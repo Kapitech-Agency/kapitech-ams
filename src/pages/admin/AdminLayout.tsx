@@ -162,8 +162,11 @@ export const AdminLayout: React.FC = () => {
   const workspaceNavigationModule: AmsSidebarModuleKey | null = (() => {
     const path = location.pathname;
 
-    if (path === '/admin/dashboard' || path === '/admin/navigation/live-activity') return 'dashboard';
-    if (path === '/admin/projects') return 'projects';
+    if (path === '/admin/dashboard') return 'dashboard';
+    if (path === '/admin/projects' || path === '/admin/tasks') return 'projects';
+    if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';
+    if (path === '/admin/team' || path === '/admin/time-logs' || path === '/admin/vendors') return 'team';
+    if (path.startsWith('/admin/cms/')) return 'cms';
     if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';
     return null;
   })();

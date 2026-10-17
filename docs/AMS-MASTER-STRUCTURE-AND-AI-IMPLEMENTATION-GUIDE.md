@@ -19,7 +19,7 @@ The goal of AMS is to provide one integrated operating system for Kapitech's cre
 
 ### 1.1 Core Principles
 
-1. **One sidebar with ten primary modules.** Do not create a new sidebar module merely because a feature has its own workflow.
+1. **One sidebar with nine primary modules.** Do not create a new sidebar module merely because a feature has its own workflow.
 2. **End to end, not just a collection of pages.** Every feature must account for its initial state, process, user actions, statuses, failures, exceptions, outcome, history, and cross-module impact.
 3. **One authoritative data source.** Cross-module references must point to the same record rather than copying data into independent master records.
 4. **Preserve established business rules.** In particular, Finance navigation restructuring must not silently change formulas, historical transactions, account mappings, calculations, journal posting, period closing, or existing production behavior.
@@ -86,20 +86,19 @@ Use the existing AMS design system; do not create a second design system.
 
 ## 3. Target Primary Navigation
 
-The sidebar must display only the following ten primary modules. Worksheets and internal features must not appear as top-level sidebar modules.
+The sidebar must display only the following nine primary modules. Worksheets and internal features must not appear as top-level sidebar modules.
 
 1. Dashboard
 2. Inbox
-3. CRM & Sales
-4. Projects
-5. Clients
-6. Finance
-7. Team & Resources
-8. Documents
-9. Website CMS
-10. Settings
+3. Projects
+4. Clients
+5. Finance
+6. Team & Resources
+7. Documents
+8. Website CMS
+9. Settings
 
-Standalone Proposal, Approval, and legacy CRM modules must not remain as primary sidebar modules. **CRM & Sales must remain available** as the complete sales/business module. Quotations are workflows in CRM & Sales and Finance backed by one shared quotation record. Generic Approval is not a primary module; transaction-level authorization controls remain in place. Vendors, Time Tracking, People Operations, Content & Campaign Operations, and Kopra H2H are subareas, not additional top-level modules.
+CRM, Proposal/Quotation, and generic Approval are not primary modules. Preserve existing records, API contracts, IDs, audit history and workflow controls wherever still consumed. The existing quotation workflow remains reachable through Finance using canonical records and the current API. Do not rebuild a sales pipeline, create a second quotation store, or introduce a generic approval engine. Vendors, Time Tracking, People Operations, Content & Campaign Operations and Kopra H2H remain subareas, not additional top-level modules.
 
 Visible navigation items must be accessible to the appropriate roles and lead to functional destinations. Do not show links that only open empty pages.
 
@@ -123,7 +122,7 @@ Show metrics that are actually available and relevant to the user's role, such a
 
 - Active projects, task overdue, milestones at risk.
 - Active clients, client requests awaiting action.
-- Sales pipeline and forecast from CRM.
+- Client-request activity from Inbox, client health from Clients, and authorized quotation/invoice/cash summaries from Finance.
 - Revenue, outstanding receivables, overdue invoices, expenses, cash position, and profit indicators from Finance.
 - Team utilization/capacity from Team & Resources when sufficient time and capacity data exists.
 - Critical integrations requiring attention, including bank synchronization status when enabled.
@@ -208,139 +207,17 @@ Each message/thread should have the following fields as appropriate to its sourc
 
 ---
 
-## 6. Module 03 — CRM & Sales
+## 6. Legacy CRM, quotation and approval compatibility boundary
 
-CRM & Sales manages the commercial process before and during closing. Clients manages active client relationships. Company/contact identity must be shared so lead conversion does not create duplicate company/contact records.
+The standalone CRM UI and sales-pipeline module are outside the approved navigation. Existing CRM/deal records, stable IDs, APIs, audit history and current consumers remain intact. The old `/crm` and `/admin/crm` routes redirect to Clients. Do not reintroduce a standalone sales pipeline or duplicate client/account/contact store.
 
-### 6.1 Navigation Structure
+Clients owns supported client identity, directory, onboarding, retainers, SLA and related contracts. Inbox remains the owner of inbound communication and inquiry state. Legacy lead/deal records may still be referenced by existing consumers; preserving this data does not create a primary UI requirement.
 
-**A. Sales Overview**
+The standalone Proposal menu is retired. The existing quotation UI/API remains under Finance at `/admin/finance/quotations`, and `/admin/proposals` redirects there. Keep quotation records, versions, status transitions, numbering, history, permissions and quote-to-invoice conversion unchanged. Do not add a second quote store or workflow.
 
-**B. Leads & Prospecting**
-- Lead Database
-- Lead Sources
-- Lead Capture
-- Qualification & Scoring
-- Lead Assignment
-- Nurture & Re-engagement
-- Duplicate Management
+The generic Approval item is absent from primary/contextual navigation. Keep existing workflow-specific maker-checker, posting, period-close, request history, API and audit behavior. The current `/admin/approvals` route remains protected but unlinked as `DEPRECATED_PENDING`, because its consumers and safe owning workflows have not yet been proven complete. Do not claim full retirement until that dependency review is complete.
 
-**C. Sales Pipeline**
-- Pipeline Board
-- Opportunity Register
-- Opportunity Details
-- Sales Forecast
-- Stalled Deals
-- Won & Lost Deals
-
-**D. Accounts & Contacts**
-- Companies & Contacts
-- Relationship History
-- Account 360°
-
-**E. Sales Activities**
-- Calls & Meetings
-- Emails & Notes
-- Sales Tasks
-- Follow-up Queue
-
-**F. Sales Desk**
-- Discovery & Brief
-- Service Fit
-- Scope & Deliverables
-- Estimation & Pricing
-- Quotation Builder
-- Negotiation History
-
-**G. Contracts & Closing**
-- Contract Register
-- Service Agreements
-- Statements of Work
-- Change Orders
-- Closing Checklist
-
-**H. Project Handover**
-- Ready for Handover
-- Handover Checklist
-- Commercial Summary
-- Handover History
-
-**I. Sales Reports**
-- Lead Conversion
-- Pipeline Performance
-- Win / Loss Analysis
-- Revenue Forecast
-- Salesperson Performance
-
-### 6.2 Lead Database and Qualification
-
-A lead contains source data, contact, needs, desired services, indicative budget when known, decision role, expected timing, source, owner, qualification state, activity history, and related opportunity. Keep unknown fields unknown; do not invent commercial data.
-
-Scoring may use clear, reviewable, explainable rules. A score must not be the sole rejection criterion. Duplicate management must support reviewing, merging, or linking records while preserving history.
-
-### 6.3 Opportunity Pipeline and Lifecycle
-
-Recommended pipeline:
-
-New → Qualification → Discovery → Scoping → Quotation → Negotiation → Contract → Closed Won / Closed Lost.
-
-Every stage transition has exit criteria, required fields, next actions, and audit history. A stage is not merely a visual label.
-
-- **New:** source and owner are recorded.
-- **Qualification:** initial need and service fit are assessed.
-- **Discovery:** meetings/briefs and decision-makers are recorded.
-- **Scoping:** deliverables, exclusions, assumptions, dependencies, timeline, and estimates are defined.
-- **Quotation:** a quotation is created from the shared record using a template and prepared for review.
-- **Negotiation:** price/scope/terms changes and communications are recorded in history/version records.
-- **Contract:** the service agreement/SOW and closing checklist are completed.
-- **Closed Won:** the commercial requirements for handover are validated.
-- **Closed Lost:** a lost reason is required; activity history is retained.
-
-Pipeline value and forecast must distinguish deal amount, probability-weighted forecast, quotation value, contracted value, invoiced revenue, and cash received.
-
-### 6.4 Sales Desk and Quotations
-
-The CRM Quotation Builder uses the same authoritative quotation records as Finance. Do not create a duplicate quotation store.
-
-Required inputs include account/contact, opportunity, scope/deliverables, quantity, price, discounts/tax as configured in Finance, assumptions/exclusions, timeline, payment terms, validity, notes, and version history.
-
-Sales must not bypass Finance controls to change tax, document numbering, terms, or authorized pricing. A sent quotation must be revised as a new version with history rather than silently overwriting the sent version.
-
-### 6.5 Contracts & Closing
-
-- Contract Register and Active/Expired/Expiring views.
-- Service agreements and Statements of Work.
-- Change orders/change requests with scope, timeline, value, billing, and policy-required approval impacts.
-- Closing checklist.
-- Contract dates, parties, references, status, version, secure document link, renewal terms, and obligations.
-- Legal documents are stored in Documents; CRM stores references and business metadata.
-
-### 6.6 Project Handover
-
-The handover must include:
-
-- Accepted quotation/contract/SOW and the approved version.
-- Scope and exclusions.
-- Deliverables, milestones, dependencies, target timeline.
-- Client PIC, internal PIC, stakeholders, and communication preferences.
-- Budget/contract value and billing milestones.
-- Risk, assumption, open issues, special commitments.
-- Required files and meeting/brief summary.
-- Handover readiness checklist, owner, timestamp, and history.
-
-A project must be created or activated only once from a qualifying handover. Retries must not create duplicate projects.
-
-### 6.7 Sales reports
-
-- Lead conversion with consistent numerator/denominator definitions.
-- Pipeline aging and stalled opportunities.
-- Win/loss analysis by source/service/owner based on valid data.
-- Forecast with relevant probabilities and dates.
-- Sales performance should account for quality and outcomes, not only nominal value.
-
----
-
-## 7. Module 04 — Projects
+## 7. Module 03 — Projects
 
 Projects is the primary source for delivery management. CRM starts the deal and transfers commercial context; Finance is the authoritative source for financial values. Projects must not create journals or reconstruct Finance values independently.
 
@@ -458,7 +335,7 @@ If automated publishing is not integrated, AMS may still manage the calendar and
 
 ---
 
-## 8. Module 05 — Clients
+## 8. Module 04 — Clients
 
 Clients manages active accounts and the client relationship lifecycle after a lead becomes an account. Company/contact identity is shared with CRM. Do not create duplicate companies, contacts, contracts, or projects during conversion.
 
@@ -533,47 +410,38 @@ Onboarding criteria must be configurable for the service type. Do not mark a pro
 
 ---
 
-## 9. Module 06 — Finance
+## 9. Module 05 — Finance
 
 Finance has established worksheets, reports, and transactions. Navigation may be reorganized, but accounting and calculation rules must not change as a side effect of changing labels.
 
 ### 9.1 Finance Navigation Structure
 
+Finance uses five top-level areas. Preserve all twenty current worksheet keys and existing transaction, accounting, and posting behavior.
+
 **A. Overview & Control**
 - Executive Summary
 - Dashboard
 
-**B. Revenue & Receivables**
-- Quotations
-- Revenue & Invoices
-- Accounts Receivable
-- Document Templates
-
-**C. Expenses & Payables**
-- Expense Register
-- Purchase & Expense Requests
-- Budget Availability Check
-- Purchase Orders (when the purchasing process requires them)
-- Vendor Bills
-- Accounts Payable
-- Vendor Ledger & Payments
-- Recurring Expenses & Subscriptions
-- Expense Categories & Supporting Documents
-
-**D. Cash Management**
+**B. Transactions & Cash**
 - Cash & Bank
-- Bank Accounts
-- Bank Transactions & Reconciliation
-- Bank Mandiri Kopra H2H
+- Revenue
+- Expenses
 - Petty Cash
 
-**E. Project Finance**
+**C. Receivables & Payables**
+- Quotations
+- Accounts Receivable
+- Accounts Payable
+- Vendor bills and payment references
+- Vendor & Freelancer financial reference views
+
+**D. Project Finance**
 - Project Finance
 - Operational Budget
 - Project Allocation
 - Team Fee
 
-**F. Accounting & Reports**
+**E. Accounting & Reports**
 - Journal
 - Chart of Accounts
 - Monthly P&L
@@ -757,7 +625,7 @@ Required features:
 
 Business transaction screens live under:
 
-Finance → Cash Management → Bank Mandiri Kopra H2H.
+Finance → Transactions & Cash → Bank Mandiri Kopra H2H.
 
 Connection and technical configuration live under:
 
@@ -778,7 +646,7 @@ These references are orientation only. Before coding or enabling the connector, 
 
 Do not infer endpoints, headers, tokens, HMAC/signature algorithms, certificate formats, idempotency field names, pagination rules, balance formats, or callback payloads. Implement only from the approved current technical documentation and bank test results.
 
-### 10.3 Finance → Cash Management → Bank Mandiri Kopra H2H
+### 10.3 Finance → Transactions & Cash → Bank Mandiri Kopra H2H
 
 **A. Kopra Overview**
 - Integration/service status and last successful check.
@@ -931,7 +799,7 @@ Sandbox testing is not proof of production access. A mock provider used in tests
 
 ---
 
-## 11. Module 07 — Team & Resources
+## 11. Module 06 — Team & Resources
 
 ### 11.1 Structure
 
@@ -1034,7 +902,7 @@ Approved leave → availability calendar → workload/capacity computation → p
 
 ---
 
-## 12. Module 08 — Documents
+## 12. Module 07 — Documents
 
 ### 12.1 Structure
 
@@ -1064,7 +932,7 @@ Quotation/invoice PDFs are generated artifacts linked to the canonical document 
 
 ---
 
-## 13. Module 09 — Website CMS
+## 13. Module 08 — Website CMS
 
 ### 13.1 Structure
 
@@ -1111,7 +979,7 @@ Draft → review/preview → publish → verified sync/status → update or unpu
 
 ---
 
-## 14. Module 10 — Settings
+## 14. Module 09 — Settings
 
 ### 14.1 Structure
 
@@ -1166,7 +1034,7 @@ Workflow & Automation is a platform capability, not a new sidebar module and not
 | Trigger / source event | Target/action | Guardrail |
 |---|---|---|
 | Website/customer inquiry received | Inbox: create/link thread; CRM: lead candidate if qualified/needed | Stable external ID/duplicate detection |
-| Inbox categorized as sales | CRM lead or opportunity candidate | Keep Inbox thread; link, don't copy conversation into a new unrelated record |
+| Inbox categorized as sales | Existing linked lead/opportunity record only where required by the current intake contract | Keep the Inbox thread, link an existing record where needed, and do not create a parallel CRM UI or duplicate conversation |
 | Opportunity moves to Closed Won | Validate handover; prepare client onboarding and project | Idempotent conversion; required scope/terms |
 | Quotation accepted | Update shared quote state; prepare contract/billing plan | Must not auto-create duplicate quote/invoice or cash event |
 | Contract/milestone billing becomes due | Finance prepares invoice per valid schedule | No premature issue/posting; valid source terms |
@@ -1202,9 +1070,9 @@ This section defines logical ownership. It does not require a full database rewr
 
 | Entity/domain | Canonical owner | Consumers |
 |---|---|---|
-| Company/account and contacts | Shared identity used by CRM & Sales and Clients | Inbox, Projects, Finance, Documents |
-| Lead and opportunity | CRM & Sales | Dashboard, Inbox, Project Handover, Finance references |
-| Quote/quotation and quote versions | One shared quotation record; Sales authoring and Finance control | CRM, Finance, Documents, project handover |
+| Company/account and contacts | Canonical client identity in Clients; legacy CRM consumers use linked records | Inbox, Projects, Finance, Documents |
+| Lead and opportunity | Existing legacy records/API compatibility, not a primary UI module | Inbox and current consumers where still used |
+| Quote/quotation and quote versions | Existing canonical quotation API/records surfaced by Finance | Finance, Documents and any legacy API consumer |
 | Contract/SOW/change order | Canonical contract record with secure Documents references | CRM, Clients, Projects, Finance |
 | Client onboarding/retainer/SLA | Clients | Projects, Team & Resources, CRM, Finance |
 | Project/task/deliverable/campaign item | Projects | Clients, Documents, Dashboard, Finance summaries |
@@ -1242,9 +1110,9 @@ This section defines logical ownership. It does not require a full database rewr
 
 ## 17. Cross-module lifecycle maps
 
-### 17.1 Sales-to-delivery
+### 17.1 Existing quotation-to-delivery compatibility
 
-Inquiry → Inbox classification/owner → CRM lead → qualification/discovery → scope/estimation → quotation versioning → negotiation → contract/SOW → Closed Won readiness → client onboarding → project handover → project setup → delivery and review → closure → client renewal/expansion.
+Inquiry → Inbox classification/owner → existing lead/opportunity record where required by the current intake contract → existing qualification/scoping workflow → quotation authoring and versioning in Finance → existing negotiation/contract handling → client onboarding → project handover → project setup → delivery and review → closure → client renewal/expansion. Preserve legacy stages and API consumers, but do not present a standalone CRM pipeline as an approved AMS module.
 
 Every arrow represents a real persisted relationship and guard condition. It is not only a redirect between screens.
 
@@ -1354,7 +1222,7 @@ The complete structure is broad. Implement it in verified vertical slices. Do no
 
 ### Phase 1 — Navigation and shared shell
 
-- Align the ten primary nav entries, access rules, nested module routes, page titles and active states.
+- Align the nine primary nav entries, access rules, nested module routes, page titles and active states.
 - Preserve route compatibility as needed; do not break bookmarked/deep-linked routes without redirects/migration plan.
 - Normalize header/page padding/tab structure/drawers using existing design system.
 - Remove obsolete module-level entry points only after verifying replacement paths and record dependencies.
@@ -1362,12 +1230,12 @@ The complete structure is broad. Implement it in verified vertical slices. Do no
 
 **Exit gate:** Every visible primary/subnav item has a real destination, correct access, consistent visual hierarchy, and no unintended duplicates.
 
-### Phase 2 — Core CRM/client/project handover
+### Phase 2 — Client, quotation, and project compatibility
 
-- Complete CRM lifecycle and stage criteria.
-- Canonical account/contact relationship and lead-to-client conversion.
-- Shared quotation reference.
-- Handover checklist and project creation guards.
+- Preserve legacy lead/opportunity records and API consumers without building a standalone CRM pipeline UI.
+- Preserve canonical account/contact relationships and supported client-linking behavior.
+- Keep quotation IDs, history, valid state transitions and invoice conversion in the existing Finance workflow.
+- Verify handover checklist and project creation guards against source and tests before claiming full coverage.
 - Project delivery and Content & Campaign Operations.
 - Client 360, onboarding, retainer/SLA relation.
 - Build tests for duplicate prevention and lifecycle transitions.
@@ -1602,12 +1470,12 @@ Do not mark a requirement done until the UI, persisted data, API validation, per
 
 ### 25.4 Scope safety: what menu consolidation means
 
-The target has exactly ten top-level navigation modules: Dashboard, Inbox, CRM & Sales, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings.
+The target has exactly nine top-level navigation modules: Dashboard, Inbox, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings.
 
 This taxonomy is not permission to delete underlying capabilities:
-- Removing a standalone Proposals menu must preserve quotation records, sent/accepted/rejected/expired states, quote versions, and quote-to-invoice conversion. Make quotation reachable through CRM & Sales and Finance.
-- Removing the general Approval menu must preserve workflow-specific maker-checker permissions, finance posting controls, period closing controls, request history, audit trail, and any valid API consumers. Map each approval process to the owning business workflow.
-- Removing a legacy CRM menu must not remove CRM & Sales.
+- Removing the standalone Proposal menu must preserve quotation records, sent/accepted/rejected/expired states, quote versions and quote-to-invoice conversion. Make the existing workflow reachable through Finance without creating a second UI/data implementation.
+- Removing the generic Approval menu must preserve workflow-specific maker-checker permissions, finance posting controls, period closing controls, request history, audit trail and valid API consumers. The current protected direct route remains unlinked as DEPRECATED_PENDING until a safe workflow owner is verified.
+- Removing CRM from primary navigation does not authorize deleting underlying CRM/deal records, APIs, history or valid consumers. The old route redirects to Clients; do not rebuild a standalone sales pipeline.
 - Vendors and Time Tracking become subareas, but preserve their canonical records, routes/API contracts that are still consumed, record links and relevant redirects.
 - The target does not introduce separate stores for invoice, quotation, vendor, project finance, time entries or bank transactions.
 - A legacy route may be redirected or removed from navigation only after route consumers, deep links, tests, external clients and access rules are assessed.

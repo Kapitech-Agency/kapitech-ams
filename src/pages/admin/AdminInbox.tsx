@@ -109,7 +109,9 @@ export const AdminInbox: React.FC = () => {
         return;
       }
 
-      const items = (res.data.leads as ContactSubmission[]).map(normalizeContactSubmission);
+      const items = (res.data.leads as ContactSubmission[])
+        .map(normalizeContactSubmission)
+        .filter((item) => item.type !== 'career');
       setSubmissions(items);
       setPrevCount(items.length);
     } catch {
@@ -178,8 +180,7 @@ export const AdminInbox: React.FC = () => {
 
   const inboxTabs: Array<{ key: InboxTab; label: string; count: number }> = [
     { key: 'overview', label: 'Overview', count: submissions.length },
-    { key: 'client', label: 'Client Requests', count: submissions.filter((item) => item.type !== 'career').length },
-    { key: 'jobs', label: 'Job Applications', count: submissions.filter((item) => item.type === 'career').length },
+    { key: 'client', label: 'Client Requests', count: submissions.length },
     { key: 'starred', label: 'Starred', count: submissions.filter((item) => !!item.starred).length }
   ];
 
@@ -740,6 +741,7 @@ export const AdminInbox: React.FC = () => {
         actions={(
           <>
             <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inbound</span>
+            {canManageCrm && <Link to="/admin/cms/careers?tab=applicants" className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">{language === 'id' ? 'Pelamar Careers' : 'Careers Applicants'}</Link>}
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
             {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{activeInboxTab === 'jobs'
     ? (language === 'id' ? 'Mulai Screening' : 'Start Screening')

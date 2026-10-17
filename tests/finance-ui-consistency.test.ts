@@ -16,10 +16,11 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(sidebar, /data-ams-navigation-layout="flat"/);
   assert.doesNotMatch(sidebar, /data-ams-nav-submenu|aria-expanded=|ChevronDown/);
   const subnavigation = await read('src/lib/amsModuleSubnavigation.ts');
-  assert.match(navigation, /label: 'Finance Overview', to: '\/admin\/finance\?tab=executive-summary'/);
-  assert.match(subnavigation, /label: 'Invoicing & Revenues'/);
-  assert.match(subnavigation, /label: 'Profitability & Expenses'/);
-  assert.match(subnavigation, /label: 'Project Profitability'/);
+  assert.match(navigation, /key: 'finance', label: 'Finance', to: '\/admin\/finance\?tab=executive-summary'/);
+  assert.doesNotMatch(subnavigation, /Invoicing & Revenues|Profitability & Expenses|Project Profitability/);
+  for (const area of ['Overview & Control', 'Transactions & Cash', 'Receivables & Payables', 'Project Finance', 'Accounting & Reports']) {
+    assert.ok(workbook.includes("label: '" + area + "'"), 'Missing Finance group ' + area);
+  }
   assert.match(workspace, /FINANCE_WORKBOOK_GROUPS/);
   assert.match(workspace, /ariaLabel="Finance areas"/);
   assert.match(workspace, /finance-tab-overview-control/);
@@ -212,14 +213,16 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.match(app, /query.get\('finance'\) === 'vendor-payments'/);
   assert.ok(app.includes("'/admin/finance?tab=accounts-payable'"));
   assert.match(app, /const AdminInvoicing = lazyWithRetry/);
-  assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
+  assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
   assert.doesNotMatch(layout, /location\.pathname === '\/admin\/invoicing'/);
   assert.doesNotMatch(layout, /isFinanceModuleRoute|ariaLabel="Finance sections"/);
   assert.equal(layout.includes('data-ams-slug="active-module-title"'), false);
   assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
   assert.ok(workspace.includes('ariaLabel="Finance areas"'));
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');
-  assert.match(navigation, /label: 'Profitability & Expenses', to: '\/admin\/finance\?tab=accounts-payable'/);
+  assert.equal(navigation.includes("label: 'Profitability & Expenses'"), false);
+  assert.ok(workspace.includes('finance-tab-receivables-payables'));
   assert.match(workspace, /finance-tab-accounting-reports/);
   assert.doesNotMatch(layout, /finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
 

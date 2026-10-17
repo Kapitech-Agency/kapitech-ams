@@ -1,194 +1,113 @@
-# AMS Navigation Information Architecture
+# AMS Navigation and Information Architecture
 
-**Status:** Target-state specification aligned with the AMS Master Structure and AI Implementation Guide.  
-**Scope:** Primary navigation, module ownership, local navigation, URL state, deep links, and role-aware visibility.  
-**Implementation status:** This defines the target; it is not proof that every target item has shipped. Inspect current route/navigation source before making implementation claims.
+**Status:** Approved navigation target, updated 16 October 2026.
+**Authority:** Latest product decision, current route/access implementation, AMS master guide, and implementation traceability register.
 
 ## 1. Global rules
 
-The target product has exactly ten primary modules: Dashboard, Inbox, CRM & Sales, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, and Settings.
+- The product has exactly nine primary modules: Dashboard, Inbox, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, and Settings.
+- Primary entries represent modules, not worksheets, views, or legacy routes.
+- CRM, Proposal/Quotation, and generic Approval are not primary modules. Do not build a replacement sales pipeline, separate proposal workspace, or new approval engine.
+- Removing a menu does not authorize deleting records, API contracts, IDs, history, business controls, or active consumers.
+- Each feature has one owning module and canonical write path. Other modules may show contextual/read-only linked records.
+- Navigation visibility is not authorization. Existing route guards and server permissions remain authoritative.
+- This is consolidation, not redesign. Preserve existing AMS design tokens, component patterns, shared shell, and Finance business rules.
+- Documentation is not implementation evidence. Verify source and execute tests.
 
-1. **Sidebar = primary destinations.** Do not duplicate worksheets, filters, detail views, or CRUD actions as primary modules.
-2. **Module tabs = related local views.** A tab belongs only to the workspace it changes.
-3. **In-page controls = local state.** Search, filters, sorting, pagination, pipeline stages, Kanban/list modes, editor Details/Preview, and queues remain within their owning workspace.
-4. **One canonical owner.** Cross-module views reference canonical records; they do not clone master records or create parallel ledgers.
-5. **One unambiguous route state.** Pathname, query parameters and relevant hash fragments must resolve to one active destination. Reload and browser back/forward must preserve URL-driven views.
-6. **Role-aware visibility is not authorization.** Reuse current route access policy for display and enforce access server-side on every protected API.
-7. **Deep links must open a real usable state.** Do not link to a conditional element inside a closed drawer or an unavailable page.
-8. **No dead navigation or simulated completion.** Record unimplemented target features in the traceability register.
-9. **Preserve legacy compatibility.** Assess bookmarks, consumers, tests, permissions and stored references before redirecting or removing paths.
-10. **Preserve the current AMS design.** Use the shared page shell and design system. This document does not authorize a redesign.
+## 2. Approved primary modules
 
-## 2. Target structure by module
+| Order | Module | Canonical entry | Feature ownership |
+|---|---|---|---|
+| 1 | Dashboard | `/admin/dashboard` | Role-permitted source-backed summaries and drill-downs |
+| 2 | Inbox | `/admin/inbox` | Notifications, inbound inquiries, actionable activity and follow-up supported by current code |
+| 3 | Projects | `/admin/projects` | Project delivery, tasks/Kanban, milestones, project status and project work views |
+| 4 | Clients | `/admin/clients/all-clients` | Client directory, onboarding, contracts, retainers, SLA and relationship health where implemented |
+| 5 | Finance | `/admin/finance` | Transactions, cash, receivables/payables, project finance, accounting and reports |
+| 6 | Team & Resources | `/admin/team` for roles allowed by policy | Team/capacity; vendor/freelancer and time subareas according to current permissions |
+| 7 | Documents | `/admin/documents` | Canonical documents, files, versions and authorized attachments |
+| 8 | Website CMS | `/admin/cms/projects` for Admin; `/admin/cms/insights` for eligible editors | Public content and supported Careers workflows |
+| 9 | Settings | `/admin/settings?tab=overview` | Authorized account/application configuration, access, audit and integrations |
 
-### 2.1 Dashboard
-- Overview
-- Performance
-- Analytics
+Settings may remain pinned in the existing system area. It remains the ninth primary module. Role visibility continues to follow the actual route policy.
 
-Dashboard tabs apply only to Dashboard. Personal task workspaces or activity routes must not inherit unrelated Dashboard tabs. Metrics and drill-downs use authoritative source data.
+## 3. Module subnavigation
 
-### 2.2 Inbox
-- Inbox Overview
-- All Messages
-- Sales Inquiries
-- Client Requests
-- Project & Support Requests
-- Follow-ups
-- Starred
-- Resolved & Archived
-- Routing & Response Templates
+### 3.1 Dashboard
+Local views are Overview, Performance and Analytics. Values are summaries of their source modules. Do not imply an unimplemented activity/analytics route is functional.
 
-These are views over inbox-related records. Job applications belong in Website CMS → Careers → Applicants, not the sales inbox. Website inquiries may enter Inbox.
+### 3.2 Inbox
+Keep current communication, client inquiry, follow-up, starred and read/unread experiences. Notification targets route to the owning record/module using existing authorization. Careers applicants are managed only in Website CMS → Careers. Inbox may provide a contextual shortcut, but it must not expose a competing applicant status, notes or delete workflow. Inbox is not an approval register.
 
-### 2.3 CRM & Sales
-- Sales Overview
-- Leads & Prospecting
-- Sales Pipeline
-- Accounts & Contacts
-- Sales Activities
-- Sales Desk
-- Contracts & Closing
-- Project Handover
-- Sales Reports
+### 3.3 Projects
+Project views include the existing registry/overview, delivery, budget and archived views. Tasks/Kanban/list are views over the same records. Financial values remain sourced from Finance. Client retainers/SLA belong to Clients, vendor master/time records to Team & Resources, and canonical files to Documents.
 
-Quotations are workflows in CRM & Sales and Finance backed by one authoritative quotation lifecycle. Do not add a primary Proposals/Quotations module or a second quotation store.
+### 3.4 Clients
+Directory, onboarding, contracts, retainers and SLA monitoring remain contextual views under Clients where supported and role-permitted. Client/account/contact data stay canonical; Project, Finance, Inbox and Documents references are linked views.
 
-### 2.4 Projects
-- Projects Overview
-- Project Registry
-- Planning & Scope
-- Tasks & Execution
-- Project Resources
-- Deliverables & Quality
-- Content & Campaign Operations
-- Changes, Risks & Issues
-- Budget & Project Health
-- Project Files
-- Project Reports & Closure
+### 3.5 Finance
+Finance keeps five top-level areas:
 
-Board/list/timeline are local presentation modes. Content calendar, production stages, reviews, revisions, publishing schedule and campaign reporting belong inside Content & Campaign Operations.
+1. **Overview & Control**: Executive Summary and Dashboard.
+2. **Transactions & Cash**: Cash & Bank, Revenue, Expenses and Petty Cash.
+3. **Receivables & Payables**: Accounts Receivable, Accounts Payable and vendor-linked financial references.
+4. **Project Finance**: Project Finance, Operational Budget, Project Allocation and Team Fee.
+5. **Accounting & Reports**: Journal, Chart of Accounts, Monthly P&L, Cash Flow, Balance Sheet, Monthly Closing and Annual Summary.
 
-### 2.5 Clients
-- Client Overview
-- Client Directory
-- Onboarding
-- Contracts & Agreements
-- Retainers
-- SLA & Service Operations
-- Client Growth & Health
+Preserve all twenty current worksheet keys and their API/source behavior. The existing quotation UI is reachable at `/admin/finance/quotations` from Finance's Receivables & Payables area. Legacy `/admin/proposals` redirects there. Reuse existing components, APIs, IDs, status history and quote-to-invoice logic. Do not add a Proposal module or duplicate store.
 
-Company/contact identity is shared with CRM & Sales. Client 360 aggregates linked project, contract, Inbox and Finance records rather than creating copies.
+Navigation consolidation must not change financial formulas, account codes, journal rules, posting, allocations, receivables, payables, reconciliation, closing or workbook mappings.
 
-### 2.6 Finance
-- Overview & Control
-- Revenue & Receivables
-- Expenses & Payables
-- Cash Management
-- Project Finance
-- Accounting & Reports
+### 3.6 Team & Resources
+Team/capacity, vendor/freelancer and time-record features remain subareas, not primary modules. Vendor data stays canonical here and Finance references the same records. Preserve role restrictions. Vendor billing access does not grant team-directory or time-entry access.
 
-Preserve all twenty current source-code worksheet destinations under Finance. Quotation/template workflows and future Kopra operations belong inside Finance. Navigation regrouping must not change accounting logic.
+### 3.7 Documents
+Documents owns canonical file metadata and versions. Contextual attachment views link to those records. Do not create competing repositories or expose private storage URLs/secrets.
 
-### 2.7 Team & Resources
-- Team & Capacity
-- People Operations
-- Vendors & Freelancers
-- Time Tracking
+### 3.8 Website CMS
+Preserve existing editor routes for Portfolio/Case Studies, Services, Insights, Testimonials and Careers. Careers owns supported job-opening and applicant workflows. Do not create a second CMS or show placeholders as functional.
 
-Leave, availability, employment contracts, onboarding/offboarding, training, performance history, vendor master data and time records live here. Finance references the same vendor master and eligible time records.
+### 3.9 Settings
+Settings owns authorized access, configuration, audit and integration screens. Direct route access remains guarded. The release-readiness placeholder is not a navigable feature until verified.
 
-### 2.8 Documents
-- Document Overview
-- All Documents
-- Project & Client Files
-- SOPs & Policies
-- Legal & Corporate
-- Finance & Tax
-- HR & People
-- Security & Infrastructure
+## 4. Legacy route compatibility
 
-Contextual file views link to canonical files and versions.
-
-### 2.9 Website CMS
-- CMS Overview
-- Case Studies
-- Services
-- Insights
-- Testimonials
-- Careers: Jobs, Applicants, Recruitment History
-
-Editor-level Details/Preview controls stay inside the editor. Do not duplicate CMS destinations as a second clickable tab bar.
-
-### 2.10 Settings
-- System Overview
-- Users & Access
-- Audit Log
-- Integrations
-- Preferences
-
-Technical Kopra connection configuration belongs under Settings → Integrations. Daily bank balance, transaction, payment queue and reconciliation views belong to Finance.
-
-## 3. Navigation ownership matrix
-
-| Module | Owns | Must not become a separate primary module |
+| Legacy route | Navigation behavior | Data/security behavior |
 |---|---|---|
-| Dashboard | Business and operational summaries | Standalone KPI/report cards |
-| Inbox | Communications and intake queues | Job Applications |
-| CRM & Sales | Leads, opportunities, quotations, sales contracts, handover | Proposals, generic Approval |
-| Projects | Delivery, tasks, deliverables, content and campaigns | Tasks/Content Calendar/Campaigns as primary modules |
-| Clients | Active client identity, onboarding, retainers, SLA, relationship health | Competing company/contact master |
-| Finance | Invoices, quotations/templates, expenses, payables, cash/bank, journals/reports, Kopra | Vendor master, generic Approval, separate bank ledger |
-| Team & Resources | People, capacity, vendor master, time records | Standalone Time Tracking/Vendors |
-| Documents | Canonical files and versions | Copied file stores per module |
-| Website CMS | Public content and recruitment records | Careers Applicants as primary module |
-| Settings | Access, security, audit and integration configuration | Daily financial transactions |
+| `/crm`, `/admin/crm` | Redirect to Clients directory; no standalone CRM UI | Preserve CRM/deal records, IDs, APIs, history and consumers. Do not rebuild a sales pipeline. |
+| `/admin/clients/lead-accounts` | Redirect to Clients directory | Keep route access guarded. |
+| `/admin/inbox?view=jobs` | Redirect to `/admin/cms/careers?tab=applicants` | Preserve old links while keeping one Careers applicant management workspace. Finance/PM access is limited to the applicant tab. |
+| `/admin/proposals` | Redirect to `/admin/finance/quotations`, preserving query/hash | Reuse existing quotation API/component and conversion behavior. |
+| `/admin/approvals` | No primary/local link or command-palette shortcut. Keep protected direct route as `DEPRECATED_PENDING`. | Preserve approval records, API, audit and maker-checker. Full retirement waits for owner/consumer validation. |
+| `/admin/invoicing` | Keep existing Finance compatibility redirect | Preserve current query-based destination mapping. |
+| `/admin/vendors`, `/admin/time-logs` | Keep protected feature routes within Team & Resources context | Preserve records, permissions and consumers. |
 
-## 4. URL and interaction contract
+Do not redirect distinct source-record links indiscriminately. Preserve valid IDs/query/hash. Do not delete backend routes or data just to clean menus.
 
-- Reuse the current page shell, module header, and section-tab primitives.
-- Do not add nested page padding or a second header below a subtab.
-- Query parameters are authoritative for query-driven views.
-- Normalize path/query state so one URL cannot produce contradictory active destinations.
-- Reload, browser back and forward preserve the intended view.
-- Role-specific aliases such as My Hub or Assigned Tasks obey current access helpers and server-side checks.
-- Do not expose active placeholders. Record unimplemented target routes in traceability.
-- Do not duplicate a primary destination as a local tab unless a useful contextual action is documented.
+## 5. Active state, deep links and shared layout
 
-## 5. Finance navigation rules
+- Active/expanded state follows route and query, including role-specific variants.
+- Reload, browser back/forward and direct URL entry preserve the permitted destination.
+- Contextual tabs do not duplicate destinations already visible globally.
+- Redirects must not loop or discard valid context.
+- Shared shell owns padding, headers and tab layout. Avoid duplicate headers, nested padding, arbitrary offsets and unapproved motion.
+- Existing authentication, route guards and server permissions remain authoritative.
 
-- Use the six Finance groups in the master guide.
-- Preserve every current worksheet key from src/lib/financeWorkbook.ts; verify the source before editing.
-- New quote/template and bank views follow the existing workspace architecture. A submenu does not automatically require a new table, API or store.
-- Reuse current invoice, expense, vendor, journal and reporting sources.
-- Keep reporting-period state visible and consistent; avoid redundant filter cards.
-- Do not remove old destinations until the owning module workflow, permission and compatibility path are verified.
+## 6. Acceptance criteria
 
-## 6. Legacy destination policy
+- [ ] Admin has eight workspace links plus pinned Settings: nine primary modules total.
+- [ ] No standalone CRM, Proposal, Approval, Vendors or Time Tracking primary item exists.
+- [ ] Role-specific items match the existing route permission policy.
+- [ ] Clients, Team & Resources, Finance, Documents and CMS contain links to supported, owned features.
+- [ ] Quotations are accessible inside Finance with the current records/API.
+- [ ] CRM and Proposal legacy routes redirect intentionally. Approval remains protected but unlinked pending dependency review.
+- [ ] No duplicate global/contextual destinations or stale active states.
+- [ ] Direct unauthorized routes and server-side permissions remain protected.
+- [ ] Finance worksheets and existing records are preserved.
+- [ ] Build, type, regression and supported E2E checks are executed and reported honestly.
 
-Removing a standalone Proposals, Approval, Vendors or Time menu is not permission to delete its underlying capability.
+## 7. Related specifications
 
-For each legacy route:
-1. Identify consumers, deep links, API callers, permission checks, tests and stored references.
-2. Map it to a target owner/subview.
-3. Decide preserve, redirect or deprecate from evidence.
-4. Preserve data, audit history, quote-to-invoice conversion, maker-checker and period-close controls.
-5. Add route/access regression tests.
-6. Remove obsolete visible navigation only after the replacement works.
-
-## 7. Acceptance criteria
-
-- [ ] Exactly ten primary modules are specified.
-- [ ] No standalone Proposals, generic Approval, Vendors or Time Tracking primary module is added.
-- [ ] Every submenu maps to an owner, route/view, permission and traceability requirement.
-- [ ] Every visible link opens a real permitted state.
-- [ ] Query-driven views survive reload and browser navigation.
-- [ ] Direct unauthorized routes/API calls remain blocked.
-- [ ] Finance worksheet data and behavior are preserved.
-- [ ] Navigation tests, full tests, lint and build are run and reported.
-
-## 8. Related specifications
-- ../AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md
-- ../AMS-IMPLEMENTATION-TRACEABILITY.md
-- ../AMS-UX-INTERACTION-STANDARDS.md
-- ../../AMS-DESIGN-SYSTEM.md
+- `../AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`
+- `../AMS-IMPLEMENTATION-TRACEABILITY.md`
+- `../AMS-UX-INTERACTION-STANDARDS.md`
+- `../../AMS-DESIGN-SYSTEM.md`

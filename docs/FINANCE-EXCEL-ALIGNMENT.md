@@ -1,6 +1,6 @@
 # Excel-aligned Finance workflow
 
-> **Documentation priority note (16 October 2026):** This document remains the domain reference for the established workbook-aligned Finance process, worksheet/source mapping, journal controls, and known accounting limitations. Its original five-group navigation map is a historical/baseline mapping; the target Finance navigation grouping is now defined by [AMS Master Structure & AI Implementation Guide](AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md). That navigation regrouping does **not** authorize changes to workbook formulas, account mapping, transaction meaning, posting controls, close guards, or historical results. Inspect current source and tests before assuming any implementation state.
+> **Documentation priority note (16 October 2026):** This document remains the domain reference for the established workbook-aligned Finance process, worksheet/source mapping, journal controls and known accounting limitations. The approved five-area Finance navigation is defined by [AMS Master Structure & AI Implementation Guide](AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md) and the source in `src/lib/financeWorkbook.ts`. Navigation regrouping does **not** authorize changes to formulas, account mapping, transaction meaning, posting controls, close guards or historical results. Inspect current source/tests before assuming implementation state.
 
 ## Source of truth and UI constraints
 
@@ -8,7 +8,7 @@ The workbook **Kapitech Finance Final Automated.xlsx** is the business-process r
 
 ## Navigation map
 
-The Finance workspace provides all twenty workbook sheet destinations in five navigation groups.
+The Finance workspace preserves all twenty workbook sheet destinations in five approved areas: Overview & Control, Transactions & Cash, Receivables & Payables, Project Finance, and Accounting & Reports.
 
 | Workbook sheet | AMS view | Current source / implementation status |
 |---|---|---|

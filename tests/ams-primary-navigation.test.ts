@@ -2,55 +2,65 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   AMS_PRIMARY_SETTINGS_ITEM,
+  canAccessAmsRoute,
   getPrimaryNavigationForRole,
   getAmsRole,
   isNavigationItemActive,
 } from '../src/lib/amsNavigationAccess';
 
-const labels = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) =>
-  getPrimaryNavigationForRole(role).map((item) => item.label);
-const keys = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) =>
-  getPrimaryNavigationForRole(role).map((item) => item.key);
+const items = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) => getPrimaryNavigationForRole(role);
+const labels = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) => items(role).map((item) => item.label);
+const key = (role: Parameters<typeof getPrimaryNavigationForRole>[0], target: string) => items(role).find((item) => item.key === target)!;
 
-test('sidebar exposes important feature destinations directly and keeps Settings separate', () => {
-  const adminLabels = labels('Admin');
-  for (const label of [
-    'Dashboard & Hub', 'My Hub', 'Sales & Pipeline', 'Client Directory', 'Client Onboarding',
-    'Inbox', 'Contracts', 'SLA Monitoring', 'Project Hub', 'Tasks', 'Project Files', 'Team & Capacity',
-    'Timesheet Control', 'Retainer Hours Pool', 'Finance Overview', 'Invoicing & Revenues',
-    'Profitability & Expenses', 'Project Profitability', 'Quotations', 'Vendor Ledger', 'Approvals',
-    'Insights', 'Portfolio', 'Testimonials', 'Services', 'Careers',
-  ]) assert.ok(adminLabels.includes(label), 'Missing direct sidebar destination: ' + label);
+test('the Admin navigation has exactly eight sidebar modules plus pinned Settings', () => {
+  assert.deepEqual(labels('Admin'), [
+    'Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources', 'Documents', 'Website CMS',
+  ]);
   assert.equal(AMS_PRIMARY_SETTINGS_ITEM.label, 'Settings');
-  assert.equal(AMS_PRIMARY_SETTINGS_ITEM.allowedRoles.includes('Admin'), true);
-  assert.equal(AMS_PRIMARY_SETTINGS_ITEM.allowedRoles.includes('PM'), false);
+  assert.deepEqual(AMS_PRIMARY_SETTINGS_ITEM.allowedRoles, ['Admin']);
+  assert.equal(items('Admin').length + 1, 9);
+
+  const forbiddenPrimaryLabels = ['CRM', 'Sales & Pipeline', 'Proposals', 'Approvals', 'Vendor Ledger', 'Time Tracking', 'Timesheet Control'];
+  for (const label of forbiddenPrimaryLabels) assert.equal(labels('Admin').includes(label), false, label + ' must not be a primary item');
 });
 
-test('role-specific sidebars remain relevant to each responsibility', () => {
+test('role-specific module visibility follows the existing route policy', () => {
+  assert.deepEqual(labels('Finance'), ['Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources']);
+  assert.deepEqual(labels('PM'), ['Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources', 'Website CMS']);
+  assert.deepEqual(labels('Creative'), ['My Hub', 'Projects', 'Website CMS']);
   assert.deepEqual(labels('Freelancer'), ['My Hub', 'Assigned Tasks']);
-  assert.ok(labels('Finance').includes('Invoicing & Revenues'));
-  assert.ok(labels('Finance').includes('Vendor Ledger'));
-  assert.ok(!labels('Finance').includes('Project Files'));
-  assert.ok(labels('PM').includes('Project Profitability'));
-  assert.ok(labels('PM').includes('Team & Capacity'));
-  assert.ok(!labels('PM').includes('Invoicing & Revenues'));
-  assert.deepEqual(labels('Creative'), ['My Hub', 'Project Hub', 'Assigned Tasks', 'Insights', 'Portfolio', 'Testimonials']);
-  assert.equal(getPrimaryNavigationForRole('Creative').find((item) => item.key === 'dashboard')?.to, '/admin/tasks?taskscope=my');
-  assert.equal(getPrimaryNavigationForRole('Freelancer').find((item) => item.key === 'tasks')?.to, '/admin/tasks?taskscope=my&workspace=project');
-  assert.ok(keys('Finance').includes('client-directory'));
+
+  assert.equal(key('Finance', 'projects').to, '/admin/projects?projects=sprint');
+  assert.equal(key('Finance', 'team-resources').to, '/admin/vendors');
+  assert.equal(key('PM', 'finance').to, '/admin/finance?tab=project-finance');
+  assert.equal(key('Creative', 'website-cms').to, '/admin/cms/insights');
+  assert.equal(key('Freelancer', 'tasks').to, '/admin/tasks?taskscope=my&workspace=project');
+  assert.equal(key('Creative', 'dashboard').to, '/admin/tasks?taskscope=my');
 });
 
-test('query-aware active state selects the specific destination', () => {
-  const adminItems = getPrimaryNavigationForRole(getAmsRole({
+test('removed module paths are not offered as primary entries and legacy routes remain policy-guarded', () => {
+  const primaryLabels = labels('Admin').join('|');
+  assert.doesNotMatch(primaryLabels, /CRM|Proposal|Approval|Vendor Ledger|Time Tracking/i);
+  assert.equal(canAccessAmsRoute('Finance', '/admin/finance/quotations'), true);
+  assert.equal(canAccessAmsRoute('PM', '/admin/finance/quotations'), false);
+  assert.equal(canAccessAmsRoute('Finance', '/admin/settings'), false);
+  assert.equal(canAccessAmsRoute('Finance', '/admin/clients/lead-accounts'), true);
+  assert.equal(canAccessAmsRoute('Freelancer', '/admin/clients/lead-accounts'), false);
+});
+
+test('primary active state remains stable across subviews and canonical Finance quotation path', () => {
+  const masterRole = getAmsRole({
     id: 'usr_root_admin',
     role: 'Tier 1: Top Management / Sponsor',
     stakeholderType: 'Master',
-  }));
-  const findItem = (key: string) => adminItems.find((item) => item.key === key)!;
-  assert.equal(isNavigationItemActive(findItem('crm'), '/admin/crm', '', ''), true);
-  assert.equal(isNavigationItemActive(findItem('client-directory'), '/admin/clients/all-clients', '', ''), true);
-  assert.equal(isNavigationItemActive(findItem('tasks'), '/admin/tasks', '?taskscope=due', ''), true);
-  assert.equal(isNavigationItemActive(findItem('quotations'), '/admin/proposals', '', ''), true);
-  assert.equal(isNavigationItemActive(findItem('testimonials'), '/admin/cms/testimonials', '', ''), true);
-  assert.equal(isNavigationItemActive(AMS_PRIMARY_SETTINGS_ITEM, '/admin/navigation/release-readiness', '', ''), true);
+  });
+  assert.equal(masterRole, 'Admin');
+  assert.equal(isNavigationItemActive(key('Admin', 'dashboard'), '/admin/dashboard', '?view=performance'), true);
+  assert.equal(isNavigationItemActive(key('Admin', 'projects'), '/admin/projects', '?projects=archived'), true);
+  assert.equal(isNavigationItemActive(key('Admin', 'clients'), '/admin/contracts'), true);
+  assert.equal(isNavigationItemActive(key('Admin', 'finance'), '/admin/finance/quotations'), true);
+  assert.equal(isNavigationItemActive(key('PM', 'finance'), '/admin/finance', '?tab=project-finance'), true);
+  assert.equal(isNavigationItemActive(key('PM', 'finance'), '/admin/finance', '?tab=accounts-receivable'), false);
+  assert.equal(isNavigationItemActive(AMS_PRIMARY_SETTINGS_ITEM, '/admin/settings', '?tab=audit'), true);
+  assert.equal(isNavigationItemActive(AMS_PRIMARY_SETTINGS_ITEM, '/admin/navigation/release-readiness'), true);
 });

@@ -136,12 +136,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     },
     {
       id: 'nav_invoicing',
-      title: language === 'id' ? 'Buka Invoicing & Financial Records' : 'Open Invoicing & Financials',
+      title: language === 'id' ? 'Buka Finance' : 'Open Finance',
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: Receipt,
       shortcut: 'G I',
       moduleKey: 'invoicing',
-      action: () => { navigate('/admin/invoicing'); onClose(); }
+      action: () => { navigate('/admin/finance'); onClose(); }
     },
     {
       id: 'nav_clients',
@@ -150,16 +150,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       icon: Users,
       shortcut: 'G U',
       moduleKey: 'clients',
-      action: () => { navigate('/admin/clients'); onClose(); }
-    },
-    {
-      id: 'nav_vendors',
-      title: language === 'id' ? 'Buka Direktori Vendor' : 'Open Vendor Directory',
-      category: language === 'id' ? 'Navigasi' : 'Navigation',
-      icon: Briefcase,
-      shortcut: 'G V',
-      moduleKey: 'vendors',
-      action: () => { navigate('/admin/vendors'); onClose(); }
+      action: () => { navigate('/admin/clients/all-clients'); onClose(); }
     },
     {
       id: 'nav_documents',
@@ -181,7 +172,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     },
     {
       id: 'nav_team',
-      title: language === 'id' ? 'Buka Team Directory & Operations' : 'Open Team Directory & Operations',
+      title: language === 'id' ? 'Buka Team & Resources' : 'Open Team & Resources',
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: Users,
       shortcut: 'G T',

@@ -3123,7 +3123,18 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         slug="finance-workspace-header"
         title="Finance"
         description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."
-        actions={<Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>Refresh data</Button>}
+        actions={(
+          <div className="flex flex-wrap items-center gap-2">
+            {activeGroup.key === 'receivables' && (
+              <Button variant="secondary" type="button" onClick={() => navigate('/admin/finance/quotations')}>
+                Quotations
+              </Button>
+            )}
+            <Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>
+              Refresh data
+            </Button>
+          </div>
+        )}
         className="mb-0"
       />
       {groupItems.length > 0 && (

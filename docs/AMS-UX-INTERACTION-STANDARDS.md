@@ -65,7 +65,7 @@ Not every screen needs KPI cards. Do not leave blank metric gaps or add meaningl
 
 ## 5. Navigation and URL state
 
-- Primary navigation follows the ten-module target in the master guide.
+- Primary navigation follows the nine-module target in the master guide.
 - Primary navigation, local tabs, filters and presentation modes have separate roles.
 - Query-driven views survive reload/back/forward.
 - Active state uses normalized path/query and role access, not string-prefix accidents.

@@ -5,8 +5,12 @@ import test from 'node:test';
 
 test('CRM, proposals, approvals, and Time routes use their functional workspaces', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
-  assert.ok(source.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />'));
-  assert.ok(source.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(source.includes('<Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
+  assert.ok(source.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(source.includes('<Route path="clients/lead-accounts" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
+  assert.equal(source.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm"'), false);
+  assert.ok(source.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
+  assert.ok(source.includes("pathname: '/admin/finance/quotations', search: location.search, hash: location.hash"));
   assert.ok(source.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
   assert.ok(source.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
   assert.ok(source.includes("default: m.AdminApprovals"));
@@ -33,7 +37,7 @@ test('Finance transaction worksheets keep mutations permission-gated and use emb
   assert.ok(source.includes('onClick={exportInvoicesCsv}'));
   assert.ok(source.includes('onClick={exportExpensesCsv}'));
   assert.ok(source.includes('onClick={exportVendorPaymentsCsv}'));
-  assert.ok(source.includes("isProposalWorkspace && <AdminModuleHeader className=\"mb-0\" title=\"Proposals\""));
+  assert.ok(source.includes("isProposalWorkspace && <AdminModuleHeader className=\"mb-0\" title=\"Quotations\""));
   assert.ok(source.includes("const canManageProposals = hasAdminPermission('canManageCrm') || canManageInvoices;"));
   assert.ok(!source.includes('<AdminSectionTabs'));
   assert.ok(!source.includes('Finance sections'));
@@ -64,10 +68,14 @@ test('Finance worksheets stay inside the Finance workspace and retired routes st
   assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
-  assert.ok(navigation.includes("key: 'finance', label: 'Finance Overview', to: '/admin/finance?tab=executive-summary'"));
-  assert.ok(subnavigation.includes("to: '/admin/finance?tab=accounts-receivable'"));
-  assert.ok(subnavigation.includes("to: '/admin/finance?tab=accounts-payable'"));
-  assert.ok(subnavigation.includes("to: '/admin/finance?tab=project-finance'"));
+  assert.ok(navigation.includes("key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary'"));
+  assert.equal(subnavigation.includes("to: '/admin/finance?tab=accounts-receivable'"), false);
+  assert.equal(subnavigation.includes("to: '/admin/finance?tab=accounts-payable'"), false);
+  assert.equal(subnavigation.includes("to: '/admin/finance?tab=project-finance'"), false);
+  const workbook = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/financeWorkbook.ts'), 'utf8');
+  for (const area of ['Overview & Control', 'Transactions & Cash', 'Receivables & Payables', 'Project Finance', 'Accounting & Reports']) {
+    assert.ok(workbook.includes("label: '" + area + "'"), 'Missing Finance area ' + area);
+  }
   assert.ok(workspace.includes('FINANCE_WORKBOOK_GROUPS'));
   assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance worksheets"'));
   assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
@@ -152,8 +160,10 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.equal(sidebar.includes('data-ams-nav-submenu='), false);
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
-  assert.ok(navigation.includes("label: 'DELIVERY & OPERATIONS'"));
-  assert.ok(subnavigation.includes("label: 'Retainer Hours Pool'"));
+  for (const group of ["label: 'WORKSPACE'", "label: 'DELIVERY'", "label: 'OPERATIONS'", "label: 'PUBLISHING'"]) {
+    assert.ok(navigation.includes(group), 'Missing primary navigation group ' + group);
+  }
+  assert.ok(subnavigation.includes("label: 'Retainers'"));
   assert.ok(primitives.includes("'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
@@ -169,9 +179,9 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
   assert.ok(layout.includes('ariaLabel="Workspace navigation"'), 'CRM and retainer route navigation comes from the shared content-area workspace tabs.');
-  assert.ok(subnavigation.includes("label: 'Client Directory'"));
+  assert.ok(subnavigation.includes("label: 'Client directory'"));
   assert.ok(subnavigation.includes("label: 'Onboarding'"));
-  assert.ok(subnavigation.includes("label: 'Retainer Hours Pool'"));
+  assert.ok(subnavigation.includes("label: 'Retainers'"));
   assert.equal(clients.includes('clients-mobile-tabs'), false);
   assert.equal(retainers.includes('Clients sections'), false);
   assert.equal(sla.includes('Clients sections'), false);
@@ -455,7 +465,7 @@ test('CRM stage timeline events are only emitted when the stage changes and conv
 });
 
 
-test('Flat sidebar visibility follows the canonical role route policy and keeps System Center separate', () => {
+test('Flat sidebar visibility follows the nine-module role policy and keeps Settings separate', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const routes = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
   const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
@@ -463,18 +473,19 @@ test('Flat sidebar visibility follows the canonical role route policy and keeps 
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
 
-  for (const key of ["key: 'main-dashboard'", "key: 'client-pipeline'", "key: 'projects-workspace'", "key: 'finance-ledger'", "key: 'cms-content'"]) {
-    assert.ok(navigation.includes(key), 'Missing functional navigation group ' + key);
-  }
+  for (const key of [
+    "key: 'dashboard-hub'", "key: 'inbox'", "key: 'project-hub'", "key: 'clients'",
+    "key: 'finance'", "key: 'team-resources'", "key: 'documents'", "key: 'website-cms'",
+  ]) assert.ok(navigation.includes(key), 'Missing primary module ' + key);
   assert.ok(navigation.includes("key: 'user-access'"));
   assert.ok(navigation.includes("key: 'data-persistence-backup'"));
-  assert.ok(navigation.includes("key: 'release-readiness'"));
+  assert.equal(navigation.includes("key: 'release-readiness'"), false);
   assert.ok(navigation.includes("path === '/admin/contracts'"));
   assert.ok(routes.includes('<Route path="contracts" element={<ModuleRoute moduleKey="clients" moduleLabel="contracts"><AdminContracts /></ModuleRoute>} />'));
 
   assert.ok(layout.includes('<DynamicAdminSidebarNavigation role={amsRole}'));
-  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\b/g) || []).length, 2, 'Desktop and mobile use the same navigation list.');
-  assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Desktop and mobile pin the single Admin-only Settings link.');
+  assert.equal(layout.split('<DynamicAdminSidebarNavigation').length - 1, 2);
+  assert.equal(layout.split('<AdminSystemSettingsNavigation').length - 1, 2);
   assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
   assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
@@ -483,29 +494,14 @@ test('Flat sidebar visibility follows the canonical role route policy and keeps 
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
   assert.ok(navigation.includes('export function isNavigationItemActive'));
 
-  const expectedSidebarEntries = [
-    "label: 'Dashboard & Hub'",
-    "label: 'Sales & Pipeline'",
-    "label: 'Client Directory'",
-    "label: 'Client Onboarding'",
-    "label: 'Project Hub'",
-    "label: 'Tasks'",
-    "label: 'Finance Overview'",
-    "label: 'Invoicing & Revenues'",
-    "label: 'Profitability & Expenses'",
-    "label: 'Project Profitability'",
-    "label: 'Insights'",
-    "label: 'Portfolio'",
-    "label: 'Testimonials'",
-  ];
-  for (const label of expectedSidebarEntries) assert.ok(navigation.includes(label), 'Missing direct workspace ' + label);
-  for (const label of [
-    "label: 'Retainer Hours Pool'",
-    "label: 'Team & Capacity'",
-    "label: 'Timesheet Control'",
-    "label: 'Vendor Ledger'",
-  ]) {
-    assert.ok(subnavigation.includes(label), 'Missing in-workspace destination ' + label);
+  for (const label of ["Dashboard", "Inbox", "Projects", "Clients", "Finance", "Team & Resources", "Documents", "Website CMS"]) {
+    assert.ok(navigation.includes("label: '" + label + "'"), 'Missing primary module ' + label);
+  }
+  for (const label of ["label: 'Retainers'", "label: 'Capacity'", "label: 'Time tracking'", "label: 'Vendors & freelancers'"]) {
+    assert.ok(subnavigation.includes(label), 'Missing contextual destination ' + label);
+  }
+  for (const removed of ["label: 'Sales & Pipeline'", "label: 'Proposals'", "label: 'Approvals'", "label: 'Vendor Ledger'", "label: 'Timesheet Control'"]) {
+    assert.equal(navigation.includes(removed), false, 'Retired primary entry remains: ' + removed);
   }
   assert.ok(sidebar.includes('AMS_PRIMARY_SETTINGS_ITEM'));
   assert.ok(layout.includes('GlobalTimerControl'));
