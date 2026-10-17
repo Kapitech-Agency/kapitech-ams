@@ -72,6 +72,10 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'capacity')!, '/admin/team', '?view=capacity-allocation'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'capacity')!, '/admin/team'), false);
 
+  const cms = getAmsModuleSubnavigation('cms', 'Admin');
+  assert.equal(isAmsModuleSubnavigationItemActive(cms.find((item) => item.key === 'careers')!, '/admin/cms/careers', '?tab=applicants'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(cms.find((item) => item.key === 'projects')!, '/admin/cms/careers', '?tab=applicants'), false);
+
   const settings = getAmsModuleSubnavigation('settings', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'access')!, '/admin/settings', '?tab=security'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'audit')!, '/admin/settings', '?tab=audit'), true);
