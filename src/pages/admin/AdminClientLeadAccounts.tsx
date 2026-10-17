@@ -11,7 +11,6 @@ import {
   Clock3,
   Eye,
   FileText,
-  MailCheck,
   Plus,
   Search,
   Target,
@@ -240,7 +239,6 @@ export const AdminClientLeadAccounts: React.FC = () => {
 
   const pipelineValue = records.reduce((sum, item) => sum + item.annualValue, 0);
   const weightedProbability = pipelineValue ? records.reduce((sum, item) => sum + item.annualValue * item.probability, 0) / pipelineValue : 0;
-  const proposalCount = records.filter((item) => item.stage === 'proposal').length;
   const stageCounts = stageOrder.reduce((acc, value) => {
     acc[value] = value === 'all' ? records.length : records.filter((item) => item.stage === value).length;
     return acc;
@@ -500,11 +498,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
         </div>
       )}
 
-      <section data-ams-feature-slug="lead-accounts-kpis" data-ams-slug="lead-accounts-kpis" className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Pipeline metrics">
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">OPEN DEAL VALUE</span><CircleDollarSign size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{compactMoney(pipelineValue)}</div><p className="mt-1 text-[11px] text-muted">Combined value of open CRM opportunities</p></div>
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">WEIGHTED WIN PROBABILITY</span><Target size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{weightedProbability.toFixed(1)}%</div><p className="mt-1 text-[11px] text-muted">Value-weighted across {records.length} opportunities</p></div>
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">DEALS IN PROPOSAL</span><MailCheck size={18} /><span className="sr-only">{proposalCount} proposal stage records</span></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{proposalCount}</div><p className="mt-1 text-[11px] text-muted">Opportunities currently in proposal stage</p></div>
-      </section>
+
 
       <AdminFilterBar slug="lead-accounts-filters"
         searchValue={query}
