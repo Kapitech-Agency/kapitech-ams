@@ -481,8 +481,11 @@ test('Finance document templates are available inside the existing five-group wo
   const groups = workbook.slice(0, workbook.indexOf('export interface ExcelChartAccount'));
 
   assert.equal((groups.match(/\n    key: '(?:overview|transactions|receivables|projects|accounting)'/g) || []).length, 5);
-  assert.match(groups, /key: 'receivables',[\s\S]*?key: 'quotations',[\s\S]*?key: 'accounts-receivable'/);
-  assert.match(workspace, /case 'quotations':[\s\S]{0,160}embeddedView="quotations"/);
+  assert.match(groups, /key: 'receivables',[\s\S]*?key: 'accounts-receivable'/);
+  assert.doesNotMatch(groups, /key: 'quotations', sheet: '03A'/);
+  assert.ok(workspace.includes('const quotationsViewTab: FinanceWorkbookTab = {'));
+  assert.match(workspace, /if \(tab\.key === 'quotations'\)[\s\S]{0,180}embeddedView="quotations"/);
+  assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
   assert.ok(invoicing.includes('FINANCE_INVOICE_TEMPLATES'));
   assert.ok(invoicing.includes('FINANCE_QUOTATION_TEMPLATES'));
   assert.ok(invoicing.includes('data-ams-feature-slug="finance-invoice-template-picker"'));
