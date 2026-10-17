@@ -1203,10 +1203,22 @@ export const AdminTeams: React.FC = () => {
 
       {loading ? (
         <div className="space-y-5" role="status" aria-live="polite" aria-label="Loading team data">
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            {[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-[104px] rounded-card border border-line bg-panel" />)}
-          </div>
-          <Skeleton className="h-80 rounded-card border border-line bg-panel" />
+          {['team-directory', 'vendor-directory', 'time-logs'].includes(currentView) ? (
+            <>
+              <Skeleton className="h-[72px] rounded-card border border-line bg-panel" />
+              <Skeleton className="h-80 rounded-card border border-line bg-panel" />
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                {[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-[104px] rounded-card border border-line bg-panel" />)}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                {[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-[104px] rounded-card border border-line bg-panel" />)}
+              </div>
+              <Skeleton className="h-80 rounded-card border border-line bg-panel" />
+            </>
+          )}
         </div>
       ) : currentView === 'team-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="team-directory" data-ams-slug="team-directory">

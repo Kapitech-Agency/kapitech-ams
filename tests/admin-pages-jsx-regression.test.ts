@@ -840,3 +840,21 @@ test('Vendor directory prioritizes its register, then the snapshot, and uses the
   assert.ok(vendors.includes('{filteredVendors.length > 0 && ('));
   assert.ok(vendors.includes('Array.from({ length: 4 })'));
 });
+
+
+test('Team loading skeleton follows the selected directory/report hierarchy', () => {
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  const loadingStart = teams.indexOf('{loading ? (');
+  const loadingEnd = teams.indexOf(") : currentView === 'team-directory' ? (", loadingStart);
+  assert.ok(loadingStart >= 0 && loadingEnd > loadingStart);
+  const loading = teams.slice(loadingStart, loadingEnd);
+  const contentFirstStart = loading.indexOf("['team-directory', 'vendor-directory', 'time-logs'].includes(currentView) ? (");
+  const metricFirstStart = loading.indexOf(') : (', contentFirstStart);
+  assert.ok(contentFirstStart >= 0 && metricFirstStart > contentFirstStart);
+  const contentFirst = loading.slice(contentFirstStart, metricFirstStart);
+  assert.ok(contentFirst.indexOf('h-[72px]') < contentFirst.indexOf('h-80'));
+  assert.ok(contentFirst.indexOf('h-80') < contentFirst.indexOf('grid grid-cols-2 gap-3 xl:grid-cols-4'));
+  assert.ok(contentFirst.includes('[1, 2, 3, 4].map'));
+  const metricFirst = loading.slice(metricFirstStart);
+  assert.ok(metricFirst.indexOf('grid grid-cols-2 gap-3 xl:grid-cols-4') < metricFirst.indexOf('h-80'));
+});

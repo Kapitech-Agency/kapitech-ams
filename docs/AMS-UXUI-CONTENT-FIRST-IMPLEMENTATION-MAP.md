@@ -146,6 +146,10 @@ The linked-task field in the Time Tracking entry form used the last native `<sel
 
 The standalone Vendor Directory now leads with directory controls and vendor cards, followed by the empty/unavailable state and pagination; its four source-derived snapshot metrics are below the working register. The loading skeleton mirrors that content-first order and four-metric count. The long-form vendor profile detail now uses the shared `Drawer` with the Edit action in its fixed footer instead of a `Modal` incorrectly named `vendor-delete-modal`. The selected vendor, rate, contact details and notes remain unchanged; the existing edit handler, permissions, mutations and data sources stay intact.
 
+## Follow-on Team & Resources loading hierarchy slice
+
+The shared Team workspace loading state now mirrors the selected view's actual content order. Team Directory, Vendor & Contractor Directory, and Time Logs show a filter/surface placeholder, then the main register placeholder, then supporting metric placeholders. Capacity & Allocation and Skill Matrix keep metric-first loading placeholders because their aggregate values frame the analytical view. This changes loading presentation only; source requests, data availability flags, metrics, filters, records, permissions, and actions are unchanged.
+
 ## Remaining visual verification and limits
 
 Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.
