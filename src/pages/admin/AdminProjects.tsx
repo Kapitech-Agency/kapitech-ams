@@ -1057,7 +1057,10 @@ export const AdminProjects: React.FC = () => {
         showToast(language === 'id' ? 'Proyek berhasil disimpan.' : 'Project saved.');
         savedToData = true;
       } else {
-        if (isUnknownMutationOutcome(response)) await syncProjects(false);
+        if (isUnknownMutationOutcome(response)) {
+          await syncProjects(false);
+          setProjectDrawerOpen(false);
+        }
         showToast(response.error || (language === 'id' ? 'Proyek gagal disimpan.' : 'Project could not be saved.'));
         return;
       }
@@ -1165,7 +1168,10 @@ export const AdminProjects: React.FC = () => {
         : await api.tasks.create(payload);
 
       if (!response.success) {
-        if (isUnknownMutationOutcome(response)) await syncProjects(false);
+        if (isUnknownMutationOutcome(response)) {
+          await syncProjects(false);
+          setTaskDrawerOpen(false);
+        }
         showToast(response.error || (language === 'id' ? 'Tugas gagal disimpan.' : 'Task could not be saved.'));
         return;
       }
