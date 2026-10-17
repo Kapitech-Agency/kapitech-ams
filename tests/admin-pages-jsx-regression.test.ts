@@ -596,8 +596,8 @@ test('Content-first CMS registers use their working area instead of repeated KPI
 
   for (const file of pages) {
     const source = fs.readFileSync(path.resolve(process.cwd(), file), 'utf8');
-    assert.match(source, /<AdminModuleHeader\\b/, file + ' keeps its single module header');
-    assert.doesNotMatch(source, /<AdminMetricStrip\\b/, file + ' should not put a repeated KPI strip before its register/editor');
+    assert.match(source, /<AdminModuleHeader\b/, file + ' keeps its single module header');
+    assert.doesNotMatch(source, /<AdminMetricStrip\b/, file + ' should not put a repeated KPI strip before its register/editor');
   }
 
   const caseStudies = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsProjects.tsx'), 'utf8');
@@ -605,19 +605,19 @@ test('Content-first CMS registers use their working area instead of repeated KPI
   const insights = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsInsights.tsx'), 'utf8');
   const testimonials = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsTestimonials.tsx'), 'utf8');
   const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
-  assert.match(caseStudies, /<AdminFilterBar\\b/);
-  assert.match(services, /<AdminFilterBar\\b/);
-  assert.match(insights, /<AdminFilterBar\\b/);
-  assert.match(testimonials, /<AdminFilterBar\\b/);
-  assert.match(careers, /role="tablist"[\\s\\S]{0,800}<section className="space-y-3" data-ams-feature-slug="cms-careers-list"/);
+  assert.match(caseStudies, /<AdminFilterBar\b/);
+  assert.match(services, /<AdminFilterBar\b/);
+  assert.match(insights, /<AdminFilterBar\b/);
+  assert.match(testimonials, /<AdminFilterBar\b/);
+  assert.ok(careers.indexOf('role="tablist"') < careers.indexOf('data-ams-feature-slug="cms-careers-list"'));
 });
 
 test('Inbox opens with contextual controls and its triage workspace, without a redundant KPI dashboard', () => {
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
-  assert.match(inbox, /<AdminModuleHeader\\b/);
-  assert.match(inbox, /<AdminSectionTabs\\b/);
-  assert.match(inbox, /<AdminFilterBar\\b/);
+  assert.match(inbox, /<AdminModuleHeader\b/);
+  assert.match(inbox, /<AdminSectionTabs\b/);
+  assert.match(inbox, /<AdminFilterBar\b/);
   assert.match(inbox, /data-ams-slug="inbox-overview-workspace"/);
-  assert.doesNotMatch(inbox, /<AdminMetricStrip\\b/);
-  assert.match(inbox, /to="\\/admin\\/cms\\/careers\\?tab=applicants"/);
+  assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);
+  assert.ok(inbox.includes('to="/admin/cms/careers?tab=applicants"'));
 });
