@@ -878,3 +878,21 @@ test('Team and vendor directory filters have one search/category control in thei
   assert.ok(teams.includes("const matchesDepartment = teamDepartment === 'all' || member.division === teamDepartment;"));
   assert.ok(teams.includes("(vendorCategory === 'all' || vendor.primaryCategory === vendorCategory)"));
 });
+
+
+test('Team member and vendor profile details use shared drawers with fixed action footers', () => {
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  assert.equal(teams.includes('<Modal'), false);
+  assert.ok(teams.includes('slug="team-member-detail-drawer"'));
+  assert.ok(teams.includes('slug="team-vendor-detail-drawer"'));
+  const memberStart = teams.indexOf('slug="team-member-detail-drawer"');
+  const memberEnd = teams.indexOf('slug="allocationTarget"');
+  assert.ok(memberStart >= 0);
+  assert.ok(teams.indexOf('footer={(', memberStart) < teams.indexOf('memberProjects(memberDetail).length', memberStart));
+  assert.ok(teams.includes('Open Projects</Link>'));
+  assert.ok(teams.includes('setAllocationTarget(member)'));
+  assert.ok(teams.includes('vendorDetail?.portfolioUrl'));
+  assert.ok(teams.includes('vendorDetail?.githubUrl'));
+  assert.ok(teams.includes('Edit vendor</Button>'));
+  assert.ok(teams.includes('setVendorDetail(null)'));
+});

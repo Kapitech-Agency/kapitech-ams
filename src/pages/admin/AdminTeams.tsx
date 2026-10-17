@@ -37,7 +37,6 @@ import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminP
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { Modal } from '../../components/ui/Modal';
 import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
@@ -1842,12 +1841,19 @@ export const AdminTeams: React.FC = () => {
         </div>
       )}
 
-      <Modal
+      <Drawer
+        slug="team-member-detail-drawer"
         open={Boolean(memberDetail)}
         onClose={() => setMemberDetail(null)}
         title={memberDetail?.name || 'Team Member'}
         description={memberDetail ? 'Team member profile · ' + memberDetail.slug : undefined}
         size="lg"
+        footer={(
+          <div className="flex justify-end gap-2">
+            <Link to="/admin/projects" className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Open Projects</Link>
+            <Button type="button" variant="primary" onClick={() => { const member = memberDetail; setMemberDetail(null); setAllocationTarget(member); }}>Allocate</Button>
+          </div>
+        )}
       >
         {memberDetail && (
           <div className="space-y-5">
@@ -1889,13 +1895,9 @@ export const AdminTeams: React.FC = () => {
                 {memberCoreSkills(memberDetail).map((skill) => <span key={skill} className="rounded-badge border border-line bg-panel px-2.5 py-1 text-[10px] text-fg">{skill}</span>)}
               </div>
             </div>
-            <div className="flex justify-end gap-2 border-t border-line pt-4">
-              <Link to="/admin/projects" className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Open Projects</Link>
-              <Button type="button" variant="primary" onClick={() => { const member = memberDetail; setMemberDetail(null); setAllocationTarget(member); }}>Allocate</Button>
-            </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <Drawer
         open={Boolean(allocationTarget)}
@@ -2017,12 +2019,20 @@ export const AdminTeams: React.FC = () => {
         </form>
       </Drawer>
 
-      <Modal
+      <Drawer
+        slug="team-vendor-detail-drawer"
         open={Boolean(vendorDetail)}
         onClose={() => setVendorDetail(null)}
         title={vendorDetail?.companyName || vendorDetail?.name || 'Vendor'}
         description={(vendorDetail?.primaryCategory || '') + (vendorDetail ? ' · ' + vendorDetail.slug : '')}
-        size="lg"
+        size="xl"
+        footer={(
+          <div className="flex flex-wrap justify-end gap-2">
+            {vendorDetail?.portfolioUrl && <a href={vendorDetail.portfolioUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-muted hover:bg-bg hover:text-fg"><ExternalLink size={14} />Portfolio</a>}
+            {vendorDetail?.githubUrl && <a href={vendorDetail.githubUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-muted hover:bg-bg hover:text-fg"><ExternalLink size={14} />GitHub</a>}
+            {canManageVendors && vendorDetail && <Button type="button" variant="primary" icon={<Edit3 size={14} />} onClick={() => { const vendor = vendorDetail; setVendorDetail(null); openVendorForm(vendor); }}>Edit vendor</Button>}
+          </div>
+        )}
       >
         {vendorDetail && (
           <div className="space-y-4">
@@ -2044,14 +2054,9 @@ export const AdminTeams: React.FC = () => {
                 </table>
               </div>
             )}
-            <div className="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
-              {vendorDetail.portfolioUrl && <a href={vendorDetail.portfolioUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-muted hover:bg-bg hover:text-fg"><ExternalLink size={14} />Portfolio</a>}
-              {vendorDetail.githubUrl && <a href={vendorDetail.githubUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-muted hover:bg-bg hover:text-fg"><ExternalLink size={14} />GitHub</a>}
-              {canManageVendors && <Button type="button" variant="primary" icon={<Edit3 size={14} />} onClick={() => { const vendor = vendorDetail; setVendorDetail(null); openVendorForm(vendor); }}>Edit vendor</Button>}
-            </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <ConfirmDialog
         open={Boolean(vendorDeleteTarget)}
