@@ -640,8 +640,18 @@ const FinanceWorkbookWorkspace: React.FC = () => {
   const navigate = useNavigate();
   const requestedTab = searchParams.get('tab') || 'executive-summary';
   const flatTabs = FINANCE_WORKBOOK_GROUPS.flatMap((group) => group.items);
-  const activeTab = flatTabs.find((item) => item.key === requestedTab) || flatTabs[0];
-  const activeGroup = FINANCE_WORKBOOK_GROUPS.find((group) => group.items.some((item) => item.key === activeTab.key)) || FINANCE_WORKBOOK_GROUPS[0];
+  const quotationsViewTab: FinanceWorkbookTab = {
+    key: 'quotations',
+    sheet: '03A',
+    label: 'Quotations',
+    description: 'Reusable quotation templates, creation, validity tracking, and conversion to invoice.'
+  };
+  const activeTab = requestedTab === 'quotations'
+    ? quotationsViewTab
+    : flatTabs.find((item) => item.key === requestedTab) || flatTabs[0];
+  const activeGroup = requestedTab === 'quotations'
+    ? FINANCE_WORKBOOK_GROUPS.find((group) => group.key === 'receivables') || FINANCE_WORKBOOK_GROUPS[0]
+    : FINANCE_WORKBOOK_GROUPS.find((group) => group.items.some((item) => item.key === activeTab.key)) || FINANCE_WORKBOOK_GROUPS[0];
 
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<AgencyExpense[]>([]);
@@ -1680,14 +1690,24 @@ const FinanceWorkbookWorkspace: React.FC = () => {
       slug: groupTabSlugs[group.key] || 'finance-area-' + group.key
     }];
   });
-  const sheetItems = activeGroup.items
-    .filter((item) => canShowFinanceWorksheet(item.key))
-    .map((item) => ({
-      key: item.key,
-      label: item.label,
-      to: financeWorksheetDestination(item.key),
-      slug: 'finance-sheet-' + item.key
-    }));
+  const sheetItems = [
+    ...activeGroup.items
+      .filter((item) => canShowFinanceWorksheet(item.key))
+      .map((item) => ({
+        key: item.key,
+        label: item.label,
+        to: financeWorksheetDestination(item.key),
+        slug: 'finance-sheet-' + item.key
+      })),
+    ...(activeGroup.key === 'receivables' && canShowFinanceWorksheet('quotations')
+      ? [{
+          key: 'quotations',
+          label: 'Quotations',
+          to: financeWorksheetDestination('quotations'),
+          slug: 'finance-view-quotations'
+        }]
+      : [])
+  ];
   const renderLoading = () => (
     <AdminPanel title="Loading finance sources" description="Reading live AMS invoice, expense, project and vendor records.">
       <div className="space-y-3 p-4">
@@ -1951,6 +1971,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
   };
 
   const renderView = (tab: FinanceWorkbookTab) => {
+    if (tab.key === 'quotations') {
+      return <AdminInvoicing key={tab.key} embeddedView="quotations" showStandaloneHeader={false} />;
+    }
     switch (tab.key) {
       case 'executive-summary':
         return renderSummary(false);
@@ -1995,8 +2018,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           </div>
         );
       }
-      case 'quotations':
-        return <AdminInvoicing key={tab.key} embeddedView="quotations" showStandaloneHeader={false} />;
       case 'revenue':
         return <AdminInvoicing key={tab.key} embeddedView="invoices" />;
       case 'expenses':
