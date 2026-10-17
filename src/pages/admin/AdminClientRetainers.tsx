@@ -116,12 +116,9 @@ export const AdminClientRetainers: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [hoursTarget, setHoursTarget] = useState<Retainer | null>(null);
-  const [hours, setHours] = useState('8');
   const [retainerFormOpen, setRetainerFormOpen] = useState(false);
   const [editingRetainer, setEditingRetainer] = useState<Retainer | null>(null);
   const [retainerSaving, setRetainerSaving] = useState(false);
-  const [hoursSaving, setHoursSaving] = useState(false);
   const [retainerClient, setRetainerClient] = useState('');
   const [retainerTier, setRetainerTier] = useState<Tier>('tier-2');
   const [retainerMonthlyValue, setRetainerMonthlyValue] = useState('100000000');
@@ -288,38 +285,6 @@ export const AdminClientRetainers: React.FC = () => {
     anchor.href = url; anchor.download = 'kapitech-retainer-report.csv'; document.body.appendChild(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url);
   };
 
-  const logHours = async () => {
-    if (!hoursTarget || hoursSaving) return;
-    const amount = Number(hours);
-    if (!Number.isFinite(amount) || amount <= 0 || amount > 100000) {
-      setMessage(language === 'id' ? 'Jumlah jam harus lebih dari 0 dan tidak boleh melebihi 100.000 jam.' : 'Hours must be greater than 0 and no more than 100,000.');
-      return;
-    }
-
-    const nextUsedHours = hoursTarget.usedHours + amount;
-    const clientId = hoursTarget.clientId;
-    if (!clientId) {
-      setMessage('This retainer is missing its client link and cannot be updated.');
-      return;
-    }
-    setHoursSaving(true);
-    try {
-      const response = await api.clients.addRetainerHours(clientId, amount);
-      if (!response.success || !response.data?.client) {
-        throw new Error(response.error || 'Retainer usage could not be saved.');
-      }
-      const savedClient = response.data.client as AgencyClient;
-      const updatedRetainer = mapClientRetainer(savedClient);
-      setClients((current) => current.map((item) => item.id === savedClient.id ? savedClient : item));
-      setRecords((current) => current.map((item) => item.clientId === savedClient.id ? updatedRetainer : item));
-      setMessage(amount + ' hours added to the retainer usage total for ' + updatedRetainer.client + '.');
-      setHoursTarget(null);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Retainer usage could not be saved.');
-    } finally {
-      setHoursSaving(false);
-    }
-  };
 
   return (
     <AdminPageShell featureSlug="client-retainers-module" className="ams-clients-module">
@@ -387,7 +352,6 @@ export const AdminClientRetainers: React.FC = () => {
                    <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
                      {canManageRetainers && <>
                        <button type="button" onClick={() => openRetainerForm(item)} aria-label={`Edit terms for ${item.client}`} title="Edit terms" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={15} aria-hidden="true" /></button>
-                       <button type="button" onClick={() => { setHoursTarget(item); setHours('8'); }} aria-label={`Log hours for ${item.client}`} title="Log hours" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-accent-text hover:bg-accent/10 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Clock3 size={16} aria-hidden="true" /></button>
                      </>}
                    </div></td>
                  </tr>;
@@ -452,9 +416,6 @@ export const AdminClientRetainers: React.FC = () => {
         </form>
       </Drawer>
 
-      <Drawer slug="retainer-hours-drawer" open={!!hoursTarget} onClose={() => setHoursTarget(null)} size="sm" title="Log retainer hours" description={hoursTarget ? `${hoursTarget.client} · ${hoursTarget.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setHoursTarget(null)}>Cancel</Button><Button type="button" variant="primary" loading={hoursSaving} onClick={logHours}>Log hours</Button></div>}>
-        {hoursTarget && <div className="space-y-4"><div><label htmlFor="retainer-hours" className="mb-1.5 block text-xs font-medium text-fg">Hours to log</label><input id="retainer-hours" type="number" min="0" step="0.5" value={hours} onChange={(event) => setHours(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg focus:border-accent focus:outline-none" /></div><div className="rounded-card border border-line bg-bg p-4 text-xs text-muted">Current usage: <span className="font-medium tabular-nums text-fg">{hoursTarget.usedHours}</span> / {hoursTarget.committedHours} hrs.</div></div>}
-      </Drawer>
     </AdminPageShell>
   );
 };
