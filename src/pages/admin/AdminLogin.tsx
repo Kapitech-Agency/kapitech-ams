@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { KeyRound, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { KeyRound, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft, ShieldCheck, Pause, Play } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { authenticateAdmin, cacheAdminSession } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -37,6 +37,10 @@ export const AdminLogin: React.FC = () => {
   const [trustDevice, setTrustDevice] = useState(true);
   const [mfaCode, setMfaCode] = useState('');
   const [artFrame, setArtFrame] = useState(0);
+  const [isArtAutoplayPaused, setIsArtAutoplayPaused] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
   const mfaInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const searchParams = new URLSearchParams(location.search);
@@ -82,12 +86,23 @@ export const AdminLogin: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const slideInterval = window.setInterval(() => {
-      setArtFrame((current) => (current + 1) % loginSlides.length);
-    }, 6000);
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleMotionPreferenceChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsArtAutoplayPaused(true);
+    };
 
-    return () => window.clearInterval(slideInterval);
-  }, []);
+    motionPreference.addEventListener('change', handleMotionPreferenceChange);
+    const slideInterval = isArtAutoplayPaused
+      ? undefined
+      : window.setInterval(() => {
+          setArtFrame((current) => (current + 1) % loginSlides.length);
+        }, 6000);
+
+    return () => {
+      if (slideInterval !== undefined) window.clearInterval(slideInterval);
+      motionPreference.removeEventListener('change', handleMotionPreferenceChange);
+    };
+  }, [isArtAutoplayPaused]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -636,6 +651,19 @@ export const AdminLogin: React.FC = () => {
                         className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                       >
                         <ArrowLeft size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={isArtAutoplayPaused
+                          ? (language === 'id' ? 'Lanjutkan rotasi gambar otomatis' : 'Resume automatic image rotation')
+                          : (language === 'id' ? 'Jeda rotasi gambar otomatis' : 'Pause automatic image rotation')}
+                        title={isArtAutoplayPaused
+                          ? (language === 'id' ? 'Putar otomatis' : 'Resume automatic rotation')
+                          : (language === 'id' ? 'Jeda otomatis' : 'Pause automatic rotation')}
+                        onClick={() => setIsArtAutoplayPaused((paused) => !paused)}
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                      >
+                        {isArtAutoplayPaused ? <Play size={15} /> : <Pause size={15} />}
                       </button>
                       <button
                         type="button"
