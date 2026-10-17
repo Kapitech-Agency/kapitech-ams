@@ -17,4 +17,11 @@ test('Client detail distinguishes absent financial values from recorded zero', a
   assert.match(clients, /language === 'id' \? 'Belum ditetapkan' : 'Not configured'/);
   assert.doesNotMatch(clients, /formatAmount\(selectedClient\.currentDailyAdSpend \|\| 0, currency\)/);
   assert.doesNotMatch(clients, /formatAmount\(selectedClient\.slaDailyAdSpendBudget \|\| 0, currency\)/);
+  assert.match(clients, /const getClientSlaState = \(client: AgencyClient\): Exclude<SlaFilter, 'all'> =>/);
+  assert.match(clients, /if \(typeof spend !== 'number' \|\| !Number\.isFinite\(spend\)\) return 'spend-not-recorded';/);
+  assert.match(clients, /value={slaFilter}/);
+  assert.match(clients, /value: 'spend-not-recorded', label: language === 'id' \? 'Belanja belum tercatat' : 'Spend not recorded'/);
+  assert.match(clients, /const recorded = configured\.filter\(\(\{ state \}\) => state !== 'spend-not-recorded'\);/);
+  assert.match(clients, /slaCompliance: recorded\.length \? Math\.round\(\(healthy \/ recorded\.length\) \* 1000\) \/ 10 : null/);
+  assert.match(clients, /clientMetrics\.recordedSla/);
 });
