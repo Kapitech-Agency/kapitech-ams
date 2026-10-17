@@ -671,3 +671,33 @@ test('Project portfolio and archive registers lead their supporting KPI summarie
   assert.ok(projects.includes('aria-label="Project status quick filters"'));
   assert.ok(projects.includes('slug="projects-directory-filters"'));
 });
+
+
+test('Client, team, vendor and time-log registers lead their supporting summaries', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+
+  const clientDirectory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
+  const clientDirectoryEnd = clients.indexOf('</section>', clientDirectory);
+  const clientMetrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
+  assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory && clientMetrics > clientDirectoryEnd);
+  assert.ok(clients.indexOf('slug="client-directory-filters"') < clientDirectory);
+
+  const teamPagination = teams.indexOf('slug="team-directory-pagination"');
+  const teamPanelEnd = teams.indexOf('</AdminPanel>', teamPagination);
+  const teamMetrics = teams.indexOf("slug: 'team-directory-kpi-headcount'");
+  assert.ok(teamPagination >= 0 && teamPanelEnd > teamPagination && teamMetrics > teamPanelEnd);
+
+  const vendorPagination = teams.indexOf('slug="vendor-directory-pagination"');
+  const vendorPanelEnd = teams.indexOf('</AdminPanel>', vendorPagination);
+  const vendorMetrics = teams.indexOf("slug: 'vendor-directory-kpi-active-contractors'");
+  assert.ok(vendorPagination >= 0 && vendorPanelEnd > vendorPagination && vendorMetrics > vendorPanelEnd);
+  assert.equal(teams.includes('SLA is not tracked by the current vendor data model'), false);
+  assert.equal(teams.includes('className="w-[8%] text-center">SLA</th>'), false);
+
+  const timePagination = teams.indexOf('slug="time-logs-pagination"');
+  const timePanelEnd = teams.indexOf('</AdminPanel>', timePagination);
+  const timeMetrics = teams.indexOf("slug: 'time-logs-kpi-tracked'");
+  assert.ok(timePagination >= 0 && timePanelEnd > timePagination && timeMetrics > timePanelEnd);
+  assert.ok(teams.indexOf('slug="time-logs-filters"') < teams.indexOf('slug="time-logs-ledger"'));
+});

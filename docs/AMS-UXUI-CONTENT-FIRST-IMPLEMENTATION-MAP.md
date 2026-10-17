@@ -57,6 +57,54 @@ The vendor-directory view included an “Average SLA Compliance” KPI with a pe
 
 The active portfolio and archived-project views each rendered a four-card summary before the actual portfolio table/board register. The metrics are source-derived and remain useful as supporting context, so they are retained in the same views but moved after their primary `AdminPanel` register. The page header continues to show the active/completed record count; portfolio search, status/health/client/owner filters, board/table/timeline selection, pagination and project actions are unchanged. No project/task workflows or calculations were changed.
 
+## Sixth implementation slice: Clients and Team & Resources registers
+
+The Clients directory had a header-level account count, a three-metric strip, then search/filter controls and the directory table. The metric strip is now retained below the directory; the search, scopes, pagination, export, relationship drawer and editing behavior are unchanged.
+
+Team Directory, Vendor & Contractor Directory and Time Log Ledger also began with large KPI strips before their filters and primary list/table. Their existing source-backed summaries now sit after the relevant register. Capacity and Skill Matrix retain their analytical summaries before the capacity view/table because those values provide context for interpreting those analytical surfaces. The Vendor & Contractor Directory no longer includes the unsupported per-row SLA column, whose only value was a permanent dash with a tooltip explaining that the current model does not track SLA. Vendor data, contract and finance links, permissions and all calculations remain unchanged.
+
+## Detailed view-by-view audit and disposition
+
+| Module / view | Primary work surface and content order | Disposition and verification focus |
+|---|---|---|
+| Dashboard · Overview | Decision KPIs and live exceptions, then supporting activity/drill-down | Existing Dashboard remains the reference. No KPI formulas, source contracts, period scope or navigation changed in this task. |
+| Dashboard · Performance | Performance-specific visual/report surface and period context | Retain existing metrics/charts; inspect period labels, legend, loading/unavailable states and narrow-width overflow during visual QA. |
+| Dashboard · Analytics | Source-backed analytic charts and supporting explanations | Retain current chart implementation and navigation. Do not replace missing series with fixtures. |
+| Inbox · Overview | Incoming queue controls, queue/list, record detail and follow-up actions | Removed the redundant per-view KPI strip. Direct Careers Applicants link remains. |
+| Inbox · Client inquiries | Inquiry stage counts and triage/board view | Kept inquiry-status visualization and existing records/actions. Confirmed it is a different work surface from the main queue, not a duplicate dashboard. |
+| Inbox · Starred | Starred inbound records and their source-backed detail | Uses same queue source/actions. No separate KPI summary remains. |
+| Projects · Portfolio | Search/status/health/client/owner filters, board/table/timeline portfolio | Moved its four source-derived portfolio metrics below the primary portfolio register. Preserved layout selector, filters, route/query behavior, rows and actions. |
+| Projects · Delivery | Selected project, task board, task filters and detail drawer | Preserved project selector, task lifecycle, keyboard/drag interactions, permissions and empty states. Task view route remains separately reachable. |
+| Projects · Budget | Budget-versus-recorded-expense table with explicit cost basis | Preserved source mappings, displayed calculations, project links and pagination; no budget or expense calculation changed. |
+| Projects · Archived | Archive filters/table and project details | Moved archived summary cards below the archive register. Kept historical records and edit/view controls as implemented. |
+| Tasks | Dedicated task workspace at `/admin/tasks` | Preserved list/board and project scopes. Detailed browser checks still require authenticated interaction testing. |
+| Clients · Directory | Header/actions, search/status scopes, directory/table and details | Moved the three-metric summary below the directory so filters/table are encountered first. Row fields, pagination, export, profile/edit and relationship links unchanged. |
+| Clients · Onboarding | Existing directory state scope via URL/query | Preserved query-backed scope and client lifecycle. No separate onboarding data model was introduced. |
+| Clients · Contracts | Contract/SOW workspace and linked record actions | Existing route remains the contract owner. No commercial document workflow changed. |
+| Clients · Retainers | Reconciliation notice, shared metric strip, filters and retainer agreements | Unified three relevant metrics under the shared AMS primitive. Existing usage caveat and saved values remain. |
+| Clients · SLA monitoring | Telemetry-unavailable state, setup checklist, Contracts & SOW action | Removed four repeated unavailable tiles. The explicit unconfigured message remains; no mock telemetry introduced. |
+| Finance · Overview & Control | Executive summary/report context and operational controls | Five primary workspace groups remain. Preserve metric meaning, report range and source-status distinctions. |
+| Finance · Transactions & Cash | Cash/bank, revenue, expenses and petty cash source registers | Each worksheet retains its own register and source caveat. Cash/bank and petty cash continue to disclose reconciliation/provisional status. |
+| Finance · Receivables & Payables | Receivables, vendor bills, vendors/freelancers | Invoices, due dates, recorded payment/bill rows and supported vendor references remain the primary records. |
+| Finance · Project Finance | Project finance, operational budget, project allocation and team fee | Keep each worksheet separate. No allocations, expense mappings, costs, fees or profitability formulas changed. |
+| Finance · Accounting & Reports | Journal, Chart of Accounts, P&L, cash flow, balance sheet, closing, annual summary | Retain all worksheet views and disclosed proxies/posted-ledger distinctions. Changes to formulas, posting, reconciliation and closing are outside scope. |
+| Team · Directory | Search/status/Pod controls, member table/card directory and profile/allocation actions | Moved headcount/role-group metrics below the team register/cards. Member assignment and recorded-time semantics unchanged. |
+| Team · Capacity | Historical tracked utilization and capacity/project-assignment view | Retained analytical metrics before the capacity table because they provide context; values remain explicitly historical, not forecast. |
+| Team · Skill Matrix | Vendor/internal capability coverage table | Retained coverage metrics and table hierarchy. Counts remain source-derived with unavailable states. |
+| Team · Vendors & Freelancers | Search/tier/category/agreement filters and contract directory | Moved relevant contractor/burn/renewal metrics below the vendor directory. Removed the unsupported SLA summary and per-row placeholder column. |
+| Team · Time Tracking | Project/time-type search filters, time-entry form when opened, ledger/pagination | Moved tracked/billable totals below the filtered ledger. Form save/delete behavior and role checks unchanged. |
+| Documents · Vault | Search/sort, private document register and metadata/actions | Removed redundant metric strip; moved existing upload/dropzone surface below the register. Header upload action and secure API/drawer workflow preserved. |
+| CMS · Case Studies | Search/status filters and case-study register/editor | Removed pre-register metric strip and extra top margin. Source records, editor/publication behavior and filtering untouched. |
+| CMS · Services | Content register and editor | Removed pre-register metric strip; preserved category/publication behavior and existing editor. |
+| CMS · Insights | Search/status filters and insight editor/register | Removed pre-register metric strip and now-unused display-only counts. Publication and bilingual editing unchanged. |
+| CMS · Testimonials | Testimonial register and editor | Removed pre-register metric strip; retained existing records/actions. |
+| CMS · Careers · Job openings | Job-opening controls and content register | Removed redundant KPI strip. Existing add/edit/delete drawer/confirmation actions remain. |
+| CMS · Careers · Applicants | Applicant register/details | Same Careers view uses query-backed Applicants selection and permission-specific actions. No Inbox duplicate or new applicant data source added. |
+| Settings · System overview | Source-backed readiness, backups/snapshots and server status | Preserve server-owned status and explicit unavailable/error states. Sensitive actions and confirmation remain unchanged. |
+| Settings · Access & security | Password/MFA/account/security controls | Protected security scope. No authentication, session, MFA, account policy or permission logic edited. |
+| Settings · Audit log | Audit register/filter/pagination | Audit data and policy untouched. Source errors must not masquerade as empty history. |
+| Settings · Integrations | Integration status/configuration and save feedback | UI displays current source status; no API/provider configuration or credentials changed. |
+
 ## Evidence and remaining verification
 
 Source review covered the canonical page shell/navigation primitives and source files for all nine modules, Finance navigation/workbook grouping, page-specific CMS/Inbox working areas, and existing regression tests. The baseline CI passed. The current implementation branch still requires its own CI run, full diff review, responsive/browser inspection, and final source-boundary scan before it can be declared ready.

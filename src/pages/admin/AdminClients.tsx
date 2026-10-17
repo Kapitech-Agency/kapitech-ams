@@ -837,17 +837,6 @@ export const AdminClients: React.FC = () => {
         </div>
       )}
 
-      <section data-ams-feature-slug="clients-metrics" data-ams-slug="clients-metrics" aria-label="Client metrics">
-        <AdminMetricStrip slug="clients-kpis"
-          className="lg:grid-cols-3"
-          metrics={[
-            { id: 'active-clients', label: 'Active clients', value: isLoading || errorMessage ? '—' : clientMetrics.active, change: isLoading || errorMessage ? '—' : '+' + clientMetrics.leads, changeToneClassName: 'text-warning', context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'onboarding / lead accounts',  icon: <Users size={15} aria-hidden="true" /> },
-            { id: 'billed-value', label: 'Cumulative billed value', value: isLoading || errorMessage ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clientMetrics.totalBilled), context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'across client records',  icon: <TrendingUp size={15} aria-hidden="true" />, toneClassName: 'text-success' },
-            { id: 'sla-compliance', label: 'Spend cap compliance', value: isLoading || errorMessage ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`, context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : clientMetrics.configuredSla + ' configured spend-cap records',  icon: <ShieldCheck size={15} aria-hidden="true" />, toneClassName: clientMetrics.slaCompliance !== null && clientMetrics.slaCompliance >= 90 ? 'text-success' : 'text-fg' }
-          ]}
-        />
-      </section>
-
       <AdminFilterBar slug="client-directory-filters"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
@@ -923,6 +912,17 @@ export const AdminClients: React.FC = () => {
         </div>
         {!isLoading && <AdminTablePagination total={filteredClients.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="records" slug="client-directory-pagination" />}
       </section>
+
+            <section data-ams-feature-slug="clients-metrics" data-ams-slug="clients-metrics" aria-label="Client metrics">
+              <AdminMetricStrip slug="clients-kpis"
+                className="lg:grid-cols-3"
+                metrics={[
+                  { id: 'active-clients', label: 'Active clients', value: isLoading || errorMessage ? '—' : clientMetrics.active, change: isLoading || errorMessage ? '—' : '+' + clientMetrics.leads, changeToneClassName: 'text-warning', context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'onboarding / lead accounts',  icon: <Users size={15} aria-hidden="true" /> },
+                  { id: 'billed-value', label: 'Cumulative billed value', value: isLoading || errorMessage ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clientMetrics.totalBilled), context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'across client records',  icon: <TrendingUp size={15} aria-hidden="true" />, toneClassName: 'text-success' },
+                  { id: 'sla-compliance', label: 'Spend cap compliance', value: isLoading || errorMessage ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`, context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : clientMetrics.configuredSla + ' configured spend-cap records',  icon: <ShieldCheck size={15} aria-hidden="true" />, toneClassName: clientMetrics.slaCompliance !== null && clientMetrics.slaCompliance >= 90 ? 'text-success' : 'text-fg' }
+                ]}
+              />
+            </section>
 
       <Drawer slug="client-directory-detail-drawer"
         open={!!selectedClient}
