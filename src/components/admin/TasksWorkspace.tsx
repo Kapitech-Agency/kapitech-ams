@@ -291,6 +291,8 @@ export const TasksWorkspace: React.FC = () => {
         }).filter((task: TaskRecord) => task.id);
 
         setRecords(normalized);
+        setSelectedTask(current => current ? normalized.find(task => task.id === current.id) || null : null);
+        setSelectedIds(current => current.filter(id => normalized.some(task => task.id === id)));
         setNotice(projectRes.success
           ? null
           : projectRes.error || 'Project directory could not be refreshed. Task records were refreshed.');
@@ -691,10 +693,11 @@ export const TasksWorkspace: React.FC = () => {
     for (const task of selectedTasks) {
       try {
         const response = await api.tasks.update(task.id, { status: nextStatus });
-        if (response.success) succeeded += 1;
+        const confirmedTask = response.data?.task;
+        if (response.success && confirmedTask && String(confirmedTask.id || '') === task.id) succeeded += 1;
         else {
           failedIds.push(task.id);
-          if (isUnknownMutationOutcome(response)) hasUnknownOutcome = true;
+          if (isUnknownMutationOutcome(response) || response.success) hasUnknownOutcome = true;
         }
       } catch {
         failedIds.push(task.id);
@@ -704,6 +707,7 @@ export const TasksWorkspace: React.FC = () => {
 
     if (hasUnknownOutcome) {
       const refreshed = await loadTasks(false);
+      if (!refreshed) setRecords(previousRecords);
       setSelectedIds([]);
       setBulkUpdating(false);
       setNotice(refreshed
