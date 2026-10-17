@@ -429,19 +429,30 @@ test('PostgreSQL client updates accept all canonical client statuses exposed by 
     assert.ok(jsonUpdate.includes("'" + status + "'"), 'JSON update must accept ' + status);
   }
 });
-test('sample fixture data cannot be enabled in production by environment flags', async () => {
+test('runtime fixture mode is disabled and demo records are isolated from normal app paths', async () => {
   const runtimeMode = await read('src/lib/runtimeMode.ts');
-  assert.match(runtimeMode, /isSlugFixtureMode = \(\): boolean => !import\.meta\.env\.PROD/);
+  assert.match(runtimeMode, /isSlugFixtureMode = \(\): boolean => false/);
   assert.doesNotMatch(runtimeMode, /VITE_AB_TEST_DATA/);
 });
 
-test('Finance never initializes production state with demo vendors or retired quotation fixtures', async () => {
+test('Finance invoices, expenses, vendors, and quotations use canonical persisted sources only', async () => {
   const page = await read('src/pages/admin/AdminInvoicing.tsx');
-  assert.match(page, /const \[vendors, setVendors\] = useState<AgencyVendor\[]>\(\(\) => \(isSlugFixtureMode\(\) \? getAgencyVendors\(\) : \[\]\)\)/);
-  assert.match(page, /const \[quotations, setQuotations\] = useState<FinanceQuotation\[]>\(\(\) => \(isSlugFixtureMode\(\) \? STITCH_FINANCE_QUOTATIONS : \[\]\)\)/);
-  assert.match(page, /const \[usingDemoQuotations, setUsingDemoQuotations\] = useState\(isSlugFixtureMode\(\)\)/);
-});
+  const store = await read('src/lib/financeStore.ts');
 
+  assert.match(page, /const \\[vendors, setVendors\\] = useState<AgencyVendor\\[]>\\(\\[\\]\\)/);
+  assert.match(page, /const \\[quotations, setQuotations\\] = useState<FinanceQuotation\\[]>\\(\\[\\]\\)/);
+  assert.match(page, /api\\.finance\\.getInvoices\\(\\)/);
+  assert.match(page, /api\\.finance\\.getExpenses\\(\\)/);
+  assert.match(page, /api\\.vendors\\.getAll\\(\\)/);
+  assert.match(page, /api\\.proposals\\.getAll\\(\\)/);
+  assert.match(page, /setVendors\\(serverVendors\\)/);
+  assert.match(page, /quotationError/);
+  assert.doesNotMatch(page, /STITCH_FINANCE_QUOTATIONS|STITCH_FINANCE_RETAINER_INVOICES|isSlugFixtureMode|usingDemo|slugDataMode|syncDemoFinanceMetrics|inv_slug_|exp_slug_|quote_slug_|retainer_demo_/);
+
+  assert.match(store, /INITIAL_DEFAULT_INVOICES: AgencyInvoice\\[\\] = \\[\\]/);
+  assert.match(store, /INITIAL_DEFAULT_EXPENSES: AgencyExpense\\[\\] = \\[\\]/);
+  assert.doesNotMatch(store, /KAPI-INV-2026-001|KAPI-RET-2026-001|retainer_demo_001/);
+});
 
 test('Task creation uses the persisted server task ID and never reports a failed create as saved', async () => {
   const page = await read('src/components/admin/TasksWorkspace.tsx');
