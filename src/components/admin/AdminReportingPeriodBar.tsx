@@ -58,7 +58,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
         aria-controls="global-reporting-period-popover"
         title={enabled ? label : (isId ? 'Periode terpilih, belum diterapkan' : 'Selected period, not applied')}
         className={[
-          'h-8 min-h-8 gap-1.5 px-2.5 text-[11px]',
+          'h-8 min-h-8 gap-1.5 px-2.5 text-[11px] sm:w-[124px] sm:justify-between',
           enabled ? 'border-accent/35 bg-accent/10 text-fg' : ''
         ].join(' ')}
         slug="global-reporting-period-trigger"

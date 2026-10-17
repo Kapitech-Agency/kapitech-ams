@@ -103,7 +103,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
           className={cn(
             variant === 'primary'
               ? 'inline-flex min-h-9 shrink-0 items-center border-b-2 border-transparent px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'
-              : 'inline-flex min-h-8 shrink-0 items-center rounded-control px-2.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+              : 'inline-flex min-h-9 shrink-0 items-center rounded-control px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
             active
               ? variant === 'primary'
                 ? 'border-accent font-semibold text-fg'
@@ -236,7 +236,7 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
         icon ? 'flex items-center gap-2.5' : 'block'
       )}>
         {icon && <span className="shrink-0 text-accent-text">{icon}</span>}
-        <span className="min-w-0 truncate">{title}</span>
+        <span className="min-w-0 break-words [overflow-wrap:anywhere]">{title}</span>
       </h1>
       {description && (
         <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">

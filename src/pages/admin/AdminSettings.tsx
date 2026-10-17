@@ -841,8 +841,8 @@ export const AdminSettings: React.FC = () => {
   return (
     <AdminPageShell featureSlug="settings-module">
       <AdminModuleHeader slug="settings-header"
-        title="System & Security"
-        description="Automated backup verification, identity access governance, and immutable audit telemetry."
+        title="Settings"
+        description="Manage system health, access and security, audit history, and connected services."
         actions={canAccessServer ? (
           <>
             <Button
