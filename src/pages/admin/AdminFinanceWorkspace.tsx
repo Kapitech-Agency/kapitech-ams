@@ -270,7 +270,7 @@ const FinanceDataTable: React.FC<{
 
   return (
     <AdminPanel title={title} description={description} actions={panelActions} bodyClassName="p-0">
-      <div className="max-w-full overflow-x-auto">
+      <div className="max-w-full overflow-x-auto" tabIndex={0} role="region" aria-label={'Scrollable ' + title + ' table'}>
         <table className="w-full min-w-[760px] border-collapse text-left text-xs">
           <thead className="bg-bg text-[11px] font-medium text-muted">
             <tr>

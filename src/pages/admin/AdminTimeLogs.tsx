@@ -363,7 +363,7 @@ export const AdminTimeLogs: React.FC = () => {
               <p className="mt-1 text-xs text-muted">Add the first delivery time entry above.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable time log register">
               <table className="ams-table w-full min-w-[760px] text-left">
                 <thead className="bg-bg text-xs normal-case tracking-normal text-muted">
                   <tr>

@@ -876,7 +876,7 @@ export const AdminClients: React.FC = () => {
       />
 
       <section data-ams-feature-slug="clients-directory-table" data-ams-slug="clients-directory-table" aria-label="Clients directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel">
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable client directory">
           <table className="ams-client-table w-full min-w-[1240px] border-collapse text-left">
             <thead className="bg-bg">
               <tr className="border-b border-line text-[11px] font-medium text-muted">

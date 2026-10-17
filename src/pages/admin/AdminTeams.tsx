@@ -1242,7 +1242,7 @@ export const AdminTeams: React.FC = () => {
 
           <AdminPanel className="overflow-hidden">
             {teamDisplay === 'table' ? (
-              <div className="overflow-x-auto custom-scrollbar">
+              <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable team directory table">
                 {pagedTeamRows.length === 0 ? (
                   <div className="min-h-[180px] px-5 py-10 text-center">
                     <UsersRound size={22} className="mx-auto text-muted" />
@@ -1438,7 +1438,7 @@ export const AdminTeams: React.FC = () => {
           </section>
 
           <AdminPanel slug="vendor-directory-table" title="Vendor & Contractor Directory" description={vendorRows.length + ' external vendors · sorted by rate high to low'} className="overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable vendor and contractor directory table">
               {pagedVendorRows.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
                   <Users size={22} className="mx-auto text-muted" />
@@ -1582,7 +1582,7 @@ export const AdminTeams: React.FC = () => {
             className="overflow-hidden"
             actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
           >
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable historical capacity table">
               <table className="ams-teams-table min-w-[1180px] table-fixed">
                 <thead><tr>
                   <th className="w-[24%]">Resource & role</th>
@@ -1622,7 +1622,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
 
           <AdminPanel slug="future-resource-allocation-plan" title="Upcoming resource allocation" description="Upcoming four weeks calculated from saved project-member plans. The 40-hour baseline is used to convert planned percentages into hours." className="overflow-hidden" actions={<span className="text-[10px] text-muted">No plan means unplanned, not automatically available.</span>}>
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable planned resource allocation table">
               <table className="ams-teams-table min-w-[1080px] table-fixed">
                 <thead><tr>
                   <th className="w-[24%]">Resource & role</th>
@@ -1668,7 +1668,7 @@ export const AdminTeams: React.FC = () => {
           />
 
           <AdminPanel slug="skill-matrix-internal-role-matrix" title="Internal role matrix" description="Role-aligned focus derived from the server-provided role and division. It is not a self-reported proficiency score." className="overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable internal skill matrix table">
               <table className="ams-teams-table min-w-[900px] table-fixed">
                 <thead><tr>
                   <th className="w-[26%]">Member</th>
@@ -1701,7 +1701,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
 
           <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={skillRows.length + ' distinct skills reported by the vendor directory.'} className="overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable vendor skill coverage table">
               <table className="ams-teams-table min-w-[800px] table-fixed">
                 <thead><tr>
                   <th className="w-[44%]">Skill</th>
@@ -1789,7 +1789,7 @@ export const AdminTeams: React.FC = () => {
           )}
 
           <AdminPanel slug="time-logs-ledger" title="Time log ledger" description={filteredLogs.length + ' entries visible'} className="overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable time log ledger table">
               {filteredLogs.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
                   <Timer size={22} className="mx-auto text-muted" />
@@ -2062,7 +2062,7 @@ export const AdminTeams: React.FC = () => {
               <div className="mt-2 flex flex-wrap gap-1.5">{vendorDetail.skills.map((skill) => <span key={skill} className="rounded-chip border border-line bg-panel px-2.5 py-1 text-[10px] text-muted">{skill}</span>)}</div>
             </div>
             {vendorDetail.contracts.length > 0 && (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable vendor contracts table">
                 <table className="ams-teams-table min-w-[640px] border-separate border-spacing-0 text-xs align-middle">
                   <thead><tr><th>Contract</th><th>Period</th><th>Rate</th><th>Status</th></tr></thead>
                   <tbody>{vendorDetail.contracts.map((contract) => <tr key={contract.id}><td className="font-medium text-fg">{contract.title}</td><td className="tabular-nums text-muted">{formatDate(contract.startDate)}{contract.endDate ? ' · ' + formatDate(contract.endDate) : ''}</td><td className="tabular-nums text-fg">{formatAmount(contract.rateAmount, contract.currency)}</td><td><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{contract.status}</span></td></tr>)}</tbody>

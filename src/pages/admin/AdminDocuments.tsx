@@ -717,7 +717,7 @@ export const AdminDocuments: React.FC = () => {
                 })}
               </div>
 
-              <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar" data-ams-feature-slug="documents-table">
+              <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar" data-ams-feature-slug="documents-table" tabIndex={0} role="region" aria-label="Scrollable private document register">
                 <table className="ams-data-table min-w-[1050px] text-left">
                   <thead>
                     <tr>
