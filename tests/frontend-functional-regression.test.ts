@@ -12,6 +12,8 @@ test('API client does not encourage blind retry when a mutation outcome is unkno
   const client = await read('src/lib/apiClient.ts');
 
   assert.ok(client.includes('const mutationOutcomeUnknown = MUTATING_METHODS.has(String(options.method || \'GET\').toUpperCase());'));
+  assert.ok(client.includes('? MUTATING_METHODS.has(method)'));
+  assert.ok(client.includes('The change may still have completed. Check the record before retrying to avoid creating a duplicate.'));
   assert.ok(client.includes('The request timed out. Its result is unknown. Check the record before retrying to avoid creating a duplicate.'));
   assert.ok(client.includes('The request result could not be confirmed. Check the record before retrying to avoid creating a duplicate.'));
   assert.ok(client.includes('Upload timed out. Its result is unknown; inspect the document in the private vault before retrying.'));
