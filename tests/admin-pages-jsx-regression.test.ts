@@ -886,7 +886,6 @@ test('Team member and vendor profile details use shared drawers with fixed actio
   assert.ok(teams.includes('slug="team-member-detail-drawer"'));
   assert.ok(teams.includes('slug="team-vendor-detail-drawer"'));
   const memberStart = teams.indexOf('slug="team-member-detail-drawer"');
-  const memberEnd = teams.indexOf('slug="allocationTarget"');
   assert.ok(memberStart >= 0);
   assert.ok(teams.indexOf('footer={(', memberStart) < teams.indexOf('memberProjects(memberDetail).length', memberStart));
   assert.ok(teams.includes('Open Projects</Link>'));
