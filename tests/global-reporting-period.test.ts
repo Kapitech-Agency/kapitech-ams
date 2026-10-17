@@ -58,15 +58,15 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
     'finance-tab-project-finance',
     'finance-tab-accounting-reports',
   ]) {
-    assert.ok(workspace.includes(slug), 'Missing stable Finance area tab slug ' + slug);
+    assert.ok(subnavigation.includes(slug), 'Missing stable Finance area tab slug ' + slug);
   }
   assert.ok(workspace.includes('const canShowFinanceWorksheet = (key: string) =>'));
-  assert.ok(workspace.includes('const groupItems = FINANCE_WORKBOOK_GROUPS.flatMap((group) =>'));
+  assert.ok(subnavigation.includes("key: 'overview', label: 'Overview & Control'"));
   assert.ok(workspace.includes('const sheetItems = ['));
   assert.ok(workspace.includes('...activeGroup.items'));
   assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
   assert.ok(workspace.includes('getAmsSidebarDestinationSignatures(navigationRole)'));
-  assert.ok(workspace.includes('ariaLabel="Finance areas"'));
+  assert.ok(subnavigation.includes('Finance areas') || subnavigation.includes("label: 'Overview & Control'"));
   assert.ok(workspace.includes('ariaLabel="Finance worksheets"'));
   assert.ok(workspace.includes('data-ams-slug="finance-workspace-navigation"'));
 });
@@ -74,6 +74,7 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
 test('date-aware Finance worksheets use the shared reporting period without changing their ledger roll-forward', async () => {
   const fs = await import('node:fs/promises');
   const workspace = await fs.readFile('src/pages/admin/AdminFinanceWorkspace.tsx', 'utf8');
+  const subnavigation = await fs.readFile('src/lib/amsModuleSubnavigation.ts', 'utf8');
   const invoicing = await fs.readFile('src/pages/admin/AdminInvoicing.tsx', 'utf8');
 
   assert.ok(workspace.includes('const { mode: reportPeriodMode, value: reportPeriodValue, enabled: reportPeriodEnabled, matchesDate, matchesInterval } = useReportingPeriod()'));

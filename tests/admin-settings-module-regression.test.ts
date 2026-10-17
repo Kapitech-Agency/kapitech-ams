@@ -17,9 +17,9 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
-  assert.ok(workspace.includes("{ key: 'backup', label: 'DB migrations & backups', to: '/admin/settings?tab=overview' }"));
-  assert.ok(workspace.includes("{ key: 'access', label: 'Access & confidential cost rates', to: '/admin/settings?tab=security' }"));
-  assert.ok(workspace.includes("{ key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' }"));
+  assert.ok(workspace.includes("{ key: 'backup', label: 'System overview', to: '/admin/settings?tab=overview' }"));
+  assert.ok(workspace.includes("{ key: 'access', label: 'Access & security', to: '/admin/settings?tab=security' }"));
+  assert.ok(workspace.includes("{ key: 'audit', label: 'Audit log', to: '/admin/settings?tab=audit' }"));
   assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));
   assert.equal(workspace.includes("key: 'readiness'"), false);
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
