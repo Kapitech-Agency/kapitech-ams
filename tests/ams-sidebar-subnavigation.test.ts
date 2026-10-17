@@ -91,6 +91,20 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'integrations')!, '/admin/settings', '?tab=integrations'), true);
 });
 
+test('role-specific module entry points activate a tab that owns the destination', () => {
+  const financeProjects = getAmsModuleSubnavigation('projects', 'Finance');
+  assert.equal(isAmsModuleSubnavigationItemActive(financeProjects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=sprint'), true);
+
+  const financeTeam = getAmsModuleSubnavigation('team', 'Finance');
+  assert.equal(isAmsModuleSubnavigationItemActive(financeTeam.find((item) => item.key === 'vendors')!, '/admin/vendors'), true);
+
+  const creativeCms = getAmsModuleSubnavigation('cms', 'Creative');
+  assert.equal(isAmsModuleSubnavigationItemActive(creativeCms.find((item) => item.key === 'insights')!, '/admin/cms/insights'), true);
+
+  const creativeProjects = getAmsModuleSubnavigation('projects', 'Creative');
+  assert.equal(isAmsModuleSubnavigationItemActive(creativeProjects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=sprint'), true);
+});
+
 test('MFA setup preserves exceptional Access without exposing Settings to non-admin navigation', () => {
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'Freelancer', true).map((item) => item.key), ['access']);
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'PM'), []);
