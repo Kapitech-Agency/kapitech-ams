@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, AlertTriangle, CheckCircle2, ExternalLink, FileText, TimerReset } from 'lucide-react';
-import Button from '../../components/ui/Button';
-import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 
 const slaSetupRequirements = [
   {
@@ -28,7 +27,6 @@ export const AdminClientSlaMonitoring: React.FC = () => {
         title="SLA Monitoring"
         description="Monitor service commitments, availability, response performance, and incidents only after a verified telemetry source is connected."
         eyebrow={<AdminStatusBadge tone="warning" icon={<AlertTriangle size={12} />}>Telemetry not configured</AdminStatusBadge>}
-        actions={<Button type="button" variant="secondary" disabled icon={<Activity size={14} />}>Snapshot unavailable</Button>}
       />
 
       

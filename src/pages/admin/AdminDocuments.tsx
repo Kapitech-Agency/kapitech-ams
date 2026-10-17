@@ -67,25 +67,17 @@ interface DocumentItem {
 }
 
 type SortKey = 'name' | 'category' | 'size' | 'updated' | 'status';
-type TabKey = 'all' | 'sops' | 'legal' | 'finance' | 'infra';
-type CategoryKey = 'all' | 'sop' | 'legal' | 'finance' | 'hr' | 'security';
+type TabKey = 'all' | 'sops' | 'legal' | 'finance' | 'hr' | 'infra';
 
 const DOCUMENT_TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'all', label: 'All Documents' },
   { key: 'sops', label: 'SOP & Guides' },
   { key: 'legal', label: 'Legal & Corporate' },
   { key: 'finance', label: 'Finance & Tax' },
+  { key: 'hr', label: 'HR & People' },
   { key: 'infra', label: 'Security & Keys' },
 ];
 
-const CATEGORY_FILTERS: Array<{ key: CategoryKey; label: string }> = [
-  { key: 'all', label: 'All Files' },
-  { key: 'sop', label: 'SOP & Guides' },
-  { key: 'legal', label: 'Legal & Corporate' },
-  { key: 'finance', label: 'Finance & Tax' },
-  { key: 'hr', label: 'HR & People' },
-  { key: 'security', label: 'Security & Keys' },
-];
 
 const PAGE_SIZES = [10, 25, 50];
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
@@ -133,15 +125,6 @@ const typeOf = (doc: DocumentItem) => {
   return ext ? ext.toUpperCase() : 'FILE';
 };
 
-const matchesCategory = (doc: DocumentItem, key: CategoryKey) => {
-  if (key === 'all') return true;
-  const text = searchTextOf(doc);
-  if (key === 'sop') return /sop|policy|guide|handbook|procedure|manual/.test(text);
-  if (key === 'legal') return /legal|contract|charter|corporate|agreement|nda/.test(text);
-  if (key === 'finance') return /finance|financial|tax|invoice|audit|accounting/.test(text);
-  if (key === 'hr') return /hr|people|human|employee|culture|talent/.test(text);
-  return /security|key|credential|infra|engineering|devops|access/.test(text);
-};
 
 const matchesTab = (doc: DocumentItem, tab: TabKey) => {
   if (tab === 'all') return true;
@@ -149,6 +132,7 @@ const matchesTab = (doc: DocumentItem, tab: TabKey) => {
   if (tab === 'sops') return /sop|policy|guide|handbook|procedure|manual/.test(text);
   if (tab === 'legal') return /legal|contract|charter|corporate|agreement|nda/.test(text);
   if (tab === 'finance') return /finance|financial|tax|invoice|audit|accounting/.test(text);
+  if (tab === 'hr') return /hr|people|human|employee|culture|talent/.test(text);
   return /security|key|credential|infra|engineering|devops|access/.test(text);
 };
 
@@ -190,7 +174,6 @@ export const AdminDocuments: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<CategoryKey>('all');
   const [sortKey, setSortKey] = useState<SortKey>('updated');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
@@ -321,22 +304,12 @@ export const AdminDocuments: React.FC = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [activeTab, categoryFilter, searchQuery, pageSize, reportPeriodValue, reportPeriodEnabled]);
-
-  const categoryCounts = useMemo(() => ({
-    all: documents.length,
-    sop: documents.filter((doc) => matchesCategory(doc, 'sop')).length,
-    legal: documents.filter((doc) => matchesCategory(doc, 'legal')).length,
-    finance: documents.filter((doc) => matchesCategory(doc, 'finance')).length,
-    hr: documents.filter((doc) => matchesCategory(doc, 'hr')).length,
-    security: documents.filter((doc) => matchesCategory(doc, 'security')).length,
-  }), [documents]);
+  }, [activeTab, searchQuery, pageSize, reportPeriodValue, reportPeriodEnabled]);
 
   const filteredDocuments = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const items = documents.filter((doc) =>
       matchesTab(doc, activeTab) &&
-      matchesCategory(doc, categoryFilter) &&
       matchesDate(doc.updatedAt || doc.uploadedAt || doc.uploadedDate || (doc as any).createdAt) &&
       (!q || searchTextOf(doc).includes(q))
     );
@@ -353,7 +326,7 @@ export const AdminDocuments: React.FC = () => {
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [documents, activeTab, categoryFilter, searchQuery, sortKey, sortDirection, matchesDate]);
+  }, [documents, activeTab, searchQuery, sortKey, sortDirection, matchesDate]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -372,7 +345,6 @@ export const AdminDocuments: React.FC = () => {
 
   const resetFilters = () => {
     setSearchQuery('');
-    setCategoryFilter('all');
     setPage(1);
   };
 
@@ -564,7 +536,7 @@ export const AdminDocuments: React.FC = () => {
     }
   };
 
-  const activeFilterCount = [searchQuery, categoryFilter !== 'all' ? categoryFilter : ''].filter(Boolean).length;
+  const activeFilterCount = [searchQuery].filter(Boolean).length;
   const tabLabel = DOCUMENT_TABS.find((tab) => tab.key === activeTab)?.label || 'All Internal Documents';
 
   return (
@@ -702,27 +674,6 @@ export const AdminDocuments: React.FC = () => {
               Reset filters
             </Button>
           ) : undefined}
-          footer={(
-            <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto custom-scrollbar" data-ams-slug="documents-category-filters" aria-label="Document categories">
-              {CATEGORY_FILTERS.map((filter) => (
-                <button
-                  type="button"
-                  key={filter.key}
-                  onClick={() => setCategoryFilter(filter.key)}
-                  aria-pressed={categoryFilter === filter.key}
-                  data-ams-slug={'documents-filter-' + filter.key}
-                  className={'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
-                    categoryFilter === filter.key
-                      ? 'border-line bg-line text-fg'
-                      : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-                  )}
-                >
-                  <span>{filter.label}</span>
-                  <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] tabular-nums text-muted">{categoryCounts[filter.key]}</span>
-                </button>
-              ))}
-            </div>
-          )}
         >
           <div className="w-full shrink-0 sm:w-[180px]">
             <CustomSelect

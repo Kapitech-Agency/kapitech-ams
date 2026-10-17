@@ -49,9 +49,9 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers' },
   ],
   settings: [
-    { key: 'backup', label: 'DB migrations & backups', to: '/admin/settings?tab=overview' },
-    { key: 'access', label: 'Access & confidential cost rates', to: '/admin/settings?tab=security' },
-    { key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' },
+    { key: 'backup', label: 'System overview', to: '/admin/settings?tab=overview' },
+    { key: 'access', label: 'Access & security', to: '/admin/settings?tab=security' },
+    { key: 'audit', label: 'Audit log', to: '/admin/settings?tab=audit' },
     { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
   ],
   tasks: [],
