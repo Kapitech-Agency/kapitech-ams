@@ -26,7 +26,6 @@ import { ProfileIdentity } from './ProfileIdentity';
 import Button from '../ui/Button';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
-import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
 type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -65,58 +64,6 @@ const TASK_TABS = [
 ] as const;
 
 const DEFAULT_PAGE_SIZE = 10;
-
-const buildPreviewTask = (
-  id: string,
-  title: string,
-  description: string,
-  projectId: string,
-  projectName: string,
-  clientName: string,
-  assignee: string,
-  priority: TaskPriority,
-  status: TaskStatus,
-  dueOffset: number,
-  tags: string[],
-  blocked = false,
-  subtasks: Array<{ id: string; title: string; completed: boolean }> = [],
-): TaskRecord => {
-  const dueDate = new Date(Date.now() + dueOffset * 86400000).toISOString().slice(0, 10);
-  return {
-    id,
-    title,
-    description,
-    projectId,
-    projectName,
-    projectSlug: slugify(projectName),
-    clientName,
-    assigneeId: '',
-    assignee,
-    priority,
-    status,
-    dueDate,
-    tags,
-    blocked,
-    slug: 'task-' + slugify(title) + '-' + slugify(id),
-    createdAt: new Date(Date.now() - Math.max(1, Math.abs(dueOffset) + 2) * 86400000).toISOString(),
-    subtasks,
-  };
-};
-
-const fallbackTasks: TaskRecord[] = [
-  buildPreviewTask('task-001', 'Approve homepage copy', 'Final content approval before client handoff.', 'proj-001', 'Atlas Brand System', 'Atlas Group', 'Fikri', 'high', 'todo', 0, ['content', 'client']),
-  buildPreviewTask('task-002', 'Finalize checkout UI', 'Finish the checkout flow and responsive states.', 'proj-002', 'Meridian Commerce', 'Meridian Labs', 'Sarah', 'high', 'in_progress', 1, ['frontend', 'ui']),
-  buildPreviewTask('task-003', 'QA campaign landing page', 'Run final QA against approved campaign layouts.', 'proj-003', 'Nova Growth Retainer', 'Nova Ventures', 'Dimas', 'medium', 'review', 2, ['qa', 'campaign']),
-  buildPreviewTask('task-004', 'Resolve API handoff', 'Waiting for the final API contract confirmation.', 'proj-004', 'Orbit Product Launch', 'Orbit Health', 'Raka', 'urgent', 'in_progress', -1, ['blocked', 'api'], true),
-  buildPreviewTask('task-005', 'Prepare client presentation', 'Prepare delivery deck for the next client checkpoint.', 'proj-005', 'Northstar Campaign', 'Northstar Capital', 'Nadia', 'medium', 'in_progress', 3, ['client', 'presentation']),
-  buildPreviewTask('task-006', 'Review analytics dashboard', 'Review the latest dashboard metrics and document findings.', 'proj-001', 'Atlas Brand System', 'Atlas Group', 'Fikri', 'low', 'done', 0, ['analytics']),
-  buildPreviewTask('task-007', 'Confirm sitemap structure', 'Confirm the final navigation and page hierarchy.', 'proj-001', 'Atlas Brand System', 'Atlas Group', 'Rey', 'medium', 'todo', 4, ['planning']),
-  buildPreviewTask('task-008', 'Test mobile navigation', 'Validate mobile navigation states across target breakpoints.', 'proj-002', 'Meridian Commerce', 'Meridian Labs', 'Sarah', 'high', 'in_progress', 5, ['qa', 'mobile']),
-  buildPreviewTask('task-009', 'Prepare ad creative variants', 'Prepare the approved creative variants for launch.', 'proj-003', 'Nova Growth Retainer', 'Nova Ventures', 'Tareq', 'medium', 'todo', 6, ['creative', 'ads']),
-  buildPreviewTask('task-010', 'Review staging deployment', 'Check the latest staging release against the delivery checklist.', 'proj-004', 'Orbit Product Launch', 'Orbit Health', 'Jordan', 'urgent', 'review', 1, ['release', 'qa']),
-  buildPreviewTask('task-011', 'Collect final brand assets', 'Collect final approved logos, imagery, and brand references.', 'proj-005', 'Northstar Campaign', 'Northstar Capital', 'Fikri', 'low', 'done', -2, ['assets']),
-  buildPreviewTask('task-012', 'Send launch readiness notes', 'Send the final internal launch readiness summary.', 'proj-004', 'Orbit Product Launch', 'Orbit Health', 'Reynaldo', 'high', 'todo', 7, ['launch', 'internal']),
-];
 
 const taskStatusLabel: Record<TaskStatus, string> = {
   todo: 'To Do',
@@ -333,28 +280,20 @@ export const TasksWorkspace: React.FC = () => {
             };
           }).filter((task: TaskRecord) => task.id);
 
-          setRecords(normalized.length ? normalized : (isSlugFixtureMode() ? fallbackTasks : []));
-          setNotice(normalized.length
-            ? null
-            : isSlugFixtureMode()
-              ? 'No server tasks were returned. Frontend preview tasks are active for the workspace.'
-              : null);
+          setRecords(normalized);
+          setNotice(null);
         } else {
-          setRecords(isSlugFixtureMode() ? fallbackTasks : []);
-          setNotice(isSlugFixtureMode()
-            ? 'Task service is unavailable. Frontend preview tasks are active for the workspace.'
-            : taskRes.error || 'Task service is unavailable. Live task data could not be loaded.');
+          setRecords([]);
+          setNotice(taskRes.error || 'Task service is unavailable. Live task data could not be loaded.');
         }
 
-        if (!projectRes.success && !isSlugFixtureMode()) {
+        if (!projectRes.success) {
           setNotice(current => [current, projectRes.error || 'Project directory could not be loaded.'].filter(Boolean).join(' '));
         }
       } catch (error) {
         if (mounted) {
-          setRecords(isSlugFixtureMode() ? fallbackTasks : []);
-          setNotice(isSlugFixtureMode()
-            ? 'Task service is unavailable. Frontend preview tasks are active for the workspace.'
-            : error instanceof Error ? error.message : 'Task service is unavailable. Live task data could not be loaded.');
+          setRecords([]);
+          setNotice(error instanceof Error ? error.message : 'Task service is unavailable. Live task data could not be loaded.');
         }
       } finally {
         if (mounted) setLoading(false);
@@ -367,11 +306,6 @@ export const TasksWorkspace: React.FC = () => {
 
   const projectOptions = useMemo(() => {
     const options = new Map<string, string>(projects.map((project) => [project.id, project.name]));
-    if (isSlugFixtureMode() && options.size === 0) {
-      fallbackTasks.forEach((task) => {
-        if (task.projectId) options.set(task.projectId, task.projectName);
-      });
-    }
     return Array.from(options.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   }, [projects]);
 
