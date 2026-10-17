@@ -120,59 +120,6 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
   </nav>
 );
 
-export const AdminTopbarTabs: React.FC<AdminSectionTabsProps> = ({
-  items,
-  activeKey,
-  ariaLabel,
-  className
-}) => (
-  <nav
-    aria-label={ariaLabel}
-    className={cn('inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll', className)}
-  >
-    {items.filter(canRenderNavigationTab).map((item) => {
-      const active = activeKey === item.key;
-      return (
-        <Link
-          key={item.key}
-          to={item.to}
-          end
-          aria-current={active ? 'page' : undefined}
-          data-ams-slug={item.slug ?? item.key}
-          className={cn(
-            'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-            active
-              ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-              : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-          )}
-        >
-          {item.label}
-        </Link>
-      );
-    })}
-  </nav>
-);
-
-export type AdminCmsSectionKey = 'projects' | 'services' | 'testimonials' | 'insights' | 'careers';
-
-const CMS_SECTION_ITEMS: AdminSectionTabItem[] = [
-  { key: 'projects', label: 'Case Studies', to: '/admin/cms/projects', permission: 'cms_projects' },
-  { key: 'services', label: 'Services', to: '/admin/cms/services', permission: 'services' },
-  { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', permission: 'testimonials' },
-  { key: 'insights', label: 'Insights', to: '/admin/cms/insights', permission: 'cms_insights' },
-  { key: 'careers', label: 'Careers', to: '/admin/cms/careers', permission: 'cms_projects' },
-];
-
-export const AdminCmsSectionTabs: React.FC<{ activeKey: AdminCmsSectionKey }> = ({ activeKey }) => (
-  <div className="min-w-0 ams-cms-section-tabs" data-ams-slug="cms-section-tabs" data-ams-feature-slug="cms-sections">
-    <AdminSectionTabs
-      ariaLabel="CMS sections"
-      activeKey={activeKey}
-      items={CMS_SECTION_ITEMS}
-    />
-  </div>
-);
-
 export type AdminModuleNoticeTone = 'success' | 'danger' | 'warning' | 'info';
 
 export interface AdminModuleNoticeProps {
