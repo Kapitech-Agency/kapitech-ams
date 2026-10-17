@@ -68,7 +68,7 @@ test('Projects does not present unavailable project data as seeded/demo records 
   assert.ok(source.includes('Project data unavailable'));
 });
 
-test('Finance worksheets stay inside the Finance workspace and retired routes stay hidden', () => {
+test('Finance views stay inside the Finance workspace and retired routes stay hidden', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
@@ -89,7 +89,7 @@ test('Finance worksheets stay inside the Finance workspace and retired routes st
     assert.ok(workbook.includes("label: '" + area + "'"), 'Missing Finance area ' + area);
   }
   assert.ok(workspace.includes('FINANCE_WORKBOOK_GROUPS'));
-  assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance worksheets"'));
+  assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance views"'));
   assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
 });
 test('Retainer workspace uses neutral counts and sentence-case table hierarchy', () => {
@@ -301,6 +301,10 @@ test('All drawers use canonical geometry, typography, and named width presets', 
   assert.equal(cmsProjects.includes('dialogClassName'), false);
   assert.equal(cmsServices.includes('dialogClassName'), false);
   assert.equal(cmsTestimonials.includes('dialogClassName'), false);
+  assert.ok(cmsServices.includes('<Drawer'));
+  assert.ok(cmsServices.includes('<Drawer\n        slug="cms-service-detail-drawer"'));
+  assert.ok(cmsServices.includes('size="3xl"'));
+  assert.equal(cmsServices.includes('cms-service-detail-modal'), false);
   assert.ok(cmsProjects.includes('data-ams-drawer-preview'));
   assert.ok(cmsProjects.includes('size="4xl"'));
   assert.ok(cmsServices.includes('size="lg"'));

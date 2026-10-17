@@ -28,7 +28,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(subnavigation, /finance-tab-receivables-payables/);
   assert.match(subnavigation, /finance-tab-project-finance/);
   assert.match(subnavigation, /finance-tab-accounting-reports/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance views" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
   assert.match(workspace, /const sheetItems = \[[\s\S]{0,240}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
@@ -208,7 +208,7 @@ test('Finance locale uses the selected application language and localized financ
   assert.match(translations, /'admin\.finance\.tab\.overviewControl': 'Ringkasan & Kontrol'/);
 });
 
-test('Finance worksheets embed the existing transactional workflows instead of routing users away', async () => {
+test('Finance views embed the existing transactional workflows instead of routing users away', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');
