@@ -138,6 +138,10 @@ The Contracts status filter and editor dropdowns for type, client, project, and 
 
 The Project Profitability report displayed four aggregate KPI cards before the primary financial register and its project/client search. The table now leads the workspace; the same source-derived project count and IDR-only collection, outstanding, and contribution summaries remain directly below it. Per-currency row values, the contribution formula disclosure, search behavior, loading/error states, refresh action, and aggregate-only privacy boundary remain unchanged. No financial formula, source mapping, API contract, or accounting logic changed.
 
+## Follow-on Time Tracking control consistency slice
+
+The linked-task field in the Time Tracking entry form used the last native `<select>` in the page. It now uses the shared `CustomSelect` while keeping the same task ID value, task-title labels, handler, “No linked task” option, and disabled condition when no project or eligible tasks are available. This is a presentation/control consistency change only; the time-entry form's persistence, task linkage, validation, and permission logic are unchanged.
+
 ## Remaining visual verification and limits
 
 Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.
