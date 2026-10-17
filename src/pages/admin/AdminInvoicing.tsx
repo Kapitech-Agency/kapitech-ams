@@ -27,8 +27,8 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
-import { AgencyVendor, getAgencyVendors } from '../../lib/vendorStore';
+import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
+import { AgencyVendor } from '../../lib/vendorStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -40,7 +40,6 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { AdminMetricCard, AdminTablePagination, AdminStatusBadge, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { FINANCE_INVOICE_TEMPLATES, FINANCE_QUOTATION_TEMPLATES, printFinanceDocument } from '../../lib/financeDocumentTemplates';
 
@@ -341,131 +340,6 @@ type FinanceQuotation = {
   notes?: string;
 };
 
-const STITCH_FINANCE_QUOTATIONS: FinanceQuotation[] = [
-  { id: 'quote_slug_001', slug: 'enterprise-website-redesign-design-system', quotationNumber: 'QTN-2026-018', title: 'Enterprise Website Redesign & Design System', clientName: 'Nadia Wijaya', clientCompany: 'Astra Digital Ventures', total: 285000000, currency: 'IDR', status: 'sent', validUntil: '2026-10-10', createdAt: '2026-09-23', owner: 'Fikri Nurlete' },
-  { id: 'quote_slug_002', slug: 'fintech-product-ux-audit-prototype', quotationNumber: 'QTN-2026-017', title: 'Fintech Product UX Audit & Prototype', clientName: 'Raka Prasetyo', clientCompany: 'Finova Labs', total: 92000000, currency: 'IDR', status: 'review', validUntil: '2026-10-04', createdAt: '2026-09-21', owner: 'Strategy Team' },
-  { id: 'quote_slug_003', slug: 'cloud-migration-platform-hardening', quotationNumber: 'QTN-2026-016', title: 'Cloud Migration & Platform Hardening', clientName: 'Sarah Jenkins', clientCompany: 'Telkomsel Innovation Labs', total: 175000000, currency: 'IDR', status: 'approved', validUntil: '2026-10-16', createdAt: '2026-09-18', owner: 'Technology Team' },
-  { id: 'quote_slug_004', slug: '3d-brand-experience-sprint', quotationNumber: 'QTN-2026-015', title: '3D Brand Experience Sprint', clientName: 'Jessica Halim', clientCompany: 'ShopeePay Regional Tech', total: 640000000, currency: 'IDR', status: 'accepted', validUntil: '2026-09-29', createdAt: '2026-09-12', owner: 'Creative Team', invoiceId: 'slug-inv-qtn-015' },
-  { id: 'quote_slug_005', slug: 'security-portal-discovery', quotationNumber: 'QTN-2026-014', title: 'Security Portal Discovery', clientName: 'Reza Pratama', clientCompany: 'Mandiri FinTech Division', total: 145000000, currency: 'IDR', status: 'draft', validUntil: '2026-10-22', createdAt: '2026-09-08', owner: 'Fikri Nurlete' },
-  { id: 'quote_slug_006', slug: 'react-native-commerce-app', quotationNumber: 'QTN-2026-013', title: 'React Native Commerce App', clientName: 'Kevin Wijaya', clientCompany: 'Nusa Cloud Systems', total: 128000000, currency: 'IDR', status: 'rejected', validUntil: '2026-09-26', createdAt: '2026-09-03', owner: 'Product Team' }
-];
-
-const STITCH_FINANCE_RETAINER_INVOICES: AgencyInvoice[] = [
-  {
-    id: 'retainer_demo_001',
-    slug: 'kapi-ret-2026-001-astra-digital-ventures',
-    invoiceNumber: 'KAPI-RET-2026-001',
-    type: 'invoice',
-    clientName: 'Nadia Wijaya',
-    clientCompany: 'Astra Digital Ventures',
-    clientEmail: 'finance@astradigital.id',
-    clientPhone: '+62 811-2000-1100',
-    items: [{ id: 'retainer_item_001', description: 'Monthly Product Design & Frontend Retainer', quantity: 1, unitPrice: 68000000, amount: 68000000 }],
-    subtotal: 68000000,
-    discountPercent: 0,
-    discountAmount: 0,
-    taxPercent: 11,
-    taxAmount: 7480000,
-    total: 75480000,
-    amountPaid: 75480000,
-    balanceDue: 0,
-    payments: [{ id: 'retainer_payment_001', amount: 75480000, date: '2026-09-06', method: 'bank_transfer', reference: 'ADV-RET-SEP', recordedBy: 'Finance Lead' }],
-    currency: 'IDR',
-    status: 'paid',
-    issueDate: '2026-09-01',
-    dueDate: '2026-09-10',
-    paidDate: '2026-09-06',
-    notes: 'Monthly retainer — product design and frontend support.',
-    paymentTerms: 'Monthly Retainer Net 10',
-    createdAt: '2026-09-01T09:00:00Z',
-    updatedAt: '2026-09-06T14:00:00Z'
-  },
-  {
-    id: 'retainer_demo_002',
-    slug: 'kapi-ret-2026-002-telkomsel-innovation-labs',
-    invoiceNumber: 'KAPI-RET-2026-002',
-    type: 'invoice',
-    clientName: 'Sarah Jenkins',
-    clientCompany: 'Telkomsel Innovation Labs',
-    clientEmail: 'finance@telkomsel.co.id',
-    clientPhone: '+62 811-2000-2200',
-    items: [{ id: 'retainer_item_002', description: 'Cloud Platform Maintenance Retainer', quantity: 1, unitPrice: 92000000, amount: 92000000 }],
-    subtotal: 92000000,
-    discountPercent: 0,
-    discountAmount: 0,
-    taxPercent: 11,
-    taxAmount: 10120000,
-    total: 102120000,
-    amountPaid: 51060000,
-    balanceDue: 51060000,
-    payments: [{ id: 'retainer_payment_002', amount: 51060000, date: '2026-09-12', method: 'bank_transfer', reference: 'TIL-RET-SEP', recordedBy: 'Finance Lead' }],
-    currency: 'IDR',
-    status: 'partially_paid',
-    issueDate: '2026-09-03',
-    dueDate: '2026-09-18',
-    notes: 'Monthly cloud platform maintenance retainer.',
-    paymentTerms: 'Monthly Retainer Net 15',
-    createdAt: '2026-09-03T10:00:00Z',
-    updatedAt: '2026-09-12T15:00:00Z'
-  },
-  {
-    id: 'retainer_demo_003',
-    slug: 'kapi-ret-2026-003-shopeepay-regional-tech',
-    invoiceNumber: 'KAPI-RET-2026-003',
-    type: 'invoice',
-    clientName: 'Jessica Halim',
-    clientCompany: 'ShopeePay Regional Tech',
-    clientEmail: 'finance@shopeepay.com',
-    clientPhone: '+62 811-2000-3300',
-    items: [{ id: 'retainer_item_003', description: 'Interactive Product Support Retainer', quantity: 1, unitPrice: 125000000, amount: 125000000 }],
-    subtotal: 125000000,
-    discountPercent: 0,
-    discountAmount: 0,
-    taxPercent: 11,
-    taxAmount: 13750000,
-    total: 138750000,
-    amountPaid: 0,
-    balanceDue: 138750000,
-    payments: [],
-    currency: 'IDR',
-    status: 'sent',
-    issueDate: '2026-09-05',
-    dueDate: '2026-09-20',
-    notes: 'Monthly product support and optimization retainer.',
-    paymentTerms: 'Monthly Retainer Net 15',
-    createdAt: '2026-09-05T09:00:00Z',
-    updatedAt: '2026-09-05T09:00:00Z'
-  },
-  {
-    id: 'retainer_demo_004',
-    slug: 'kapi-ret-2026-004-northstar-labs',
-    invoiceNumber: 'KAPI-RET-2026-004',
-    type: 'invoice',
-    clientName: 'Marcus Lee',
-    clientCompany: 'Northstar Labs',
-    clientEmail: 'finance@northstarlabs.com',
-    clientPhone: '+1 415-200-4400',
-    items: [{ id: 'retainer_item_004', description: 'US Market Growth Retainer', quantity: 1, unitPrice: 14500, amount: 14500 }],
-    subtotal: 14500,
-    discountPercent: 0,
-    discountAmount: 0,
-    taxPercent: 0,
-    taxAmount: 0,
-    total: 14500,
-    amountPaid: 7250,
-    balanceDue: 7250,
-    payments: [{ id: 'retainer_payment_004', amount: 7250, date: '2026-09-08', method: 'bank_transfer', reference: 'NSL-SEP-RET', recordedBy: 'Finance Lead' }],
-    currency: 'USD',
-    status: 'partially_paid',
-    issueDate: '2026-09-02',
-    dueDate: '2026-09-16',
-    notes: 'Monthly growth retainer for US market support.',
-    paymentTerms: 'Monthly Retainer Net 14',
-    createdAt: '2026-09-02T09:00:00Z',
-    updatedAt: '2026-09-08T14:00:00Z'
-  }
-];
-
 const normalizeFinanceQuotationStatus = (value: unknown): FinanceQuotationStatus => {
   switch (String(value || '').trim().toLowerCase()) {
     case 'review':
@@ -737,7 +611,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
   const [projects, setProjects] = useState<FinanceProject[]>([]);
-  const [vendors, setVendors] = useState<AgencyVendor[]>(() => (isSlugFixtureMode() ? getAgencyVendors() : []));
+  const [vendors, setVendors] = useState<AgencyVendor[]>([]);
   const [serverMetrics, setServerMetrics] = useState<ServerMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -852,9 +726,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [paymentDirty, setPaymentDirty] = useState(false);
   const loadRequestId = React.useRef(0);
 
-  const [usingDemoFinance, setUsingDemoFinance] = useState(false);
-  const [usingDemoInvoices, setUsingDemoInvoices] = useState(false);
-  const [usingDemoExpenses, setUsingDemoExpenses] = useState(false);
   const [incomeExpenseMode, setIncomeExpenseMode] = useState<'income' | 'expenses'>(embeddedIncomeExpenseMode || 'income');
   const [incomeSearch, setIncomeSearch] = useState('');
   const [incomePage, setIncomePage] = useState(1);
@@ -865,9 +736,9 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [vendorPaymentPageSize, setVendorPaymentPageSize] = useState(10);
   const [retainerPage, setRetainerPage] = useState(1);
   const [retainerPageSize, setRetainerPageSize] = useState(10);
-  const [quotations, setQuotations] = useState<FinanceQuotation[]>(() => (isSlugFixtureMode() ? STITCH_FINANCE_QUOTATIONS : []));
-  const [usingDemoQuotations, setUsingDemoQuotations] = useState(isSlugFixtureMode());
+  const [quotations, setQuotations] = useState<FinanceQuotation[]>([]);
   const [quotationLoading, setQuotationLoading] = useState(true);
+  const [quotationError, setQuotationError] = useState<string | null>(null);
   const [quotationSearch, setQuotationSearch] = useState('');
   const [quotationStatusFilter, setQuotationStatusFilter] = useState<'all' | FinanceQuotationStatus>('all');
   const [quotationSort, setQuotationSort] = useState<QuotationSort>('newest');
@@ -929,8 +800,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     }
   }, []);
 
-  const slugDataMode = isSlugFixtureMode();
-
   const loadData = async (silent = false) => {
     const requestId = ++loadRequestId.current;
     if (silent) setRefreshing(true);
@@ -956,21 +825,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       const apiInvoices = invoiceSourceAvailable ? invoiceRes.data!.invoices as AgencyInvoice[] : [];
       const apiExpenses = expenseSourceAvailable ? expenseRes.data!.expenses as FinanceExpense[] : [];
 
-      const demoInvoices = slugDataMode
-        ? INITIAL_DEFAULT_INVOICES
-            .filter((invoice) => invoice.currency === currency)
-            .map((invoice) => ({ ...invoice, items: Array.isArray(invoice.items) ? invoice.items.map((item) => ({ ...item })) : [] }))
-        : [];
-      const demoExpenses = slugDataMode
-        ? INITIAL_DEFAULT_EXPENSES.map((expense) => ({ ...expense, currency }))
-        : [];
-
-      const shouldUseDemoInvoices = slugDataMode && apiInvoices.length === 0;
-      const shouldUseDemoExpenses = slugDataMode && apiExpenses.length === 0;
       // A failed source is not an authoritative empty result. Keep its last successful
       // records visible while the source-level warning tells the operator to retry.
-      const nextInvoices = shouldUseDemoInvoices ? demoInvoices : invoiceSourceAvailable ? apiInvoices : invoices;
-      const nextExpenses = shouldUseDemoExpenses ? demoExpenses : expenseSourceAvailable ? apiExpenses : expenses;
+      const nextInvoices = invoiceSourceAvailable ? apiInvoices : invoices;
+      const nextExpenses = expenseSourceAvailable ? apiExpenses : expenses;
 
       if (requestId !== loadRequestId.current) return;
 
@@ -987,14 +845,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         ? `Some Finance data sources could not be loaded. Displayed records and totals may be incomplete. ${sourceFailures.join(' ')} Retry before relying on these values.`
         : null);
 
-      setUsingDemoInvoices(shouldUseDemoInvoices);
-      setUsingDemoExpenses(shouldUseDemoExpenses);
-      setUsingDemoFinance(shouldUseDemoInvoices || shouldUseDemoExpenses);
-
       setInvoices(nextInvoices);
       setExpenses(nextExpenses);
 
-      if (shouldUseDemoInvoices || shouldUseDemoExpenses || (!metricsSourceAvailable && invoiceSourceAvailable && expenseSourceAvailable)) {
+      if (!metricsSourceAvailable && invoiceSourceAvailable && expenseSourceAvailable) {
         const derived = computeFinancialMetrics(nextInvoices, nextExpenses);
         setServerMetrics({
           currency,
@@ -1023,8 +877,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       }
       if (vendorsSourceAvailable) {
         const serverVendors = vendorRes.data!.vendors as AgencyVendor[];
-        // An empty production response is authoritative. Never show local sample vendors as live suppliers.
-        setVendors(serverVendors.length > 0 ? serverVendors : (slugDataMode ? getAgencyVendors() : []));
+        setVendors(serverVendors);
       }
     } catch (err) {
       if (requestId === loadRequestId.current) {
@@ -1049,31 +902,20 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const loadQuotations = async () => {
     setQuotationLoading(true);
+    setQuotationError(null);
     try {
       const result = await api.proposals.getAll();
-      const rows = result.success && Array.isArray(result.data?.proposals)
-        ? result.data.proposals.map(normalizeFinanceQuotation).filter((quotation) => quotation.currency === currency)
-        : [];
-
-      if (rows.length) {
-        setQuotations(rows);
-        setUsingDemoQuotations(false);
-      } else if (slugDataMode) {
-        setQuotations(
-          STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency)
-        );
-        setUsingDemoQuotations(true);
-      } else {
+      if (!result.success || !Array.isArray(result.data?.proposals)) {
         setQuotations([]);
-        setUsingDemoQuotations(false);
+        setQuotationError(result.error || 'Quotation records could not be loaded.');
+        return;
       }
-    } catch {
-      setQuotations(
-        slugDataMode
-          ? STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency)
-          : []
-      );
-      setUsingDemoQuotations(slugDataMode);
+      setQuotations(result.data.proposals
+        .map(normalizeFinanceQuotation)
+        .filter((quotation) => quotation.currency === currency));
+    } catch (error) {
+      setQuotations([]);
+      setQuotationError(error instanceof Error ? error.message : 'Quotation records could not be loaded.');
     } finally {
       setQuotationLoading(false);
     }
@@ -1228,15 +1070,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   );
 
   const retainerLedgerInvoices = useMemo(() => {
-    const source = retainerInvoices.length
-      ? retainerInvoices
-      : slugDataMode
-        ? STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency).map(normalizeFinanceInvoice)
-        : [];
-    return source.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt));
-  }, [currency, retainerInvoices, slugDataMode, matchesDate]);
-
-  const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
+    return retainerInvoices.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt));
+  }, [retainerInvoices, matchesDate]);
   const retainerPageCount = Math.max(1, Math.ceil(retainerLedgerInvoices.length / retainerPageSize));
   const paginatedRetainerLedgerInvoices = retainerLedgerInvoices.slice((retainerPage - 1) * retainerPageSize, retainerPage * retainerPageSize);
 
@@ -1554,241 +1389,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     setInvoiceNotes('');
   };
 
-  const syncDemoFinanceMetrics = (nextInvoices: AgencyInvoice[], nextExpenses: FinanceExpense[]) => {
-    const metrics = computeFinancialMetrics(
-      nextInvoices.filter((invoice) => invoice.currency === currency),
-      nextExpenses.filter((expense) => (expense.currency || 'IDR') === currency)
-    );
-    setServerMetrics({
-      currency,
-      totalRevenueCollected: metrics.totalPaidRevenue,
-      totalBilled: metrics.totalBilled,
-      totalOutstanding: metrics.totalOutstanding,
-      totalExpense: metrics.totalExpenses,
-      netProfit: metrics.netOperatingProfit,
-      profitMargin: String(metrics.netMarginPercent),
-      operatingMargin: String(metrics.netMarginPercent),
-      totalInvoicesCount: metrics.totalInvoicesCount,
-      paidCount: metrics.paidCount,
-      partiallyPaidCount: metrics.partiallyPaidCount,
-      overdueCount: metrics.overdueCount,
-      draftCount: nextInvoices.filter((invoice) => invoice.status === 'draft' && invoice.currency === currency).length
-    });
-  };
-
-  const openCreateInvoice = () => {
-    if (invoiceSourceBlocked) {
-      showNotice('danger', sourceUnavailableMessage('invoice'));
-      return;
-    }
-    resetInvoiceForm();
-    setInvoiceModalOpen(true);
-  };
-
-  const applyInvoiceTemplate = () => {
-    const template = FINANCE_INVOICE_TEMPLATES.find((item) => item.key === invoiceTemplateKey);
-    if (!template) return;
-    setInvoiceDirty(true);
-    setInvoiceItems(template.lineItems.length
-      ? template.lineItems.map((line, index) => ({
-          ...emptyLineItem(),
-          id: 'invoice-template-' + template.key + '-' + index + '-' + Date.now(),
-          description: line.description,
-          quantity: line.quantity,
-          unitPrice: 0,
-          amount: 0
-        }))
-      : [emptyLineItem()]);
-    if (template.paymentTerms) setPaymentTerms(template.paymentTerms);
-    if (!editingInvoice && template.title) setInvoiceNotes('');
-    showNotice('success', 'Invoice template applied. Review all prices, tax, dates, and payment terms before issuing.');
-  };
-
-  const printInvoiceDraft = () => {
-    const totals = computeInvoiceTotals(invoiceItems, Number(taxPercent) || 0, Number(discountPercent) || 0);
-    const printed = printFinanceDocument({
-      kind: 'invoice',
-      documentNumber: invoiceNumber || 'DRAFT-' + new Date().getFullYear(),
-      title: invoiceItems.length === 1 ? invoiceItems[0].description : (projects.find((project) => project.id === projectId)?.name || 'Project billing'),
-      clientName,
-      clientCompany,
-      clientEmail,
-      clientPhone,
-      projectName: projects.find((project) => project.id === projectId)?.name,
-      currency: invoiceCurrency,
-      issueDate,
-      dueDate,
-      status: invoiceStatus,
-      items: invoiceItems.map((line) => ({ ...line, amount: Number(line.quantity || 0) * Number(line.unitPrice || 0) })),
-      subtotal: totals.subtotal,
-      discountPercent,
-      discountAmount: totals.discountAmount,
-      taxPercent,
-      taxAmount: totals.taxAmount,
-      total: totals.total,
-      paymentTerms,
-      notes: invoiceNotes
-    });
-    if (!printed) showNotice('danger', 'The print window was blocked. Allow pop-ups for AMS, then try again.');
-  };
-
-  const requestCloseInvoice = () => {
-    if (savingInvoice) return;
-    if (invoiceDirty) {
-      setInvoiceModalOpen(false);
-      setDiscardPrompt('invoice');
-      return;
-    }
-    setInvoiceModalOpen(false);
-    setInvoiceDirty(false);
-  };
-
-  const requestCloseExpense = () => {
-    if (savingExpense) return;
-    if (expenseDirty) {
-      setExpenseModalOpen(false);
-      setDiscardPrompt('expense');
-      return;
-    }
-    setExpenseModalOpen(false);
-    setExpenseDirty(false);
-  };
-
-  const requestClosePayment = () => {
-    if (savingPayment) return;
-    if (paymentDirty) {
-      setPendingPaymentInvoice(paymentInvoice);
-      setPaymentInvoice(null);
-      setDiscardPrompt('payment');
-      return;
-    }
-    setPaymentInvoice(null);
-    setPaymentDirty(false);
-  };
-
-  const cancelDiscardPrompt = () => {
-    const target = discardPrompt;
-    setDiscardPrompt(null);
-    if (target === 'invoice') setInvoiceModalOpen(true);
-    if (target === 'expense') setExpenseModalOpen(true);
-    if (target === 'payment') {
-      setPaymentInvoice(pendingPaymentInvoice);
-      setPendingPaymentInvoice(null);
-    }
-  };
-
-  const confirmDiscardPrompt = () => {
-    const target = discardPrompt;
-    setDiscardPrompt(null);
-    if (target === 'invoice') setInvoiceDirty(false);
-    if (target === 'expense') {
-      setExpenseDirty(false);
-      setExpenseIdempotencyKey('');
-    }
-    if (target === 'payment') {
-      setPaymentDirty(false);
-      setPaymentIdempotencyKey('');
-      setPendingPaymentInvoice(null);
-    }
-  };
-
-  const openExpenseModal = () => {
-    if (expenseSourceBlocked) {
-      showNotice('danger', sourceUnavailableMessage('expense'));
-      return;
-    }
-    setExpenseDirty(false);
-    setExpenseType('OpEx');
-    setExpenseCategory('Software & Cloud');
-    setExpenseDescription('');
-    setExpenseAmount(0);
-    setExpenseDate(getDateInputValue());
-    setExpensePaymentStatus('unpaid');
-    setExpensePaidDate(getDateInputValue());
-    setExpensePaymentMethod('bank_transfer');
-    setExpensePaymentAccountCode('1000');
-    setExpenseProjectId('');
-    setExpenseRecurringInterval('none');
-    setExpenseReceiptUrl('');
-    setExpenseIdempotencyKey(
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`
-    );
-    setExpenseModalOpen(true);
-  };
-
-  const openEditInvoice = (invoice: AgencyInvoice) => {
-    setInvoiceTemplateKey('blank');
-    if (invoiceSourceBlocked) {
-      showNotice('danger', sourceUnavailableMessage('invoice'));
-      return;
-    }
-    setInvoiceDirty(false);
-    setEditingInvoice(invoice);
-    setInvoiceNumber(invoice.invoiceNumber);
-    setClientId(String((invoice as AgencyInvoice & { clientId?: string }).clientId || ''));
-    setProjectId(invoice.projectId || '');
-    setClientName(invoice.clientName || '');
-    setClientCompany(invoice.clientCompany || '');
-    setClientEmail(invoice.clientEmail || '');
-    setClientPhone(invoice.clientPhone || '');
-    setInvoiceCurrency(invoice.currency);
-    setInvoiceItems(invoice.items.length ? invoice.items.map((item) => ({ ...item })) : [emptyLineItem()]);
-    setDiscountPercent(Number(invoice.discountPercent || 0));
-    setTaxPercent(Number(invoice.taxPercent || 0));
-    setInvoiceStatus(invoice.status);
-    setIssueDate(invoice.issueDate || '');
-    setDueDate(invoice.dueDate || '');
-    setPaymentTerms(invoice.paymentTerms || '');
-    setInvoiceNotes(invoice.notes || '');
-    setInvoiceModalOpen(true);
-  };
-
-  const selectClient = (id: string) => {
-    setInvoiceDirty(true);
-    setClientId(id);
-    const client = clients.find((item) => item.id === id);
-    if (!client) return;
-    setClientName(client.name);
-    setClientCompany(client.company);
-    setClientEmail(client.email);
-    setClientPhone(client.phone);
-  };
-
-  const selectProject = (id: string) => {
-    setInvoiceDirty(true);
-    setProjectId(id);
-    const project = projects.find((item) => item.id === id);
-    if (!project) return;
-
-    if (project.clientId) {
-      const client = clients.find((item) => item.id === project.clientId);
-      setClientId(project.clientId);
-      setClientName(client?.name || project.clientName || '');
-      setClientCompany(client?.company || project.clientCompany || '');
-      setClientEmail(client?.email || project.clientEmail || '');
-      setClientPhone(client?.phone || '');
-      return;
-    }
-
-    setClientId('');
-    if (!clientName) setClientName(project.clientName || '');
-    if (!clientCompany) setClientCompany(project.clientCompany || '');
-    if (!clientEmail) setClientEmail(project.clientEmail || '');
-  };
-
-  const updateLineItem = (index: number, patch: Partial<InvoiceLineItem>) => {
-    setInvoiceDirty(true);
-    setInvoiceItems((current) => current.map((item, itemIndex) => {
-      if (itemIndex !== index) return item;
-      const next = { ...item, ...patch };
-      const quantity = Math.max(0, Number(next.quantity) || 0);
-      const unitPrice = Math.max(0, Number(next.unitPrice) || 0);
-      return { ...next, quantity, unitPrice, amount: Math.round(quantity * unitPrice * 100) / 100 };
-    }));
-  };
-
   const handleSaveInvoice = async (event: React.FormEvent) => {
     event.preventDefault();
     if (invoiceSourceBlocked) {
@@ -1870,50 +1470,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       };
 
 
-      if (usingDemoInvoices) {
-        const now = new Date().toISOString();
-        const localTotals = computeInvoiceTotals(validItems, numericTax, numericDiscount);
-        const localInvoice: AgencyInvoice = {
-          id: editingInvoice?.id || 'inv_slug_' + Date.now(),
-          slug: editingInvoice?.slug || slugifyFinance(invoiceNumber.trim() || clientCompany.trim() || ('invoice-' + Date.now())),
-          invoiceNumber: invoiceNumber.trim() || 'INV-SLUG-' + String(100 + invoices.length + 1),
-          type: 'invoice',
-          clientName: clientName.trim(),
-          clientCompany: clientCompany.trim(),
-          clientEmail: clientEmail.trim(),
-          clientPhone: clientPhone.trim(),
-          projectId: projectId || undefined,
-          items: validItems,
-          subtotal: localTotals.subtotal,
-          discountPercent: numericDiscount,
-          discountAmount: localTotals.discountAmount,
-          taxPercent: numericTax,
-          taxAmount: localTotals.taxAmount,
-          total: localTotals.total,
-          amountPaid: editingInvoice?.amountPaid || 0,
-          balanceDue: Math.max(0, localTotals.total - Number(editingInvoice?.amountPaid || 0)),
-          payments: editingInvoice?.payments || [],
-          currency: invoiceCurrency,
-          status: invoiceStatus,
-          issueDate: issueDate || new Date().toISOString().slice(0, 10),
-          dueDate: dueDate || getDateInputValue(14),
-          paidDate: editingInvoice?.paidDate,
-          notes: invoiceNotes.trim(),
-          paymentTerms: paymentTerms.trim(),
-          createdAt: editingInvoice?.createdAt || now,
-          updatedAt: now
-        };
-        const nextInvoices = editingInvoice
-          ? invoices.map((invoice) => invoice.id === editingInvoice.id ? localInvoice : invoice)
-          : [localInvoice, ...invoices];
-        setInvoices(nextInvoices);
-        syncDemoFinanceMetrics(nextInvoices, expenses);
-        setInvoiceModalOpen(false);
-        setInvoiceDirty(false);
-        showNotice('success', editingInvoice ? 'Demo invoice updated.' : 'Demo invoice created.');
-        return;
-      }
-
       const result = editingInvoice
         ? await api.finance.updateInvoice(editingInvoice.id, payload)
         : await api.finance.createInvoice(payload);
@@ -1946,16 +1502,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     if (!canManageInvoices || updatingInvoiceId || invoice.status === nextStatus || nextStatus === 'cancelled') return;
     setUpdatingInvoiceId(invoice.id);
     try {
-      if (usingDemoInvoices) {
-        const nextInvoices = invoices.map((item) => item.id === invoice.id
-          ? { ...item, status: nextStatus, updatedAt: new Date().toISOString(), paidDate: nextStatus === 'paid' ? getDateInputValue() : item.paidDate }
-          : item);
-        setInvoices(nextInvoices);
-        syncDemoFinanceMetrics(nextInvoices, expenses);
-        showNotice('success', 'Demo invoice status updated.');
-        return;
-      }
-
       const result = await api.finance.updateInvoice(invoice.id, { status: nextStatus, updatedAt: invoice.updatedAt });
       if (!result.success) {
         showNotice(
@@ -2026,40 +1572,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
     setSavingPayment(true);
     try {
-      if (usingDemoInvoices) {
-        const nextAmountPaid = Math.min(Number(paymentInvoice.total), Number(paymentInvoice.amountPaid || 0) + amount);
-        const nextBalance = Math.max(0, Number(paymentInvoice.total) - nextAmountPaid);
-        const nextStatus: InvoiceStatus = nextBalance === 0 ? 'paid' : 'partially_paid';
-        const paymentRecord = {
-          id: 'payment_slug_' + Date.now(),
-          slug: slugifyFinance((paymentInvoice.slug || paymentInvoice.invoiceNumber) + '-payment-' + Date.now()),
-          amount,
-          date: paymentDate,
-          method: paymentMethod,
-          settlementAccountCode: paymentMethod === 'other' ? paymentSettlementAccount : undefined,
-          reference: paymentReference.trim(),
-          notes: paymentNotes.trim()
-        };
-        const nextInvoices = invoices.map((item) => item.id === paymentInvoice.id
-          ? {
-              ...item,
-              amountPaid: nextAmountPaid,
-              balanceDue: nextBalance,
-              status: nextStatus,
-              paidDate: nextBalance === 0 ? paymentDate : item.paidDate,
-              payments: [...(item.payments || []), paymentRecord],
-              updatedAt: new Date().toISOString()
-            }
-          : item);
-        setInvoices(nextInvoices);
-        syncDemoFinanceMetrics(nextInvoices, expenses);
-        setPaymentInvoice(null);
-        setPaymentIdempotencyKey('');
-        setPaymentDirty(false);
-        showNotice('success', 'Demo payment recorded.');
-        return;
-      }
-
       const result = await api.finance.payInvoice(paymentInvoice.id, {
         amount,
         date: paymentDate,
@@ -2170,16 +1682,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         notes: expenseSettlementNotes.trim(),
         version: expense.version
       };
-      if (usingDemoExpenses) {
-        const payments = [...getExpensePayments(expense), payment];
-        const paidTotal = payments.reduce((sum, item) => sum + Math.max(0, Number(item.amount) || 0), 0);
-        const nextExpense = { ...expense, payments, paymentStatus: paidTotal >= Number(expense.amount || 0) - 0.01 ? 'paid' : 'partially_paid' } as FinanceExpense;
-        setExpenses((current) => current.map((item) => item.id === expense.id ? nextExpense : item));
-        setExpenseDetail(nextExpense);
-        setExpensePaymentDrawer(null);
-        showNotice('success', language === 'id' ? 'Pelunasan demo dicatat.' : 'Demo payment recorded.');
-        return;
-      }
       const result = await api.finance.recordExpensePayment(expense.id, payment);
       if (!result.success) {
         if (result.status === 409) await loadData(true);
@@ -2234,36 +1736,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
     setSavingExpense(true);
     try {
-      if (usingDemoExpenses) {
-        const localExpense: FinanceExpense = {
-          id: 'exp_slug_' + Date.now(),
-          slug: slugifyFinance(expenseDescription.trim() + '-' + expenseDate + '-' + Date.now()),
-          type: expenseType,
-          category: expenseCategory,
-          description: expenseDescription.trim(),
-          amount,
-          date: expenseDate,
-          paymentStatus: expensePaymentStatus,
-          paidDate: expensePaymentStatus === 'paid' ? expensePaidDate : undefined,
-          paymentMethod: expensePaymentMethod,
-          paymentAccountCode: expensePaymentStatus === 'paid' && expensePaymentMethod !== 'credit_card' ? expensePaymentAccountCode : undefined,
-          currency,
-          recordedBy: 'Fikri Nurlete',
-          createdAt: new Date().toISOString(),
-          version: 1
-        };
-        const nextExpenses = [localExpense, ...expenses];
-        setExpenses(nextExpenses);
-        syncDemoFinanceMetrics(invoices, nextExpenses);
-        setExpenseModalOpen(false);
-        setExpenseIdempotencyKey('');
-        setExpenseDirty(false);
-        setExpenseDescription('');
-        setExpenseAmount(0);
-        showNotice('success', 'Demo expense recorded.');
-        return;
-      }
-
       const result = await api.finance.createExpense({
         slug: slugifyFinance(expenseDescription.trim() + '-' + expenseDate),
         type: expenseType,
@@ -2306,23 +1778,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     }
     setConfirmingAction(true);
     try {
-      if ((confirmAction.type === 'invoice' && usingDemoInvoices) || (confirmAction.type === 'expense' && usingDemoExpenses)) {
-        if (confirmAction.type === 'invoice') {
-          const nextInvoices = invoices.map((item) => item.id === confirmAction.id ? { ...item, status: 'cancelled' as InvoiceStatus, updatedAt: new Date().toISOString() } : item);
-          setInvoices(nextInvoices);
-          syncDemoFinanceMetrics(nextInvoices, expenses);
-          setDetailInvoice((current) => current?.id === confirmAction.id ? null : current);
-          showNotice('success', 'Demo invoice cancelled.');
-        } else {
-          const nextExpenses = expenses.filter((item) => item.id !== confirmAction.id);
-          setExpenses(nextExpenses);
-          syncDemoFinanceMetrics(invoices, nextExpenses);
-          showNotice('success', 'Demo expense voided.');
-        }
-        setConfirmAction(null);
-        return;
-      }
-
       const result = confirmAction.type === 'invoice'
         ? await api.finance.deleteInvoice(confirmAction.id)
         : await api.finance.deleteExpense(
@@ -2822,37 +2277,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     };
 
     try {
-      if (usingDemoQuotations) {
-        const now = new Date().toISOString();
-        const localQuotation: FinanceQuotation = {
-          id: editingQuotation?.id || 'quote_slug_' + Date.now(),
-          slug: editingQuotation?.slug || slugifyFinance(quotationClientCompany.trim() + '-' + quotationTitle.trim()),
-          quotationNumber: editingQuotation?.quotationNumber || 'QTN-2026-' + String(100 + quotations.length + 1).padStart(3, '0'),
-          title: quotationTitle.trim(),
-          clientName: quotationClientName.trim(),
-          clientCompany: quotationClientCompany.trim(),
-          total: Math.round(quotationPreviewTotals.total),
-          currency,
-          status: quotationStatus,
-          validUntil: quotationValidUntil,
-          createdAt: editingQuotation?.createdAt || now.slice(0, 10),
-          owner: editingQuotation?.owner || 'Fikri Nurlete',
-          invoiceId: editingQuotation?.invoiceId,
-          items: validQuotationItems,
-          discountPercent: Number(quotationDiscountPercent) || 0,
-          taxPercent: Number(quotationTaxPercent) || 0,
-          paymentTerms: quotationPaymentTerms.trim(),
-          notes: quotationNotes.trim()
-        };
-        setQuotations((current) => editingQuotation
-          ? current.map((item) => item.id === editingQuotation.id ? localQuotation : item)
-          : [localQuotation, ...current]);
-        setQuotationModalOpen(false);
-        resetQuotationForm();
-        showNotice('success', editingQuotation ? 'Quotation updated.' : 'Quotation created.');
-        return;
-      }
-
       const response = editingQuotation
         ? await api.proposals.update(editingQuotation.id, payload)
         : await api.proposals.create(payload);
@@ -2878,14 +2302,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const updateQuotationStatus = async (quotation: FinanceQuotation, status: FinanceQuotationStatus) => {
     if (!canManageProposals || quotation.status === status) return;
 
-    if (usingDemoQuotations) {
-      const updatedQuotation = { ...quotation, status };
-      setQuotations((current) => current.map((item) => item.id === quotation.id ? updatedQuotation : item));
-      setQuotationDetail((current) => current?.id === quotation.id ? updatedQuotation : current);
-      showNotice('success', 'Quotation status updated.');
-      return;
-    }
-
     try {
       const response = await api.proposals.update(quotation.id, { status: quotationStatusLabel(status) });
       if (!response.success || !response.data?.proposal) throw new Error(response.error || 'Quotation status could not be updated.');
@@ -2901,13 +2317,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const deleteQuotation = async (quotation: FinanceQuotation) => {
     if (!canManageProposals) return;
 
-    if (usingDemoQuotations) {
-      setQuotations((current) => current.filter((item) => item.id !== quotation.id));
-      if (quotationDetail?.id === quotation.id) setQuotationDetail(null);
-      showNotice('success', 'Quotation removed from the demo workspace.');
-      return;
-    }
-
     try {
       const response = await api.proposals.delete(quotation.id);
       if (!response.success) throw new Error(response.error || 'Quotation could not be deleted.');
@@ -2921,14 +2330,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const convertQuotationToInvoice = async (quotation: FinanceQuotation) => {
     if (!canManageInvoices || quotation.invoiceId || quotation.status !== 'approved') return;
-
-    if (usingDemoQuotations) {
-      const updatedQuotation = { ...quotation, status: 'accepted' as FinanceQuotationStatus, invoiceId: 'slug-inv-' + Date.now() };
-      setQuotations((current) => current.map((item) => item.id === quotation.id ? updatedQuotation : item));
-      setQuotationDetail((current) => current?.id === quotation.id ? updatedQuotation : current);
-      showNotice('success', 'Approved quotation converted to a demo invoice reference.');
-      return;
-    }
 
     try {
       const response = await api.proposals.convertToInvoice(quotation.id);
@@ -3100,12 +2501,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-accent/10 text-fg border border-accent/25' : 'text-muted hover:bg-bg hover:text-fg border border-transparent')}>{item}</button>
           ))}
         </div>
-        {usingDemoFinance && (
-          <div className="flex min-w-0 items-center gap-2 rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-[11px] text-warning" role="status">
-            <AdminStatusBadge tone="warning">Sample data</AdminStatusBadge>
-            <span>Some finance records use fallback sample data. Verify the source before relying on these values.</span>
-          </div>
-        )}
       </div>
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
@@ -3132,7 +2527,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
       ) : financeView === 'quotations' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : [quotationMetrics.value]} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context="Records returned by the Finance service" sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : undefined} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
           <section className="space-y-5">
             <section data-ams-feature-slug="finance-records-section" data-ams-slug="finance-records-section" className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line bg-panel p-4 sm:px-5">
@@ -3441,7 +2836,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" sparkline={[taxProvision, taxCollected, taxOutstanding, retainerBilled]} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} sparkline={[taxProvision, taxCollected, taxOutstanding]} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" sparkline={[taxOutstanding, taxProvision, taxCollected]} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} sparkline={financeChartData.map((point) => point.retainerTarget)} icon={<TrendingUp size={15}/>}/></section>
-          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div>{usingDemoRetainerLedger&&<span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Sample data</span>}</div></div><div className="overflow-hidden"><table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div></div></div><div className="overflow-hidden"><table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead><tr>
   <th className="w-[22%]">Invoice</th>
   <th className="w-[24%]">Client</th>
