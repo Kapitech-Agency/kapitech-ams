@@ -45,6 +45,9 @@ test('Document association IDs are validated against canonical client and projec
   const handler = routes.slice(start, end);
 
   assert.ok(handler.includes("const relatedEntity = cleanText(data.relatedEntity || 'General', 200);"));
+  assert.ok(handler.includes("!['General', 'Client', 'Project'].includes(relatedEntity)"));
+  assert.ok(handler.includes("You do not have permission to link documents to client records."));
+  assert.ok(handler.includes("You do not have permission to link documents to project records."));
   assert.ok(handler.includes("const relatedId = cleanText(data.relatedId || '', 120);"));
   assert.ok(handler.includes('postgresClientRepository.findById(relatedId)'));
   assert.ok(handler.includes('postgresProjectRepository.list()'));
