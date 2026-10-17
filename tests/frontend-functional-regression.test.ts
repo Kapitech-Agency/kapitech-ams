@@ -204,7 +204,8 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   assert.ok(app.includes('path="navigation/release-readiness"'));
 
   assert.equal(layout.includes('data-ams-slug="active-module-title"'), false);
-  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(sidebar.includes('aria-label="Primary navigation"'));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(layout.includes('Search Everything'));
   assert.ok(layout.includes('GlobalTimerControl'));
   assert.ok(layout.includes('AdminNotificationCenter'));

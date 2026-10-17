@@ -181,7 +181,7 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.ok(inbox.includes('<AdminSectionTabs') && inbox.includes('inboxTabs.map((tab)'));
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
-  assert.ok(layout.includes('ariaLabel="Workspace navigation"'), 'CRM and retainer route navigation comes from the shared content-area workspace tabs.');
+  assert.ok(sidebar.includes('aria-label="Primary navigation"'), 'Primary navigation stays accessible while CRM and retainer tabs remain contextual.');
   assert.ok(subnavigation.includes("label: 'Client directory'"));
   assert.ok(subnavigation.includes("label: 'Onboarding'"));
   assert.ok(subnavigation.includes("label: 'Retainers'"));
