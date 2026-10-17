@@ -508,3 +508,42 @@ After this documentation update, fetch the current branch HEAD and check the exa
 ### Resume point
 
 The exact source HEAD verified here is 84c86652ea13eedf8242c41592d2775f8a054d11. The branch remains 50 commits ahead of main and 0 commits behind the checked main baseline 35bc936ef96972a233196d3f3c92b2e5bb24d2d7. Refresh both branch references before any later delivery decision. Nothing in this checkpoint is merged to main or deployed.
+
+## Follow-up checkpoint · Nine-module source sweep and responsive interaction consistency · 18 October 2026
+
+### Coverage rule
+
+This checkpoint completes a source-backed pass across all nine primary AMS modules. It distinguishes pre-existing content-first changes already present in `main` from new follow-up changes in this review branch. A file does not need an artificial edit merely to claim that its module was reviewed; verified source structure and regression coverage are recorded instead. Business workflows, API contracts, permissions, persistence, authentication, database behavior, and Finance calculations remain outside this UI-only change.
+
+### Module-by-module disposition
+
+| Primary module | Source-backed review and disposition in this sweep |
+|---|---|
+| Dashboard | The overview metric grid now uses two columns from 390px instead of waiting until the general small-screen breakpoint; the invoice/expense chart legend remains visible and wraps on narrow screens. Live-data-unavailable labels and chart source descriptions remain intact. |
+| Inbox | The earlier branch slice removes the unreachable applicant pipeline and keeps recruitment review in the canonical CMS Careers workspace. Star toggles retain proper button semantics, state announcement, keyboard focus, and permission gating. |
+| Projects & Tasks | Projects keeps its source-backed portfolio table ahead of supporting metrics. Tasks now places the primary filtered queue/register ahead of KPI and team workload summaries so daily work is reached first. Compact table/board action controls have a shared minimum target size and visible keyboard focus. Task lifecycle, source mapping, and mutation behavior are unchanged. |
+| Clients | The earlier branch slice preserves missing-versus-zero distinctions, incomplete totals, spend/SLA availability and CSV behavior. The register remains ahead of supporting metrics; no client data contract or save payload was changed. |
+| Finance | The current worksheet remains the active work surface with source error/stale-record notices and no inferred values for failed sources. Shared table-action target/focus styling applies here as well. No accounting rules, formulas, permissions, or financial persistence changed. |
+| Team & Resources | The earlier branch slice distinguishes unavailable project/time sources from real zero activity across Team, Vendor, capacity and time-log views. Directory/register context and existing retry paths remain source-backed; shared table target/focus styling applies. |
+| Documents | The earlier branch slice distinguishes an empty vault from a failed request, retains known-good records during transient failures and clears private selected/deletion targets on access denial. The register remains before the upload area; mobile actions use 40px controls. |
+| Website CMS | Insights block movement/removal controls now use supported icon-bridge exports, 36px controls and visible focus. Testimonials deletion uses the shared ConfirmDialog with the affected author and impact stated. Careers continues to own both openings and applicants; CMS data and publication logic are unchanged. |
+| Settings | The earlier branch slice distinguishes backup status unavailable from a genuinely empty backup history, retains known-good rows on transient failures and handles access denial separately. Shared table target/focus styling applies to system tables. Security policy and privileged actions were not altered. |
+
+### Cross-module interaction consistency
+
+- Table action buttons and links with compact 32px utility classes receive a 36px minimum target on desktop and 40px on screens below 640px. Compact task-board actions follow the same rule. Focus-visible outlines use the existing AMS accent token.
+- Added `tests/ams-nine-module-workspace-regression.test.ts` as a source-level regression matrix covering all nine primary modules, key content ordering, source availability messaging, canonical Careers ownership, and shared touch/focus affordances.
+- The Tasks, Dashboard, CMS Insights, Testimonials, stylesheet, and audit-map changes remain limited to presentation, control affordance, and test/documentation surfaces. No backend, API, database, authentication/session, RBAC-policy, Finance calculation, dependency, or migration changes were included.
+
+### Automated validation
+
+At source commit `53edaaa063c649a0b1a840aa9ac56dac58848314`, both workflows completed successfully:
+
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39054972582): type check, security regression tests, PostgreSQL integration tests, production build, and production HTTP smoke test passed.
+- [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39054972524): typecheck, regression tests and production build passed.
+
+These runs validate source commit `53edaaa063c649a0b1a840aa9ac56dac58848314`, before this documentation-only checkpoint. Re-read workflow status for the resulting audit-map commit before treating that later SHA as validated.
+
+### Remaining acceptance checks
+
+Automated tests do not establish visual or interaction correctness in an authenticated browser. The remaining acceptance gate is to inspect all nine routes and their contextual tabs at 1440, 1024, 768, 390 and 320px; verify last-column reachability, horizontal scroll discoverability, native scrollbars, keyboard/touch interactions, drawer and dialog focus/scroll restoration, and login/logout scroll-lock cleanup. This runtime verification has not been claimed or substituted by CI. This audit branch remains separate from `main`; no merge or deployment is implied by this checkpoint.
