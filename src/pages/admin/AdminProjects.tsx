@@ -2387,56 +2387,56 @@ export const AdminProjects: React.FC = () => {
             )}
           </AdminPanel>
 
-                <section data-ams-feature-slug="projects-kpis" data-ams-slug="projects-kpis" aria-label="Projects key performance indicators">
-                      <AdminMetricStrip
-                        className="sm:grid-cols-2 lg:grid-cols-4"
-                        metrics={[
-                          {
-                            id: 'active-value',
-                            label: 'Total active value',
-                            value: serverMode ? formatAmount(metrics.value, currency) : '—',
-                            change: serverMode ? activeProjects.length + ' active' : loading ? 'Loading records' : 'Unavailable',
-                            changeToneClassName: serverMode ? 'text-success' : 'text-muted',
-                            context: serverMode ? 'Across active contracts' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                            
-                            icon: <CircleDollarSign size={15} />,
-                            toneClassName: 'text-success',
-                          },
-                          {
-                            id: 'velocity',
-                            label: 'Average project progress',
-                            value: serverMode ? metrics.averageProgress + '%' : '—',
-                            change: serverMode ? metrics.openTasks + ' open tasks' : loading ? 'Loading records' : 'Unavailable',
-                            changeToneClassName: serverMode ? 'text-info' : 'text-muted',
-                            context: serverMode ? 'Based on active project progress' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                            
-                            icon: <BarChart3 size={15} />,
-                            toneClassName: 'text-info',
-                          },
-                          {
-                            id: 'risk',
-                            label: 'Milestones at risk',
-                            value: serverMode ? String(metrics.milestonesAtRisk || metrics.risks) : '—',
-                            change: serverMode ? metrics.risks ? 'Action required' : 'Healthy' : loading ? 'Loading records' : 'Unavailable',
-                            changeToneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
-                            context: serverMode ? metrics.risks + ' projects need attention' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                            icon: <ShieldAlert size={15} />,
-                            toneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
-                          },
-                          {
-                            id: 'allocation',
-                            label: 'Resource allocation',
-                            value: serverMode ? metrics.assignedPeople + ' assigned' : '—',
-                            change: serverMode ? activeProjects.length + ' active projects' : loading ? 'Loading records' : 'Unavailable',
-                            changeToneClassName: 'text-muted',
-                            context: serverMode ? 'Unique owners & contributors' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                            
-                            icon: <Users size={15} />,
-                            toneClassName: 'text-fg',
-                          },
-                        ]}
-                      />
-                    </section>
+                          <section data-ams-feature-slug="projects-kpis" data-ams-slug="projects-kpis" aria-label="Projects key performance indicators">
+            <AdminMetricStrip
+              className="sm:grid-cols-2 lg:grid-cols-4"
+              metrics={[
+                {
+                  id: 'active-value',
+                  label: 'Total active value',
+                  value: serverMode ? formatAmount(metrics.value, currency) : '—',
+                  change: serverMode ? activeProjects.length + ' active' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-success' : 'text-muted',
+                  context: serverMode ? 'Across active contracts' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <CircleDollarSign size={15} />,
+                  toneClassName: 'text-success',
+                },
+                {
+                  id: 'velocity',
+                  label: 'Average project progress',
+                  value: serverMode ? metrics.averageProgress + '%' : '—',
+                  change: serverMode ? metrics.openTasks + ' open tasks' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-info' : 'text-muted',
+                  context: serverMode ? 'Based on active project progress' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <BarChart3 size={15} />,
+                  toneClassName: 'text-info',
+                },
+                {
+                  id: 'risk',
+                  label: 'Milestones at risk',
+                  value: serverMode ? String(metrics.milestonesAtRisk || metrics.risks) : '—',
+                  change: serverMode ? metrics.risks ? 'Action required' : 'Healthy' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
+                  context: serverMode ? metrics.risks + ' projects need attention' : loading ? 'Loading live project records' : 'Live project data unavailable',
+                  icon: <ShieldAlert size={15} />,
+                  toneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
+                },
+                {
+                  id: 'allocation',
+                  label: 'Resource allocation',
+                  value: serverMode ? metrics.assignedPeople + ' assigned' : '—',
+                  change: serverMode ? activeProjects.length + ' active projects' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: 'text-muted',
+                  context: serverMode ? 'Unique owners & contributors' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <Users size={15} />,
+                  toneClassName: 'text-fg',
+                },
+              ]}
+            />
+          </section>
         </>
       )}
 
@@ -3057,57 +3057,57 @@ export const AdminProjects: React.FC = () => {
           <AdminTablePagination total={filteredArchivedProjects.length} page={archiveTablePage} pageSize={archiveTablePageSize} onPageChange={setArchiveTablePage} onPageSizeChange={setArchiveTablePageSize} itemLabel="completed projects" slug="projects-archived-pagination" />
           </AdminPanel>
 
-                    <section data-ams-feature-slug="projects-archived-kpis" data-ams-slug="projects-archived-kpis" aria-label="Archived project summary">
-                      <AdminMetricStrip
-                        className="sm:grid-cols-2 lg:grid-cols-4"
-                        metrics={[
-                          {
-                            id: 'archived-count',
-                            label: 'Completed projects',
-                            value: serverMode ? String(archivedProjects.length) : '—',
-                            change: serverMode ? 'Historical delivery' : loading ? 'Loading records' : 'Unavailable',
-                            changeToneClassName: serverMode ? 'text-success' : 'text-muted',
-                            context: serverMode ? 'Closed project records' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                            
-                            icon: <CheckCircle2 size={15} />,
-                            toneClassName: 'text-success',
-                          },
-                          {
-                            id: 'archived-value',
-                            label: 'Completed value',
-                            value: serverMode ? formatAmount(archiveStats.totalValue, currency) : '—',
-                            change: serverMode ? archiveStats.clients + ' clients' : loading ? 'Loading records' : 'Unavailable',
-                            changeToneClassName: serverMode ? 'text-info' : 'text-muted',
-                            context: serverMode ? 'Historical portfolio value' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                            
-                            icon: <CircleDollarSign size={15} />,
-                            toneClassName: 'text-info',
-                          },
-                          {
-                            id: 'archived-progress',
-                            label: 'Average final progress',
-                            value: serverMode ? archiveStats.averageProgress + '%' : '—',
-                            change: serverMode ? 'Delivery completion' : loading ? 'Loading records' : 'Unavailable',
-                            changeToneClassName: serverMode ? 'text-success' : 'text-muted',
-                            context: serverMode ? 'Across archived projects' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                            
-                            icon: <BarChart3 size={15} />,
-                            toneClassName: 'text-fg',
-                          },
-                          {
-                            id: 'archived-clients',
-                            label: 'Historical clients',
-                            value: serverMode ? String(archiveStats.clients) : '—',
-                            change: serverMode ? filteredArchivedProjects.length + ' visible' : loading ? 'Loading records' : 'Unavailable',
-                            changeToneClassName: 'text-muted',
-                            context: serverMode ? 'Distinct client companies' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                            
-                            icon: <Users size={15} />,
-                            toneClassName: 'text-fg',
-                          },
-                        ]}
-                      />
-                    </section>
+                              <section data-ams-feature-slug="projects-archived-kpis" data-ams-slug="projects-archived-kpis" aria-label="Archived project summary">
+            <AdminMetricStrip
+              className="sm:grid-cols-2 lg:grid-cols-4"
+              metrics={[
+                {
+                  id: 'archived-count',
+                  label: 'Completed projects',
+                  value: serverMode ? String(archivedProjects.length) : '—',
+                  change: serverMode ? 'Historical delivery' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-success' : 'text-muted',
+                  context: serverMode ? 'Closed project records' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <CheckCircle2 size={15} />,
+                  toneClassName: 'text-success',
+                },
+                {
+                  id: 'archived-value',
+                  label: 'Completed value',
+                  value: serverMode ? formatAmount(archiveStats.totalValue, currency) : '—',
+                  change: serverMode ? archiveStats.clients + ' clients' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-info' : 'text-muted',
+                  context: serverMode ? 'Historical portfolio value' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <CircleDollarSign size={15} />,
+                  toneClassName: 'text-info',
+                },
+                {
+                  id: 'archived-progress',
+                  label: 'Average final progress',
+                  value: serverMode ? archiveStats.averageProgress + '%' : '—',
+                  change: serverMode ? 'Delivery completion' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-success' : 'text-muted',
+                  context: serverMode ? 'Across archived projects' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <BarChart3 size={15} />,
+                  toneClassName: 'text-fg',
+                },
+                {
+                  id: 'archived-clients',
+                  label: 'Historical clients',
+                  value: serverMode ? String(archiveStats.clients) : '—',
+                  change: serverMode ? filteredArchivedProjects.length + ' visible' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: 'text-muted',
+                  context: serverMode ? 'Distinct client companies' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <Users size={15} />,
+                  toneClassName: 'text-fg',
+                },
+              ]}
+            />
+          </section>
         </div>
       )}
 
