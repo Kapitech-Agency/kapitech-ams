@@ -91,5 +91,5 @@ test('legacy routes remain protected and role-scoped while removed modules stay 
   const app = await read('src/App.tsx');
   assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
   assert.ok(!app.includes('AdminApprovals'));
-  assert.ok(app.includes('const AdminApprovals = lazyWithRetry('));
+  assert.ok(!app.includes('const AdminApprovals = lazyWithRetry('));
 });
