@@ -47,7 +47,7 @@ test('contextual navigation contains only local views owned by the current modul
   assert.deepEqual(getAmsModuleSubnavigation('team', 'Finance').map((item) => item.key), ['vendors']);
   assert.equal(getAmsModuleSubnavigation('team', 'Creative').some((item) => item.key === 'skills'), false);
   assert.equal(getAmsModuleSubnavigation('team', 'Freelancer').some((item) => item.key === 'skills'), false);
-  assert.deepEqual(getAmsModuleSubnavigation('cms', 'Admin').map((item) => item.key), ['insights', 'projects', 'testimonials', 'services', 'careers']);
+  assert.deepEqual(getAmsModuleSubnavigation('cms', 'Admin').map((item) => item.key), ['projects', 'insights', 'testimonials', 'services', 'careers']);
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'Admin').map((item) => item.key), ['backup', 'access', 'audit', 'integrations']);
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'PM'), []);
 });
@@ -89,6 +89,25 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'access')!, '/admin/settings', '?tab=security'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'audit')!, '/admin/settings', '?tab=audit'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'integrations')!, '/admin/settings', '?tab=integrations'), true);
+});
+
+test('CMS default tabs and applicant-only roles match their permitted entry point', () => {
+  const adminCms = getAmsModuleSubnavigation('cms', 'Admin');
+  assert.equal(adminCms[0]?.key, 'projects');
+  assert.equal(adminCms[0]?.label, 'Case studies');
+  assert.equal(isAmsModuleSubnavigationItemActive(adminCms[0], '/admin/cms/projects'), true);
+
+  const pmCms = getAmsModuleSubnavigation('cms', 'PM');
+  assert.equal(pmCms[0]?.key, 'insights');
+  const pmApplicants = pmCms.find((item) => item.key === 'careers');
+  assert.equal(pmApplicants?.label, 'Applicants');
+  assert.equal(pmApplicants?.to, '/admin/cms/careers?tab=applicants');
+  assert.equal(isAmsModuleSubnavigationItemActive(pmApplicants!, '/admin/cms/careers', '?tab=applicants'), true);
+
+  const financeCms = getAmsModuleSubnavigation('cms', 'Finance');
+  assert.deepEqual(financeCms.map((item) => item.key), ['careers']);
+  assert.equal(financeCms[0]?.label, 'Applicants');
+  assert.equal(financeCms[0]?.to, '/admin/cms/careers?tab=applicants');
 });
 
 test('role-specific module entry points activate a tab that owns the destination', () => {
