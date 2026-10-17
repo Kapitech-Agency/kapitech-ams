@@ -17,6 +17,8 @@ import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive } from '.
 const flatten = (role: Parameters<typeof getNavigationGroupsForRole>[0]) =>
   getNavigationGroupsForRole(role).flatMap((group) => group.items);
 const keys = (role: Parameters<typeof getNavigationGroupsForRole>[0]) => new Set(flatten(role).map((item) => item.key));
+const roles = ['Admin', 'Finance', 'PM', 'Creative', 'Freelancer'] as const;
+const contextualModules = ['dashboard', 'crm', 'projects', 'finance', 'clients', 'team', 'cms', 'settings', 'tasks'] as const;
 const subnav = (
   moduleKey: Parameters<typeof getAmsModuleSubnavigation>[0],
   role: Parameters<typeof getAmsModuleSubnavigation>[1],
