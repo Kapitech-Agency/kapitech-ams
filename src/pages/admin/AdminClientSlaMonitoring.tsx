@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, ExternalLink, FileText } from 'lucide-react';
+import { Activity, AlertTriangle, ExternalLink, FileText } from 'lucide-react';
 import { AdminModuleHeader, AdminPageShell, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 
 const slaSetupRequirements = [
