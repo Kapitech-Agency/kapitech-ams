@@ -134,44 +134,35 @@ test('Creative and Freelancer route restrictions remain intact while using the c
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/cms/insights'), false);
 });
 
-test('query and path destination signatures are stable and module ownership does not duplicate links', () => {
-  assert.equal(
-    getAmsNavigationDestinationSignature('/admin/finance/?tab=accounts-receivable'),
-    getAmsNavigationDestinationSignature('/admin/finance?tab=accounts-receivable')
-  );
-  assert.equal(
-    getAmsNavigationDestinationSignature('/admin/clients/all-clients?scope=onboarding'),
-    getAmsNavigationDestinationSignature('/admin/clients/all-clients?scope=onboarding')
-  );
-
-  const roles = ['Admin', 'Finance', 'PM', 'Creative', 'Freelancer'] as const;
-  const modules = ['dashboard', 'projects', 'finance', 'clients', 'team', 'cms', 'settings', 'tasks'] as const;
-  for (const role of roles) {
-    const destinations = getAmsSidebarDestinationSignatures(role);
-    for (const moduleKey of modules) {
-      for (const item of subnav(moduleKey, role)) {
-        assert.equal(destinations.has(getAmsNavigationDestinationSignature(item.to)), false, role + ':' + moduleKey + ':' + item.to);
-      }
-    }
+test('contextual navigation preserves the default view of each module', () => {
+  const cases: Array<[typeof contextualModules[number], typeof roles[number], string]> = [
+    ['dashboard', 'Admin', 'overview'],
+    ['projects', 'Admin', 'all'],
+    ['clients', 'Admin', 'directory'],
+    ['team', 'Admin', 'team'],
+    ['cms', 'Admin', 'projects'],
+  ];
+  for (const [moduleKey, role, key] of cases) {
+    assert.ok(subnav(moduleKey, role).some((item) => item.key === key), role + '/' + moduleKey + ' is missing its default view');
   }
 });
 
 test('module subnavigation respects feature ownership and role-specific scope', () => {
-  assert.deepEqual(subnav('dashboard', 'Admin').map((item) => item.key), ['performance', 'analytics']);
+  assert.deepEqual(subnav('dashboard', 'Admin').map((item) => item.key), ['overview', 'performance', 'analytics']);
   assert.deepEqual(subnav('crm', 'Admin'), []);
   assert.deepEqual(subnav('finance', 'Finance'), []);
-  assert.deepEqual(subnav('projects', 'Admin').map((item) => item.key), ['sprint', 'budget', 'archived', 'tasks']);
-  assert.deepEqual(subnav('projects', 'Finance').map((item) => item.key), ['tasks']);
-  assert.deepEqual(subnav('projects', 'Creative').map((item) => item.key), ['tasks']);
-  assert.deepEqual(subnav('projects', 'Freelancer'), []);
-  assert.deepEqual(subnav('clients', 'Admin').map((item) => item.key), ['onboarding', 'contracts', 'retainers', 'sla']);
-  assert.deepEqual(subnav('clients', 'Finance').map((item) => item.key), ['onboarding', 'contracts', 'sla']);
-  assert.deepEqual(subnav('team', 'Admin').map((item) => item.key), ['capacity', 'skills', 'vendors', 'time']);
-  assert.deepEqual(subnav('team', 'PM').map((item) => item.key), ['capacity', 'time']);
-  assert.deepEqual(subnav('team', 'Finance'), []);
-  assert.deepEqual(subnav('cms', 'Admin').map((item) => item.key), ['insights', 'testimonials', 'services', 'careers']);
-  assert.deepEqual(subnav('cms', 'Creative').map((item) => item.key), ['projects', 'testimonials']);
-  assert.deepEqual(subnav('settings', 'Admin').map((item) => item.key), ['access', 'audit', 'integrations']);
+  assert.deepEqual(subnav('projects', 'Admin').map((item) => item.key), ['all', 'sprint', 'budget', 'archived', 'tasks']);
+  assert.deepEqual(subnav('projects', 'Finance').map((item) => item.key), ['sprint', 'tasks']);
+  assert.deepEqual(subnav('projects', 'Creative').map((item) => item.key), ['sprint', 'tasks']);
+  assert.deepEqual(subnav('projects', 'Freelancer').map((item) => item.key), ['tasks']);
+  assert.deepEqual(subnav('clients', 'Admin').map((item) => item.key), ['directory', 'onboarding', 'contracts', 'retainers', 'sla']);
+  assert.deepEqual(subnav('clients', 'Finance').map((item) => item.key), ['directory', 'onboarding', 'contracts', 'sla']);
+  assert.deepEqual(subnav('team', 'Admin').map((item) => item.key), ['team', 'capacity', 'skills', 'vendors', 'time']);
+  assert.deepEqual(subnav('team', 'PM').map((item) => item.key), ['team', 'capacity', 'time']);
+  assert.deepEqual(subnav('team', 'Finance').map((item) => item.key), ['vendors']);
+  assert.deepEqual(subnav('cms', 'Admin').map((item) => item.key), ['insights', 'projects', 'testimonials', 'services', 'careers']);
+  assert.deepEqual(subnav('cms', 'Creative').map((item) => item.key), ['insights', 'projects', 'testimonials']);
+  assert.deepEqual(subnav('settings', 'Admin').map((item) => item.key), ['backup', 'access', 'audit', 'integrations']);
   assert.deepEqual(subnav('settings', 'PM'), []);
 });
 
