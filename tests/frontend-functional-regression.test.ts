@@ -100,13 +100,13 @@ test('Projects accepts valid empty server lists and never falls back to demo rec
   const projects = await read('src/pages/admin/AdminProjects.tsx');
   assert.match(projects, /response\.success && Array\.isArray\(response\.data\?\.projects\)/);
   assert.doesNotMatch(projects, /response\.data\.projects\.length > 0/);
-  assert.match(projects, /isSlugFixtureMode\(\) \? applyKanbanStatusOverrides\(demoProjects\) : \[\]/);
-  assert.match(projects, /if \(!serverModeRef\.current && !isSlugFixtureMode\(\)\)/);
+  assert.match(projects, /setProjects\(serverProjects\);/);
+  assert.doesNotMatch(projects, /demoProjects|INITIAL_DEFAULT_PROJECTS|isSlugFixtureMode|A\/B dataset|demo_task_|'demo_'/);
+  assert.doesNotMatch(projects, /sessionStorage|PROJECT_STATUS_OVERRIDES_KEY|TASK_STATUS_OVERRIDES_KEY|applyKanbanStatusOverrides/);
   assert.match(projects, /if \(savedToData\) setProjectDrawerOpen\(false\)/);
   assert.match(projects, /if \(savedToData\) setTaskDrawerOpen\(false\)/);
-  assert.match(projects, /delete taskOverrides\[task\.id\]/);
-  assert.match(projects, /delete projectOverrides\[project\.id\]/);
-  assert.match(projects, /if \(!isSlugFixtureMode\(\)\) \{[\s\S]{0,200}writeStatusOverrides\(PROJECT_STATUS_OVERRIDES_KEY, \{\}\)[\s\S]{0,160}return source/);
+  const runtime = await read('src/lib/runtimeMode.ts');
+  assert.match(runtime, /isSlugFixtureMode = \(\): boolean => false/);
 });
 
 test('Project editor can link an existing canonical client without guessing by display name', async () => {
@@ -133,7 +133,12 @@ test('Project save requires the canonical persisted record before showing succes
 
 test('Team workspace preview records are only injected in development or explicit fixture mode', async () => {
   const teams = await read('src/pages/admin/AdminTeams.tsx');
-  assert.match(teams, /if \(isSlugFixtureMode\(\)\) \{[\s\S]{0,120}if \(nextMembers\.length === 0\)/);
+  assert.doesNotMatch(teams, /isSlugFixtureMode|previewMembers|previewVendors|previewProjects|previewLogs|previewTabs|A\/B workspace/);
+  assert.match(teams, /api\.auth\.getTaskAssignees\(\)/);
+  assert.match(teams, /api\.vendors\.getAll\(\)/);
+  assert.match(teams, /api\.projects\.getAll\(\)/);
+  assert.match(teams, /api\.timeLogs\.getAll\(\)/);
+  assert.match(teams, /let nextMembers: TeamMember\[] = \[\]/);
   assert.match(teams, /currentViewResults[\s\S]{0,600}filter\(\(item\) => !item\.result\.success\)/);
 });
 
@@ -236,7 +241,9 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
 
   assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />'));
   assert.ok(dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} />'));
-  assert.ok(dashboard.includes('Preview data only'));
+  assert.doesNotMatch(dashboard, /Preview data only|sampleProjects|sampleTeam|sampleRevenueByRange|isSlugFixtureMode|fixtureMode/);
+  assert.ok(dashboard.includes('Live data unavailable'));
+  assert.ok(dashboard.includes('buildFinancialTrend(range, invoices, expenses)'));
   assert.ok(dashboard.includes('not a posted profit figure'));
   assert.doesNotMatch(dashboard, /const deliveryBreakdown = \[/);
 });
@@ -272,10 +279,12 @@ test('Client Retainers are server-persisted and sample agreements are fixture-on
 
   assert.match(model, /activeRetainer\?: boolean/);
   assert.match(model, /retainerMonthlyValue\?: number/);
-  assert.match(page, /const \[records, setRecords\] = useState<Retainer\[]>\(\(\) => fixtureMode \? seed : \[\]\)/);
+  assert.match(page, /const \[records, setRecords\] = useState<Retainer\[]>\(\[\]\)/);
+  assert.doesNotMatch(page, /const seed: Retainer|isSlugFixtureMode|hoursTarget|setHoursTarget|retainer-hours-drawer|api\.clients\.addRetainerHours/);
   assert.match(page, /api\.clients\.getAll\(\)/);
   assert.match(page, /api\.clients\.update\(targetClient\.id/);
-  assert.match(page, /api\.clients\.addRetainerHours\(clientId, amount\)/);
+  assert.doesNotMatch(page, /api\.clients\.addRetainerHours\(/);
+  assert.doesNotMatch(page, /retainer-hours-drawer|setHoursTarget/);
   assert.match(routes, /retainerMonthlyValue/);
   assert.match(routes, /Invalid retainer cycle/);
   assert.match(routes, /key === 'retainerCommittedHours' && numeric < 1/);
@@ -320,7 +329,8 @@ test('retainer usage increments atomically and keeps its audit event in the same
   assert.match(method, /appendWithinTransaction\(client, audit\)/);
   assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
   assert.match(client, /addRetainerHours: \(id: string, hours: number\)/);
-  assert.match(page, /api\.clients\.addRetainerHours\(clientId, amount\)/);
+  assert.doesNotMatch(page, /api\.clients\.addRetainerHours\(/);
+  assert.doesNotMatch(page, /retainer-hours-drawer|setHoursTarget/);
 });
 
 
@@ -328,9 +338,10 @@ test('retainer mutations are only offered to accounts with client-management per
   const page = await read('src/pages/admin/AdminClientRetainers.tsx');
   const routes = await read('server/routes.ts');
 
-  assert.match(page, /const canManageRetainers = fixtureMode \|\| hasAdminPermission\('canManageClients'\)/);
+  assert.match(page, /const canManageRetainers = hasAdminPermission\('canManageClients'\)/);
   assert.match(page, /\{canManageRetainers && <Button[^>]*onClick=\{openRetainerForm\}/);
-  assert.match(page, /\{canManageRetainers && <>[\s\S]{0,600}onClick=\{\(\) => openRetainerForm\(item\)\}[\s\S]{0,500}onClick=\{\(\) => \{ setHoursTarget\(item\)/);
+  assert.doesNotMatch(page, /setHoursTarget|retainer-hours-drawer|Log hours/);
+  assert.match(page, /onClick=\{\(\) => openRetainerForm\(item\)\}/);
   assert.match(routes, /apiRouter\.put\('\/clients\/:id', requireAuth, requirePermission\('canManageClients'\)/);
   assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
 });
