@@ -1995,6 +1995,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           </div>
         );
       }
+      case 'quotations':
+        return <AdminInvoicing key={tab.key} embeddedView="quotations" showStandaloneHeader={false} />;
       case 'revenue':
         return <AdminInvoicing key={tab.key} embeddedView="invoices" />;
       case 'expenses':
