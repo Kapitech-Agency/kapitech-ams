@@ -289,7 +289,7 @@ No claim of full data-integrity, production-readiness or financial-statement ver
 
 | Requirement | Status | Evidence | Remaining limitation |
 |---|---|---|---|
-| FIN-011: Only replace Finance cache when the API returns a valid collection envelope | IMPLEMENTED_UNVERIFIED until the combined branch CI completes | `src/lib/financeStore.ts` now requires HTTP success, no explicit `success: false`, and the expected invoice/expense array before replacing the related cache. A valid empty array remains authoritative; malformed/error payloads preserve last-known-good cache and trigger the existing retry path. Regression coverage: `tests/frontend-functional-regression.test.ts`. | Static regressions validate the source contract. Mounted-browser recovery behavior still requires an isolated malformed-HTTP-200 test. |
+| FIN-011: Only replace Finance cache when the API returns a valid collection envelope | IMPLEMENTED_VERIFIED (source regression and CI passed; browser runtime remains unverified) | `src/lib/financeStore.ts` now requires HTTP success, no explicit `success: false`, and the expected invoice/expense array before replacing the related cache. A valid empty array remains authoritative; malformed/error payloads preserve last-known-good cache and trigger the existing retry path. Regression coverage: `tests/frontend-functional-regression.test.ts`. | Static regressions validate the source contract. Mounted-browser recovery behavior still requires an isolated malformed-HTTP-200 test. |
 
 ### 12.2 Source-proven protected-system risks
 
@@ -303,6 +303,6 @@ No claim of full data-integrity, production-readiness or financial-statement ver
 
 ### 12.3 Additional automated evidence and limitations
 
-The earlier PR #169 adds an isolated mock-fetch API client regression suite covering mutating-request timeout, read timeout and binary upload timeout. This follow-up adapts its assertions to the current API client's clearer messages rather than reverting the newer implementation from PR #168. The CI results attached to older branch heads are historical evidence only; the combined branch must pass its own latest Quality Gate and AMS CI before this follow-up is merged.
+The earlier PR #169 adds an isolated mock-fetch API client regression suite covering mutating-request timeout, read timeout and binary upload timeout. This follow-up adapts its assertions to the current API client's clearer messages rather than reverting the newer implementation from PR #168. Combined source/test head `6fb61d4cf4e7ecee9b0d4f385cca66d76d280ded` passed AMS Quality Gate and AMS CI: 572 tests, 552 passed, 0 failed, 20 skipped; typecheck and production build passed; all 8 isolated PostgreSQL integration tests passed; dependency audit found no vulnerabilities in 266 packages; migration packaging and isolated PostgreSQL HTTP smoke checks passed. These checks validate the tested code paths and isolated environment only. Both workflows must pass again on the latest PR head before merging.
 
 The findings above are source-level risks and release-control gaps, not claims that duplicate live payments, a live invoice read mismatch, or unsafe production TLS was observed. No backend endpoint, authentication/RBAC control, database schema/migration, production record, bank operation, finance formula, account mapping or posting rule was modified.
