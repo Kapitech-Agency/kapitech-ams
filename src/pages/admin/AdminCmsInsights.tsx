@@ -3,8 +3,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   Check,
-  ChevronDown,
-  ChevronUp,
+  ArrowDown,
+  ArrowUp,
   HelpCircle,
   FileText,
   Globe,
@@ -170,8 +170,8 @@ const BlockEditor: React.FC<{
               aria-label={'Block type ' + (index + 1)}
             />
             <div className="flex items-center gap-1">
-              <Button type="button" variant="ghost" className="h-9 w-9 px-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" disabled={index === 0} onClick={() => move(index, -1)} aria-label="Move block up"><ChevronUp size={15} aria-hidden="true" /></Button>
-              <Button type="button" variant="ghost" className="h-9 w-9 px-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" disabled={index === blocks.length - 1} onClick={() => move(index, 1)} aria-label="Move block down"><ChevronDown size={15} aria-hidden="true" /></Button>
+              <Button type="button" variant="ghost" className="h-9 w-9 px-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" disabled={index === 0} onClick={() => move(index, -1)} aria-label="Move block up"><ArrowUp size={15} aria-hidden="true" /></Button>
+              <Button type="button" variant="ghost" className="h-9 w-9 px-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" disabled={index === blocks.length - 1} onClick={() => move(index, 1)} aria-label="Move block down"><ArrowDown size={15} aria-hidden="true" /></Button>
               <Button
                 type="button"
                 variant="ghost"
