@@ -439,18 +439,20 @@ test('Finance invoices, expenses, vendors, and quotations use canonical persiste
   const page = await read('src/pages/admin/AdminInvoicing.tsx');
   const store = await read('src/lib/financeStore.ts');
 
-  assert.match(page, /const \\[vendors, setVendors\\] = useState<AgencyVendor\\[]>\\(\\[\\]\\)/);
-  assert.match(page, /const \\[quotations, setQuotations\\] = useState<FinanceQuotation\\[]>\\(\\[\\]\\)/);
-  assert.match(page, /api\\.finance\\.getInvoices\\(\\)/);
-  assert.match(page, /api\\.finance\\.getExpenses\\(\\)/);
-  assert.match(page, /api\\.vendors\\.getAll\\(\\)/);
-  assert.match(page, /api\\.proposals\\.getAll\\(\\)/);
-  assert.match(page, /setVendors\\(serverVendors\\)/);
-  assert.match(page, /quotationError/);
-  assert.doesNotMatch(page, /STITCH_FINANCE_QUOTATIONS|STITCH_FINANCE_RETAINER_INVOICES|isSlugFixtureMode|usingDemo|slugDataMode|syncDemoFinanceMetrics|inv_slug_|exp_slug_|quote_slug_|retainer_demo_/);
+  for (const token of [
+    'const [vendors, setVendors] = useState<AgencyVendor[]>([]);',
+    'const [quotations, setQuotations] = useState<FinanceQuotation[]>([]);',
+    'api.finance.getInvoices()',
+    'api.finance.getExpenses()',
+    'api.vendors.getAll()',
+    'api.proposals.getAll()',
+    'setVendors(serverVendors);',
+    'quotationError'
+  ]) assert.ok(page.includes(token), 'Finance is missing canonical-source behavior: ' + token);
 
-  assert.match(store, /INITIAL_DEFAULT_INVOICES: AgencyInvoice\\[\\] = \\[\\]/);
-  assert.match(store, /INITIAL_DEFAULT_EXPENSES: AgencyExpense\\[\\] = \\[\\]/);
+  assert.doesNotMatch(page, /STITCH_FINANCE_QUOTATIONS|STITCH_FINANCE_RETAINER_INVOICES|isSlugFixtureMode|usingDemo|slugDataMode|syncDemoFinanceMetrics|inv_slug_|exp_slug_|quote_slug_|retainer_demo_/);
+  assert.ok(store.includes('INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [];'));
+  assert.ok(store.includes('INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [];'));
   assert.doesNotMatch(store, /KAPI-INV-2026-001|KAPI-RET-2026-001|retainer_demo_001/);
 });
 
