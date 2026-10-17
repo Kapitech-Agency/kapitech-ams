@@ -455,8 +455,10 @@ export const AdminDocuments: React.FC = () => {
 
     setUploading(true);
     let createdId = '';
+    let createAttempted = false;
     let uploadAttempted = false;
     try {
+      createAttempted = true;
       const created = await api.documents.create({
         name: uploadTitle.trim(),
         title: uploadTitle.trim(),
@@ -470,7 +472,14 @@ export const AdminDocuments: React.FC = () => {
       });
 
       if (!created.success || !created.data?.document) {
-        notify(created.error || 'Document could not be created.');
+        const createOutcomeUnknown = created.status === undefined || created.status >= 500;
+        if (createOutcomeUnknown) {
+          await loadDocuments();
+          notify((created.error || 'The document record could not be confirmed.')
+            + ' The record may already exist. Inspect the refreshed vault before retrying the upload.');
+        } else {
+          notify(created.error || 'Document could not be created.');
+        }
         return;
       }
 
@@ -514,6 +523,11 @@ export const AdminDocuments: React.FC = () => {
         // Never delete a possibly completed upload from an ambiguous transport failure.
         await loadDocuments();
         notify('The upload result could not be confirmed. The file may already be stored. Inspect the refreshed vault before retrying; do not upload it again until its status is clear.');
+      } else if (createAttempted && !createdId) {
+        // A timed-out create may have persisted a pending record without returning its ID.
+        // Refresh the vault and do not issue an automatic duplicate create.
+        await loadDocuments();
+        notify('The document record creation result could not be confirmed. Inspect the refreshed vault before retrying; the record may already exist.');
       } else {
         const cleanup = createdId
           ? await cleanupIncompleteDocument(createdId)
