@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
@@ -132,6 +133,8 @@ export const AdminContracts: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [transitioningId, setTransitioningId] = useState('');
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ contract: ClientContract; status: 'expired' | 'terminated' } | null>(null);
+  const [deleteDraftTarget, setDeleteDraftTarget] = useState<ClientContract | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [query, setQuery] = useState('');
@@ -265,12 +268,6 @@ export const AdminContracts: React.FC = () => {
 
   const transition = async (contract: ClientContract, status: ContractStatus) => {
     if (!canManage || transitioningId) return;
-    const confirmation = status === 'terminated'
-      ? window.confirm('Terminate ' + contract.contractNumber + '? This action changes the contract lifecycle state.')
-      : status === 'expired'
-        ? window.confirm('Mark ' + contract.contractNumber + ' as expired?')
-        : true;
-    if (!confirmation) return;
     setTransitioningId(contract.id);
     setError('');
     try {
@@ -281,6 +278,8 @@ export const AdminContracts: React.FC = () => {
       }
       setContracts((current) => current.map((item) => item.id === contract.id ? response.data!.contract as ClientContract : item));
       setNotice(contract.contractNumber + ' moved to ' + statusLabels[status] + '.');
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'The contract status could not be changed.');
     } finally {
       setTransitioningId('');
     }
@@ -288,7 +287,6 @@ export const AdminContracts: React.FC = () => {
 
   const deleteDraft = async (contract: ClientContract) => {
     if (!canManage || transitioningId || contract.status !== 'draft') return;
-    if (!window.confirm('Delete draft ' + contract.contractNumber + '? This action cannot be undone.')) return;
     setTransitioningId(contract.id);
     setError('');
     try {
@@ -304,6 +302,20 @@ export const AdminContracts: React.FC = () => {
     } finally {
       setTransitioningId('');
     }
+  };
+
+  const confirmPendingStatusChange = async () => {
+    const pending = pendingStatusChange;
+    if (!pending || !canManage || transitioningId) return;
+    await transition(pending.contract, pending.status);
+    setPendingStatusChange(null);
+  };
+
+  const confirmDeleteDraft = async () => {
+    const target = deleteDraftTarget;
+    if (!target || !canManage || transitioningId) return;
+    await deleteDraft(target);
+    setDeleteDraftTarget(null);
   };
 
   const primaryNext = (status: ContractStatus): ContractStatus | null => {
@@ -386,9 +398,9 @@ export const AdminContracts: React.FC = () => {
                         <div className="flex flex-wrap items-center justify-end gap-1.5">
                           {['draft', 'in_review'].includes(contract.status) && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => openEdit(contract)} disabled={!canManage}>Edit draft</Button>}
                           {next && <Button type="button" variant="primary" className="h-8 px-2 text-[10px]" onClick={() => void transition(contract, next)} disabled={!canManage || Boolean(transitioningId)} loading={transitioningId === contract.id}>{next === 'in_review' ? 'Send to review' : next === 'sent' ? 'Send for signature' : next === 'signed' ? 'Record signature' : next === 'active' ? 'Activate' : 'Complete'} <ArrowRight size={12} /></Button>}
-                          {contract.status === 'draft' && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => void deleteDraft(contract)} disabled={!canManage || Boolean(transitioningId)} loading={transitioningId === contract.id}><Trash2 size={12} /> Delete draft</Button>}
-                          {contract.status === 'active' && isDatePast(contract.endDate) && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => void transition(contract, 'expired')} disabled={!canManage || Boolean(transitioningId)}>Mark expired</Button>}
-                          {contract.status === 'active' && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => void transition(contract, 'terminated')} disabled={!canManage || Boolean(transitioningId)}>Terminate</Button>}
+                          {contract.status === 'draft' && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => setDeleteDraftTarget(contract)} disabled={!canManage || Boolean(transitioningId) || Boolean(deleteDraftTarget)} loading={transitioningId === contract.id}><Trash2 size={12} /> Delete draft</Button>}
+                          {contract.status === 'active' && isDatePast(contract.endDate) && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => setPendingStatusChange({ contract, status: 'expired' })} disabled={!canManage || Boolean(transitioningId) || Boolean(pendingStatusChange)}>Mark expired</Button>}
+                          {contract.status === 'active' && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => setPendingStatusChange({ contract, status: 'terminated' })} disabled={!canManage || Boolean(transitioningId) || Boolean(pendingStatusChange)}>Terminate</Button>}
                         </div>
                       </td>
                     </tr>
@@ -421,6 +433,29 @@ export const AdminContracts: React.FC = () => {
         <ShieldAlert size={15} className="mt-0.5 shrink-0" />
         <p>Lifecycle status and audit events are stored in AMS. The workflow records review, sending, signature confirmation, activation, and closeout; it does not send emails or apply a legally binding e-signature. Store signed documents in an approved secure location and attach its HTTPS link.</p>
       </section>
+
+      <ConfirmDialog
+        open={Boolean(pendingStatusChange)}
+        onClose={() => { if (!transitioningId) setPendingStatusChange(null); }}
+        title={pendingStatusChange?.status === 'terminated' ? 'Terminate contract?' : 'Mark contract as expired?'}
+        description={pendingStatusChange
+          ? pendingStatusChange.status === 'terminated'
+            ? 'Terminate ' + pendingStatusChange.contract.contractNumber + '? This action changes the contract lifecycle state.'
+            : 'Mark ' + pendingStatusChange.contract.contractNumber + ' as expired?'
+          : 'Confirm the contract lifecycle change.'}
+        confirmLabel={pendingStatusChange?.status === 'terminated' ? 'Terminate contract' : 'Mark expired'}
+        onConfirm={() => void confirmPendingStatusChange()}
+        loading={Boolean(pendingStatusChange && transitioningId === pendingStatusChange.contract.id)}
+      />
+      <ConfirmDialog
+        open={Boolean(deleteDraftTarget)}
+        onClose={() => { if (!transitioningId) setDeleteDraftTarget(null); }}
+        title="Delete contract draft?"
+        description={deleteDraftTarget ? 'Delete draft ' + deleteDraftTarget.contractNumber + '? This action cannot be undone.' : 'This draft contract will be deleted.'}
+        confirmLabel="Delete draft"
+        onConfirm={() => void confirmDeleteDraft()}
+        loading={Boolean(deleteDraftTarget && transitioningId === deleteDraftTarget.id)}
+      />
 
       <Drawer
         slug="client-contract-editor"

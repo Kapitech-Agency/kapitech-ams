@@ -126,6 +126,10 @@ The dedicated Time Tracking page showed period-filtered tracked/billable totals 
 
 Contracts & SOW previously placed four hand-built overview cards before the search/status controls and primary contract register. The counts are meaningful for the lifecycle, so they remain source-derived but now use the shared `AdminMetricStrip` after the searchable, paginated register. The row actions, workflow transitions, document references, authorization checks, and drawer editor are unchanged. No contract status, mutation, API, or persisted data behavior is changed.
 
+## Follow-on Contracts interaction slice: shared confirmations
+
+The Contracts lifecycle workspace now uses the existing shared `ConfirmDialog` for status changes to Expired and Terminated, and for deleting a draft. Browser-native `window.confirm` calls were removed. Each dialog identifies the affected contract, explains the impact, and uses the existing `transitioningId` for busy-state protection. Existing permission checks, API mutations, record updates and success/error notices remain in the same handlers. Transition request errors are surfaced using the page's existing error notice.
+
 ## Remaining visual verification and limits
 
 Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.
