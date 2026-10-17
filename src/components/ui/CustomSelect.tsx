@@ -9,6 +9,7 @@ export interface SelectOption {
   badge?: string;
   badgeColor?: string;
   description?: string;
+  disabled?: boolean;
 }
 
 interface CustomSelectProps {
@@ -49,6 +50,21 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
   const selectedOption = options.find((opt) => opt.value === value);
   const selectedIndex = Math.max(0, options.findIndex((opt) => opt.value === value));
+  const nextEnabledIndex = (startIndex: number, delta: 1 | -1): number => {
+    if (!options.length) return 0;
+    for (let offset = 1; offset <= options.length; offset += 1) {
+      const candidate = ((startIndex + delta * offset) % options.length + options.length) % options.length;
+      if (!options[candidate].disabled) return candidate;
+    }
+    return startIndex;
+  };
+  const firstEnabledIndex = options.findIndex((option) => !option.disabled);
+  const lastEnabledIndex = (() => {
+    for (let index = options.length - 1; index >= 0; index -= 1) {
+      if (!options[index].disabled) return index;
+    }
+    return -1;
+  })();
 
   useEffect(() => setActiveIndex(selectedIndex), [selectedIndex]);
 
@@ -70,14 +86,11 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             e.preventDefault();
             const delta = e.key === 'ArrowDown' ? 1 : -1;
-            const nextIndex = options.length
-              ? (activeIndex + delta + options.length) % options.length
-              : 0;
-            setActiveIndex(nextIndex);
+            setActiveIndex(nextEnabledIndex(activeIndex, delta as 1 | -1));
             setIsOpen(true);
           } else if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (isOpen && options[activeIndex]) {
+            if (isOpen && options[activeIndex] && !options[activeIndex].disabled) {
               onChange(options[activeIndex].value);
               setIsOpen(false);
             } else {
@@ -85,7 +98,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             }
           } else if (e.key === 'Home' || e.key === 'End') {
             e.preventDefault();
-            setActiveIndex(e.key === 'Home' ? 0 : Math.max(0, options.length - 1));
+            const edgeIndex = e.key === 'Home' ? firstEnabledIndex : lastEnabledIndex;
+            if (edgeIndex >= 0) setActiveIndex(edgeIndex);
             setIsOpen(true);
           } else if (e.key === 'Escape') {
             e.preventDefault();
@@ -150,15 +164,18 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           ) : (
             options.map((option, index) => {
               const isSelected = option.value === value;
-              const isActive = index === activeIndex;
+              const isActive = index === activeIndex && !option.disabled;
 
               return (
                 <button
                   key={option.value}
                   id={`${listboxId}-option-${index}`}
                   type="button"
-                  onMouseEnter={() => setActiveIndex(index)}
+                  disabled={option.disabled}
+                  aria-disabled={option.disabled || undefined}
+                  onMouseEnter={() => { if (!option.disabled) setActiveIndex(index); }}
                   onClick={() => {
+                    if (option.disabled) return;
                     onChange(option.value);
                     setActiveIndex(index);
                     setIsOpen(false);
@@ -169,11 +186,13 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   data-selected={isSelected}
                   data-active={isActive}
                   className={`ams-dropdown-item w-max min-w-full flex items-center justify-between min-h-10 sm:min-h-9 text-left transition-colors focus-visible:outline-none group ${
-                    isSelected
-                      ? 'bg-accent/14 text-fg font-semibold'
-                      : isActive
-                        ? 'text-fg bg-panel-hover'
-                        : 'text-muted hover:text-fg hover:bg-panel-hover'
+                    option.disabled
+                      ? 'cursor-not-allowed opacity-50 text-muted'
+                      : isSelected
+                        ? 'bg-accent/14 text-fg font-semibold'
+                        : isActive
+                          ? 'text-fg bg-panel-hover'
+                          : 'text-muted hover:text-fg hover:bg-panel-hover'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 pr-2">
