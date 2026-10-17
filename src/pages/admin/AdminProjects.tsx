@@ -1940,7 +1940,7 @@ export const AdminProjects: React.FC = () => {
                   change: activeProjects.length + ' active',
                   changeToneClassName: 'text-success',
                   context: 'Across active contracts',
-                  sparkline: activeProjects.slice(0, 5).map(project => project.budget),
+                  
                   icon: <CircleDollarSign size={15} />,
                   toneClassName: 'text-success',
                 },
@@ -1951,7 +1951,7 @@ export const AdminProjects: React.FC = () => {
                   change: metrics.openTasks + ' open tasks',
                   changeToneClassName: 'text-info',
                   context: 'Based on active project progress',
-                  sparkline: activeProjects.slice(0, 5).map(project => project.progressPercent),
+                  
                   icon: <BarChart3 size={15} />,
                   toneClassName: 'text-info',
                 },
@@ -1962,7 +1962,7 @@ export const AdminProjects: React.FC = () => {
                   change: metrics.risks ? 'Action required' : 'Healthy',
                   changeToneClassName: metrics.risks ? 'text-danger' : 'text-success',
                   context: metrics.risks + ' projects need attention',
-                  sparkline: [metrics.risks, metrics.milestonesAtRisk, metrics.openTasks, activeProjects.length],
+                  
                   icon: <ShieldAlert size={15} />,
                   toneClassName: metrics.risks ? 'text-danger' : 'text-success',
                 },
@@ -1973,7 +1973,7 @@ export const AdminProjects: React.FC = () => {
                   change: activeProjects.length + ' active projects',
                   changeToneClassName: 'text-muted',
                   context: 'Unique owners & contributors',
-                  sparkline: [1, Math.max(1, metrics.assignedPeople - 2), metrics.assignedPeople],
+                  
                   icon: <Users size={15} />,
                   toneClassName: 'text-fg',
                 },
@@ -2969,7 +2969,7 @@ export const AdminProjects: React.FC = () => {
                   change: 'Historical delivery',
                   changeToneClassName: 'text-success',
                   context: 'Closed project records',
-                  sparkline: archivedProjects.slice(0, 5).map(project => project.progressPercent),
+                  
                   icon: <CheckCircle2 size={15} />,
                   toneClassName: 'text-success',
                 },
@@ -2980,7 +2980,7 @@ export const AdminProjects: React.FC = () => {
                   change: archiveStats.clients + ' clients',
                   changeToneClassName: 'text-info',
                   context: 'Historical portfolio value',
-                  sparkline: archivedProjects.slice(0, 5).map(project => project.budget),
+                  
                   icon: <CircleDollarSign size={15} />,
                   toneClassName: 'text-info',
                 },
@@ -2991,7 +2991,7 @@ export const AdminProjects: React.FC = () => {
                   change: 'Delivery completion',
                   changeToneClassName: 'text-success',
                   context: 'Across archived projects',
-                  sparkline: archivedProjects.slice(0, 5).map(project => project.progressPercent),
+                  
                   icon: <BarChart3 size={15} />,
                   toneClassName: 'text-fg',
                 },
@@ -3002,7 +3002,7 @@ export const AdminProjects: React.FC = () => {
                   change: filteredArchivedProjects.length + ' visible',
                   changeToneClassName: 'text-muted',
                   context: 'Distinct client companies',
-                  sparkline: [archiveStats.clients, archivedProjects.length, filteredArchivedProjects.length],
+                  
                   icon: <Users size={15} />,
                   toneClassName: 'text-fg',
                 },

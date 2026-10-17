@@ -625,10 +625,10 @@ export const AdminDocuments: React.FC = () => {
         <AdminMetricStrip
           className="sm:grid-cols-2 lg:grid-cols-4"
           metrics={[
-            { id: 'documents-total', slug: 'documents-kpi-total', label: 'Total internal assets', value: documents.length, context: updatedThisMonth + ' updated this month', sparkline: [Math.max(0, documents.length - updatedThisMonth), documents.length], icon: <FileText size={15} /> },
-            { id: 'documents-storage', slug: 'documents-kpi-storage', label: 'Tracked storage', value: formatBytes(storageBytes), context: 'From available file metadata', sparkline: [storageBytes / 2, storageBytes], toneClassName: 'text-info', icon: <UploadCloud size={15} /> },
-            { id: 'documents-ready', slug: 'documents-kpi-ready', label: 'Ready files', value: readyCount, context: documents.length ? Math.round((readyCount / documents.length) * 100) + '% of registry' : 'No files yet', sparkline: [Math.max(0, readyCount - 1), readyCount], toneClassName: 'text-success', icon: <ShieldCheck size={15} /> },
-            { id: 'documents-categories', slug: 'documents-kpi-categories', label: 'Active categories', value: categoryCount, context: 'Across current registry', sparkline: [Math.max(0, categoryCount - 1), categoryCount], toneClassName: 'text-warning', icon: <Building2 size={15} /> },
+            { id: 'documents-total', slug: 'documents-kpi-total', label: 'Total internal assets', value: documents.length, context: updatedThisMonth + ' updated this month',  icon: <FileText size={15} /> },
+            { id: 'documents-storage', slug: 'documents-kpi-storage', label: 'Tracked storage', value: formatBytes(storageBytes), context: 'From available file metadata',  toneClassName: 'text-info', icon: <UploadCloud size={15} /> },
+            { id: 'documents-ready', slug: 'documents-kpi-ready', label: 'Ready files', value: readyCount, context: documents.length ? Math.round((readyCount / documents.length) * 100) + '% of registry' : 'No files yet',  toneClassName: 'text-success', icon: <ShieldCheck size={15} /> },
+            { id: 'documents-categories', slug: 'documents-kpi-categories', label: 'Active categories', value: categoryCount, context: 'Across current registry',  toneClassName: 'text-warning', icon: <Building2 size={15} /> },
           ]}
         />
       </div>

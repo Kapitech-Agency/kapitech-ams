@@ -770,9 +770,9 @@ export const AdminInbox: React.FC = () => {
             <span className="text-[11px] font-medium tabular-nums text-muted">{submissions.length} total inbound</span>
           </div>
           <AdminMetricStrip slug="inbox-overview-kpis" className="lg:grid-cols-4" metrics={[
-            { id: 'overview-total', label: 'Total inbound', value: submissions.length, context: 'All website submissions', sparkline: [Math.max(0, submissions.length - 3), submissions.length], icon: <Inbox size={16} strokeWidth={1.8} /> },
-            { id: 'overview-client-new', label: 'New client leads', value: submissions.filter((item) => item.type !== 'career' && item.status === 'new').length, context: 'Awaiting client triage', sparkline: [0, submissions.filter((item) => item.type !== 'career' && item.status === 'new').length], icon: <MessageSquare size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
-            { id: 'overview-starred', label: 'Starred queue', value: submissions.filter((item) => !!item.starred).length, context: 'Saved for follow-up', sparkline: [0, submissions.filter((item) => !!item.starred).length], icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' }
+            { id: 'overview-total', label: 'Total inbound', value: submissions.length, context: 'All website submissions',  icon: <Inbox size={16} strokeWidth={1.8} /> },
+            { id: 'overview-client-new', label: 'New client leads', value: submissions.filter((item) => item.type !== 'career' && item.status === 'new').length, context: 'Awaiting client triage',  icon: <MessageSquare size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
+            { id: 'overview-starred', label: 'Starred queue', value: submissions.filter((item) => !!item.starred).length, context: 'Saved for follow-up',  icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' }
           ]} />
         </section>
       ) : activeInboxTab === 'client' ? (
@@ -785,10 +785,10 @@ export const AdminInbox: React.FC = () => {
             <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} client inquiries</span>
           </div>
           <AdminMetricStrip slug="inbox-client-kpis" className="lg:grid-cols-4" metrics={[
-            { id: 'client-total', label: 'Total inquiries', value: activeTabItems.length, context: 'Inbound client requests', sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length] },
-            { id: 'client-new', label: 'New', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'Needs first review', sparkline: [0, activeTabItems.filter((item) => item.status === 'new').length], toneClassName: 'text-danger' },
-            { id: 'client-review', label: 'In review', value: activeTabItems.filter((item) => item.status === 'in-review').length, context: 'Being qualified', sparkline: [0, activeTabItems.filter((item) => item.status === 'in-review').length], toneClassName: 'text-warning' },
-            { id: 'client-contact-details', label: 'Contact details', value: activeTabItems.filter((item) => Boolean(item.email || item.phone)).length, context: 'Email or phone provided', sparkline: [0, activeTabItems.filter((item) => Boolean(item.email || item.phone)).length], icon: <Users size={16} strokeWidth={1.8} />, toneClassName: 'text-info' }
+            { id: 'client-total', label: 'Total inquiries', value: activeTabItems.length, context: 'Inbound client requests', },
+            { id: 'client-new', label: 'New', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'Needs first review',  toneClassName: 'text-danger' },
+            { id: 'client-review', label: 'In review', value: activeTabItems.filter((item) => item.status === 'in-review').length, context: 'Being qualified',  toneClassName: 'text-warning' },
+            { id: 'client-contact-details', label: 'Contact details', value: activeTabItems.filter((item) => Boolean(item.email || item.phone)).length, context: 'Email or phone provided',  icon: <Users size={16} strokeWidth={1.8} />, toneClassName: 'text-info' }
           ]} />
         </section>
       ) : activeInboxTab === 'jobs' ? (
@@ -801,10 +801,10 @@ export const AdminInbox: React.FC = () => {
             <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} applications</span>
           </div>
           <AdminMetricStrip slug="inbox-jobs-kpis" className="lg:grid-cols-4" metrics={[
-            { id: 'jobs-total', label: 'Applications', value: activeTabItems.length, context: 'All candidate intake', sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
-            { id: 'jobs-new', label: 'Needs screening', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'New applications', sparkline: [0, activeTabItems.filter((item) => item.status === 'new').length], toneClassName: 'text-danger' },
-            { id: 'jobs-active', label: 'In process', value: activeTabItems.filter((item) => ['screening', 'shortlisted', 'interview'].includes(item.status)).length, context: 'Screening to interview', sparkline: [0, activeTabItems.filter((item) => ['screening', 'shortlisted', 'interview'].includes(item.status)).length], toneClassName: 'text-info' },
-            { id: 'jobs-hired', label: 'Hired', value: metrics.hiredCount, context: metrics.hiringRate + '% of applications', sparkline: [0, metrics.hiredCount], toneClassName: 'text-success' }
+            { id: 'jobs-total', label: 'Applications', value: activeTabItems.length, context: 'All candidate intake',  icon: <Briefcase size={16} strokeWidth={1.8} /> },
+            { id: 'jobs-new', label: 'Needs screening', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'New applications',  toneClassName: 'text-danger' },
+            { id: 'jobs-active', label: 'In process', value: activeTabItems.filter((item) => ['screening', 'shortlisted', 'interview'].includes(item.status)).length, context: 'Screening to interview',  toneClassName: 'text-info' },
+            { id: 'jobs-hired', label: 'Hired', value: metrics.hiredCount, context: metrics.hiringRate + '% of applications',  toneClassName: 'text-success' }
           ]} />
         </section>
       ) : (
@@ -817,9 +817,9 @@ export const AdminInbox: React.FC = () => {
             <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} starred</span>
           </div>
           <AdminMetricStrip slug="inbox-starred-kpis" className="lg:grid-cols-4" metrics={[
-            { id: 'starred-total', label: 'Starred', value: activeTabItems.length, context: 'Saved records', sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length], icon: <Star size={16} strokeWidth={1.8} /> },
-            { id: 'starred-critical', label: 'Urgent / high', value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length, context: 'Priority follow-up', sparkline: [0, activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length], toneClassName: 'text-danger' },
-            { id: 'starred-clients', label: 'Client inquiries', value: activeTabItems.filter((item) => item.type !== 'career').length, context: 'Client follow-up', sparkline: [0, activeTabItems.filter((item) => item.type !== 'career').length] },
+            { id: 'starred-total', label: 'Starred', value: activeTabItems.length, context: 'Saved records',  icon: <Star size={16} strokeWidth={1.8} /> },
+            { id: 'starred-critical', label: 'Urgent / high', value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length, context: 'Priority follow-up',  toneClassName: 'text-danger' },
+            { id: 'starred-clients', label: 'Client inquiries', value: activeTabItems.filter((item) => item.type !== 'career').length, context: 'Client follow-up', },
           ]} />
         </section>
       )}
