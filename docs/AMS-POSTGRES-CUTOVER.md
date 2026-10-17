@@ -4,6 +4,8 @@
 
 This guide describes cutover safety gates and rollback mechanics. It does not prove whether a specific deployed environment has completed cutover; verify actual runtime mode and readiness evidence.
 
+> **Implementation audit note (16 October 2026):** The current runtime guard in `server.ts` rejects production configuration unless `KAPITECH_DATA_SOURCE=postgres`; when production mode is `json`, it blocks API work with HTTP 503. Therefore the JSON-switch rollback steps below are not executable under the current production guard. Do not bypass this guard or run production in a non-production mode. Treat rollback-to-JSON as blocked until a separately authorized implementation reconciles runtime behavior, financial idempotency parity, deployment procedures, backups and reconciliation evidence. The current Hostinger environment configuration was not verified by this documentation change.
+
 ## Source selection
 
 Set:
