@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { Link } from 'react-router-dom';
-// Shared module chrome renders the canonical ams-dashboard-header primitive.
+// Shared module chrome renders the canonical ams-page-header primitive.
 import {
   Users,
   Plus,

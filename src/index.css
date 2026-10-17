@@ -209,8 +209,8 @@
   }
 }
 
-.ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{min-width:0;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
-.ams-shell .ams-page-header>*,.ams-shell .ams-dashboard-header>*{min-width:0}
+.ams-shell .ams-page-header{min-width:0;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.ams-shell .ams-page-header>*{min-width:0}
 .ams-shell .ams-page-shell>.fixed{margin-top:0}
 /* Canonical page rhythm: use a real layout gap rather than overriding each child's margin. */
 .ams-shell .ams-page-shell{display:flex;flex-direction:column;gap:24px;padding:24px 24px 32px}
@@ -354,8 +354,8 @@
 @media(max-width:1099px) and (min-width:900px){.ams-shell .ams-page-shell{padding:24px 20px 32px}}
 @media(max-width:899px){
  .ams-shell>aside{width:min(280px,86vw);min-width:min(280px,86vw)}.ams-shell .ams-page-shell{padding:16px 16px 24px}
- .ams-shell .ams-mobile-topbar{padding-left:14px;padding-right:14px}.ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{gap:12px}
- .ams-shell .ams-page-header>div:last-child,.ams-shell .ams-dashboard-header>div:last-child{flex-wrap:wrap}
+ .ams-shell .ams-mobile-topbar{padding-left:14px;padding-right:14px}.ams-shell .ams-page-header{gap:12px}
+ .ams-shell .ams-page-header>div:last-child{flex-wrap:wrap}
  }
 @media(max-width:599px){
  .ams-shell .ams-page-shell{padding:16px 14px max(24px,env(safe-area-inset-bottom))}
@@ -365,14 +365,7 @@
  .ams-shell .ams-mobile-drawer>.relative{width:min(320px,88vw);max-width:88vw}
  .ams-shell table th,.ams-shell table td{white-space:nowrap}
 
- /* Mobile-first dashboard composition: controls stack, cards stay scannable, tables become cards. */
- .ams-shell .ams-dashboard-header{margin-bottom:16px;padding-bottom:14px}
- .ams-shell .ams-dashboard-header>div:last-child{width:100%;display:grid;grid-template-columns:1fr;gap:8px}
- .ams-shell .ams-dashboard-header>div:last-child>div:first-child{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}
- .ams-shell .ams-dashboard-header>div:last-child>div:first-child button{min-height:36px;padding-inline:4px}
- .ams-shell .ams-dashboard-header>div:last-child>a{width:100%;min-height:42px}
- .ams-shell .ams-dashboard-header h1{font-size:18px;line-height:24px}
- .ams-shell .ams-dashboard-header p{font-size:11px;line-height:18px}
+ /* Keep dashboard KPIs and cards readable on narrow screens. */
  .ams-shell .ams-dashboard-card{border-radius:10px;padding:13px}
  .ams-shell .ams-dashboard-card .text-2xl{font-size:20px;line-height:26px}
  .ams-shell .ams-dashboard-card .text-xs{font-size:11px}
@@ -512,78 +505,6 @@
     padding-bottom: max(32px, env(safe-area-inset-bottom));
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-header {
-    display: block;
-    margin-bottom: 10px;
-    border-bottom: 0;
-    padding-bottom: 10px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child {
-    margin-top: 14px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child > div:first-child {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    width: 100%;
-    min-height: 40px;
-    padding: 3px;
-    gap: 2px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--panel);
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child > div:first-child button {
-    min-height: 32px;
-    padding: 4px 2px;
-    border-radius: 7px;
-    font-size: 10px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child > a {
-    width: auto;
-    min-width: 42px;
-    min-height: 40px;
-    padding-inline: 11px;
-    white-space: nowrap;
-  }
-
-  .ams-shell .ams-dashboard > .min-\[900px\]\:hidden {
-    position: sticky;
-    top: calc(52px + env(safe-area-inset-top));
-    z-index: 20;
-    margin: 0 -14px 14px;
-    padding: 7px 14px;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    background: color-mix(in srgb, var(--bg) 94%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-
-  .ams-shell .ams-dashboard > .min-\[900px\]\:hidden nav {
-    border: 0;
-    background: var(--panel);
-    border-radius: 9px;
-    padding: 3px;
-    gap: 2px;
-  }
-
-  .ams-shell .ams-dashboard > .min-\[900px\]\:hidden nav a {
-    min-height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px 4px;
-    font-size: 10px;
-  }
-
   .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] {
     margin-bottom: 14px;
   }
@@ -643,14 +564,6 @@
 }
 
 @media (max-width: 599px) {
-  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child {
-    grid-template-columns: 1fr;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child > a {
-    width: 100%;
-  }
-
   .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] > div {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
