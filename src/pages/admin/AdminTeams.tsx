@@ -1354,7 +1354,7 @@ export const AdminTeams: React.FC = () => {
                           slug: 'team-directory-kpi-headcount',
                           label: 'Total headcount',
                           value: currentViewDataUnavailable ? '—' : teamMetrics.headcount,
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries',
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : sourceAvailability.timeLogs === true ? (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries' : sourceAvailability.timeLogs === false ? 'Time log data unavailable' : 'Loading time log data',
                           
                           icon: <UsersRound size={15} />
                         },
@@ -1639,8 +1639,8 @@ export const AdminTeams: React.FC = () => {
                               <span className={'font-semibold tabular-nums ' + (sourceAvailability.projects !== true ? 'text-muted' : week.allocationPercent > 100 ? 'text-danger' : 'text-fg')}>{sourceAvailability.projects === true ? (week.projectCount ? week.allocationPercent + '%' : '—') : sourceAvailability.projects === false ? 'Unavailable' : 'Loading'}</span>
                               <span className="text-[10px] tabular-nums text-muted">{sourceAvailability.projects === true ? (week.projectCount ? week.plannedHours.toFixed(1) + 'h' : 'No plan') : sourceAvailability.projects === false ? 'Unavailable' : 'Loading'}</span>
                             </div>
-                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (week.allocationPercent > 100 ? 'bg-danger' : 'bg-series-4')} style={{ width: Math.min(100, week.allocationPercent) + '%' }} /></div>
-                            <p className="mt-1 text-left text-[10px] text-muted">{week.projectCount ? week.projectCount + ' planned project(s)' : 'Not scheduled'}</p>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (sourceAvailability.projects !== true ? 'bg-muted' : week.allocationPercent > 100 ? 'bg-danger' : 'bg-series-4')} style={{ width: sourceAvailability.projects === true ? Math.min(100, week.allocationPercent) + '%' : '0%' }} /></div>
+                            <p className="mt-1 text-left text-[10px] text-muted">{sourceAvailability.projects === true ? (week.projectCount ? week.projectCount + ' planned project(s)' : 'Not scheduled') : sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>
                           </div>
                         </td>
                       ))}
@@ -1649,7 +1649,7 @@ export const AdminTeams: React.FC = () => {
                 </tbody>
               </table>
             </div>
-            {!futureCapacityRows.some((row) => row.weeks.some((week) => week.projectCount > 0)) && <div className="border-t border-line px-4 py-4 text-xs leading-5 text-muted">No dated resource plans saved for the next four weeks. Open Team Directory, choose Allocate, assign the member to a project, then enter the planned percentage and date range.</div>}
+            {sourceAvailability.projects === true && !futureCapacityRows.some((row) => row.weeks.some((week) => week.projectCount > 0)) && <div className="border-t border-line px-4 py-4 text-xs leading-5 text-muted">No dated resource plans saved for the next four weeks. Open Team Directory, choose Allocate, assign the member to a project, then enter the planned percentage and date range.</div>}
           </AdminPanel>
         </div>
       ) : currentView === 'skill-matrix' ? (
