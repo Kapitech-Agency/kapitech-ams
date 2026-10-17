@@ -13,6 +13,9 @@ import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePaginati
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
+const isUnknownMutationOutcome = (response: { success: boolean; status?: number }) =>
+  !response.success && (response.status === undefined || response.status >= 500);
+
 type TimeLog = {
   id: string;
   projectId?: string;
@@ -61,22 +64,23 @@ export const AdminTimeLogs: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<TimeLog | null>(null);
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (showLoading = true): Promise<boolean> => {
+    if (showLoading) setLoading(true);
     showStatus(null);
     try {
       const [logsRes, projectsRes] = await Promise.all([
         api.timeLogs.getAll(),
         api.projects.getAll()
       ]);
+      const logsLoaded = logsRes.success && Array.isArray(logsRes.data?.timeLogs);
 
-      if (logsRes.success && Array.isArray(logsRes.data?.timeLogs)) {
-        setLogs(logsRes.data.timeLogs.map((log: TimeLog) => ({
+      if (logsLoaded) {
+        setLogs(logsRes.data!.timeLogs.map((log: TimeLog) => ({
           ...log,
           slug: log.slug || toSlug((log.taskTitle || log.projectName || 'time-log') + '-' + log.id, 'time-log-record')
         })));
       } else {
-        showStatus(logsRes.error || 'Unable to load time logs.', 'error', true);
+        showStatus(logsRes.error || 'Unable to load time logs. Previously loaded records are kept.', 'error', true);
       }
 
       if (projectsRes?.success && Array.isArray(projectsRes.data?.projects)) {
@@ -84,13 +88,15 @@ export const AdminTimeLogs: React.FC = () => {
           ...project,
           slug: project.slug || toSlug(project.name || project.id, 'project-record')
         })));
-      } else if (!projectsRes?.success && logsRes.success) {
-        showStatus(projectsRes?.error || 'Unable to load projects.', 'error', true);
+      } else if (!projectsRes?.success && logsLoaded) {
+        showStatus(projectsRes?.error || 'Unable to load projects. Previously loaded project options are kept.', 'error', true);
       }
+      return logsLoaded;
     } catch (error) {
-      showStatus(error instanceof Error ? error.message : 'Unable to load time logs.', 'error', true);
+      showStatus(error instanceof Error ? error.message : 'Unable to load time logs. Previously loaded records are kept.', 'error', true);
+      return false;
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -158,10 +164,36 @@ export const AdminTimeLogs: React.FC = () => {
         setNotes('');
         showStatus('Time entry saved.', 'success');
       } else {
-        showStatus(res.error || 'Time entry could not be saved.');
+        const unknownOutcome = isUnknownMutationOutcome(res)
+          || (res.success && !res.data?.timeLog);
+        if (unknownOutcome) {
+          const refreshed = await load(false);
+          setProjectId('');
+          setProjectName('');
+          setTaskId('');
+          setTaskTitle('');
+          setDurationMinutes(60);
+          setBillable(true);
+          setNotes('');
+          showStatus((res.error || 'Time entry result could not be confirmed.') + (refreshed
+            ? ' The canonical time log list was refreshed. Inspect it before entering the same work again.'
+            : ' The time log list could not be confirmed. Do not retry until the server state has been checked.'), 'info', !refreshed);
+        } else {
+          showStatus(res.error || 'Time entry could not be saved.');
+        }
       }
     } catch (error) {
-      showStatus(error instanceof Error ? error.message : 'Time entry could not be saved.');
+      const refreshed = await load(false);
+      setProjectId('');
+      setProjectName('');
+      setTaskId('');
+      setTaskTitle('');
+      setDurationMinutes(60);
+      setBillable(true);
+      setNotes('');
+      showStatus((error instanceof Error ? error.message : 'Time entry result could not be confirmed.') + (refreshed
+        ? ' The canonical time log list was refreshed. Inspect it before entering the same work again.'
+        : ' The time log list could not be confirmed. Do not retry until the server state has been checked.'), 'info', !refreshed);
     } finally {
       setSaving(false);
     }
@@ -178,11 +210,19 @@ export const AdminTimeLogs: React.FC = () => {
       if (res.success) {
         setLogs(current => current.filter(item => item.id !== log.id));
         showStatus('Time entry deleted.', 'success');
+      } else if (isUnknownMutationOutcome(res)) {
+        const refreshed = await load(false);
+        showStatus((res.error || 'Time entry deletion result could not be confirmed.') + (refreshed
+          ? ' The canonical time log list was refreshed. Inspect it before trying again.'
+          : ' The time log list could not be confirmed. Do not retry until the server state has been checked.'), 'info', !refreshed);
       } else {
         showStatus(res.error || 'Time entry could not be deleted.');
       }
     } catch (error) {
-      showStatus(error instanceof Error ? error.message : 'Time entry could not be deleted.');
+      const refreshed = await load(false);
+      showStatus((error instanceof Error ? error.message : 'Time entry deletion result could not be confirmed.') + (refreshed
+        ? ' The canonical time log list was refreshed. Inspect it before trying again.'
+        : ' The time log list could not be confirmed. Do not retry until the server state has been checked.'), 'info', !refreshed);
     } finally {
       setDeleteTarget(null);
     }
