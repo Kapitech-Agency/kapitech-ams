@@ -155,6 +155,13 @@ test('Documents distinguishes an unavailable vault from a genuinely empty vault 
 // Print-specific !important rules remain outside these screen-layout variants by design.
 
 
+test('route navigation resets the actual AMS workspace scroller', async () => {
+  const app = await read('src/App.tsx');
+  assert.match(app, /document\.querySelector<HTMLElement>\('\.ams-shell > main'\)/);
+  assert.match(app, /workspaceScroller\.scrollTo\(\{ top: 0, left: 0, behavior: 'auto' \}\)/);
+  assert.match(app, /window\.scrollTo\(\{ top: 0, left: 0, behavior: 'auto' \}\)/);
+});
+
 test('AMS viewport has one intentional vertical scroll owner without body overflow side effects', async () => {
   const css = await read('src/index.css');
   assert.match(css, /body\s*\{[^}]*overflow-x:\s*clip;/s);
