@@ -223,6 +223,7 @@ export const AdminSettings: React.FC = () => {
   };
 
   const [backups, setBackups] = useState<BackupRecord[]>([]);
+  const [backupLoadError, setBackupLoadError] = useState<string | null>(null);
   const [backupRetentionDays, setBackupRetentionDays] = useState(0);
   const [backupIntegrity, setBackupIntegrity] = useState<{
     valid: boolean;
@@ -444,9 +445,12 @@ export const AdminSettings: React.FC = () => {
 
       if (backupRes?.success && backupRes.data) {
         setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
+        setBackupLoadError(null);
         const res = backupRes;
         setBackupRetentionDays(Number(res.data.retention ?? res.data.retentionDays ?? 14));
       } else {
+        const backupError = backupRes && 'error' in backupRes ? backupRes.error : undefined;
+        setBackupLoadError(backupError || 'Backup status could not be loaded. Retry to refresh the latest server data.');
         failures.push('backup status');
       }
 
@@ -934,8 +938,14 @@ export const AdminSettings: React.FC = () => {
             </div>
 
             <div className="overflow-x-auto">
-              {overviewLoading ? (
+              {overviewLoading && backups.length === 0 ? (
                 <div className="px-5 py-8">{renderSkeleton()}</div>
+              ) : backupLoadError && backups.length === 0 ? (
+                <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center" role="alert">
+                  <p className="text-sm font-medium text-fg">Backup status unavailable</p>
+                  <p className="mt-1 max-w-md text-xs leading-5 text-muted">{backupLoadError}</p>
+                  <Button type="button" variant="secondary" onClick={() => void loadOverview()} disabled={overviewLoading} loading={overviewLoading} className="mt-4">Retry status</Button>
+                </div>
               ) : backups.length === 0 ? (
                 <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center">
                   <FileCheck2 size={22} className="text-muted" />
@@ -952,7 +962,19 @@ export const AdminSettings: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <table className="settings-system-table min-w-[760px]">
+                <>
+                  {overviewLoading && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-bg px-5 py-2 text-[11px] text-muted" role="status">
+                      <span>Refreshing backup status. Previously loaded entries remain visible.</span>
+                    </div>
+                  )}
+                  {backupLoadError && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-warning/20 bg-warning/5 px-5 py-3 text-[11px] text-warning" role="alert">
+                      <span>{backupLoadError} Showing the last successfully loaded backup entries.</span>
+                      <Button type="button" variant="secondary" onClick={() => void loadOverview()} disabled={overviewLoading} loading={overviewLoading}>Retry</Button>
+                    </div>
+                  )}
+                  <table className="settings-system-table min-w-[760px]">
                   <thead>
                     <tr>
                       <th>Archive Identifier</th>
@@ -998,7 +1020,8 @@ export const AdminSettings: React.FC = () => {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                  </table>
+                </>
               )}
             </div>
           </section>
