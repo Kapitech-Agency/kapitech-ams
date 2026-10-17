@@ -565,3 +565,8 @@ Regression assertions now cover the scrollbar geometry, last-row register scroll
 - Settings summary cards distinguish unavailable backup/security status from a real “No snapshot” or a verified zero-user value. Retry paths remain tied to existing status APIs.
 
 These changes address display-state interpretation and recovery only; they do not alter endpoints, persistence, permission checks, business calculations, or security settings.
+
+
+### Finance table geometry parity · 18 October 2026
+
+The shared Finance register renderer uses the existing `ams-finance-table` design-system variant. Row density and compact action hit-target rules apply consistently to each worksheet using that renderer rather than relying on generic table defaults. This is a frontend presentation-only correction; record data, sort/pagination behavior, accounting calculations, authorization and API contracts are unchanged.
