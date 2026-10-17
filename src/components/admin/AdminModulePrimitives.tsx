@@ -271,7 +271,7 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
       )}
     </div>
     {actions && (
-      <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
         {actions}
       </div>
     )}
