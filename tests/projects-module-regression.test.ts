@@ -113,7 +113,7 @@ test('Project overview metrics and sprint project selection describe their actua
 
   assert.ok(source.includes("label: 'Average project progress'"));
   assert.ok(source.includes("value: serverMode ? metrics.averageProgress + '%' : '—'"));
-  assert.ok(source.includes("serverMode ? view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects' : loading ? 'Loading project records' : 'Project data unavailable'"));
+  assert.match(source, /serverMode\s*\?\s*view === 'archived'\s*\?\s*archivedProjects\.length \+ ' Completed Projects'\s*:\s*activeProjects\.length \+ ' Active Projects'\s*:\s*loading\s*\?\s*'Loading project records'\s*:\s*'Project data unavailable'/);
   assert.ok(source.includes("label: project.name + (project.status === 'completed' ? ' (Completed)' : '')"));
   assert.ok(source.includes("selectedSprintProject.status === 'completed' ? 'Completed project' : 'Active delivery'"));
 });
