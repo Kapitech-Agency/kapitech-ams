@@ -64,6 +64,17 @@ test('table geometry variants use scoped selectors rather than important overrid
 });
 
 
+test('Inbox star action is keyboard-accessible and announces its current state', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+
+  assert.match(inbox, /onClick=\{\(event\) => void handleToggleStar\(event, item\.id, item\.starred\)\}/);
+  assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
+  assert.match(inbox, /aria-label=\{item\.starred[\s\S]{0,260}Remove star from/);
+  assert.match(inbox, /disabled=\{!canManageCrm\}/);
+  assert.match(inbox, /focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed/);
+  assert.doesNotMatch(inbox, /<td className="p-3 text-center" onClick=\{\(e\) => handleToggleStar/);
+});
+
 test('Inbox leaves Careers applicant review in the canonical CMS workspace', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   const app = await read('src/App.tsx');
