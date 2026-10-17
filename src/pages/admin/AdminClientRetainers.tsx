@@ -291,7 +291,7 @@ export const AdminClientRetainers: React.FC = () => {
       <AdminModuleHeader slug="client-retainers-header"
         className="mb-0"
         title="Client Retainer Agreements"
-        description="Overview of recurring retainers, allocated hours, burn rates, overage caps, and renewal terms."
+        description="Manage saved retainer terms, committed hours, and renewal dates."
         eyebrow={<AdminStatusBadge tone="success">{records.length} active contracts</AdminStatusBadge>}
         actions={(
           <>
@@ -301,7 +301,10 @@ export const AdminClientRetainers: React.FC = () => {
         )}
       />
 
-      
+      <div className="flex items-start gap-3 rounded-card border border-warning/25 bg-warning/5 px-3 py-3 text-xs text-muted" role="status" aria-live="polite" data-ams-slug="retainer-time-log-reconciliation-state">
+        <TriangleAlert size={15} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
+        <p className="leading-5">Hours used currently reflect the saved Client Directory field. AMS does not yet reconcile Time Logs with retainer billing cycles and eligible-entry rules. Verify usage before applying overage or billing.</p>
+      </div>
 
       {message && <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite"><span>{message}</span><button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button></div>}
 
