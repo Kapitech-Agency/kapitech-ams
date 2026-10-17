@@ -138,7 +138,10 @@ test('Documents distinguishes an unavailable vault from a genuinely empty vault 
   assert.ok(loadStart >= 0 && loadEnd > loadStart, 'missing document loader boundary');
   const loader = documents.slice(loadStart, loadEnd);
 
-  assert.doesNotMatch(loader, /setDocuments\(\[\]\)/);
+  assert.match(loader, /let hadAccessFailure = firstError\?\.status === 401 \|\| firstError\?\.status === 403/);
+  assert.match(loader, /hadAccessFailure = hadAccessFailure \|\| retryError\?\.status === 401 \|\| retryError\?\.status === 403/);
+  assert.match(loader, /if \(hadAccessFailure\) setDocuments\(\[\]\);/);
+  assert.match(loader, /Retain last-known-good rows for transient service failures/);
   assert.match(documents, /isLoading && documents\.length === 0/);
   assert.match(documents, /isLoading && documents\.length > 0/);
   assert.match(documents, /loadError && documents\.length === 0/);
