@@ -58,7 +58,7 @@ export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
   const canManageClients = hasAdminPermission('canManageClients');
-  type InboxTab = 'overview' | 'client' | 'jobs' | 'starred';
+  type InboxTab = 'overview' | 'client' | 'starred';
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('view') as InboxTab | null;
   const activeInboxTab: InboxTab = requestedTab && ['overview', 'client', 'starred'].includes(requestedTab)
@@ -134,7 +134,6 @@ export const AdminInbox: React.FC = () => {
   const activeTabItems = useMemo(() => {
     switch (activeInboxTab) {
       case 'overview': return submissions;
-      case 'jobs': return submissions.filter((item) => item.type === 'career');
       case 'starred': return submissions.filter((item) => !!item.starred);
       case 'client':
       default: return submissions.filter((item) => item.type !== 'career');
@@ -145,38 +144,13 @@ export const AdminInbox: React.FC = () => {
   const [triageScope, setTriageScope] = useState<TriageScope>('action');
 
   const isMixedInboxTab = activeInboxTab === 'overview' || activeInboxTab === 'starred';
-  const inboxStatusOptions = activeInboxTab === 'jobs'
-    ? [
-        { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
-        { value: 'new', label: 'Status: New' },
-        { value: 'screening', label: 'Status: Screening' },
-        { value: 'shortlisted', label: 'Status: Shortlisted' },
-        { value: 'interview', label: 'Status: Interview' },
-        { value: 'hired', label: 'Status: Hired' },
-        { value: 'rejected', label: 'Status: Rejected' },
-        { value: 'withdrawn', label: 'Status: Withdrawn' }
-      ]
-    : activeInboxTab === 'client'
-      ? [
-          { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
-          { value: 'new', label: 'Status: New' },
-          { value: 'in-review', label: 'Status: In Review' },
-          { value: 'contacted', label: 'Status: Contacted' },
-          { value: 'closed', label: 'Status: Closed Deal' }
-        ]
-      : [
-          { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
-          { value: 'new', label: 'Status: New' },
-          { value: 'in-review', label: 'Status: In Review' },
-          { value: 'contacted', label: 'Status: Contacted' },
-          { value: 'closed', label: 'Status: Closed Deal' },
-          { value: 'screening', label: 'Status: Screening' },
-          { value: 'shortlisted', label: 'Status: Shortlisted' },
-          { value: 'interview', label: 'Status: Interview' },
-          { value: 'hired', label: 'Status: Hired' },
-          { value: 'rejected', label: 'Status: Rejected' },
-          { value: 'withdrawn', label: 'Status: Withdrawn' }
-        ];
+  const inboxStatusOptions = [
+    { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
+    { value: 'new', label: 'Status: New' },
+    { value: 'in-review', label: 'Status: In Review' },
+    { value: 'contacted', label: 'Status: Contacted' },
+    { value: 'closed', label: 'Status: Closed Deal' }
+  ];
 
   const inboxTabs: Array<{ key: InboxTab; label: string; count: number }> = [
     { key: 'overview', label: 'Overview', count: submissions.length },
@@ -190,15 +164,7 @@ export const AdminInbox: React.FC = () => {
     setFilterStatus('all');
     setFilterPriority('all');
     setSearchQuery('');
-    setViewMode(
-      activeInboxTab === 'overview'
-        ? 'overview'
-        : activeInboxTab === 'jobs'
-          ? 'board'
-          : activeInboxTab === 'starred'
-            ? 'queue'
-            : 'split'
-    );
+    setViewMode(activeInboxTab === 'overview' ? 'overview' : activeInboxTab === 'starred' ? 'queue' : 'split');
   }, [activeInboxTab]);
 
   // Keep selected submission in sync with store
@@ -413,7 +379,7 @@ export const AdminInbox: React.FC = () => {
       setConfirmAction({
         type: 'mark-read',
         count,
-        targetStatus: activeInboxTab === 'jobs' ? 'screening' : activeInboxTab === 'client' ? 'in-review' : undefined
+        targetStatus: activeInboxTab === 'client' ? 'in-review' : undefined
       });
     }
   };
@@ -424,15 +390,15 @@ export const AdminInbox: React.FC = () => {
     try {
       const unread = activeTabItems.filter((item) => item.status === 'new');
       for (const item of unread) {
-        const nextStatus = targetStatus || (item.type === 'career' ? 'screening' : 'in-review');
+        const nextStatus = targetStatus || 'in-review';
         const res = await api.leads.update(item.id, { status: nextStatus });
         if (!res.success) throw new Error(res.error || 'Bulk status update failed');
       }
       await refreshInbox();
       setToastMessage({
         text: language === 'id'
-          ? String(count) + (activeInboxTab === 'jobs' ? ' lamaran dipindahkan ke screening.' : isMixedInboxTab ? ' record baru diproses.' : ' pesan ditandai telah ditinjau.')
-          : String(count) + (activeInboxTab === 'jobs' ? ' applications moved to Screening.' : isMixedInboxTab ? ' new records processed.' : ' messages marked as In Review.')
+          ? String(count) + (isMixedInboxTab ? ' record baru diproses.' : ' pesan ditandai telah ditinjau.')
+          : String(count) + (isMixedInboxTab ? ' new records processed.' : ' messages marked as In Review.')
       });
       setTimeout(() => setToastMessage(null), 3000);
     } catch {
@@ -483,15 +449,10 @@ export const AdminInbox: React.FC = () => {
   };
 
   // Metrics calculation
-  const metrics = useMemo(() => {
-    const total = activeTabItems.length;
-    const newCount = activeTabItems.filter((item) => item.status === 'new').length;
-    const hiredCount = activeTabItems.filter((item) => item.type === 'career' && item.status === 'hired').length;
-    const jobCount = activeTabItems.filter((item) => item.type === 'career').length;
-    const hiringRate = jobCount > 0 ? Math.round((hiredCount / jobCount) * 100) : 0;
-
-    return { total, newCount, hiredCount, hiringRate };
-  }, [activeTabItems]);
+  const metrics = useMemo(() => ({
+    total: activeTabItems.length,
+    newCount: activeTabItems.filter((item) => item.status === 'new').length
+  }), [activeTabItems]);
 
   // Filtering
   const filteredItems = useMemo(() => {
@@ -571,7 +532,7 @@ export const AdminInbox: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'kapitech_' + ({ overview: 'all_inbound', client: 'client_inbox', jobs: 'job_applications', starred: 'starred' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
+    link.setAttribute('download', 'kapitech_' + ({ overview: 'all_inbound', client: 'client_inbox', starred: 'starred' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
