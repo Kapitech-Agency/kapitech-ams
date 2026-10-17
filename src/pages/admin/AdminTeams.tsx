@@ -47,6 +47,16 @@ import { AgencyVendor, VendorStatus, VendorType } from '../../lib/vendorStore';
 import { formatAmount } from '../../lib/currency';
 
 type TeamView = 'team-directory' | 'vendor-directory' | 'capacity-allocation' | 'skill-matrix' | 'time-logs';
+type TeamDataSource = 'members' | 'vendors' | 'projects' | 'timeLogs';
+type TeamSourceAvailability = Record<TeamDataSource, boolean | null>;
+
+const TEAM_VIEW_DATA_SOURCES: Record<TeamView, TeamDataSource[]> = {
+  'team-directory': ['members', 'projects', 'timeLogs'],
+  'vendor-directory': ['vendors', 'projects'],
+  'capacity-allocation': ['members', 'projects', 'timeLogs'],
+  'skill-matrix': ['members', 'vendors'],
+  'time-logs': ['timeLogs', 'projects'],
+};
 
 type TeamMember = {
   id: string;
@@ -263,6 +273,14 @@ export const AdminTeams: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger'; message: string } | null>(null);
+  const [sourceAvailability, setSourceAvailability] = useState<TeamSourceAvailability>({
+    members: null,
+    vendors: null,
+    projects: null,
+    timeLogs: null,
+  });
+  const currentViewDataUnavailable = TEAM_VIEW_DATA_SOURCES[currentView]
+    .some((source) => sourceAvailability[source] !== true);
 
   const [teamHeaderSearch, setTeamHeaderSearch] = useState('');
   const [teamSearch, setTeamSearch] = useState('');
@@ -334,6 +352,13 @@ export const AdminTeams: React.FC = () => {
       let nextVendors: VendorRecord[] = [];
       let nextProjects: ProjectRecord[] = [];
       let nextLogs: TimeLog[] = [];
+      const availableSources: TeamSourceAvailability = {
+        members: memberRes.success && Array.isArray(memberRes.data?.assignees),
+        vendors: vendorRes.success && Array.isArray(vendorRes.data?.vendors),
+        projects: projectRes.success && Array.isArray(projectRes.data?.projects),
+        timeLogs: timeRes.success && Array.isArray(timeRes.data?.timeLogs),
+      };
+      setSourceAvailability(availableSources);
 
     if (memberRes.success && Array.isArray(memberRes.data?.assignees)) {
       nextMembers = (memberRes.data!.assignees as Omit<TeamMember, 'slug'>[]).map((member) => ({
@@ -367,16 +392,35 @@ export const AdminTeams: React.FC = () => {
       }));
     }
 
-      const currentViewResults = currentView === 'vendor-directory' || currentView === 'skill-matrix'
-        ? [{ label: 'Vendor directory', result: vendorRes }]
-        : currentView === 'time-logs'
-          ? [{ label: 'Time logs', result: timeRes }]
-          : currentView === 'capacity-allocation'
-            ? [{ label: 'Capacity allocation', result: projectRes }, { label: 'Time logs', result: timeRes }]
-            : [{ label: 'Team directory', result: memberRes }, { label: 'Tracked hours', result: timeRes }];
+      const currentViewResults = currentView === 'vendor-directory'
+        ? [
+            { label: 'Vendor directory', available: availableSources.vendors, error: vendorRes.error },
+            { label: 'Project assignments', available: availableSources.projects, error: projectRes.error },
+          ]
+        : currentView === 'skill-matrix'
+          ? [
+              { label: 'Team directory', available: availableSources.members, error: memberRes.error },
+              { label: 'Vendor skill coverage', available: availableSources.vendors, error: vendorRes.error },
+            ]
+          : currentView === 'time-logs'
+            ? [
+                { label: 'Time logs', available: availableSources.timeLogs, error: timeRes.error },
+                { label: 'Project references', available: availableSources.projects, error: projectRes.error },
+              ]
+            : currentView === 'capacity-allocation'
+              ? [
+                  { label: 'Team directory', available: availableSources.members, error: memberRes.error },
+                  { label: 'Capacity allocation', available: availableSources.projects, error: projectRes.error },
+                  { label: 'Time logs', available: availableSources.timeLogs, error: timeRes.error },
+                ]
+              : [
+                  { label: 'Team directory', available: availableSources.members, error: memberRes.error },
+                  { label: 'Project assignments', available: availableSources.projects, error: projectRes.error },
+                  { label: 'Tracked hours', available: availableSources.timeLogs, error: timeRes.error },
+                ];
       const failures = currentViewResults
-        .filter((item) => !item.result.success)
-        .map((item) => item.result.error || item.label + ' could not be loaded.');
+        .filter((item) => !item.available)
+        .map((item) => item.error || item.label + ' could not be loaded.');
       if (failures.length > 0) {
         setNotice({ tone: 'danger', message: failures.join(' ') });
       }
@@ -386,9 +430,10 @@ export const AdminTeams: React.FC = () => {
       setProjects(nextProjects);
       setLogs(nextLogs);
     } catch (error) {
+      setSourceAvailability({ members: false, vendors: false, projects: false, timeLogs: false });
       setNotice({
         tone: 'danger',
-        message: error instanceof Error ? error.message : 'Team operations data could not be loaded.'
+        message: 'Live data refresh failed. Previously loaded records, if any, may be stale. ' + (error instanceof Error ? error.message : 'Team operations data could not be loaded.')
       });
     } finally {
       setLoading(false);
@@ -1176,8 +1221,8 @@ export const AdminTeams: React.FC = () => {
                 id: 'headcount',
                 slug: 'team-directory-kpi-headcount',
                 label: 'Total headcount',
-                value: teamMetrics.headcount,
-                context: (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries',
+                value: currentViewDataUnavailable ? '—' : teamMetrics.headcount,
+                context: currentViewDataUnavailable ? 'Live source unavailable' : (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries',
                 
                 icon: <UsersRound size={15} />
               },
@@ -1185,7 +1230,7 @@ export const AdminTeams: React.FC = () => {
                 id: 'engineering',
                 slug: 'team-directory-kpi-engineering',
                 label: 'Engineering & tech',
-                value: members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
+                value: currentViewDataUnavailable ? '—' : members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
                 context: 'Backend, Frontend, DevOps & QA',
                 
                 icon: <BarChart3 size={15} />,
@@ -1195,7 +1240,7 @@ export const AdminTeams: React.FC = () => {
                 id: 'design',
                 slug: 'team-directory-kpi-product-design',
                 label: 'Product & design',
-                value: members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
+                value: currentViewDataUnavailable ? '—' : members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
                 context: 'UI/UX, Product Strategy & Systems',
                 
                 icon: <LayoutGrid size={15} />,
@@ -1205,7 +1250,7 @@ export const AdminTeams: React.FC = () => {
                 id: 'operations',
                 slug: 'team-directory-kpi-operations',
                 label: 'Operations & delivery',
-                value: members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
+                value: currentViewDataUnavailable ? '—' : members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
                 context: 'Delivery, PMs, Operations & Client Work',
                 
                 icon: <UsersRound size={15} />
@@ -1259,8 +1304,8 @@ export const AdminTeams: React.FC = () => {
                 {pagedTeamRows.length === 0 ? (
                   <div className="min-h-[180px] px-5 py-10 text-center">
                     <UsersRound size={22} className="mx-auto text-muted" />
-                    <p className="mt-3 text-sm font-medium text-fg">No team members found</p>
-                    <p className="mt-1 text-xs text-muted">Adjust your search, pod, or allocation filters.</p>
+                    <p className="mt-3 text-sm font-medium text-fg">{currentViewDataUnavailable ? 'Team data unavailable' : 'No team members found'}</p>
+                    <p className="mt-1 text-xs text-muted">{currentViewDataUnavailable ? 'The live data source did not return all records needed for this view. Use Refresh to retry.' : 'Adjust your search, pod, or allocation filters.'}</p>
                   </div>
                 ) : (
                   <table className="ams-teams-table min-w-[1240px] table-fixed">
@@ -1368,8 +1413,8 @@ export const AdminTeams: React.FC = () => {
                 id: 'active-contractors',
                 slug: 'vendor-directory-kpi-active-contractors',
                 label: 'Active Contractors',
-                value: vendors.filter((vendor) => vendor.status === 'active').length,
-                context: vendorTierCounts.strategic + ' Dedicated · ' + (vendorTierCounts.specialized + vendorTierCounts.adhoc) + ' On-Demand',
+                value: currentViewDataUnavailable ? '—' : vendors.filter((vendor) => vendor.status === 'active').length,
+                context: currentViewDataUnavailable ? 'Live source unavailable' : vendorTierCounts.strategic + ' Dedicated · ' + (vendorTierCounts.specialized + vendorTierCounts.adhoc) + ' On-Demand',
                 
                 icon: <UsersRound size={15} />
               },
@@ -1377,10 +1422,10 @@ export const AdminTeams: React.FC = () => {
                 id: 'external-burn',
                 slug: 'vendor-directory-kpi-external-burn',
                 label: 'Monthly External Burn',
-                value: Object.keys(vendorMonthlyBurn).length === 1
+                value: currentViewDataUnavailable ? '—' : Object.keys(vendorMonthlyBurn).length === 1
                   ? formatAmount(vendorMonthlyBurn[Object.keys(vendorMonthlyBurn)[0]], Object.keys(vendorMonthlyBurn)[0] as 'IDR' | 'USD')
                   : Object.keys(vendorMonthlyBurn).length > 1 ? 'Mixed' : '—',
-                context: Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(Number(amount), currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
+                context: currentViewDataUnavailable ? 'Live source unavailable' : Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(Number(amount), currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
                 
                 icon: <TrendingUp size={15} />
               },
@@ -1398,8 +1443,8 @@ export const AdminTeams: React.FC = () => {
                 id: 'renewals',
                 slug: 'vendor-directory-kpi-renewals',
                 label: 'Contract Renewals Due',
-                value: vendorRenewalCount,
-                context: 'Action required within 30 days',
+                value: currentViewDataUnavailable ? '—' : vendorRenewalCount,
+                context: currentViewDataUnavailable ? 'Live source unavailable' : 'Action required within 30 days',
                 
                 icon: <CalendarDays size={15} className="text-warning" />,
                 toneClassName: 'text-warning'
@@ -1457,8 +1502,8 @@ export const AdminTeams: React.FC = () => {
               {pagedVendorRows.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
                   <Users size={22} className="mx-auto text-muted" />
-                  <p className="mt-3 text-sm font-medium text-fg">No vendors found</p>
-                  <p className="mt-1 text-xs text-muted">Adjust search, tier, category, or agreement filters.</p>
+                  <p className="mt-3 text-sm font-medium text-fg">{currentViewDataUnavailable ? 'Vendor data unavailable' : 'No vendors found'}</p>
+                  <p className="mt-1 text-xs text-muted">{currentViewDataUnavailable ? 'The live vendor or project source did not return the records needed for this view. Use Refresh to retry.' : 'Adjust search, tier, category, or agreement filters.'}</p>
                 </div>
               ) : (
                 <table className="ams-teams-table min-w-[1260px] table-fixed">
@@ -1549,11 +1594,11 @@ export const AdminTeams: React.FC = () => {
           <AdminMetricStrip
             metrics={[
               { id: 'utilization',
-                slug: 'capacity-allocation-kpi-utilization', label: 'Historical tracked utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Actual time entries vs 40h baseline',  icon: <TrendingUp size={15} /> },
+                slug: 'capacity-allocation-kpi-utilization', label: 'Historical tracked utilization', value: currentViewDataUnavailable ? '—' : currentCapacityStats.average.toFixed(1) + '%', context: 'Actual time entries vs 40h baseline',  icon: <TrendingUp size={15} /> },
               { id: 'risk',
-                slug: 'capacity-allocation-kpi-risk', label: 'High tracked hours', value: currentCapacityStats.highRisk, context: '>90% of weekly baseline recorded',  icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
+                slug: 'capacity-allocation-kpi-risk', label: 'High tracked hours', value: currentViewDataUnavailable ? '—' : currentCapacityStats.highRisk, context: '>90% of weekly baseline recorded',  icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
               { id: 'allocated',
-                slug: 'capacity-allocation-kpi-tracked', label: 'Tracked this week', value: formatHours(currentCapacityStats.totalMinutes), context: currentCapacityStats.active + ' active contributors', sparkline: weeklyCapacity.map((week) => logs.filter((log) => { const date = new Date(log.date + 'T00:00:00'); return date >= week.start && date < week.end; }).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0)), icon: <Timer size={15} /> },
+                slug: 'capacity-allocation-kpi-tracked', label: 'Tracked this week', value: currentViewDataUnavailable ? '—' : formatHours(currentCapacityStats.totalMinutes), context: currentViewDataUnavailable ? 'Live source unavailable' : currentCapacityStats.active + ' active contributors', sparkline: currentViewDataUnavailable ? undefined : weeklyCapacity.map((week) => logs.filter((log) => { const date = new Date(log.date + 'T00:00:00'); return date >= week.start && date < week.end; }).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0)), icon: <Timer size={15} /> },
               { id: 'baseline',
                 slug: 'capacity-allocation-kpi-baseline', label: 'Reference baseline', value: '40h', context: 'Comparison only, not planned capacity',  icon: <CalendarDays size={15} /> }
             ]}
@@ -1573,6 +1618,11 @@ export const AdminTeams: React.FC = () => {
                   {weeklyCapacity.map((week) => <th key={week.label} className="w-[19%] text-center">{week.label}</th>)}
                 </tr></thead>
                 <tbody>
+                  {pagedCapacityRows.length === 0 && (
+                    <tr><td colSpan={weeklyCapacity.length + 1} className="px-4 py-8 text-center text-xs text-muted">
+                      {currentViewDataUnavailable ? 'Capacity data unavailable. Refresh to retry.' : 'No team members or tracked time are available for this range.'}
+                    </td></tr>
+                  )}
                   {pagedCapacityRows.map((row) => (
                     <tr key={row.member.id} data-ams-slug={row.member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
@@ -1636,13 +1686,13 @@ export const AdminTeams: React.FC = () => {
           <AdminMetricStrip
             metrics={[
               { id: 'internal',
-                slug: 'skill-matrix-kpi-internal-members', label: 'Internal members', value: members.length, context: 'Role-aligned capability focus',  icon: <UsersRound size={15} /> },
+                slug: 'skill-matrix-kpi-internal-members', label: 'Internal members', value: currentViewDataUnavailable ? '—' : members.length, context: 'Role-aligned capability focus',  icon: <UsersRound size={15} /> },
               { id: 'vendorSkills',
-                slug: 'skill-matrix-kpi-vendor-skills', label: 'Vendor skills', value: skillRows.length, context: 'Distinct external skills',  icon: <BarChart3 size={15} /> },
+                slug: 'skill-matrix-kpi-vendor-skills', label: 'Vendor skills', value: currentViewDataUnavailable ? '—' : skillRows.length, context: 'Distinct external skills',  icon: <BarChart3 size={15} /> },
               { id: 'vettedCoverage',
-                slug: 'skill-matrix-kpi-vetted-coverage', label: 'Vetted coverage', value: skillRows.length ? Math.round((skillRows.filter((row) => row.vetted > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with vetted coverage',  icon: <ShieldCheck size={15} className="text-success" />, toneClassName: 'text-success' },
+                slug: 'skill-matrix-kpi-vetted-coverage', label: 'Vetted coverage', value: currentViewDataUnavailable ? '—' : skillRows.length ? Math.round((skillRows.filter((row) => row.vetted > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with vetted coverage',  icon: <ShieldCheck size={15} className="text-success" />, toneClassName: 'text-success' },
               { id: 'activeCoverage',
-                slug: 'skill-matrix-kpi-active-coverage', label: 'Active skill coverage', value: skillRows.length ? Math.round((skillRows.filter((row) => row.active > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with active vendors',  icon: <CheckCircle2 size={15} className="text-success" />, toneClassName: 'text-success' }
+                slug: 'skill-matrix-kpi-active-coverage', label: 'Active skill coverage', value: currentViewDataUnavailable ? '—' : skillRows.length ? Math.round((skillRows.filter((row) => row.active > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with active vendors',  icon: <CheckCircle2 size={15} className="text-success" />, toneClassName: 'text-success' }
             ]}
           />
 
@@ -1656,6 +1706,11 @@ export const AdminTeams: React.FC = () => {
                   <th className="w-[33%]">Primary capability focus</th>
                 </tr></thead>
                 <tbody>
+                  {pagedRoleMatrixMembers.length === 0 && (
+                    <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-muted">
+                      {currentViewDataUnavailable ? 'Internal team records unavailable. Refresh to retry.' : 'No internal team members found.'}
+                    </td></tr>
+                  )}
                   {pagedRoleMatrixMembers.map((member) => (
                     <tr key={member.id} data-ams-slug={member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
@@ -1684,6 +1739,11 @@ export const AdminTeams: React.FC = () => {
                   <th className="w-[20%] text-right">Active</th>
                 </tr></thead>
                 <tbody>
+                  {pagedSkillRows.length === 0 && (
+                    <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-muted">
+                      {currentViewDataUnavailable ? 'Vendor skill data unavailable. Refresh to retry.' : 'No vendor skills have been recorded.'}
+                    </td></tr>
+                  )}
                   {pagedSkillRows.map((row) => (
                     <tr key={row.slug} data-ams-slug={row.slug} className="transition-colors hover:bg-bg/40">
                       <td>
@@ -1705,13 +1765,13 @@ export const AdminTeams: React.FC = () => {
           <AdminMetricStrip
             metrics={[
               { id: 'tracked',
-                slug: 'time-logs-kpi-tracked', label: 'Tracked time', value: formatHours(timeMetrics.total), context: 'Current filters',  icon: <Timer size={15} />, toneClassName: 'text-accent-text' },
+                slug: 'time-logs-kpi-tracked', label: 'Tracked time', value: currentViewDataUnavailable ? '—' : formatHours(timeMetrics.total), context: currentViewDataUnavailable ? 'Live source unavailable' : 'Current filters',  icon: <Timer size={15} />, toneClassName: 'text-accent-text' },
               { id: 'billable',
-                slug: 'time-logs-kpi-billable', label: 'Billable time', value: formatHours(timeMetrics.billable), context: 'Billable entries',  icon: <WalletCards size={15} /> },
+                slug: 'time-logs-kpi-billable', label: 'Billable time', value: currentViewDataUnavailable ? '—' : formatHours(timeMetrics.billable), context: currentViewDataUnavailable ? 'Live source unavailable' : 'Billable entries',  icon: <WalletCards size={15} /> },
               { id: 'entries',
-                slug: 'time-logs-kpi-entries', label: 'Entries', value: timeMetrics.entries, context: timeMetrics.contributors + ' contributors',  icon: <CalendarDays size={15} /> },
+                slug: 'time-logs-kpi-entries', label: 'Entries', value: currentViewDataUnavailable ? '—' : timeMetrics.entries, context: currentViewDataUnavailable ? 'Live source unavailable' : timeMetrics.contributors + ' contributors',  icon: <CalendarDays size={15} /> },
               { id: 'contributors',
-                slug: 'time-logs-kpi-contributors', label: 'Contributors', value: timeMetrics.contributors, context: 'Users in filtered log',  icon: <UsersRound size={15} /> }
+                slug: 'time-logs-kpi-contributors', label: 'Contributors', value: currentViewDataUnavailable ? '—' : timeMetrics.contributors, context: currentViewDataUnavailable ? 'Live source unavailable' : 'Users in filtered log',  icon: <UsersRound size={15} /> }
             ]}
           />
 
@@ -1775,8 +1835,8 @@ export const AdminTeams: React.FC = () => {
               {filteredLogs.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
                   <Timer size={22} className="mx-auto text-muted" />
-                  <p className="mt-3 text-sm font-medium text-fg">No time logs found</p>
-                  <p className="mt-1 text-xs text-muted">Adjust the filters or add a time entry.</p>
+                  <p className="mt-3 text-sm font-medium text-fg">{currentViewDataUnavailable ? 'Time log data unavailable' : 'No time logs found'}</p>
+                  <p className="mt-1 text-xs text-muted">{currentViewDataUnavailable ? 'The live time log or project source did not return the records needed for this view. Use Refresh to retry.' : 'Adjust the filters or add a time entry.'}</p>
                 </div>
               ) : (
                 <table className="ams-teams-table min-w-[1040px] table-fixed">
