@@ -20,6 +20,12 @@ test('essential AMS tab and Kanban scrollers keep a visible scrollbar affordance
   assert.match(css, /\.ams-shell \.ams-kanban-scroll::-webkit-scrollbar\{width:8px;height:8px\}/);
 });
 
+test('document and workspace do not reserve duplicate vertical scrollbar gutters', async () => {
+  const css = await read('src/index.css');
+  assert.match(css, /html\s*\{[^}]*scrollbar-gutter:\s*auto;/s);
+  assert.match(css, /\.ams-shell>main\{[^}]*scrollbar-gutter:stable/s);
+});
+
 test('scrollbar thumb policy is consistent for global and local horizontal scrollers', async () => {
   const css = await read('src/index.css');
 

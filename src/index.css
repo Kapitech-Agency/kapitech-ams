@@ -83,7 +83,9 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    scrollbar-gutter: stable;
+    /* The document is not the AMS workspace scroll owner. Keep its gutter
+       automatic; the authenticated main scroller reserves the stable gutter. */
+    scrollbar-gutter: auto;
   }
 
   body {
