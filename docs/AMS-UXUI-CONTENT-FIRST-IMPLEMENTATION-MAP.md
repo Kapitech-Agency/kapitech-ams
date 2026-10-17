@@ -556,3 +556,12 @@ The nine-module source sweep was fast-forwarded directly to `main` at `c9768dfd4
 This follow-up makes primary horizontally scrollable registers and boards keyboard-focusable and exposes each as a named region across Dashboard, Inbox, Projects, Tasks, Clients, Finance, Team & Resources, Documents, Website CMS and Settings. The main content scrollbar now reserves a stable gutter, increases Chromium/WebKit scrollbar geometry from 6px to 8px, and adds a visible keyboard-focus outline to horizontal scroll regions. These are presentation/accessibility changes only.
 
 Regression assertions now cover the scrollbar geometry, last-row register scroll affordances, and named keyboard-accessible data regions. Authenticated browser/device acceptance checks remain outstanding: verify actual appearance and last-column reachability at 1440, 1024, 768, 390 and 320px, keyboard/touch scrolling, theme behavior, and drawer/dialog focus and scroll restoration. No browser-level pass is claimed by this source checkpoint.
+
+
+### Data availability states in Inbox, Team & Resources, and Settings · 18 October 2026
+
+- Inbox now persists a load-error state, exposes a retry alert, retains the last successful records after refresh failures, and avoids presenting a failed source as an empty/live queue.
+- Vendor, vendor-skill and time-log descriptions now disclose when live sources are unavailable; retained last-known-good records are identified rather than framed as current live totals.
+- Settings summary cards distinguish unavailable backup/security status from a real “No snapshot” or a verified zero-user value. Retry paths remain tied to existing status APIs.
+
+These changes address display-state interpretation and recovery only; they do not alter endpoints, persistence, permission checks, business calculations, or security settings.

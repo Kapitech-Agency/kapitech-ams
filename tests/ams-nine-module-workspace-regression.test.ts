@@ -65,6 +65,8 @@ test('Team and Resources distinguish unavailable source data from a true zero', 
   assert.match(teams, /data-ams-feature-slug="team-directory-filters"/);
   assert.match(teams, /Team data unavailable/);
   assert.match(teams, /Vendor data unavailable/);
+  assert.match(teams, /Vendor source unavailable\. Previously loaded records remain visible/);
+  assert.match(teams, /Time log source unavailable\. Previously loaded entries remain visible/);
   assert.match(vendors, /Failed to load vendors/);
   assert.match(timeLogs, /Previously loaded records are kept/);
 });
@@ -97,6 +99,8 @@ test('Settings keeps backup and audit failure states distinct from empty history
   const settings = await read('src/pages/admin/AdminSettings.tsx');
   assert.match(settings, /featureSlug="settings-module"/);
   assert.match(settings, /Backup status unavailable/);
+  assert.match(settings, /const backupValue = backupLoadError/);
+  assert.match(settings, /Security status could not be verified/);
   assert.match(settings, /Previously loaded entries remain visible/);
   assert.match(settings, /Retry/);
 });

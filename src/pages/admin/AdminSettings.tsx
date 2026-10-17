@@ -813,13 +813,21 @@ export const AdminSettings: React.FC = () => {
 
   const latestBackup = backups[0] ?? null;
   const backupHealthy = Boolean(backupIntegrity?.valid);
-  const mfaEnrolled = securityStatus ? securityStatus.mfaEnabledCount + ' / ' + securityStatus.activeUserCount + ' Enrolled' : 'Checking…';
-  const backupValue = latestBackup
-    ? backupHealthy ? '100% Verified' : 'Check required'
-    : 'No snapshot';
-  const backupContext = latestBackup
-    ? 'Latest snapshot ' + formatUtc(latestBackup.createdAt)
-    : 'No production backup returned by the server';
+  const mfaEnrolled = securityStatus
+    ? securityStatus.mfaEnabledCount + ' / ' + securityStatus.activeUserCount + ' Enrolled'
+    : overviewLoading ? 'Checking…' : 'Unavailable';
+  const backupValue = backupLoadError
+    ? backups.length > 0 ? 'Last known' : 'Unavailable'
+    : latestBackup
+      ? backupHealthy ? '100% Verified' : 'Check required'
+      : 'No snapshot';
+  const backupContext = backupLoadError
+    ? backups.length > 0
+      ? 'Current backup status could not be refreshed. The last known snapshot is shown below.'
+      : 'Backup status could not be verified. Retry to refresh the server data.'
+    : latestBackup
+      ? 'Latest snapshot ' + formatUtc(latestBackup.createdAt)
+      : 'No production backup returned by the server';
   const notificationContext =
     notificationStatus === 'connected'
       ? 'Server-managed notification settings are reachable'
@@ -907,15 +915,19 @@ export const AdminSettings: React.FC = () => {
               label="Backup & Recovery"
               value={overviewLoading ? 'Checking…' : backupValue}
               context={overviewLoading ? 'Loading backup health and retention status' : backupContext}
-              status={overviewLoading ? 'Checking' : backupHealthy ? 'Healthy' : 'Needs review'}
-              tone={overviewLoading ? 'neutral' : backupHealthy ? 'success' : 'warning'}
+              status={overviewLoading ? 'Checking' : backupLoadError ? 'Unavailable' : backupHealthy ? 'Healthy' : 'Needs review'}
+              tone={overviewLoading ? 'neutral' : backupLoadError ? 'warning' : backupHealthy ? 'success' : 'warning'}
             />
             <SummaryCard
               label="Security & MFA"
               value={overviewLoading ? 'Checking…' : mfaEnrolled}
-              context={overviewLoading ? 'Loading identity protection status' : ((securityStatus?.activeUserCount ?? 0) + ' active users reported by the server')}
-              status={overviewLoading ? 'Checking' : securityStatus?.mfaCoveragePercent === 100 ? 'Enforced' : 'Review'}
-              tone={overviewLoading ? 'neutral' : securityStatus?.mfaCoveragePercent === 100 ? 'success' : 'warning'}
+              context={overviewLoading
+                ? 'Loading identity protection status'
+                : securityStatus
+                  ? securityStatus.activeUserCount + ' active users reported by the server'
+                  : 'Security status could not be verified'}
+              status={overviewLoading ? 'Checking' : !securityStatus ? 'Unavailable' : securityStatus.mfaCoveragePercent === 100 ? 'Enforced' : 'Review'}
+              tone={overviewLoading ? 'neutral' : !securityStatus ? 'warning' : securityStatus.mfaCoveragePercent === 100 ? 'success' : 'warning'}
             />
             <SummaryCard
               label="Integrations & Alerts"

@@ -1437,7 +1437,9 @@ export const AdminTeams: React.FC = () => {
             </div>
           </section>
 
-          <AdminPanel slug="vendor-directory-table" title="Vendor & Contractor Directory" description={vendorRows.length + ' external vendors · sorted by rate high to low'} className="overflow-hidden">
+          <AdminPanel slug="vendor-directory-table" title="Vendor & Contractor Directory" description={currentViewDataUnavailable
+            ? (vendorRows.length > 0 ? 'Vendor source unavailable. Previously loaded records remain visible.' : 'Vendor data unavailable. Refresh to retry; vendor count is not available.')
+            : vendorRows.length + ' external vendors · sorted by rate high to low'} className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable vendor and contractor directory table">
               {pagedVendorRows.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
@@ -1700,7 +1702,9 @@ export const AdminTeams: React.FC = () => {
             <AdminTablePagination total={members.length} page={roleMatrixPage} pageSize={roleMatrixPageSize} onPageChange={setRoleMatrixPage} onPageSizeChange={setRoleMatrixPageSize} itemLabel="members" slug="skill-matrix-role-matrix-pagination" />
           </AdminPanel>
 
-          <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={skillRows.length + ' distinct skills reported by the vendor directory.'} className="overflow-hidden">
+          <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={currentViewDataUnavailable
+            ? (skillRows.length > 0 ? 'Vendor source unavailable. Previously loaded skill coverage remains visible.' : 'Vendor skill data unavailable. Refresh to retry; skill count is not available.')
+            : skillRows.length + ' distinct skills reported by the vendor directory.'} className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable vendor skill coverage table">
               <table className="ams-teams-table min-w-[800px] table-fixed">
                 <thead><tr>
@@ -1788,7 +1792,9 @@ export const AdminTeams: React.FC = () => {
             </AdminPanel>
           )}
 
-          <AdminPanel slug="time-logs-ledger" title="Time log ledger" description={filteredLogs.length + ' entries visible'} className="overflow-hidden">
+          <AdminPanel slug="time-logs-ledger" title="Time log ledger" description={currentViewDataUnavailable
+            ? (filteredLogs.length > 0 ? 'Time log source unavailable. Previously loaded entries remain visible.' : 'Time log data unavailable. Refresh to retry; entry count is not available.')
+            : filteredLogs.length + ' entries visible'} className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable time log ledger table">
               {filteredLogs.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
