@@ -840,8 +840,8 @@ export const AdminInbox: React.FC = () => {
               <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
                 <Download size={13} />Export
               </button>
-              <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-8 min-h-8 shrink-0 items-center gap-1.5 rounded-chip border border-line bg-panel px-2.5 text-[11px] font-medium text-fg">
-                <User size={12} />Review
+              <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open review workspace">
+                <User size={13} />Review
               </button>
               <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all'} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
                 Reset
@@ -869,8 +869,8 @@ export const AdminInbox: React.FC = () => {
               <div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div>
               <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
               <div className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
-                <button type="button" onClick={() => setViewMode('board')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (viewMode === 'board' ? 'border border-line bg-panel text-fg' : 'border border-transparent text-muted hover:text-fg')}><LayoutGrid size={13}/>Board</button>
-                <button type="button" onClick={() => setViewMode('split')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (viewMode === 'split' ? 'border border-line bg-panel text-fg' : 'border border-transparent text-muted hover:text-fg')}><User size={13}/>Review</button>
+                <button type="button" aria-pressed={viewMode === 'board'} onClick={() => setViewMode('board')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (viewMode === 'board' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><LayoutGrid size={13}/>Board</button>
+                <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><User size={13}/>Review</button>
               </div>
               <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all'} className="inline-flex h-9 min-h-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">Reset</button>
             </div>
