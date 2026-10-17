@@ -39,6 +39,28 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(workbook, /FINANCE_WORKBOOK_GROUPS/);
   assert.ok(workbook.includes('cash-bank') && workbook.includes('accounts-receivable'));
 });
+test('Finance visible copy describes user workflows, not spreadsheet implementation', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const workbook = await read('src/lib/financeWorkbook.ts');
+
+  for (const implementationPhrase of [
+    'Excel-aligned finance workflow',
+    'Finance workbook sheets',
+    'Project name / Excel key',
+    'workbook sheet tabs above',
+    'Kapitech Finance Final Automated.xlsx',
+    'Excel-aligned Finance flow',
+    'Persistent workbook register',
+    'Excel allocation policy',
+    'Workbook Chart of Accounts posting map'
+  ]) {
+    assert.equal(workspace.includes(implementationPhrase), false, 'Visible Finance copy should not expose implementation wording: ' + implementationPhrase);
+  }
+  assert.ok(workspace.includes('Finance worksheets'));
+  assert.ok(workspace.includes('Project name / project reference'));
+  assert.doesNotMatch(workbook, /description: '[^']*(?:workbook|Excel)[^']*'/i);
+});
+
 test('Finance workspace groups navigation, search, and alerts using the shared AMS layout patterns', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
