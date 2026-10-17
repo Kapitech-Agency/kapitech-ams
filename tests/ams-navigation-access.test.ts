@@ -6,7 +6,6 @@ import {
   AMS_SYSTEM_SETTINGS_ITEMS,
   canAccessAmsRoute,
   getAmsNavigationDestinationSignature,
-  getAmsSidebarDestinationSignatures,
   getAmsHomePath,
   getNavigationGroupsForRole,
   isNavigationItemActive,
