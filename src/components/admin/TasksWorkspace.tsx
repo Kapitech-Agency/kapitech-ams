@@ -228,7 +228,9 @@ export const TasksWorkspace: React.FC = () => {
         setProjects(normalizedProjects);
       }
 
-      const projectById = new Map(normalizedProjects.map((project) => [project.id, project]));
+      const projectById = new Map<string, TaskProject>(
+        normalizedProjects.map((project): [string, TaskProject] => [project.id, project])
+      );
       let assigneeMap = new Map<string, { id: string; name: string; username: string }>();
       assignees.forEach((item) => {
         assigneeMap.set(item.id, item);
