@@ -36,7 +36,7 @@ test('reduced-motion preference disables smooth document scrolling', async () =>
 });
 
 test('table geometry variants use scoped selectors rather than important overrides', async () => {
-  const css = (await read('src/index.css')).replace(/\\/\\*[\\s\\S]*?\\*\\//g, '');
+  const css = await read('src/index.css');
   const slice = (start: string, end: string) => {
     const startIndex = css.indexOf(start);
     const endIndex = css.indexOf(end, startIndex + start.length);
@@ -46,7 +46,7 @@ test('table geometry variants use scoped selectors rather than important overrid
   };
 
   const sharedActions = slice('.ams-shell table .ams-table-actions>button', '.ams-shell .ams-finance-table{');
-  const projects = slice('.ams-shell .ams-projects-table{', '.ams-shell .ams-finance-table{');
+  const projects = slice('.ams-shell .ams-projects-table{', '/* --------------------------------------------------------------------------\n   AMS CANONICAL DATA TABLE');
   const teams = slice('.ams-shell .ams-teams-table{', '/* Settings / System & Security table treatment */');
   const settings = slice('/* Settings / System & Security table treatment */', '/* AMS DRAWER SYSTEM: canonical geometry');
 
