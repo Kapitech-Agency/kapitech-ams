@@ -834,7 +834,7 @@ test('Vendor directory prioritizes its register, then the snapshot, and uses the
   assert.ok(emptyState > directory && pagination > emptyState);
   assert.ok(snapshot > pagination);
   assert.ok(detailDrawer > snapshot);
-  assert.doesNotMatch(vendors, /<Modal\\b/);
+  assert.equal(vendors.includes('<Modal'), false);
   assert.ok(vendors.includes('footer={('));
   assert.ok(vendors.includes("handleOpenEdit(selectedVendor)"));
   assert.ok(vendors.includes('{filteredVendors.length > 0 && ('));
