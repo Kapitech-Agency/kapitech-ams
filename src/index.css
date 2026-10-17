@@ -95,10 +95,10 @@
     overflow-x: hidden;
   }
 
-  /* AMS-native scrollbars: replace platform defaults without hiding scroll affordance. */
+  /* AMS-native scrollbars share one visible, restrained policy. */
   *, *::before, *::after {
     scrollbar-width: thin;
-    scrollbar-color: var(--line) transparent;
+    scrollbar-color: var(--muted) transparent;
   }
 
   *::-webkit-scrollbar {
@@ -111,14 +111,14 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background: var(--line);
+    background: var(--muted);
     border: 1px solid transparent;
     border-radius: 999px;
     background-clip: padding-box;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background: var(--muted);
+    background: var(--text);
     background-clip: padding-box;
   }
 
@@ -130,6 +130,10 @@
     background: var(--accent);
     color: #ffffff;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }
 /* ==========================================================================
    KAPITECH AMS CANONICAL UI
@@ -157,8 +161,8 @@
 .ams-shell .text-amber-400,.ams-shell .text-yellow-400{color:var(--warning)}
 .ams-shell .text-blue-400,.ams-shell .text-cyan-400{color:var(--info)}
 .ams-shell [data-status=success]{color:var(--success)}.ams-shell [data-status=warning]{color:var(--warning)}.ams-shell [data-status=danger]{color:var(--danger)}.ams-shell [data-status=info]{color:var(--info)}
-.ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;-webkit-overflow-scrolling:touch}
-.ams-shell .overflow-x-auto::-webkit-scrollbar{width:4px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;-webkit-overflow-scrolling:touch}
+.ams-shell .overflow-x-auto::-webkit-scrollbar{width:6px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb:hover{background:var(--text)}
 /* Base control and keyboard defaults belong to Tailwind's base layer.
    Unlayered selectors here used to beat utility classes and component focus rings. */
 @layer base {
@@ -232,10 +236,14 @@
 .ams-shell .ams-sidebar-expanded a[aria-current=page],.ams-shell .ams-sidebar-collapsed a[aria-current=page]{position:relative;box-shadow:none;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text)}
 .ams-shell .ams-sidebar-expanded a[aria-current=page]::before,.ams-shell .ams-sidebar-collapsed a[aria-current=page]::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:1px;background:var(--accent)}
 .ams-shell .ams-sidebar-expanded,.ams-shell .ams-sidebar-collapsed{min-width:0}
-.ams-shell .ams-topnav-scroll{scrollbar-width:none;-ms-overflow-style:none}
-.ams-shell .ams-topnav-scroll::-webkit-scrollbar{display:none}
-.ams-shell .ams-kanban-scroll{min-height:0;max-width:100%;overscroll-behavior-x:contain;scrollbar-width:none;-ms-overflow-style:none}
-.ams-shell .ams-kanban-scroll::-webkit-scrollbar{display:none}
+.ams-shell .ams-topnav-scroll{scrollbar-width:thin;scrollbar-color:var(--muted) transparent;scroll-padding-inline:12px}
+.ams-shell .ams-topnav-scroll::-webkit-scrollbar{width:6px;height:6px}
+.ams-shell .ams-topnav-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}
+.ams-shell .ams-topnav-scroll::-webkit-scrollbar-thumb:hover{background:var(--text)}
+.ams-shell .ams-kanban-scroll{min-height:0;max-width:100%;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--muted) transparent}
+.ams-shell .ams-kanban-scroll::-webkit-scrollbar{width:6px;height:6px}
+.ams-shell .ams-kanban-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}
+.ams-shell .ams-kanban-scroll::-webkit-scrollbar-thumb:hover{background:var(--text)}
 .ams-shell .kanban-card{min-height:126px}
 .ams-shell .ams-kanban-scroll [data-drag-handle="true"]{cursor:grab;-webkit-user-drag:element;user-select:none}
 .ams-shell .ams-kanban-scroll [data-drag-handle="true"]:active{cursor:grabbing}
@@ -250,11 +258,15 @@
 .ams-shell .ams-inbox-page .ams-table-scroll{max-width:100%;overflow-x:auto}.ams-shell .ams-table-scroll table{min-width:max-content}
 .ams-shell .ams-project-kanban-board,
 .ams-shell .ams-project-kanban-task-board{
-  scrollbar-width:none;
-  -ms-overflow-style:none;
+  scrollbar-width:thin;
+  scrollbar-color:var(--muted) transparent;
 }
 .ams-shell .ams-project-kanban-board::-webkit-scrollbar,
-.ams-shell .ams-project-kanban-task-board::-webkit-scrollbar{display:none}
+.ams-shell .ams-project-kanban-task-board::-webkit-scrollbar{width:6px;height:6px}
+.ams-shell .ams-project-kanban-board::-webkit-scrollbar-thumb,
+.ams-shell .ams-project-kanban-task-board::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}
+.ams-shell .ams-project-kanban-board::-webkit-scrollbar-thumb:hover,
+.ams-shell .ams-project-kanban-task-board::-webkit-scrollbar-thumb:hover{background:var(--text)}
 .ams-shell .ams-project-kanban-board{
   background:var(--bg);
   border:1px solid var(--line);
@@ -300,27 +312,27 @@
   font-variant-numeric:tabular-nums;
 }
 .ams-shell .ams-projects-table thead th{
-  height:42px!important;
-  padding:0 14px!important;
-  background:var(--panel)!important;
-  border-bottom:1px solid var(--line)!important;
-  color:var(--muted)!important;
-  font-size:11px!important;
-  line-height:16px!important;
-  font-weight:600!important;
-  letter-spacing:0!important;
-  text-transform:none!important;
-  text-align:left!important;
-  white-space:nowrap!important;
+  height:42px;
+  padding:0 14px;
+  background:var(--panel);
+  border-bottom:1px solid var(--line);
+  color:var(--muted);
+  font-size:11px;
+  line-height:16px;
+  font-weight:600;
+  letter-spacing:0;
+  text-transform:none;
+  text-align:left;
+  white-space:nowrap;
 }
 .ams-shell .ams-projects-table tbody td{
-  padding:11px 14px!important;
-  border-bottom:1px solid var(--line)!important;
-  color:var(--text)!important;
-  vertical-align:middle!important;
+  padding:11px 14px;
+  border-bottom:1px solid var(--line);
+  color:var(--text);
+  vertical-align:middle;
 }
 .ams-shell .ams-projects-table tbody tr:last-child td{
-  border-bottom:0!important;
+  border-bottom:0;
 }
 .ams-shell .ams-projects-table tbody tr{
   transition:background-color 120ms ease;
@@ -339,7 +351,7 @@
   cursor:grabbing;
 }
 .ams-shell .ams-inbox-list-pane,.ams-shell .ams-inbox-reader-pane{min-width:0;min-height:0}.ams-shell .ams-inbox-reader-pane{overflow:hidden}
-.ams-shell .custom-scrollbar::-webkit-scrollbar{width:4px;height:4px}.ams-shell .custom-scrollbar::-webkit-scrollbar-track{background:transparent}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+.ams-shell .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}.ams-shell .custom-scrollbar::-webkit-scrollbar-track{background:transparent}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:var(--text)}
 .ams-portal-root{font-family:var(--font-sans);color:var(--text)}
 .ams-portal-root .ams-popover-surface{background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);box-shadow:0 12px 32px color-mix(in srgb,var(--bg) 45%,transparent);overflow:hidden}
 .ams-portal-root .ams-dropdown-item{min-height:36px;padding:8px 10px;border-radius:6px}
@@ -587,11 +599,11 @@
 .ams-shell table thead th.text-right,.ams-shell table tbody td.text-right{text-align:right}
 .ams-shell table thead th.text-center,.ams-shell table tbody td.text-center{text-align:center}
 .ams-shell table .ams-table-actions{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:6px}
-.ams-shell table .ams-table-actions>button,.ams-shell table .ams-table-actions>a{min-height:32px!important;min-width:32px!important;height:32px!important;width:32px!important;padding:0!important;display:inline-flex;align-items:center;justify-content:center}
-.ams-shell .ams-table-action{min-height:34px!important;padding:7px 10px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:var(--bg)!important;color:var(--muted);font-size:11px;font-weight:500;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
-.ams-shell .ams-table-action:hover{background:var(--panel)!important;color:var(--text)}
-.ams-shell .ams-table-action[data-primary=true]{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))!important;background:color-mix(in srgb,var(--accent) 10%,var(--bg))!important;color:var(--accent-text)}
-.ams-shell .ams-table-action[data-primary=true]:hover{background:var(--accent)!important;color:#fff!important}
+.ams-shell table .ams-table-actions>button,.ams-shell table .ams-table-actions>a{min-height:32px!important;min-width:32px!important;height:32px!important;width:32px!important;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.ams-shell .ams-table-action{min-height:34px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted);font-size:11px;font-weight:500;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
+.ams-shell .ams-table-action:hover{background:var(--panel);color:var(--text)}
+.ams-shell .ams-table-action[data-primary=true]{border-color:color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--bg));color:var(--accent-text)}
+.ams-shell .ams-table-action[data-primary=true]:hover{background:var(--accent);color:#fff}
 .ams-shell .ams-table-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .ams-shell .ams-finance-table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
 .ams-shell .ams-finance-table thead th{height:40px;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line);color:var(--muted);font-size:11px;line-height:16px;font-weight:600;letter-spacing:0;text-transform:none;text-align:left;vertical-align:middle;white-space:nowrap}
@@ -631,39 +643,39 @@
   position:sticky;
   top:0;
   z-index:1;
-  height:44px!important;
-  padding:0 14px!important;
-  background:var(--panel)!important;
-  border-bottom:1px solid var(--line)!important;
-  color:var(--muted)!important;
-  font-size:11px!important;
-  line-height:16px!important;
-  font-weight:600!important;
-  letter-spacing:0!important;
-  text-transform:none!important;
-  text-align:left!important;
-  vertical-align:middle!important;
-  white-space:nowrap!important;
-}
-.ams-shell .ams-teams-table tbody tr{border:0!important}
-.ams-shell .ams-teams-table tbody td{
-  min-height:48px!important;
-  height:48px!important;
-  padding:8px 14px!important;
+  height:44px;
+  padding:0 14px;
   background:var(--panel);
-  border-bottom:1px solid var(--line)!important;
-  color:var(--text);
-  font-size:13px!important;
-  line-height:18px!important;
-  vertical-align:middle!important;
-  text-align:left!important;
+  border-bottom:1px solid var(--line);
+  color:var(--muted);
+  font-size:11px;
+  line-height:16px;
+  font-weight:600;
+  letter-spacing:0;
+  text-transform:none;
+  text-align:left;
+  vertical-align:middle;
+  white-space:nowrap;
 }
-.ams-shell .ams-teams-table tbody tr:last-child td{border-bottom:0!important}
+.ams-shell .ams-teams-table tbody tr{border:0}
+.ams-shell .ams-teams-table tbody td{
+  min-height:48px;
+  height:48px;
+  padding:8px 14px;
+  background:var(--panel);
+  border-bottom:1px solid var(--line);
+  color:var(--text);
+  font-size:13px;
+  line-height:18px;
+  vertical-align:middle;
+  text-align:left;
+}
+.ams-shell .ams-teams-table tbody tr:last-child td{border-bottom:0}
 .ams-shell .ams-teams-table tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
-.ams-shell .ams-teams-table th:first-child,.ams-shell .ams-teams-table td:first-child{padding-left:18px!important}
-.ams-shell .ams-teams-table th:last-child,.ams-shell .ams-teams-table td:last-child{padding-right:18px!important}
-.ams-shell .ams-teams-table th.text-right,.ams-shell .ams-teams-table td.text-right{text-align:right!important}
-.ams-shell .ams-teams-table th.text-center,.ams-shell .ams-teams-table td.text-center{text-align:center!important}
+.ams-shell .ams-teams-table th:first-child,.ams-shell .ams-teams-table td:first-child{padding-left:18px}
+.ams-shell .ams-teams-table th:last-child,.ams-shell .ams-teams-table td:last-child{padding-right:18px}
+.ams-shell .ams-teams-table th.text-right,.ams-shell .ams-teams-table td.text-right{text-align:right}
+.ams-shell .ams-teams-table th.text-center,.ams-shell .ams-teams-table td.text-center{text-align:center}
 .ams-shell .ams-teams-table th>*,.ams-shell .ams-teams-table td>*{vertical-align:middle}
 .ams-shell .ams-teams-table .ams-table-actions{
   display:flex;
@@ -673,20 +685,20 @@
   gap:6px;
 }
 @media(max-width:899px){
-  .ams-shell .ams-teams-table tbody td{padding:8px 12px!important}
-  .ams-shell .ams-teams-table th:first-child,.ams-shell .ams-teams-table td:first-child{padding-left:14px!important}
-  .ams-shell .ams-teams-table th:last-child,.ams-shell .ams-teams-table td:last-child{padding-right:14px!important}
+  .ams-shell .ams-teams-table tbody td{padding:8px 12px}
+  .ams-shell .ams-teams-table th:first-child,.ams-shell .ams-teams-table td:first-child{padding-left:14px}
+  .ams-shell .ams-teams-table th:last-child,.ams-shell .ams-teams-table td:last-child{padding-right:14px}
 }
 
 
 /* Settings / System & Security table treatment */
 .ams-shell .settings-system-table thead th{
-  text-transform:none!important;
-  letter-spacing:0!important;
-  font-size:11px!important;
-  line-height:16px!important;
-  font-weight:500!important;
-  height:44px!important;
+  text-transform:none;
+  letter-spacing:0;
+  font-size:11px;
+  line-height:16px;
+  font-weight:500;
+  height:44px;
   padding:0 12px!important;
   color:var(--muted)!important;
 }
