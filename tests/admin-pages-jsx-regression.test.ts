@@ -244,6 +244,8 @@ test('All drawers use canonical geometry, typography, and named width presets', 
   assert.ok(drawer.includes('ams-drawer-header'));
   assert.ok(drawer.includes('ams-drawer-body'));
   assert.ok(drawer.includes('ams-drawer-footer'));
+  assert.ok(drawer.includes('bg-black/45 backdrop-blur-[2px]'), 'Drawer scrim stays neutral in dark and light themes.');
+  assert.equal(drawer.includes('bg-bg/80'), false, 'Page surface colors must not be reused as overlay scrims.');
   assert.equal(drawer.includes('dialogClassName'), false, 'Drawer widths must use named presets only.');
   assert.ok(stylesheet.includes('.ams-drawer-header{'));
   assert.ok(stylesheet.includes('.ams-drawer-body form{'));
@@ -258,7 +260,7 @@ test('All drawers use canonical geometry, typography, and named width presets', 
   assert.equal(cmsServices.includes('dialogClassName'), false);
   assert.equal(cmsTestimonials.includes('dialogClassName'), false);
   assert.ok(cmsProjects.includes('data-ams-drawer-preview'));
-  assert.ok(cmsProjects.includes('size="xl"'));
+  assert.ok(cmsProjects.includes('size="4xl"'));
   assert.ok(cmsServices.includes('size="lg"'));
   assert.ok(cmsTestimonials.includes('size="lg"'));
   assert.equal((careers.match(/data-ams-drawer-size="large"/g) || []).length, 2);

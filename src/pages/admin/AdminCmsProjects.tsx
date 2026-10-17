@@ -601,7 +601,7 @@ export const AdminCmsProjects: React.FC = () => {
       <Drawer slug="cms-project-editor-drawer"
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        size="xl"
+        size="4xl"
         title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add new case study'}
         description="Maintain the public case study content, media, and presentation."
         footer={modalTab === 'details'
