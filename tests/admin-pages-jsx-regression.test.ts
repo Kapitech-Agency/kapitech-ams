@@ -731,3 +731,20 @@ test('Time tracking leads with the time-entry workflow and register before perio
   assert.ok(time.includes('const totalMinutes = useMemo'));
   assert.ok(time.includes('const billableMinutes = useMemo'));
 });
+
+
+test('Contracts and SOW leads with its searchable register before the shared summary metrics', () => {
+  const contracts = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminContracts.tsx'), 'utf8');
+  const search = contracts.indexOf('aria-label="Search contracts"');
+  const table = contracts.indexOf('<table', search);
+  const pagination = contracts.indexOf('slug="contracts-pagination"');
+  const metrics = contracts.indexOf('data-ams-feature-slug="contracts-overview-kpis"');
+  assert.ok(search >= 0 && table > search);
+  assert.ok(pagination > table && metrics > pagination);
+  assert.ok(contracts.includes('<AdminMetricStrip'));
+  for (const label of ['Drafts', 'In workflow', 'Active agreements', 'Renewal / expiry watch']) {
+    assert.ok(contracts.includes("label: '" + label + "'"), 'Missing contract metric: ' + label);
+  }
+  assert.ok(contracts.includes("value: loading ? '—' : expiringSoon"));
+  assert.ok(contracts.includes('data-ams-slug={\'contract-\' + contract.id}'));
+});
