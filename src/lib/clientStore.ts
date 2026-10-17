@@ -73,7 +73,7 @@ export const normalizeAgencyClient = (client: AgencyClient): AgencyClient => ({
 });
 
 import { api } from './apiClient';
-import { isSlugFixtureMode } from './runtimeMode';
+
 
 let clientServerHydrationStarted = false;
 
@@ -91,7 +91,7 @@ function scheduleClientHydrationRetry(): void {
 }
 
 function hydrateClientsFromServer(): void {
-  if (!import.meta.env.PROD || clientServerHydrationStarted) return;
+  if (typeof window === 'undefined' || clientServerHydrationStarted) return;
   clientServerHydrationStarted = true;
   api.clients.getAll().then((res) => {
     if (!res.success || !Array.isArray(res.data?.clients)) {
@@ -110,113 +110,11 @@ function hydrateClientsFromServer(): void {
   });
 }
 
-export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [
-  {
-    id: 'cli_101',
-    slug: 'pt-astra-digital-ventura',
-    name: 'Budi Santoso',
-    company: 'PT Astra Digital Ventura',
-    email: 'budi.santoso@astradigital.id',
-    phone: '+62 812-9988-7711',
-    website: 'https://astradigital.id',
-    location: 'Jakarta Selatan, Indonesia',
-    industry: 'Enterprise Technology & Mobility',
-    status: 'active',
-    totalSpend: 183150000,
-    projectsCount: 2,
-    contactPersonRole: 'Head of Digital Engineering',
-    notes: 'Key enterprise account. Currently deploying microservices and React architecture.',
-    slaDailyAdSpendBudget: 15000000,
-    currentDailyAdSpend: 11200000,
-    createdAt: '2026-08-01T08:00:00Z',
-    updatedAt: '2026-08-14T14:15:00Z'
-  },
-  {
-    id: 'cli_102',
-    slug: 'telkomsel-innovation-labs',
-    name: 'Sarah Jenkins',
-    company: 'Telkomsel Innovation Labs',
-    email: 's.jenkins@telkomsel.co.id',
-    phone: '+62 811-2233-4455',
-    website: 'https://telkomsel.com/innovation',
-    location: 'Bandung, Indonesia',
-    industry: 'Telecommunications & Cloud',
-    status: 'active',
-    totalSpend: 126540000,
-    projectsCount: 1,
-    contactPersonRole: 'VP Product Innovation',
-    notes: '3D WebGL Brand Experience & Interactive Design System showcase.',
-    slaDailyAdSpendBudget: 10000000,
-    currentDailyAdSpend: 8400000,
-    createdAt: '2026-08-10T09:00:00Z',
-    updatedAt: '2026-09-02T10:00:00Z'
-  },
-  {
-    id: 'cli_103',
-    slug: 'goto-financial-technology',
-    name: 'Hendra Gunawan',
-    company: 'GoTo Financial Technology',
-    email: 'hendra.gunawan@gotofinancial.com',
-    phone: '+62 813-7788-9900',
-    website: 'https://gotofinancial.com',
-    location: 'Jakarta Pusat, Indonesia',
-    industry: 'FinTech & Payments',
-    status: 'active',
-    totalSpend: 233100000,
-    projectsCount: 2,
-    contactPersonRole: 'Managing Director of Core Platforms',
-    notes: 'High-volume transaction dashboards and merchant settlement portals.',
-    slaDailyAdSpendBudget: 25000000,
-    currentDailyAdSpend: 18500000,
-    createdAt: '2026-07-15T11:00:00Z',
-    updatedAt: '2026-09-01T15:00:00Z'
-  },
-  {
-    id: 'cli_104',
-    slug: 'shopeepay-international',
-    name: 'Jessica Halim',
-    company: 'ShopeePay International',
-    email: 'jessica.h@shopeepay.com',
-    phone: '+62 817-4433-2211',
-    website: 'https://shopeepay.co.id',
-    location: 'Jakarta Barat, Indonesia',
-    industry: 'E-Commerce & Digital Wallet',
-    status: 'active',
-    totalSpend: 105450000,
-    projectsCount: 1,
-    contactPersonRole: 'Engineering Operations Lead',
-    notes: 'High-Throughput Payment Orchestrator & Cloud Run Backend.',
-    slaDailyAdSpendBudget: 12000000,
-    currentDailyAdSpend: 9800000,
-    createdAt: '2026-08-20T10:00:00Z',
-    updatedAt: '2026-09-05T10:00:00Z'
-  },
-  {
-    id: 'cli_105',
-    slug: 'nusa-cloud-systems',
-    name: 'Kevin Wijaya',
-    company: 'Nusa Cloud Systems',
-    email: 'kevin@nusacloud.id',
-    phone: '+62 819-1122-3344',
-    website: 'https://nusacloud.id',
-    location: 'Surabaya, Indonesia',
-    industry: 'Cloud Infrastructure & DevOps',
-    status: 'active',
-    totalSpend: 49950000,
-    projectsCount: 1,
-    contactPersonRole: 'Chief Technology Officer',
-    notes: 'Legacy Cloud Migration & Kubernetes Architecture Sprint.',
-    slaDailyAdSpendBudget: 8000000,
-    currentDailyAdSpend: 7500000,
-    createdAt: '2026-08-01T08:00:00Z',
-    updatedAt: '2026-08-20T11:00:00Z'
-  }
-];
-
+export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [];
 export const getAgencyClients = (): AgencyClient[] => {
   hydrateClientsFromServer();
   if (clientsCache) return clientsCache.map(normalizeAgencyClient);
-  clientsCache = isSlugFixtureMode() ? INITIAL_DEFAULT_CLIENTS.map(normalizeAgencyClient) : [];
+  clientsCache = [];
   return clientsCache;
 };
 
