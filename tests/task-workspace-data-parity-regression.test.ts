@@ -53,4 +53,8 @@ test('Task workspace reconciles ambiguous task mutations against canonical serve
   assert.ok(workspace.includes('Task status response did not include the saved record.'));
   assert.ok(workspace.includes('Task update response did not include the saved record.'));
   assert.ok(workspace.includes('Checklist response did not include the saved task record.'));
+  assert.ok(workspace.includes('setSelectedTask(current => current ? normalized.find(task => task.id === current.id) || null : null);'));
+  assert.ok(workspace.includes('setSelectedIds(current => current.filter(id => normalized.some(task => task.id === id)));'));
+  assert.ok(workspace.includes('if (!refreshed) setRecords(previousRecords);'));
+  assert.ok(workspace.includes("response.success && confirmedTask && String(confirmedTask.id || '') === task.id"));
 });
