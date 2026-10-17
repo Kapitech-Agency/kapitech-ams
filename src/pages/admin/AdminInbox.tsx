@@ -68,6 +68,7 @@ export const AdminInbox: React.FC = () => {
   // Core Data & Currency
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Filters & Views
   const [page, setPage] = useState(1);
@@ -102,10 +103,7 @@ export const AdminInbox: React.FC = () => {
       const res = await api.leads.getAll();
 
       if (!res.success || !Array.isArray(res.data?.leads)) {
-        setToastMessage({
-          text: res.error || (language === 'id' ? 'Inbox gagal dimuat.' : 'Inbox could not be loaded.'),
-          tone: 'danger'
-        });
+        setLoadError(res.error || (language === 'id' ? 'Inbox gagal dimuat.' : 'Inbox could not be loaded.'));
         return;
       }
 
@@ -114,11 +112,9 @@ export const AdminInbox: React.FC = () => {
         .filter((item) => item.type !== 'career');
       setSubmissions(items);
       setPrevCount(items.length);
+      setLoadError(null);
     } catch {
-      setToastMessage({
-        text: language === 'id' ? 'Inbox gagal dimuat. Coba lagi.' : 'Inbox could not be loaded. Please retry.',
-        tone: 'danger'
-      });
+      setLoadError(language === 'id' ? 'Inbox gagal dimuat. Coba lagi.' : 'Inbox could not be loaded. Please retry.');
     } finally {
       if (!silent) setLoading(false);
     }
@@ -689,7 +685,7 @@ export const AdminInbox: React.FC = () => {
         }
         actions={(
           <>
-            <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inbound</span>
+            <span className="text-[11px] tabular-nums text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Data tidak tersedia' : 'Unavailable') : activeTabItems.length + ' inbound'}</span>
             {canManageCrm && <Link to="/admin/cms/careers?tab=applicants" className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">{language === 'id' ? 'Pelamar Careers' : 'Careers Applicants'}</Link>}
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
             {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
@@ -697,6 +693,20 @@ export const AdminInbox: React.FC = () => {
           </>
         )}
       />
+
+      {loadError && (
+        <div className="flex flex-col gap-3 rounded-card border border-warning/25 bg-warning/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="inbox-load-unavailable">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-fg">{language === 'id' ? 'Data Inbox tidak tersedia' : 'Inbox data unavailable'}</p>
+            <p className="mt-1 text-[11px] leading-5 text-muted">
+              {loadError}{' '}{submissions.length > 0
+                ? (language === 'id' ? 'Data terakhir yang berhasil dimuat tetap ditampilkan.' : 'The last successfully loaded records remain visible.')
+                : (language === 'id' ? 'Jumlah dan status antrean belum bisa diverifikasi.' : 'Queue totals and empty states cannot be verified yet.')}
+            </p>
+          </div>
+          <Button type="button" variant="secondary" onClick={() => void refreshInbox()} disabled={loading} loading={loading}>{language === 'id' ? 'Coba lagi' : 'Retry'}</Button>
+        </div>
+      )}
 
       <div className="min-w-0">
         <AdminSectionTabs
@@ -737,9 +747,10 @@ export const AdminInbox: React.FC = () => {
           )}
           footer={(
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[10px] text-muted">{filteredItems.length} matching inbound records · updates automatically every 30 seconds.</p>
-              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-2 text-[10px] font-medium text-success">
-                <span className="h-1.5 w-1.5 rounded-full bg-success" />Live
+              <p className="text-[10px] text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Jumlah record belum tersedia.' : 'Inbound record count unavailable.') : filteredItems.length + ' matching inbound records · updates automatically every 30 seconds.'}</p>
+              <span className={'inline-flex min-h-7 items-center gap-1.5 rounded-badge border px-2 text-[10px] font-medium ' + (loadError ? 'border-warning/20 bg-warning/10 text-warning' : 'border-success/20 bg-success/10 text-success')}>
+                <span className={'h-1.5 w-1.5 rounded-full ' + (loadError ? 'bg-warning' : 'bg-success')} />
+                {loadError ? (submissions.length > 0 ? (language === 'id' ? 'Data lama' : 'Stale') : (language === 'id' ? 'Tidak tersedia' : 'Unavailable')) : 'Live'}
               </span>
             </div>
           )}
@@ -865,8 +876,8 @@ export const AdminInbox: React.FC = () => {
                         <Check size={15} className="text-success" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-fg">{triageScope === 'action' ? 'No records need action' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}</p>
-                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{triageScope === 'action' ? 'New inbound records will appear here automatically.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
+                        <p className="text-xs font-medium text-fg">{loadError && submissions.length === 0 ? (language === 'id' ? 'Inbox tidak tersedia' : 'Inbox unavailable') : triageScope === 'action' ? 'No records need action' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}</p>
+                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Sumber data gagal dimuat. Coba lagi untuk memverifikasi antrean.' : 'The inbox source failed to load. Retry to verify this queue.') : triageScope === 'action' ? 'New inbound records will appear here automatically.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
                       </div>
                     </div>
                   </div>
@@ -1078,7 +1089,11 @@ export const AdminInbox: React.FC = () => {
                   <tr>
                     <td colSpan={8} className="p-12 text-center text-muted">
                       <Inbox size={32} className="mx-auto text-line mb-2" />
-                      <p>{language === 'id' ? 'Tidak ada data pesan yang sesuai kriteria.' : 'No records match your filters.'}</p>
+                      <p>{loadError && submissions.length === 0
+                  ? (language === 'id' ? 'Inbox tidak tersedia.' : 'Inbox is unavailable.')
+                  : submissions.length === 0
+                    ? (language === 'id' ? 'Belum ada pesan masuk.' : 'No inbound records yet.')
+                    : (language === 'id' ? 'Tidak ada data pesan yang sesuai kriteria.' : 'No records match your filters.')}</p>
                     </td>
                   </tr>
                 ) : (
@@ -1258,8 +1273,8 @@ export const AdminInbox: React.FC = () => {
             ) : (
               <div className="flex min-h-[420px] flex-col items-center justify-center rounded-card border border-line bg-panel px-6 py-10 text-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-card border border-line bg-bg text-muted"><Inbox size={18} /></div>
-                <p className="mt-3 text-xs font-medium text-fg">{submissions.length === 0 ? 'No inbound records yet' : 'No matching records'}</p>
-                <p className="mt-1 max-w-xs text-[10px] leading-4 text-muted">{submissions.length === 0 ? 'New inquiries and applications will appear here as they arrive.' : 'Try another search or reset the active filters.'}</p>
+                <p className="mt-3 text-xs font-medium text-fg">{loadError && submissions.length === 0 ? (language === 'id' ? 'Inbox tidak tersedia' : 'Inbox unavailable') : submissions.length === 0 ? 'No inbound records yet' : 'No matching records'}</p>
+                <p className="mt-1 max-w-xs text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Coba muat ulang untuk memverifikasi data masuk.' : 'Retry to verify incoming records.') : submissions.length === 0 ? 'New inquiries and applications will appear here as they arrive.' : 'Try another search or reset the active filters.'}</p>
                 {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
                   <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); }} className="mt-4 inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg"><Filter size={11} />Reset filters</button>
                 )}

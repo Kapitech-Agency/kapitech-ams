@@ -556,8 +556,3 @@ The nine-module source sweep was fast-forwarded directly to `main` at `c9768dfd4
 This follow-up makes primary horizontally scrollable registers and boards keyboard-focusable and exposes each as a named region across Dashboard, Inbox, Projects, Tasks, Clients, Finance, Team & Resources, Documents, Website CMS and Settings. The main content scrollbar now reserves a stable gutter, increases Chromium/WebKit scrollbar geometry from 6px to 8px, and adds a visible keyboard-focus outline to horizontal scroll regions. These are presentation/accessibility changes only.
 
 Regression assertions now cover the scrollbar geometry, last-row register scroll affordances, and named keyboard-accessible data regions. Authenticated browser/device acceptance checks remain outstanding: verify actual appearance and last-column reachability at 1440, 1024, 768, 390 and 320px, keyboard/touch scrolling, theme behavior, and drawer/dialog focus and scroll restoration. No browser-level pass is claimed by this source checkpoint.
-
-
-### Finance table geometry parity · 18 October 2026
-
-The shared Finance register renderer now uses the existing `ams-finance-table` design-system variant. Its row density, header treatment and compact action hit-target rules therefore apply consistently to every worksheet using that renderer rather than relying on generic table defaults. This is a frontend presentation-only correction; record data, sort/pagination behavior, accounting calculations, authorization and API contracts are unchanged.
