@@ -30,6 +30,7 @@ test('Client detail distinguishes absent financial values from recorded zero', a
   assert.match(clients, /if \(billedA !== null && billedB === null\) return -1;/);
   assert.match(clients, /clientMetrics\.totalBilled === null \? '—'/);
   assert.match(clients, /clientMetrics\.missingSlaSpend === 0 \? 'text-success' : 'text-fg'/);
+  assert.match(clients, /clientMetrics\.total === 0 \? \(language === 'id' \? 'Belum ada akun klien' : 'No client records'\)/);
   assert.match(clients, /client\.slaDailyAdSpendBudget \?\? ''/);
   assert.match(clients, /client\.currentDailyAdSpend \?\? ''/);
 });
