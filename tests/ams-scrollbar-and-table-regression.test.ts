@@ -155,6 +155,15 @@ test('Documents distinguishes an unavailable vault from a genuinely empty vault 
 // Print-specific !important rules remain outside these screen-layout variants by design.
 
 
+test('mobile topbar controls remain reachable when the viewport is narrower than the control group', async () => {
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const css = await read('src/index.css');
+  assert.match(layout, /className="ams-mobile-topbar-actions flex min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain custom-scrollbar"/);
+  assert.match(layout, /aria-label="Mobile workspace controls"/);
+  assert.match(css, /\.ams-shell \.ams-mobile-topbar-actions\{[^}]*max-width:calc\(100vw - 176px\)[^}]*overscroll-behavior-x:contain/s);
+  assert.match(css, /\.ams-shell \.ams-mobile-topbar-actions>\*\{flex-shrink:0\}/);
+});
+
 test('route navigation resets the actual AMS workspace scroller', async () => {
   const app = await read('src/App.tsx');
   assert.match(app, /document\.querySelector<HTMLElement>\('\.ams-shell > main'\)/);

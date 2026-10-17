@@ -281,7 +281,13 @@ export const AdminLayout: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div
+          className="ams-mobile-topbar-actions flex min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain custom-scrollbar"
+          tabIndex={0}
+          role="region"
+          aria-label="Mobile workspace controls"
+          data-ams-slug="mobile-workspace-controls"
+        >
           <AdminReportingPeriodBar />
           <Button
             type="button"
