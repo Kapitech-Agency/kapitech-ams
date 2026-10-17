@@ -2387,7 +2387,7 @@ export const AdminProjects: React.FC = () => {
             )}
           </AdminPanel>
 
-                          <section data-ams-feature-slug="projects-kpis" data-ams-slug="projects-kpis" aria-label="Projects key performance indicators">
+          <section data-ams-feature-slug="projects-kpis" data-ams-slug="projects-kpis" aria-label="Projects key performance indicators">
             <AdminMetricStrip
               className="sm:grid-cols-2 lg:grid-cols-4"
               metrics={[
@@ -3057,7 +3057,7 @@ export const AdminProjects: React.FC = () => {
           <AdminTablePagination total={filteredArchivedProjects.length} page={archiveTablePage} pageSize={archiveTablePageSize} onPageChange={setArchiveTablePage} onPageSizeChange={setArchiveTablePageSize} itemLabel="completed projects" slug="projects-archived-pagination" />
           </AdminPanel>
 
-                              <section data-ams-feature-slug="projects-archived-kpis" data-ams-slug="projects-archived-kpis" aria-label="Archived project summary">
+          <section data-ams-feature-slug="projects-archived-kpis" data-ams-slug="projects-archived-kpis" aria-label="Archived project summary">
             <AdminMetricStrip
               className="sm:grid-cols-2 lg:grid-cols-4"
               metrics={[
