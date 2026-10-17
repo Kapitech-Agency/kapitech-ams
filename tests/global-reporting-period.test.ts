@@ -37,6 +37,7 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
   const fs = await import('node:fs/promises');
   const workbook = await fs.readFile('src/lib/financeWorkbook.ts', 'utf8');
   const workspace = await fs.readFile('src/pages/admin/AdminFinanceWorkspace.tsx', 'utf8');
+  const subnavigation = await fs.readFile('src/lib/amsModuleSubnavigation.ts', 'utf8');
   const workbookBlock = workbook.slice(
     workbook.indexOf('export const FINANCE_WORKBOOK_GROUPS'),
     workbook.indexOf('export interface ExcelChartAccount')
