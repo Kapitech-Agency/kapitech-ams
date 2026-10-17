@@ -351,7 +351,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
   );
 };
 
-remove browser-only A/B status override implementationconst projectStatusClass = (status: ProjectStatus) => {
+const projectStatusClass = (status: ProjectStatus) => {
   if (status === 'completed') return 'border-success/30 bg-success/10 text-success';
   if (status === 'on_hold') return 'border-warning/30 bg-warning/10 text-warning';
   if (status === 'review') return 'border-warning/30 bg-warning/10 text-warning';
