@@ -31,7 +31,8 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
-  assert.match(workspace, /const sheetItems = activeGroup\.items[\s\S]{0,180}canShowFinanceWorksheet\(item\.key\)/);
+  assert.match(workspace, /const sheetItems = \[[\s\S]{0,240}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
+  assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
   assert.match(workspace, /label: item\.label/);
   assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
   assert.match(workspace, /\{loading \? renderLoading\(\) : renderView\(activeTab\)\}/);
@@ -470,4 +471,29 @@ test('New vendor payments only offer bills with balances and preserve the select
   assert.match(options, /Number\(bill\.payload\.outstanding \?\? bill\.payload\.total\) \|\| 0\) > 0\.01/);
   assert.match(options, /\|\| bill\.id === currentBillId/);
   assert.match(options, /No outstanding vendor bills/);
+});
+
+
+test('Finance document templates are available inside the existing five-group workspace', async () => {
+  const workbook = await read('src/lib/financeWorkbook.ts');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const templates = await read('src/lib/financeDocumentTemplates.ts');
+  const groups = workbook.slice(0, workbook.indexOf('export interface ExcelChartAccount'));
+
+  assert.equal((groups.match(/\n    key: '(?:overview|transactions|receivables|projects|accounting)'/g) || []).length, 5);
+  assert.match(groups, /key: 'receivables',[\s\S]*?key: 'accounts-receivable'/);
+  assert.doesNotMatch(groups, /key: 'quotations', sheet: '03A'/);
+  assert.ok(workspace.includes('const quotationsViewTab: FinanceWorkbookTab = {'));
+  assert.match(workspace, /if \(tab\.key === 'quotations'\)[\s\S]{0,180}embeddedView="quotations"/);
+  assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
+  assert.ok(invoicing.includes('FINANCE_INVOICE_TEMPLATES'));
+  assert.ok(invoicing.includes('FINANCE_QUOTATION_TEMPLATES'));
+  assert.ok(invoicing.includes('data-ams-feature-slug="finance-invoice-template-picker"'));
+  assert.ok(invoicing.includes('data-ams-feature-slug="finance-quotation-template-picker"'));
+  assert.ok(invoicing.includes('const printInvoiceDraft = () => {'));
+  assert.ok(invoicing.includes('const printQuotationDraft = () => {'));
+  assert.ok(invoicing.includes('const printSavedQuotation = (quotation: FinanceQuotation) => {'));
+  assert.ok(templates.includes('const escapeHtml ='));
+  assert.ok(templates.includes('document.write(html)'));
 });

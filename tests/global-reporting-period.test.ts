@@ -62,7 +62,9 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
   }
   assert.ok(workspace.includes('const canShowFinanceWorksheet = (key: string) =>'));
   assert.ok(workspace.includes('const groupItems = FINANCE_WORKBOOK_GROUPS.flatMap((group) =>'));
-  assert.ok(workspace.includes('const sheetItems = activeGroup.items'));
+  assert.ok(workspace.includes('const sheetItems = ['));
+  assert.ok(workspace.includes('...activeGroup.items'));
+  assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
   assert.ok(workspace.includes('getAmsSidebarDestinationSignatures(navigationRole)'));
   assert.ok(workspace.includes('ariaLabel="Finance areas"'));
   assert.ok(workspace.includes('ariaLabel="Finance worksheets"'));
