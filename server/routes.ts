@@ -4292,7 +4292,8 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
       paidDate: paymentStatus === 'paid' ? paidDate : undefined,
       paymentMethod,
       paymentAccountCode: paymentStatus === 'paid' && paymentMethod !== 'credit_card' ? paymentAccountCode : undefined,
-      payments: paymentStatus === 'paid' ? [{ id: initialPaymentId, amount: Math.round(amount * 100) / 100, date: paidDate, method: paymentMethod, paymentAccountCode: paymentMethod !== 'credit_card' ? paymentAccountCode : undefined, reference: cleanText(exp.paymentReference || exp.reference || '', 160), notes: cleanText(exp.paymentNotes || '', 500), recordedBy: req.user!.name || req.user!.username }] : []
+      payments: paymentStatus === 'paid' ? [{ id: initialPaymentId, amount: Math.round(amount * 100) / 100, date: paidDate, method: paymentMethod, paymentAccountCode: paymentMethod !== 'credit_card' ? paymentAccountCode : undefined, reference: cleanText(exp.paymentReference || exp.reference || '', 160), notes: cleanText(exp.paymentNotes || '', 500), recordedBy: req.user!.name || req.user!.username }] : [],
+      requestFingerprint: undefined as string | undefined
     },
     recurringInterval: cleanText(exp.recurringInterval || 'none', 40),
     recordedBy: req.user!.name || req.user!.username,
