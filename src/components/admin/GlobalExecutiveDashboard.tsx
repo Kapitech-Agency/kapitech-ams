@@ -32,7 +32,7 @@ interface DashboardProject {
   type: Exclude<ProjectFilter, 'All'>;
   status: string;
   statusTone: 'success' | 'warning' | 'danger' | 'info';
-  progress: number;
+  progress: number | null;
   lead: string;
   budget: string;
   startDate?: string;
@@ -326,7 +326,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
   const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
   const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
-  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
+  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; projectDataAvailable?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
     loading: true, projects: null, tasks: null, timeLogs: null, invoices: null, expenses: null
   });
@@ -340,12 +340,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           setDashboardOverview({ source: 'ab', loading: false });
           return;
         }
-        const projects = Array.isArray(response.data?.projects) ? response.data.projects : [];
+        const projectDataAvailable = Array.isArray(response.data?.projects);
+        const projects = projectDataAvailable ? response.data.projects : [];
         setDashboardOverview({
           metrics: response.data?.metrics,
           financials: response.data?.financials,
           projects,
-          source: projects.length > 0 || Boolean(response.data?.metrics) ? 'server' : 'ab',
+          projectDataAvailable,
+          source: projectDataAvailable || Boolean(response.data?.metrics) ? 'server' : 'ab',
           loading: false
         });
       })
@@ -415,8 +417,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, [projectActionId]);
 
 
+  const dashboardProjectDataAvailable = operationalSnapshot.projects !== null || dashboardOverview.projectDataAvailable === true;
   const dashboardProjects = useMemo<DashboardProject[]>(() => {
-    const projectSource = operationalSnapshot.projects ?? dashboardOverview.projects;
+    const projectSource = operationalSnapshot.projects ?? (dashboardOverview.projectDataAvailable ? dashboardOverview.projects : undefined);
     const serverProjects = Array.isArray(projectSource)
       ? projectSource.map((project: any, index: number) => {
           const rawType = String(project.type || project.projectType || project.billingType || 'Fixed-fee').toLowerCase();
@@ -425,25 +428,29 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             : rawType.includes('enterprise')
               ? 'Enterprise'
               : 'Fixed-fee';
-          const health = String(project.health || project.status || '').toLowerCase();
+          const rawStatus = String(project.status || project.health || '').trim();
+          const health = rawStatus.toLowerCase();
           const statusTone: DashboardProject['statusTone'] =
-            health.includes('delay') || health.includes('blocked') ? 'danger'
-              : health.includes('risk') ? 'warning'
-                : health.includes('review') ? 'info'
-                  : 'success';
+            /delay|blocked|overdue|hold|cancel|failed|issue/.test(health) ? 'danger'
+              : /risk|watch|concern/.test(health) ? 'warning'
+                : /review|pending|planning|draft|not started/.test(health) ? 'info'
+                  : /active|progress|complete|done|closed|on track/.test(health) ? 'success'
+                    : 'info';
+          const rawProgress = project.progress ?? project.progressPercent;
+          const parsedProgress = rawProgress === null || rawProgress === undefined || rawProgress === '' ? null : Number(rawProgress);
+          const rawBudget = project.budget ?? project.totalBudget;
+          const parsedBudget = rawBudget === null || rawBudget === undefined || rawBudget === '' ? null : Number(rawBudget);
+          const dashboardCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
           return {
             id: String(project.id || project.slug || 'server-project-' + index),
             name: String(project.name || project.title || project.projectName || 'Untitled project'),
             client: String(project.clientName || project.client || 'Unassigned client'),
             type,
-            status: String(project.status || project.health || 'Active'),
+            status: rawStatus || 'Status unavailable',
             statusTone,
-            progress: Math.max(0, Math.min(100, Number(project.progress ?? project.progressPercent ?? 0) || 0)),
+            progress: parsedProgress !== null && Number.isFinite(parsedProgress) ? Math.max(0, Math.min(100, parsedProgress)) : null,
             lead: String(project.teamLead || project.ownerName || project.lead || 'Unassigned'),
-            budget: formatLiveMoney(
-              Number(project.budget ?? project.totalBudget ?? 0) || 0,
-              String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()
-            ),
+            budget: parsedBudget !== null && Number.isFinite(parsedBudget) ? formatLiveMoney(parsedBudget, dashboardCurrency) : '—',
             startDate: String(project.startDate || project.start || ''),
             targetEndDate: String(project.targetEndDate || project.endDate || project.dueDate || ''),
             createdAt: String(project.createdAt || project.updatedAt || '')
@@ -451,7 +458,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         })
       : [];
     return serverProjects;
-  }, [dashboardOverview.projects, operationalSnapshot.projects]);
+  }, [dashboardOverview.financials?.currency, dashboardOverview.metrics?.currency, dashboardOverview.projectDataAvailable, dashboardOverview.projects, operationalSnapshot.projects]);
 
   const filteredProjects = useMemo(
     () => dashboardProjects.filter((project) =>
@@ -571,9 +578,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               {
                 id: 'overdue', label: 'Projects at risk',
                 value: projectsAtRiskMetric != null ? String(projectsAtRiskMetric) : '—',
-                change: projectsAtRiskMetric != null ? 'Requires attention' : undefined,
-                changeToneClassName: 'text-danger',
-                                icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', slug: 'dashboard-projects-risk'
+                change: projectsAtRiskMetric == null ? undefined : projectsAtRiskMetric > 0 ? 'Requires attention' : 'No projects flagged',
+                changeToneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success',
+                icon: <AlertTriangle size={15} />,
+                toneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success',
+                slug: 'dashboard-projects-risk'
               },
               {
                 id: 'revenue', label: 'Cash collected this month',
@@ -652,7 +661,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </AdminPanel>
 
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
-          {deliveryProjects !== null ? (
+          {deliveryProjects !== null ? totalDelivery === 0 ? (
+            <div className="flex min-h-[180px] flex-col items-center justify-center px-4 py-8 text-center" role="status">
+              <FolderKanban size={20} className="text-muted" aria-hidden="true" />
+              <p className="mt-3 text-xs font-semibold text-fg">No active projects to assess</p>
+              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">The live project source returned no active projects for delivery-risk assessment.</p>
+              <Link to="/admin/projects" className="mt-3 inline-flex min-h-8 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">Open Projects</Link>
+            </div>
+          ) : (
           <div className="space-y-4">
             <div className="rounded-control border border-line bg-bg/45 p-4">
               <div className="flex items-end justify-between gap-3">
@@ -738,8 +754,20 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           {filteredProjects.length === 0 ? (
             <div className="flex min-h-[200px] flex-col items-center justify-center px-5 py-10 text-center" role="status">
               <FolderKanban size={22} className="text-muted" aria-hidden="true" />
-              <p className="mt-3 text-sm font-semibold text-fg">{dashboardOverview.loading ? 'Loading live projects…' : 'No live project data'}</p>
-              <p className="mt-1 max-w-md text-xs leading-5 text-muted">{dashboardOverview.loading ? 'Waiting for the dashboard service to return project records.' : 'The dashboard service has not returned project records yet. Open Projects to review the live workspace.'}</p>
+              <p className="mt-3 text-sm font-semibold text-fg">
+                {dashboardOverview.loading || operationalSnapshot.loading
+                  ? 'Loading live projects…'
+                  : dashboardProjectDataAvailable
+                    ? 'No projects recorded'
+                    : 'Live project data unavailable'}
+              </p>
+              <p className="mt-1 max-w-md text-xs leading-5 text-muted">
+                {dashboardOverview.loading || operationalSnapshot.loading
+                  ? 'Waiting for the live dashboard and project services to return their records.'
+                  : dashboardProjectDataAvailable
+                    ? 'The live project source returned no projects matching this reporting period and type. Adjust the view or open Projects.'
+                    : 'The dashboard and project services did not return project records. Open Projects to retry from the canonical workspace.'}
+              </p>
               <Link to="/admin/projects" className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Projects</Link>
             </div>
           ) : (
@@ -759,12 +787,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <div className="mt-4">
                   <div className="flex items-center justify-between gap-3 text-[10px] text-muted">
                     <span>{project.type}</span>
-                    <span className="tabular-nums">{project.progress}%</span>
+                    <span className="tabular-nums">{project.progress == null ? '—' : project.progress + '%'}</span>
                   </div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
                     <div
-                      className={['h-full rounded-full', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')}
-                      style={{ width: project.progress + '%' }}
+                      className={['h-full rounded-full', progressClasses[project.statusTone]].join(' ')}
+                      style={{ width: (project.progress ?? 0) + '%' }}
                     />
                   </div>
                 </div>
@@ -939,7 +967,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </div>
               <div className="rounded-control border border-line bg-bg p-3">
                 <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Progress</div>
-                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.progress}%</div>
+                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.progress == null ? '—' : projectDetails.progress + '%'}</div>
               </div>
               <div className="rounded-control border border-line bg-bg p-3">
                 <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Project lead</div>
@@ -953,11 +981,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <div className="rounded-control border border-line bg-bg p-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-muted">Delivery pacing</span>
-                <span className="text-xs font-semibold text-fg">{projectDetails.progress}% complete</span>
+                <span className="text-xs font-semibold text-fg">{projectDetails.progress == null ? 'Progress unavailable' : projectDetails.progress + '% complete'}</span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-sm bg-line">
                 <div
-                  className={['h-full rounded-sm', progressClasses[projectDetails.statusTone === 'danger' ? 'danger' : projectDetails.statusTone === 'warning' ? 'warning' : 'success']].join(' ')}
+                  className={['h-full rounded-sm', progressClasses[projectDetails.statusTone]].join(' ')}
                   style={{ width: projectDetails.progress + '%' }}
                 />
               </div>
