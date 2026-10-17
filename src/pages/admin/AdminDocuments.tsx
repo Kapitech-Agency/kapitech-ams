@@ -224,6 +224,7 @@ export const AdminDocuments: React.FC = () => {
       const loaded = await requestDocuments();
       setDocuments(loaded);
     } catch (firstError: any) {
+      let hadAccessFailure = firstError?.status === 401 || firstError?.status === 403;
       // Retry transient server/auth races once before showing the module error state.
       // A 401 can occur briefly while the authenticated session cookie is being
       // restored after navigation or a fresh login.
@@ -234,9 +235,14 @@ export const AdminDocuments: React.FC = () => {
           setDocuments(loaded);
           return;
         } catch (retryError: any) {
+          hadAccessFailure = hadAccessFailure || retryError?.status === 401 || retryError?.status === 403;
           firstError = retryError;
         }
       }
+
+      // Retain last-known-good rows for transient service failures, but never keep displaying
+      // private records after the session or authorization check has failed.
+      if (hadAccessFailure) setDocuments([]);
 
       if (firstError?.status === 401) {
         setLoadError('Your AMS session has expired. Please sign in again and retry.');
