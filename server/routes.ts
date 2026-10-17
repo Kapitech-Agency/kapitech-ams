@@ -2887,48 +2887,13 @@ apiRouter.post('/clients', requireAuth, requirePermission('canManageClients'), a
   res.json({ success: true, client: newClient });
 });
 
-apiRouter.post('/clients/:id/retainer-hours', requireAuth, requirePermission('canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const { id } = req.params;
-  const hours = Number(req.body?.hours);
-  if (!Number.isFinite(hours) || hours <= 0 || hours > 100_000) {
-    res.status(400).json({ success: false, error: 'Hours must be greater than 0 and no more than 100,000.' });
-    return;
-  }
-
-  if (getDataSourceMode() === 'postgres') {
-    try {
-      const client = await postgresClientRepository.addRetainerHours(id, hours, makeAuditEntry(req, 'CLIENT_RETAINER_HOURS_LOGGED', `Added ${hours} retainer usage hours to client ${id}.`, 'info'));
-      if (!client) { res.status(404).json({ success: false, error: 'Client not found.' }); return; }
-      res.json({ success: true, client });
-    } catch (error) {
-      const code = error instanceof Error ? error.message : '';
-      if (code === 'CLIENT_RETAINER_NOT_ACTIVE') { res.status(409).json({ success: false, error: 'This client does not have an active retainer.' }); return; }
-      if (code === 'CLIENT_RETAINER_HOURS_LIMIT') { res.status(409).json({ success: false, error: 'Retainer usage cannot exceed 1,000,000 hours.' }); return; }
-      throw error;
-    }
-    return;
-  }
-
-  const db = getDatabase();
-  const index = db.clients.findIndex((item: any) => item.id === id);
-  if (index < 0) { res.status(404).json({ success: false, error: 'Client not found.' }); return; }
-  const current = db.clients[index] as any;
-  if (!current.activeRetainer) { res.status(409).json({ success: false, error: 'This client does not have an active retainer.' }); return; }
-  const nextHours = Number(current.retainerUsedHours || 0) + hours;
-  if (!Number.isFinite(nextHours) || nextHours > 1_000_000) { res.status(409).json({ success: false, error: 'Retainer usage cannot exceed 1,000,000 hours.' }); return; }
-  db.clients[index] = { ...current, retainerUsedHours: nextHours, updatedAt: new Date().toISOString() };
-  saveDatabase(db);
-  recordAuditLog({
-    action: 'CLIENT_RETAINER_HOURS_LOGGED',
-    actor: req.user!.username,
-    actorRole: req.user!.role,
-    ip: req.ip,
-    userAgent: req.headers['user-agent'] as string,
-    details: `Added ${hours} retainer usage hours to client ${id}.`,
-    severity: 'info'
+apiRouter.post('/clients/:id/retainer-hours', requireAuth, requirePermission('canManageClients'), async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  res.status(410).json({
+    success: false,
+    error: 'Manual retainer usage adjustments are disabled. Retainer usage cannot be changed until the billing-cycle and eligible time-entry rules are implemented.'
   });
-  res.json({ success: true, client: db.clients[index] });
 });
+
 apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
   const updates = req.body || {};
