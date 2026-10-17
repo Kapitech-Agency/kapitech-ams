@@ -686,8 +686,8 @@ export const AdminClients: React.FC = () => {
         client.email,
         client.projectsCount,
         client.totalSpend,
-        client.slaDailyAdSpendBudget || 0,
-        client.currentDailyAdSpend || 0
+        client.slaDailyAdSpendBudget ?? '',
+        client.currentDailyAdSpend ?? ''
       ])
     ];
 
