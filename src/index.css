@@ -102,8 +102,8 @@
   }
 
   *::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   *::-webkit-scrollbar-track {
@@ -146,7 +146,7 @@
 }
 .ams-shell *,.ams-shell *::before,.ams-shell *::after{box-sizing:border-box}
 .ams-shell>aside{min-width:0;background:var(--panel);border-right:1px solid var(--line)}
-.ams-shell>main{min-width:0;min-height:0;background:var(--bg);overscroll-behavior:none}
+.ams-shell>main{min-width:0;min-height:0;background:var(--bg);overscroll-behavior:none;scrollbar-gutter:stable;scrollbar-width:auto;scrollbar-color:var(--muted) var(--bg)}
 .ams-shell>main>header{height:52px;min-height:52px;background:var(--panel);border-bottom:1px solid var(--line)}
 .ams-shell>main>.ams-content{min-width:0;padding:0}
 .ams-shell .ams-mobile-topbar{height:52px;min-height:52px;background:var(--panel);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
@@ -161,8 +161,9 @@
 .ams-shell .text-amber-400,.ams-shell .text-yellow-400{color:var(--warning)}
 .ams-shell .text-blue-400,.ams-shell .text-cyan-400{color:var(--info)}
 .ams-shell [data-status=success]{color:var(--success)}.ams-shell [data-status=warning]{color:var(--warning)}.ams-shell [data-status=danger]{color:var(--danger)}.ams-shell [data-status=info]{color:var(--info)}
-.ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;-webkit-overflow-scrolling:touch}
-.ams-shell .overflow-x-auto::-webkit-scrollbar{width:6px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb:hover{background:var(--text)}
+.ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;scroll-padding-inline:12px;-webkit-overflow-scrolling:touch}
+.ams-shell .overflow-x-auto::-webkit-scrollbar{width:8px;height:8px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:color-mix(in srgb,var(--line) 45%,transparent)}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--muted);border:1px solid var(--bg);border-radius:999px}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb:hover{background:var(--text)}
+.ams-shell .overflow-x-auto:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 /* Compact register actions meet AMS desktop/mobile target sizes and keyboard focus standards. */
 .ams-shell :is(.ams-data-table,.ams-client-table,.ams-teams-table,.ams-projects-table,.settings-system-table,.ams-table) td :is(button,a)[class~="h-8"][class~="w-8"]{
   min-width:36px;
@@ -259,11 +260,11 @@
 .ams-shell .ams-sidebar-expanded a[aria-current=page]::before,.ams-shell .ams-sidebar-collapsed a[aria-current=page]::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:1px;background:var(--accent)}
 .ams-shell .ams-sidebar-expanded,.ams-shell .ams-sidebar-collapsed{min-width:0}
 .ams-shell .ams-topnav-scroll{scrollbar-width:thin;scrollbar-color:var(--muted) transparent;scroll-padding-inline:12px}
-.ams-shell .ams-topnav-scroll::-webkit-scrollbar{width:6px;height:6px}
+.ams-shell .ams-topnav-scroll::-webkit-scrollbar{width:8px;height:8px}
 .ams-shell .ams-topnav-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}
 .ams-shell .ams-topnav-scroll::-webkit-scrollbar-thumb:hover{background:var(--text)}
 .ams-shell .ams-kanban-scroll{min-height:0;max-width:100%;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--muted) transparent}
-.ams-shell .ams-kanban-scroll::-webkit-scrollbar{width:6px;height:6px}
+.ams-shell .ams-kanban-scroll::-webkit-scrollbar{width:8px;height:8px}
 .ams-shell .ams-kanban-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}
 .ams-shell .ams-kanban-scroll::-webkit-scrollbar-thumb:hover{background:var(--text)}
 .ams-shell .kanban-card{min-height:126px}
@@ -284,7 +285,7 @@
   scrollbar-color:var(--muted) transparent;
 }
 .ams-shell .ams-project-kanban-board::-webkit-scrollbar,
-.ams-shell .ams-project-kanban-task-board::-webkit-scrollbar{width:6px;height:6px}
+.ams-shell .ams-project-kanban-task-board::-webkit-scrollbar{width:8px;height:8px}
 .ams-shell .ams-project-kanban-board::-webkit-scrollbar-thumb,
 .ams-shell .ams-project-kanban-task-board::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}
 .ams-shell .ams-project-kanban-board::-webkit-scrollbar-thumb:hover,
@@ -373,7 +374,7 @@
   cursor:grabbing;
 }
 .ams-shell .ams-inbox-list-pane,.ams-shell .ams-inbox-reader-pane{min-width:0;min-height:0}.ams-shell .ams-inbox-reader-pane{overflow:hidden}
-.ams-shell .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}.ams-shell .custom-scrollbar::-webkit-scrollbar-track{background:transparent}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:var(--text)}
+.ams-shell .custom-scrollbar::-webkit-scrollbar{width:8px;height:8px}.ams-shell .custom-scrollbar::-webkit-scrollbar-track{background:transparent}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:var(--text)}
 .ams-portal-root{font-family:var(--font-sans);color:var(--text)}
 .ams-portal-root .ams-popover-surface{background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);box-shadow:0 12px 32px color-mix(in srgb,var(--bg) 45%,transparent);overflow:hidden}
 .ams-portal-root .ams-dropdown-item{min-height:36px;padding:8px 10px;border-radius:6px}

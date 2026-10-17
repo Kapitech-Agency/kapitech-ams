@@ -271,7 +271,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto custom-scrollbar" tabIndex={0} aria-label="Scrollable project schedule">
+      <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable project schedule">
         <div className="min-w-max">
           <div className="flex border-b border-line bg-panel">
             <div className="sticky left-0 z-30 flex h-11 w-[260px] shrink-0 items-center border-r border-line bg-panel px-3.5 text-[11px] font-medium text-muted">
@@ -2041,7 +2041,7 @@ export const AdminProjects: React.FC = () => {
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div ref={projectKanbanScrollRef} className="ams-project-kanban-board overflow-x-auto overflow-y-visible cursor-grab">
+              <div ref={projectKanbanScrollRef} className="ams-project-kanban-board overflow-x-auto overflow-y-visible cursor-grab" tabIndex={0} role="region" aria-label="Scrollable project board" data-ams-slug="projects-board-scroll">
                 {filteredProjects.length === 0 && (
                   <div role="status" className="mx-3 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-control border border-line bg-panel p-3 sm:mx-4">
                     <div className="text-xs text-muted">
@@ -2314,7 +2314,7 @@ export const AdminProjects: React.FC = () => {
                 onOpenProject={openProjectDetail}
               />
             ) : (
-              <div className="overflow-x-auto custom-scrollbar">
+              <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable project register table">
                 <table className="ams-projects-table min-w-[1080px] text-left">
                   <thead>
                     <tr>
@@ -2601,7 +2601,7 @@ export const AdminProjects: React.FC = () => {
                   </div>
                 </div>
 
-                <div ref={taskKanbanScrollRef} className="ams-project-kanban-task-board overflow-x-auto bg-bg p-5 sm:p-6 cursor-grab">
+                <div ref={taskKanbanScrollRef} className="ams-project-kanban-task-board overflow-x-auto bg-bg p-5 sm:p-6 cursor-grab" tabIndex={0} role="region" aria-label="Scrollable project task board" data-ams-slug="project-task-board-scroll">
                   <div className="flex min-w-max items-start gap-3 pb-8 sm:pb-10">
                     {TASK_COLUMNS.map(column => {
                       const tasks = visibleTasks.filter(task => task.status === column.id);
@@ -2895,7 +2895,7 @@ export const AdminProjects: React.FC = () => {
           </section>
 
           <AdminPanel title="Budget vs actual" description="Actuals use Finance expense entries linked by project ID. Delivery progress is not used as a cost estimate.">
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable project budget comparison table">
               <table className="ams-data-table min-w-[900px] text-left">
                 <thead>
                   <tr><th>Project</th><th>Health</th><th>Budget</th><th>Actual to date</th><th>Remaining</th><th>Delivery</th><th>Budget burn</th><th>Variance</th></tr>
@@ -3009,7 +3009,7 @@ export const AdminProjects: React.FC = () => {
               </div>
             </div>
 
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable archived project register">
               <table className="ams-data-table min-w-[1020px] text-left">
                 <thead><tr><th>Project</th><th>Client</th><th>Completed</th><th>Budget</th><th>Final progress</th><th>Owner</th><th>Slug</th><th>Actions</th></tr></thead>
                 <tbody>

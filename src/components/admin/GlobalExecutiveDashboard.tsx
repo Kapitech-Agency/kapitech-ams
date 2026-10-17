@@ -817,7 +817,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ))}
           </div>
 
-          <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar">
+          <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable active project register" data-ams-slug="dashboard-projects-scroll">
             <table className="w-full min-w-[760px] border-collapse text-left">
               <thead><tr>
                 <th className="px-4 py-3 text-xs font-medium text-muted sm:px-5">Project / client</th>

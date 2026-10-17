@@ -16,8 +16,8 @@ test('essential AMS tab and Kanban scrollers keep a visible scrollbar affordance
   assert.doesNotMatch(css, /\.ams-shell \.ams-topnav-scroll\{[^}]*scrollbar-width:\s*none/s);
   assert.doesNotMatch(css, /\.ams-shell \.ams-kanban-scroll\{[^}]*scrollbar-width:\s*none/s);
   assert.doesNotMatch(css, /\.ams-shell \.ams-project-kanban-(?:board|task-board)[^{]*\{[^}]*scrollbar-width:\s*none/s);
-  assert.match(css, /\.ams-shell \.ams-topnav-scroll::-webkit-scrollbar\{width:6px;height:6px\}/);
-  assert.match(css, /\.ams-shell \.ams-kanban-scroll::-webkit-scrollbar\{width:6px;height:6px\}/);
+  assert.match(css, /\.ams-shell \.ams-topnav-scroll::-webkit-scrollbar\{width:8px;height:8px\}/);
+  assert.match(css, /\.ams-shell \.ams-kanban-scroll::-webkit-scrollbar\{width:8px;height:8px\}/);
 });
 
 test('scrollbar thumb policy is consistent for global and local horizontal scrollers', async () => {
@@ -88,7 +88,7 @@ test('Inbox leaves Careers applicant review in the canonical CMS workspace', asy
   assert.match(app, /if \(query\.get\('view'\) === 'jobs'\)/);
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
   assert.match(careers, /pagedApplicants\.map\(applicant/);
-  assert.match(inbox, /className="ams-table-scroll overflow-x-auto custom-scrollbar">\s*<div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="min-w-0"><table/);
+  assert.match(inbox, /className="ams-table-scroll overflow-x-auto custom-scrollbar" tabIndex=\{0\} role="region" aria-label="Scrollable inbox inquiry register">\s*<div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="min-w-0"><table/);
   assert.doesNotMatch(inbox, /data-ams-feature-slug="inbox-leads-directory"[^>]*className="overflow-x-auto"/);
 });
 

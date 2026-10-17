@@ -1164,7 +1164,7 @@ export const TasksWorkspace: React.FC = () => {
             )}
           </div>
         ) : layout === 'board' ? (
-          <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-board-view">
+          <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-board-view" tabIndex={0} role="region" aria-label="Scrollable task board">
             <div className="border-b border-line px-4 py-2 text-[10px] text-muted" data-ams-slug="tasks-board-instructions">
               {canManageTasks ? 'Drag a card by its handle, or focus the handle and use the left/right arrow keys. Press Enter to open task details.' : 'Task movement is read-only for your current role.'}
             </div>
@@ -1300,7 +1300,7 @@ export const TasksWorkspace: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-table-view">
+          <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-table-view" tabIndex={0} role="region" aria-label="Scrollable task register">
             <table className="w-full min-w-[1120px] border-collapse text-left">
               <thead className="sticky top-0 z-10 bg-panel">
                 <tr className="border-b border-line">
