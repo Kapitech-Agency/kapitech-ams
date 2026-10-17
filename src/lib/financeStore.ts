@@ -6,7 +6,7 @@
 
 import { api } from './apiClient';
 import { toSlug } from './slug';
-import { isSlugFixtureMode } from './runtimeMode';
+
 
 export type InvoiceStatus = 'draft' | 'sent' | 'partially_paid' | 'paid' | 'overdue' | 'cancelled';
 
@@ -190,7 +190,7 @@ function scheduleFinanceHydrationRetry(): void {
 }
 
 function hydrateFinanceFromServer(): void {
-  if (!import.meta.env.PROD || financeServerHydrationStarted) return;
+  if (typeof window === 'undefined' || financeServerHydrationStarted) return;
   financeServerHydrationStarted = true;
 
   Promise.all([api.finance.getInvoices(), api.finance.getExpenses()]).then(([invoiceRes, expenseRes]) => {
@@ -230,279 +230,12 @@ function hydrateFinanceFromServer(): void {
   });
 }
 
-export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
-  {
-    id: 'inv_101',
-    slug: 'kapi-inv-2026-001-astradigital-ventura',
-    invoiceNumber: 'KAPI-INV-2026-001',
-    type: 'invoice',
-    clientName: 'Budi Santoso',
-    clientCompany: 'PT Astra Digital Ventura',
-    clientEmail: 'budi.santoso@astradigital.id',
-    clientPhone: '+62 812-9988-7711',
-    items: [
-      {
-        id: 'item_1',
-        description: 'Enterprise React & Node.js Microservices Architecture Implementation',
-        quantity: 1,
-        unitPrice: 165000000,
-        amount: 165000000
-      }
-    ],
-    subtotal: 165000000,
-    discountPercent: 0,
-    discountAmount: 0,
-    taxPercent: 11,
-    taxAmount: 18150000,
-    total: 183150000,
-    currency: 'IDR',
-    status: 'paid',
-    issueDate: '2026-08-01',
-    dueDate: '2026-08-15',
-    paidDate: '2026-08-14',
-    amountPaid: 183150000,
-    balanceDue: 0,
-    payments: [{
-      id: 'pay_101_20260814',
-      slug: 'kapi-inv-2026-001-payment-20260814',
-      amount: 183150000,
-      date: '2026-08-14',
-      method: 'bank_transfer',
-      reference: 'BCA-VA-101',
-      recordedBy: 'BCA Virtual Account'
-    }],
-    notes: 'Sprint 1 & Sprint 2 deliverable sign-off settlement.',
-    paymentTerms: 'Bank Transfer Net 14',
-    auditTrail: [
-      { action: 'Created', timestamp: '2026-08-01T09:00:00Z', user: 'Finance Lead' },
-      { action: 'Approved', timestamp: '2026-08-02T10:30:00Z', user: 'Managing Partner' },
-      { action: 'Paid', timestamp: '2026-08-14T14:15:00Z', user: 'BCA Virtual Account' }
-    ],
-    createdAt: '2026-08-01T09:00:00Z',
-    updatedAt: '2026-08-14T14:15:00Z'
-  },
-  {
-    id: 'inv_102',
-    slug: 'kapi-inv-2026-002-telkomsel-innovation-labs',
-    invoiceNumber: 'KAPI-INV-2026-002',
-    type: 'invoice',
-    clientName: 'Sarah Jenkins',
-    clientCompany: 'Telkomsel Innovation Labs',
-    clientEmail: 's.jenkins@telkomsel.co.id',
-    clientPhone: '+62 811-2233-4455',
-    items: [
-      {
-        id: 'item_2',
-        description: '3D WebGL Brand Experience & Interactive Design System',
-        quantity: 1,
-        unitPrice: 120000000,
-        amount: 120000000
-      }
-    ],
-    subtotal: 120000000,
-    discountPercent: 5,
-    discountAmount: 6000000,
-    taxPercent: 11,
-    taxAmount: 12540000,
-    total: 126540000,
-    currency: 'IDR',
-    status: 'paid',
-    issueDate: '2026-08-18',
-    dueDate: '2026-09-01',
-    paidDate: '2026-08-30',
-    amountPaid: 126540000,
-    balanceDue: 0,
-    payments: [{
-      id: 'pay_102_20260830',
-      slug: 'kapi-inv-2026-002-payment-20260830',
-      amount: 126540000,
-      date: '2026-08-30',
-      method: 'bank_transfer',
-      reference: 'MANDIRI-CORP-102',
-      recordedBy: 'Mandiri Corporate'
-    }],
-    notes: 'Phase 1 Interactive showcase release milestone.',
-    paymentTerms: 'Bank Transfer Net 14',
-    auditTrail: [
-      { action: 'Created', timestamp: '2026-08-18T11:00:00Z', user: 'Finance Lead' },
-      { action: 'Paid', timestamp: '2026-08-30T16:00:00Z', user: 'Mandiri Corporate' }
-    ],
-    createdAt: '2026-08-18T11:00:00Z',
-    updatedAt: '2026-08-30T16:00:00Z'
-  },
-  {
-    id: 'inv_103',
-    slug: 'kapi-inv-2026-003-bank-mandiri-fintech',
-    invoiceNumber: 'KAPI-INV-2026-003',
-    type: 'invoice',
-    clientName: 'Reza Pratama',
-    clientCompany: 'Bank Mandiri FinTech Division',
-    clientEmail: 'reza.p@mandirift.co.id',
-    clientPhone: '+62 813-5566-7788',
-    items: [
-      {
-        id: 'item_3',
-        description: 'Zero-Trust Internal Portal & RBAC Security Infrastructure',
-        quantity: 1,
-        unitPrice: 210000000,
-        amount: 210000000
-      }
-    ],
-    subtotal: 210000000,
-    discountPercent: 0,
-    discountAmount: 0,
-    taxPercent: 11,
-    taxAmount: 23100000,
-    total: 233100000,
-    currency: 'IDR',
-    status: 'sent',
-    issueDate: '2026-09-02',
-    dueDate: '2026-09-20',
-    approvedDate: '2026-09-04',
-    notes: 'Final UAT signed. Invoice authorized and sent for AP processing.',
-    paymentTerms: 'Bank Transfer Net 21',
-    auditTrail: [
-      { action: 'Created', timestamp: '2026-09-02T13:00:00Z', user: 'Finance Lead' },
-      { action: 'Approved', timestamp: '2026-09-04T09:45:00Z', user: 'Managing Partner' }
-    ],
-    createdAt: '2026-09-02T13:00:00Z',
-    updatedAt: '2026-09-04T09:45:00Z'
-  },
-  {
-    id: 'inv_104',
-    slug: 'kapi-inv-2026-004-shopeepay-regional-tech',
-    invoiceNumber: 'KAPI-INV-2026-004',
-    type: 'invoice',
-    clientName: 'Jessica Halim',
-    clientCompany: 'ShopeePay Regional Tech',
-    clientEmail: 'jessica.h@shopeepay.com',
-    clientPhone: '+62 817-4433-2211',
-    items: [
-      {
-        id: 'item_4',
-        description: 'High-Throughput Payment Orchestrator & Cloud Run Backend',
-        quantity: 1,
-        unitPrice: 95000000,
-        amount: 95000000
-      }
-    ],
-    subtotal: 95000000,
-    discountPercent: 0,
-    discountAmount: 0,
-    taxPercent: 11,
-    taxAmount: 10450000,
-    total: 105450000,
-    currency: 'IDR',
-    status: 'sent',
-    issueDate: '2026-09-05',
-    dueDate: '2026-09-22',
-    notes: 'Awaiting client finance authorization.',
-    paymentTerms: 'Bank Transfer Net 14',
-    createdAt: '2026-09-05T10:00:00Z',
-    updatedAt: '2026-09-05T10:00:00Z'
-  },
-  {
-    id: 'inv_105',
-    slug: 'kapi-inv-2026-005-nusa-cloud-systems',
-    invoiceNumber: 'KAPI-INV-2026-005',
-    type: 'invoice',
-    clientName: 'Kevin Wijaya',
-    clientCompany: 'Nusa Cloud Systems',
-    clientEmail: 'kevin@nusacloud.id',
-    clientPhone: '+62 819-1122-3344',
-    items: [
-      {
-        id: 'item_5',
-        description: 'Legacy Cloud Migration & Kubernetes Architecture Sprint',
-        quantity: 1,
-        unitPrice: 45000000,
-        amount: 45000000
-      }
-    ],
-    subtotal: 45000000,
-    discountPercent: 0,
-    discountAmount: 0,
-    taxPercent: 11,
-    taxAmount: 4950000,
-    total: 49950000,
-    currency: 'IDR',
-    status: 'overdue',
-    issueDate: '2026-08-01',
-    dueDate: '2026-08-16',
-    notes: 'Reminder notice #2 sent to client finance team.',
-    paymentTerms: 'Bank Transfer Net 14',
-    createdAt: '2026-08-01T08:00:00Z',
-    updatedAt: '2026-08-20T11:00:00Z'
-  }
-];
-
-export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
-  {
-    id: 'exp_201',
-    slug: 'gcp-cloud-run-artifact-registry-vertex-ai-2026-09-01-exp-201',
-    type: 'OpEx',
-    category: 'Software & Cloud',
-    description: 'GCP Cloud Run, Artifact Registry & Vertex AI Infrastructure',
-    amount: 14500000,
-    date: '2026-09-01',
-    recurringInterval: 'monthly',
-    recordedBy: 'Cloud DevOps Lead',
-    createdAt: '2026-09-01T08:00:00Z'
-  },
-  {
-    id: 'exp_202',
-    slug: 'senior-frontend-3d-webgl-contractor-retainer-2026-09-05-exp-202',
-    type: 'OpEx',
-    category: 'Salaries & Contractors',
-    description: 'Senior Frontend & 3D WebGL Specialist Contractor Retainer',
-    amount: 38000000,
-    date: '2026-09-05',
-    recurringInterval: 'monthly',
-    recordedBy: 'Managing Partner',
-    createdAt: '2026-09-05T09:00:00Z'
-  },
-  {
-    id: 'exp_203',
-    slug: 'kapitech-hq-studio-rental-coworking-2026-09-02-exp-203',
-    type: 'Rentals',
-    category: 'Office & Rentals',
-    description: 'Kapitech HQ Studio Rental & Coworking Hub (Sudirman, Jakarta)',
-    amount: 22000000,
-    date: '2026-09-02',
-    recurringInterval: 'monthly',
-    recordedBy: 'Operations Staff',
-    createdAt: '2026-09-02T10:00:00Z'
-  },
-  {
-    id: 'exp_204',
-    slug: 'apple-silicon-m3-max-workstations-2026-08-15-exp-204',
-    type: 'CapEx',
-    category: 'CapEx Equipment',
-    description: 'Apple Silicon M3 Max Workstations for 3D Render Team',
-    amount: 46000000,
-    date: '2026-08-15',
-    recurringInterval: 'none',
-    recordedBy: 'Managing Partner',
-    createdAt: '2026-08-15T11:00:00Z'
-  },
-  {
-    id: 'exp_205',
-    slug: 'b2b-enterprise-client-acquisition-showcase-campaign-2026-08-25-exp-205',
-    type: 'OpEx',
-    category: 'Marketing & Ads',
-    description: 'B2B Enterprise Client Acquisition & Showcase Campaign',
-    amount: 8500000,
-    date: '2026-08-25',
-    recurringInterval: 'monthly',
-    recordedBy: 'Growth Manager',
-    createdAt: '2026-08-25T14:00:00Z'
-  }
-];
-
+export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [];
+export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [];
 export const getAgencyInvoices = (): AgencyInvoice[] => {
   hydrateFinanceFromServer();
   if (invoiceCache) return invoiceCache;
-  invoiceCache = isSlugFixtureMode() ? INITIAL_DEFAULT_INVOICES.map(normalizeFinanceInvoice) : [];
+  invoiceCache = [];
   return invoiceCache;
 };
 
@@ -612,7 +345,7 @@ export const recordInvoicePayment = async (
 export const getAgencyExpenses = (): AgencyExpense[] => {
   hydrateFinanceFromServer();
   if (expenseCache) return expenseCache;
-  expenseCache = isSlugFixtureMode() ? INITIAL_DEFAULT_EXPENSES.map(normalizeFinanceExpense) : [];
+  expenseCache = [];
   return expenseCache;
 };
 
