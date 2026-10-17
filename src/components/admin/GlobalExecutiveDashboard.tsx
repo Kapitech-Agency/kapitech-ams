@@ -18,7 +18,6 @@ import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminS
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
-import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { ProfileIdentity } from './ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
@@ -41,66 +40,6 @@ interface DashboardProject {
   createdAt?: string;
 }
 
-interface TeamMember {
-  name: string;
-  role: string;
-  workload: number;
-  tasks: number;
-  state: string;
-  tone: 'success' | 'warning' | 'info';
-}
-
-const sampleProjects: DashboardProject[] = [
-  { id: 'proj-001', name: 'Atlas Brand System', client: 'Atlas Group', type: 'Enterprise', status: 'On track', statusTone: 'success', progress: 78, lead: 'Fikri', budget: '$42,000', startDate: '2026-01-01', targetEndDate: '2026-06-30' },
-  { id: 'proj-002', name: 'Meridian Commerce', client: 'Meridian Labs', type: 'Fixed-fee', status: 'At risk', statusTone: 'warning', progress: 61, lead: 'Sarah', budget: '$28,500', startDate: '2026-03-01', targetEndDate: '2026-08-31' },
-  { id: 'proj-003', name: 'Nova Growth Retainer', client: 'Nova Ventures', type: 'Retainer', status: 'On track', statusTone: 'success', progress: 72, lead: 'Dimas', budget: '$18,000', startDate: '2026-06-01', targetEndDate: '2026-12-31' },
-  { id: 'proj-004', name: 'Orbit Product Launch', client: 'Orbit Health', type: 'Enterprise', status: 'Delayed', statusTone: 'danger', progress: 44, lead: 'Raka', budget: '$36,800', startDate: '2025-11-01', targetEndDate: '2026-03-31' },
-  { id: 'proj-005', name: 'Northstar Campaign', client: 'Northstar Capital', type: 'Retainer', status: 'In review', statusTone: 'info', progress: 86, lead: 'Nadia', budget: '$24,000', startDate: '2026-04-01', targetEndDate: '2026-12-31' },
-];
-
-const sampleTeam: TeamMember[] = [
-  { name: 'Fikri Nurlete', role: 'Chief Creative Officer', workload: 82, tasks: 11, state: 'High load', tone: 'warning' },
-  { name: 'Reynaldo Anakotta', role: 'Project Manager', workload: 74, tasks: 9, state: 'Balanced', tone: 'success' },
-  { name: 'Akell Ahmed', role: 'HR Manager', workload: 68, tasks: 8, state: 'Balanced', tone: 'success' },
-  { name: 'IBrahim', role: 'Financial FP&A', workload: 55, tasks: 6, state: 'Available', tone: 'info' },
-];
-
-const sampleRevenueByRange: Record<RangeKey, Array<{ label: string; primary: number; secondary: number; tertiary: number }>> = {
-  '30D': [
-    { label: 'W1', primary: 18800, secondary: 12400, tertiary: 6400 },
-    { label: 'W2', primary: 20100, secondary: 12900, tertiary: 7200 },
-    { label: 'W3', primary: 21400, secondary: 13200, tertiary: 8200 },
-    { label: 'W4', primary: 22600, secondary: 13800, tertiary: 8800 },
-  ],
-  Q2: [
-    { label: 'Apr', primary: 71800, secondary: 49200, tertiary: 22600 },
-    { label: 'May', primary: 80200, secondary: 51400, tertiary: 28800 },
-    { label: 'Jun', primary: 84500, secondary: 52200, tertiary: 32300 },
-  ],
-  YTD: [
-    { label: 'Jan', primary: 61000, secondary: 42000, tertiary: 19000 },
-    { label: 'Feb', primary: 68500, secondary: 44700, tertiary: 23800 },
-    { label: 'Mar', primary: 74200, secondary: 46300, tertiary: 27900 },
-    { label: 'Apr', primary: 71800, secondary: 49200, tertiary: 22600 },
-    { label: 'May', primary: 80200, secondary: 51400, tertiary: 28800 },
-    { label: 'Jun', primary: 84500, secondary: 52200, tertiary: 32300 },
-  ],
-  '12M': [
-    { label: 'Jul', primary: 57400, secondary: 40100, tertiary: 17300 },
-    { label: 'Aug', primary: 59200, secondary: 41100, tertiary: 18100 },
-    { label: 'Sep', primary: 63800, secondary: 42600, tertiary: 21200 },
-    { label: 'Oct', primary: 67100, secondary: 43500, tertiary: 23600 },
-    { label: 'Nov', primary: 69600, secondary: 44100, tertiary: 25500 },
-    { label: 'Dec', primary: 73200, secondary: 45200, tertiary: 28000 },
-    { label: 'Jan', primary: 61000, secondary: 42000, tertiary: 19000 },
-    { label: 'Feb', primary: 68500, secondary: 44700, tertiary: 23800 },
-    { label: 'Mar', primary: 74200, secondary: 46300, tertiary: 27900 },
-    { label: 'Apr', primary: 71800, secondary: 49200, tertiary: 22600 },
-    { label: 'May', primary: 80200, secondary: 51400, tertiary: 28800 },
-    { label: 'Jun', primary: 84500, secondary: 52200, tertiary: 32300 },
-  ],
-};
-
 const toneClasses = {
   success: 'border-success/25 bg-success/10 text-success',
   warning: 'border-warning/25 bg-warning/10 text-warning',
@@ -115,7 +54,6 @@ const progressClasses = {
   info: 'bg-info',
 } as const;
 
-const formatMoney = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 const formatLiveMoney = (value: number, currency: string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 
@@ -227,10 +165,8 @@ const DashboardUnavailable: React.FC<{ title: string; description: string }> = (
 );
 
 const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({ snapshot }) => {
-  const fixtureMode = isSlugFixtureMode();
-  const previewMode = fixtureMode && !snapshot.tasks?.length && !snapshot.projects?.length && !snapshot.timeLogs?.length;
   const tasks = snapshot.tasks || [];
-  const projectRows = snapshot.projects?.length ? snapshot.projects : previewMode ? sampleProjects : [];
+  const projectRows = snapshot.projects || [];
   const activeProjects = projectRows.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
   const completedTasks = tasks.filter((task) => isFinishedWork(task.status)).length;
   const blockedTasks = tasks.filter((task) => String(task.status || '').toLowerCase().includes('block')).length;
@@ -239,11 +175,11 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
     const due = dateKey(task.dueDate || task.deadline);
     return due && due < today && !isFinishedWork(task.status);
   }).length;
-  const taskCount = snapshot.tasks !== null ? tasks.length : previewMode ? sampleTeam.reduce((sum, member) => sum + member.tasks, 0) : null;
+  const taskCount = snapshot.tasks !== null ? tasks.length : null;
   const completionValue = snapshot.tasks !== null && tasks.length ? Math.round(completedTasks / tasks.length * 100) + '%' : '—';
   const blockedValue = snapshot.tasks !== null ? String(blockedTasks) : '—';
   const overdueValue = snapshot.tasks !== null ? String(overdueTasks) : '—';
-  const activeProjectValue = snapshot.projects !== null ? String(activeProjects.length) : previewMode ? String(sampleProjects.length) : '—';
+  const activeProjectValue = snapshot.projects !== null ? String(activeProjects.length) : '—';
 
   const current = new Date();
   const monday = new Date(current);
@@ -270,10 +206,9 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
 
   return (
     <div className="space-y-4">
-      {previewMode && <p className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-[11px] text-warning">Preview data only. Metrics below must not be used as production reporting.</p>}
       <AdminMetricStrip metrics={[
-        { id: 'performance-projects', label: 'Active projects', value: activeProjectValue, icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Project records' : previewMode ? 'Preview records' : 'Live source unavailable' },
-        { id: 'performance-tasks', label: 'Tasks tracked', value: taskCount === null ? '—' : String(taskCount), icon: <CheckCircle2 size={15} />, context: snapshot.tasks !== null ? 'Task records' : previewMode ? 'Preview summary' : 'Live source unavailable' },
+        { id: 'performance-projects', label: 'Active projects', value: activeProjectValue, icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Project records' : 'Live source unavailable' },
+        { id: 'performance-tasks', label: 'Tasks tracked', value: taskCount === null ? '—' : String(taskCount), icon: <CheckCircle2 size={15} />, context: snapshot.tasks !== null ? 'Task records' : 'Live source unavailable' },
         { id: 'performance-overdue', label: 'Overdue tasks', value: overdueValue, icon: <CalendarDays size={15} />, toneClassName: 'text-warning', context: snapshot.tasks !== null ? 'Open tasks past due date' : 'Not available' },
         { id: 'performance-blocked', label: 'Blocked tasks', value: blockedValue, icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', context: snapshot.tasks !== null ? 'Task status' : 'Not available' },
       ]} />
@@ -297,7 +232,7 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
           )}
         </AdminPanel>
         <AdminPanel title="Projects needing attention" description="Projects with an explicit risk flag or a past target date." bodyClassName="p-4 sm:p-5">
-          {snapshot.projects === null && !previewMode ? <DashboardUnavailable title="Project status unavailable" description="Project risk cannot be calculated because live project records were not returned." /> : needsAttention.length === 0 ? (
+          {snapshot.projects === null ? <DashboardUnavailable title="Project status unavailable" description="Project risk cannot be calculated because live project records were not returned." /> : needsAttention.length === 0 ? (
             <p className="py-8 text-center text-xs text-muted">No project risk flags or overdue target dates were found.</p>
           ) : (
             <div className="space-y-2">
@@ -325,14 +260,12 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
 };
 
 const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: RangeKey }> = ({ snapshot, range }) => {
-  const fixtureMode = isSlugFixtureMode();
-  const previewFinancialData = fixtureMode && !snapshot.invoices?.length && !snapshot.expenses?.length;
   const currency = 'IDR';
   const invoiceRows = snapshot.invoices || [];
   const expenseRows = snapshot.expenses || [];
   const trend = snapshot.invoices !== null && snapshot.expenses !== null
     ? buildFinancialTrend(range, invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency), expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency))
-    : previewFinancialData ? sampleRevenueByRange[range] : [];
+    : [];
   const validInvoices = invoiceRows.filter((invoice) => String(invoice.currency || 'IDR').toUpperCase() === currency && !['draft', 'cancelled', 'voided'].includes(String(invoice.status || '').toLowerCase()));
   const validExpenses = expenseRows.filter((expense) => String(expense.currency || 'IDR').toUpperCase() === currency);
   const totalInvoiced = validInvoices.reduce((sum, invoice) => sum + (Number(invoice.total ?? invoice.amount ?? 0) || 0), 0);
@@ -348,31 +281,27 @@ const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: R
 
   if (snapshot.loading) return <DashboardUnavailable title="Loading analytics" description="Invoice, expense, and portfolio records are being loaded from AMS." />;
   const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
-  const previewInvoiced = previewFinancialData ? trend.reduce((sum: number, point: any) => sum + Number(point.primary || 0), 0) : null;
-  const previewExpenses = previewFinancialData ? trend.reduce((sum: number, point: any) => sum + Number(point.secondary || 0), 0) : null;
-
   return (
     <div className="space-y-4">
-      {previewFinancialData && <p className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-[11px] text-warning">Preview data only. No production financial records were used for these sample trends.</p>}
       <AdminMetricStrip metrics={[
-        { id: 'analytics-invoiced', label: 'Invoices issued', value: financialDataAvailable ? formatLiveMoney(totalInvoiced, currency) : previewFinancialData ? formatMoney(previewInvoiced || 0) : '—', icon: <FileText size={15} />, context: financialDataAvailable ? 'Issued invoices · IDR' : previewFinancialData ? 'Sample data' : 'Live source unavailable' },
-        { id: 'analytics-expenses', label: 'Recorded expenses', value: financialDataAvailable ? formatLiveMoney(recordedExpenses, currency) : previewFinancialData ? formatMoney(previewExpenses || 0) : '—', icon: <CircleDollarSign size={15} />, context: financialDataAvailable ? 'Expense records · IDR' : previewFinancialData ? 'Sample data' : 'Live source unavailable' },
+        { id: 'analytics-invoiced', label: 'Invoices issued', value: financialDataAvailable ? formatLiveMoney(totalInvoiced, currency) : '—', icon: <FileText size={15} />, context: financialDataAvailable ? 'Issued invoices · IDR' : 'Live source unavailable' },
+        { id: 'analytics-expenses', label: 'Recorded expenses', value: financialDataAvailable ? formatLiveMoney(recordedExpenses, currency) : '—', icon: <CircleDollarSign size={15} />, context: financialDataAvailable ? 'Expense records · IDR' : 'Live source unavailable' },
         { id: 'analytics-receivables', label: 'Outstanding receivables', value: snapshot.invoices !== null ? formatLiveMoney(receivables, currency) : '—', icon: <ReceiptText size={15} />, context: snapshot.invoices !== null ? 'Open, non-draft invoices · IDR' : 'Live source unavailable' },
-        { id: 'analytics-projects', label: 'Active projects', value: snapshot.projects !== null ? String(activeProjects || 0) : fixtureMode ? String(sampleProjects.length) : '—', icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : fixtureMode ? 'Preview records' : 'Live source unavailable' }
+        { id: 'analytics-projects', label: 'Active projects', value: snapshot.projects !== null ? String(activeProjects || 0) : '—', icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : 'Live source unavailable' }
       ]} />
 
       <AdminPanel title="Invoice and expense trend" description="Invoice totals are grouped by issue date; expenses are grouped by recorded date. Their difference is not a posted profit figure." bodyClassName="p-4 sm:p-5">
         {trend.length >= 2 ? (
-          <TrendChart data={trend} primaryLabel="Invoices issued" secondaryLabel="Recorded expenses" tertiaryLabel="Difference" primaryFormat={previewFinancialData ? formatMoney : (value) => formatLiveMoney(value, currency)} ariaLabel="Issued invoices and recorded expenses by period." />
+          <TrendChart data={trend} primaryLabel="Invoices issued" secondaryLabel="Recorded expenses" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, currency)} ariaLabel="Issued invoices and recorded expenses by period." />
         ) : (
           <DashboardUnavailable title="Financial trend unavailable" description="The selected sources did not return a usable period series. Values are not estimated." />
         )}
       </AdminPanel>
 
       <AdminPanel title="Project status" description="Current project status values from the project register." bodyClassName="p-4 sm:p-5">
-        {snapshot.projects === null && !fixtureMode ? <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." /> : (
+        {snapshot.projects === null ? <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." /> : (
           <div className="space-y-3">
-            {(snapshot.projects?.length ? snapshot.projects : fixtureMode ? sampleProjects : []).reduce((groups: Array<{ status: string; count: number }>, project: any) => {
+            {(snapshot.projects || []).reduce((groups: Array<{ status: string; count: number }>, project: any) => {
               const status = String(project.status || project.health || 'Not set');
               const existing = groups.find((item) => item.status === status);
               if (existing) existing.count += 1; else groups.push({ status, count: 1 });
@@ -389,7 +318,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics';
-  const fixtureMode = isSlugFixtureMode();
   const { matchesInterval, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const [range, setRange] = useState<RangeKey>('Q2');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
@@ -522,8 +450,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           };
         })
       : [];
-    return serverProjects.length ? serverProjects : (fixtureMode ? sampleProjects : []);
-  }, [dashboardOverview.projects, operationalSnapshot.projects, fixtureMode]);
+    return serverProjects;
+  }, [dashboardOverview.projects, operationalSnapshot.projects]);
 
   const filteredProjects = useMemo(
     () => dashboardProjects.filter((project) =>
@@ -546,7 +474,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     setDashboardProjectPage((current) => Math.min(current, dashboardProjectPageCount));
   }, [dashboardProjectPageCount]);
 
-  const deliveryProjects = operationalSnapshot.projects?.length ? operationalSnapshot.projects : fixtureMode ? sampleProjects : operationalSnapshot.projects;
+  const deliveryProjects = operationalSnapshot.projects;
   const deliveryBreakdown = useMemo(
     () => deliveryProjects === null ? [] : buildProjectDeliveryBreakdown(deliveryProjects),
     [deliveryProjects]
@@ -555,15 +483,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const onScheduleValue = deliveryBreakdown.find((item) => item.label === 'No risk flag')?.value ?? 0;
   const onSchedulePercent = totalDelivery > 0 ? Math.round((Math.max(0, onScheduleValue) / totalDelivery) * 100) : 0;
   const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
-  const previewFinancialTrend = fixtureMode && !operationalSnapshot.invoices?.length && !operationalSnapshot.expenses?.length;
   const financeSourcesAvailable = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null;
   const revenueData = useMemo(() => {
-    if (previewFinancialTrend) return sampleRevenueByRange[range];
     if (!financeSourcesAvailable) return [];
     const invoices = (operationalSnapshot.invoices || []).filter((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency);
     const expenses = (operationalSnapshot.expenses || []).filter((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency);
     return buildFinancialTrend(range, invoices, expenses);
-  }, [previewFinancialTrend, financeSourcesAvailable, operationalSnapshot.invoices, operationalSnapshot.expenses, financeCurrency, range]);
+  }, [financeSourcesAvailable, operationalSnapshot.invoices, operationalSnapshot.expenses, financeCurrency, range]);
 
   const currentMonthKey = localDateKey(new Date()).slice(0, 7);
   const liveProjectRows = operationalSnapshot.projects || [];
@@ -594,9 +520,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     return sum + Math.max(0, Number(expense.amount) || 0);
   }, 0);
   const liveCashDifference = liveCashCollected !== null && liveMonthlyExpenses !== null ? liveCashCollected - liveMonthlyExpenses : null;
-  const activeProjectsMetric = dashboardOverview.metrics?.activeProjects ?? (operationalSnapshot.projects !== null ? activeProjectRows.length : fixtureMode ? 12 : null);
-  const overdueTasksMetric = dashboardOverview.metrics?.overdueTasks ?? liveOverdueTaskCount ?? (fixtureMode ? 3 : null);
-  const projectsAtRiskMetric = dashboardOverview.metrics?.projectsAtRisk ?? liveRiskProjectCount ?? (fixtureMode ? 3 : null);
+  const activeProjectsMetric = dashboardOverview.metrics?.activeProjects ?? (operationalSnapshot.projects !== null ? activeProjectRows.length : null);
+  const overdueTasksMetric = dashboardOverview.metrics?.overdueTasks ?? liveOverdueTaskCount;
+  const projectsAtRiskMetric = dashboardOverview.metrics?.projectsAtRisk ?? liveRiskProjectCount;
   const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? dashboardOverview.financials?.revenueThisMonth ?? liveCashCollected;
   const outstandingMetric = dashboardOverview.financials?.outstandingReceivables ?? liveOutstanding;
   const cashDifferenceMetric = dashboardOverview.financials?.netOperatingProfit ?? liveCashDifference;
@@ -609,24 +535,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         description="Real-time metrics, project pacing, and financial health for the agency."
         actions={(
           <>
-            {fixtureMode && (
-              <div className="space-y-1">
-                <span className="block text-[10px] text-muted">Preview chart range</span>
-                <div className="flex w-full items-center gap-0.5 rounded-control bg-bg p-0.5 sm:w-auto">
-                  {(['30D', 'Q2', 'YTD', '12M'] as RangeKey[]).map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      aria-pressed={range === item}
-                      onClick={() => setRange(item)}
-                      className={['rounded-chip px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', range === item ? 'bg-line font-medium text-fg' : 'text-muted hover:text-fg'].join(' ')}
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+
             <Link
               to="/admin/projects"
               className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium sm:min-h-9 sm:w-auto text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -650,62 +559,54 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               {
                 id: 'active-projects', label: 'Active projects',
                 value: activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
-                context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Live project records' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode && operationalSnapshot.projects === null ? [8, 9, 10, Number(activeProjectsMetric ?? 12)] : undefined,
-                icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
+                context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Live project records' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                                icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
               },
               {
                 id: 'tasks-due', label: 'Overdue tasks',
                 value: overdueTasksMetric != null ? String(overdueTasksMetric) : '—',
-                context: dashboardOverview.metrics?.overdueTasks != null || operationalSnapshot.tasks !== null ? 'Open tasks past due date' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode && operationalSnapshot.tasks === null ? [6, 5, 4, Number(overdueTasksMetric ?? 3)] : undefined,
-                icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue'
+                context: dashboardOverview.metrics?.overdueTasks != null || operationalSnapshot.tasks !== null ? 'Open tasks past due date' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                                icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue'
               },
               {
                 id: 'overdue', label: 'Projects at risk',
                 value: projectsAtRiskMetric != null ? String(projectsAtRiskMetric) : '—',
-                change: projectsAtRiskMetric != null || fixtureMode ? 'Requires attention' : undefined,
+                change: projectsAtRiskMetric != null ? 'Requires attention' : undefined,
                 changeToneClassName: 'text-danger',
-                sparkline: fixtureMode && operationalSnapshot.projects === null ? [6, 5, 4, Number(projectsAtRiskMetric ?? 3)] : undefined,
-                icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', slug: 'dashboard-projects-risk'
+                                icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', slug: 'dashboard-projects-risk'
               },
               {
                 id: 'revenue', label: 'Cash collected this month',
-                value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : fixtureMode ? formatLiveMoney(84500, financeCurrency) : '—',
-                context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Recorded invoice payments' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode && liveCashCollected === null ? sampleRevenueByRange[range].map((point) => point.primary) : undefined,
-                icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
+                value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
+                context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Recorded invoice payments' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                                icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
               },
               {
                 id: 'outstanding', label: 'Outstanding invoices',
-                value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : fixtureMode ? formatLiveMoney(32400, financeCurrency) : '—',
-                context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode && liveOutstanding === null ? [22, 25, 28, 32.4] : undefined,
-                icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
+                value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
+                context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                                icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
               },
               {
                 id: 'utilization', label: 'Team utilization',
-                value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : fixtureMode ? '78%' : '—',
-                context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode ? [66, 70, 73, 78] : undefined,
-                icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
+                value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : '—',
+                context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
+                                icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
               },
               {
                 id: 'avg-project-value', label: 'Avg. active project budget',
-                value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : fixtureMode ? '$29.8k' : '—',
-                context: averageActiveBudget != null ? 'Average of active project budgets' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
-                sparkline: fixtureMode && averageActiveBudget === null ? [24, 25.5, 28, 29.8] : undefined,
-                icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
+                value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : '—',
+                context: averageActiveBudget != null ? 'Average of active project budgets' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
+                                icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
               },
               {
                 id: 'net-operating-profit', label: 'Cash surplus / deficit',
-                value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : fixtureMode ? formatLiveMoney(32300, financeCurrency) : '—',
-                context: dashboardOverview.financials?.netOperatingProfit != null || liveCashDifference !== null ? 'Cash collected less recorded expenses; not posted profit' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
-                sparkline: fixtureMode && liveCashDifference === null ? [19600, 22600, 28800, 32300] : undefined,
-                icon: <CircleDollarSign size={15} />,
+                value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : '—',
+                context: dashboardOverview.financials?.netOperatingProfit != null || liveCashDifference !== null ? 'Cash collected less recorded expenses; not posted profit' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
+                                icon: <CircleDollarSign size={15} />,
                 toneClassName: dashboardOverview.financials?.netOperatingProfit != null
                   ? Number(dashboardOverview.financials.netOperatingProfit) >= 0 ? 'text-success' : 'text-danger'
-                  : fixtureMode ? 'text-success' : 'text-fg',
+                  : 'text-fg',
                 slug: 'dashboard-net-operating-profit'
               }
             ]}
@@ -740,7 +641,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           </div>
         )}>
           {revenueData.length >= 2 ? (
-            <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={previewFinancialTrend ? formatMoney : (value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + range + '.'} />
+            <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + range + '.'} />
           ) : (
             <div className="flex min-h-[220px] flex-col items-center justify-center rounded-control border border-line bg-bg px-5 py-8 text-center" role="status">
               <CircleDollarSign size={20} className="text-muted" aria-hidden="true" />
@@ -753,7 +654,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
           {deliveryProjects !== null ? (
           <div className="space-y-4">
-            {fixtureMode && !operationalSnapshot.projects?.length && <p className="text-[10px] text-warning">Preview data only. Live project records were not returned.</p>}
             <div className="rounded-control border border-line bg-bg/45 p-4">
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
@@ -983,64 +883,18 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           className="min-[1100px]:col-span-4"
           bodyClassName="p-4 sm:p-5"
           title="Team capacity"
-          description="Current workload distribution across the team."
-          actions={fixtureMode ? <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">4 members</span> : undefined}
+          description="Current workload distribution from persisted team and time records."
         >
-          {fixtureMode ? (
-            <div className="space-y-4">
-              {sampleTeam.map((member) => (
-                <div key={member.name}>
-                  <div className="mb-1.5 flex items-center justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-xs font-semibold text-fg">{member.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span>
-                      <div className="min-w-0">
-                        <div className="truncate text-xs font-medium text-fg">{member.name}</div>
-                        <div className="mt-0.5 truncate text-[10px] text-muted">{member.role}</div>
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <span className="text-xs font-medium tabular-nums text-fg">{member.workload}%</span>
-                      <span className="mt-0.5 block text-[10px] text-muted">{member.tasks} tasks · {member.state}</span>
-                    </div>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-sm bg-line">
-                    <div className={['h-full rounded-sm', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} />
-                  </div>
-                </div>
-              ))}
-              <div className="border-t border-line pt-4">
-                <Link to="/admin/time-logs" className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">View team schedule <ArrowUpRight size={13} /></Link>
-              </div>
-            </div>
-          ) : (
-            <div className="flex min-h-[180px] flex-col items-center justify-center px-3 py-8 text-center" role="status">
-              <Users size={20} className="text-muted" aria-hidden="true" />
-              <p className="mt-3 text-xs font-semibold text-fg">Team workload data is unavailable</p>
-              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">Live assignments and utilization are not available from the dashboard service yet.</p>
-            </div>
-          )}
+          <div className="flex min-h-[180px] flex-col items-center justify-center px-3 py-8 text-center" role="status">
+            <Users size={20} className="text-muted" aria-hidden="true" />
+            <p className="mt-3 text-xs font-semibold text-fg">Team workload data is unavailable</p>
+            <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">Live assignments and utilization are not available from the dashboard service yet.</p>
+            <Link to="/admin/time-logs" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={13} /></Link>
+          </div>
         </AdminPanel>
       </div>
 
-      {fixtureMode && (
-      <section className="mt-3 grid gap-3 sm:grid-cols-3" aria-label="Dashboard supporting signals">
-        <article className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2 text-xs font-medium text-fg"><CheckCircle2 size={15} className="text-success" /> Delivery health</div><span className="rounded-badge border border-success/25 bg-success/10 px-2 py-1 text-[10px] font-medium text-success">67% on track</span></div>
-          <div className="mt-4 flex items-end justify-between gap-4"><div><div className="text-xl font-semibold tabular-nums text-fg">8 / 12</div><div className="mt-1 text-[10px] text-muted">projects on schedule</div></div><div className="text-right"><div className="text-xs font-semibold text-fg">3 at risk</div><div className="mt-1 text-[10px] text-danger">1 overdue</div></div></div>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-success" style={{ width: '67%' }} /></div>
-        </article>
-        <article className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2 text-xs font-medium text-fg"><Clock3 size={15} className="text-warning" /> Priority work</div><span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">6 high</span></div>
-          <div className="mt-4 flex items-end justify-between gap-4"><div><div className="text-xl font-semibold tabular-nums text-fg">18</div><div className="mt-1 text-[10px] text-muted">tasks due this week</div></div><div className="text-right"><div className="text-xs font-semibold text-fg">3 overdue</div><div className="mt-1 text-[10px] text-danger">1 blocked</div></div></div>
-          <div className="mt-3 flex gap-1"><span className="h-1.5 flex-[3] rounded-full bg-danger" /><span className="h-1.5 flex-[3] rounded-full bg-warning" /><span className="h-1.5 flex-[6] rounded-full bg-info" /><span className="h-1.5 flex-[6] rounded-full bg-line" /></div>
-        </article>
-        <article className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2 text-xs font-medium text-fg"><ReceiptText size={15} className="text-warning" /> Invoice follow-up</div><span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">Action needed</span></div>
-          <div className="mt-4 flex items-end justify-between gap-4"><div><div className="text-xl font-semibold tabular-nums text-fg">$8.7k</div><div className="mt-1 text-[10px] text-muted">past-due balance</div></div><div className="text-right"><div className="text-xs font-semibold text-fg">$32.4k</div><div className="mt-1 text-[10px] text-muted">total outstanding</div></div></div>
-          <div className="mt-3 flex items-center justify-between text-[10px] text-muted"><span>27% of outstanding is overdue</span><span className="font-medium text-warning">Follow up</span></div>
-        </article>
-      </section>
-      )}
+
 
         </>
       ) : view === 'performance' ? (
