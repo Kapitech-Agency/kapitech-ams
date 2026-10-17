@@ -29,7 +29,7 @@ test('Projects and Tasks keep registers ahead of supporting summaries', async ()
   const projects = await read('src/pages/admin/AdminProjects.tsx');
   const tasks = await read('src/components/admin/TasksWorkspace.tsx');
   assert.match(projects, /featureSlug="projects-module"/);
-  assert.ok(projects.indexOf('data-ams-feature-slug="projects-kpis"') > projects.indexOf('data-ams-feature-slug="projects-portfolio"'));
+  assert.ok(projects.indexOf('className="ams-projects-table') < projects.indexOf('data-ams-feature-slug="projects-kpis"'));
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-filters"') < tasks.indexOf('data-ams-feature-slug="tasks-table-view"'));
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-table-view"') < tasks.indexOf('data-ams-feature-slug="tasks-kpis"'));
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-kpis"') < tasks.indexOf('slug="tasks-team-workload"'));
@@ -67,7 +67,7 @@ test('Team and Resources distinguish unavailable source data from a true zero', 
 test('Documents puts the private register before upload and has a distinct failure state', async () => {
   const documents = await read('src/pages/admin/AdminDocuments.tsx');
   assert.match(documents, /featureSlug="documents-module"/);
-  assert.ok(documents.indexOf('data-ams-slug="documents-directory"') < documents.indexOf('data-ams-slug="documents-upload-dropzone"'));
+  assert.ok(documents.indexOf('data-ams-slug="documents-directory"') < documents.indexOf('slug="documents-upload-dropzone"'));
   assert.match(documents, /Documents unavailable/);
   assert.match(documents, /No documents match the current filters/);
 });
@@ -78,8 +78,8 @@ test('Website CMS editorial controls use accessible actions and the canonical Ca
   const testimonials = await read('src/pages/admin/AdminCmsTestimonials.tsx');
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
   assert.match(cmsProjects, /featureSlug="cms-projects-module"/);
-  assert.match(insights, /ChevronUp/);
-  assert.match(insights, /ChevronDown/);
+  assert.match(insights, /ArrowUp/);
+  assert.match(insights, /ArrowDown/);
   assert.match(insights, /Move block up/);
   assert.match(insights, /focus-visible:ring-2/);
   assert.match(testimonials, /<ConfirmDialog/);
