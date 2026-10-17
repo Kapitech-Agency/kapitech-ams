@@ -167,3 +167,16 @@ test('Project edits preserve the original server timestamp for optimistic concur
   assert.ok(page.includes('The server will issue the new updatedAt value after a successful write.'));
   assert.ok(repository.includes('if (patch.updatedAt && iso(current.updated_at) !== patch.updatedAt) throw new ProjectConcurrencyError();'));
 });
+
+test('Ambiguous project and task mutation responses refresh canonical records instead of rolling back blindly', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(source.includes('const isUnknownMutationOutcome = (response: { success: boolean; status?: number }) =>'));
+  assert.ok(source.includes('!response.success && (response.status === undefined || response.status >= 500)'));
+  assert.ok(source.includes('if (isUnknownMutationOutcome(response)) await syncProjects(false);'));
+  assert.ok(source.includes('Task status outcome is unknown. Canonical records were refreshed.'));
+  assert.ok(source.includes('Project status outcome is unknown. Canonical records were refreshed.'));
+  assert.ok(source.includes('Checklist update outcome is unknown. Canonical records were refreshed.'));
+  assert.ok(source.includes('Project deletion outcome is unknown.'));
+  assert.ok(source.includes('Task deletion outcome is unknown.'));
+});
