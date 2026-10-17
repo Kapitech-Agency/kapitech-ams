@@ -48,6 +48,7 @@ test('Finance exposes one current worksheet and explicit unavailable source cont
   const finance = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(finance, /data-ams-slug="finance-active-worksheet"/);
+  assert.match(finance, /className="ams-finance-table w-full min-w-\[760px\] border-collapse text-left text-xs"/);
   assert.match(finance, /Core source errors/);
   assert.match(finance, /Values from unavailable records are not inferred/);
   assert.match(finance, /Previously loaded records remain visible where available/);
