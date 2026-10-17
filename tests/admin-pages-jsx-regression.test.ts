@@ -701,3 +701,33 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   assert.ok(timePagination >= 0 && timePanelEnd > timePagination && timeMetrics > timePanelEnd);
   assert.ok(teams.indexOf('slug="time-logs-filters"') < teams.indexOf('slug="time-logs-ledger"'));
 });
+
+
+test('Lead pipeline uses one compact summary after the primary filtered directory', () => {
+  const leads = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientLeadAccounts.tsx'), 'utf8');
+  const filters = leads.indexOf('slug="lead-accounts-filters"');
+  const directory = leads.indexOf('data-ams-feature-slug="lead-accounts-directory"');
+  const pagination = leads.indexOf('slug="lead-accounts-pagination"');
+  const summary = leads.indexOf('data-ams-feature-slug="lead-accounts-summary"');
+  assert.ok(filters >= 0 && directory > filters);
+  assert.ok(pagination > directory && summary > pagination);
+  assert.doesNotMatch(leads, /data-ams-feature-slug="lead-accounts-kpis"/);
+  assert.doesNotMatch(leads, /const proposalCount\s*=/);
+  assert.ok(leads.includes('Open deal value:'));
+  assert.ok(leads.includes('Weighted probability:'));
+  assert.ok(leads.includes('Contract review:'));
+  assert.ok(leads.includes('Ready to sign:'));
+});
+
+test('Time tracking leads with the time-entry workflow and register before period summary metrics', () => {
+  const time = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTimeLogs.tsx'), 'utf8');
+  const form = time.indexOf('id="time-entry-form"');
+  const ledger = time.indexOf('data-ams-slug="time-tracking-ledger"');
+  const pagination = time.indexOf('slug="time-tracking-pagination"');
+  const metrics = time.indexOf('time-tracking-kpis');
+  assert.ok(form >= 0 && ledger > form);
+  assert.ok(pagination > ledger && metrics > pagination);
+  assert.ok(time.includes('onClick={() => document.getElementById(\'time-entry-form\')?.scrollIntoView'));
+  assert.ok(time.includes('const totalMinutes = useMemo'));
+  assert.ok(time.includes('const billableMinutes = useMemo'));
+});

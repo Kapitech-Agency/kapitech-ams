@@ -262,31 +262,7 @@ export const AdminTimeLogs: React.FC = () => {
 
 
 
-      <AdminMetricStrip slug="time-tracking-kpis"
-        metrics={[
-          {
-            id: 'tracked-time',
-            label: 'Tracked time',
-            value: formatMinutes(totalMinutes),
-            icon: <Timer size={15} />,
-            toneClassName: 'text-accent-text'
-          },
-          {
-            id: 'billable-time',
-            label: 'Billable time',
-            value: formatMinutes(billableMinutes),
-            icon: <ReceiptText size={15} />,
-            toneClassName: 'text-accent-text'
-          },
-          {
-            id: 'entries',
-            label: 'Entries',
-            value: String(logs.length),
-            icon: <CalendarDays size={15} />,
-            toneClassName: 'text-muted'
-          }
-        ]}
-      />
+
 
         {canManage && (
           <form id="time-entry-form" data-ams-feature-slug="time-tracking-create-form" data-ams-slug="time-tracking-create-form" onSubmit={submit} className="rounded-card border border-line bg-panel p-4 space-y-4">
@@ -419,6 +395,32 @@ export const AdminTimeLogs: React.FC = () => {
             </div>
           )}
         </section>
+      <AdminMetricStrip slug="time-tracking-kpis"
+        metrics={[
+          {
+            id: 'tracked-time',
+            label: 'Tracked time',
+            value: formatMinutes(totalMinutes),
+            icon: <Timer size={15} />,
+            toneClassName: 'text-accent-text'
+          },
+          {
+            id: 'billable-time',
+            label: 'Billable time',
+            value: formatMinutes(billableMinutes),
+            icon: <ReceiptText size={15} />,
+            toneClassName: 'text-accent-text'
+          },
+          {
+            id: 'entries',
+            label: 'Entries',
+            value: String(logs.length),
+            icon: <CalendarDays size={15} />,
+            toneClassName: 'text-muted'
+          }
+        ]}
+      />
+
       <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}

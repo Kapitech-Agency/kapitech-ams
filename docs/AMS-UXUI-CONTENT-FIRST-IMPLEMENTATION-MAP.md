@@ -80,6 +80,7 @@ Team Directory, Vendor & Contractor Directory and Time Log Ledger also began wit
 | Tasks | Dedicated task workspace at `/admin/tasks` | Preserved list/board and project scopes. Detailed browser checks still require authenticated interaction testing. |
 | Clients · Directory | Header/actions, search/status scopes, directory/table and details | Moved the three-metric summary below the directory so filters/table are encountered first. Row fields, pagination, export, profile/edit and relationship links unchanged. |
 | Clients · Onboarding | Existing directory state scope via URL/query | Preserved query-backed scope and client lifecycle. No separate onboarding data model was introduced. |
+| Clients · Lead Accounts & Pipeline (existing direct workspace) | Stage/search/owner filters, pipeline register, pagination and compact summary | Follow-on slice removes the duplicated top KPI strip while keeping the existing filtered register and summary values/actions. No standalone sidebar module is added. |
 | Clients · Contracts | Contract/SOW workspace and linked record actions | Existing route remains the contract owner. No commercial document workflow changed. |
 | Clients · Retainers | Reconciliation notice, shared metric strip, filters and retainer agreements | Unified three relevant metrics under the shared AMS primitive. Existing usage caveat and saved values remain. |
 | Clients · SLA monitoring | Telemetry-unavailable state, setup checklist, Contracts & SOW action | Removed four repeated unavailable tiles. The explicit unconfigured message remains; no mock telemetry introduced. |
@@ -109,13 +110,17 @@ Team Directory, Vendor & Contractor Directory and Time Log Ledger also began wit
 
 Source review covered the canonical page shell and contextual navigation primitives, all nine primary modules, the actual Finance worksheet grouping, page-level CMS/Inbox workflows, and targeted frontend regression tests.
 
-Implementation branch: `fix/ams-content-first-workspaces-2026-10-17`. It is 12 commits ahead of `main` and 0 commits behind the baseline `356ba6d57b1993dccafcea7e7a6f40a977afda04` at the time of the final diff review.
+Initial implementation was merged into `main` through [PR #175](https://github.com/Kapitech-Agency/kapitech-ams/pull/175), with squash commit `3a693a20aee65d01d175ad194992aa1a60913733`. Both post-merge checks on that `main` commit passed:
+- [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39044280168)
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39044280079)
 
-The source implementation at commit `348f89ac69b976ee4d96341371e116a2145154f2` passed both repository workflows:
-- [AMS Quality Gate: typecheck, regression tests, production build](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39043896120)
-- [AMS CI: verify job](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39043896129)
+The first delivery diff contained only frontend page components, frontend regression tests, and this implementation map. No backend, API, database, auth/session, RBAC, Finance calculation, dependency, or migration files were included. The follow-on register-hierarchy slice is being worked separately from the new `main` HEAD and needs its own validation before delivery.
 
-The compare review contained only these frontend/documentation/test files: this implementation map; `AdminClientRetainers.tsx`, `AdminClientSlaMonitoring.tsx`, `AdminClients.tsx`, `AdminCmsCareers.tsx`, `AdminCmsInsights.tsx`, `AdminCmsProjects.tsx`, `AdminCmsServices.tsx`, `AdminCmsTestimonials.tsx`, `AdminDocuments.tsx`, `AdminInbox.tsx`, `AdminProjects.tsx`, `AdminTeams.tsx`, and the two frontend regression test files. No backend, API, database, auth/session, RBAC, Finance calculation, dependency, or migration files are included in the diff.
+## Follow-on implementation slice: Lead Accounts & Time Tracking
+
+The existing Lead Accounts & Pipeline workspace showed the same Open Deal Value and Weighted Probability twice: first in three large KPI cards above search/stage/owner filters, then again in the compact Pipeline Summary below the directory. The top KPI section has been removed. The filtered table now leads the workspace, while the compact summary retains open value, weighted probability, contract-review count and ready-to-sign count. The display-only proposal count and icon import were removed with the redundant section. No lead-stage transitions, source records, proposal deep links, permissions or save behavior were changed.
+
+The dedicated Time Tracking page showed period-filtered tracked/billable totals before its entry form and recent-entry ledger. The existing metric strip is moved below the ledger, preserving its source calculations and reporting-period scope. The entry form, scroll-to-form header action, delete confirmation, pagination and API flows are unchanged.
 
 ## Remaining visual verification and limits
 
