@@ -189,6 +189,7 @@ test('Finance locale uses the selected application language and localized financ
 test('Finance worksheets embed the existing transactional workflows instead of routing users away', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
 
   assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses' \| 'vendor-payments' \| 'quotations'/);
@@ -222,7 +223,6 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.equal(layout.includes('data-ams-slug="active-module-title"'), false);
   assert.ok(sidebar.includes('aria-label="Primary navigation"'));
   assert.ok(navigation.includes('Finance areas') || navigation.includes("label: 'Overview & Control'"));
-  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
   assert.equal(navigation.includes("label: 'Profitability & Expenses'"), false);
   assert.ok(navigation.includes('finance-tab-receivables-payables'));
   assert.match(navigation, /finance-tab-accounting-reports/);

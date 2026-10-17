@@ -132,7 +132,7 @@ const matchesTab = (doc: DocumentItem, tab: TabKey) => {
   if (tab === 'sops') return /sop|policy|guide|handbook|procedure|manual/.test(text);
   if (tab === 'legal') return /legal|contract|charter|corporate|agreement|nda/.test(text);
   if (tab === 'finance') return /finance|financial|tax|invoice|audit|accounting/.test(text);
-  if (tab === 'hr') return /hr|people|human|employee|culture|talent/.test(text);
+  if (tab === 'hr') return /\bhr\b|people|human|employee|culture|talent/.test(text);
   return /security|key|credential|infra|engineering|devops|access/.test(text);
 };
 
