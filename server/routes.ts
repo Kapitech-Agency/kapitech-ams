@@ -7279,6 +7279,20 @@ apiRouter.post('/documents', requireAuth, documentMutationMiddleware, async (req
 
   const relatedEntity = cleanText(data.relatedEntity || 'General', 200);
   const relatedId = cleanText(data.relatedId || '', 120);
+  if (!['General', 'Client', 'Project'].includes(relatedEntity)) {
+    res.status(400).json({ success: false, error: 'Select a supported document relationship type.' });
+    return;
+  }
+
+  if (relatedEntity === 'Client' && !req.user!.permissions?.canManageClients && !req.user!.permissions?.canManageCrm && !isMasterAdministrator(req.user)) {
+    res.status(403).json({ success: false, error: 'You do not have permission to link documents to client records.' });
+    return;
+  }
+  if (relatedEntity === 'Project' && !req.user!.permissions?.canManageProjects && !req.user!.permissions?.canManageKanbanTasks && !isMasterAdministrator(req.user)) {
+    res.status(403).json({ success: false, error: 'You do not have permission to link documents to project records.' });
+    return;
+  }
+
   if (relatedEntity === 'Client' || relatedEntity === 'Project') {
     if (!relatedId) {
       res.status(400).json({ success: false, error: 'Select an existing client or project record for this document.' });
