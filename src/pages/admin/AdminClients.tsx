@@ -924,10 +924,10 @@ export const AdminClients: React.FC = () => {
         {!isLoading && <AdminTablePagination total={filteredClients.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="records" slug="client-directory-pagination" />}
       </section>
 
-      <Modal slug="client-directory-detail-modal"
+      <Drawer slug="client-directory-detail-drawer"
         open={!!selectedClient}
         onClose={() => setSelectedClient(null)}
-        size="lg"
+        size="3xl"
         title={selectedClient?.company || 'Client details'}
         description={selectedClient ? `${selectedClient.name} · ${selectedClient.id} · ${getAgencyClientSlug(selectedClient as AgencyClient & Record<string, unknown>)}` : undefined}
         footer={<div className="flex flex-wrap justify-end gap-2">{canManageClientInteractions && <Button type="button" variant="secondary" onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log interaction</Button>}{canManageClients && <Button type="button" variant="secondary" onClick={() => { if (!selectedClient) return; const client = selectedClient; setSelectedClient(null); openEdit(client); }}>{selectedClient?.status === 'lead' ? 'Continue onboarding' : 'Edit client'}</Button>}<Button type="button" variant="secondary" onClick={() => setSelectedClient(null)}>Close</Button></div>}
@@ -1198,7 +1198,7 @@ export const AdminClients: React.FC = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <Drawer slug="client-editor-drawer"
         open={isClientModalOpen}

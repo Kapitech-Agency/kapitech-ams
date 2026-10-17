@@ -104,6 +104,16 @@ test('Retainer workspace uses neutral counts and sentence-case table hierarchy',
   assert.ok(retainers.includes('inline-flex h-9 w-9 items-center justify-center rounded-control'));
 });
 
+test('Long-form client relationship detail uses the shared drawer surface', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+
+  assert.ok(clients.includes('<Drawer slug="client-directory-detail-drawer"'));
+  assert.ok(clients.includes('size="3xl"'));
+  assert.equal(clients.includes('client-directory-detail-modal'), false);
+  assert.ok(clients.includes('Relationship timeline'));
+  assert.ok(clients.includes('Contracts &amp; Statements of Work'));
+});
+
 test('Operational UI avoids sub-10px text outside faithful CMS previews', () => {
   const paths = [
     'src/pages/admin/AdminProjects.tsx',
