@@ -166,7 +166,7 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   const clients = await read('src/pages/admin/AdminClients.tsx');
   const workbook = await read('src/lib/financeWorkbook.ts');
 
-  for (const group of ["'WORKSPACE'", "'DELIVERY'", "'OPERATIONS'", "'PUBLISHING'"]) {
+  for (const group of ["'Workspace'", "'Delivery'", "'Operations'", "'Publishing'"]) {
     assert.ok(navigation.includes(group), 'Expected navigation group ' + group);
   }
   for (const label of ["Dashboard", "Inbox", "Projects", "Clients", "Finance", "Team & Resources", "Documents", "Website CMS"]) {

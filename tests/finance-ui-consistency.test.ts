@@ -12,7 +12,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   const workbook = await read('src/lib/financeWorkbook.ts');
   assert.doesNotMatch(layout, /<AdminTopbarTabs/);
   assert.doesNotMatch(layout, /active-module-title|aria-label="Current module"/);
-  assert.match(layout, /ariaLabel="Workspace navigation"/);
+  assert.match(sidebar, /aria-label="Primary navigation"/);
   assert.match(sidebar, /data-ams-navigation-layout="flat"/);
   assert.doesNotMatch(sidebar, /data-ams-nav-submenu|aria-expanded=|ChevronDown/);
   const subnavigation = await read('src/lib/amsModuleSubnavigation.ts');
@@ -207,6 +207,7 @@ test('Finance worksheets embed the existing transactional workflows instead of r
 test('Finance workbook replaces legacy finance navigation and keeps all operational actions in workbook tabs', async () => {
   const app = await read('src/App.tsx');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
 
@@ -219,7 +220,7 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.doesNotMatch(layout, /location\.pathname === '\/admin\/invoicing'/);
   assert.doesNotMatch(layout, /isFinanceModuleRoute|ariaLabel="Finance sections"/);
   assert.equal(layout.includes('data-ams-slug="active-module-title"'), false);
-  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(sidebar.includes('aria-label="Primary navigation"'));
   assert.ok(workspace.includes('ariaLabel="Finance areas"'));
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');
   assert.equal(navigation.includes("label: 'Profitability & Expenses'"), false);
@@ -497,4 +498,28 @@ test('Finance document templates are available inside the existing five-group wo
   assert.ok(invoicing.includes('const printSavedQuotation = (quotation: FinanceQuotation) => {'));
   assert.ok(templates.includes('const escapeHtml ='));
   assert.ok(templates.includes('document.write(html)'));
+});
+
+test('Finance reconciles uncertain transaction mutations before duplicate-prone retries', async () => {
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+
+  for (const behavior of [
+    'const isUnknownFinanceMutationOutcome = (response: { success: boolean; status?: number }) =>',
+    'Previously loaded quotations are kept.',
+    'The invoice save result could not be confirmed.',
+    'The payment form and idempotency key are preserved.',
+    'The payment form and idempotency ID are preserved.',
+    'The form and idempotency key are preserved.',
+    'Quotation save result could not be confirmed.',
+    'Quotation status result could not be confirmed.',
+    'Quotation deletion result could not be confirmed.',
+    'Invoice and quotation sources were refreshed.',
+    'The idempotency key is preserved. Inspect the vendor payment list before changing or resubmitting this payment.'
+  ]) {
+    assert.ok(invoicing.includes(behavior), 'Finance is missing unknown-outcome handling: ' + behavior);
+  }
+
+  assert.ok(invoicing.includes('await Promise.all([loadData(true), loadQuotations()])'));
+  assert.ok(invoicing.includes('vendorPaymentIdempotencyKey'));
+  assert.ok(invoicing.includes('expenseIdempotencyKey'));
 });

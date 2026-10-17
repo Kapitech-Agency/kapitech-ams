@@ -14,7 +14,7 @@ test('Master identity receives the approved nine-module navigation and separate 
 
   const groups = getNavigationGroupsForRole(getAmsRole(master));
   assert.equal(groups.length, 4);
-  assert.deepEqual(groups.map((group) => group.label), ['WORKSPACE', 'DELIVERY', 'OPERATIONS', 'PUBLISHING']);
+  assert.deepEqual(groups.map((group) => group.label), ['Workspace', 'Delivery', 'Operations', 'Publishing']);
   assert.deepEqual(groups.flatMap((group) => group.items).map((item) => item.label), [
     'Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources', 'Documents', 'Website CMS',
   ]);

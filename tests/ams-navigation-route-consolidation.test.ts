@@ -74,7 +74,7 @@ test('legacy routes remain protected and role-scoped while removed modules stay 
     'Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources', 'Documents', 'Website CMS',
   ]);
   assert.equal(labels.length + 1, 9);
-  assert.deepEqual(AMS_NAVIGATION_GROUPS.map((group) => group.label), ['WORKSPACE', 'DELIVERY', 'OPERATIONS', 'PUBLISHING']);
+  assert.deepEqual(AMS_NAVIGATION_GROUPS.map((group) => group.label), ['Workspace', 'Delivery', 'Operations', 'Publishing']);
   assert.doesNotMatch(labels.join('|'), /CRM|Proposal|Approval/i);
 
   for (const role of roles) {

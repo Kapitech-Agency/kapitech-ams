@@ -163,7 +163,7 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.equal(sidebar.includes('data-ams-nav-submenu='), false);
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
-  for (const group of ["label: 'WORKSPACE'", "label: 'DELIVERY'", "label: 'OPERATIONS'", "label: 'PUBLISHING'"]) {
+  for (const group of ["label: 'Workspace'", "label: 'Delivery'", "label: 'Operations'", "label: 'Publishing'"]) {
     assert.ok(navigation.includes(group), 'Missing primary navigation group ' + group);
   }
   assert.ok(subnavigation.includes("label: 'Retainers'"));
@@ -171,8 +171,8 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
   assert.equal(dashboard.includes('<AdminSectionTabs'), false, 'Dashboard workspace tabs come from the shared layout.');
-  assert.ok(layout.includes('data-ams-slug="workspace-navigation"'));
-  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(sidebar.includes('aria-label="Primary navigation"'));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(dashboard.includes('api.finance.getExpenses()') && dashboard.includes('api.tasks.getAll()'));
   assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />') && dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} />'));
   assert.ok(dashboard.includes('className="mb-0"'));

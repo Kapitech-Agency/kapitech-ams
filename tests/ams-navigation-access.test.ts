@@ -34,7 +34,7 @@ test('unknown role values fall back to the least-privileged navigation profile',
 });
 
 test('the navigation configuration defines nine primary modules in four grouped workspace sections', () => {
-  assert.deepEqual(AMS_NAVIGATION_GROUPS.map((group) => group.label), ['WORKSPACE', 'DELIVERY', 'OPERATIONS', 'PUBLISHING']);
+  assert.deepEqual(AMS_NAVIGATION_GROUPS.map((group) => group.label), ['Workspace', 'Delivery', 'Operations', 'Publishing']);
   assert.deepEqual(flatten('Admin').map((item) => item.label), [
     'Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources', 'Documents', 'Website CMS',
   ]);

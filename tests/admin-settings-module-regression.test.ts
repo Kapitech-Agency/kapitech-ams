@@ -13,8 +13,8 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   const navigation = await read('src/lib/amsNavigationAccess.ts');
   const workspace = await read('src/lib/amsModuleSubnavigation.ts');
 
-  assert.ok(layout.includes('data-ams-slug="workspace-navigation"'));
-  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(sidebar.includes('aria-label="Primary navigation"'));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
   assert.ok(workspace.includes("{ key: 'backup', label: 'DB migrations & backups', to: '/admin/settings?tab=overview' }"));
