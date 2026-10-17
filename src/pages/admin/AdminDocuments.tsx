@@ -423,6 +423,11 @@ export const AdminDocuments: React.FC = () => {
   const relatedRecords = uploadRelatedType === 'Client' ? relatedClients : uploadRelatedType === 'Project' ? relatedProjects : [];
   const relatedRecordLoading = uploadRelatedType === 'Client' ? relatedClientsLoading : uploadRelatedType === 'Project' ? relatedProjectsLoading : false;
   const relatedRecordError = uploadRelatedType === 'Client' ? relatedClientsError : uploadRelatedType === 'Project' ? relatedProjectsError : null;
+  const relatedHref = (doc: DocumentItem) => doc.relatedId && doc.relatedEntity === 'Client'
+    ? '/admin/clients?client=' + encodeURIComponent(doc.relatedId)
+    : doc.relatedId && doc.relatedEntity === 'Project'
+      ? '/admin/projects?project=' + encodeURIComponent(doc.relatedId)
+      : null;
   const relatedLabel = (doc: DocumentItem) => {
     if (!doc.relatedId || !['Client', 'Project'].includes(String(doc.relatedEntity || ''))) return doc.relatedEntity || doc.department || 'Internal';
     const records = doc.relatedEntity === 'Client' ? relatedClients : relatedProjects;
@@ -783,7 +788,7 @@ export const AdminDocuments: React.FC = () => {
                       </div>
                       <div className="mt-3 flex min-w-0 items-center gap-2">
                         <ProfileIdentity profile={{ name: ownerOf(doc), contextLabel: 'Document owner' }} size="sm" showRole={false} />
-                        <span className="truncate text-[10px] text-muted">· {relatedLabel(doc)}</span>
+                        {relatedHref(doc) ? <Link to={relatedHref(doc)!} className="truncate text-[10px] text-accent-text hover:underline">· {relatedLabel(doc)}</Link> : <span className="truncate text-[10px] text-muted">· {relatedLabel(doc)}</span>}
                       </div>
                       <div className="mt-3 flex justify-end gap-1.5">
                         <button type="button" title="Preview" aria-label={'Preview ' + titleOf(doc)} onClick={() => setSelectedDocument(doc)} data-ams-slug={'document-' + doc.id + '-preview'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg"><Eye size={14} /></button>
@@ -873,7 +878,7 @@ export const AdminDocuments: React.FC = () => {
             <input id="documents-upload-title" value={uploadTitle} onChange={(event) => setUploadTitle(event.target.value)} required placeholder="e.g. Master Services Agreement 2026" className="mt-1 h-10 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div data-ams-slug="documents-upload-category"><label className="text-xs font-medium text-muted">Category</label><CustomSelect aria-label="Category" value={uploadCategory} onChange={setUploadCategory} options={['Contract','Proposal','Invoice','Deliverable','Compliance','SOP & Guides','Legal & Charters','Financial Reports','HR & People','Security & Keys'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="documents-upload-category"><label className="text-xs font-medium text-muted">Category</label><CustomSelect aria-label="Category" value={uploadCategory} onChange={setUploadCategory} options={['Contract','Proposal','Invoice','Deliverable','Compliance','SOP & Guides','Legal & Corporate','Finance & Tax','HR & People','Security & Keys'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
             <div data-ams-slug="documents-upload-related"><label className="text-xs font-medium text-muted">Related entity</label><CustomSelect aria-label="Related entity" value={uploadRelatedType} onChange={(value) => { setUploadRelatedType(value); setUploadRelatedId(''); }} options={['General','Client','Project'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 w-full" /></div>
           </div>
           {uploadRelatedType !== 'General' && (
@@ -922,7 +927,7 @@ export const AdminDocuments: React.FC = () => {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Category</div><div className="mt-1 text-xs font-semibold text-fg">{categoryOf(selectedDocument)}</div></div>
-              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Related entity</div><div className="mt-1 text-xs font-semibold text-fg">{relatedLabel(selectedDocument)}{selectedDocument.relatedId ? <span className="mt-1 block break-all text-[10px] font-normal text-muted">Record ID: {selectedDocument.relatedId}</span> : null}</div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Related entity</div><div className="mt-1 text-xs font-semibold text-fg">{relatedLabel(selectedDocument)}{selectedDocument.relatedId ? <span className="mt-1 block break-all text-[10px] font-normal text-muted">Record ID: {selectedDocument.relatedId}</span> : null}{relatedHref(selectedDocument) ? <Link to={relatedHref(selectedDocument)!} className="mt-2 inline-flex text-xs font-medium text-accent-text hover:underline">Open linked {selectedDocument.relatedEntity?.toLowerCase()} record</Link> : null}</div></div>
               <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Last updated</div><div className="mt-1 text-xs font-semibold tabular-nums text-fg">{dateOf(selectedDocument)}</div></div>
               <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Owner</div><div className="mt-1"><ProfileIdentity profile={{ name: ownerOf(selectedDocument), contextLabel: 'Document owner' }} size="sm" showRole={false} /></div></div>
             </div>
