@@ -47,7 +47,7 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 type SortKey = 'name' | 'company' | 'industry' | 'status' | 'updatedAt' | 'projectsCount' | 'totalSpend';
 type SortDirection = 'asc' | 'desc';
-type SlaFilter = 'all' | 'healthy' | 'near' | 'over' | 'not-configured';
+type SlaFilter = 'all' | 'healthy' | 'near' | 'over' | 'not-configured' | 'spend-not-recorded';
 type StatusScope = 'all' | 'active' | 'lead' | 'at-risk';
 
 const getStatusScopeFromSearchParams = (searchParams: URLSearchParams): StatusScope => {
@@ -161,6 +161,17 @@ const statusMeta: Record<AgencyClient['status'], { label: string; tone: 'success
   completed: { label: 'Completed', tone: 'info', icon: <Check size={12} aria-hidden="true" /> },
   lead: { label: 'Lead', tone: 'warning', icon: <Users size={12} aria-hidden="true" /> },
   inactive: { label: 'Inactive', tone: 'neutral', icon: <X size={12} aria-hidden="true" /> }
+};
+
+const getClientSlaState = (client: AgencyClient): Exclude<SlaFilter, 'all'> => {
+  const budget = client.slaDailyAdSpendBudget;
+  const spend = client.currentDailyAdSpend;
+  const hasConfiguredBudget = typeof budget === 'number' && Number.isFinite(budget) && budget > 0;
+  if (!hasConfiguredBudget) return 'not-configured';
+  if (typeof spend !== 'number' || !Number.isFinite(spend)) return 'spend-not-recorded';
+  if (spend > budget) return 'over';
+  if (spend / budget >= 0.9) return 'near';
+  return 'healthy';
 };
 
 const statusClasses: Record<'success' | 'info' | 'warning' | 'neutral', string> = {
@@ -341,16 +352,7 @@ export const AdminClients: React.FC = () => {
       if (industryFilter !== 'all' && client.industry !== industryFilter) return false;
       if (locationFilter !== 'all' && client.location !== locationFilter) return false;
 
-      const budget = Number(client.slaDailyAdSpendBudget || 0);
-      const spend = Number(client.currentDailyAdSpend || 0);
-      const slaState =
-        budget <= 0
-          ? 'not-configured'
-          : spend > budget
-            ? 'over'
-            : spend / budget >= 0.9
-              ? 'near'
-              : 'healthy';
+      const slaState = getClientSlaState(client);
 
       if (slaFilter !== 'all' && slaState !== slaFilter) return false;
       if (statusScope === 'active' && client.status !== 'active') return false;
@@ -476,37 +478,26 @@ export const AdminClients: React.FC = () => {
   const locationOptions = useMemo(() => Array.from(new Set(clients.map((client) => client.location).filter(Boolean))).sort(), [clients]);
 
   const overBudgetClients = useMemo(
-    () => clients.filter((client) =>
-      Boolean(client.slaDailyAdSpendBudget && client.currentDailyAdSpend &&
-        client.currentDailyAdSpend > client.slaDailyAdSpendBudget)
-    ),
+    () => clients.filter((client) => getClientSlaState(client) === 'over'),
     [clients]
   );
 
   const clientMetrics = useMemo(() => {
-    const configured = clients.filter((client) => Number(client.slaDailyAdSpendBudget || 0) > 0);
-    const healthy = configured.filter((client) => {
-      const budget = Number(client.slaDailyAdSpendBudget || 0);
-      const spend = Number(client.currentDailyAdSpend || 0);
-      return spend / budget < 0.9;
-    }).length;
+    const states = clients.map((client) => ({ client, state: getClientSlaState(client) }));
+    const configured = states.filter(({ state }) => state !== 'not-configured');
+    const recorded = configured.filter(({ state }) => state !== 'spend-not-recorded');
+    const healthy = recorded.filter(({ state }) => state === 'healthy').length;
 
     return {
       total: clients.length,
       active: clients.filter((client) => client.status === 'active').length,
       leads: clients.filter((client) => client.status === 'lead').length,
-      overBudget: clients.filter((client) => {
-        const budget = Number(client.slaDailyAdSpendBudget || 0);
-        const spend = Number(client.currentDailyAdSpend || 0);
-        return budget > 0 && spend > budget;
-      }).length,
-      atRisk: clients.filter((client) => {
-        const budget = Number(client.slaDailyAdSpendBudget || 0);
-        const spend = Number(client.currentDailyAdSpend || 0);
-        return budget > 0 && spend / budget >= 0.9;
-      }).length,
+      overBudget: states.filter(({ state }) => state === 'over').length,
+      atRisk: states.filter(({ state }) => state === 'near' || state === 'over').length,
       configuredSla: configured.length,
-      slaCompliance: configured.length ? Math.round((healthy / configured.length) * 1000) / 10 : null,
+      recordedSla: recorded.length,
+      missingSlaSpend: configured.length - recorded.length,
+      slaCompliance: recorded.length ? Math.round((healthy / recorded.length) * 1000) / 10 : null,
       totalBilled: clients.reduce((sum, client) => sum + Number(client.totalSpend || 0), 0)
     };
   }, [clients]);
@@ -842,7 +833,24 @@ export const AdminClients: React.FC = () => {
         searchPlaceholder="Search by company, contact, industry, or client ID..."
         searchLabel="Search clients"
         actions={(
-          <Button type="button" variant="secondary" icon={<X size={13} />} onClick={resetFilters}>Reset filters</Button>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <div className="w-full shrink-0 sm:w-56">
+              <CustomSelect
+                aria-label={language === 'id' ? 'Filter kesehatan batas belanja' : 'Filter spend cap health'}
+                value={slaFilter}
+                onChange={(value) => setSlaFilter(value as SlaFilter)}
+                options={[
+                  { value: 'all', label: language === 'id' ? 'Semua status batas belanja' : 'All spend cap states' },
+                  { value: 'healthy', label: language === 'id' ? 'Dalam batas aman' : 'Healthy' },
+                  { value: 'near', label: language === 'id' ? 'Mendekati batas' : 'Near cap' },
+                  { value: 'over', label: language === 'id' ? 'Melewati batas' : 'Over cap' },
+                  { value: 'not-configured', label: language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured' },
+                  { value: 'spend-not-recorded', label: language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded' }
+                ]}
+              />
+            </div>
+            <Button type="button" variant="secondary" icon={<X size={13} />} onClick={resetFilters}>{language === 'id' ? 'Reset filter' : 'Reset filters'}</Button>
+          </div>
         )}
         footer={(
           <div className="flex min-w-0 gap-1 overflow-x-auto custom-scrollbar" aria-label="Client scopes">
@@ -879,10 +887,15 @@ export const AdminClients: React.FC = () => {
               {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
                 <tr><td colSpan={8} className="p-0"><div className="flex min-h-[280px] w-full flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="clients-empty-state"><div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div><p className="mt-3 text-sm font-medium text-fg">{errorMessage ? 'Client directory unavailable.' : clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 max-w-sm text-xs leading-5 text-muted">{errorMessage ? 'The client data could not be loaded. Use the retry action above.' : 'Adjust the search or active filters.'}</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</div></td></tr>
               ) : paginatedClients.map((client) => {
-                const budget = Number(client.slaDailyAdSpendBudget) || 0;
-                const spend = Number(client.currentDailyAdSpend) || 0;
-                const spendState = budget <= 0 ? 'neutral' : spend > budget ? 'danger' : spend >= budget * 0.9 ? 'warning' : 'success';
-                const headroom = budget > 0 ? Math.max(0, Math.min(100, (1 - spend / budget) * 100)) : null;
+                const budget = typeof client.slaDailyAdSpendBudget === 'number' && Number.isFinite(client.slaDailyAdSpendBudget) && client.slaDailyAdSpendBudget > 0
+                  ? client.slaDailyAdSpendBudget
+                  : null;
+                const spend = typeof client.currentDailyAdSpend === 'number' && Number.isFinite(client.currentDailyAdSpend)
+                  ? client.currentDailyAdSpend
+                  : null;
+                const slaState = getClientSlaState(client);
+                const spendState = slaState === 'over' ? 'danger' : slaState === 'near' ? 'warning' : slaState === 'healthy' ? 'success' : 'neutral';
+                const headroom = budget !== null && spend !== null ? Math.max(0, Math.min(100, (1 - spend / budget) * 100)) : null;
                 const clientSlug = getAgencyClientSlug(client as AgencyClient & Record<string, unknown>) || createClientSlug(client.company || client.name || 'client account', client.id);
                 return (
                   <tr key={client.id} data-ams-slug={'client-account-' + clientSlug} className="transition-colors hover:bg-bg/70">
@@ -891,8 +904,8 @@ export const AdminClients: React.FC = () => {
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3"><span className={`inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[11px] font-medium ${client.projectsCount >= 5 ? 'border-accent/30 bg-accent/10 text-accent-text' : client.status === 'lead' ? 'border-info/20 bg-info/10 text-info' : 'border-line bg-bg text-fg'}`}>{client.projectsCount >= 5 ? 'Tier 1 Strategic' : client.status === 'lead' ? 'Project-based' : 'Retainer Core'}</span></td>
                     <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company, companyEmail: client.email, phone: client.phone }} /> : <span className="text-xs text-muted">—</span>}</td>
-                    <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(Number(client.totalSpend) || 0)}</td>
-                    <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${spendState === 'success' ? 'bg-success' : spendState === 'warning' ? 'bg-warning' : spendState === 'danger' ? 'bg-danger' : 'bg-line'}`} aria-hidden="true" /><span className={spendState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{headroom === null ? 'Not configured' : headroom.toFixed(1) + '% headroom'}</span></div></td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(client.totalSpend) : (language === 'id' ? 'Belum tercatat' : 'Not recorded')}</td>
+                    <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${spendState === 'success' ? 'bg-success' : spendState === 'warning' ? 'bg-warning' : spendState === 'danger' ? 'bg-danger' : 'bg-line'}`} aria-hidden="true" /><span className={spendState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{headroom === null ? (slaState === 'not-configured' ? (language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured') : (language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded')) : headroom.toFixed(1) + (language === 'id' ? '% ruang tersisa' : '% headroom')}</span></div></td>
                     <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
                         <button type="button" onClick={() => setSelectedClient(client)} aria-label={`View profile for ${client.company}`} title="View profile" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                           <Eye size={16} aria-hidden="true" />
@@ -918,7 +931,7 @@ export const AdminClients: React.FC = () => {
                 metrics={[
                   { id: 'active-clients', label: 'Active clients', value: isLoading || errorMessage ? '—' : clientMetrics.active, change: isLoading || errorMessage ? '—' : '+' + clientMetrics.leads, changeToneClassName: 'text-warning', context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'onboarding / lead accounts',  icon: <Users size={15} aria-hidden="true" /> },
                   { id: 'billed-value', label: 'Cumulative billed value', value: isLoading || errorMessage ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clientMetrics.totalBilled), context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'across client records',  icon: <TrendingUp size={15} aria-hidden="true" />, toneClassName: 'text-success' },
-                  { id: 'sla-compliance', label: 'Spend cap compliance', value: isLoading || errorMessage ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`, context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : clientMetrics.configuredSla + ' configured spend-cap records',  icon: <ShieldCheck size={15} aria-hidden="true" />, toneClassName: clientMetrics.slaCompliance !== null && clientMetrics.slaCompliance >= 90 ? 'text-success' : 'text-fg' }
+                  { id: 'sla-compliance', label: language === 'id' ? 'Kepatuhan batas belanja' : 'Spend cap compliance', value: isLoading || errorMessage ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`, context: isLoading ? (language === 'id' ? 'Memuat data terbaru' : 'Loading live data') : errorMessage ? (language === 'id' ? 'Data live tidak tersedia' : 'Live data unavailable') : clientMetrics.configuredSla === 0 ? (language === 'id' ? 'Belum ada batas belanja yang dikonfigurasi' : 'No spend caps configured') : language === 'id' ? `${clientMetrics.recordedSla} dari ${clientMetrics.configuredSla} batas belanja memiliki catatan aktual` : `${clientMetrics.recordedSla} of ${clientMetrics.configuredSla} configured spend caps have recorded spend`, icon: <ShieldCheck size={15} aria-hidden="true" />, toneClassName: clientMetrics.slaCompliance !== null && clientMetrics.slaCompliance >= 90 ? 'text-success' : 'text-fg' }
                 ]}
               />
             </section>
