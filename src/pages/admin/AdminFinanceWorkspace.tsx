@@ -1673,23 +1673,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
     return !sidebarDestinations.has(destination)
       && canAccessAmsRoute(navigationRole, '/admin/finance', '?tab=' + key);
   };
-  const groupTabSlugs: Record<string, string> = {
-    overview: 'finance-tab-overview-control',
-    transactions: 'finance-tab-transactions-cash',
-    receivables: 'finance-tab-receivables-payables',
-    projects: 'finance-tab-project-finance',
-    accounting: 'finance-tab-accounting-reports'
-  };
-  const groupItems = FINANCE_WORKBOOK_GROUPS.flatMap((group) => {
-    const firstNavigableSheet = group.items.find((item) => canShowFinanceWorksheet(item.key));
-    if (!firstNavigableSheet) return [];
-    return [{
-      key: group.key,
-      label: group.label,
-      to: financeWorksheetDestination(firstNavigableSheet.key),
-      slug: groupTabSlugs[group.key] || 'finance-area-' + group.key
-    }];
-  });
   const sheetItems = [
     ...activeGroup.items
       .filter((item) => canShowFinanceWorksheet(item.key))
@@ -3160,14 +3143,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         )}
         className="mb-0"
       />
-      {groupItems.length > 0 && (
-        <AdminSectionTabs
-          ariaLabel="Finance areas"
-          activeKey={activeGroup.key}
-          items={groupItems}
-          className="w-full"
-        />
-      )}
       <div
         className={SEARCHABLE_FINANCE_TABS.has(activeTab.key) && activeGroup.items.length <= 4
           ? 'grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center'

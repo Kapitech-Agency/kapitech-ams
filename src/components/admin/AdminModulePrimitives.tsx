@@ -22,7 +22,9 @@ export const AdminPageShell: React.FC<AdminPageShellProps> = ({
 }) => {
   const workspaceNavigation = React.useContext(AdminWorkspaceNavigationContext);
   const navigationResult = workspaceNavigation
-    ? injectWorkspaceNavigationAfterHeader(children, workspaceNavigation)
+    ? workspaceNavigation.placement === 'before-header'
+      ? injectWorkspaceNavigationBeforeHeader(children, workspaceNavigation)
+      : injectWorkspaceNavigationAfterHeader(children, workspaceNavigation)
     : { content: children, inserted: false };
 
   return (
@@ -50,6 +52,7 @@ export interface AdminSectionTabItem {
 export interface AdminWorkspaceNavigationValue {
   items: AdminSectionTabItem[];
   activeKey: string;
+  placement?: 'before-header' | 'after-header';
 }
 
 /** Supplies the current module's contextual navigation to its page shell. */
@@ -645,6 +648,49 @@ const WorkspaceNavigationTabs: React.FC<{ navigation: AdminWorkspaceNavigationVa
     <AdminSectionTabs ariaLabel="Workspace navigation" activeKey={navigation.activeKey} items={navigation.items} className="w-full" />
   </div>
 );
+
+/** Places contextual navigation before the first page-level header for workspaces that lead with area navigation. */
+function injectWorkspaceNavigationBeforeHeader(children: React.ReactNode, navigation: AdminWorkspaceNavigationValue): WorkspaceNavigationInjectionResult {
+  const walk = (node: React.ReactNode): { node: React.ReactNode; inserted: boolean } => {
+    if (Array.isArray(node)) {
+      let inserted = false;
+      const content = node.map((child) => {
+        if (inserted) return child;
+        const result = walk(child);
+        if (result.inserted) inserted = true;
+        return result.node;
+      });
+      return { node: content, inserted };
+    }
+    if (!React.isValidElement(node)) return { node, inserted: false };
+    if (node.type === AdminModuleHeader) {
+      const header = React.cloneElement(
+        node as React.ReactElement<{ className?: string }>,
+        { className: cn((node.props as { className?: string }).className, 'mb-0') }
+      );
+      return {
+        node: (
+          <div key="ams-workspace-navigation-before-header" className="flex min-w-0 flex-col gap-3">
+            <WorkspaceNavigationTabs navigation={navigation} />
+            {header}
+          </div>
+        ),
+        inserted: true
+      };
+    }
+    if (node.type === React.Fragment) {
+      const result = walk(node.props.children);
+      return result.inserted ? { node: React.cloneElement(node, undefined, result.node), inserted: true } : { node, inserted: false };
+    }
+    if (typeof node.type === 'string' && node.props?.children !== undefined) {
+      const result = walk(node.props.children);
+      return result.inserted ? { node: React.cloneElement(node, undefined, result.node), inserted: true } : { node, inserted: false };
+    }
+    return { node, inserted: false };
+  };
+  const result = walk(children);
+  return { content: result.node, inserted: result.inserted };
+}
 
 /** Places contextual navigation immediately after the first page-level header. */
 function injectWorkspaceNavigationAfterHeader(children: React.ReactNode, navigation: AdminWorkspaceNavigationValue): WorkspaceNavigationInjectionResult {
