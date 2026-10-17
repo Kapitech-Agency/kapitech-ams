@@ -435,6 +435,24 @@ test('runtime fixture mode is disabled and demo records are isolated from normal
   assert.doesNotMatch(runtimeMode, /VITE_AB_TEST_DATA/);
 });
 
+test('fresh JSON database bootstrap starts operational collections empty', async () => {
+  const database = await read('server/db.ts');
+  const seedStart = database.indexOf('const seed: DatabaseSchema = {');
+  const seedEnd = database.indexOf('\n  if (isProduction)', seedStart);
+  assert.ok(seedStart >= 0 && seedEnd > seedStart, 'The JSON bootstrap seed must remain inspectable.');
+  const seed = database.slice(seedStart, seedEnd);
+
+  for (const collection of [
+    'leads', 'crmDeals', 'proposals', 'clients', 'clientInteractions',
+    'projects', 'tasks', 'timeLogs', 'invoices', 'expenses', 'approvals',
+    'vendors', 'documents', 'notifications'
+  ]) assert.ok(seed.includes('    ' + collection + ': [],'), 'Fresh JSON bootstrap must not seed ' + collection + '.');
+
+  assert.ok(seed.includes("id: 'usr_root_admin'"), 'The initial administrator bootstrap is required.');
+  assert.ok(seed.includes("action: 'SYSTEM_BOOTSTRAP'"), 'The database initialization audit event is retained.');
+  assert.doesNotMatch(seed, /lead_inb_001|deal_101|prop_2026_001|cli_101|proj_101|task_101|KAPI-INV-2026-001|exp_201|appr_001|ven_001|doc_001|notif_001|Budi Santoso|Bambang Soediro/);
+});
+
 test('Finance invoices, expenses, vendors, and quotations use canonical persisted sources only', async () => {
   const page = await read('src/pages/admin/AdminInvoicing.tsx');
   const store = await read('src/lib/financeStore.ts');
