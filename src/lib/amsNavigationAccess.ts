@@ -224,6 +224,7 @@ export function canAccessAmsRoute(role: AmsRole, pathname: string, search = ''):
   const params = new URLSearchParams(search);
 
   if (!path.startsWith('/admin')) return false;
+  if (path === '/admin/vendors' && params.get('view') === 'skill-matrix') return role === 'Admin';
   if (role === 'Admin') return true;
 
   if (path === '/admin/navigation/live-activity') return true;

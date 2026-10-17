@@ -23,6 +23,15 @@ const subnav = (
   allowMfaSetup = false,
 ) => getAmsModuleSubnavigation(moduleKey, role, allowMfaSetup);
 
+test('Skill Matrix route is Admin-only even when the vendor directory is available to Finance', () => {
+  assert.equal(canAccessAmsRoute('Admin', '/admin/vendors', '?view=skill-matrix'), true);
+  assert.equal(canAccessAmsRoute('Finance', '/admin/vendors'), true);
+  assert.equal(canAccessAmsRoute('Finance', '/admin/vendors', '?view=skill-matrix'), false);
+  assert.equal(canAccessAmsRoute('PM', '/admin/vendors', '?view=skill-matrix'), false);
+  assert.equal(canAccessAmsRoute('Creative', '/admin/vendors', '?view=skill-matrix'), false);
+  assert.equal(canAccessAmsRoute('Freelancer', '/admin/vendors', '?view=skill-matrix'), false);
+});
+
 test('unknown role values fall back to the least-privileged navigation profile', () => {
   assert.equal(normalizeAmsRole('Admin'), 'Admin');
   assert.equal(normalizeAmsRole('Finance'), 'Finance');
