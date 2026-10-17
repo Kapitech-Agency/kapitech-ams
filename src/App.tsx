@@ -203,6 +203,14 @@ const ScrollToTop = () => {
   const { pathname, search } = useLocation();
 
   useEffect(() => {
+    // Authenticated AMS scrolls inside its main workspace, not the document window.
+    const workspaceScroller = document.querySelector<HTMLElement>('.ams-shell > main');
+    if (workspaceScroller) {
+      workspaceScroller.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      return;
+    }
+
+    // Public/login routes still use document scrolling.
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [pathname, search]);
 
