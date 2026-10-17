@@ -88,6 +88,19 @@ test('Finance exposes one current worksheet and explicit unavailable source cont
   assert.match(finance, /Previously loaded records remain visible where available/);
 });
 
+test('Time tracking uses the shared drawer for multi-field entry while keeping the ledger as the primary workspace', async () => {
+  const timeLogs = await read('src/pages/admin/AdminTimeLogs.tsx');
+  const header = timeLogs.indexOf('<AdminModuleHeader slug="time-tracking-header"');
+  const drawer = timeLogs.indexOf('<Drawer', header);
+  const form = timeLogs.indexOf('data-ams-feature-slug="time-tracking-create-form"', drawer);
+  const ledger = timeLogs.indexOf('data-ams-feature-slug="time-tracking-ledger"');
+  assert.ok(header >= 0 && drawer > header && form > drawer);
+  assert.ok(ledger > form, 'ledger remains after the header and the form uses the shared drawer');
+  assert.match(timeLogs, /onClick=\{\(\) => setFormOpen\(true\)\}/);
+  assert.match(timeLogs, /closeOnEscape=\{!saving\}/);
+  assert.match(timeLogs, /setFormOpen\(false\);\s*showStatus\('Time entry saved\.'/);
+});
+
 test('Team and Resources distinguish unavailable source data from a true zero', async () => {
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');

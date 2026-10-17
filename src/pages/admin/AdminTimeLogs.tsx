@@ -11,6 +11,7 @@ import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { Drawer } from '../../components/ui/Drawer';
 
 
 const isUnknownMutationOutcome = (response: { success: boolean; status?: number }) =>
@@ -42,6 +43,7 @@ export const AdminTimeLogs: React.FC = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<'success' | 'error' | 'info'>('info');
   const [canRetryLoad, setCanRetryLoad] = useState(false);
@@ -162,6 +164,7 @@ export const AdminTimeLogs: React.FC = () => {
         setTaskId('');
         setTaskTitle('');
         setNotes('');
+        setFormOpen(false);
         showStatus('Time entry saved.', 'success');
       } else {
         const unknownOutcome = isUnknownMutationOutcome(res)
@@ -241,7 +244,7 @@ export const AdminTimeLogs: React.FC = () => {
                 type="button"
                 variant="primary"
                 icon={<Plus size={15} />}
-                onClick={() => document.getElementById('time-entry-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                onClick={() => setFormOpen(true)}
               >
                 Add time entry
               </Button>
@@ -264,67 +267,58 @@ export const AdminTimeLogs: React.FC = () => {
 
 
 
-        {canManage && (
-          <form id="time-entry-form" data-ams-feature-slug="time-tracking-create-form" data-ams-slug="time-tracking-create-form" onSubmit={submit} className="rounded-card border border-line bg-panel p-4 space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold">New time entry</h2>
-                <p className="text-xs text-muted mt-1">Keep project time accurate and traceable.</p>
-              </div>
-              <span className="hidden sm:inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-accent-text" aria-hidden="true"><Plus size={15} /></span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-              <label className="space-y-1.5">
-                <span className="text-[11px] text-muted">Project</span>
-                <CustomSelect
-                  value={projectId}
-                  onChange={handleProjectChange}
-                  options={[{ value: "", label: "Select project" }, ...projects.map(project => ({ value: project.id, label: project.name }))]}
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-[11px] text-muted">Linked task</span>
-                <CustomSelect
-                  value={taskId}
-                  onChange={handleTaskChange}
-                  options={[{ value: "", label: "No linked task" }, ...selectedProjectTasks.map(task => ({ value: task.id, label: task.title }))]}
-                  disabled={!projectId || selectedProjectTasks.length === 0}
-                  aria-label="Linked task"
-                  className="w-full"
-                  triggerClassName="w-full"
-                  slug="time-entry-task-select"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-[11px] text-muted">Task / activity</span>
-                <input value={taskTitle} onChange={e => { setTaskTitle(e.target.value); if (selectedProjectTasks.find(task => task.id === taskId)?.title !== e.target.value) setTaskId(''); }} placeholder="Describe the work" className="ams-control w-full" />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-[11px] text-muted">Duration (minutes)</span>
-                <input type="number" min={1} max={1440} value={durationMinutes} onChange={e => setDurationMinutes(Number(e.target.value))} className="ams-control w-full" />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-[11px] text-muted">Date</span>
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ams-control w-full" />
-              </label>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
-              <label className="space-y-1.5">
-                <span className="text-[11px] text-muted">Notes</span>
-                <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional context" className="ams-control w-full" />
-              </label>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <label className="flex items-center gap-2 h-10 px-3 rounded-control border border-line bg-bg text-xs cursor-pointer">
-                  <input type="checkbox" checked={billable} onChange={e => setBillable(e.target.checked)} className="accent-accent" />
-                  Billable
+        <Drawer
+          slug="time-entry-drawer"
+          open={formOpen}
+          onClose={() => { if (!saving) setFormOpen(false); }}
+          closeOnEscape={!saving}
+          size="xl"
+          title="New time entry"
+          description="Record project time, billable hours, and activity notes."
+          footer={(
+            <>
+              <Button type="button" variant="secondary" onClick={() => setFormOpen(false)} disabled={saving}>Cancel</Button>
+              <Button type="submit" form="time-entry-form" variant="primary" loading={saving} disabled={saving}>Add entry</Button>
+            </>
+          )}
+        >
+          {canManage && (
+            <form id="time-entry-form" data-ams-feature-slug="time-tracking-create-form" data-ams-slug="time-tracking-create-form" onSubmit={submit} className="space-y-5 p-4 sm:p-5">
+              <section data-ams-drawer-layout="sections" className="grid gap-4 rounded-card border border-line bg-bg p-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-medium text-muted">Project</span>
+                    <CustomSelect value={projectId} onChange={handleProjectChange} options={[{ value: "", label: "Select project" }, ...projects.map(project => ({ value: project.id, label: project.name }))]} />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-medium text-muted">Linked task</span>
+                    <CustomSelect value={taskId} onChange={handleTaskChange} options={[{ value: "", label: "No linked task" }, ...selectedProjectTasks.map(task => ({ value: task.id, label: task.title }))]} disabled={!projectId || selectedProjectTasks.length === 0} aria-label="Linked task" className="w-full" triggerClassName="w-full" slug="time-entry-task-select" />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-medium text-muted">Task / activity</span>
+                    <input value={taskTitle} onChange={event => { setTaskTitle(event.target.value); if (selectedProjectTasks.find(task => task.id === taskId)?.title !== event.target.value) setTaskId(''); }} placeholder="Describe the work" className="ams-control w-full" />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-medium text-muted">Duration (minutes)</span>
+                    <input type="number" min={1} max={1440} value={durationMinutes} onChange={event => setDurationMinutes(Number(event.target.value))} className="ams-control w-full" />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs font-medium text-muted">Date</span>
+                    <input type="date" value={date} onChange={event => setDate(event.target.value)} className="ams-control w-full" />
+                  </label>
+                </div>
+                <label className="space-y-1.5">
+                  <span className="text-xs font-medium text-muted">Notes</span>
+                  <input value={notes} onChange={event => setNotes(event.target.value)} placeholder="Optional context" className="ams-control w-full" />
                 </label>
-                <button type="submit" disabled={saving} aria-busy={saving || undefined} className="min-h-10 px-4 rounded-control bg-accent hover:bg-accent-hover disabled:opacity-50 text-white text-xs font-semibold inline-flex items-center gap-2">
-                  {saving ? 'Saving…' : 'Add entry'}
-                </button>
-              </div>
-            </div>
-          </form>
-        )}
+                <label className="flex min-h-10 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-fg">
+                  <input type="checkbox" checked={billable} onChange={event => setBillable(event.target.checked)} className="accent-accent" />
+                  Billable time
+                </label>
+              </section>
+            </form>
+          )}
+        </Drawer>
 
         {status && (
           <div role={statusTone === 'error' ? 'alert' : 'status'} aria-live={statusTone === 'error' ? 'assertive' : 'polite'} className={'flex flex-col gap-2 rounded-card border px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between ' + (statusTone === 'error' ? 'border-danger/30 bg-danger/10 text-danger' : statusTone === 'success' ? 'border-success/25 bg-success/10 text-success' : 'border-line bg-panel text-fg')}>
