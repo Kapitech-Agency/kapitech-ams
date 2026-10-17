@@ -1633,7 +1633,7 @@ export const AdminProjects: React.FC = () => {
                 </div>
               ))}
               <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted">Owner</div>
+                <div className="text-xs font-medium text-muted">Owner</div>
                 <div className="mt-1.5">
                   {selectedProjectDetail.teamLead ? (
                     <ProfileIdentity profile={{ name: selectedProjectDetail.teamLead, contextLabel: 'Project owner' }} showRole={false} />

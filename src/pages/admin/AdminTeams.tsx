@@ -1919,7 +1919,7 @@ export const AdminTeams: React.FC = () => {
               </div>
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Core skills</p>
+              <p className="text-xs font-medium text-muted">Core skills</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {memberCoreSkills(memberDetail).map((skill) => <span key={skill} className="rounded-badge border border-line bg-panel px-2.5 py-1 text-[10px] text-fg">{skill}</span>)}
               </div>
@@ -1956,7 +1956,7 @@ export const AdminTeams: React.FC = () => {
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Project assignment & planned allocation</p>
+                <p className="text-xs font-medium text-muted">Project assignment & planned allocation</p>
                 <span className="text-[10px] text-muted">{memberProjects(allocationTarget).length} assigned</span>
               </div>
               <p className="mt-1 text-[10px] leading-4 text-muted">Assign this member to a project, then set the planned weekly allocation and dates. The forecast is based only on the saved plans below; leave calendars are not connected.</p>
@@ -2068,7 +2068,7 @@ export const AdminTeams: React.FC = () => {
               <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Status</p><div className="mt-1 flex flex-wrap gap-1.5"><span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + vendorStatusTone[vendorDetail.status]}>{vendorStatusLabel[vendorDetail.status]}</span>{(vendorDetail.isVetted ?? true) && <span className="inline-flex rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Vetted</span>}</div></div>
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Skills</p>
+              <p className="text-xs font-medium text-muted">Skills</p>
               <div className="mt-2 flex flex-wrap gap-1.5">{vendorDetail.skills.map((skill) => <span key={skill} className="rounded-chip border border-line bg-panel px-2.5 py-1 text-[10px] text-muted">{skill}</span>)}</div>
             </div>
             {vendorDetail.contracts.length > 0 && (

@@ -966,15 +966,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.status}</div>
               </div>
               <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Progress</div>
+                <div className="text-xs font-medium text-muted">Progress</div>
                 <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.progress == null ? '—' : projectDetails.progress + '%'}</div>
               </div>
               <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Project lead</div>
+                <div className="text-xs font-medium text-muted">Project lead</div>
                 <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.lead}</div>
               </div>
               <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Budget</div>
+                <div className="text-xs font-medium text-muted">Budget</div>
                 <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.budget}</div>
               </div>
             </div>
