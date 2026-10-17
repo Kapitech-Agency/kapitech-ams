@@ -92,6 +92,18 @@ test('Finance worksheets stay inside the Finance workspace and retired routes st
   assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance worksheets"'));
   assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
 });
+test('Retainer workspace uses neutral counts and sentence-case table hierarchy', () => {
+  const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
+
+  assert.ok(retainers.includes('tone="neutral">{records.length} active contracts</AdminStatusBadge>'));
+  assert.ok(retainers.includes('Monthly retainer value'));
+  assert.ok(retainers.includes('Committed retainer hours'));
+  assert.ok(retainers.includes('Renewals due in 30 days'));
+  assert.ok(retainers.includes('text-[11px] font-medium text-muted'));
+  assert.equal(retainers.includes('text-[10px] uppercase tracking-wider'), false);
+  assert.ok(retainers.includes('inline-flex h-9 w-9 items-center justify-center rounded-control'));
+});
+
 test('Authenticated AMS pages use one canonical responsive page frame', () => {
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const stylesheet = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');

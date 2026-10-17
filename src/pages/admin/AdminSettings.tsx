@@ -843,7 +843,7 @@ export const AdminSettings: React.FC = () => {
       <AdminModuleHeader slug="settings-header"
         title="Settings"
         description="Manage system health, access and security, audit history, and connected services."
-        actions={canAccessServer ? (
+        actions={canAccessServer && activeTab === 'overview' ? (
           <>
             <Button
               type="button"
