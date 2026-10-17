@@ -48,7 +48,7 @@ test('MFA setup stays reachable without admin rights while routine security acce
 test('System integrity and snapshot controls are hidden without server permissions', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
 
-  assert.ok(source.includes('actions={canAccessServer ? ('));
+  assert.ok(source.includes("actions={canAccessServer && activeTab === 'overview' ? ("));
   assert.ok(source.includes('if (!canAccessServer || integrityLoading) return;'));
   assert.ok(source.includes('if (!canAccessServer || snapshotLoading) return;'));
 });

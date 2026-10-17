@@ -28,7 +28,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(subnavigation, /finance-tab-receivables-payables/);
   assert.match(subnavigation, /finance-tab-project-finance/);
   assert.match(subnavigation, /finance-tab-accounting-reports/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance views" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
   assert.match(workspace, /const sheetItems = \[[\s\S]{0,240}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
@@ -39,6 +39,28 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(workbook, /FINANCE_WORKBOOK_GROUPS/);
   assert.ok(workbook.includes('cash-bank') && workbook.includes('accounts-receivable'));
 });
+test('Finance visible copy describes user workflows, not spreadsheet implementation', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const workbook = await read('src/lib/financeWorkbook.ts');
+
+  for (const implementationPhrase of [
+    'Excel-aligned finance workflow',
+    'Finance workbook sheets',
+    'Project name / Excel key',
+    'workbook sheet tabs above',
+    'Kapitech Finance Final Automated.xlsx',
+    'Excel-aligned Finance flow',
+    'Persistent workbook register',
+    'Excel allocation policy',
+    'Workbook Chart of Accounts posting map'
+  ]) {
+    assert.equal(workspace.includes(implementationPhrase), false, 'Visible Finance copy should not expose implementation wording: ' + implementationPhrase);
+  }
+  assert.ok(workspace.includes('Finance views'));
+  assert.ok(workspace.includes('Project name / project reference'));
+  assert.doesNotMatch(workbook, /description: '[^']*(?:workbook|Excel)[^']*'/i);
+});
+
 test('Finance workspace groups navigation, search, and alerts using the shared AMS layout patterns', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
@@ -186,7 +208,7 @@ test('Finance locale uses the selected application language and localized financ
   assert.match(translations, /'admin\.finance\.tab\.overviewControl': 'Ringkasan & Kontrol'/);
 });
 
-test('Finance worksheets embed the existing transactional workflows instead of routing users away', async () => {
+test('Finance views embed the existing transactional workflows instead of routing users away', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');

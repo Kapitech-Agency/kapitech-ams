@@ -165,7 +165,7 @@ export const Drawer: React.FC<DrawerProps> = ({
     <div data-ams-feature-slug={slug} data-ams-slug={slug} className="fixed inset-0 z-[70] flex justify-end" role="presentation">
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-bg/80 backdrop-blur-[1px]"
+        className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
         onMouseDown={(event) => {
           if (closeOnOutsideClick && event.target === event.currentTarget) onClose();
         }}

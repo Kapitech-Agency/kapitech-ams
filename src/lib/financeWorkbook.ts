@@ -30,7 +30,7 @@ export const FINANCE_WORKBOOK_GROUPS: FinanceWorkbookGroup[] = [
       { key: 'cash-bank', sheet: '05', label: 'Cash & Bank', description: 'Cash movement view built from recorded receipts and expenses.' },
       { key: 'revenue', sheet: '03', label: 'Revenue', description: 'Revenue register sourced from issued client invoices.' },
       { key: 'expenses', sheet: '04', label: 'Expenses', description: 'Expense register sourced from finance expenses in AMS.' },
-      { key: 'petty-cash', sheet: '10', label: 'Petty Cash', description: 'Petty-cash register and controls required by the workbook.' }
+      { key: 'petty-cash', sheet: '10', label: 'Petty Cash', description: 'Petty-cash register and supporting controls.' }
     ]
   },
   {
@@ -48,7 +48,7 @@ export const FINANCE_WORKBOOK_GROUPS: FinanceWorkbookGroup[] = [
     items: [
       { key: 'project-finance', sheet: '08', label: 'Project Finance', description: 'Project-level budget, invoicing, receipts and recorded costs.' },
       { key: 'operational-budget', sheet: '09', label: 'Operational Budget', description: 'Budget-versus-actual controls and variance review.' },
-      { key: 'project-allocation', sheet: '15', label: 'Project Allocation', description: 'The workbook allocation policy for net project profit.' },
+      { key: 'project-allocation', sheet: '15', label: 'Project Allocation', description: 'Rules for allocating net project profit.' },
       { key: 'team-fee', sheet: '16', label: 'Team Fee', description: 'Project team-fee allocation, kept separate from Team Reward.' }
     ]
   },
@@ -57,8 +57,8 @@ export const FINANCE_WORKBOOK_GROUPS: FinanceWorkbookGroup[] = [
     label: 'Accounting & Reports',
     items: [
       { key: 'journal', sheet: '18', label: 'Journal', description: 'Double-entry mapping and source transactions awaiting posting.' },
-      { key: 'chart-of-accounts', sheet: '02', label: 'Chart of Accounts', description: 'Master account codes and normal balances from the workbook.' },
-      { key: 'monthly-pnl', sheet: '12', label: 'Monthly P&L', description: 'Monthly profit-and-loss view based on the workbook structure.' },
+      { key: 'chart-of-accounts', sheet: '02', label: 'Chart of Accounts', description: 'Account codes and normal balances used in finance records.' },
+      { key: 'monthly-pnl', sheet: '12', label: 'Monthly P&L', description: 'Monthly profit-and-loss summary.' },
       { key: 'cash-flow', sheet: '13', label: 'Cash Flow', description: 'Monthly cash inflow, outflow and net movement.' },
       { key: 'balance-sheet', sheet: '17', label: 'Balance Sheet', description: 'Company-wide assets, liabilities and equity readiness.' },
       { key: 'monthly-closing', sheet: '14', label: 'Monthly Closing', description: 'Month-end checklist and reconciliation controls.' },

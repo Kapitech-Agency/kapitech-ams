@@ -666,19 +666,19 @@ export const AdminInbox: React.FC = () => {
     switch (priority) {
       case 'urgent':
         return (
-          <span className="px-1.5 py-0.5 rounded-badge text-[9px] font-sans bg-danger/10 text-danger border border-danger/30 font-semibold">
+          <span className="px-1.5 py-0.5 rounded-badge text-[10px] font-sans bg-danger/10 text-danger border border-danger/30 font-semibold">
             Urgent
           </span>
         );
       case 'high':
         return (
-          <span className="px-1.5 py-0.5 rounded-badge text-[9px] font-sans bg-warning/10 text-warning border border-warning/30">
+          <span className="px-1.5 py-0.5 rounded-badge text-[10px] font-sans bg-warning/10 text-warning border border-warning/30">
             High
           </span>
         );
       case 'low':
         return (
-          <span className="px-1.5 py-0.5 rounded-badge text-[9px] font-sans bg-panel-hover text-muted border border-line">
+          <span className="px-1.5 py-0.5 rounded-badge text-[10px] font-sans bg-panel-hover text-muted border border-line">
             Low
           </span>
         );
@@ -851,7 +851,7 @@ export const AdminInbox: React.FC = () => {
           footer={(
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10px] text-muted">{filteredItems.length} matching inbound records · updates automatically every 30 seconds.</p>
-              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-2 text-[9px] font-medium text-success">
+              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-2 text-[10px] font-medium text-success">
                 <span className="h-1.5 w-1.5 rounded-full bg-success" />Live
               </span>
             </div>
@@ -1039,9 +1039,9 @@ export const AdminInbox: React.FC = () => {
                           </div>
                           <p className="mt-1 line-clamp-1 text-[11px] leading-4 text-muted">{item.message || 'No brief content provided.'}</p>
                           <div className="mt-2 flex items-center justify-between gap-2">
-                            <span className="min-w-0 truncate font-mono text-[9px] text-muted/70">/{getSubmissionSlug(item)}</span>
+                            <span className="min-w-0 truncate font-mono text-[10px] text-muted/70">/{getSubmissionSlug(item)}</span>
                             <div className="flex shrink-0 items-center gap-1.5">
-                              {item.assignedTo && <span className="hidden max-w-[120px] truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted md:inline">{item.assignedTo}</span>}
+                              {item.assignedTo && <span className="hidden max-w-[120px] truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted md:inline">{item.assignedTo}</span>}
                               <span className="text-[10px] text-muted">Open monitor</span>
                               <ChevronRight size={12} className="text-muted" />
                             </div>
@@ -1070,7 +1070,7 @@ export const AdminInbox: React.FC = () => {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-fg">Live intake monitor</h3>
-                    <span className="inline-flex items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-1.5 py-1 text-[9px] font-medium text-success">
+                    <span className="inline-flex items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-1.5 py-1 text-[10px] font-medium text-success">
                       <span className="h-1.5 w-1.5 rounded-full bg-success" />Live
                     </span>
                   </div>
@@ -1102,7 +1102,7 @@ export const AdminInbox: React.FC = () => {
                     }}
                     className="rounded-control border border-line bg-bg px-2.5 py-2 text-left transition-colors hover:bg-panel"
                   >
-                    <span className="block text-[9px] text-muted">{metric.label}</span>
+                    <span className="block text-[10px] text-muted">{metric.label}</span>
                     <span className="mt-0.5 block text-sm font-medium tabular-nums text-fg">{metric.value}</span>
                   </button>
                 ))}
@@ -1121,7 +1121,7 @@ export const AdminInbox: React.FC = () => {
                       </div>
                       <h4 className="mt-2 truncate text-sm font-semibold text-fg">{selectedSubmission.fullName || 'Anonymous'}</h4>
                       <p className="mt-0.5 truncate text-[11px] text-muted">{selectedSubmission.type === 'career' ? (selectedSubmission.positionTitle || selectedSubmission.specialty || selectedSubmission.email) : (selectedSubmission.company || selectedSubmission.email)}</p>
-                      <p className="mt-1 font-mono text-[9px] text-muted/70">/{getSubmissionSlug(selectedSubmission)}</p>
+                      <p className="mt-1 font-mono text-[10px] text-muted/70">/{getSubmissionSlug(selectedSubmission)}</p>
                     </div>
                     <button type="button" onClick={() => setSelectedSubmission(null)} className="inline-flex h-9 w-9 min-h-9 min-w-9 shrink-0 aspect-square items-center justify-center rounded-control border border-line bg-bg p-0 text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Clear selected record" title="Clear selected record"><X size={14} /></button>
                   </div>
@@ -1316,24 +1316,24 @@ export const AdminInbox: React.FC = () => {
                           <div className="mt-3 flex flex-wrap gap-1">
                             {renderPriorityBadge(item.priority)}
                             {item.specialty && (
-                              <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">
+                              <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">
                                 {item.specialty}
                               </span>
                             )}
                             {item.experienceYears && (
-                              <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] tabular-nums text-muted">
+                              <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] tabular-nums text-muted">
                                 {item.experienceYears} yrs
                               </span>
                             )}
                             {item.location && (
-                              <span className="max-w-full truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">
+                              <span className="max-w-full truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">
                                 {item.location}
                               </span>
                             )}
                           </div>
 
                           <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5">
-                            <span className="text-[9px] tabular-nums text-muted">
+                            <span className="text-[10px] tabular-nums text-muted">
                               {formatRelativeTime(item.createdAt)}
                             </span>
                             <button
@@ -1368,7 +1368,7 @@ export const AdminInbox: React.FC = () => {
                           <div>
                             <Briefcase size={18} className="mx-auto text-line" />
                             <p className="mt-2 text-[10px] font-medium text-muted">No candidates</p>
-                            <p className="mt-1 text-[9px] leading-4 text-muted/75">
+                            <p className="mt-1 text-[10px] leading-4 text-muted/75">
                               Candidates entering this stage will appear here.
                             </p>
                           </div>
@@ -1385,7 +1385,7 @@ export const AdminInbox: React.FC = () => {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] font-medium text-fg">Hiring flow</p>
-                <p className="mt-0.5 text-[9px] leading-4 text-muted">Move candidates forward one stage at a time. Rejected and withdrawn applications stay outside the active board.</p>
+                <p className="mt-0.5 text-[10px] leading-4 text-muted">Move candidates forward one stage at a time. Rejected and withdrawn applications stay outside the active board.</p>
               </div>
               <button
                 type="button"
@@ -1407,7 +1407,7 @@ export const AdminInbox: React.FC = () => {
             {[
               {key:'client',title:'Starred client work',description:'Saved sales opportunities and follow-up threads.',items:filteredItems.filter((item)=>item.type!=='career')},
               {key:'jobs',title:'Starred candidate work',description:'Saved recruitment records and hiring decisions.',items:filteredItems.filter((item)=>item.type==='career')}
-            ].map((group)=><div key={group.key} className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line px-4 py-3.5"><div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">{group.title}</h3><p className="mt-0.5 text-[11px] text-muted">{group.description}</p></div><span className="text-[11px] tabular-nums text-muted">{group.items.length}</span></div></div><div className="divide-y divide-line">{group.items.map((item)=><div key={item.id} className="px-4 py-3 hover:bg-panel-hover transition-colors"><div className="flex items-start gap-3"><div className="min-w-0 flex-1"><div className="flex items-center gap-1.5 flex-wrap">{renderChannelBadge(item.type)}{renderStatusBadge(item.status)}{renderPriorityBadge(item.priority)}</div><div className="mt-1.5 flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-xs font-semibold text-fg">{item.fullName}</p><p className="truncate text-[11px] text-muted">{item.type==='career'?(item.positionTitle||item.specialty||item.email):(item.company||item.email)}</p></div><span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span></div><p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted">{item.message||'No message content.'}</p><div className="mt-2 flex flex-wrap items-center justify-between gap-2"><span className="font-mono text-[9px] text-muted/75">/{getSubmissionSlug(item)}</span><div className="flex items-center gap-1.5"><button type="button" onClick={(e)=>handleToggleStar(e,item.id,item.starred)} disabled={!canManageCrm} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-warning/30 bg-warning/10 px-2.5 text-[10px] font-medium text-warning hover:bg-warning/15"><Star size={11} className="fill-warning"/>Remove</button><button type="button" onClick={()=>{handleSelectSubmission(item);setViewMode('split');}} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg">Review<ChevronRight size={11}/></button></div></div></div></div></div>) }{group.items.length===0&&<div className="p-12 text-center"><Star size={20} className="mx-auto mb-2 text-line"/><p className="text-xs text-muted">No starred records in this queue.</p></div>}</div></div>)}
+            ].map((group)=><div key={group.key} className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line px-4 py-3.5"><div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">{group.title}</h3><p className="mt-0.5 text-[11px] text-muted">{group.description}</p></div><span className="text-[11px] tabular-nums text-muted">{group.items.length}</span></div></div><div className="divide-y divide-line">{group.items.map((item)=><div key={item.id} className="px-4 py-3 hover:bg-panel-hover transition-colors"><div className="flex items-start gap-3"><div className="min-w-0 flex-1"><div className="flex items-center gap-1.5 flex-wrap">{renderChannelBadge(item.type)}{renderStatusBadge(item.status)}{renderPriorityBadge(item.priority)}</div><div className="mt-1.5 flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-xs font-semibold text-fg">{item.fullName}</p><p className="truncate text-[11px] text-muted">{item.type==='career'?(item.positionTitle||item.specialty||item.email):(item.company||item.email)}</p></div><span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span></div><p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted">{item.message||'No message content.'}</p><div className="mt-2 flex flex-wrap items-center justify-between gap-2"><span className="font-mono text-[10px] text-muted/75">/{getSubmissionSlug(item)}</span><div className="flex items-center gap-1.5"><button type="button" onClick={(e)=>handleToggleStar(e,item.id,item.starred)} disabled={!canManageCrm} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-warning/30 bg-warning/10 px-2.5 text-[10px] font-medium text-warning hover:bg-warning/15"><Star size={11} className="fill-warning"/>Remove</button><button type="button" onClick={()=>{handleSelectSubmission(item);setViewMode('split');}} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg">Review<ChevronRight size={11}/></button></div></div></div></div></div>) }{group.items.length===0&&<div className="p-12 text-center"><Star size={20} className="mx-auto mb-2 text-line"/><p className="text-xs text-muted">No starred records in this queue.</p></div>}</div></div>)}
           </div>
           <div className="rounded-card border border-line bg-panel p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold text-fg">Next follow-up</p><p className="mt-0.5 text-[11px] text-muted">Open the most urgent saved record without scanning the whole queue.</p></div>{(()=>{const next=[...filteredItems].sort((a,b)=>{const rank=(item:ContactSubmission)=>item.priority==='urgent'?0:item.priority==='high'?1:item.status==='new'?2:3;return rank(a)-rank(b);})[0];return next?<button type="button" onClick={()=>{handleSelectSubmission(next);setViewMode('split');}} className="inline-flex min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><ChevronRight size={14}/>Review {next.fullName}</button>:<span className="text-[11px] text-muted">Queue is clear.</span>;})()}</div></div>
         </section>
@@ -1464,7 +1464,7 @@ export const AdminInbox: React.FC = () => {
                           <div className="font-semibold text-fg font-sans text-sm flex items-center gap-1.5">
                             <span>{item.fullName}</span>
                             {item.type === 'career' && item.status === 'hired' && (
-                              <span className="text-[9px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
+                              <span className="text-[10px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
                                 Hired ✓
                               </span>
                             )}
@@ -1608,11 +1608,11 @@ export const AdminInbox: React.FC = () => {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {(item.type === 'career' ? [item.positionTitle, item.specialty, item.experienceYears ? item.experienceYears + ' yrs' : undefined] : (item.services || [])).filter(Boolean).slice(0, 3).map((value, index) => (
-                        <span key={index} className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[9px] text-muted">{value}</span>
+                        <span key={index} className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">{value}</span>
                       ))}
                     </div>
                     <p className="mt-2 line-clamp-2 text-[11px] leading-5 text-muted">{item.message || (language === 'id' ? 'Tidak ada isi brief.' : 'No brief content provided.')}</p>
-                    <p className="mt-2 truncate font-mono text-[9px] text-muted/70">/{getSubmissionSlug(item)}</p>
+                    <p className="mt-2 truncate font-mono text-[10px] text-muted/70">/{getSubmissionSlug(item)}</p>
                   </div>
                 );
               })

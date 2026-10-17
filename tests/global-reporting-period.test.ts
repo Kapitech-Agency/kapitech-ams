@@ -68,11 +68,11 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
   assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
   assert.ok(workspace.includes('getAmsSidebarDestinationSignatures(navigationRole)'));
   assert.ok(subnavigation.includes('Finance areas') || subnavigation.includes("label: 'Overview & Control'"));
-  assert.ok(workspace.includes('ariaLabel="Finance worksheets"'));
+  assert.ok(workspace.includes('ariaLabel="Finance views"'));
   assert.ok(workspace.includes('data-ams-slug="finance-workspace-navigation"'));
 });
 
-test('date-aware Finance worksheets use the shared reporting period without changing their ledger roll-forward', async () => {
+test('date-aware Finance views use the shared reporting period without changing their ledger roll-forward', async () => {
   const fs = await import('node:fs/promises');
   const workspace = await fs.readFile('src/pages/admin/AdminFinanceWorkspace.tsx', 'utf8');
   const subnavigation = await fs.readFile('src/lib/amsModuleSubnavigation.ts', 'utf8');

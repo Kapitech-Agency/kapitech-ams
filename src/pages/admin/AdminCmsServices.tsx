@@ -29,7 +29,6 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
 import { Drawer } from '../../components/ui/Drawer';
-import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -558,12 +557,12 @@ export const AdminCmsServices: React.FC = () => {
                     >
                       {publishingServiceId === item.id ? 'Saving…' : item.isPublished === true ? 'Published' : 'Draft'}
                     </button>
-                    <p className="mt-1 text-[9px] text-muted">Badge: {item.badgeId || item.badge || '—'}</p>
+                    <p className="mt-1 text-[10px] text-muted">Badge: {item.badgeId || item.badge || '—'}</p>
                   </td>
                   <td className="max-w-[250px] px-4 py-2.5">
                     <div className="flex flex-wrap gap-1">
-                      {item.capabilities.slice(0, 2).map((cap, index) => <span key={index} className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{cap.title || cap.titleId}</span>)}
-                      {item.capabilities.length > 2 && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">+{item.capabilities.length - 2}</span>}
+                      {item.capabilities.slice(0, 2).map((cap, index) => <span key={index} className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">{cap.title || cap.titleId}</span>)}
+                      {item.capabilities.length > 2 && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">+{item.capabilities.length - 2}</span>}
                     </div>
                   </td>
                   <td className="px-4 py-2.5"><span className="font-mono text-[10px] text-muted">/{item.slug}</span></td>
@@ -583,7 +582,38 @@ export const AdminCmsServices: React.FC = () => {
         </AdminDataTableShell>
       )}
       {/* Service Detail / Inspection Modal */}
-      <Modal slug="cms-service-detail-modal" open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
+      <Drawer
+        slug="cms-service-detail-drawer"
+        open={!!selectedServiceForDetail}
+        onClose={() => setSelectedServiceForDetail(null)}
+        size="3xl"
+        title={selectedServiceForDetail?.title || 'Service detail'}
+        description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}
+        footer={selectedServiceForDetail ? (
+          <>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => handleDeleteService(selectedServiceForDetail)}
+              icon={<Trash2 size={13} />}
+            >
+              Delete offering
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => { const service = selectedServiceForDetail; setSelectedServiceForDetail(null); openServiceEditor(service); }}><Edit3 size={13} /> Edit service</Button>
+            <Button type="button" variant="secondary" loading={publishingServiceId === selectedServiceForDetail.id} disabled={!selectedServiceForDetail.id || publishingServiceId !== null} onClick={() => void handleTogglePublished(selectedServiceForDetail)}>{selectedServiceForDetail.isPublished === true ? 'Unpublish' : 'Publish'}</Button>
+            <Button type="button" variant="secondary" onClick={() => setSelectedServiceForDetail(null)}>Close</Button>
+            <a
+              href={`https://kapitech.id/services/${selectedServiceForDetail.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-xs font-semibold text-white transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <span>Open public page</span>
+              <ExternalLink size={12} />
+            </a>
+          </>
+        ) : null}
+      >
         {selectedServiceForDetail && (
           <>
             <div className="flex items-center gap-2 font-sans text-xs text-accent font-semibold mb-2">
@@ -645,7 +675,7 @@ export const AdminCmsServices: React.FC = () => {
                       <p className="text-[11px] text-muted mb-2">{stage.stageDesc}</p>
                       <div className="flex flex-wrap gap-1">
                         {stage.deliverables?.map((d, dIdx) => (
-                          <span key={dIdx} className="text-[9px] font-sans bg-panel text-success px-1.5 py-0.5 rounded-badge border border-line">
+                          <span key={dIdx} className="text-[10px] font-sans bg-panel text-success px-1.5 py-0.5 rounded-badge border border-line">
                             ✓ {d}
                           </span>
                         ))}
@@ -656,34 +686,9 @@ export const AdminCmsServices: React.FC = () => {
               </div>
             )}
 
-            <div className="flex flex-col-reverse gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => handleDeleteService(selectedServiceForDetail)}
-                icon={<Trash2 size={13} />}
-              >
-                Delete Offering
-              </Button>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <Button type="button" variant="secondary" onClick={() => { const service = selectedServiceForDetail; setSelectedServiceForDetail(null); openServiceEditor(service); }}><Edit3 size={13} /> Edit service</Button>
-                <Button type="button" variant="secondary" loading={publishingServiceId === selectedServiceForDetail.id} disabled={!selectedServiceForDetail.id || publishingServiceId !== null} onClick={() => void handleTogglePublished(selectedServiceForDetail)}>{selectedServiceForDetail.isPublished === true ? 'Unpublish' : 'Publish'}</Button>
-                <Button type="button" variant="secondary" onClick={() => setSelectedServiceForDetail(null)}>Close</Button>
-                <a
-                  href={`https://kapitech.id/services/${selectedServiceForDetail.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-sans font-semibold flex items-center gap-1 transition-all"
-                >
-                  <span>Open Public Page</span>
-                  <ExternalLink size={12} />
-                </a>
-              </div>
-            </div>
           </>
         )}
-      </Modal>
+      </Drawer>
 
       {/* Add New Service Modal */}
       <Drawer slug="cms-service-editor-drawer"

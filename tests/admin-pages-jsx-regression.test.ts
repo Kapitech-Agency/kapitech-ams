@@ -68,7 +68,7 @@ test('Projects does not present unavailable project data as seeded/demo records 
   assert.ok(source.includes('Project data unavailable'));
 });
 
-test('Finance worksheets stay inside the Finance workspace and retired routes stay hidden', () => {
+test('Finance views stay inside the Finance workspace and retired routes stay hidden', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
@@ -89,9 +89,63 @@ test('Finance worksheets stay inside the Finance workspace and retired routes st
     assert.ok(workbook.includes("label: '" + area + "'"), 'Missing Finance area ' + area);
   }
   assert.ok(workspace.includes('FINANCE_WORKBOOK_GROUPS'));
-  assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance worksheets"'));
+  assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance views"'));
   assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
 });
+test('Retainer workspace uses neutral counts and sentence-case table hierarchy', () => {
+  const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
+
+  assert.ok(retainers.includes('tone="neutral">{records.length} active contracts</AdminStatusBadge>'));
+  assert.ok(retainers.includes('Monthly retainer value'));
+  assert.ok(retainers.includes('Committed retainer hours'));
+  assert.ok(retainers.includes('Renewals due in 30 days'));
+  assert.ok(retainers.includes('text-[11px] font-medium text-muted'));
+  assert.equal(retainers.includes('text-[10px] uppercase tracking-wider'), false);
+  assert.ok(retainers.includes('inline-flex h-9 w-9 items-center justify-center rounded-control'));
+});
+
+test('Long-form client relationship detail uses the shared drawer surface', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+
+  assert.ok(clients.includes('<Drawer slug="client-directory-detail-drawer"'));
+  assert.ok(clients.includes('size="3xl"'));
+  assert.equal(clients.includes('client-directory-detail-modal'), false);
+  assert.ok(clients.includes('Relationship timeline'));
+  assert.ok(clients.includes('Contracts &amp; Statements of Work'));
+});
+
+test('Operational UI avoids sub-10px text outside faithful CMS previews', () => {
+  const paths = [
+    'src/pages/admin/AdminProjects.tsx',
+    'src/pages/admin/AdminInbox.tsx',
+    'src/pages/admin/AdminTeams.tsx',
+    'src/pages/admin/AdminCmsServices.tsx',
+    'src/pages/admin/AdminSettings.tsx',
+    'src/components/admin/GlobalExecutiveDashboard.tsx'
+  ];
+  for (const file of paths) {
+    const source = fs.readFileSync(path.resolve(process.cwd(), file), 'utf8');
+    assert.doesNotMatch(source, /text-\[(?:8|9)px\]/, file + ' must keep operational text at 10px or above.');
+  }
+});
+
+test('Operational labels use sentence case and shared AMS text sizing', () => {
+  const readPage = (file: string) => fs.readFileSync(path.resolve(process.cwd(), file), 'utf8');
+  const projects = readPage('src/pages/admin/AdminProjects.tsx');
+  const clients = readPage('src/pages/admin/AdminClients.tsx');
+  const teams = readPage('src/pages/admin/AdminTeams.tsx');
+  const sla = readPage('src/pages/admin/AdminClientSlaMonitoring.tsx');
+  const dashboard = readPage('src/components/admin/GlobalExecutiveDashboard.tsx');
+
+  assert.equal(projects.includes('uppercase tracking-[0.06em]'), false);
+  assert.equal(projects.includes('uppercase tracking-[0.08em]'), false);
+  assert.equal(clients.includes('uppercase tracking-wider'), false);
+  assert.equal(clients.includes('uppercase tracking-wide'), false);
+  assert.equal(teams.includes('uppercase tracking-[0.06em]'), false);
+  assert.equal(sla.includes('uppercase tracking-[0.08em]'), false);
+  assert.equal(dashboard.includes('uppercase tracking-[0.08em]'), false);
+});
+
 test('Authenticated AMS pages use one canonical responsive page frame', () => {
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const stylesheet = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
@@ -232,6 +286,8 @@ test('All drawers use canonical geometry, typography, and named width presets', 
   assert.ok(drawer.includes('ams-drawer-header'));
   assert.ok(drawer.includes('ams-drawer-body'));
   assert.ok(drawer.includes('ams-drawer-footer'));
+  assert.ok(drawer.includes('bg-black/45 backdrop-blur-[2px]'), 'Drawer scrim stays neutral in dark and light themes.');
+  assert.equal(drawer.includes('bg-bg/80'), false, 'Page surface colors must not be reused as overlay scrims.');
   assert.equal(drawer.includes('dialogClassName'), false, 'Drawer widths must use named presets only.');
   assert.ok(stylesheet.includes('.ams-drawer-header{'));
   assert.ok(stylesheet.includes('.ams-drawer-body form{'));
@@ -245,8 +301,12 @@ test('All drawers use canonical geometry, typography, and named width presets', 
   assert.equal(cmsProjects.includes('dialogClassName'), false);
   assert.equal(cmsServices.includes('dialogClassName'), false);
   assert.equal(cmsTestimonials.includes('dialogClassName'), false);
+  assert.ok(cmsServices.includes('<Drawer'));
+  assert.ok(cmsServices.includes('<Drawer\n        slug="cms-service-detail-drawer"'));
+  assert.ok(cmsServices.includes('size="3xl"'));
+  assert.equal(cmsServices.includes('cms-service-detail-modal'), false);
   assert.ok(cmsProjects.includes('data-ams-drawer-preview'));
-  assert.ok(cmsProjects.includes('size="xl"'));
+  assert.ok(cmsProjects.includes('size="4xl"'));
   assert.ok(cmsServices.includes('size="lg"'));
   assert.ok(cmsTestimonials.includes('size="lg"'));
   assert.equal((careers.match(/data-ams-drawer-size="large"/g) || []).length, 2);

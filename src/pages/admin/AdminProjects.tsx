@@ -274,7 +274,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
       <div className="overflow-x-auto custom-scrollbar" tabIndex={0} aria-label="Scrollable project schedule">
         <div className="min-w-max">
           <div className="flex border-b border-line bg-panel">
-            <div className="sticky left-0 z-30 flex h-11 w-[260px] shrink-0 items-center border-r border-line bg-panel px-3.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+            <div className="sticky left-0 z-30 flex h-11 w-[260px] shrink-0 items-center border-r border-line bg-panel px-3.5 text-[11px] font-medium text-muted">
               Project / owner
             </div>
             <div className="relative h-11 shrink-0" style={{ width: rangeWidth }}>
@@ -285,7 +285,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
               ))}
               {todayPosition >= 0 && todayPosition <= 100 && (
                 <div className="absolute inset-y-0 z-10 border-l border-dashed border-warning" style={{ left: todayPosition + '%' }}>
-                  <span className="absolute left-1 top-0.5 whitespace-nowrap rounded-badge border border-warning/30 bg-panel px-1 py-0.5 text-[9px] font-semibold text-warning">Today</span>
+                  <span className="absolute left-1 top-0.5 whitespace-nowrap rounded-badge border border-warning/30 bg-panel px-1 py-0.5 text-[10px] font-semibold text-warning">Today</span>
                 </div>
               )}
             </div>
@@ -1628,12 +1628,12 @@ export const AdminProjects: React.FC = () => {
                 ['Service', selectedProjectDetail.serviceCategory || 'Delivery'],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-control border border-line bg-bg p-3">
-                  <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted">{label}</div>
+                  <div className="text-xs font-medium text-muted">{label}</div>
                   <div className="mt-1.5 truncate text-xs font-semibold text-fg">{value}</div>
                 </div>
               ))}
               <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted">Owner</div>
+                <div className="text-xs font-medium text-muted">Owner</div>
                 <div className="mt-1.5">
                   {selectedProjectDetail.teamLead ? (
                     <ProfileIdentity profile={{ name: selectedProjectDetail.teamLead, contextLabel: 'Project owner' }} showRole={false} />
@@ -1652,7 +1652,7 @@ export const AdminProjects: React.FC = () => {
                     <p className="mt-1 text-[10px] leading-4 text-muted">Drag is the primary workflow. These controls are the keyboard and touch fallback.</p>
                   </div>
                   {movingProjectId === selectedProjectDetail.id && (
-                    <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[9px] font-semibold text-accent-text">Updating…</span>
+                    <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Updating…</span>
                   )}
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
@@ -2141,7 +2141,7 @@ export const AdminProjects: React.FC = () => {
                               </button>
                             )}
                           </div>
-                          <div className="mt-2 flex items-center justify-between gap-2 border-t border-line/70 pt-2 text-[9px] text-muted">
+                          <div className="mt-2 flex items-center justify-between gap-2 border-t border-line/70 pt-2 text-[10px] text-muted">
                             <span>{items.reduce((sum, project) => sum + project.tasks.filter(task => task.status !== 'done').length, 0)} open tasks</span>
                             <span className="tabular-nums">{formatAmount(items.reduce((sum, project) => sum + project.budget, 0), currency)}</span>
                           </div>
@@ -2271,7 +2271,7 @@ export const AdminProjects: React.FC = () => {
                                     </div>
                                     <div className="flex shrink-0 items-center gap-1.5">
                                       {movingProjectId === project.id && (
-                                        <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[9px] font-semibold text-accent-text">Updating…</span>
+                                        <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Updating…</span>
                                       )}
                                       <button type="button" aria-label={'Actions for ' + project.name} onClick={() => openProjectDetail(project)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg">
                                         <MoreHorizontal size={15} />
@@ -2286,11 +2286,11 @@ export const AdminProjects: React.FC = () => {
                                   </div>
                                   <div className="mt-3 grid grid-cols-2 gap-2">
                                     <div className="min-w-0 rounded-control border border-line bg-bg px-2.5 py-2">
-                                      <div className="text-[9px] font-medium text-muted">Service</div>
+                                      <div className="text-[10px] font-medium text-muted">Service</div>
                                       <div className="mt-0.5 truncate text-[10px] font-medium text-fg">{project.serviceCategory || 'Delivery'}</div>
                                     </div>
                                     <div className="min-w-0 rounded-control border border-line bg-bg px-2.5 py-2">
-                                      <div className="text-[9px] font-medium text-muted">Deadline</div>
+                                      <div className="text-[10px] font-medium text-muted">Deadline</div>
                                       <div className={'mt-0.5 truncate text-[10px] font-medium ' + (isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'text-danger' : 'text-fg')}>
                                         {project.targetEndDate ? formatDate(project.targetEndDate) : 'Not set'}
                                       </div>
@@ -2315,7 +2315,7 @@ export const AdminProjects: React.FC = () => {
                                           {recordedCost === null ? '—' : formatAmount(recordedCost, currency)}
                                           <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
                                         </div>
-                                        <div className="mt-1 text-[9px] text-muted">
+                                        <div className="mt-1 text-[10px] text-muted">
                                           {recordedCost === null ? 'Finance source unavailable' : recordedCostCount + ' expense records'}
                                         </div>
                                       </div>
@@ -2526,7 +2526,7 @@ export const AdminProjects: React.FC = () => {
                     ['Overdue', sprintStats.overdue, 'Past due'],
                   ].map(([label, value, context]) => (
                     <div key={String(label)} className="rounded-card border border-line bg-panel p-4">
-                      <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted">{label}</div>
+                      <div className="text-xs font-medium text-muted">{label}</div>
                       <div className="mt-2 text-xl font-semibold tabular-nums text-fg">{value}</div>
                       <div className="mt-1 text-[10px] text-muted">{context}</div>
                     </div>
@@ -2777,9 +2777,9 @@ export const AdminProjects: React.FC = () => {
                                       </button>
                                       <button type="button" onClick={() => setSelectedTask(task)} className="min-w-0 flex-1 text-left">
                                         <div className="flex flex-wrap items-center gap-1.5">
-                                          <span className={'rounded-badge border px-2 py-1 text-[9px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
+                                          <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
                                           {overdue && (
-                                            <span className="inline-flex items-center gap-1 rounded-badge border border-danger/20 bg-danger/5 px-2 py-1 text-[9px] font-semibold text-danger">
+                                            <span className="inline-flex items-center gap-1 rounded-badge border border-danger/20 bg-danger/5 px-2 py-1 text-[10px] font-semibold text-danger">
                                               <Clock size={10} /> Overdue
                                             </span>
                                           )}
@@ -2795,15 +2795,15 @@ export const AdminProjects: React.FC = () => {
                                     {(task.tags || []).length > 0 && (
                                       <div className="mt-3 flex flex-wrap gap-1">
                                         {(task.tags || []).slice(0, 3).map(tag => (
-                                          <span key={tag} className="rounded-badge border border-line bg-bg px-1.5 py-1 text-[9px] text-muted">{tag}</span>
+                                          <span key={tag} className="rounded-badge border border-line bg-bg px-1.5 py-1 text-[10px] text-muted">{tag}</span>
                                         ))}
-                                        {(task.tags || []).length > 3 && <span className="rounded-badge border border-line bg-bg px-1.5 py-1 text-[9px] text-muted">+{task.tags.length - 3}</span>}
+                                        {(task.tags || []).length > 3 && <span className="rounded-badge border border-line bg-bg px-1.5 py-1 text-[10px] text-muted">+{task.tags.length - 3}</span>}
                                       </div>
                                     )}
 
                                     {checklistTotal > 0 && (
                                       <div className="mt-3">
-                                        <div className="flex items-center justify-between text-[9px] text-muted">
+                                        <div className="flex items-center justify-between text-[10px] text-muted">
                                           <span>Checklist</span>
                                           <span className="tabular-nums text-fg">{doneSubtasks}/{checklistTotal}</span>
                                         </div>
@@ -2831,7 +2831,7 @@ export const AdminProjects: React.FC = () => {
                                           <span className="text-[10px] font-medium text-muted">Unassigned</span>
                                         )}
                                         <div className="min-w-0">
-                                          <div className="text-[9px] text-muted">{dueDays === null ? 'No due date' : overdue ? 'Past due' : dueDays === 0 ? 'Due today' : dueDays === 1 ? 'Due tomorrow' : 'Due ' + formatDate(task.dueDate)}</div>
+                                          <div className="text-[10px] text-muted">{dueDays === null ? 'No due date' : overdue ? 'Past due' : dueDays === 0 ? 'Due today' : dueDays === 1 ? 'Due tomorrow' : 'Due ' + formatDate(task.dueDate)}</div>
                                         </div>
                                       </div>
                                       <button
