@@ -609,7 +609,7 @@ export const AdminDocuments: React.FC = () => {
         />
       </div>
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="documents-mobile-tabs" data-ams-feature-slug="documents-tabs">
+      <div className="min-w-0" data-ams-slug="documents-section-tabs" data-ams-feature-slug="documents-tabs">
         <AdminSectionTabs
           ariaLabel="Documents sections"
           activeKey={activeTab}

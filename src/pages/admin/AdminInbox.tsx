@@ -712,15 +712,7 @@ export const AdminInbox: React.FC = () => {
 
       <AdminModuleHeader slug="inbox-header"
         className="mb-0"
-        title={
-          activeInboxTab === 'overview'
-            ? 'Overview'
-            : activeInboxTab === 'client'
-              ? 'Client Inbox'
-              : activeInboxTab === 'jobs'
-                ? 'Job Applications'
-                : 'Starred'
-        }
+        title="Inbox"
         description={
           activeInboxTab === 'overview'
             ? (language === 'id'

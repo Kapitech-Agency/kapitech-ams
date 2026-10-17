@@ -42,6 +42,7 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
   team: [
     { key: 'team', label: 'Team directory', to: '/admin/team' },
     { key: 'capacity', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
+    { key: 'skills', label: 'Skill matrix', to: '/admin/vendors?view=skill-matrix' },
     { key: 'vendors', label: 'Vendors & freelancers', to: '/admin/vendors' },
     { key: 'time', label: 'Time tracking', to: '/admin/time-logs' },
   ],
@@ -140,7 +141,8 @@ export function isAmsModuleSubnavigationItemActive(
 
   if (item.key === 'team' && path === '/admin/team') return params.get('view') !== 'capacity-allocation';
   if (item.key === 'capacity' && path === '/admin/team') return params.get('view') === 'capacity-allocation';
-  if (item.key === 'vendors') return path === '/admin/vendors';
+  if (item.key === 'vendors') return path === '/admin/vendors' && params.get('view') !== 'skill-matrix';
+  if (item.key === 'skills') return path === '/admin/vendors' && params.get('view') === 'skill-matrix';
   if (item.key === 'time') return path === '/admin/time-logs';
 
   if (item.key === 'backup' && path === '/admin/settings') return !params.get('tab') || params.get('tab') === 'overview';
