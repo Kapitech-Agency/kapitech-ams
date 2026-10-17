@@ -727,7 +727,9 @@ test('Time tracking leads with the time-entry workflow and register before perio
   const metrics = time.indexOf('time-tracking-kpis');
   assert.ok(form >= 0 && ledger > form);
   assert.ok(pagination > ledger && metrics > pagination);
-  assert.ok(time.includes('onClick={() => document.getElementById(\'time-entry-form\')?.scrollIntoView'));
+  assert.ok(time.includes('onClick={() => setFormOpen(true)'));
+  assert.ok(time.includes('<Drawer'));
+  assert.ok(time.includes('closeOnEscape={!saving}'));
   assert.ok(time.includes('const totalMinutes = useMemo'));
   assert.ok(time.includes('const billableMinutes = useMemo'));
 });
