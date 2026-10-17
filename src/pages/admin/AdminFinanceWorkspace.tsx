@@ -3131,11 +3131,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."
         actions={(
           <div className="flex flex-wrap items-center gap-2">
-            {activeGroup.key === 'receivables' && (
-              <Button variant="secondary" type="button" onClick={() => navigate('/admin/finance/quotations')}>
-                Quotations
-              </Button>
-            )}
             <Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>
               Refresh data
             </Button>

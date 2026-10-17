@@ -1871,7 +1871,7 @@ export const AdminProjects: React.FC = () => {
         eyebrow={view === 'all' ? 'Workspace / Projects' : 'Projects'}
         title={(
           <span className="flex min-w-0 flex-wrap items-center gap-2.5">
-            <span>{view === 'all' ? 'Projects & Delivery Kanban' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
+            <span>{view === 'all' ? 'Projects' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
             <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (serverMode ? 'border-accent/25 bg-accent/10 text-accent' : loading ? 'border-info/25 bg-info/10 text-info' : 'border-warning/25 bg-warning/10 text-warning')}>
               {serverMode
                 ? view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects'

@@ -1131,9 +1131,6 @@ export const AdminTeams: React.FC = () => {
         description={pageCopy[currentView].description}
         actions={
           <>
-            {currentView === 'capacity-allocation' && (
-              <Link to="/admin/team" className="inline-flex h-9 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg"><UsersRound size={14} /> Team Directory</Link>
-            )}
             {currentView === 'vendor-directory' && (
               <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                 <label className="relative w-full sm:w-[190px]">
@@ -1166,7 +1163,6 @@ export const AdminTeams: React.FC = () => {
                   <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input value={teamHeaderSearch} onChange={(event) => setTeamHeaderSearch(event.target.value)} placeholder="Search team..." aria-label="Search team" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
                 </label>
-                <Link to="/admin/team?view=capacity-allocation" className="inline-flex h-9 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg"><CalendarDays size={14} /> Capacity &amp; Allocation</Link>
                 <CustomSelect
                   value={teamDepartment}
                   onChange={setTeamDepartment}

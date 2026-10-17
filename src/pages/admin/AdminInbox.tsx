@@ -892,8 +892,10 @@ export const AdminInbox: React.FC = () => {
           actions={(
             <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
               <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
-              <button type="button" onClick={()=>setViewMode('queue')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg"><Star size={13}/>Queue</button>
-              <button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><User size={13}/>Review</button>
+              <div role="group" aria-label="Starred record view" className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
+                <button type="button" aria-pressed={viewMode === 'queue'} onClick={() => setViewMode('queue')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'queue' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><Star size={13}/>Queue</button>
+                <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><User size={13}/>Review</button>
+              </div>
             </div>
           )}
         />
@@ -909,8 +911,8 @@ export const AdminInbox: React.FC = () => {
               <div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div>
               <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
               <div className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
-                <button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip bg-panel border border-line px-2.5 text-[11px] font-medium text-fg"><LayoutGrid size={13}/>Review</button>
-                <button type="button" onClick={()=>setViewMode('table')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium text-muted hover:text-fg"><TableIcon size={13}/>Table</button>
+                <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><LayoutGrid size={13}/>Review</button>
+                <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><TableIcon size={13}/>Table</button>
               </div>
             </div>
           )}
