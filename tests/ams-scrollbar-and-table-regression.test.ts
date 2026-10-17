@@ -63,4 +63,18 @@ test('table geometry variants use scoped selectors rather than important overrid
   assert.match(settings, /height:\s*48px/);
 });
 
+
+test('Inbox leaves Careers applicant review in the canonical CMS workspace', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const app = await read('src/App.tsx');
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+
+  assert.doesNotMatch(inbox, /inbox-jobs-board|Candidate pipeline|Starred candidate work/);
+  assert.match(inbox, /\.filter\(\(item\) => item\.type !== 'career'\)/);
+  assert.match(inbox, /to="\/admin\/cms\/careers\?tab=applicants"/);
+  assert.match(app, /if \(query\.get\('view'\) === 'jobs'\)/);
+  assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
+  assert.match(careers, /pagedApplicants\.map\(applicant/);
+});
+
 // Print-specific !important rules remain outside these screen-layout variants by design.
