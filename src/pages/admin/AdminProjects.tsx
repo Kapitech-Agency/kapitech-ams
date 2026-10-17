@@ -26,7 +26,6 @@ import {
   X,
 } from 'lucide-react';
 import {
-  INITIAL_DEFAULT_PROJECTS,
   AgencyProject,
   ProjectTask,
   ProjectStatus,
@@ -353,14 +352,6 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
   );
 };
 
-const demoProjects: ProjectRecord[] = INITIAL_DEFAULT_PROJECTS.map(item =>
-  normalizeProject({
-    ...item,
-    slug: slugify(item.name),
-    health: inferHealth(item),
-  })
-);
-
 const PROJECT_STATUS_OVERRIDES_KEY = 'kapitech_ams_project_status_overrides_v1';
 const TASK_STATUS_OVERRIDES_KEY = 'kapitech_ams_task_status_overrides_v1';
 
@@ -502,7 +493,7 @@ export const AdminProjects: React.FC = () => {
   const canManageTasks = canManageKanbanTasks;
   const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
-  const [projects, setProjects] = useState<ProjectRecord[]>(isSlugFixtureMode() ? demoProjects : []);
+  const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [projectExpenses, setProjectExpenses] = useState<any[] | null>(null);
   const [expenseLoading, setExpenseLoading] = useState(true);
   const [expenseError, setExpenseError] = useState<string | null>(null);
@@ -662,7 +653,7 @@ export const AdminProjects: React.FC = () => {
       setError(response.error || 'Project service is unavailable. Refresh after the connection is restored.');
       if (!serverModeRef.current) {
         setServerConnected(false);
-        setProjects(isSlugFixtureMode() ? applyKanbanStatusOverrides(demoProjects) : []);
+        setProjects([]);
       }
     } catch (requestError) {
       setError(requestError instanceof Error
@@ -670,7 +661,7 @@ export const AdminProjects: React.FC = () => {
         : 'Project service is unavailable. Refresh after the connection is restored.');
       if (!serverModeRef.current) {
         setServerConnected(false);
-        setProjects(isSlugFixtureMode() ? applyKanbanStatusOverrides(demoProjects) : []);
+        setProjects([]);
       }
     } finally {
       if (showLoading) setLoading(false);
@@ -2101,10 +2092,10 @@ export const AdminProjects: React.FC = () => {
         <div className="rounded-card border border-warning/25 bg-warning/5 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold text-fg">{isSlugFixtureMode() && !serverMode ? 'Demo data mode' : 'Project service status'}</p>
+              <p className="text-xs font-semibold text-fg">Project service status</p>
               <p className="mt-1 text-[11px] leading-5 text-muted">{error}</p>
             </div>
-            <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">{isSlugFixtureMode() && !serverMode ? 'fixture preview' : 'API unavailable'}</span>
+            <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">API unavailable</span>
           </div>
         </div>
       )}
