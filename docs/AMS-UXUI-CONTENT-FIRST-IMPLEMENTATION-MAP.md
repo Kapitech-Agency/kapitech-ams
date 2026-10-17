@@ -570,3 +570,29 @@ These changes address display-state interpretation and recovery only; they do no
 ### Finance table geometry parity · 18 October 2026
 
 The shared Finance register renderer uses the existing `ams-finance-table` design-system variant. Row density and compact action hit-target rules apply consistently to each worksheet using that renderer rather than relying on generic table defaults. This is a frontend presentation-only correction; record data, sort/pagination behavior, accounting calculations, authorization and API contracts are unchanged.
+
+## Full structural redesign execution checkpoint · 18 October 2026
+
+This checkpoint continues the existing source-backed nine-module content-first work. It does not mark the full redesign complete.
+
+### Direct-to-main implementation slices
+
+- Dashboard overview (118dec382792eb4f3ec458733dc135292d180c7c): retained all eight existing KPI values but made four operational measures primary. Supporting finance, utilization and budget indicators now follow the invoice-versus-expense chart and delivery distribution, before the active-project register. No metric source, calculation or label meaning changed.
+- Scroll ownership (8a1f11e06f6fb4a58b1d8f5a794e27250f2dd71c): document-level html now uses automatic scrollbar gutter while .ams-shell > main remains the stable vertical workspace scroller. Added regression coverage for duplicate gutter reservation.
+- Client Retainers (5566448291eee09ff3db765f24f19ac69176db71): moved the existing KPI strip after filters and the agreement register. Existing records, warning context, filters, sorting, actions and permission checks remain unchanged.
+- Time Tracking (49fc1a013372869ba4fc0a2f2338942aff6eee33): moved the multi-field time-entry form into the shared Drawer. The ledger remains the primary workspace; save, validation, unknown-outcome recovery, API payload and permissions are unchanged. The existing regression test was updated for the drawer interaction in d60f6708f27a518bfc43aab20ed5565d88d3bb64.
+- Shared contextual tabs (af7868d9ea7c8038cac3d68fc48f4f65684030d5): primary and secondary workspace tabs now share compact 32px geometry and 11px labels. Primary navigation uses a restrained accent-tint selected state; secondary worksheet navigation uses a neutral selected state. Route matching, access filtering, active state and scroll-to-active behavior remain unchanged. The existing tab-style assertion was updated in ef41117ec845dddc9fc5e07e683a69b1fa973995.
+
+### Automated validation evidence
+
+- Quality Gate passed at ef41117ec845dddc9fc5e07e683a69b1fa973995: typecheck, regression tests and production build.
+- AMS CI passed at the same commit: type check, PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build and HTTP smoke test.
+- A prior failing test run was caused by an assertion that still expected the retired inline time-entry form and underline-style tabs. The implementation was retained; assertions were updated to reflect the intended frontend structure and rerun successfully.
+
+### Current remaining scope
+
+The redesign remains in progress. Continue source-backed structural review of every active module and subtab, including Dashboard Overview/Performance/Analytics; Inbox Overview/Client/Starred and its queue/review/table modes; Projects portfolio/Delivery/Budget/Archived and Tasks list/board; Clients directory/Onboarding/Contracts/Retainers/SLA; the five Finance primary workspaces and their worksheets; Team directory/Capacity/Skill matrix/Vendors/Time Tracking; Documents views; every CMS content type plus Careers Jobs/Applicants; and Settings overview/security/audit/integrations and other actual configured views.
+
+The original Dashboard screenshot was not present as an inspectable repository asset in this execution context. The existing content-architecture guideline and prior source-backed reference analysis remain the available structural evidence. Do not claim screenshot reinspection.
+
+Authenticated browser/device visual validation is still unverified. Before calling the redesign complete, inspect the live authenticated UI at 1440, 1280, 1024, 900, 768, 390 and 320px; check long tables/boards, last-column reachability, keyboard/touch scrolling, drawer/modal focus and scroll restoration, reduced motion, light/dark theme, and route/query-state stability. Source tests and successful CI do not substitute for those checks.
