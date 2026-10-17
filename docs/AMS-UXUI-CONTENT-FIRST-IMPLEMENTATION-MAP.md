@@ -456,3 +456,30 @@ Refresh the current branch HEAD and Actions after this documentation update. The
 - The editor for client records still initializes optional SLA fields as zero when opening an edit form and serializes zero on save. This was not changed because it can affect persisted payload semantics and needs a separate approved data-contract/workflow review. The display, filter, compliance and export fixes described in Slice 7 remain frontend presentation fixes.
 - Browser-based verification is outstanding: authenticated module screenshots, scroll ownership and last-column reachability at the required widths, keyboard/touch behavior, drawer/modal focus and scroll restoration, login success/failure/logout style-lock cleanup, and native scrollbar behavior in another browser engine. The source checks and CI do not substitute for these runtime tests.
 - Repository main was last verified at 35bc936ef96972a233196d3f3c92b2e5bb24d2d7. Refresh main and the review branch before any future release decision. This branch remains unmerged and undeployed.
+
+
+
+## Follow-up checkpoint · Team & Resources unavailable-data states · 17 October 2026
+
+### Slice 11 · Distinguish missing time/project data from recorded zero activity
+
+- Files changed: src/pages/admin/AdminTeams.tsx and tests/team-resource-data-availability.test.ts.
+- Member allocation status now checks time-log source availability before calculating tracked-time status. When the source is loading or failed, it displays "Loading time data" or "Time data unavailable", returns an unknown percentage, and does not label all members as "No time logged".
+- Team Directory status filtering now includes an explicit unavailable option. The existing "No time logged" / bench filter matches only the state computed from a successfully loaded time-log collection. Leave status remains visible even when time logs are unavailable, while the tracked percentage is shown as unknown.
+- Table, grid, profile drawer and allocation drawer show an em dash for unknown workload percentages and neutral status styling rather than treating an unavailable source as 0%.
+- Team Directory summary context now distinguishes unavailable/loading time logs from "without entries". CSV export writes "Unavailable" for tracked hours when the source was not loaded, while a real, successfully loaded zero remains zero.
+- Project assignment counts, pod/focus labels, detail panels and allocation drawer now distinguish an unavailable project source from an actual empty assignment list. Project counts show an em dash with a source-specific message instead of 0.
+- Capacity history and upcoming allocation rows now distinguish unavailable/loading sources from 0% utilization or "No plan". The related CSV columns export "Unavailable" when the relevant source did not load. The future-plan empty-state explanation only appears after project data loaded successfully and no saved dated plans were found.
+- Added focused regression tests in tests/team-resource-data-availability.test.ts. They check source ownership, filter behavior, unknown values, CSV output, and the separation between unavailable sources and valid empty/zero states.
+- No time logs, project assignments, saved resource allocations, backend behavior, API contracts, formulas, permissions or data model were modified.
+
+### Validation at the Team & Resources source checkpoint
+
+- At commit 44aa4df8a491600cd1af371be965324bdfcbf13e, AMS CI passed: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39053344590.
+- This is CI evidence for typecheck, regression tests, production build and the broader AMS CI workflow. AMS Quality Gate for that exact SHA was still pending at the last poll; it must not be described as passed unless its run later reports success.
+- Source-level assertions on that SHA passed for: unknown workload percentage, explicit unavailable filter, project counts and allocation rows showing unavailable, capacity CSV not emitting false zero/no-plan, and source-gated empty-plan messaging.
+- No authenticated browser preview, computed-style inspection, or mobile/keyboard/touch screenshot was performed. Visual QA for Team tabs, the resource table and the allocation drawer remains outstanding.
+
+### Resume point
+
+After this documentation update, fetch the current branch HEAD and check the exact SHA's AMS Quality Gate and AMS CI. The review branch remains separate from main, with no merge or deployment. Next visual verification should focus on the seven required viewport widths, table horizontal reachability, filter behavior during source failure/recovery, and scroll/focus restoration in resource drawers. Do not change the protected data contracts to simplify the unavailable-state presentation.
