@@ -113,7 +113,7 @@ test('shared module headers wrap actions without forcing a full-width mobile act
 
 test('shared compact actions retain adequate touch targets and visible keyboard focus', async () => {
   const css = await read('src/index.css');
-  assert.match(css, /\.ams-shell :is\(\.ams-data-table,\.ams-client-table,\.ams-teams-table,\.ams-projects-table,\.settings-system-table,\.ams-table\) td :is\(button,a\)\[class~="h-8"\]\[class~="w-8"\]/);
+  assert.match(css, /\.ams-shell :is\(\.ams-data-table,\.ams-finance-table,\.ams-client-table,\.ams-teams-table,\.ams-projects-table,\.settings-system-table,\.ams-table\) td :is\(button,a\)\[class~="h-8"\]\[class~="w-8"\]/);
   assert.match(css, /min-width:40px;\s*min-height:40px/s);
   assert.match(css, /outline:2px solid var\(--accent\)/);
 });
