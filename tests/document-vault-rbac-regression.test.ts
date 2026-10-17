@@ -36,3 +36,19 @@ test('Document upload keeps ambiguous storage writes for reconciliation instead 
   assert.ok(handler.includes('const cleanup = createdId'));
   assert.ok(handler.includes('Never delete a possibly completed upload'));
 });
+
+test('Document association IDs are validated against canonical client and project records', async () => {
+  const routes = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  const start = routes.indexOf("apiRouter.post('/documents', requireAuth, documentMutationMiddleware");
+  const end = routes.indexOf("apiRouter.put('/documents/:id/content'", start);
+  assert.ok(start >= 0 && end > start, 'The document create endpoint must remain discoverable.');
+  const handler = routes.slice(start, end);
+
+  assert.ok(handler.includes("const relatedEntity = cleanText(data.relatedEntity || 'General', 200);"));
+  assert.ok(handler.includes("const relatedId = cleanText(data.relatedId || '', 120);"));
+  assert.ok(handler.includes('postgresClientRepository.findById(relatedId)'));
+  assert.ok(handler.includes('postgresProjectRepository.list()'));
+  assert.ok(handler.includes("const relatedRecords = relatedEntity === 'Client' ? db.clients : db.projects;"));
+  assert.ok(handler.includes("relatedRecords.some((record: any) => String(record.id) === relatedId)"));
+  assert.ok(handler.includes('related record was not found or is no longer available'));
+});
