@@ -54,25 +54,34 @@ test('contextual navigation contains only local views owned by the current modul
 
 test('active state follows route and query for Dashboard, Projects, Clients, Team and Settings', () => {
   const dashboard = getAmsModuleSubnavigation('dashboard', 'Admin');
+  assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'overview')!, '/admin/dashboard'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'overview')!, '/admin/dashboard', '?view=performance'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'performance')!, '/admin/dashboard', '?view=performance'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'performance')!, '/admin/dashboard', '?view=analytics'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'analytics')!, '/admin/dashboard', '?view=analytics'), true);
 
   const projects = getAmsModuleSubnavigation('projects', 'Admin');
+  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'all')!, '/admin/projects'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'all')!, '/admin/projects', '?projects=budget'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=sprint'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=budget'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'budget')!, '/admin/projects', '?projects=budget'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'archived')!, '/admin/projects', '?projects=archived'), true);
 
   const clients = getAmsModuleSubnavigation('clients', 'Admin');
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'directory')!, '/admin/clients/all-clients'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'directory')!, '/admin/clients/all-clients', '?scope=onboarding'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'onboarding')!, '/admin/clients/all-clients', '?scope=onboarding'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'onboarding')!, '/admin/clients/all-clients'), false);
 
   const team = getAmsModuleSubnavigation('team', 'Admin');
+  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'team')!, '/admin/team'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'team')!, '/admin/team', '?view=capacity-allocation'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'capacity')!, '/admin/team', '?view=capacity-allocation'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'capacity')!, '/admin/team'), false);
 
   const cms = getAmsModuleSubnavigation('cms', 'Admin');
+  assert.equal(isAmsModuleSubnavigationItemActive(cms.find((item) => item.key === 'projects')!, '/admin/cms/projects'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(cms.find((item) => item.key === 'careers')!, '/admin/cms/careers', '?tab=applicants'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(cms.find((item) => item.key === 'projects')!, '/admin/cms/careers', '?tab=applicants'), false);
 
