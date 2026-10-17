@@ -1164,22 +1164,22 @@ export const AdminClients: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-xs text-muted">Cumulative billed value</p>
-                  <p className="mt-1 text-base font-medium tabular-nums text-fg">{formatAmount(selectedClient.totalSpend || 0, currency)}</p>
+                  <p className="mt-1 text-base font-medium tabular-nums text-fg">{typeof selectedClient.totalSpend === 'number' && Number.isFinite(selectedClient.totalSpend) ? formatAmount(selectedClient.totalSpend, currency) : (language === 'id' ? 'Belum tercatat' : 'Not recorded')}</p>
                 </div>
               </div>
             </div>
 
-            {(selectedClient.slaDailyAdSpendBudget || selectedClient.currentDailyAdSpend) ? (
+            {(typeof selectedClient.slaDailyAdSpendBudget === 'number' && Number.isFinite(selectedClient.slaDailyAdSpendBudget)) || (typeof selectedClient.currentDailyAdSpend === 'number' && Number.isFinite(selectedClient.currentDailyAdSpend)) ? (
               <div>
                 <p className="text-xs font-medium text-fg">Daily ad-spend SLA</p>
                 <div className="mt-2 grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-muted">Current spend</p>
-                    <p className="mt-1 text-sm tabular-nums text-fg">{formatAmount(selectedClient.currentDailyAdSpend || 0, currency)}</p>
+                    <p className="mt-1 text-sm tabular-nums text-fg">{typeof selectedClient.currentDailyAdSpend === 'number' && Number.isFinite(selectedClient.currentDailyAdSpend) ? formatAmount(selectedClient.currentDailyAdSpend, currency) : (language === 'id' ? 'Belum dicatat' : 'Not recorded')}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted">Agreed cap</p>
-                    <p className="mt-1 text-sm tabular-nums text-fg">{formatAmount(selectedClient.slaDailyAdSpendBudget || 0, currency)}</p>
+                    <p className="mt-1 text-sm tabular-nums text-fg">{typeof selectedClient.slaDailyAdSpendBudget === 'number' && Number.isFinite(selectedClient.slaDailyAdSpendBudget) ? formatAmount(selectedClient.slaDailyAdSpendBudget, currency) : (language === 'id' ? 'Belum ditetapkan' : 'Not configured')}</p>
                   </div>
                 </div>
               </div>
