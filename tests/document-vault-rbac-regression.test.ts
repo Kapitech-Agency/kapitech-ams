@@ -55,3 +55,18 @@ test('Document association IDs are validated against canonical client and projec
   assert.ok(handler.includes("relatedRecords.some((record: any) => String(record.id) === relatedId)"));
   assert.ok(handler.includes('related record was not found or is no longer available'));
 });
+
+test('Document record creation timeouts refresh the vault without blind duplicate creation', async () => {
+  const ui = await fs.readFile(path.join(root, 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
+  const start = ui.indexOf('const saveUpload = async');
+  const end = ui.indexOf('const confirmDelete', start);
+  assert.ok(start >= 0 && end > start, 'The document upload handler must remain discoverable.');
+  const handler = ui.slice(start, end);
+
+  assert.ok(handler.includes('let createAttempted = false;'));
+  assert.ok(handler.includes('createAttempted = true;'));
+  assert.ok(handler.includes('const createOutcomeUnknown = created.status === undefined || created.status >= 500;'));
+  assert.ok(handler.includes('if (createOutcomeUnknown) {\n          await loadDocuments();'));
+  assert.ok(handler.includes('else if (createAttempted && !createdId)'));
+  assert.ok(handler.includes('Inspect the refreshed vault before retrying; the record may already exist.'));
+});
