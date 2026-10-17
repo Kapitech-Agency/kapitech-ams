@@ -471,3 +471,25 @@ test('New vendor payments only offer bills with balances and preserve the select
   assert.match(options, /\|\| bill\.id === currentBillId/);
   assert.match(options, /No outstanding vendor bills/);
 });
+
+
+test('Finance document templates are available inside the existing five-group workspace', async () => {
+  const workbook = await read('src/lib/financeWorkbook.ts');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const templates = await read('src/lib/financeDocumentTemplates.ts');
+  const groups = workbook.slice(0, workbook.indexOf('export interface ExcelChartAccount'));
+
+  assert.equal((groups.match(/\\n    key: '(?:overview|transactions|receivables|projects|accounting)'/g) || []).length, 5);
+  assert.match(groups, /key: 'receivables',[\\s\\S]*?key: 'quotations',[\\s\\S]*?key: 'accounts-receivable'/);
+  assert.match(workspace, /case 'quotations':[\\s\\S]{0,160}embeddedView="quotations"/);
+  assert.ok(invoicing.includes('FINANCE_INVOICE_TEMPLATES'));
+  assert.ok(invoicing.includes('FINANCE_QUOTATION_TEMPLATES'));
+  assert.ok(invoicing.includes('data-ams-feature-slug="finance-invoice-template-picker"'));
+  assert.ok(invoicing.includes('data-ams-feature-slug="finance-quotation-template-picker"'));
+  assert.ok(invoicing.includes('const printInvoiceDraft = () => {'));
+  assert.ok(invoicing.includes('const printQuotationDraft = () => {'));
+  assert.ok(invoicing.includes('const printSavedQuotation = (quotation: FinanceQuotation) => {'));
+  assert.ok(templates.includes('const escapeHtml ='));
+  assert.ok(templates.includes('document.write(html)'));
+});
