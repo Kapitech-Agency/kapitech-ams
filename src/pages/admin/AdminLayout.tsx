@@ -17,7 +17,7 @@ import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
 import { getAmsRole } from '../../lib/amsNavigationAccess';
 import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive, type AmsSidebarModuleKey } from '../../lib/amsModuleSubnavigation';
-import { AdminSectionTabs } from '../../components/admin/AdminModulePrimitives';
+import { AdminWorkspaceNavigationContext } from '../../components/admin/AdminModulePrimitives';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -447,19 +447,13 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
         </header>
-        {/* Workspace navigation lives in the content area, not the global topbar. */}
+        {/* Page shells render contextual navigation below the page title and description. */}
         <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
-          {workspaceTabItems.length > 0 && (
-            <div className="px-4 pt-3 sm:px-5 lg:px-6" data-ams-slug="workspace-navigation">
-              <AdminSectionTabs
-                ariaLabel="Workspace navigation"
-                activeKey={activeWorkspaceTab?.key || ''}
-                items={workspaceTabItems}
-                className="w-full"
-              />
-            </div>
-          )}
-          <Outlet />
+          <AdminWorkspaceNavigationContext.Provider
+            value={workspaceTabItems.length > 0 ? { items: workspaceTabItems, activeKey: activeWorkspaceTab?.key || '' } : null}
+          >
+            <Outlet />
+          </AdminWorkspaceNavigationContext.Provider>
         </div>
 
       </main>

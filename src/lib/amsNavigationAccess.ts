@@ -41,7 +41,7 @@ const COMMERCIAL_ROLES: AmsRole[] = ['Admin', 'Finance', 'PM'];
 export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   {
     key: 'workspace',
-    label: 'WORKSPACE',
+    label: 'Workspace',
     items: [
       { key: 'dashboard-hub', label: 'Dashboard', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: ALL_ROLES },
       { key: 'inbox', label: 'Inbox', to: '/admin/inbox', icon: 'activity', allowedRoles: COMMERCIAL_ROLES },
@@ -49,7 +49,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   },
   {
     key: 'delivery',
-    label: 'DELIVERY',
+    label: 'Delivery',
     items: [
       { key: 'project-hub', label: 'Projects', to: '/admin/projects', icon: 'projects', allowedRoles: ALL_ROLES },
       { key: 'clients', label: 'Clients', to: '/admin/clients/all-clients', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
@@ -57,7 +57,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   },
   {
     key: 'operations',
-    label: 'OPERATIONS',
+    label: 'Operations',
     items: [
       { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'], accessNote: { PM: 'Project finance view' } },
       { key: 'team-resources', label: 'Team & Resources', to: '/admin/team', icon: 'user', allowedRoles: ['Admin', 'Finance', 'PM'] },
@@ -66,7 +66,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   },
   {
     key: 'publishing',
-    label: 'PUBLISHING',
+    label: 'Publishing',
     items: [
       { key: 'website-cms', label: 'Website CMS', to: '/admin/cms/projects', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
     ],

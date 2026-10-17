@@ -19,15 +19,25 @@ export const AdminPageShell: React.FC<AdminPageShellProps> = ({
   children,
   className,
   featureSlug
-}) => (
-  <div
-    data-ams-feature-slug={featureSlug}
-    data-ams-slug={featureSlug}
-    className={cn('ams-page-shell min-h-full min-w-0', className)}
-  >
-    {children}
-  </div>
-);
+}) => {
+  const workspaceNavigation = React.useContext(AdminWorkspaceNavigationContext);
+  const navigationResult = workspaceNavigation
+    ? injectWorkspaceNavigationAfterHeader(children, workspaceNavigation)
+    : { content: children, inserted: false };
+
+  return (
+    <div
+      data-ams-feature-slug={featureSlug}
+      data-ams-slug={featureSlug}
+      className={cn('ams-page-shell min-h-full min-w-0', className)}
+    >
+      {workspaceNavigation && !navigationResult.inserted && (
+        <WorkspaceNavigationTabs navigation={workspaceNavigation} />
+      )}
+      {navigationResult.content}
+    </div>
+  );
+};
 
 export interface AdminSectionTabItem {
   key: string;
@@ -36,6 +46,14 @@ export interface AdminSectionTabItem {
   slug?: string;
   permission?: string;
 }
+
+export interface AdminWorkspaceNavigationValue {
+  items: AdminSectionTabItem[];
+  activeKey: string;
+}
+
+/** Supplies the current module's contextual navigation to its page shell. */
+export const AdminWorkspaceNavigationContext = React.createContext<AdminWorkspaceNavigationValue | null>(null);
 
 export interface AdminSectionTabsProps {
   items: AdminSectionTabItem[];
@@ -66,7 +84,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
   <nav
     aria-label={ariaLabel}
     className={cn(
-      'flex max-w-full min-w-0 items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1 ams-topnav-scroll',
+      'flex max-w-full min-w-0 items-center gap-1 overflow-x-auto border-b border-line ams-topnav-scroll',
       className
     )}
   >
@@ -79,10 +97,10 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
           aria-current={active ? 'page' : undefined}
           data-ams-slug={item.slug ?? item.key}
           className={cn(
-            'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+            'inline-flex min-h-9 shrink-0 items-center border-b-2 border-transparent px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
             active
-              ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-              : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+              ? 'border-accent font-semibold text-fg'
+              : 'text-muted hover:border-line hover:text-fg'
           )}
         >
           {item.label}
@@ -659,3 +677,45 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
 };
 
 export default AdminModuleHeader;
+
+interface WorkspaceNavigationInjectionResult {
+  content: React.ReactNode;
+  inserted: boolean;
+}
+
+const WorkspaceNavigationTabs: React.FC<{ navigation: AdminWorkspaceNavigationValue }> = ({ navigation }) => (
+  <div className="ams-workspace-navigation min-w-0" data-ams-slug="workspace-navigation">
+    <AdminSectionTabs ariaLabel="Workspace navigation" activeKey={navigation.activeKey} items={navigation.items} className="w-full" />
+  </div>
+);
+
+/** Places contextual navigation immediately after the first page-level header. */
+function injectWorkspaceNavigationAfterHeader(children: React.ReactNode, navigation: AdminWorkspaceNavigationValue): WorkspaceNavigationInjectionResult {
+  const walk = (node: React.ReactNode): { node: React.ReactNode; inserted: boolean } => {
+    if (Array.isArray(node)) {
+      let inserted = false;
+      const content = node.map((child) => {
+        if (inserted) return child;
+        const result = walk(child);
+        if (result.inserted) inserted = true;
+        return result.node;
+      });
+      return { node: content, inserted };
+    }
+    if (!React.isValidElement(node)) return { node, inserted: false };
+    if (node.type === AdminModuleHeader) {
+      return { node: <React.Fragment key="ams-workspace-navigation-after-header">{node}<WorkspaceNavigationTabs navigation={navigation} /></React.Fragment>, inserted: true };
+    }
+    if (node.type === React.Fragment) {
+      const result = walk(node.props.children);
+      return result.inserted ? { node: React.cloneElement(node, undefined, result.node), inserted: true } : { node, inserted: false };
+    }
+    if (typeof node.type === 'string' && node.props?.children !== undefined) {
+      const result = walk(node.props.children);
+      return result.inserted ? { node: React.cloneElement(node, undefined, result.node), inserted: true } : { node, inserted: false };
+    }
+    return { node, inserted: false };
+  };
+  const result = walk(children);
+  return { content: result.node, inserted: result.inserted };
+}

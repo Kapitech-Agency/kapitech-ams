@@ -126,7 +126,7 @@ const NavigationGroup: React.FC<NavigationGroupProps> = ({
       className="space-y-1.5"
     >
       {showHeading && (
-        <h2 className="px-2.5 pb-1 pt-3 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted/80">
+        <h2 className="px-2.5 pb-1 pt-3 text-[10px] font-semibold text-muted">
           {group.label}
         </h2>
       )}
@@ -214,8 +214,8 @@ export const AdminSystemSettingsNavigation: React.FC<AdminSystemSettingsNavigati
       data-ams-feature-slug="ams-system-settings-nav"
       className="mt-3 border-t border-line pt-3"
     >
-      <h2 className="px-2.5 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted/80">
-        SYSTEM CENTER
+      <h2 className="px-2.5 pb-1.5 text-[10px] font-semibold text-muted">
+        System settings
       </h2>
       <NavigationLink
         item={AMS_PRIMARY_SETTINGS_ITEM}
