@@ -148,7 +148,10 @@ export function isAmsModuleSubnavigationItemActive(
 
   if (path !== targetPath) return false;
   const targetParams = target.searchParams;
-  for (const key of new Set([...targetParams.keys(), ...params.keys()])) {
+  // Extra page-local query state (for example Careers' ?tab=applicants)
+  // must not clear the active module tab. Only compare parameters that define
+  // the navigation destination itself.
+  for (const key of targetParams.keys()) {
     if (targetParams.get(key) !== params.get(key)) return false;
   }
   if (target.hash) return hash === target.hash;
