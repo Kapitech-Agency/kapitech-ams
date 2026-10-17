@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
-  Building2,
   CheckCircle2,
   Download,
   Eye,
@@ -13,7 +12,6 @@ import {
   Plus,
   RefreshCw,
   Search,
-  ShieldCheck,
   Trash2,
   UploadCloud,
   X,
@@ -28,7 +26,6 @@ import Button from '../../components/ui/Button';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import {
   AdminFilterBar,
-  AdminMetricStrip,
   AdminModuleHeader,
   AdminPageShell,
   AdminPanel,
@@ -332,17 +329,6 @@ export const AdminDocuments: React.FC = () => {
   const safePage = Math.min(page, totalPages);
   const pagedDocuments = filteredDocuments.slice((safePage - 1) * pageSize, safePage * pageSize);
 
-  const storageBytes = documents.reduce((sum, doc) => sum + sizeBytesOf(doc), 0);
-  const readyCount = documents.filter(readyOf).length;
-  const categoryCount = new Set(documents.map((doc) => categoryOf(doc).toLowerCase())).size;
-  const updatedThisMonth = documents.filter((doc) => {
-    const raw = doc.updatedAt || doc.uploadedAt;
-    if (!raw) return false;
-    const date = new Date(raw);
-    const now = new Date();
-    return !Number.isNaN(date.getTime()) && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-  }).length;
-
   const resetFilters = () => {
     setSearchQuery('');
     setPage(1);
@@ -593,74 +579,7 @@ export const AdminDocuments: React.FC = () => {
         />
       </div>
 
-      <div data-ams-feature-slug="documents-kpis">
-        <AdminMetricStrip
-          className="sm:grid-cols-2 lg:grid-cols-4"
-          metrics={[
-            { id: 'documents-total', slug: 'documents-kpi-total', label: 'Total internal assets', value: documents.length, context: updatedThisMonth + ' updated this month',  icon: <FileText size={15} /> },
-            { id: 'documents-storage', slug: 'documents-kpi-storage', label: 'Tracked storage', value: formatBytes(storageBytes), context: 'From available file metadata',  toneClassName: 'text-info', icon: <UploadCloud size={15} /> },
-            { id: 'documents-ready', slug: 'documents-kpi-ready', label: 'Ready files', value: readyCount, context: documents.length ? Math.round((readyCount / documents.length) * 100) + '% of registry' : 'No files yet',  toneClassName: 'text-success', icon: <ShieldCheck size={15} /> },
-            { id: 'documents-categories', slug: 'documents-kpi-categories', label: 'Active categories', value: categoryCount, context: 'Across current registry',  toneClassName: 'text-warning', icon: <Building2 size={15} /> },
-          ]}
-        />
-      </div>
 
-      <AdminPanel slug="documents-upload-dropzone" className="border-dashed" bodyClassName="p-4 sm:px-5">
-        <div
-          className={'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ' + (uploadDragActive ? 'rounded-card bg-accent/5 ring-1 ring-accent/30' : '')}
-          onDragEnter={(event) => { event.preventDefault(); setUploadDragActive(true); }}
-          onDragOver={(event) => { event.preventDefault(); setUploadDragActive(true); }}
-          onDragLeave={() => setUploadDragActive(false)}
-          onDrop={(event) => {
-            event.preventDefault();
-            setUploadDragActive(false);
-            const file = event.dataTransfer.files?.[0] || null;
-            pickFile(file);
-            if (file && canManageDocuments && !validateFile(file)) setUploadOpen(true);
-          }}
-          data-ams-feature-slug="documents-dropzone"
-        >
-          <div className="flex min-w-0 items-center gap-3.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
-              <UploadCloud size={19} />
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-sm font-semibold text-fg">Upload new internal document</h2>
-                <span className="rounded-badge border border-info/25 bg-info/10 px-2 py-0.5 text-[10px] font-medium text-info">Private vault</span>
-                <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">Auto-indexed</span>
-              </div>
-              <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">Drag and drop or browse locally. Supported PDF, DOCX, XLSX, ZIP, images, text and common office files. Maximum 25 MB.</p>
-            </div>
-          </div>
-          <input
-            key={inputKey}
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPTED_TYPES}
-            className="sr-only"
-            onChange={(event) => {
-              const file = event.target.files?.[0] || null;
-              pickFile(file);
-              if (file && canManageDocuments && !validateFile(file)) setUploadOpen(true);
-            }}
-            data-ams-slug="documents-upload-input"
-          />
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              icon={<UploadCloud size={14} />}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={!canManageDocuments}
-              data-ams-slug="documents-upload-browse"
-            >
-              Browse files
-            </Button>
-            {uploadFile && <span className="max-w-[220px] truncate text-[11px] text-muted" title={uploadFile.name}>Selected: {uploadFile.name}</span>}
-          </div>
-        </div>
-      </AdminPanel>
 
       <div data-ams-feature-slug="documents-workspace" className="space-y-4">
         <AdminFilterBar
@@ -832,6 +751,63 @@ export const AdminDocuments: React.FC = () => {
             </>
           )}
         </section>
+
+      <AdminPanel slug="documents-upload-dropzone" className="border-dashed" bodyClassName="p-4 sm:px-5">
+        <div
+          className={'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ' + (uploadDragActive ? 'rounded-card bg-accent/5 ring-1 ring-accent/30' : '')}
+          onDragEnter={(event) => { event.preventDefault(); setUploadDragActive(true); }}
+          onDragOver={(event) => { event.preventDefault(); setUploadDragActive(true); }}
+          onDragLeave={() => setUploadDragActive(false)}
+          onDrop={(event) => {
+            event.preventDefault();
+            setUploadDragActive(false);
+            const file = event.dataTransfer.files?.[0] || null;
+            pickFile(file);
+            if (file && canManageDocuments && !validateFile(file)) setUploadOpen(true);
+          }}
+          data-ams-feature-slug="documents-dropzone"
+        >
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
+              <UploadCloud size={19} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-sm font-semibold text-fg">Upload new internal document</h2>
+                <span className="rounded-badge border border-info/25 bg-info/10 px-2 py-0.5 text-[10px] font-medium text-info">Private vault</span>
+                <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">Auto-indexed</span>
+              </div>
+              <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">Drag and drop or browse locally. Supported PDF, DOCX, XLSX, ZIP, images, text and common office files. Maximum 25 MB.</p>
+            </div>
+          </div>
+          <input
+            key={inputKey}
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_TYPES}
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0] || null;
+              pickFile(file);
+              if (file && canManageDocuments && !validateFile(file)) setUploadOpen(true);
+            }}
+            data-ams-slug="documents-upload-input"
+          />
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              icon={<UploadCloud size={14} />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!canManageDocuments}
+              data-ams-slug="documents-upload-browse"
+            >
+              Browse files
+            </Button>
+            {uploadFile && <span className="max-w-[220px] truncate text-[11px] text-muted" title={uploadFile.name}>Selected: {uploadFile.name}</span>}
+          </div>
+        </div>
+      </AdminPanel>
       </div>
 
       <Drawer

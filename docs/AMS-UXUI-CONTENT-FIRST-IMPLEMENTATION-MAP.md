@@ -37,6 +37,12 @@ Confirmed root cause: Case Studies, Services, Insights, Testimonials and Careers
 
 Change intent: remove those summary strips and their now-unused display-only counters/imports; leave module headers, queue/register/filter controls, all source-backed record data, editor drawers, statuses, route/query behavior and authorized actions intact. Remove the case-study filter's extra top margin because the shared page shell already owns vertical spacing.
 
+## Second implementation slice: Documents
+
+Confirmed hierarchy before this slice: header and contextual tabs were followed by a four-card metrics strip, a large upload/dropzone panel, and only then the search/sort controls and document register. The header already exposes the upload drawer, so the KPI strip was secondary and the large drag-and-drop surface unnecessarily pushed the primary register down.
+
+Change intent: remove the four-card KPI strip and its display-only summaries, place search/sort and the document register first, then keep the existing upload/dropzone panel below the register. The header upload action, browse control, drag-and-drop behavior, upload drawer, private-vault wording, record states, filters, sorting, permissions and source data remain intact.
+
 ## Evidence and remaining verification
 
 Source review covered the canonical page shell/navigation primitives and source files for all nine modules, Finance navigation/workbook grouping, page-specific CMS/Inbox working areas, and existing regression tests. The baseline CI passed. The current implementation branch still requires its own CI run, full diff review, responsive/browser inspection, and final source-boundary scan before it can be declared ready.

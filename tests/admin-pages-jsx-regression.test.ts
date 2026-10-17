@@ -621,3 +621,14 @@ test('Inbox opens with contextual controls and its triage workspace, without a r
   assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);
   assert.ok(inbox.includes('to="/admin/cms/careers?tab=applicants"'));
 });
+
+
+test('Document vault prioritizes search and the register while preserving the upload dropzone', () => {
+  const documents = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
+  assert.doesNotMatch(documents, /<AdminMetricStrip\\b/);
+  assert.ok(documents.indexOf('<AdminFilterBar') < documents.indexOf('data-ams-slug="documents-directory"'));
+  assert.ok(documents.indexOf('data-ams-slug="documents-directory"') < documents.indexOf('<AdminPanel slug="documents-upload-dropzone"'));
+  assert.ok(documents.includes('onDrop={(event) => {'));
+  assert.ok(documents.includes('data-ams-slug="documents-upload-browse"'));
+  assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form'));
+});
