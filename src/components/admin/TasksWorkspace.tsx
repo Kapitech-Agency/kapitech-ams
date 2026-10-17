@@ -943,7 +943,8 @@ export const TasksWorkspace: React.FC = () => {
             : ' The task list could not be confirmed. Do not retry until the server state is checked.'));
           return;
         }
-        throw new Error(response.error || 'Task could not be deleted.');
+        setDeleteTaskError(response.error || 'Task could not be deleted.');
+        return;
       }
       setRecords((current) => current.filter((item) => item.id !== target.id));
       setSelectedIds((current) => current.filter((id) => id !== target.id));
