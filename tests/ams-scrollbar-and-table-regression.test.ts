@@ -155,6 +155,13 @@ test('Documents distinguishes an unavailable vault from a genuinely empty vault 
 // Print-specific !important rules remain outside these screen-layout variants by design.
 
 
+test('AMS viewport has one intentional vertical scroll owner without body overflow side effects', async () => {
+  const css = await read('src/index.css');
+  assert.match(css, /body\s*\{[^}]*overflow-x:\s*clip;/s);
+  assert.match(css, /\.ams-shell\s*\{[^}]*height:\s*100dvh;[^}]*min-height:\s*0;/s);
+  assert.match(css, /\.ams-shell>main\{[^}]*min-height:0[^}]*scrollbar-gutter:stable/s);
+});
+
 test('main viewport scrollbar is stable and horizontal scroll regions show a visible focus ring', async () => {
   const css = await read('src/index.css');
   assert.match(css, /\.ams-shell>main\{[^}]*scrollbar-gutter:stable[^}]*scrollbar-width:auto/s);
