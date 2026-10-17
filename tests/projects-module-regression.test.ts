@@ -49,6 +49,12 @@ test('Successful project and task writes update local state before non-blocking 
   assert.ok(!source.includes("'demo_task_' + Date.now()"));
   assert.ok(source.includes('const syncProjects = async (showLoading = true) =>'));
   assert.ok(source.includes('await syncProjects(false)'));
+  const taskSaveStart = source.indexOf('const saveTask = async');
+  const taskSaveEnd = source.indexOf('const updateTaskStatus = async', taskSaveStart);
+  const taskSave = source.slice(taskSaveStart, taskSaveEnd);
+  assert.ok(taskSave.includes('} catch (error) {'));
+  assert.ok(taskSave.includes('Task could not be saved.'));
+  assert.ok(taskSave.includes('if (savedToData) setTaskDrawerOpen(false)'));
 });
 
 test('Sprint project switching clears stale task details, filters, and drag state', async () => {
