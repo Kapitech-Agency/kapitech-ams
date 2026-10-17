@@ -350,7 +350,14 @@ export const TasksWorkspace: React.FC = () => {
         return;
       }
 
-      const savedStatus = response.data?.task?.status;
+      const savedTask = response.data?.task;
+      if (!savedTask) {
+        const refreshed = await loadTasks(false);
+        if (!refreshed) rollback();
+        setNotice('Task status response did not include the saved record. The canonical task list was refreshed; inspect the status before retrying.');
+        return;
+      }
+      const savedStatus = savedTask.status;
       const committedStatus: TaskStatus = ['todo', 'in_progress', 'review', 'done'].includes(String(savedStatus))
         ? savedStatus as TaskStatus
         : nextStatus;
@@ -358,7 +365,7 @@ export const TasksWorkspace: React.FC = () => {
         ...previousTask,
         status: committedStatus,
         blocked: committedStatus === 'done' ? false : previousTask.blocked,
-        updatedAt: String(response.data?.task?.updatedAt || previousTask.updatedAt),
+        updatedAt: String(savedTask.updatedAt || previousTask.updatedAt),
       };
       setRecords(current => current.map(item => item.id === committedTask.id ? committedTask : item));
       setSelectedTask(current => current?.id === committedTask.id ? committedTask : current);
@@ -433,7 +440,9 @@ export const TasksWorkspace: React.FC = () => {
 
       const persistedTask = response.data?.task;
       if (!response.success || !persistedTask || !String(persistedTask.id || '').trim()) {
-        if (!response.success && isUnknownMutationOutcome(response)) {
+        const createOutcomeUnknown = isUnknownMutationOutcome(response)
+          || (response.success && (!persistedTask || !String(persistedTask.id || '').trim()));
+        if (createOutcomeUnknown) {
           const refreshed = await loadTasks(false);
           setTaskFormOpen(false);
           setSelectedIds([]);
@@ -822,6 +831,13 @@ export const TasksWorkspace: React.FC = () => {
       }
 
       const savedTask = response.data?.task;
+      if (!savedTask) {
+        const refreshed = await loadTasks(false);
+        setEditingTask(null);
+        if (!refreshed) rollback();
+        setNotice('Task update response did not include the saved record. The canonical task list was refreshed; inspect the task before retrying.');
+        return;
+      }
       const committedTask: TaskRecord = {
         ...nextTask,
         id: previousTask.id,
@@ -874,6 +890,12 @@ export const TasksWorkspace: React.FC = () => {
         throw new Error(response.error || 'Checklist progress could not be saved.');
       }
       const savedTask = response.data?.task;
+      if (!savedTask) {
+        const refreshed = await loadTasks(false);
+        if (!refreshed) rollback();
+        setNotice('Checklist response did not include the saved task record. The canonical task list was refreshed; inspect it before retrying.');
+        return;
+      }
       const committedTask: TaskRecord = {
         ...optimisticTask,
         updatedAt: String(savedTask?.updatedAt || optimisticTask.updatedAt || ''),
