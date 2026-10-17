@@ -43,7 +43,6 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 import { hasAdminPermission } from '../../lib/adminAuth';
-import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 
 type ProjectHealth = 'Good' | 'At Risk' | 'Delayed' | 'Blocked';
@@ -352,83 +351,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
   );
 };
 
-const PROJECT_STATUS_OVERRIDES_KEY = 'kapitech_ams_project_status_overrides_v1';
-const TASK_STATUS_OVERRIDES_KEY = 'kapitech_ams_task_status_overrides_v1';
-
-function readStatusOverrides<T extends string>(key: string): Record<string, T> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const parsed = JSON.parse(window.sessionStorage.getItem(key) || '{}');
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-    return parsed as Record<string, T>;
-  } catch {
-    return {};
-  }
-}
-
-function writeStatusOverrides<T extends string>(key: string, overrides: Record<string, T>) {
-  if (typeof window === 'undefined') return;
-  try {
-    if (Object.keys(overrides).length === 0) {
-      window.sessionStorage.removeItem(key);
-      return;
-    }
-    window.sessionStorage.setItem(key, JSON.stringify(overrides));
-  } catch {
-    // Session persistence is only a front-end enhancement for A/B testing.
-  }
-}
-
-const applyKanbanStatusOverrides = (source: ProjectRecord[]) => {
-  // Session-only A/B overrides must never overwrite authoritative production state.
-  if (!isSlugFixtureMode()) {
-    writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, {});
-    writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, {});
-    return source;
-  }
-
-  const projectOverrides = readStatusOverrides<ProjectStatus>(PROJECT_STATUS_OVERRIDES_KEY);
-  const taskOverrides = readStatusOverrides<TaskStatus>(TASK_STATUS_OVERRIDES_KEY);
-  const nextProjectOverrides = { ...projectOverrides };
-  const nextTaskOverrides = { ...taskOverrides };
-
-  const merged = source.map(project => {
-    const projectOverride = projectOverrides[project.id];
-    if (projectOverride === project.status) {
-      delete nextProjectOverrides[project.id];
-    }
-
-    let tasksChanged = false;
-    const nextTasks = project.tasks.map(task => {
-      const taskOverride = taskOverrides[task.id];
-      if (taskOverride === task.status) {
-        delete nextTaskOverrides[task.id];
-      }
-      if (taskOverride && taskOverride !== task.status) {
-        tasksChanged = true;
-        return { ...task, status: taskOverride };
-      }
-      return task;
-    });
-
-    return projectOverride && projectOverride !== project.status
-      ? normalizeProject({
-          ...project,
-          status: projectOverride,
-          tasks: nextTasks,
-          updatedAt: new Date().toISOString(),
-        })
-      : tasksChanged
-        ? { ...project, tasks: nextTasks, updatedAt: new Date().toISOString() }
-        : project;
-  });
-
-  writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, nextProjectOverrides);
-  writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, nextTaskOverrides);
-  return merged;
-};
-
-const projectStatusClass = (status: ProjectStatus) => {
+remove browser-only A/B status override implementationconst projectStatusClass = (status: ProjectStatus) => {
   if (status === 'completed') return 'border-success/30 bg-success/10 text-success';
   if (status === 'on_hold') return 'border-warning/30 bg-warning/10 text-warning';
   if (status === 'review') return 'border-warning/30 bg-warning/10 text-warning';
@@ -644,7 +567,7 @@ export const AdminProjects: React.FC = () => {
       // An empty array is a valid server response. Never replace it with demo records.
       if (response.success && Array.isArray(response.data?.projects)) {
         const serverProjects = response.data.projects.map(normalizeProject);
-        setProjects(applyKanbanStatusOverrides(serverProjects));
+        setProjects(serverProjects);
         setServerConnected(true);
         setError(null);
         return;
@@ -1075,9 +998,9 @@ export const AdminProjects: React.FC = () => {
 
     const now = new Date().toISOString();
     const slug = slugify(projectForm.name);
-    const localProject: ProjectRecord = normalizeProject({
+    const projectDraft: ProjectRecord = normalizeProject({
       ...(editingProject || {}),
-      id: editingProject?.id || 'demo_' + slug + '_' + Date.now(),
+      id: editingProject?.id || '',
       name: projectForm.name.trim(),
       clientId: projectForm.clientId || undefined,
       clientName: projectForm.clientName.trim(),
@@ -1107,7 +1030,7 @@ export const AdminProjects: React.FC = () => {
     setSaving(true);
     let savedToData = false;
     try {
-      const payload = { ...localProject, id: editingProject?.id || '' };
+      const payload = { ...projectDraft, id: editingProject?.id || '' };
       const response = editingProject
         ? await api.projects.update(editingProject.id, payload)
         : await api.projects.create(payload);
@@ -1128,30 +1051,13 @@ export const AdminProjects: React.FC = () => {
         await syncProjects(false);
         showToast(language === 'id' ? 'Proyek berhasil disimpan.' : 'Project saved.');
         savedToData = true;
-      } else if (serverModeRef.current || !isSlugFixtureMode()) {
+      } else {
         showToast(response.error || (language === 'id' ? 'Proyek gagal disimpan.' : 'Project could not be saved.'));
         return;
-      } else {
-        setProjects(current =>
-          editingProject
-            ? current.map(item => (item.id === editingProject.id ? localProject : item))
-            : [localProject, ...current]
-        );
-        showToast('Project saved to the A/B dataset.');
-        savedToData = true;
       }
     } catch (error) {
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        showToast(error instanceof Error ? error.message : (language === 'id' ? 'Proyek gagal disimpan.' : 'Project could not be saved.'));
-        return;
-      }
-      setProjects(current =>
-        editingProject
-          ? current.map(item => (item.id === editingProject.id ? localProject : item))
-          : [localProject, ...current]
-      );
-      showToast('Project saved to the A/B dataset.');
-        savedToData = true;
+      showToast(error instanceof Error ? error.message : (language === 'id' ? 'Proyek gagal disimpan.' : 'Project could not be saved.'));
+      return;
     } finally {
       setSaving(false);
       if (savedToData) setProjectDrawerOpen(false);
@@ -1220,8 +1126,8 @@ export const AdminProjects: React.FC = () => {
         completed: editingTask?.subtasks?.[index]?.completed || false,
       }));
 
-    const localTask: ProjectTask = {
-      id: editingTask?.id || 'demo_task_' + slugify(taskForm.title) + '_' + Date.now(),
+    const taskDraft: ProjectTask = {
+      id: editingTask?.id || '',
       title: taskForm.title.trim(),
       description: taskForm.description.trim() || undefined,
       status: taskForm.status,
@@ -1237,66 +1143,45 @@ export const AdminProjects: React.FC = () => {
     let savedToData = false;
     try {
       const payload = {
-        title: localTask.title,
-        description: localTask.description || '',
+        title: taskDraft.title,
+        description: taskDraft.description || '',
         projectId: project.id,
         projectName: project.name,
-        assignee: localTask.assignedTo,
-        priority: localTask.priority,
-        status: localTask.status,
-        dueDate: localTask.dueDate,
-        tags: localTask.tags || [],
-        subtasks: localTask.subtasks || [],
+        assignee: taskDraft.assignedTo,
+        priority: taskDraft.priority,
+        status: taskDraft.status,
+        dueDate: taskDraft.dueDate,
+        tags: taskDraft.tags || [],
+        subtasks: taskDraft.subtasks || [],
       };
       const response = editingTask
         ? await api.tasks.update(editingTask.id, payload)
         : await api.tasks.create(payload);
 
-      if (response.success) {
-        setServerConnected(true);
-        const persistedTask = response.data?.task ? normalizeTask(response.data.task) : localTask;
-        setProjects(current => current.map(item => {
-          if (item.id !== project.id) return item;
-          const tasks = editingTask
-            ? item.tasks.map(task => task.id === editingTask.id ? persistedTask : task)
-            : [persistedTask, ...item.tasks.filter(task => task.id !== persistedTask.id)];
-          return { ...item, tasks, updatedAt: new Date().toISOString() };
-        }));
-        await syncProjects(false);
-        showToast(language === 'id' ? 'Tugas berhasil disimpan.' : 'Task saved.');
-        savedToData = true;
-      } else if (serverModeRef.current || !isSlugFixtureMode()) {
+      if (!response.success) {
         showToast(response.error || (language === 'id' ? 'Tugas gagal disimpan.' : 'Task could not be saved.'));
         return;
-      } else {
-        setProjects(current =>
-          current.map(item => {
-            if (item.id !== project.id) return item;
-            const tasks = editingTask
-              ? item.tasks.map(task => (task.id === editingTask.id ? localTask : task))
-              : [localTask, ...item.tasks];
-            return { ...item, tasks, updatedAt: new Date().toISOString() };
-          })
-        );
-        showToast('Task saved to the A/B dataset.');
-        savedToData = true;
       }
-    } catch (error) {
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        showToast(error instanceof Error ? error.message : (language === 'id' ? 'Tugas gagal disimpan.' : 'Task could not be saved.'));
+      const persistedTask = response.data?.task ? normalizeTask(response.data.task) : null;
+      if (!persistedTask) {
+        await syncProjects(false);
+        showToast(language === 'id'
+          ? 'Server tidak mengembalikan data tugas yang tersimpan. Periksa daftar tugas sebelum mencoba lagi.'
+          : 'The server did not return the saved task record. Review the refreshed task list before retrying.');
         return;
       }
-      setProjects(current =>
-        current.map(item => {
-          if (item.id !== project.id) return item;
-          const tasks = editingTask
-            ? item.tasks.map(task => (task.id === editingTask.id ? localTask : task))
-            : [localTask, ...item.tasks];
-          return { ...item, tasks, updatedAt: new Date().toISOString() };
-        })
-      );
-      showToast('Task saved to the A/B dataset.');
-        savedToData = true;
+
+      setServerConnected(true);
+      setProjects(current => current.map(item => {
+        if (item.id !== project.id) return item;
+        const tasks = editingTask
+          ? item.tasks.map(task => task.id === editingTask.id ? persistedTask : task)
+          : [persistedTask, ...item.tasks.filter(task => task.id !== persistedTask.id)];
+        return { ...item, tasks, updatedAt: new Date().toISOString() };
+      }));
+      await syncProjects(false);
+      showToast(language === 'id' ? 'Tugas berhasil disimpan.' : 'Task saved.');
+      savedToData = true;
     } finally {
       setSaving(false);
       if (savedToData) setTaskDrawerOpen(false);
@@ -1311,7 +1196,7 @@ export const AdminProjects: React.FC = () => {
       setDragOverTaskId(null);
       return;
     }
-    if (!serverModeRef.current && !isSlugFixtureMode()) {
+    if (!serverModeRef.current) {
       setDraggingTaskId(null);
       setDragOverTaskStatus(null);
       setDragOverTaskId(null);
@@ -1325,75 +1210,35 @@ export const AdminProjects: React.FC = () => {
       return;
     }
 
+    const projectId = selectedSprintProject.id;
     setDraggingTaskId(null);
     setDragOverTaskStatus(null);
+    setDragOverTaskId(null);
     setMovingTaskId(task.id);
-
-    const taskOverrides = readStatusOverrides<TaskStatus>(TASK_STATUS_OVERRIDES_KEY);
-    taskOverrides[task.id] = status;
-    writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, taskOverrides);
-
-    setProjects(current =>
-      current.map(project =>
-        project.id === selectedSprintProject.id
-          ? {
-              ...project,
-              tasks: project.tasks.map(item => item.id === task.id ? { ...item, status } : item),
-              updatedAt: new Date().toISOString(),
-            }
-          : project
-      )
-    );
+    setProjects(current => current.map(project => project.id === projectId
+      ? { ...project, tasks: project.tasks.map(item => item.id === task.id ? { ...item, status } : item), updatedAt: new Date().toISOString() }
+      : project));
     setSelectedTask(current => current?.id === task.id ? { ...current, status } : current);
 
+    const rollback = () => {
+      setProjects(current => current.map(project => project.id === projectId
+        ? { ...project, tasks: project.tasks.map(item => item.id === task.id ? { ...item, status: task.status } : item) }
+        : project));
+      setSelectedTask(current => current?.id === task.id ? { ...current, status: task.status } : current);
+    };
     try {
       const response = await api.tasks.update(task.id, { status });
-      if (response.success) {
-        delete taskOverrides[task.id];
-        writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, taskOverrides);
-        setServerConnected(true);
-        await syncProjects(false);
-        showToast(language === 'id' ? 'Status tugas diperbarui.' : 'Task status updated.');
+      if (!response.success) {
+        rollback();
+        showToast(response.error || (language === 'id' ? 'Status tugas gagal diperbarui. Perubahan dikembalikan.' : 'Task status could not be saved. Changes were reverted.'));
         return;
       }
-
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        delete taskOverrides[task.id];
-        writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, taskOverrides);
-        setProjects(current =>
-          current.map(project =>
-            project.id === selectedSprintProject.id
-              ? {
-                  ...project,
-                  tasks: project.tasks.map(item => item.id === task.id ? { ...item, status: task.status } : item),
-                }
-              : project
-          )
-        );
-        setSelectedTask(current => current?.id === task.id ? { ...current, status: task.status } : current);
-        showToast(language === 'id' ? 'Status tugas gagal diperbarui dan dikembalikan.' : 'Task status could not be saved and was reverted.');
-      } else {
-        showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
-      }
-    } catch {
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        delete taskOverrides[task.id];
-        writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, taskOverrides);
-        setProjects(current =>
-          current.map(project =>
-            project.id === selectedSprintProject.id
-              ? {
-                  ...project,
-                  tasks: project.tasks.map(item => item.id === task.id ? { ...item, status: task.status } : item),
-                }
-              : project
-          )
-        );
-        setSelectedTask(current => current?.id === task.id ? { ...current, status: task.status } : current);
-        showToast(language === 'id' ? 'Status tugas gagal diperbarui dan dikembalikan.' : 'Task status could not be saved and was reverted.');
-      } else {
-        showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
-      }
+      setServerConnected(true);
+      await syncProjects(false);
+      showToast(language === 'id' ? 'Status tugas diperbarui.' : 'Task status updated.');
+    } catch (error) {
+      rollback();
+      showToast(error instanceof Error ? error.message : (language === 'id' ? 'Status tugas gagal diperbarui. Perubahan dikembalikan.' : 'Task status could not be saved. Changes were reverted.'));
     } finally {
       setMovingTaskId(null);
     }
@@ -1458,8 +1303,7 @@ export const AdminProjects: React.FC = () => {
       setDragOverProjectId(null);
       return;
     }
-
-    if (!serverModeRef.current && !isSlugFixtureMode()) {
+    if (!serverModeRef.current) {
       setDraggingProjectId(null);
       setDragOverProjectStatus(null);
       setDragOverProjectId(null);
@@ -1468,48 +1312,30 @@ export const AdminProjects: React.FC = () => {
     }
     const previousProject = project;
     const updatedProject = normalizeProject({ ...project, status, updatedAt: new Date().toISOString() });
-    const projectOverrides = readStatusOverrides<ProjectStatus>(PROJECT_STATUS_OVERRIDES_KEY);
-    projectOverrides[project.id] = status;
-    writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
-
     setMovingProjectId(project.id);
-    setProjects(current =>
-      current.map(item => item.id === project.id ? updatedProject : item)
-    );
+    setProjects(current => current.map(item => item.id === project.id ? updatedProject : item));
     setSelectedProject(current => current?.id === project.id ? updatedProject : current);
     setDraggingProjectId(null);
     setDragOverProjectStatus(null);
+    setDragOverProjectId(null);
 
+    const rollback = () => {
+      setProjects(current => current.map(item => item.id === project.id ? previousProject : item));
+      setSelectedProject(current => current?.id === project.id ? previousProject : current);
+    };
     try {
       const response = await api.projects.update(project.id, { status });
-      if (response.success) {
-        delete projectOverrides[project.id];
-        writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
-        setServerConnected(true);
-        await syncProjects(false);
-        showToast(language === 'id' ? 'Status proyek diperbarui.' : 'Project status updated.');
+      if (!response.success) {
+        rollback();
+        showToast(response.error || (language === 'id' ? 'Status proyek gagal diperbarui dan dikembalikan.' : 'Project status could not be saved and was reverted.'));
         return;
       }
-
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        delete projectOverrides[project.id];
-        writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
-        setProjects(current => current.map(item => item.id === project.id ? previousProject : item));
-        setSelectedProject(current => current?.id === project.id ? previousProject : current);
-        showToast(language === 'id' ? 'Status proyek gagal diperbarui dan dikembalikan.' : 'Project status could not be saved and was reverted.');
-      } else {
-        showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
-      }
-    } catch {
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        delete projectOverrides[project.id];
-        writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
-        setProjects(current => current.map(item => item.id === project.id ? previousProject : item));
-        setSelectedProject(current => current?.id === project.id ? previousProject : current);
-        showToast(language === 'id' ? 'Status proyek gagal diperbarui dan dikembalikan.' : 'Project status could not be saved and was reverted.');
-      } else {
-        showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
-      }
+      setServerConnected(true);
+      await syncProjects(false);
+      showToast(language === 'id' ? 'Status proyek diperbarui.' : 'Project status updated.');
+    } catch (error) {
+      rollback();
+      showToast(error instanceof Error ? error.message : (language === 'id' ? 'Status proyek gagal diperbarui dan dikembalikan.' : 'Project status could not be saved and was reverted.'));
     } finally {
       setMovingProjectId(null);
     }
@@ -1517,7 +1343,7 @@ export const AdminProjects: React.FC = () => {
 
   const toggleSubtask = async (task: ProjectTask, subtaskId: string) => {
     if (!canManageKanbanTasks || updatingSubtaskId || movingTaskId || !selectedSprintProject) return;
-    if (!serverModeRef.current && !isSlugFixtureMode()) {
+    if (!serverModeRef.current) {
       showToast('Project service is unavailable. Refresh before changing subtasks.');
       return;
     }
@@ -1533,10 +1359,7 @@ export const AdminProjects: React.FC = () => {
     );
     const applySubtasks = (subtasks: ProjectTask['subtasks']) => {
       setProjects(current => current.map(project => project.id === projectId
-        ? {
-            ...project,
-            tasks: project.tasks.map(item => item.id === task.id ? { ...item, subtasks } : item),
-          }
+        ? { ...project, tasks: project.tasks.map(item => item.id === task.id ? { ...item, subtasks } : item) }
         : project));
       setSelectedTask(current => current?.id === task.id ? { ...current, subtasks } : current);
     };
@@ -1545,30 +1368,19 @@ export const AdminProjects: React.FC = () => {
     applySubtasks(nextSubtasks);
     try {
       const response = await api.tasks.update(task.id, { subtasks: nextSubtasks });
-      if (response.success) {
-        setServerConnected(true);
-        const savedSubtasks = Array.isArray(response.data?.task?.subtasks)
-          ? response.data.task.subtasks
-          : nextSubtasks;
-        applySubtasks(savedSubtasks);
-        await syncProjects(false);
-        showToast(language === 'id' ? 'Checklist diperbarui.' : 'Checklist updated.');
-        return;
-      }
-
-      if (serverModeRef.current || !isSlugFixtureMode()) {
+      if (!response.success) {
         applySubtasks(previousSubtasks);
         showToast(response.error || (language === 'id' ? 'Checklist gagal diperbarui. Perubahan dikembalikan.' : 'Checklist could not be updated. Changes were reverted.'));
         return;
       }
-      showToast(language === 'id' ? 'Checklist diperbarui untuk sesi demo.' : 'Checklist updated for this demo session.');
+      setServerConnected(true);
+      const savedSubtasks = Array.isArray(response.data?.task?.subtasks) ? response.data.task.subtasks : nextSubtasks;
+      applySubtasks(savedSubtasks);
+      await syncProjects(false);
+      showToast(language === 'id' ? 'Checklist diperbarui.' : 'Checklist updated.');
     } catch (error) {
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        applySubtasks(previousSubtasks);
-        showToast(error instanceof Error ? error.message : (language === 'id' ? 'Checklist gagal diperbarui. Perubahan dikembalikan.' : 'Checklist could not be updated. Changes were reverted.'));
-        return;
-      }
-      showToast(language === 'id' ? 'Checklist diperbarui untuk sesi demo.' : 'Checklist updated for this demo session.');
+      applySubtasks(previousSubtasks);
+      showToast(error instanceof Error ? error.message : (language === 'id' ? 'Checklist gagal diperbarui. Perubahan dikembalikan.' : 'Checklist could not be updated. Changes were reverted.'));
     } finally {
       setUpdatingSubtaskId(null);
     }
@@ -1576,92 +1388,58 @@ export const AdminProjects: React.FC = () => {
 
   const confirmDeleteProject = async () => {
     if (!canManageProjects || !deleteProject || deletingProjectRecord) return;
-    if (!serverModeRef.current && !isSlugFixtureMode()) {
+    if (!serverModeRef.current) {
       showToast('Project service is unavailable. Refresh before deleting projects.');
       return;
     }
     const target = deleteProject;
     setDeletingProjectRecord(true);
-
     try {
       const response = await api.projects.delete(target.id);
-      if (response.success) {
-        setProjects(current => current.filter(project => project.id !== target.id));
-        setServerConnected(true);
-        await syncProjects(false);
-        showToast('Project deleted.');
-        setDeleteProject(null);
-        return;
-      }
-
-      if (serverModeRef.current || !isSlugFixtureMode()) {
+      if (!response.success) {
         showToast(response.error || 'Project could not be deleted.');
         return;
       }
+      setProjects(current => current.filter(project => project.id !== target.id));
+      setServerConnected(true);
+      await syncProjects(false);
+      showToast('Project deleted.');
+      setDeleteProject(null);
     } catch (error) {
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        showToast(error instanceof Error ? error.message : 'Project could not be deleted.');
-        return;
-      }
+      showToast(error instanceof Error ? error.message : 'Project could not be deleted.');
     } finally {
       setDeletingProjectRecord(false);
     }
-
-    setProjects(current => current.filter(project => project.id !== target.id));
-    setDeleteProject(null);
-    showToast('Project removed from A/B dataset.');
   };
 
   const confirmDeleteTask = async () => {
     if (!canManageKanbanTasks || !deleteTask || !selectedSprintProject || deletingTaskRecord) return;
-    if (!serverModeRef.current && !isSlugFixtureMode()) {
+    if (!serverModeRef.current) {
       showToast('Project service is unavailable. Refresh before deleting tasks.');
       return;
     }
     const target = deleteTask;
+    const projectId = selectedSprintProject.id;
     setDeletingTaskRecord(true);
-
     try {
       const response = await api.tasks.delete(target.id);
-      if (response.success) {
-        setProjects(current =>
-          current.map(project =>
-            project.id === selectedSprintProject.id
-              ? { ...project, tasks: project.tasks.filter(task => task.id !== target.id) }
-              : project
-          )
-        );
-        setServerConnected(true);
-        await syncProjects(false);
-        showToast('Task deleted.');
-        setDeleteTask(null);
-        setSelectedTask(null);
-        return;
-      }
-
-      if (serverModeRef.current || !isSlugFixtureMode()) {
+      if (!response.success) {
         showToast(response.error || 'Task could not be deleted.');
         return;
       }
+      setProjects(current => current.map(project => project.id === projectId
+        ? { ...project, tasks: project.tasks.filter(task => task.id !== target.id) }
+        : project));
+      setServerConnected(true);
+      await syncProjects(false);
+      showToast('Task deleted.');
+      setDeleteTask(null);
+      setSelectedTask(null);
     } catch (error) {
-      if (serverModeRef.current || !isSlugFixtureMode()) {
-        showToast(error instanceof Error ? error.message : 'Task could not be deleted.');
-        return;
-      }
+      showToast(error instanceof Error ? error.message : 'Task could not be deleted.');
     } finally {
       setDeletingTaskRecord(false);
     }
-
-    setProjects(current =>
-      current.map(project =>
-        project.id === selectedSprintProject.id
-          ? { ...project, tasks: project.tasks.filter(task => task.id !== target.id) }
-          : project
-      )
-    );
-    setDeleteTask(null);
-    setSelectedTask(null);
-    showToast('Task removed from A/B dataset.');
   };
 
   const exportProjects = () => {
