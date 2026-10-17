@@ -3174,7 +3174,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           : 'min-w-0 space-y-3'}
         data-ams-slug="finance-workspace-navigation"
       >
-        {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="w-full" />}
+        {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="w-full" variant="secondary" />}
         {SEARCHABLE_FINANCE_TABS.has(activeTab.key) && (
           <div className="flex min-w-0 justify-start sm:justify-end" data-ams-slug="finance-worksheet-search">
             <label className="relative block w-full max-w-lg">
