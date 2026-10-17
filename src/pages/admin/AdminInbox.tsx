@@ -648,25 +648,6 @@ export const AdminInbox: React.FC = () => {
   return (
     <AdminPageShell featureSlug="inbox-module" className="ams-inbox-page">
       
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className={`p-3 sm:p-4 rounded-card text-xs font-sans flex items-start sm:items-center justify-between gap-2 animate-in fade-in duration-300 ${toastMessage.tone === 'danger' ? 'bg-danger/10 border border-danger/30 text-danger' : 'bg-success/10 border border-success/30 text-success'}`}>
-          <div className="flex items-center gap-2.5">
-            {toastMessage.tone === 'danger' ? <AlertCircle size={16} className="text-danger shrink-0" aria-hidden="true" /> : <Check size={16} className="text-success shrink-0" aria-hidden="true" />}
-            <span>{toastMessage.text}</span>
-          </div>
-          {toastMessage.link && (
-            <Link
-              to={toastMessage.link}
-              className="px-3 py-1 rounded-control bg-success text-bg font-medium hover:bg-success/90 transition-colors flex items-center gap-1 shrink-0 ml-3"
-            >
-              <span>{toastMessage.linkText || 'Open'}</span>
-              <ExternalLink size={11} />
-            </Link>
-          )}
-        </div>
-      )}
-
       <AdminModuleHeader slug="inbox-header"
         className="mb-0"
         title="Inbox"
@@ -693,6 +674,26 @@ export const AdminInbox: React.FC = () => {
           </>
         )}
       />
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`p-3 sm:p-4 rounded-card text-xs font-sans flex items-start sm:items-center justify-between gap-2 animate-in fade-in duration-300 ${toastMessage.tone === 'danger' ? 'bg-danger/10 border border-danger/30 text-danger' : 'bg-success/10 border border-success/30 text-success'}`}>
+          <div className="flex items-center gap-2.5">
+            {toastMessage.tone === 'danger' ? <AlertCircle size={16} className="text-danger shrink-0" aria-hidden="true" /> : <Check size={16} className="text-success shrink-0" aria-hidden="true" />}
+            <span>{toastMessage.text}</span>
+          </div>
+          {toastMessage.link && (
+            <Link
+              to={toastMessage.link}
+              className="px-3 py-1 rounded-control bg-success text-bg font-medium hover:bg-success/90 transition-colors flex items-center gap-1 shrink-0 ml-3"
+            >
+              <span>{toastMessage.linkText || 'Open'}</span>
+              <ExternalLink size={11} />
+            </Link>
+          )}
+        </div>
+      )}
+
 
       {loadError && (
         <div className="flex flex-col gap-3 rounded-card border border-warning/25 bg-warning/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="inbox-load-unavailable">

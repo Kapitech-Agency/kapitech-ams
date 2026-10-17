@@ -16,6 +16,13 @@ test('Dashboard preserves useful finance context and two-column mobile KPI layou
   assert.match(dashboard, /Issued invoice value and recorded expenses/);
 });
 
+test('Inbox toast feedback follows the stable page header instead of shifting it', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const header = inbox.indexOf('<AdminModuleHeader slug="inbox-header"');
+  const toast = inbox.indexOf('{/* Toast Notification */}');
+  assert.ok(header >= 0 && toast > header, 'toast feedback should render after the module header');
+});
+
 test('Inbox remains an inquiry workspace and star state remains accessible', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   const app = await read('src/App.tsx');
