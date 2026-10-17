@@ -112,8 +112,8 @@ test('Project overview metrics and sprint project selection describe their actua
   const source = await read('src/pages/admin/AdminProjects.tsx');
 
   assert.ok(source.includes("label: 'Average project progress'"));
-  assert.ok(source.includes("value: metrics.averageProgress + '%'"));
-  assert.ok(source.includes("view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects'"));
+  assert.ok(source.includes("value: serverMode ? metrics.averageProgress + '%' : '—'"));
+  assert.ok(source.includes("serverMode ? view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects' : loading ? 'Loading project records' : 'Project data unavailable'"));
   assert.ok(source.includes("label: project.name + (project.status === 'completed' ? ' (Completed)' : '')"));
   assert.ok(source.includes("selectedSprintProject.status === 'completed' ? 'Completed project' : 'Active delivery'"));
 });
