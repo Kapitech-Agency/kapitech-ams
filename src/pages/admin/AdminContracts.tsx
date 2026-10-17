@@ -4,7 +4,7 @@ import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
-import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type ContractStatus = 'draft' | 'in_review' | 'sent' | 'signed' | 'active' | 'completed' | 'expired' | 'terminated';
 type ContractType = 'msa' | 'sow' | 'service_agreement' | 'nda' | 'change_order';
@@ -332,20 +332,7 @@ export const AdminContracts: React.FC = () => {
       )}
       {notice && <div role="status" className="flex items-center justify-between gap-2 rounded-control border border-success/20 bg-success/5 px-3 py-2 text-xs text-fg"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss message" className="rounded-control p-1 text-muted hover:bg-bg"><X size={13} /></button></div>}
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Contract overview">
-        {[
-          { label: 'Drafts', value: contracts.filter((item) => item.status === 'draft').length, note: 'Not yet submitted for review' },
-          { label: 'In workflow', value: contracts.filter((item) => ['in_review', 'sent', 'signed'].includes(item.status)).length, note: 'Review and signature pending' },
-          { label: 'Active agreements', value: contracts.filter((item) => item.status === 'active').length, note: 'Currently in force' },
-          { label: 'Renewal / expiry watch', value: expiringSoon, note: 'Active agreements ending within 30 days' }
-        ].map((metric) => (
-          <div key={metric.label} className="rounded-card border border-line bg-panel p-4">
-            <p className="text-[11px] font-medium text-muted">{metric.label}</p>
-            <p className="mt-2 text-2xl font-semibold tabular-nums text-fg">{loading ? '—' : metric.value}</p>
-            <p className="mt-1 text-[10px] leading-4 text-muted">{metric.note}</p>
-          </div>
-        ))}
-      </section>
+            </section>
 
       <section className="rounded-card border border-line bg-panel p-3 sm:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -417,6 +404,18 @@ export const AdminContracts: React.FC = () => {
           </table>
         </div>
         <AdminTablePagination total={filtered.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="contracts" slug="contracts-pagination" />
+      </section>
+
+      <section data-ams-feature-slug="contracts-overview-kpis" data-ams-slug="contracts-overview-kpis" aria-label="Contract overview">
+        <AdminMetricStrip
+          slug="contracts-overview-kpis"
+          metrics={[
+            { id: 'drafts', label: 'Drafts', value: loading ? '—' : contracts.filter((item) => item.status === 'draft').length, context: 'Not yet submitted for review', icon: <FileText size={15} /> },
+            { id: 'in-workflow', label: 'In workflow', value: loading ? '—' : contracts.filter((item) => ['in_review', 'sent', 'signed'].includes(item.status)).length, context: 'Review and signature pending', icon: <RefreshCw size={15} />, toneClassName: 'text-info' },
+            { id: 'active-agreements', label: 'Active agreements', value: loading ? '—' : contracts.filter((item) => item.status === 'active').length, context: 'Currently in force', icon: <CheckCircle2 size={15} />, toneClassName: 'text-success' },
+            { id: 'renewal-expiry-watch', label: 'Renewal / expiry watch', value: loading ? '—' : expiringSoon, context: 'Active agreements ending within 30 days', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
+          ]}
+        />
       </section>
 
       <section className="flex items-start gap-3 rounded-card border border-line bg-panel px-4 py-3 text-xs text-muted">

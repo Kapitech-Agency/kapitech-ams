@@ -81,7 +81,7 @@ Team Directory, Vendor & Contractor Directory and Time Log Ledger also began wit
 | Clients · Directory | Header/actions, search/status scopes, directory/table and details | Moved the three-metric summary below the directory so filters/table are encountered first. Row fields, pagination, export, profile/edit and relationship links unchanged. |
 | Clients · Onboarding | Existing directory state scope via URL/query | Preserved query-backed scope and client lifecycle. No separate onboarding data model was introduced. |
 | Clients · Lead Accounts & Pipeline (existing direct workspace) | Stage/search/owner filters, pipeline register, pagination and compact summary | Follow-on slice removes the duplicated top KPI strip while keeping the existing filtered register and summary values/actions. No standalone sidebar module is added. |
-| Clients · Contracts | Contract/SOW workspace and linked record actions | Existing route remains the contract owner. No commercial document workflow changed. |
+| Clients · Contracts | Search/status filters, contract/SOW register, lifecycle actions and linked document references | The four source-backed lifecycle counts now use the shared AMS metric strip below the register. Search, pagination, contract state transitions, document links, permissions and drawer form remain unchanged. |
 | Clients · Retainers | Reconciliation notice, shared metric strip, filters and retainer agreements | Unified three relevant metrics under the shared AMS primitive. Existing usage caveat and saved values remain. |
 | Clients · SLA monitoring | Telemetry-unavailable state, setup checklist, Contracts & SOW action | Removed four repeated unavailable tiles. The explicit unconfigured message remains; no mock telemetry introduced. |
 | Finance · Overview & Control | Executive summary/report context and operational controls | Five primary workspace groups remain. Preserve metric meaning, report range and source-status distinctions. |
@@ -114,13 +114,17 @@ Initial implementation was merged into `main` through [PR #175](https://github.c
 - [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39044280168)
 - [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39044280079)
 
-The first delivery diff contained only frontend page components, frontend regression tests, and this implementation map. No backend, API, database, auth/session, RBAC, Finance calculation, dependency, or migration files were included. The follow-on register-hierarchy slice is being worked separately from the new `main` HEAD and needs its own validation before delivery.
+The first delivery diff contained only frontend page components, frontend regression tests, and this implementation map. No backend, API, database, auth/session, RBAC, Finance calculation, dependency, or migration files were included. The follow-on Lead Accounts & Time Tracking slice merged through [PR #176](https://github.com/Kapitech-Agency/kapitech-ams/pull/176) as squash commit `162b3cce51c18751da68fdb8764a7a074a7f02a7`; both workflows passed before merge ([Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39044548147), [CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39044548311)). The current Contracts hierarchy slice is being verified separately from that updated `main` HEAD.
 
 ## Follow-on implementation slice: Lead Accounts & Time Tracking
 
 The existing Lead Accounts & Pipeline workspace showed the same Open Deal Value and Weighted Probability twice: first in three large KPI cards above search/stage/owner filters, then again in the compact Pipeline Summary below the directory. The top KPI section has been removed. The filtered table now leads the workspace, while the compact summary retains open value, weighted probability, contract-review count and ready-to-sign count. The display-only proposal count and icon import were removed with the redundant section. No lead-stage transitions, source records, proposal deep links, permissions or save behavior were changed.
 
 The dedicated Time Tracking page showed period-filtered tracked/billable totals before its entry form and recent-entry ledger. The existing metric strip is moved below the ledger, preserving its source calculations and reporting-period scope. The entry form, scroll-to-form header action, delete confirmation, pagination and API flows are unchanged.
+
+## Next slice: Contracts & SOW
+
+Contracts & SOW previously placed four hand-built overview cards before the search/status controls and primary contract register. The counts are meaningful for the lifecycle, so they remain source-derived but now use the shared `AdminMetricStrip` after the searchable, paginated register. The row actions, workflow transitions, document references, authorization checks, and drawer editor are unchanged. No contract status, mutation, API, or persisted data behavior is changed.
 
 ## Remaining visual verification and limits
 
