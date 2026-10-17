@@ -1389,6 +1389,219 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     setInvoiceNotes('');
   };
 
+  const openCreateInvoice = () => {
+    if (invoiceSourceBlocked) {
+      showNotice('danger', sourceUnavailableMessage('invoice'));
+      return;
+    }
+    resetInvoiceForm();
+    setInvoiceModalOpen(true);
+  };
+
+  const applyInvoiceTemplate = () => {
+    const template = FINANCE_INVOICE_TEMPLATES.find((item) => item.key === invoiceTemplateKey);
+    if (!template) return;
+    setInvoiceDirty(true);
+    setInvoiceItems(template.lineItems.length
+      ? template.lineItems.map((line, index) => ({
+          ...emptyLineItem(),
+          id: 'invoice-template-' + template.key + '-' + index + '-' + Date.now(),
+          description: line.description,
+          quantity: line.quantity,
+          unitPrice: 0,
+          amount: 0
+        }))
+      : [emptyLineItem()]);
+    if (template.paymentTerms) setPaymentTerms(template.paymentTerms);
+    if (!editingInvoice && template.title) setInvoiceNotes('');
+    showNotice('success', 'Invoice template applied. Review all prices, tax, dates, and payment terms before issuing.');
+  };
+
+  const printInvoiceDraft = () => {
+    const totals = computeInvoiceTotals(invoiceItems, Number(taxPercent) || 0, Number(discountPercent) || 0);
+    const printed = printFinanceDocument({
+      kind: 'invoice',
+      documentNumber: invoiceNumber || 'DRAFT-' + new Date().getFullYear(),
+      title: invoiceItems.length === 1 ? invoiceItems[0].description : (projects.find((project) => project.id === projectId)?.name || 'Project billing'),
+      clientName,
+      clientCompany,
+      clientEmail,
+      clientPhone,
+      projectName: projects.find((project) => project.id === projectId)?.name,
+      currency: invoiceCurrency,
+      issueDate,
+      dueDate,
+      status: invoiceStatus,
+      items: invoiceItems.map((line) => ({ ...line, amount: Number(line.quantity || 0) * Number(line.unitPrice || 0) })),
+      subtotal: totals.subtotal,
+      discountPercent,
+      discountAmount: totals.discountAmount,
+      taxPercent,
+      taxAmount: totals.taxAmount,
+      total: totals.total,
+      paymentTerms,
+      notes: invoiceNotes
+    });
+    if (!printed) showNotice('danger', 'The print window was blocked. Allow pop-ups for AMS, then try again.');
+  };
+
+  const requestCloseInvoice = () => {
+    if (savingInvoice) return;
+    if (invoiceDirty) {
+      setInvoiceModalOpen(false);
+      setDiscardPrompt('invoice');
+      return;
+    }
+    setInvoiceModalOpen(false);
+    setInvoiceDirty(false);
+  };
+
+  const requestCloseExpense = () => {
+    if (savingExpense) return;
+    if (expenseDirty) {
+      setExpenseModalOpen(false);
+      setDiscardPrompt('expense');
+      return;
+    }
+    setExpenseModalOpen(false);
+    setExpenseDirty(false);
+  };
+
+  const requestClosePayment = () => {
+    if (savingPayment) return;
+    if (paymentDirty) {
+      setPendingPaymentInvoice(paymentInvoice);
+      setPaymentInvoice(null);
+      setDiscardPrompt('payment');
+      return;
+    }
+    setPaymentInvoice(null);
+    setPaymentDirty(false);
+  };
+
+  const cancelDiscardPrompt = () => {
+    const target = discardPrompt;
+    setDiscardPrompt(null);
+    if (target === 'invoice') setInvoiceModalOpen(true);
+    if (target === 'expense') setExpenseModalOpen(true);
+    if (target === 'payment') {
+      setPaymentInvoice(pendingPaymentInvoice);
+      setPendingPaymentInvoice(null);
+    }
+  };
+
+  const confirmDiscardPrompt = () => {
+    const target = discardPrompt;
+    setDiscardPrompt(null);
+    if (target === 'invoice') setInvoiceDirty(false);
+    if (target === 'expense') {
+      setExpenseDirty(false);
+      setExpenseIdempotencyKey('');
+    }
+    if (target === 'payment') {
+      setPaymentDirty(false);
+      setPaymentIdempotencyKey('');
+      setPendingPaymentInvoice(null);
+    }
+  };
+
+  const openExpenseModal = () => {
+    if (expenseSourceBlocked) {
+      showNotice('danger', sourceUnavailableMessage('expense'));
+      return;
+    }
+    setExpenseDirty(false);
+    setExpenseType('OpEx');
+    setExpenseCategory('Software & Cloud');
+    setExpenseDescription('');
+    setExpenseAmount(0);
+    setExpenseDate(getDateInputValue());
+    setExpensePaymentStatus('unpaid');
+    setExpensePaidDate(getDateInputValue());
+    setExpensePaymentMethod('bank_transfer');
+    setExpensePaymentAccountCode('1000');
+    setExpenseProjectId('');
+    setExpenseRecurringInterval('none');
+    setExpenseReceiptUrl('');
+    setExpenseIdempotencyKey(
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
+    setExpenseModalOpen(true);
+  };
+
+  const openEditInvoice = (invoice: AgencyInvoice) => {
+    setInvoiceTemplateKey('blank');
+    if (invoiceSourceBlocked) {
+      showNotice('danger', sourceUnavailableMessage('invoice'));
+      return;
+    }
+    setInvoiceDirty(false);
+    setEditingInvoice(invoice);
+    setInvoiceNumber(invoice.invoiceNumber);
+    setClientId(String((invoice as AgencyInvoice & { clientId?: string }).clientId || ''));
+    setProjectId(invoice.projectId || '');
+    setClientName(invoice.clientName || '');
+    setClientCompany(invoice.clientCompany || '');
+    setClientEmail(invoice.clientEmail || '');
+    setClientPhone(invoice.clientPhone || '');
+    setInvoiceCurrency(invoice.currency);
+    setInvoiceItems(invoice.items.length ? invoice.items.map((item) => ({ ...item })) : [emptyLineItem()]);
+    setDiscountPercent(Number(invoice.discountPercent || 0));
+    setTaxPercent(Number(invoice.taxPercent || 0));
+    setInvoiceStatus(invoice.status);
+    setIssueDate(invoice.issueDate || '');
+    setDueDate(invoice.dueDate || '');
+    setPaymentTerms(invoice.paymentTerms || '');
+    setInvoiceNotes(invoice.notes || '');
+    setInvoiceModalOpen(true);
+  };
+
+  const selectClient = (id: string) => {
+    setInvoiceDirty(true);
+    setClientId(id);
+    const client = clients.find((item) => item.id === id);
+    if (!client) return;
+    setClientName(client.name);
+    setClientCompany(client.company);
+    setClientEmail(client.email);
+    setClientPhone(client.phone);
+  };
+
+  const selectProject = (id: string) => {
+    setInvoiceDirty(true);
+    setProjectId(id);
+    const project = projects.find((item) => item.id === id);
+    if (!project) return;
+
+    if (project.clientId) {
+      const client = clients.find((item) => item.id === project.clientId);
+      setClientId(project.clientId);
+      setClientName(client?.name || project.clientName || '');
+      setClientCompany(client?.company || project.clientCompany || '');
+      setClientEmail(client?.email || project.clientEmail || '');
+      setClientPhone(client?.phone || '');
+      return;
+    }
+
+    setClientId('');
+    if (!clientName) setClientName(project.clientName || '');
+    if (!clientCompany) setClientCompany(project.clientCompany || '');
+    if (!clientEmail) setClientEmail(project.clientEmail || '');
+  };
+
+  const updateLineItem = (index: number, patch: Partial<InvoiceLineItem>) => {
+    setInvoiceDirty(true);
+    setInvoiceItems((current) => current.map((item, itemIndex) => {
+      if (itemIndex !== index) return item;
+      const next = { ...item, ...patch };
+      const quantity = Math.max(0, Number(next.quantity) || 0);
+      const unitPrice = Math.max(0, Number(next.unitPrice) || 0);
+      return { ...next, quantity, unitPrice, amount: Math.round(quantity * unitPrice * 100) / 100 };
+    }));
+  };
+
   const handleSaveInvoice = async (event: React.FormEvent) => {
     event.preventDefault();
     if (invoiceSourceBlocked) {
