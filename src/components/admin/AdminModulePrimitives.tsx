@@ -85,8 +85,29 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
   ariaLabel,
   className,
   variant = 'primary'
-}) => (
+}) => {
+  const navRef = React.useRef<HTMLElement | null>(null);
+  const activeTabRef = React.useRef<HTMLAnchorElement | null>(null);
+
+  React.useEffect(() => {
+    const nav = navRef.current;
+    const activeTab = activeTabRef.current;
+    if (!nav || !activeTab) return;
+
+    const navBounds = nav.getBoundingClientRect();
+    const tabBounds = activeTab.getBoundingClientRect();
+    const inset = 12;
+
+    if (tabBounds.left < navBounds.left + inset) {
+      nav.scrollLeft -= navBounds.left + inset - tabBounds.left;
+    } else if (tabBounds.right > navBounds.right - inset) {
+      nav.scrollLeft += tabBounds.right - (navBounds.right - inset);
+    }
+  }, [activeKey]);
+
+  return (
   <nav
+    ref={navRef}
     aria-label={ariaLabel}
     className={cn(
       variant === 'primary'
@@ -101,6 +122,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
         <NavLink
           key={item.key}
           to={item.to}
+          ref={active ? activeTabRef : null}
           aria-current={active ? 'page' : undefined}
           data-ams-slug={item.slug ?? item.key}
           className={cn(
@@ -121,7 +143,8 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
       );
     })}
   </nav>
-);
+  );
+};
 
 export type AdminModuleNoticeTone = 'success' | 'danger' | 'warning' | 'info';
 
