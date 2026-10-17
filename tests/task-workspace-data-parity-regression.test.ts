@@ -37,3 +37,20 @@ test('JSON mode keeps legacy project tasks and top-level task records synchroniz
   assert.ok(routes.includes('removeJsonProjectTask(db, id)'));
   assert.ok(routes.includes('Task has time logs and cannot be deleted.'));
 });
+
+test('Task workspace reconciles ambiguous task mutations against canonical server records', () => {
+  const workspace = read('src/components/admin/TasksWorkspace.tsx');
+
+  assert.ok(workspace.includes("const isUnknownMutationOutcome = (response: { success: boolean; status?: number }) =>"));
+  assert.ok(workspace.includes("const loadTasks = async (showLoading = true, isActive: () => boolean = () => true): Promise<boolean>"));
+  assert.ok(workspace.includes("const createOutcomeUnknown = isUnknownMutationOutcome(response)"));
+  assert.ok(workspace.includes('Task status could not be confirmed.'));
+  assert.ok(workspace.includes('Task creation result could not be confirmed.'));
+  assert.ok(workspace.includes('Task edit result could not be confirmed.'));
+  assert.ok(workspace.includes('Checklist result could not be confirmed.'));
+  assert.ok(workspace.includes('Task deletion result could not be confirmed.'));
+  assert.ok(workspace.includes('Some task update results were unknown.'));
+  assert.ok(workspace.includes('Task status response did not include the saved record.'));
+  assert.ok(workspace.includes('Task update response did not include the saved record.'));
+  assert.ok(workspace.includes('Checklist response did not include the saved task record.'));
+});
