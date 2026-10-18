@@ -3408,7 +3408,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h2 className="text-sm font-semibold text-fg">Tax & retainer overview</h2>
-        <p className="mt-1 text-xs text-muted">Invoice tax and retainer billing are kept inside Revenue; this replaces the retired standalone tab.</p>
+        <p className="mt-1 text-xs text-muted">Review invoice tax and retainer billing alongside the related revenue records.</p>
       </div>
       <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export tax detail</button>
     </header>
