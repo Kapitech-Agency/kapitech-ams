@@ -565,59 +565,75 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
-      <section data-ams-feature-slug="dashboard-overview" data-ams-slug="dashboard-overview" className="mb-5 grid gap-3 min-[1100px]:grid-cols-12" aria-label="Executive overview controls">
-        <div className="min-[1100px]:col-span-9">
-          <AdminMetricStrip
-            className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
-            metrics={[
-              {
-                id: 'active-projects', label: 'Active projects',
-                value: activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
-                context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Live project records' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                                icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
-              },
-              {
-                id: 'tasks-due', label: 'Overdue tasks',
-                value: overdueTasksMetric != null ? String(overdueTasksMetric) : '—',
-                context: dashboardOverview.metrics?.overdueTasks != null || operationalSnapshot.tasks !== null ? 'Open tasks past due date' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                                icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue'
-              },
-              {
-                id: 'overdue', label: 'Projects at risk',
-                value: projectsAtRiskMetric != null ? String(projectsAtRiskMetric) : '—',
-                change: projectsAtRiskMetric == null ? undefined : projectsAtRiskMetric > 0 ? 'Requires attention' : 'No projects flagged',
-                changeToneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success',
-                icon: <AlertTriangle size={15} />,
-                toneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success',
-                slug: 'dashboard-projects-risk'
-              },
-              {
-                id: 'revenue', label: 'Cash collected this month',
-                value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
-                context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Recorded invoice payments' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                                icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
-              }
-            ]}
-          />
+      <section
+        data-ams-feature-slug="dashboard-overview"
+        data-ams-slug="dashboard-overview"
+        className="space-y-3"
+        aria-label="Executive overview metrics"
+      >
+        <AdminMetricStrip
+          className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
+          metrics={[
+            {
+              id: 'active-projects', label: 'Active projects',
+              value: activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
+              context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Live project records' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
+            },
+            {
+              id: 'tasks-due', label: 'Overdue tasks',
+              value: overdueTasksMetric != null ? String(overdueTasksMetric) : '—',
+              context: dashboardOverview.metrics?.overdueTasks != null || operationalSnapshot.tasks !== null ? 'Open tasks past due date' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue'
+            },
+            {
+              id: 'overdue', label: 'Projects at risk',
+              value: projectsAtRiskMetric != null ? String(projectsAtRiskMetric) : '—',
+              change: projectsAtRiskMetric == null ? undefined : projectsAtRiskMetric > 0 ? 'Requires attention' : 'No projects flagged',
+              changeToneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success',
+              icon: <AlertTriangle size={15} />,
+              toneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success',
+              slug: 'dashboard-projects-risk'
+            },
+            {
+              id: 'revenue', label: 'Cash collected this month',
+              value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
+              context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Recorded invoice payments' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
+            }
+          ]}
+        />
+      </section>
+
+      <section
+        className="space-y-2"
+        data-ams-feature-slug="dashboard-quick-actions"
+        data-ams-slug="dashboard-quick-actions"
+        aria-label="Quick actions"
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold text-fg">Quick actions</h2>
+          <p className="text-[11px] text-muted">Common workspaces</p>
         </div>
-        <AdminPanel title="Quick actions" description="Jump directly into the most common agency workflows." bodyClassName="p-3" className="min-[1100px]:col-span-3">
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { label: 'New project', icon: <Plus size={14} />, href: '/admin/projects' },
-              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
-              { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
-              { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/invoicing' },
-              { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
-              { label: 'View documents', icon: <FileText size={14} />, href: '/admin/documents' }
-            ].map((action) => (
-              <Link key={action.label} to={action.href} className="flex min-h-10 items-center gap-2 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">{action.icon}</span>
-                <span className="truncate">{action.label}</span>
-                <ArrowUpRight size={12} className="ml-auto shrink-0 text-muted" />
-              </Link>
-            ))}
-          </div>
-        </AdminPanel>
+        <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 min-[760px]:grid-cols-3 min-[900px]:grid-cols-4 min-[1100px]:grid-cols-5">
+          {[
+            { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
+            { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
+            { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/invoicing' },
+            { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
+            { label: 'View documents', icon: <FileText size={14} />, href: '/admin/documents' }
+          ].map((action) => (
+            <Link
+              key={action.label}
+              to={action.href}
+              className="flex min-h-10 min-w-0 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <span className="shrink-0 text-muted">{action.icon}</span>
+              <span className="min-w-0 truncate">{action.label}</span>
+              <ArrowUpRight size={12} className="ml-auto shrink-0 text-muted" />
+            </Link>
+          ))}
+        </div>
       </section>
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
