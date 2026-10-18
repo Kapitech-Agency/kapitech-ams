@@ -264,17 +264,11 @@ test('Project cost actuals come from linked Finance expenses, not delivery progr
   assert.doesNotMatch(projects, /project\.budget \* \(project\.progressPercent \/ 100\)/);
 });
 
-test('Legacy Approval implementation remains permission-gated while route is retired', async () => {
-  const approvals = await read('src/pages/admin/AdminApprovals.tsx');
+test('Legacy Approval route redirects without loading a retired implementation', async () => {
   const app = await read('src/App.tsx');
   assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.ok(approvals.includes('api.approvals.getAll()'));
-  assert.ok(approvals.includes('api.approvals.create('));
-  assert.ok(approvals.includes('api.approvals.action('));
-  assert.ok(approvals.includes('const canResolve = hasAdminPermission(\'canApproveBudgets\')'));
-  assert.ok(approvals.includes('isOwnRequest'));
-  assert.ok(approvals.includes('<Drawer'));
-  assert.doesNotMatch(approvals, /<Modal\b|<\/Modal>/);
+  assert.doesNotMatch(app, /import\(['"]\.\/pages\/admin\/AdminApprovals['"]\)/);
+  assert.doesNotMatch(app, /from ['"]\.\/pages\/admin\/AdminApprovals['"]/);
 });
 
 test('Client Retainers use persisted records and disclose missing time-log reconciliation', async () => {
