@@ -9,6 +9,27 @@ export interface AmsSidebarSubnavigationItem {
   slug?: string;
 }
 
+export function getAmsWorkspaceNavigationModule(pathname: string, search = ''): AmsSidebarModuleKey | null {
+  const path = pathname.replace(/\/+$/, '') || '/';
+
+  if (path === '/admin/dashboard') return 'dashboard';
+  if (path === '/admin/inbox') return 'inbox';
+  if (path === '/admin/documents') return 'documents';
+  if (path === '/admin/finance' || path.startsWith('/admin/finance/')) return 'finance';
+  if (path === '/admin/projects') return 'projects';
+  if (path === '/admin/tasks') {
+    const params = new URLSearchParams(search);
+    // Role-specific My Hub is a personal task destination, not the Projects workspace.
+    if (params.get('taskscope') === 'my' && params.get('workspace') !== 'project') return null;
+    return 'projects';
+  }
+  if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';
+  if (path === '/admin/team' || path === '/admin/time-logs' || path === '/admin/vendors') return 'team';
+  if (path.startsWith('/admin/cms/')) return 'cms';
+  if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';
+  return null;
+}
+
 const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationItem[]> = {
   dashboard: [
     { key: 'overview', label: 'Overview', to: '/admin/dashboard' },

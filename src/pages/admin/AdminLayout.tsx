@@ -8,7 +8,7 @@ import {
   Sun,
   Moon,
   Search,
-} from 'lucide-react';
+} from '../../lib/untitled-ui-icon-bridge';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CommandPalette } from '../../components/admin/CommandPalette';
@@ -16,7 +16,7 @@ import { AdminNotificationCenter } from '../../components/admin/AdminNotificatio
 import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
 import { getAmsRole } from '../../lib/amsNavigationAccess';
-import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive, type AmsSidebarModuleKey } from '../../lib/amsModuleSubnavigation';
+import { getAmsModuleSubnavigation, getAmsWorkspaceNavigationModule, isAmsModuleSubnavigationItemActive } from '../../lib/amsModuleSubnavigation';
 import { AdminSectionTabs, AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
@@ -159,20 +159,7 @@ export const AdminLayout: React.FC = () => {
     session?.user?.role
   );
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
-  const workspaceNavigationModule: AmsSidebarModuleKey | null = (() => {
-    const path = location.pathname;
-
-    if (path === '/admin/dashboard') return 'dashboard';
-    if (path === '/admin/inbox') return 'inbox';
-    if (path === '/admin/documents') return 'documents';
-    if (path === '/admin/finance' || path.startsWith('/admin/finance/')) return 'finance';
-    if (path === '/admin/projects' || path === '/admin/tasks') return 'projects';
-    if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';
-    if (path === '/admin/team' || path === '/admin/time-logs' || path === '/admin/vendors') return 'team';
-    if (path.startsWith('/admin/cms/')) return 'cms';
-    if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';
-    return null;
-  })();
+  const workspaceNavigationModule = getAmsWorkspaceNavigationModule(location.pathname, location.search);
 
   const mfaSetupRequired = Boolean(
     session?.user

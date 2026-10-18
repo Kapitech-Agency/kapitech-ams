@@ -1,18 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Home,
-  Inbox,
+  BarChart3,
   Briefcase,
-  Landmark,
+  Building2,
   ClipboardCheck,
   Clock3,
-  UsersRound,
-  LockKeyhole,
-  LayoutGrid,
+  Database,
   FileText,
+  Globe,
+  Inbox,
+  Landmark,
+  LayoutDashboard,
+  ReceiptText,
+  Settings,
   ShieldCheck,
-} from 'lucide-react';
+  UsersRound,
+} from '../../lib/untitled-ui-icon-bridge';
 import {
   AMS_PRIMARY_SETTINGS_ITEM,
   getNavigationGroupsForRole,
@@ -31,24 +35,25 @@ type IconComponent = React.ComponentType<{
 }>;
 
 const NAVIGATION_ICONS: Record<AmsNavigationIcon, IconComponent> = {
-  dashboard: Home,
+  dashboard: LayoutDashboard,
   user: UsersRound,
   activity: Inbox,
   crm: Briefcase,
-  clients: UsersRound,
+  clients: Building2,
   onboarding: ClipboardCheck,
   projects: Briefcase,
   tasks: ClipboardCheck,
   retainer: Clock3,
   quotes: FileText,
-  invoice: FileText,
+  invoice: ReceiptText,
   ledger: Landmark,
-  profitability: Landmark,
-  editorial: FileText,
-  registry: LayoutGrid,
+  profitability: BarChart3,
+  editorial: Globe,
+  registry: FileText,
   access: ShieldCheck,
-  backup: LockKeyhole,
+  backup: Database,
   readiness: ShieldCheck,
+  settings: Settings,
 };
 
 interface NavigationLinkProps {

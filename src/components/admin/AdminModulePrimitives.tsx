@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, HelpCircle, X } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, HelpCircle, X } from '../../lib/untitled-ui-icon-bridge';
 import { NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';

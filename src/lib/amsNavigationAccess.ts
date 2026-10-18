@@ -18,7 +18,8 @@ export type AmsNavigationIcon =
   | 'registry'
   | 'access'
   | 'backup'
-  | 'readiness';
+  | 'readiness'
+  | 'settings';
 
 export interface AmsNavigationItem {
   key: string;
@@ -59,7 +60,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     key: 'operations',
     label: 'Operations',
     items: [
-      { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'], accessNote: { PM: 'Project finance view' } },
+      { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'ledger', allowedRoles: ['Admin', 'Finance', 'PM'], accessNote: { PM: 'Project finance view' } },
       { key: 'team-resources', label: 'Team & Resources', to: '/admin/team', icon: 'user', allowedRoles: ['Admin', 'Finance', 'PM'] },
       { key: 'documents', label: 'Documents', to: '/admin/documents', icon: 'registry', allowedRoles: ['Admin'] },
     ],
@@ -81,7 +82,7 @@ export const AMS_PRIMARY_SETTINGS_ITEM: AmsNavigationItem = {
   key: 'settings',
   label: 'Settings',
   to: '/admin/settings?tab=overview',
-  icon: 'access',
+  icon: 'settings',
   allowedRoles: ['Admin'],
 };
 

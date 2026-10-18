@@ -5,7 +5,7 @@ import {
   getNavigationGroupsForRole,
   type AmsRole,
 } from '../src/lib/amsNavigationAccess';
-import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive } from '../src/lib/amsModuleSubnavigation';
+import { getAmsModuleSubnavigation, getAmsWorkspaceNavigationModule, isAmsModuleSubnavigationItemActive } from '../src/lib/amsModuleSubnavigation';
 
 const roles: AmsRole[] = ['Admin', 'Finance', 'PM', 'Creative', 'Freelancer'];
 const modules = ['dashboard', 'inbox', 'projects', 'clients', 'finance', 'team', 'documents', 'cms', 'settings', 'crm', 'tasks'] as const;
@@ -195,4 +195,14 @@ test('primary module clicks land on exactly one matching contextual tab across p
 test('MFA setup preserves exceptional Access without exposing Settings to non-admin navigation', () => {
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'Freelancer', true).map((item) => item.key), ['access']);
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'PM'), []);
+});
+
+
+test('topbar context follows the owning workspace and keeps personal My Hub separate from Projects', () => {
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/dashboard'), 'dashboard');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/finance', '?tab=accounts-receivable'), 'finance');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks'), 'projects');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks', '?taskscope=my'), null);
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks', '?taskscope=my&workspace=project'), 'projects');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/cms/careers', '?tab=applicants'), 'cms');
 });
