@@ -133,7 +133,7 @@ export const AdminInbox: React.FC = () => {
       case 'messages': return submissions;
       case 'starred': return submissions.filter((item) => !!item.starred);
       case 'client':
-        // Keep the Client Requests workspace scoped to actual inquiry records.
+        // Keep Sales Inquiries scoped to actual inquiry records.
         // Legacy records without a type retain their historical inquiry behavior.
         return submissions.filter((item) => !item.type || item.type === 'inquiry');
       default: return submissions;
@@ -526,7 +526,7 @@ export const AdminInbox: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'kapitech_' + ({ overview: 'all_inbound', client: 'client_inbox', starred: 'starred' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
+    link.setAttribute('download', 'kapitech_' + ({ overview: 'all_inbound', messages: 'all_messages', client: 'sales_inquiries', starred: 'starred' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
