@@ -168,3 +168,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Contract lifecycle errors remain separate, visible, and actionable. This placement change affects only the transient success notice; contract records, status transitions, confirmation dialogs, permissions, audit events, and API behavior are unchanged.
 - Added regression coverage for header → register/pagination → notice → supporting metrics order.
 - [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122141929) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122141932) passed for commit `83544de3b140fa35905afd48edb82dc050a7a124`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
+
+
+## Twentieth implementation slice: cleaner Projects header hierarchy
+
+- Removed the project-count/status pill from the page title. The selected view now has a clean, predictable title while source availability remains explicit in a shared status badge within the eyebrow.
+- Active/completed counts remain in the existing project summaries and register; loading/unavailable source states are still visible and are not represented as successful live data.
+- No project status, progress, record counts, route/query state, actions, permissions, or workflow behavior changed.
+- Added regression coverage for clean title composition and the source-backed status badge.

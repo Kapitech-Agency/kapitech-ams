@@ -324,3 +324,12 @@ test('Contracts action feedback follows the primary register and pagination', as
   const metrics = contracts.indexOf('data-ams-feature-slug="contracts-overview-kpis"');
   assert.ok(header >= 0 && pagination > header && notice > pagination && metrics > notice);
 });
+
+
+test('Projects keep the page title clean and expose data availability in the eyebrow', async () => {
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+  assert.match(projects, /AdminStatusBadge tone=\{serverMode \? 'success' : loading \? 'info' : 'warning'\}/);
+  assert.match(projects, /serverMode \? 'Live project data' : loading \? 'Loading project records' : 'Project data unavailable'/);
+  assert.match(projects, /title=\{view === 'all' \? 'Projects' : view === 'sprint' \? 'Sprint & Delivery' : view === 'budget' \? 'Budget vs Actual' : 'Archived Projects'\}/);
+  assert.match(projects, /data-ams-feature-slug="projects-kpis"/);
+});

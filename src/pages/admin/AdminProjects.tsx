@@ -38,7 +38,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
@@ -1868,17 +1868,15 @@ export const AdminProjects: React.FC = () => {
 
       <AdminModuleHeader
         className="mb-0"
-        eyebrow={view === 'all' ? 'Workspace / Projects' : 'Projects'}
-        title={(
-          <span className="flex min-w-0 flex-wrap items-center gap-2.5">
-            <span>{view === 'all' ? 'Projects' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
-            <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (serverMode ? 'border-accent/25 bg-accent/10 text-accent' : loading ? 'border-info/25 bg-info/10 text-info' : 'border-warning/25 bg-warning/10 text-warning')}>
-              {serverMode
-                ? view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects'
-                : loading ? 'Loading project records' : 'Project data unavailable'}
-            </span>
-          </span>
+        eyebrow={(
+          <div className="flex flex-wrap items-center gap-2">
+            <span>{view === 'all' ? 'Workspace / Projects' : 'Projects'}</span>
+            <AdminStatusBadge tone={serverMode ? 'success' : loading ? 'info' : 'warning'}>
+              {serverMode ? 'Live project data' : loading ? 'Loading project records' : 'Project data unavailable'}
+            </AdminStatusBadge>
+          </div>
         )}
+        title={view === 'all' ? 'Projects' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}
         description={
           view === 'all'
             ? 'Project portfolio, delivery stages, resource ownership, and live execution from one workspace.'
