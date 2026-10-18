@@ -2,9 +2,12 @@
 
 Read root AGENTS.md before coding. It defines task boundaries, conflict resolution, verification and reporting. Read `docs/README.md` for the documentation index and authority rules; historical migration notes are not current production instructions.
 
+For the current end-to-end delivery initiative, the canonical stage sequence is `docs/AMS-END-TO-END-DELIVERY-ROADMAP.md`; requirement-level status belongs in `docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md`; use `docs/AMS-END-TO-END-EXECUTION-PROMPT.md` for execution. Do not use older prompts or section-local stage numbering to create a competing delivery sequence.
+
 ## Required documentation by task
 - Target modules/workflows: docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md and docs/architecture/ams-navigation-information-architecture.md.
 - Requirement status/evidence: docs/AMS-IMPLEMENTATION-TRACEABILITY.md.
+- Delivery sequence and current gaps: docs/AMS-END-TO-END-DELIVERY-ROADMAP.md and docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md.
 - Current production operations: docs/PRODUCTION-CUTOVER.md, docs/production-cutover-checklist.md, docs/production-readiness-gate.md, docs/postgres-backup-dr-runbook.md, and docs/private-document-vault.md.
 - UI: AMS-DESIGN-SYSTEM.md and docs/AMS-UX-INTERACTION-STANDARDS.md.
 - Main content and role-aware worksheet presentation: docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md and docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md.
