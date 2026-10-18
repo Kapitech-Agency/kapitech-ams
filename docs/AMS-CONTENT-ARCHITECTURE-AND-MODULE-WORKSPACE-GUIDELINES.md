@@ -52,6 +52,9 @@ Use this as a decision framework. Do not force every item onto every page.
 - URL/query state, selected tab, browser history, and active state must agree.
 - Do not create duplicate destinations under different labels or a second tab row that repeats the same choices.
 - When primary workspace tabs and secondary worksheets both exist, make their hierarchy clear.
+- Use this hierarchy consistently: primary module → workspace → worksheet/filter/saved view → selected record detail. Worksheets, statuses and saved views stay inside their workspace; do not promote every item into the sidebar.
+- Limit persistent navigation to the primary module and its current workspace. Do not add another global navigation layer for record details.
+- Use breadcrumbs selectively for deep records when ancestor context helps the user orient or return. Show valid parent links (for example, Projects → Project Registry) and let the record title identify the current page. Do not repeat the current title in both breadcrumb and page heading. Skip breadcrumbs on obvious roots and primary tabs. At narrow widths, collapse the path or use a clear back-to-parent control.
 - Preserve route ownership and role-visible navigation. Do not change authorization policy.
 
 ### 3.3 Page-level controls
@@ -113,21 +116,28 @@ Primary question: which message or request should I handle next?
 
 ### Projects
 Primary question: what is in progress, overdue, blocked, or at risk?
-- Project portfolio/delivery list, table, or board is the primary work area.
-- Make project/client, status, owner, deadline, progress, health, and recorded cost/budget understandable where available.
-- Keep schedule, milestones, tasks, budget and activity as relevant contextual views/details.
-- Delivery progress is not a cost measure.
-- Do not bury the portfolio under excessive KPI cards.
-- Retain supported keyboard alternatives and existing project/task lifecycle behavior.
+
+Use seven workspaces, each with one clear job:
+- **Overview:** source-backed portfolio context and exceptions; not a duplicate full register.
+- **Project Registry:** one canonical project list. Planning, Active, On Hold, Completed and Archived are filters/saved views.
+- **Tasks & Execution:** Board/Kanban, List, My Tasks, Task Lists and Dependencies over shared task records.
+- **Planning & Delivery:** brief, scope/deliverables, milestones, timeline, deliverable tracking, QA, client review and revisions.
+- **Content & Campaigns:** calendar, planning/briefs, production, assets/versions, reviews, publishing schedule/status and campaign tracking.
+- **Project Resources:** assigned team, assignments and workload from Team & Resources.
+- **Project Controls:** changes, risks/issues/blockers, budget/health, reports and closure.
+
+Link project files to Documents and show financial values from Finance. Do not create duplicate file stores, budget ledgers, or separate records for alternate views. Keep delivery progress distinct from cost. Do not bury the working area under excessive KPI cards, and retain supported keyboard alternatives and existing lifecycle behavior.
 
 ### Clients
 Primary question: what is the relationship state, and what needs to happen next?
-- The client directory owns the main area of directory views.
-- Show company/client identity and relationship status clearly.
-- Structure details around contacts, interactions, projects, contracts, retainers, SLA, and related records already supported.
-- Use shared drawers for multi-field create/edit work. Use modals only for patterns permitted by the modal guideline.
-- Retainers and SLA should be purpose-built workspaces, not overloaded directory screens.
-- Preserve canonical record relationships and permissions.
+
+Use four workspaces:
+- **Directory:** one canonical client/company/contact directory; Companies and Contacts are views/filters. Client 360° is selected-record context, not another master directory.
+- **Onboarding:** checklist, required documents and kickoff readiness linked to canonical records.
+- **Agreements:** contracts/SOWs, retainers/service commitments, renewal schedule and contract history.
+- **Service & Health:** SLA, issues/feedback, client health and service history.
+
+Client Requests and message threads remain owned by Inbox; Clients may display linked context but must not create a competing queue/status system. Finance owns quotations, invoices, payments and accounting. Use shared drawers and preserve canonical record relationships/permissions.
 
 ### Finance
 Primary question: what is the financial position for the selected period, and which transaction/control needs attention?
@@ -150,35 +160,32 @@ Keep secondary worksheets subordinate to primary navigation. Do not label cash m
 
 ### Team & Resources
 Primary question: who is available, accountable, or overloaded?
-- Keep team directory, capacity, vendor/freelancer management, skills, and time tracking in their proper subareas.
-- Surface role/type, assignments, availability, workload, and status where supported.
-- Distinguish measured capacity from unavailable data.
-- Keep time records and allocation legible.
-- Preserve role visibility and confidential cost access.
+- Keep four workspaces: Team & Capacity, People Operations, Vendors & Freelancers, and Time Tracking.
+- Team Directory owns the canonical team-member identity/work profile. People Operations links employment lifecycle, leave, training and performance details to the same person; do not create a second Employee Directory.
+- Vendors & Freelancers owns the canonical supplier/provider record; Finance references it for vendor-related financial activity.
+- Surface role/type, assignments, availability, workload and status where supported. Distinguish measured capacity from unavailable data, keep time records legible, and preserve role visibility and confidential cost access.
 
 ### Documents
 Primary question: can I find the right document and understand its ownership and access?
-- Document list/register as the primary area, with search and relevant metadata/category filters.
-- Show identity, related record, type/category, date, and status where available.
-- Use existing secure document flows. Never expose or construct storage URLs as a shortcut.
-- Make upload state and per-file failures clear.
-- Keep empty, source-unavailable, and access-denied states distinct.
+- Use one canonical **Document Library** workspace with search and metadata/category filters.
+- SOPs & Policies, Legal & Corporate, Finance & Tax, HR & People, Security & Infrastructure, and Project & Client Files are categories/filters/saved views, not separate workspace destinations.
+- Avoid redundant Overview and All Documents pages that lead to the same register.
+- Show identity, related record, type/category, date, status and access context where available.
+- Use existing secure flows, never expose/construct storage URLs, and make upload state/per-file failure clear. Keep empty, source-unavailable and access-denied states distinct.
 
 ### Website CMS
 Primary question: which content item am I managing, and what is its publication state?
-- Content-type-specific register plus relevant search/status filters.
-- Case studies, insights, testimonials, services, and Careers should expose relevant fields/actions.
-- Use shared drawers for create/edit workflows, including bilingual content.
-- Keep publication state, public visibility, and confirmed save outcome clear.
-- Careers separates job opening management from applicant review; maintain the correct applicant/files/notes/status association.
-- Do not invent records to improve visual density.
+- Use content-type workspaces for Case Studies, Services, Insights, Testimonials and Careers, with relevant filters inside each.
+- CMS Overview is only useful as a genuinely cross-content publishing/status summary. It must not duplicate a content register or point to Case Studies.
+- Careers has internal Jobs, Applicants and Recruitment History worksheets/tabs; they are not global/sidebar workspaces. Keep job openings distinct from applicant review and preserve the correct applicant/files/notes/status association.
+- Use shared drawers for create/edit workflows, including bilingual content. Keep publication state, public visibility and confirmed save outcome clear. Do not invent records to improve visual density.
 
 ### Settings
 Primary question: which system setting/security control am I reviewing, and what happens if I change it?
-- Group configuration and system-state sections by purpose.
-- Show current state, concise explanation, validation, and supported action.
-- Retain confirmation and authorization for sensitive operations.
-- Do not expose secrets or weaken MFA, access controls, backups, audit, or security behavior in a UI-only task.
+- Group configuration/system status, Users & Access, Audit Log and Integrations by purpose.
+- Keep integration-specific sections (status, environment, account mapping, sync/diagnostics, audit) inside the selected integration workspace, not as an extra persistent navigation layer.
+- Keep Preferences within a relevant settings surface unless a distinct route, permission boundary and workflow justify a separate workspace.
+- Show current state, concise explanation, validation and supported actions. Retain confirmation/authorization for sensitive operations. Do not expose secrets or weaken MFA, access controls, backups, audit, or security behavior in a UI-only task.
 
 ## 5. Shared visual and interaction rules
 
@@ -263,6 +270,7 @@ A view is ready only when its purpose/next action are clear, the main work area 
 - AMS-DESIGN-SYSTEM.md
 - docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md
 - docs/AMS-UX-INTERACTION-STANDARDS.md
+- docs/architecture/ams-navigation-information-architecture.md
 - docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md
 - docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md
 - docs/AMS-DRAWER-GUIDELINES.md
