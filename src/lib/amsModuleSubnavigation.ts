@@ -203,10 +203,13 @@ export function isAmsModuleSubnavigationItemActive(
   if (item.key === 'performance' && path === '/admin/dashboard') return params.get('view') === 'performance';
   if (item.key === 'analytics' && path === '/admin/dashboard') return params.get('view') === 'analytics';
 
-  if (item.key === 'all' && path === '/admin/projects') return !params.get('projects') || params.get('projects') === 'all';
-  if (item.key === 'sprint' && path === '/admin/projects') return params.get('projects') === 'sprint';
-  if (item.key === 'budget' && path === '/admin/projects') return params.get('projects') === 'budget';
-  if (item.key === 'archived' && path === '/admin/projects') return params.get('projects') === 'archived';
+  if (path === '/admin/projects') {
+    const requestedView = params.get('projects');
+    const selectedView = requestedView && ['sprint', 'budget', 'archived'].includes(requestedView)
+      ? requestedView
+      : 'all';
+    return item.key === selectedView;
+  }
   if (item.key === 'tasks' && path === '/admin/tasks') {
     return params.get('taskscope') !== 'my' || params.get('workspace') === 'project';
   }

@@ -97,6 +97,8 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=budget'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'budget')!, '/admin/projects', '?projects=budget'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'archived')!, '/admin/projects', '?projects=archived'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'all')!, '/admin/projects', '?projects=unknown'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=unknown'), false);
 
   const clients = getAmsModuleSubnavigation('clients', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'directory')!, '/admin/clients/all-clients'), true);
