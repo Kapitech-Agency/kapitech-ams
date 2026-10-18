@@ -692,7 +692,6 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   assert.ok(teamHeader >= 0 && teamView > teamHeader && teamMetrics > teamView && teamMetrics < teamFilters);
   assert.ok(teamPagination > teamFilters);
 
-  const vendorFilters = teams.indexOf('data-ams-feature-slug="vendor-directory-filters"');
   const vendorView = teams.indexOf('data-ams-feature-slug="vendor-directory"');
   const vendorMetrics = teams.indexOf("slug: 'vendor-directory-kpi-active-contractors'");
   const vendorFilters = teams.indexOf('data-ams-feature-slug="vendor-directory-filters"');
