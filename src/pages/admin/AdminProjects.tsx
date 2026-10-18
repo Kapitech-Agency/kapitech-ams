@@ -1961,7 +1961,7 @@ export const AdminProjects: React.FC = () => {
               </div>
             )}
             {view !== 'overview' && view !== 'planning-delivery' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
-            {canManageProjects && view !== 'planning-delivery' && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
+            {canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
           </>
         )}
       />
