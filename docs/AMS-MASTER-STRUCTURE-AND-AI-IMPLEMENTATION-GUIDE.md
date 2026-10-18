@@ -1763,6 +1763,7 @@ This guide defines the product target and module requirements. Use specialist do
 | Which transitions and side effects are valid? | docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md |
 | Which entity owns a field/relationship? | docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md |
 | How are UX, spacing, margins/padding and interaction applied? | docs/AMS-UX-INTERACTION-STANDARDS.md and AMS-DESIGN-SYSTEM.md |
+| What should each module/workspace/worksheet display for each role, including columns, actions, and charts? | docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md |
 | Which frontend route/state/API patterns apply? | docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md |
 | Which backend/API/transaction controls apply? | docs/AMS-BACKEND-API-AND-DATA-INTEGRITY.md |
 | How are E2E/regression results proven? | docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md |
