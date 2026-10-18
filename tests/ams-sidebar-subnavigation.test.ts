@@ -138,6 +138,10 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'team')!, '/admin/team', '?view=capacity-allocation'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'capacity')!, '/admin/team', '?view=capacity-allocation'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'capacity')!, '/admin/team'), false);
+  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'team')!, '/admin/team', '?view=unknown'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'skills')!, '/admin/vendors', '?view=skill-matrix'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'vendors')!, '/admin/vendors'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'time')!, '/admin/time-logs'), true);
 
   const cms = getAmsModuleSubnavigation('cms', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(cms.find((item) => item.key === 'projects')!, '/admin/cms/projects'), true);
@@ -258,4 +262,9 @@ test('topbar context follows the owning workspace and keeps personal My Hub sepa
   assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks', '?taskscope=my'), null);
   assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks', '?taskscope=my&workspace=project'), 'projects');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/cms/careers', '?tab=applicants'), 'cms');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/team'), 'team');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/team', '?view=capacity-allocation'), 'team');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/vendors'), 'team');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/vendors', '?view=skill-matrix'), 'team');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/time-logs'), 'team');
 });
