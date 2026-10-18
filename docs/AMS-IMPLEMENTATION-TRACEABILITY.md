@@ -307,7 +307,7 @@ Inbox keeps the approved direct workspace order (Overview, Messages, Follow-ups,
 
 Tasks & Execution now exposes Board / Kanban and List as query-driven worksheets at all viewport widths. The task queues (All Tasks, My Tasks, Due & Overdue, Review Queue, Blocked, Completed) remain views of the same task records and are shown at desktop and compact widths. Unsupported `layout` values resolve to List without dropping other query parameters. Task Lists and Dependencies remain visible as unavailable targets until backed by actual workflows. Role-aware workspace ownership keeps a PM's `taskscope=my` view under Projects while preserving existing route access rules. AMS Quality Gate and AMS CI passed at the tested checkpoint. Browser-level responsive interaction and visual sign-off remain unverified.
 
-### NAV-018: Inbox categories and saved views are navigated inside Messages
+### NAV-021: Inbox categories and saved views are navigated inside Messages
 
 **Status:** IMPLEMENTED_VERIFIED (source regression, typecheck, production build, and CI passed; browser-level navigation remains unverified).
 
@@ -315,7 +315,7 @@ Tasks & Execution now exposes Board / Kanban and List as query-driven worksheets
 
 The Messages workspace keeps All Messages, Sales Inquiries, Client Requests, and Project & Support in its category row. Unread and Starred are presented as saved views within Messages and link to the existing canonical inbound records. Resolved and Archived are shown as non-interactive target-only views because the current inbound status contract does not expose distinct verified resolved/archive states. Unsupported query values still normalize to Inbox Overview. No API, status model, database, permissions or inbox business behavior was changed.
 
-### NAV-019: Planning & Delivery worksheet hierarchy is represented without dead links
+### NAV-022: Planning & Delivery worksheet hierarchy is represented without dead links
 
 **Status:** IMPLEMENTED_VERIFIED (typecheck, regression tests, production build and AMS CI passed at current main checkpoint; browser-level navigation remains unverified).
 
@@ -323,13 +323,21 @@ The Messages workspace keeps All Messages, Sales Inquiries, Client Requests, and
 
 The Projects → Planning & Delivery workspace now exposes the master-guide worksheet order: Project Brief, Scope & Deliverables, Milestones, Timeline, Deliverable Tracking, Internal Quality Review, Client Review, and Revision History. Project Brief is the only currently navigable worksheet because the existing project record exposes notes, dates, progress, and milestone data in a combined brief/schedule view. Other worksheet entries are visibly target-only and non-interactive until their individual destinations exist. This is navigation-stage work only; no project data, model, API, delivery workflow, or content panel logic changed.
 
-### NAV-020: Client Directory and Onboarding worksheet navigation preserves one canonical client record set
+### NAV-023: Client Directory and Onboarding worksheet navigation preserves one canonical client record set
 
-**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI are required on this checkpoint; browser-level navigation remains unverified).
+**Status:** IMPLEMENTED_VERIFIED (source regression, typecheck, production build and AMS CI passed; browser-level navigation remains unverified).
 
 **Source:** `src/pages/admin/AdminClients.tsx`, `src/lib/amsModuleSubnavigation.ts`, `tests/ams-sidebar-subnavigation.test.ts`.
 
 The Directory exposes the live Companies worksheet on the canonical client/account list. Contacts is shown as target-only because contact details remain fields on the canonical client rows; there is no distinct Contacts register/view to navigate to yet. Onboarding remains its own contextual workspace rather than a duplicated status link inside Directory. Onboarding Checklist, Required Documents and Kickoff Readiness are represented as target-only until their dedicated worksheet destinations exist. Existing `scope=onboarding` route compatibility, client record fields, data ownership and permissions remain unchanged.
+
+### NAV-024: Finance areas and existing worksheets follow their owning workspace
+
+**Status:** IMPLEMENTED_VERIFIED (source regression, typecheck, production build and AMS CI passed; browser-level finance navigation remains unverified).
+
+**Source:** `src/lib/amsModuleSubnavigation.ts`, `src/lib/financeWorkbook.ts`, `src/pages/admin/AdminFinanceWorkspace.tsx`, `tests/ams-sidebar-subnavigation.test.ts`.
+
+Finance retains the five approved areas in order: Overview & Control, Transactions & Cash, Receivables & Payables, Project Finance, Accounting & Reports. The navigation regression maps all 20 entries in `FINANCE_WORKBOOK_GROUPS` to their owner tab, including Chart of Accounts and the reporting/closing worksheets. Quotations remains a dedicated Finance view owned by Receivables & Payables at the existing canonical route; it is not a standalone primary module. No Finance calculations, transactions, APIs, posting behavior or permission rules were changed. Browser interaction, refresh and back/forward navigation remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
