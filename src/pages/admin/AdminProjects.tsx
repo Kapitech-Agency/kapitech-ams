@@ -38,7 +38,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
@@ -1924,7 +1924,21 @@ export const AdminProjects: React.FC = () => {
         )}
       />
 
-      
+      {(view === 'all' || view === 'archived') && (
+        <AdminSectionTabs
+          ariaLabel="Project Registry views"
+          activeKey={view === 'archived' ? 'archived' : registryStatusView || 'all'}
+          className="w-full border-b border-line pb-2"
+          items={[
+            { key: 'all', label: 'All Projects', to: '/admin/projects' },
+            { key: 'planning', label: 'Planning', to: '/admin/projects?projects=planning' },
+            { key: 'active', label: 'Active Projects', to: '/admin/projects?projects=active' },
+            { key: 'on-hold', label: 'On Hold', to: '/admin/projects?projects=on-hold' },
+            { key: 'completed', label: 'Completed', to: '/admin/projects?projects=completed' },
+            { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
+          ]}
+        />
+      )}
 
       {toast && (
         <div role="status" className="fixed bottom-4 left-1/2 z-[80] -translate-x-1/2 rounded-control border border-line bg-panel px-4 py-3 text-xs text-fg">

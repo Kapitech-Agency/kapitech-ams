@@ -51,7 +51,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
-import { AdminFilterBar, AdminModuleHeader, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminModuleHeader, AdminSectionTabs, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
@@ -674,6 +674,22 @@ export const AdminInbox: React.FC = () => {
           </>
         )}
       />
+
+      {activeInboxTab !== 'overview' && (
+        <AdminSectionTabs
+          ariaLabel="Messages worksheets and saved views"
+          activeKey={activeInboxTab === 'client' ? 'sales-inquiries' : activeInboxTab === 'starred' ? 'starred' : 'all-messages'}
+          className="w-full border-b border-line pb-2"
+          items={[
+            { key: 'all-messages', label: 'All Messages', to: '/admin/inbox?view=messages' },
+            { key: 'sales-inquiries', label: 'Sales Inquiries', to: '/admin/inbox?view=client' },
+            { key: 'client-requests', label: 'Client Requests', to: '/admin/inbox', available: false },
+            { key: 'project-support', label: 'Project & Support Requests', to: '/admin/inbox', available: false },
+            { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred' },
+            { key: 'resolved-archived', label: 'Resolved & Archived', to: '/admin/inbox', available: false },
+          ]}
+        />
+      )}
 
       {loadError && (
         <div className="flex flex-col gap-3 rounded-card border border-warning/25 bg-warning/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="inbox-load-unavailable">

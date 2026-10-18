@@ -63,15 +63,16 @@ interface DocumentItem {
 }
 
 type SortKey = 'name' | 'category' | 'size' | 'updated' | 'status';
-type TabKey = 'all' | 'sops' | 'legal' | 'finance' | 'hr' | 'infra';
+type TabKey = 'all' | 'project-client' | 'sops' | 'legal' | 'finance' | 'hr' | 'infra';
 
 const DOCUMENT_TABS: Array<{ key: TabKey; label: string }> = [
-  { key: 'all', label: 'All Documents' },
-  { key: 'sops', label: 'SOP & Guides' },
+  { key: 'all', label: 'All files' },
+  { key: 'project-client', label: 'Project & Client Files' },
+  { key: 'sops', label: 'SOPs & Policies' },
   { key: 'legal', label: 'Legal & Corporate' },
   { key: 'finance', label: 'Finance & Tax' },
   { key: 'hr', label: 'HR & People' },
-  { key: 'infra', label: 'Security & Keys' },
+  { key: 'infra', label: 'Security & Infrastructure' },
 ];
 
 
@@ -125,6 +126,7 @@ const typeOf = (doc: DocumentItem) => {
 const matchesTab = (doc: DocumentItem, tab: TabKey) => {
   if (tab === 'all') return true;
   const text = searchTextOf(doc);
+  if (tab === 'project-client') return /project|client|deliverable|brief|case study/.test(text);
   if (tab === 'sops') return /sop|policy|guide|handbook|procedure|manual/.test(text);
   if (tab === 'legal') return /legal|contract|charter|corporate|agreement|nda/.test(text);
   if (tab === 'finance') return /finance|financial|tax|invoice|audit|accounting/.test(text);
@@ -531,7 +533,7 @@ export const AdminDocuments: React.FC = () => {
   };
 
   const activeFilterCount = [searchQuery].filter(Boolean).length;
-  const tabLabel = DOCUMENT_TABS.find((tab) => tab.key === activeTab)?.label || 'All Internal Documents';
+  const tabLabel = DOCUMENT_TABS.find((tab) => tab.key === activeTab)?.label || 'All files';
 
   return (
     <AdminPageShell featureSlug="documents-module" className="documents-module">
@@ -550,7 +552,7 @@ export const AdminDocuments: React.FC = () => {
       <div data-ams-slug="documents-header">
         <AdminModuleHeader
           className="mb-0"
-          title={activeTab === 'all' ? 'Internal Document Vault' : tabLabel}
+          title={activeTab === 'all' ? 'Document Library' : tabLabel}
           description={activeTab === 'all'
             ? 'Secure internal repository for SOPs, legal records, finance documents, and technical assets.'
             : activeTab === 'sops'
@@ -601,6 +603,21 @@ export const AdminDocuments: React.FC = () => {
             </Button>
           ) : undefined}
         >
+          <div className="w-full shrink-0 sm:w-[220px]">
+            <CustomSelect
+              value={activeTab}
+              onChange={(value) => {
+                const next = new URLSearchParams(searchParams);
+                if (value === 'all') next.delete('documents');
+                else next.set('documents', value);
+                setSearchParams(next);
+                setPage(1);
+              }}
+              size="sm"
+              aria-label="Document category"
+              options={DOCUMENT_TABS.map((tab) => ({ value: tab.key, label: tab.label }))}
+            />
+          </div>
           <div className="w-full shrink-0 sm:w-[180px]">
             <CustomSelect
               value={sortKey + ':' + sortDirection}
