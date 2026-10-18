@@ -132,7 +132,10 @@ export const AdminInbox: React.FC = () => {
       case 'overview': return submissions;
       case 'starred': return submissions.filter((item) => !!item.starred);
       case 'client':
-      default: return submissions.filter((item) => item.type !== 'career');
+        // Keep the Client Requests workspace scoped to actual inquiry records.
+        // Legacy records without a type retain their historical inquiry behavior.
+        return submissions.filter((item) => !item.type || item.type === 'inquiry');
+      default: return submissions;
     }
   }, [activeInboxTab, submissions]);
 

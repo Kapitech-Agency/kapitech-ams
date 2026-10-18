@@ -75,6 +75,9 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   assert.match(inbox, /Inbox data unavailable/);
   assert.match(inbox, /The last successfully loaded records remain visible/);
   assert.match(inbox, /Inbox is unavailable/);
+  assert.match(inbox, /case 'client':\s*\/\/ Keep the Client Requests workspace scoped to actual inquiry records\.[\s\S]*?return submissions\.filter\(\(item\) => !item\.type \|\| item\.type === 'inquiry'\)/);
+  assert.match(inbox, /case 'overview': return submissions;/);
+  assert.match(inbox, /case 'starred': return submissions\.filter\(\(item\) => !!item\.starred\)/);
   assert.doesNotMatch(inbox, /Candidate pipeline|Starred candidate work|inbox-jobs-board/);
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
 });
