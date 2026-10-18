@@ -47,6 +47,8 @@ export interface AdminSectionTabItem {
   to: string;
   slug?: string;
   permission?: string;
+  /** False when the target workspace is documented but does not have a functional destination yet. */
+  available?: boolean;
 }
 
 export interface AdminWorkspaceNavigationValue {
@@ -117,7 +119,21 @@ export const AdminTopbarTabs: React.FC<AdminTopbarTabsProps> = ({
       className={cn('ams-topbar-tabs ams-topnav-scroll flex min-h-8 max-w-full min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain', className)}
     >
       {items.filter(canRenderNavigationTab).map((item) => {
-        const active = activeKey === item.key;
+        const active = item.available !== false && activeKey === item.key;
+        if (item.available === false) {
+          return (
+            <span
+              key={item.key}
+              aria-disabled="true"
+              title="This workspace is documented but not available yet."
+              data-ams-slug={item.slug ?? item.key}
+              data-ams-navigation-status="target-only"
+              className="inline-flex h-8 min-h-8 shrink-0 cursor-not-allowed items-center rounded-chip border border-transparent px-3 text-[11px] font-medium text-muted/50"
+            >
+              {item.label}
+            </span>
+          );
+        }
         return (
           <NavLink
             key={item.key}
@@ -176,7 +192,25 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
     )}
   >
     {items.filter(canRenderNavigationTab).map((item) => {
-      const active = activeKey === item.key;
+      const active = item.available !== false && activeKey === item.key;
+      if (item.available === false) {
+        return (
+          <span
+            key={item.key}
+            aria-disabled="true"
+            title="This workspace is documented but not available yet."
+            data-ams-slug={item.slug ?? item.key}
+            data-ams-navigation-status="target-only"
+            className={cn(
+              variant === 'primary'
+                ? 'inline-flex min-h-8 shrink-0 cursor-not-allowed items-center rounded-chip border border-transparent px-3 text-[11px] font-medium text-muted/50'
+                : 'inline-flex min-h-8 shrink-0 cursor-not-allowed items-center rounded-control border border-transparent px-3 text-[11px] font-medium text-muted/50'
+            )}
+          >
+            {item.label}
+          </span>
+        );
+      }
       return (
         <NavLink
           key={item.key}
