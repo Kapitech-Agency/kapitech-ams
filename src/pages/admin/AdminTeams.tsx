@@ -1740,7 +1740,20 @@ export const AdminTeams: React.FC = () => {
       ) : (
         <div className="space-y-4" data-ams-feature-slug="time-logs" data-ams-slug="time-logs">
           <div data-ams-feature-slug="time-logs-filters">
-            <AdminFilterBar slug="time-logs-filters" searchValue={timeSearch} onSearchChange={setTimeSearch} searchPlaceholder="Search project, task, user..." searchLabel="Search time logs">
+          <AdminMetricStrip
+                      metrics={[
+                        { id: 'tracked',
+                          slug: 'time-logs-kpi-tracked', label: 'Tracked time', value: currentViewDataUnavailable ? '—' : formatHours(timeMetrics.total), context: currentViewDataUnavailable ? 'Live source unavailable' : 'Current filters',  icon: <Timer size={15} />, toneClassName: 'text-accent-text' },
+                        { id: 'billable',
+                          slug: 'time-logs-kpi-billable', label: 'Billable time', value: currentViewDataUnavailable ? '—' : formatHours(timeMetrics.billable), context: currentViewDataUnavailable ? 'Live source unavailable' : 'Billable entries',  icon: <WalletCards size={15} /> },
+                        { id: 'entries',
+                          slug: 'time-logs-kpi-entries', label: 'Entries', value: currentViewDataUnavailable ? '—' : timeMetrics.entries, context: currentViewDataUnavailable ? 'Live source unavailable' : timeMetrics.contributors + ' contributors',  icon: <CalendarDays size={15} /> },
+                        { id: 'contributors',
+                          slug: 'time-logs-kpi-contributors', label: 'Contributors', value: currentViewDataUnavailable ? '—' : timeMetrics.contributors, context: currentViewDataUnavailable ? 'Live source unavailable' : 'Users in filtered log',  icon: <UsersRound size={15} /> }
+                      ]}
+                    />
+
+                      <AdminFilterBar slug="time-logs-filters" searchValue={timeSearch} onSearchChange={setTimeSearch} searchPlaceholder="Search project, task, user..." searchLabel="Search time logs">
             <CustomSelect
               value={timeProject}
               onChange={setTimeProject}
@@ -1845,18 +1858,7 @@ export const AdminTeams: React.FC = () => {
             <AdminTablePagination total={filteredLogs.length} page={timePage} pageSize={timePageSize} onPageChange={setTimePage} onPageSizeChange={setTimePageSize} itemLabel="time entries" slug="time-logs-pagination" />
           </AdminPanel>
 
-                    <AdminMetricStrip
-                      metrics={[
-                        { id: 'tracked',
-                          slug: 'time-logs-kpi-tracked', label: 'Tracked time', value: currentViewDataUnavailable ? '—' : formatHours(timeMetrics.total), context: currentViewDataUnavailable ? 'Live source unavailable' : 'Current filters',  icon: <Timer size={15} />, toneClassName: 'text-accent-text' },
-                        { id: 'billable',
-                          slug: 'time-logs-kpi-billable', label: 'Billable time', value: currentViewDataUnavailable ? '—' : formatHours(timeMetrics.billable), context: currentViewDataUnavailable ? 'Live source unavailable' : 'Billable entries',  icon: <WalletCards size={15} /> },
-                        { id: 'entries',
-                          slug: 'time-logs-kpi-entries', label: 'Entries', value: currentViewDataUnavailable ? '—' : timeMetrics.entries, context: currentViewDataUnavailable ? 'Live source unavailable' : timeMetrics.contributors + ' contributors',  icon: <CalendarDays size={15} /> },
-                        { id: 'contributors',
-                          slug: 'time-logs-kpi-contributors', label: 'Contributors', value: currentViewDataUnavailable ? '—' : timeMetrics.contributors, context: currentViewDataUnavailable ? 'Live source unavailable' : 'Users in filtered log',  icon: <UsersRound size={15} /> }
-                      ]}
-                    />
+                    
         </div>
       )}
 

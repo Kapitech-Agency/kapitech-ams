@@ -705,11 +705,12 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   assert.equal(teams.includes('SLA is not tracked by the current vendor data model'), false);
   assert.equal(teams.includes('className="w-[8%] text-center">SLA</th>'), false);
 
-  const timePagination = teams.indexOf('slug="time-logs-pagination"');
-  const timePanelEnd = teams.indexOf('</AdminPanel>', timePagination);
+  const timeFilters = teams.indexOf('slug="time-logs-filters"');
   const timeMetrics = teams.indexOf("slug: 'time-logs-kpi-tracked'");
-  assert.ok(timePagination >= 0 && timePanelEnd > timePagination && timeMetrics > timePanelEnd);
-  assert.ok(teams.indexOf('slug="time-logs-filters"') < teams.indexOf('slug="time-logs-ledger"'));
+  const timeLedger = teams.indexOf('slug="time-logs-ledger"');
+  const timePagination = teams.indexOf('slug="time-logs-pagination"');
+  assert.ok(timeFilters >= 0 && timeMetrics > timeFilters && timeMetrics < timeLedger);
+  assert.ok(timePagination > timeLedger);
   const timeTracking = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTimeLogs.tsx'), 'utf8');
   assert.ok(timeTracking.indexOf('slug="time-tracking-kpis"') < timeTracking.indexOf('data-ams-feature-slug="time-tracking-ledger"'));
 });
