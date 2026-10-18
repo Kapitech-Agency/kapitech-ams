@@ -29,7 +29,7 @@ import {
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import {
   AdminAccount,
   AdminTier,
@@ -48,6 +48,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { createQrCode, qrCodeToPath } from '../../lib/qrcodegen';
 
 type SettingsTab = 'overview' | 'audit' | 'security' | 'integrations';
+type IntegrationView = 'overview' | 'website-cms';
 type AuditOutcome = 'all' | 'success' | 'attention';
 
 type BackupRecord = {
@@ -187,6 +188,9 @@ export const AdminSettings: React.FC = () => {
 
   const requestedTabParam = searchParams.get('tab');
   const requestedTab = normalizeTab(requestedTabParam);
+  const requestedIntegration = searchParams.get('integration');
+  const hasIntegrationParameter = searchParams.has('integration');
+  const integrationView: IntegrationView = requestedIntegration === 'website-cms' ? 'website-cms' : 'overview';
   const [activeTab, setActiveTab] = useState<SettingsTab>(requestedTab);
   const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';
 
@@ -213,6 +217,17 @@ export const AdminSettings: React.FC = () => {
     requestedTabParam,
     setSearchParams
   ]);
+
+  useEffect(() => {
+    if (!hasIntegrationParameter) return;
+    if (activeTab === 'integrations' && requestedIntegration === 'website-cms') return;
+
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete('integration');
+      return next;
+    }, { replace: true });
+  }, [activeTab, hasIntegrationParameter, requestedIntegration, setSearchParams]);
 
   const selectTab = (tab: SettingsTab) => {
     if ((tab === 'overview' || tab === 'integrations') && !canAccessServer) return;
@@ -1823,8 +1838,19 @@ export const AdminSettings: React.FC = () => {
 
       {activeTab === 'integrations' && canAccessServer && (
         <section className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <section className="rounded-card border border-line bg-panel p-5">
+          <AdminSectionTabs
+            ariaLabel="Integration worksheets"
+            activeKey={integrationView}
+            className="w-full border-b border-line pb-2"
+            items={[
+              { key: 'overview', label: 'Integration Overview', to: '/admin/settings?tab=integrations' },
+              { key: 'website-cms', label: 'Website & CMS Integrations', to: '/admin/settings?tab=integrations&integration=website-cms' },
+              { key: 'kopra-h2h', label: 'Bank Mandiri Kopra H2H', to: '/admin/settings?tab=integrations', available: false },
+            ]}
+          />
+          {integrationView === 'overview' ? (
+            <>
+              <section className="rounded-card border border-line bg-panel p-5">
               <div className="flex items-center gap-2 border-b border-line pb-4">
                 <Database size={18} className="text-info" />
                 <div>
@@ -1850,8 +1876,9 @@ export const AdminSettings: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </section>
-
+              </section>
+            </>
+          ) : (
             <section className="rounded-card border border-line bg-panel p-5">
               <div className="flex items-center gap-2 border-b border-line pb-4">
                 <Palette size={18} className="text-accent-text" />
@@ -1930,11 +1957,11 @@ export const AdminSettings: React.FC = () => {
                 </div>
               </form>
             </section>
-          </div>
-
-          <section className="rounded-card border border-line bg-panel p-5">
-            <div className="flex items-center gap-2 border-b border-line pb-4">
-              <ShieldCheck size={18} className="text-success" />
+          )}
+          {integrationView === 'overview' && (
+            <section className="rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center gap-2 border-b border-line pb-4">
+                <ShieldCheck size={18} className="text-success" />
               <div>
                 <h2 className="text-sm font-semibold text-fg">Integration health</h2>
                 <p className="mt-1 text-[10px] leading-4 text-muted">Current server-side readiness signals for the production environment.</p>
@@ -1953,7 +1980,8 @@ export const AdminSettings: React.FC = () => {
                 </div>
               ))}
             </div>
-          </section>
+            </section>
+          )}
         </section>
       )}
 

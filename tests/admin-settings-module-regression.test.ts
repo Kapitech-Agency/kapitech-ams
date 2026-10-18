@@ -231,3 +231,17 @@ test('Client Onboarding deep-links to a URL-controlled lead scope, not a hidden 
   assert.ok(clients.includes("if (scope === 'onboarding') return 'lead';"));
   assert.ok(clients.includes("nextParams.set('scope', queryValue)"));
 });
+
+
+test('Settings Integrations exposes its documented nested navigation without enabling Kopra H2H', async () => {
+  const settings = await read('src/pages/admin/AdminSettings.tsx');
+  assert.ok(settings.includes("type IntegrationView = 'overview' | 'website-cms';"));
+  assert.ok(settings.includes("const integrationView: IntegrationView = requestedIntegration === 'website-cms' ? 'website-cms' : 'overview'"));
+  assert.ok(settings.includes('ariaLabel="Integration worksheets"'));
+  assert.ok(settings.includes("{ key: 'overview', label: 'Integration Overview', to: '/admin/settings?tab=integrations' }"));
+  assert.ok(settings.includes("{ key: 'website-cms', label: 'Website & CMS Integrations', to: '/admin/settings?tab=integrations&integration=website-cms' }"));
+  assert.ok(settings.includes("{ key: 'kopra-h2h', label: 'Bank Mandiri Kopra H2H', to: '/admin/settings?tab=integrations', available: false }"));
+  assert.ok(settings.includes("next.delete('integration')"));
+  assert.ok(settings.includes("setSearchParams((current) => {"));
+  assert.ok(settings.includes("}, { replace: true });"));
+});
