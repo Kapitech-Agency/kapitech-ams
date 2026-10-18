@@ -16,6 +16,7 @@ Before implementation, read:
    - Modal/confirmation: **docs/AMS-MODAL-GUIDELINES.md**
    - Kanban/task boards: **docs/AMS-KANBAN-GUIDELINES.md**
    - Module content hierarchy and frontend-only UX/UI execution: **docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md** and **docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md**
+   - Navigation-first staged rollout, strict stage gates, and required user-facing checkpoints: **docs/AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md** and **docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md**.
    - Detailed role-aware main content and worksheet defaults: **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md** and **docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md**
 - PostgreSQL/schema/cutover/recovery: use the current production runbooks indexed in docs/README.md first. docs/AMS-POSTGRES-*.md and docs/AMS-RELATIONAL-MIGRATION.md include historical/staging references and must not be treated as current production instructions.
    - Private documents: **docs/private-document-vault.md**
@@ -127,6 +128,7 @@ Read domain-specific documents for substantial tasks:
 - Requirement status/evidence: docs/AMS-IMPLEMENTATION-TRACEABILITY.md.
 - UX and spacing/margin/padding: docs/AMS-UX-INTERACTION-STANDARDS.md and AMS-DESIGN-SYSTEM.md.
 - Module content hierarchy and AI frontend-only UX/UI execution: docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md and docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md.
+- For the currently approved navigation-first rollout, execute docs/AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md strictly in order: finish navigation first, report a verified checkpoint, then wait for the user to authorize each later stage. Do not expand scope or proceed to content redesign early.
 - Role-based content specification across all nine modules, including worksheet fields, visualization rules, and role-aware presentation: docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md.
 - Concrete per-worksheet role defaults, fields/columns, controls and visualization decisions: docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md.
 - Documentation authority/index: docs/README.md.
