@@ -210,6 +210,9 @@ test('Settings keeps backup and audit failure states distinct from empty history
   assert.match(settings, /const backupValue = backupLoadError/);
   assert.match(settings, /Security status could not be verified/);
   assert.match(settings, /Previously loaded entries remain visible/);
+  assert.match(settings, /Reference matrix for finance, client management, delivery, and system access/);
+  assert.match(settings, /Client records & leads/);
+  assert.doesNotMatch(settings, /CRM & client leads|financial, CRM, delivery/);
   assert.match(settings, /Retry/);
 });
 

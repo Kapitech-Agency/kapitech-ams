@@ -1676,7 +1676,7 @@ export const AdminSettings: React.FC = () => {
                   <Layers size={18} className="text-muted" />
                   <div>
                     <h2 className="text-sm font-semibold text-fg">Stakeholder access standards</h2>
-                    <p className="mt-1 text-[10px] leading-4 text-muted">Reference matrix for financial, CRM, delivery, and system access.</p>
+                    <p className="mt-1 text-[10px] leading-4 text-muted">Reference matrix for finance, client management, delivery, and system access.</p>
                   </div>
                 </div>
                 <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable stakeholder access matrix">
@@ -1685,7 +1685,7 @@ export const AdminSettings: React.FC = () => {
                       <tr>
                         <th>Tier & role</th>
                         <th>Financial & invoicing</th>
-                        <th>CRM & client leads</th>
+                        <th>Client records & leads</th>
                         <th>Sprint & tasks</th>
                         <th>System & cloud API</th>
                       </tr>
@@ -1694,7 +1694,7 @@ export const AdminSettings: React.FC = () => {
                       <tr>
                         <td className="font-semibold text-fg">Stakeholder Executive</td>
                         <td className="text-success">Approval & audit</td>
-                        <td className="text-success">Full pipeline view</td>
+                        <td className="text-success">Full client-lead visibility</td>
                         <td className="text-warning">Milestone review</td>
                         <td className="text-muted">Governance</td>
                       </tr>
