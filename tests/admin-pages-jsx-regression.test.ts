@@ -963,3 +963,17 @@ test('Team Directory automatically uses cards on compact viewports and keeps the
   assert.ok(teams.includes("onClick={() => setTeamDisplay('table')}"));
   assert.ok(teams.includes("onClick={() => setTeamDisplay('grid')}"));
 });
+
+
+test('Inbox Overview keeps queue actions with queue controls and avoids duplicate header actions', () => {
+  const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const headerStart = inbox.indexOf('<AdminModuleHeader slug="inbox-header"');
+  const overviewControls = inbox.indexOf('slug="inbox-overview-controls"');
+  const header = inbox.slice(headerStart, overviewControls);
+  assert.ok(header.includes("activeInboxTab !== 'overview'"));
+  assert.ok(inbox.includes("activeTabItems.length + ' total inbound'"));
+  assert.ok(inbox.includes("metrics.newCount > 0 && activeInboxTab !== 'overview'"));
+  assert.ok(inbox.includes("metrics.newCount > 0 && (\n                <button type=\"button\" onClick={handleMarkAllRead}"));
+  const exportButtons = [...inbox.matchAll(/onClick=\{handleExportCSV\}/g)];
+  assert.ok(exportButtons.length >= 2, 'CSV export remains available in the header context and queue toolbar');
+});

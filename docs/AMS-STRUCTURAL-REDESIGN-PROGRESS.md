@@ -228,3 +228,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - The explicit Table/Grid switch remains available on wide desktop; the selected desktop preference is retained when resizing back from compact layouts.
 - Added a media-query listener for viewport changes and regression coverage for automatic layout selection and retained desktop controls.
 - Team data, filters, sorting, pagination, member/vendor/time workflows, permissions, role visibility, and data sources remain unchanged. CI is being checked after the direct-to-`main` push; authenticated visual browser testing is not claimed.
+
+
+## Twenty-seventh implementation slice: Inbox action ownership
+
+- Clarified the header count as total inbound, distinct from the filtered queue count.
+- On Inbox Overview, moved the mark-read/process-new action into the queue control strip alongside refresh, export, review mode, and reset. Removed duplicate header export/process actions for Overview; those actions remain in the header on the other Inbox tabs where they are not duplicated by the Overview toolbar.
+- Preserved the existing click handlers, permission disabling, polling, filters, route/query state, and record behavior.
+- Added regression coverage for the contextual action placement. CI status will be verified for the newest direct-to-`main` commit; browser interaction testing remains outstanding.
