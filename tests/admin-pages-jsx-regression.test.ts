@@ -692,15 +692,17 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   const teamMetrics = teams.indexOf("slug: 'team-directory-kpi-headcount'");
   const teamFilters = teams.indexOf('data-ams-feature-slug="team-directory-filters"');
   const teamPagination = teams.indexOf('slug="team-directory-pagination"');
-  assert.ok(teamHeader >= 0 && teamView > teamHeader && teamMetrics > teamView && teamMetrics < teamFilters);
-  assert.ok(teamPagination > teamFilters);
+  const vendorViewStart = teams.indexOf(") : currentView === 'vendor-directory' ?");
+  assert.ok(teamHeader >= 0 && teamView > teamHeader && teamFilters > teamView);
+  assert.ok(teamPagination > teamFilters && teamMetrics > teamPagination && teamMetrics < vendorViewStart);
 
   const vendorView = teams.indexOf('data-ams-feature-slug="vendor-directory"');
   const vendorMetrics = teams.indexOf("slug: 'vendor-directory-kpi-active-contractors'");
   const vendorFilters = teams.indexOf('data-ams-feature-slug="vendor-directory-filters"');
   const vendorPagination = teams.indexOf('slug="vendor-directory-pagination"');
-  assert.ok(vendorView >= 0 && vendorMetrics > vendorView && vendorMetrics < vendorFilters);
-  assert.ok(vendorPagination > vendorFilters);
+  const capacityViewStart = teams.indexOf(") : currentView === 'capacity-allocation' ?");
+  assert.ok(vendorView >= 0 && vendorFilters > vendorView);
+  assert.ok(vendorPagination > vendorFilters && vendorMetrics > vendorPagination && vendorMetrics < capacityViewStart);
   const vendors = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminVendors.tsx'), 'utf8');
   const vendorHeader = vendors.indexOf('<AdminModuleHeader');
   const vendorSnapshot = vendors.indexOf('data-ams-feature-slug="vendor-snapshot"');

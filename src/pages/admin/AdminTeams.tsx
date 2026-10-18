@@ -1192,51 +1192,7 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'team-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="team-directory" data-ams-slug="team-directory">
-          <AdminMetricStrip
-                      metrics={[
-                        {
-                          id: 'headcount',
-                          slug: 'team-directory-kpi-headcount',
-                          label: 'Total headcount',
-                          value: currentViewDataUnavailable ? '—' : teamMetrics.headcount,
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : sourceAvailability.timeLogs === true ? (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries' : sourceAvailability.timeLogs === false ? 'Time log data unavailable' : 'Loading time log data',
-                          
-                          icon: <UsersRound size={15} />
-                        },
-                        {
-                          id: 'engineering',
-                          slug: 'team-directory-kpi-engineering',
-                          label: 'Engineering & tech',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
-                          context: 'Backend, Frontend, DevOps & QA',
-                          
-                          icon: <BarChart3 size={15} />,
-                          toneClassName: 'text-info'
-                        },
-                        {
-                          id: 'design',
-                          slug: 'team-directory-kpi-product-design',
-                          label: 'Product & design',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
-                          context: 'UI/UX, Product Strategy & Systems',
-                          
-                          icon: <LayoutGrid size={15} />,
-                          toneClassName: 'text-info'
-                        },
-                        {
-                          id: 'operations',
-                          slug: 'team-directory-kpi-operations',
-                          label: 'Operations & delivery',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
-                          context: 'Delivery, PMs, Operations & Client Work',
-                          
-                          icon: <UsersRound size={15} />
-                        }
-                      ]}
-                    />
-
-                    
-          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="team-directory-filters" data-ams-slug="team-directory-filters">
+          data-ams-feature-slug="team-directory-filters" data-ams-slug="team-directory-filters">
             
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
@@ -1390,46 +1346,58 @@ export const AdminTeams: React.FC = () => {
           <AdminTablePagination total={teamRows.length} page={teamPage} pageSize={teamPageSize} onPageChange={setTeamPage} onPageSizeChange={setTeamPageSize} itemLabel="members" slug="team-directory-pagination" />
           </AdminPanel>
 
-                    
-        </div>
-      ) : currentView === 'vendor-directory' ? (
-        <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
           <AdminMetricStrip
                       metrics={[
                         {
-                          id: 'active-contractors',
-                          slug: 'vendor-directory-kpi-active-contractors',
-                          label: 'Active Contractors',
-                          value: currentViewDataUnavailable ? '—' : vendors.filter((vendor) => vendor.status === 'active').length,
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : vendorTierCounts.strategic + ' Dedicated · ' + (vendorTierCounts.specialized + vendorTierCounts.adhoc) + ' On-Demand',
+                          id: 'headcount',
+                          slug: 'team-directory-kpi-headcount',
+                          label: 'Total headcount',
+                          value: currentViewDataUnavailable ? '—' : teamMetrics.headcount,
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : sourceAvailability.timeLogs === true ? (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries' : sourceAvailability.timeLogs === false ? 'Time log data unavailable' : 'Loading time log data',
                           
                           icon: <UsersRound size={15} />
                         },
                         {
-                          id: 'external-burn',
-                          slug: 'vendor-directory-kpi-external-burn',
-                          label: 'Monthly External Burn',
-                          value: currentViewDataUnavailable ? '—' : Object.keys(vendorMonthlyBurn).length === 1
-                            ? formatAmount(vendorMonthlyBurn[Object.keys(vendorMonthlyBurn)[0]], Object.keys(vendorMonthlyBurn)[0] as 'IDR' | 'USD')
-                            : Object.keys(vendorMonthlyBurn).length > 1 ? 'Mixed' : '—',
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(Number(amount), currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
+                          id: 'engineering',
+                          slug: 'team-directory-kpi-engineering',
+                          label: 'Engineering & tech',
+                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
+                          context: 'Backend, Frontend, DevOps & QA',
                           
-                          icon: <TrendingUp size={15} />
+                          icon: <BarChart3 size={15} />,
+                          toneClassName: 'text-info'
                         },
                         {
-                          id: 'renewals',
-                          slug: 'vendor-directory-kpi-renewals',
-                          label: 'Contract Renewals Due',
-                          value: currentViewDataUnavailable ? '—' : vendorRenewalCount,
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : 'Action required within 30 days',
+                          id: 'design',
+                          slug: 'team-directory-kpi-product-design',
+                          label: 'Product & design',
+                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
+                          context: 'UI/UX, Product Strategy & Systems',
                           
-                          icon: <CalendarDays size={15} className="text-warning" />,
-                          toneClassName: 'text-warning'
+                          icon: <LayoutGrid size={15} />,
+                          toneClassName: 'text-info'
+                        },
+                        {
+                          id: 'operations',
+                          slug: 'team-directory-kpi-operations',
+                          label: 'Operations & delivery',
+                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
+                          context: 'Delivery, PMs, Operations & Client Work',
+                          
+                          icon: <UsersRound size={15} />
                         }
                       ]}
                     />
 
-          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
+                    
+          <section className="rounded-card border border-line bg-panel p-4"
+
+
+                    
+        </div>
+      ) : currentView === 'vendor-directory' ? (
+        <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
+          data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 xl:flex-row xl:items-center">
                 <label className="relative min-w-0 flex-1 xl:max-w-sm">
@@ -1563,6 +1531,44 @@ export const AdminTeams: React.FC = () => {
             </div>
             <AdminTablePagination total={vendorRows.length} page={vendorPage} pageSize={vendorPageSize} onPageChange={setVendorPage} onPageSizeChange={setVendorPageSize} itemLabel="external vendors" secondaryLabel="Sorted by Rate (High to Low)" slug="vendor-directory-pagination" />
           </AdminPanel>
+
+          <AdminMetricStrip
+                      metrics={[
+                        {
+                          id: 'active-contractors',
+                          slug: 'vendor-directory-kpi-active-contractors',
+                          label: 'Active Contractors',
+                          value: currentViewDataUnavailable ? '—' : vendors.filter((vendor) => vendor.status === 'active').length,
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : vendorTierCounts.strategic + ' Dedicated · ' + (vendorTierCounts.specialized + vendorTierCounts.adhoc) + ' On-Demand',
+                          
+                          icon: <UsersRound size={15} />
+                        },
+                        {
+                          id: 'external-burn',
+                          slug: 'vendor-directory-kpi-external-burn',
+                          label: 'Monthly External Burn',
+                          value: currentViewDataUnavailable ? '—' : Object.keys(vendorMonthlyBurn).length === 1
+                            ? formatAmount(vendorMonthlyBurn[Object.keys(vendorMonthlyBurn)[0]], Object.keys(vendorMonthlyBurn)[0] as 'IDR' | 'USD')
+                            : Object.keys(vendorMonthlyBurn).length > 1 ? 'Mixed' : '—',
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(Number(amount), currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
+                          
+                          icon: <TrendingUp size={15} />
+                        },
+                        {
+                          id: 'renewals',
+                          slug: 'vendor-directory-kpi-renewals',
+                          label: 'Contract Renewals Due',
+                          value: currentViewDataUnavailable ? '—' : vendorRenewalCount,
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : 'Action required within 30 days',
+                          
+                          icon: <CalendarDays size={15} className="text-warning" />,
+                          toneClassName: 'text-warning'
+                        }
+                      ]}
+                    />
+
+          <section className="rounded-card border border-line bg-panel p-4"
+
 
                     
         </div>
