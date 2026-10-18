@@ -16,6 +16,14 @@ test('Dashboard preserves useful finance context and two-column mobile KPI layou
   assert.match(dashboard, /Issued invoice value and recorded expenses/);
 });
 
+test('Time tracking summary precedes the recent-entry ledger', async () => {
+  const timeLogs = await read('src/pages/admin/AdminTimeLogs.tsx');
+  const header = timeLogs.indexOf('<AdminModuleHeader slug="time-tracking-header"');
+  const metrics = timeLogs.indexOf('<AdminMetricStrip slug="time-tracking-kpis"');
+  const ledger = timeLogs.indexOf('data-ams-feature-slug="time-tracking-ledger"');
+  assert.ok(header >= 0 && metrics > header && ledger > metrics);
+});
+
 test('Retainer value and renewal health summaries precede the searchable retainer register', async () => {
   const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
   const header = retainers.indexOf('<AdminModuleHeader');

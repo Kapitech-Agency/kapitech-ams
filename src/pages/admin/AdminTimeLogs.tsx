@@ -327,6 +327,33 @@ export const AdminTimeLogs: React.FC = () => {
           </div>
         )}
 
+
+              <AdminMetricStrip slug="time-tracking-kpis"
+        metrics={[
+          {
+            id: 'tracked-time',
+            label: 'Tracked time',
+            value: formatMinutes(totalMinutes),
+            icon: <Timer size={15} />,
+            toneClassName: 'text-accent-text'
+          },
+          {
+            id: 'billable-time',
+            label: 'Billable time',
+            value: formatMinutes(billableMinutes),
+            icon: <ReceiptText size={15} />,
+            toneClassName: 'text-accent-text'
+          },
+          {
+            id: 'entries',
+            label: 'Entries',
+            value: String(logs.length),
+            icon: <CalendarDays size={15} />,
+            toneClassName: 'text-muted'
+          }
+        ]}
+      />
+
         <section data-ams-feature-slug="time-tracking-ledger" data-ams-slug="time-tracking-ledger" className="rounded-card border border-line bg-panel overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-line flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
             <div>
@@ -395,31 +422,7 @@ export const AdminTimeLogs: React.FC = () => {
             </div>
           )}
         </section>
-      <AdminMetricStrip slug="time-tracking-kpis"
-        metrics={[
-          {
-            id: 'tracked-time',
-            label: 'Tracked time',
-            value: formatMinutes(totalMinutes),
-            icon: <Timer size={15} />,
-            toneClassName: 'text-accent-text'
-          },
-          {
-            id: 'billable-time',
-            label: 'Billable time',
-            value: formatMinutes(billableMinutes),
-            icon: <ReceiptText size={15} />,
-            toneClassName: 'text-accent-text'
-          },
-          {
-            id: 'entries',
-            label: 'Entries',
-            value: String(logs.length),
-            icon: <CalendarDays size={15} />,
-            toneClassName: 'text-muted'
-          }
-        ]}
-      />
+
 
       <ConfirmDialog
         open={!!deleteTarget}
