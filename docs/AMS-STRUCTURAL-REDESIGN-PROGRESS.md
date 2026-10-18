@@ -176,3 +176,5 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Active/completed counts remain in the existing project summaries and register; loading/unavailable source states are still visible and are not represented as successful live data.
 - No project status, progress, record counts, route/query state, actions, permissions, or workflow behavior changed.
 - Added regression coverage for clean title composition and the source-backed status badge.
+- The first run surfaced a legacy Projects regression assertion that still expected the old count badge inside the title. Updated it to assert the separate source-status badge and retained count in the existing metrics; the rerun passed.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122501818) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122501781) passed for commit `8c039e1a1c16705e1404e8c6aa452f99f15d9390`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
