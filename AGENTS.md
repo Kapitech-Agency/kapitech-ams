@@ -16,6 +16,7 @@ Before implementation, read:
    - Modal/confirmation: **docs/AMS-MODAL-GUIDELINES.md**
    - Kanban/task boards: **docs/AMS-KANBAN-GUIDELINES.md**
    - Module content hierarchy and frontend-only UX/UI execution: **docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md** and **docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md**
+   - Detailed role-aware main content and worksheet defaults: **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md** and **docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md**
    - Role-aware main content, worksheet field/column specifications, role/persona presentation, chart decisions, and cross-module content consistency: **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md**
    - PostgreSQL/schema/cutover/recovery: the relevant **docs/AMS-POSTGRES-*.md**, **docs/AMS-RELATIONAL-MIGRATION.md**, and recovery runbooks
    - Private documents: **docs/private-document-vault.md**
