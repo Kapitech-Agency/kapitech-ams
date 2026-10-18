@@ -3117,7 +3117,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         <AdminModuleHeader
           slug="finance-workspace-header"
           title="Finance"
-          description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."
+          description={activeTab.description || "Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."}
         />
         <AdminPanel title="Financial access restricted" description="Your account does not have permission to view Finance data.">
           <div className="p-4 text-xs leading-5 text-muted">
