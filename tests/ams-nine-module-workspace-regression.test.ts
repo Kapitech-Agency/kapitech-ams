@@ -378,3 +378,16 @@ test('Documents header explains the active document category', async () => {
   assert.match(documents, /activeTab === 'hr'[\s\S]*HR policies, personnel records, and people-operations documents/);
   assert.match(documents, /Security, infrastructure, and access-control documentation/);
 });
+
+test('Time Tracking billing and project views keep summaries tied to the selected reporting period', async () => {
+  const source = await read('src/pages/admin/AdminTimeLogs.tsx');
+
+  assert.match(source, /periodLogs = useMemo/);
+  assert.match(source, /projectTimeSummary = useMemo\(\(\) => \{/);
+  assert.match(source, /filteredLogs = useMemo\(\(\) => periodLogs\.filter/);
+  assert.match(source, /const totalPages = Math\.max\(1, Math\.ceil\(filteredLogs\.length \/ pageSize\)\)/);
+  assert.match(source, /total=\{filteredLogs\.length\}/);
+  assert.match(source, /value: String\(periodLogs\.length\)/);
+  assert.match(source, /No entries match this billing filter in the selected period/);
+  assert.match(source, /No entries match the selected project in this period/);
+});

@@ -1,4 +1,5 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { Plus, Trash2, RefreshCw, CalendarDays, Timer, ReceiptText } from 'lucide-react';
 import { api } from '../../lib/apiClient';
@@ -33,8 +34,34 @@ type TimeLog = {
   slug?: string;
 };
 
+type TimeTrackingView = 'time-logs' | 'billable-time' | 'time-by-project';
+type BillingFilter = 'all' | 'billable' | 'non-billable' | 'unclassified';
+type ProjectTimeSummary = {
+  key: string;
+  projectName: string;
+  entryCount: number;
+  totalMinutes: number;
+  billableMinutes: number;
+  nonBillableMinutes: number;
+  unclassifiedMinutes: number;
+};
+
 export const AdminTimeLogs: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTimeView = searchParams.get('timeView');
+  const timeView: TimeTrackingView = requestedTimeView === 'billable-time' || requestedTimeView === 'time-by-project'
+    ? requestedTimeView
+    : 'time-logs';
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
+
+  useEffect(() => {
+    if (!requestedTimeView) return;
+    const supportedViews: readonly string[] = ['time-logs', 'billable-time', 'time-by-project'];
+    if (supportedViews.includes(requestedTimeView)) return;
+    const next = new URLSearchParams(searchParams);
+    next.set('timeView', 'time-logs');
+    setSearchParams(next, { replace: true });
+  }, [requestedTimeView, searchParams, setSearchParams]);
   const canManage = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
   const canDeleteAll = hasAdminPermission('canManageProjects');
   const [logs, setLogs] = useState<TimeLog[]>([]);
@@ -63,6 +90,8 @@ export const AdminTimeLogs: React.FC = () => {
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [date, setDate] = useState(() => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10));
   const [billable, setBillable] = useState(true);
+  const [billingFilter, setBillingFilter] = useState<BillingFilter>('all');
+  const [projectFilter, setProjectFilter] = useState('all');
   const [notes, setNotes] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<TimeLog | null>(null);
 
@@ -106,10 +135,52 @@ export const AdminTimeLogs: React.FC = () => {
 
   const periodLogs = useMemo(() => logs.filter((log) => matchesDate(log.date)), [logs, matchesDate]);
   const totalMinutes = useMemo(() => periodLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [periodLogs]);
-  const billableMinutes = useMemo(() => periodLogs.filter(log => log.billable).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [periodLogs]);
-  const totalPages = Math.max(1, Math.ceil(periodLogs.length / pageSize));
-  const pagedLogs = periodLogs.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => { setPage(1); }, [reportPeriodValue, reportPeriodEnabled]);
+  const billableLogs = useMemo(() => periodLogs.filter((log) => log.billable === true), [periodLogs]);
+  const nonBillableLogs = useMemo(() => periodLogs.filter((log) => log.billable === false), [periodLogs]);
+  const unclassifiedLogs = useMemo(() => periodLogs.filter((log) => typeof log.billable !== 'boolean'), [periodLogs]);
+  const billableMinutes = useMemo(() => billableLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [billableLogs]);
+  const nonBillableMinutes = useMemo(() => nonBillableLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [nonBillableLogs]);
+  const unclassifiedMinutes = useMemo(() => unclassifiedLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [unclassifiedLogs]);
+
+  const projectTimeSummary = useMemo(() => {
+    const groups = new Map<string, ProjectTimeSummary>();
+    periodLogs.forEach((log) => {
+      const key = log.projectId ? 'id:' + log.projectId : log.projectName ? 'name:' + log.projectName : 'unassigned';
+      const current = groups.get(key) || {
+        key,
+        projectName: log.projectName?.trim() || 'Unassigned / general',
+        entryCount: 0,
+        totalMinutes: 0,
+        billableMinutes: 0,
+        nonBillableMinutes: 0,
+        unclassifiedMinutes: 0,
+      };
+      current.entryCount += 1;
+      current.totalMinutes += Number(log.durationMinutes || 0);
+      if (log.billable === true) current.billableMinutes += Number(log.durationMinutes || 0);
+      else if (log.billable === false) current.nonBillableMinutes += Number(log.durationMinutes || 0);
+      else current.unclassifiedMinutes += Number(log.durationMinutes || 0);
+      groups.set(key, current);
+    });
+    return Array.from(groups.values()).sort((a, b) => b.totalMinutes - a.totalMinutes || a.projectName.localeCompare(b.projectName));
+  }, [periodLogs]);
+
+  const filteredLogs = useMemo(() => periodLogs.filter((log) => {
+    if (timeView === 'billable-time' && billingFilter !== 'all') {
+      if (billingFilter === 'billable') return log.billable === true;
+      if (billingFilter === 'non-billable') return log.billable === false;
+      return typeof log.billable !== 'boolean';
+    }
+    if (timeView === 'time-by-project' && projectFilter !== 'all') {
+      const key = log.projectId ? 'id:' + log.projectId : log.projectName ? 'name:' + log.projectName : 'unassigned';
+      return key === projectFilter;
+    }
+    return true;
+  }), [periodLogs, timeView, billingFilter, projectFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize));
+  const pagedLogs = filteredLogs.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => { setPage(1); }, [reportPeriodValue, reportPeriodEnabled, timeView, billingFilter, projectFilter]);
   useEffect(() => {
     setPage((current) => Math.min(current, totalPages));
   }, [totalPages]);
@@ -236,7 +307,11 @@ export const AdminTimeLogs: React.FC = () => {
       <AdminModuleHeader slug="time-tracking-header"
         className="mb-0"
         title="Time tracking"
-        description="Record project time, billable hours, and activity notes in one consistent delivery workspace."
+        description={timeView === 'time-logs'
+          ? 'Record project time, billable hours, and activity notes in one consistent delivery workspace.'
+          : timeView === 'billable-time'
+            ? 'Review recorded billable, non-billable, and unclassified time in the selected reporting period.'
+            : 'Compare recorded delivery time by project and inspect the underlying canonical time entries.'}
         actions={
           <>
             {canManage && (
@@ -269,16 +344,96 @@ export const AdminTimeLogs: React.FC = () => {
 
       <AdminSectionTabs
         ariaLabel="Time Tracking worksheets"
-        activeKey="time-logs"
+        activeKey={timeView}
         className="w-full border-b border-line pb-2"
         items={[
-          { key: 'time-logs', label: 'Time Logs', to: '/admin/time-logs' },
+          { key: 'time-logs', label: 'Time Logs', to: '/admin/time-logs?timeView=time-logs' },
           { key: 'my-timesheet', label: 'My Timesheet', to: '/admin/time-logs', available: false },
           { key: 'timesheet-control', label: 'Timesheet Control', to: '/admin/time-logs', available: false },
-          { key: 'billable-time', label: 'Billable / Non-billable', to: '/admin/time-logs', available: false },
-          { key: 'time-by-project', label: 'Time by Project', to: '/admin/time-logs', available: false },
+          { key: 'billable-time', label: 'Billable / Non-billable', to: '/admin/time-logs?timeView=billable-time' },
+          { key: 'time-by-project', label: 'Time by Project', to: '/admin/time-logs?timeView=time-by-project' },
         ]}
       />
+
+      {timeView === 'billable-time' && (
+        <section className="space-y-3 rounded-card border border-line bg-panel p-3 sm:p-4" data-ams-feature-slug="time-billing-classification-summary" aria-label="Billing classification summary">
+          <div>
+            <h2 className="text-sm font-semibold text-fg">Billing classification</h2>
+            <p className="mt-1 text-xs leading-5 text-muted">Totals use the time entries in the selected reporting period. Entries without a recorded billing flag remain unclassified.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { key: 'billable', label: 'Billable', entries: billableLogs.length, minutes: billableMinutes },
+              { key: 'non-billable', label: 'Non-billable', entries: nonBillableLogs.length, minutes: nonBillableMinutes },
+              { key: 'unclassified', label: 'Unclassified', entries: unclassifiedLogs.length, minutes: unclassifiedMinutes },
+            ].map((item) => (
+              <div key={item.key} className="min-w-0 rounded-control border border-line bg-bg p-3">
+                <div className="text-[11px] font-medium text-muted">{item.label}</div>
+                <div className="mt-1.5 text-lg font-semibold tabular-nums text-fg">{formatMinutes(item.minutes)}</div>
+                <div className="mt-1 text-[11px] text-muted">{item.entries} entries</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 sm:max-w-xs">
+            <label className="text-xs font-medium text-muted" htmlFor="time-billing-filter">Filter entries</label>
+            <CustomSelect
+              value={billingFilter}
+              onChange={(value) => setBillingFilter(value as BillingFilter)}
+              options={[
+                { value: 'all', label: 'All billing types' },
+                { value: 'billable', label: 'Billable only' },
+                { value: 'non-billable', label: 'Non-billable only' },
+                { value: 'unclassified', label: 'Unclassified only' },
+              ]}
+              aria-label="Filter entries by billing classification"
+              className="w-full"
+            />
+          </div>
+        </section>
+      )}
+
+      {timeView === 'time-by-project' && (
+        <section className="space-y-3 rounded-card border border-line bg-panel p-3 sm:p-4" data-ams-feature-slug="time-by-project-summary" aria-label="Recorded time by project">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-fg">Recorded time by project</h2>
+              <p className="mt-1 text-xs leading-5 text-muted">Grouped from canonical time entries in the selected reporting period. Select a project to inspect its entries below.</p>
+            </div>
+            <Button type="button" variant="secondary" disabled={projectFilter === 'all'} onClick={() => setProjectFilter('all')}>Show all projects</Button>
+          </div>
+          {projectTimeSummary.length === 0 ? (
+            <div className="rounded-control border border-line bg-bg p-4 text-xs leading-5 text-muted" role="status">No time entries exist in the selected reporting period.</div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {projectTimeSummary.map((item) => {
+                const selected = projectFilter === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setProjectFilter((current) => current === item.key ? 'all' : item.key)}
+                    className={'min-w-0 rounded-control border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (selected ? 'border-accent/40 bg-accent/5' : 'border-line bg-bg hover:border-accent/25')}
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <span className="min-w-0 break-words text-xs font-semibold text-fg">{item.projectName}</span>
+                      <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-0.5 text-[10px] tabular-nums text-muted">{item.entryCount} entries</span>
+                    </div>
+                    <div className="mt-3 text-lg font-semibold tabular-nums text-fg">{formatMinutes(item.totalMinutes)}</div>
+                    <div className="mt-2 grid grid-cols-2 gap-2 border-t border-line pt-2 text-[10px]">
+                      <div><span className="block text-muted">Billable</span><span className="mt-1 block font-medium tabular-nums text-fg">{formatMinutes(item.billableMinutes)}</span></div>
+                      <div><span className="block text-muted">Non-billable</span><span className="mt-1 block font-medium tabular-nums text-fg">{formatMinutes(item.nonBillableMinutes)}</span></div>
+                    </div>
+                    {item.unclassifiedMinutes > 0 && (
+                      <p className="mt-2 text-[10px] leading-4 text-muted">Unclassified billing flag: {formatMinutes(item.unclassifiedMinutes)}</p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
         <Drawer
           slug="time-entry-drawer"
@@ -344,8 +499,8 @@ export const AdminTimeLogs: React.FC = () => {
               <section data-ams-feature-slug="time-tracking-ledger" data-ams-slug="time-tracking-ledger" className="rounded-card border border-line bg-panel overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-line flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
             <div>
-              <h2 className="text-sm font-semibold">Recent entries</h2>
-              <p className="text-xs text-muted mt-1">{loading ? 'Loading…' : `${logs.length} entries`}</p>
+              <h2 className="text-sm font-semibold">{timeView === 'time-logs' ? 'Time log register' : timeView === 'billable-time' ? 'Time entries by billing type' : projectFilter === 'all' ? 'Project time entries' : 'Selected project entries'}</h2>
+              <p className="text-xs text-muted mt-1">{loading ? 'Loading…' : `${filteredLogs.length} entries in selected period`}</p>
             </div>
           </div>
           {loading ? (
@@ -364,11 +519,11 @@ export const AdminTimeLogs: React.FC = () => {
                 </div>
               ))}
             </div>
-          ) : logs.length === 0 ? (
+          ) : filteredLogs.length === 0 ? (
             <div className="min-h-[160px] px-4 py-8 text-center">
               <Timer size={22} className="mx-auto text-muted" />
-              <p className="mt-3 text-sm text-fg">No time entries yet</p>
-              <p className="mt-1 text-xs text-muted">Add the first delivery time entry above.</p>
+              <p className="mt-3 text-sm text-fg">{timeView === 'time-logs' && logs.length === 0 ? 'No time entries yet' : timeView === 'billable-time' ? 'No entries match this billing filter in the selected period' : timeView === 'time-by-project' && projectFilter !== 'all' ? 'No entries match the selected project in this period' : 'No time entries in the selected reporting period'}</p>
+              <p className="mt-1 text-xs text-muted">{timeView === 'time-logs' && logs.length === 0 ? 'Add the first delivery time entry above.' : 'Try another filter or reporting period. The source records have not been changed.'}</p>
             </div>
           ) : (
             <>
@@ -438,7 +593,7 @@ export const AdminTimeLogs: React.FC = () => {
                 </tbody>
               </table>
             </div>
-              <AdminTablePagination total={logs.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="time entries" slug="time-tracking-pagination" />
+              <AdminTablePagination total={filteredLogs.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="time entries" slug="time-tracking-pagination" />
             </>
           )}
         </section>
@@ -462,7 +617,7 @@ export const AdminTimeLogs: React.FC = () => {
           {
             id: 'entries',
             label: 'Entries',
-            value: String(logs.length),
+            value: String(periodLogs.length),
             icon: <CalendarDays size={15} />,
             toneClassName: 'text-muted'
           }

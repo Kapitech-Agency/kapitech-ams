@@ -427,6 +427,14 @@ Responsive review has now added a compact register to Project Finance, Accounts 
 - Added normalization for unsupported `planningView` values and removes stale worksheet state on exit. The project selector retains the active worksheet. No deliverable, review, approval, revision, duration or dependency facts are invented.
 - Scope & Deliverables, Deliverable Tracking, Internal Quality Review, Client Review and Revision History remain unavailable because the current project/task schema does not contain separate canonical records for those outcomes.
 - Expanded the gap register with disabled nested worksheets across Inbox, Clients, Projects, Team & Resources, Time Tracking, Vendors, Contracts, SLA, Careers, Tasks and Kopra H2H. Disabled tabs remain off until their source/workflow is verified.
-- Dashboard CTA source/test/typecheck/build evidence is verified on `d26aefe57a2936b710fe7f806e8779713645a7b2`; AMS Quality Gate and AMS CI passed. This Planning & Delivery batch needs its own CI result.
+- Dashboard CTA source/test/typecheck/build evidence is verified on `d26aefe57a2936b710fe7f806e8779713645a7b2`; AMS Quality Gate and AMS CI passed. The Planning & Delivery batch `c0c63aea176ced4fc5c72613d056f1d5f28c3352` passed AMS Quality Gate [39157322660](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157322660) and AMS CI [39157322657](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157322657).
 - No local build/test is claimed because the repository could not be cloned into the runtime. No backend/API/database/authentication/RBAC/business logic, model or Finance formula changed. Authenticated browser visual QA, accessibility checks and Stage 5 approval remain outstanding.
+
+## Stage 4 source-backed Time Tracking checkpoint — 19 October 2026
+
+- Activated Billable / Non-billable and Time by Project as separate query-addressable read-only worksheets over the existing time log response.
+- Billing values distinguish `true`, `false` and unset rather than silently treating missing classifications as non-billable. Project summaries use the existing project ID/name on the entry and stay within the selected reporting period.
+- Selecting a project drills down to the same canonical time rows; the billing filter also operates on the same records and does not mutate them. Pagination and empty states now correspond to the filtered period result.
+- My Timesheet and Timesheet Control remain unavailable. The source audit has not verified a secure personal-query contract or persisted submit/review lifecycle for those workflows.
+- No API, server-side ownership gate, data model, billing rule, Finance posting, authentication or RBAC code changed. CI for this batch is pending. Browser interaction and Stage 5 visual/accessibility review remain outstanding.
 

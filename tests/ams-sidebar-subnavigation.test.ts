@@ -441,3 +441,19 @@ test('shared navigation and topbar icon controls use the Untitled UI icon bridge
     assert.equal(/from ['"]lucide-react['"]/.test(source), false, file + ' must not import icons directly from lucide-react');
   }
 });
+
+test('Time Tracking activates billing and project worksheets backed by canonical time entries', async () => {
+  const source = await read('src/pages/admin/AdminTimeLogs.tsx');
+
+  assert.match(source, /activeKey=\{timeView\}/);
+  assert.ok(source.includes("timeView=billable-time"));
+  assert.ok(source.includes("timeView=time-by-project"));
+  assert.match(source, /projectTimeSummary = useMemo/);
+  assert.match(source, /log\.billable === true/);
+  assert.match(source, /log\.billable === false/);
+  assert.match(source, /typeof log\.billable !== 'boolean'/);
+  assert.ok(source.includes('Recorded time by project'));
+  assert.ok(source.includes('time-billing-classification-summary'));
+  assert.match(source, /key: 'my-timesheet',[^\\n]*available: false/);
+  assert.match(source, /key: 'timesheet-control',[^\\n]*available: false/);
+});

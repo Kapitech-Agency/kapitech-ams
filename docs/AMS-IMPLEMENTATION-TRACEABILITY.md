@@ -523,3 +523,14 @@ The findings above are source-level risks and release-control gaps, not claims t
 **Validation:** Must pass AMS Quality Gate and AMS CI on the resulting commit. No local test/build can be claimed.  
 **Next action:** Confirm CI and carry direct entry, refresh/back/forward, keyboard and responsive tests into Stage 5.
 
+### TIME-LOGS-002: Billing and project time worksheets are source-backed read-only views
+
+**Status:** IMPLEMENTED_UNVERIFIED pending CI on this batch; browser verification remains outstanding.  
+**Scope:** Frontend filter/query state and aggregation over the existing canonical time log API response. No time-entry mutation, business rule, access policy, billing rule or Finance posting behavior changed.
+
+**Source:** `src/pages/admin/AdminTimeLogs.tsx`.  
+**Tests:** `tests/ams-sidebar-subnavigation.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`, existing time-log ownership/project-integrity/reconciliation suites.  
+**Acceptance:** Billable, non-billable and unclassified flags remain distinct; project grouping uses only recorded project ID/name; totals stay constrained to the shared reporting period; selection filters the underlying rows; page counts use the filtered set. My Timesheet and Timesheet Control remain unavailable because personal scope and review state were not established.  
+**Validation:** Await AMS Quality Gate and AMS CI for the resulting commit. Local test/build cannot be claimed.  
+**Next action:** Verify CI, then browser-check URL deep links, filters, missing project references and empty-period states. Trace billing effects before making any Finance claim.
+
