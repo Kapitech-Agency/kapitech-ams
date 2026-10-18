@@ -36,6 +36,19 @@ Structural frontend UX/UI redesign only. Preserve all routes, query parameters, 
 
 The canonical route inventory and per-view content-order guidance are in `docs/AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md`. This is the implementation reference, not evidence that visual browser testing has been completed.
 
+### Navigation-related commits visible in current main — verification still required
+
+The following recent commit messages are visible in repository history and should be carried into the current Stage 0/1 audit instead of being repeated blindly:
+
+- [`27cb9b4`](https://github.com/Kapitech-Agency/kapitech-ams/commit/27cb9b463e116c08acff942c16fca225cb0bdda8) — exposes Projects Planning and Delivery worksheets.
+- [`68979ff`](https://github.com/Kapitech-Agency/kapitech-ams/commit/68979ff3ad1c2c16fd23e8f624cb99bfa102768c) — groups Inbox categories and saved views.
+- [`c7bbb61`](https://github.com/Kapitech-Agency/kapitech-ams/commit/c7bbb61bd61d25f58900ca8f17a38e845057689b) — completes Team & Resources vendor worksheet navigation.
+- [`6c44e71`](https://github.com/Kapitech-Agency/kapitech-ams/commit/6c44e7156e1168a5c941aad7f77e99da8114bc9d) — normalizes an invalid Documents category query.
+- [`e80664c`](https://github.com/Kapitech-Agency/kapitech-ams/commit/e80664cec3e6ce28b09a3e1e4ed5c2394d1b3df6) — adds navigation regression coverage for document category query state.
+- [`f14eb8d`](https://github.com/Kapitech-Agency/kapitech-ams/commit/f14eb8d5ac014fee39052ec99bc998acb389d4be) — records Document Library category behavior in traceability.
+
+These are commit-history references, not a claim that the changes were independently re-tested during this documentation task. Verify the current source, relevant automated checks and permitted browser/role behavior; capture the actual result in the gap register and traceability records.
+
 Required follow-on sequence:
 
 1. **Dashboard:** verify overview, performance and analytics compositions against the documented content-first hierarchy; preserve source/period context and unavailable states.
