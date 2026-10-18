@@ -628,3 +628,12 @@ The shared topbar navigation now covers Dashboard, Inbox, Projects, Clients, Fin
 The Dashboard reference image from Google Drive still has not been rendered by the available browser/fetch environment. The Drive permission may be correctly configured; this execution environment's inability to render it is not evidence of an access-setting problem. Do not claim that the screenshot has been inspected.
 
 Continue the full module-by-module structural pass and verify every active subtab, data state, drawer/modal, table/board and narrow-width layout. Authenticated browser/device validation at 1440, 1280, 1024, 900, 768, 390 and 320px remains outstanding. Keep all changes frontend-only and commit directly to `main`; do not declare the redesign complete based only on passing CI.
+
+
+### Settings context clarity · 18 October 2026
+
+- `8153fc69d2190cd4b2bb2cdd6882585b511ac8d0`: the Settings header description now follows the selected topbar workspace, explaining system readiness, security, audit review, or server-managed connections/public metadata as appropriate. This changes presentation copy only.
+- `ad1d241283fe417a8e2ff16bd6631c4a0b0171f5`: regression coverage now describes Settings tabs as shell/topbar navigation and checks the contextual header descriptions.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103613440) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103613434) passed for the resulting source commit.
+
+The next work remains module-specific content hierarchy and responsive interaction review. The screenshot reference remains unverified in this environment, and authenticated browser visual acceptance is still outstanding.
