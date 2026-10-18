@@ -2101,6 +2101,21 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'planning-delivery' && (
         <div className="space-y-4" data-ams-feature-slug="projects-planning-delivery-workspace" data-ams-slug="projects-planning-delivery-workspace">
+          <AdminSectionTabs
+            ariaLabel="Planning & Delivery worksheets"
+            activeKey="project-brief"
+            className="w-full border-b border-line pb-2"
+            items={[
+              { key: 'project-brief', label: 'Project Brief', to: '/admin/projects?projects=planning-delivery' },
+              { key: 'scope-deliverables', label: 'Scope & Deliverables', to: '/admin/projects?projects=planning-delivery', available: false },
+              { key: 'milestones', label: 'Milestones', to: '/admin/projects?projects=planning-delivery', available: false },
+              { key: 'timeline', label: 'Timeline', to: '/admin/projects?projects=planning-delivery', available: false },
+              { key: 'deliverable-tracking', label: 'Deliverable Tracking', to: '/admin/projects?projects=planning-delivery', available: false },
+              { key: 'internal-quality-review', label: 'Internal Quality Review', to: '/admin/projects?projects=planning-delivery', available: false },
+              { key: 'client-review', label: 'Client Review', to: '/admin/projects?projects=planning-delivery', available: false },
+              { key: 'revision-history', label: 'Revision History', to: '/admin/projects?projects=planning-delivery', available: false },
+            ]}
+          />
           {loading && !serverMode ? (
             <AdminPanel title="Loading planning records" description="Retrieving the current project and milestone records.">
               <div role="status" aria-label="Loading planning records" className="grid gap-3 p-4 sm:grid-cols-2">

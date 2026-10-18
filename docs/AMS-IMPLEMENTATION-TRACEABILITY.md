@@ -309,11 +309,19 @@ Tasks & Execution now exposes Board / Kanban and List as query-driven worksheets
 
 ### NAV-018: Inbox categories and saved views are navigated inside Messages
 
-**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI required on this checkpoint; browser-level navigation remains unverified).
+**Status:** IMPLEMENTED_VERIFIED (source regression, typecheck, production build, and CI passed; browser-level navigation remains unverified).
 
 **Source:** `src/pages/admin/AdminInbox.tsx`, `src/lib/amsModuleSubnavigation.ts`, `tests/ams-sidebar-subnavigation.test.ts`.
 
 The Messages workspace keeps All Messages, Sales Inquiries, Client Requests, and Project & Support in its category row. Unread and Starred are presented as saved views within Messages and link to the existing canonical inbound records. Resolved and Archived are shown as non-interactive target-only views because the current inbound status contract does not expose distinct verified resolved/archive states. Unsupported query values still normalize to Inbox Overview. No API, status model, database, permissions or inbox business behavior was changed.
+
+### NAV-019: Planning & Delivery worksheet hierarchy is represented without dead links
+
+**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI are required on this checkpoint; browser-level navigation remains unverified).
+
+**Source:** `src/pages/admin/AdminProjects.tsx`, `tests/ams-sidebar-subnavigation.test.ts`.
+
+The Projects → Planning & Delivery workspace now exposes the master-guide worksheet order: Project Brief, Scope & Deliverables, Milestones, Timeline, Deliverable Tracking, Internal Quality Review, Client Review, and Revision History. Project Brief is the only currently navigable worksheet because the existing project record exposes notes, dates, progress, and milestone data in a combined brief/schedule view. Other worksheet entries are visibly target-only and non-interactive until their individual destinations exist. This is navigation-stage work only; no project data, model, API, delivery workflow, or content panel logic changed.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 

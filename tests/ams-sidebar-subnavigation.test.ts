@@ -177,7 +177,20 @@ test('Project Registry filters keep the Project Registry workspace active withou
   assert.ok(projectSource.includes("requestedView === 'resources'"));
   assert.match(projectSource, /searchParams\.get\('projects'\)/);
   assert.match(projectSource, /matchesRegistryStatus/);
-});
+  assert.match(projectSource, /ariaLabel="Planning & Delivery worksheets"/);
+  const planningWorksheetLabels = [
+    'Project Brief', 'Scope & Deliverables', 'Milestones', 'Timeline',
+    'Deliverable Tracking', 'Internal Quality Review', 'Client Review', 'Revision History',
+  ];
+  for (const label of planningWorksheetLabels) {
+    assert.ok(projectSource.includes("label: '" + label + "'"), 'Planning & Delivery worksheet missing: ' + label);
+  }
+  for (const key of [
+    'scope-deliverables', 'milestones', 'timeline', 'deliverable-tracking',
+    'internal-quality-review', 'client-review', 'revision-history',
+  ]) {
+    assert.match(projectSource, new RegExp("key: '" + key + "',[^\\n]*available: false"));
+  }
 
 
 test('Clients and Team & Resources use persistent workspaces while internal views remain inside their pages', async () => {
