@@ -295,3 +295,10 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 
 - Updated the Careers interaction test to expect the applicant status selector in both compact-card and wide-table layouts, in addition to the existing selectors in the page/form. This is a presentation duplicate for responsive layouts, not a new status workflow.
 - The test remains strict about using the approved CustomSelect component and rejecting native select elements.
+
+
+## Thirty-sixth implementation slice: Settings backup, audit and account workspaces
+
+- Added compact card registers under 1,280px for production backup snapshots, system audit entries, and administrator accounts; desktop retains the columnar tables for wide-screen review.
+- Backup cards retain snapshot identifier, UTC creation time, size, verification state, and the existing integrity-check action. Audit cards retain timestamp, actor, event, details, origin/IP, and severity. Account cards retain role, division, account state, MFA state, last login, and the master-only deletion guard.
+- Cards and tables use the same source rows and existing view permissions; no new actions, permissions, API behavior, account mutation logic, backup verification logic, or audit data transformations were introduced. Added regression coverage; CI must pass before this slice is considered validated.

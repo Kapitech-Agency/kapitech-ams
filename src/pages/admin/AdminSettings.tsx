@@ -998,6 +998,29 @@ export const AdminSettings: React.FC = () => {
                       <Button type="button" variant="secondary" onClick={() => void loadOverview()} disabled={overviewLoading} loading={overviewLoading}>Retry</Button>
                     </div>
                   )}
+                  <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="settings-backup-cards" role="list" aria-label="Production backup snapshots">
+                    {periodBackups.length === 0 ? (
+                      <div className="rounded-control border border-line bg-bg p-5 text-center text-xs text-muted">{reportPeriodEnabled ? 'No backup snapshots in the selected reporting period.' : 'No backup snapshots are available.'}</div>
+                    ) : periodBackups.slice(0, 8).map((backup, index) => (
+                      <article key={backup.createdAt + String(index)} role="listitem" data-ams-slug={'settings-backup-card-' + index} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                        <div className="flex min-w-0 items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="break-all font-mono text-xs font-medium text-fg">{archiveIdentifier(backup.createdAt, index)}</p>
+                            <p className="mt-1 text-[10px] text-muted">Production snapshot</p>
+                          </div>
+                          <StatusBadge tone={backupHealthy ? 'success' : 'warning'} label={backupHealthy ? 'Verified' : 'Needs check'} />
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                          <div className="min-w-0"><p className="text-[10px] text-muted">Size</p><p className="mt-1 text-xs tabular-nums text-fg">{formatSize(backup.sizeBytes)}</p></div>
+                          <div className="min-w-0"><p className="text-[10px] text-muted">Created (UTC)</p><p className="mt-1 break-words text-xs tabular-nums text-fg">{formatUtc(backup.createdAt)}</p></div>
+                        </div>
+                        <div className="mt-3 flex justify-end">
+                          <button type="button" onClick={() => void triggerIntegrityCheck()} disabled={integrityLoading} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-wait disabled:opacity-50"><CheckCircle2 size={13} />Verify integrity</button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                  <div className="hidden min-[1280px]:block overflow-x-auto">
                   <table className="settings-system-table min-w-[760px]">
                   <thead>
                     <tr>
@@ -1045,6 +1068,7 @@ export const AdminSettings: React.FC = () => {
                     ))}
                   </tbody>
                   </table>
+                  </div>
                 </>
               )}
             </div>
@@ -1143,7 +1167,7 @@ export const AdminSettings: React.FC = () => {
             </div>
           )}
 
-          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable system audit log">
+          <div className="min-w-0" tabIndex={0} role="region" aria-label="System audit log">
             {auditLoading ? (
               <div className="px-5 py-10">{renderSkeleton()}</div>
             ) : auditError && filteredLogs.length === 0 ? (
@@ -1160,6 +1184,33 @@ export const AdminSettings: React.FC = () => {
                 <p className="mt-1 max-w-md text-xs leading-5 text-muted">Adjust the filters or wait for new server-side audit activity.</p>
               </div>
             ) : (
+              <>
+              <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="settings-audit-cards" role="list" aria-label="System audit entries">
+                {pagedLogs.map((log) => {
+                  const isCritical = log.severity === 'critical';
+                  const isWarning = log.severity === 'warning';
+                  return (
+                    <article key={log.id} role="listitem" data-ams-slug={'settings-audit-card-' + log.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[10px] tabular-nums text-muted">{formatUtc(log.timestamp)}</p>
+                          <p className="mt-1 break-words text-xs font-semibold text-fg">{log.actor || 'System'}</p>
+                        </div>
+                        <StatusBadge tone={isCritical ? 'danger' : isWarning ? 'warning' : 'success'} label={isCritical ? 'Critical' : isWarning ? 'Warning' : 'Success'} />
+                      </div>
+                      <div className="mt-3 border-y border-line py-3">
+                        <span className="inline-flex max-w-full break-all rounded-badge border border-line bg-panel px-2 py-1 font-mono text-[10px] font-medium text-fg">{log.action}</span>
+                        <p className="mt-2 break-words text-xs leading-5 text-muted">{log.details || 'No additional details'}</p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[10px] text-muted">Origin / IP</span>
+                        <span className="break-all font-mono text-[10px] text-fg">{log.ip || 'Internal cluster'}</span>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="hidden min-[1280px]:block overflow-x-auto">
               <table className="settings-system-table min-w-[1080px]">
                 <thead>
                   <tr>
@@ -1204,6 +1255,8 @@ export const AdminSettings: React.FC = () => {
                   })}
                 </tbody>
               </table>
+              </div>
+              </>
             )}
           </div>
 
@@ -1614,6 +1667,38 @@ export const AdminSettings: React.FC = () => {
                       <p className="mt-1 text-xs leading-5 text-muted">Create the first server-managed account from this section.</p>
                     </div>
                   ) : (
+                    <>
+                    <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="settings-account-cards" role="list" aria-label="Administrator account cards">
+                      {pagedAccounts.map((account) => {
+                        const masterAccount = account.username === 'admin' || account.stakeholderType === 'Master';
+                        return (
+                          <article key={account.id} role="listitem" data-ams-slug={'settings-account-card-' + account.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                            <div className="flex min-w-0 items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="break-words text-sm font-semibold text-fg">{account.name}</p>
+                                <p className="mt-1 break-words font-mono text-[10px] text-muted">{account.username}</p>
+                                <p className="mt-1 break-all text-[10px] text-muted">{account.email}</p>
+                              </div>
+                              <StatusBadge tone={account.status === 'active' ? 'success' : 'warning'} label={account.status === 'active' ? 'Active' : 'Suspended'} />
+                            </div>
+                            <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                              <div className="min-w-0"><p className="text-[10px] text-muted">Role</p><p className="mt-1 break-words text-xs text-fg">{account.role}</p></div>
+                              <div className="min-w-0"><p className="text-[10px] text-muted">Division</p><p className="mt-1 break-words text-xs text-fg">{account.division}</p></div>
+                              <div className="min-w-0"><p className="text-[10px] text-muted">MFA</p><div className="mt-1"><StatusBadge tone={account.mfaEnabled ? 'success' : 'warning'} label={account.mfaEnabled ? 'Enabled' : 'Not configured'} /></div></div>
+                              <div className="min-w-0"><p className="text-[10px] text-muted">Last login (UTC)</p><p className="mt-1 break-words text-xs tabular-nums text-fg">{formatUtc(account.lastLogin)}</p></div>
+                            </div>
+                            <div className="mt-3 flex justify-end">
+                              {isCurrentMaster && !masterAccount ? (
+                                <button type="button" onClick={() => { setDeleteAccountMessage(null); setConfirmDelete({ id: account.id, name: account.name }); }} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><Trash2 size={13} />Delete</button>
+                              ) : (
+                                <span className="text-[10px] text-muted">{masterAccount ? 'Root account' : 'Master access required'}</span>
+                              )}
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                    <div className="hidden min-[1280px]:block overflow-x-auto">
                     <table className="settings-system-table min-w-[940px]">
                       <thead>
                         <tr>
@@ -1661,6 +1746,8 @@ export const AdminSettings: React.FC = () => {
                         })}
                       </tbody>
                     </table>
+                    </div>
+                    </>
                   )}
                 </div>
 

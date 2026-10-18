@@ -1050,3 +1050,17 @@ test('Project Budget and Archived workspaces expose compact cards with the same 
   assert.ok(projects.includes('row.remaining === null ?'));
   assert.ok(projects.includes('canManageProjects && <button type="button" className="inline-flex min-h-9 items-center rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-medium text-accent-text" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>'));
 });
+
+
+test('Settings backup, audit, and account registers provide compact cards and keep desktop tables', () => {
+  const settings = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminSettings.tsx'), 'utf8');
+  assert.ok(settings.includes('data-ams-feature-slug="settings-backup-cards"'));
+  assert.ok(settings.includes('data-ams-feature-slug="settings-audit-cards"'));
+  assert.ok(settings.includes('data-ams-feature-slug="settings-account-cards"'));
+  assert.ok(settings.includes('hidden min-[1280px]:block overflow-x-auto'));
+  assert.ok(settings.includes('onClick={() => void triggerIntegrityCheck()}'));
+  assert.ok(settings.includes("log.ip || 'Internal cluster'"));
+  assert.ok(settings.includes('account.mfaEnabled ? \'success\' : \'warning\''));
+  assert.ok(settings.includes('isCurrentMaster && !masterAccount'));
+  assert.ok(settings.includes('setConfirmDelete({ id: account.id, name: account.name })'));
+});
