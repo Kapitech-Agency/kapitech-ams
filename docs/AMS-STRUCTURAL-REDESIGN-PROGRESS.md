@@ -379,3 +379,16 @@ The structural redesign is still in progress. These changes improve three Financ
 ## Updated overall status
 
 The structural redesign remains in progress. These stages materially improve four Finance report/workspace layouts (Annual Summary, Cash Flow, Monthly P&L, Cash & Bank) and add a focused compact register for Project Finance. Other Finance worksheets and other module/subtab validation remain outstanding. The supplied Drive screenshot remains unreadable to the available fetch/render tool; no direct visual inspection is claimed. Full browser screenshot QA at 1440, 1280, 1024, 768, 390 and 320px, and interactive wheel/trackpad/touch/keyboard scrollbar testing still need to be completed where a live browser session is available.
+
+## Forty-sixth implementation slice: Accounts Payable and vendor payment schedule cards
+
+- Used the existing shared FinanceDataTable compact-card pattern for both the 10-column Accounts Payable register and 11-column vendor installment schedule below 1,280px. The full sortable tables remain available at wide desktop.
+- Payable cards group bill date/due date/amount/paid/outstanding, retain the bill status and the original per-bill actions (including permission-gated Record payment), and preserve the register Add vendor bill action. Schedule cards group bill identity, installment details, total paid, outstanding, next payment and status.
+- Both views use the same existing row data/pagination and sortable state as their desktop tables. Installment calculations, payment records, authorization, and contract-vs-bill separation were not changed.
+- Regression coverage added for the compact grouping and register-first hierarchy.
+- First CI attempt exposed a JSX bracket typo in the new schedule layout configuration; fixed immediately in commit d471d1134c137994e016fc8c87a242455ddc1b94.
+- Validation on fix commit d471d1134c137994e016fc8c87a242455ddc1b94: AMS CI passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39130839040); AMS Quality Gate passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39130839000).
+
+## Remaining Finance worksheet review
+
+Responsive review has now added a compact register to Project Finance, Accounts Payable, and its installment schedule. Remaining Finance worksheets still need source-by-source layout review, especially Petty Cash, Operational Budget, Project Allocation, Team Fee, Chart of Accounts, Balance Sheet, Journal and Monthly Closing. Other module checkpoint/visual approval remains separate. No authenticated browser/viewport screenshot QA has been performed.
