@@ -656,3 +656,26 @@ The next work remains module-specific content hierarchy and responsive interacti
 The main content rule for directory and transaction views is now explicit: filters and the actionable register come first; supporting KPI summaries follow the register unless the view is intentionally analytical (for example, Dashboard, P&L, cash-flow analysis, or allocation configuration). The existing vendor snapshot placement in the Finance-embedded Vendor Directory is intentionally preserved as its own summary-led workflow.
 
 Authenticated visual E2E review remains outstanding. Continue checking the remaining subtabs and responsive states before declaring completion.
+
+## Follow-up checkpoint · Finance register hierarchy and resource navigation consolidation · 18 October 2026
+
+This is an incremental continuation of the full structural redesign, not a completion claim.
+
+### Direct-to-main slices
+
+- `02b6d910b4a149bbcbb93de180920ae9fff46815`: removed retired CRM/Inbox terminology from Careers applicant error and status feedback. Applicant actions, permission checks, API behavior and record ownership remain unchanged.
+- `c478c96b07c21413befc6e759a339dd3c2b0328f`: rewrote the Revenue tax/retainer helper copy to describe the actual task instead of referencing a retired standalone tab.
+- `00478ac72d4883d5b6e7bbb5ed30822ceada7bd5` and `e9405742f98ca2290574d43e86f6ea484a75524a`: moved quotation summary metrics after the quotation register and added a regression assertion for the ordering.
+- `be92565dccebe547a71d239f7db0605b2fc86c3c`: moved the Income & Expenses and contract-linked vendor payment summary metrics after their primary registers. Added regression assertions so those transaction views remain register-first.
+- `570e4e581a283fef6ad13f8123e7c0e83821d293`: removed a duplicate mobile-only Vendors/Skills tab bar from the vendor workspace. The shell-owned Team & Resources topbar remains the single owner of those destinations across desktop and mobile.
+- `51a29bda336ca834dfe7b50f6e4f7982270f1479`: updated the navigation regression assertions to verify that Vendors and Skill matrix remain in shared contextual navigation rather than in a duplicate local tab bar.
+
+### Validation
+
+- [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39106679281) passed on `51a29bda336ca834dfe7b50f6e4f7982270f1479`.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39106679177) passed on the same commit, including typecheck, regression tests, and production build.
+- The earlier failing navigation assertion expected the removed local vendor tabs. The test was updated to assert the new shell-owned navigation contract, then both workflows passed.
+
+### Remaining acceptance
+
+Continue reviewing every active subtab and its contextual content hierarchy, including all Finance worksheets and CMS editors. The full redesign is still in progress. Authenticated browser/device visual acceptance remains outstanding at 1440, 1280, 1024, 900, 768, 390 and 320px; CI success is not evidence of visual E2E validation. The Drive screenshot has not been rendered in this execution environment, so do not claim it was re-inspected.
