@@ -1209,6 +1209,10 @@ Messages should describe what happened, what was saved, what was not saved, and 
 
 The AMS target is broad and contains production-critical workflows. Implement it in small, reviewable stages. Never attempt a full-repository rewrite, all-module redesign, or simultaneous implementation of all workflows. The user's latest instruction defines the active scope. This section is mandatory for every AI implementation task.
 
+**Visual-first priority for the current AMS frontend initiative:** The first deliverable is a clear, consistent, reviewable frontend experience. Complete the visual sequence in this section before starting workflow completion, data-model work, or broader functional implementation. The required order is: (1) audit the current navigation and views, (2) fix the approved navigation structure, (3) fix shared shell and page geometry, (4) establish and approve Dashboard content hierarchy, (5) redesign each remaining module workspace one module per checkpoint, and (6) complete visual/responsive review and obtain the user's sign-off. A build, an audit report, or a navigation-only change does not count as completion of the visual phase.
+
+During these visual stages, frontend changes must reuse existing routes, APIs, data sources, design tokens, and supported interactions. Keep the existing behavior intact and verify it has not regressed, but do not expand the task into implementing missing business workflows, adding new functional capabilities, changing backend/API/database/authentication/RBAC, or modifying Finance calculations. Where required functionality is missing, represent the state honestly and record the dependency. Begin workflow/data traceability or broader functional implementation only after visual sign-off and explicit user authorization for that new scope. If a companion instruction suggests a conflicting order or wider scope, follow the latest explicit user scope, flag the inconsistency, and do not silently broaden the task.
+
 ### 20.1 Non-negotiable execution rules
 
 1. **Work in one stage at a time.** Every stage must have a bounded scope, an explicit deliverable, acceptance criteria, and a report. Do not silently combine later stages with the active stage.
@@ -1294,7 +1298,7 @@ Dashboard is the reference for content hierarchy across the AMS.
 
 **Strict exclusions:** Do not use Dashboard approval as permission to redesign all modules in the same change.
 
-**Exit gate:** Dashboard workspace structure is reviewed and approved by the user. Commit and report the stage; wait before applying the pattern to the next module.
+**Exit gate:** Dashboard workspace structure is reviewed and approved by the user. Commit and report the stage; wait before applying the pattern to the next module. Approval covers visual structure only, not missing workflow implementation.
 
 ### 20.7 Stage 4 — Module workspace design, one module per checkpoint
 
@@ -1321,7 +1325,7 @@ For each module:
 - Make missing capabilities explicit. A UI-only target must not be described as end-to-end functionality.
 - Reuse existing design-system components and the module-specific guidelines.
 
-**Exit gate per module:** Its navigation, workspace hierarchy, content meaning, primary action, empty/loading/error/unavailable states and responsive behavior are checked. Report and commit this module checkpoint, then wait for approval before starting the next module.
+**Exit gate per module:** Its navigation, workspace hierarchy, content meaning, primary action placement, empty/loading/error/unavailable presentation and responsive behavior are visually checked. Existing supported interactions must remain intact, but this checkpoint does not authorize implementing missing functions. Report and commit this module checkpoint, then wait for approval before starting the next module.
 
 ### 20.8 Stage 5 — Visual QA and structural sign-off
 
@@ -1332,11 +1336,11 @@ After the approved module workspace stages:
 - Verify that the approved navigation and content hierarchy remain consistent after module implementation.
 - Separate verified issues from source-level assumptions and browser checks that were not run.
 
-**Exit gate:** Provide a consolidated visual findings report with pass/fail/unverified status and get the user's sign-off before broader workflow implementation.
+**Exit gate:** Provide a consolidated visual findings report with pass/fail/unverified status and obtain the user's explicit sign-off that the visual phase is accepted. This is a hard stop. Do not begin workflow/data traceability, missing-feature implementation, backend work, or business-function changes as the automatic next step. Wait for a separate user instruction authorizing the next scope.
 
 ### 20.9 Stage 6 — Workflow and data traceability audit
 
-This stage may start only after structural sign-off.
+This stage may start only after structural sign-off **and a separate explicit user authorization to begin workflow/data work**. Visual sign-off alone does not authorize functional implementation.
 
 - For each approved workflow, map the UI, typed API client, server route/service, persistence/schema, permission enforcement, canonical record ownership, audit trail and related-module effects.
 - Classify capabilities as existing and verified, existing but incomplete, UI-only, backend/API-only, demo-only, schema-required, externally blocked or target-only.
