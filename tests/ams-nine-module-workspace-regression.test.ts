@@ -16,6 +16,15 @@ test('Dashboard preserves useful finance context and two-column mobile KPI layou
   assert.match(dashboard, /Issued invoice value and recorded expenses/);
 });
 
+test('Client KPIs appear before directory filters and the client register', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const header = clients.indexOf('<AdminModuleHeader slug="clients-header"');
+  const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
+  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
+  const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
+  assert.ok(header >= 0 && metrics > header && filters > metrics && directory > filters);
+});
+
 test('Dashboard prioritizes operational KPIs before the primary chart and moves supporting metrics below it', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overview = dashboard.indexOf('data-ams-feature-slug="dashboard-overview"');
