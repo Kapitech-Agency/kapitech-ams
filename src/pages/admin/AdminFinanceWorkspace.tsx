@@ -202,6 +202,15 @@ const compareFinanceSortText = (left: string, right: string): number => {
   return left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
 };
 
+type FinanceCompactCardLayout = {
+  titleIndex: number;
+  subtitleIndexes?: number[];
+  statusIndexes?: number[];
+  groups: Array<{ label: string; indexes: number[] }>;
+  detailIndexes?: number[];
+  actionIndex?: number;
+};
+
 const FinanceDataTable: React.FC<{
   title: string;
   description?: string;
@@ -210,7 +219,8 @@ const FinanceDataTable: React.FC<{
   emptyMessage: string;
   actions?: React.ReactNode;
   exportable?: boolean;
-}> = ({ title, description, columns, rows, emptyMessage, actions, exportable = true }) => {
+  compactCardLayout?: FinanceCompactCardLayout;
+}> = ({ title, description, columns, rows, emptyMessage, actions, exportable = true, compactCardLayout }) => {
   const [sort, setSort] = useState<{ index: number; direction: 'asc' | 'desc' } | null>(null);
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(0);
@@ -270,7 +280,106 @@ const FinanceDataTable: React.FC<{
 
   return (
     <AdminPanel title={title} description={description} actions={panelActions} bodyClassName="p-0">
-      <div className="max-w-full overflow-x-auto" tabIndex={0} role="region" aria-label={'Scrollable ' + title + ' table'}>
+      {compactCardLayout && (
+        <div className="space-y-3 p-3 min-[1280px]:hidden" data-ams-slug="finance-project-finance-cards">
+          <div className="flex min-w-0 items-end gap-2">
+            <label className="block min-w-0 flex-1 text-[11px] font-medium text-muted">
+              Sort projects
+              <CustomSelect
+                value={sort ? String(sort.index) : ''}
+                onChange={(value) => {
+                  if (value === '') {
+                    setSort(null);
+                  } else {
+                    const index = Number(value);
+                    setSort((current) => ({ index, direction: current?.index === index ? current.direction : 'asc' }));
+                  }
+                  setPage(0);
+                }}
+                options={[
+                  { value: '', label: 'Default order' },
+                  ...columns.map((column, index) => ({ column, index }))
+                    .filter(({ column }) => !/^actions?$/i.test(column.label.trim()))
+                    .map(({ column, index }) => ({ value: String(index), label: column.label }))
+                ]}
+                aria-label={'Sort ' + title + ' cards by'}
+                className="mt-1 w-full"
+              />
+            </label>
+            <button
+              type="button"
+              disabled={!sort}
+              aria-label={sort?.direction === 'desc' ? 'Sort ascending' : 'Sort descending'}
+              title={sort?.direction === 'desc' ? 'Sort ascending' : 'Sort descending'}
+              onClick={() => setSort((current) => current ? { ...current, direction: current.direction === 'asc' ? 'desc' : 'asc' } : current)}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {sort?.direction === 'desc' ? <ArrowDown size={14} aria-hidden="true" /> : <ArrowUp size={14} aria-hidden="true" />}
+            </button>
+          </div>
+          {visibleRows.length === 0 ? (
+            <div className="rounded-control border border-line bg-bg px-4 py-8 text-center text-xs leading-5 text-muted" role="status">{emptyMessage}</div>
+          ) : (
+            <div className="grid gap-3" role="list" aria-label={title + ' cards'}>
+              {visibleRows.map((row) => (
+                <article key={row.id} role="listitem" className="min-w-0 space-y-3 rounded-control border border-line bg-bg p-3">
+                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="break-words text-xs font-semibold text-fg">{row.cells[compactCardLayout.titleIndex]}</h3>
+                      {compactCardLayout.subtitleIndexes?.length ? (
+                        <p className="mt-1 break-words text-[11px] leading-4 text-muted">
+                          {compactCardLayout.subtitleIndexes.map((index) => row.cells[index]).filter(Boolean).map((value, index) => (
+                            <span key={index}>{index > 0 ? ' · ' : ''}{value}</span>
+                          ))}
+                        </p>
+                      ) : null}
+                    </div>
+                    {compactCardLayout.statusIndexes?.length ? (
+                      <div className="flex max-w-full flex-wrap items-center justify-end gap-1.5">
+                        {compactCardLayout.statusIndexes.map((index) => (
+                          <div key={index} className="flex min-w-0 items-center gap-1.5">
+                            <span className="text-[10px] text-muted">{columns[index]?.label}</span>
+                            <span>{row.cells[index]}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  {compactCardLayout.groups.map((group) => (
+                    <section key={group.label} className="min-w-0 border-t border-line pt-3" aria-label={group.label}>
+                      <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted">{group.label}</h4>
+                      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {group.indexes.map((index) => (
+                          <div key={index} className="min-w-0 rounded-control border border-line/70 p-2">
+                            <dt className="text-[10px] leading-4 text-muted">{columns[index]?.label}</dt>
+                            <dd className="mt-1 break-words text-xs font-medium leading-5 text-fg">{row.cells[index]}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </section>
+                  ))}
+                  {compactCardLayout.detailIndexes?.length ? (
+                    <dl className="grid gap-2 border-t border-line pt-3 sm:grid-cols-2">
+                      {compactCardLayout.detailIndexes.map((index) => (
+                        <div key={index} className="min-w-0">
+                          <dt className="text-[10px] text-muted">{columns[index]?.label}</dt>
+                          <dd className="mt-1 break-words text-[11px] leading-5 text-fg">{row.cells[index]}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                  {compactCardLayout.actionIndex !== undefined ? (
+                    <div className="flex flex-wrap justify-end border-t border-line pt-3">
+                      {row.cells[compactCardLayout.actionIndex]}
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      <div className={compactCardLayout ? 'hidden max-w-full overflow-x-auto min-[1280px]:block' : 'max-w-full overflow-x-auto'} tabIndex={0} role="region" aria-label={'Scrollable ' + title + ' table'}>
         <table className="ams-finance-table w-full min-w-[760px] border-collapse text-left text-xs">
           <thead className="bg-bg text-[11px] font-medium text-muted">
             <tr>
@@ -2362,7 +2471,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote title="Project finance and source coverage">
               Contract value, vendor commitment and other obligations are planning inputs stored once in Project Finance. Billed revenue, dated collections and recorded expenses follow the selected reporting period ({periodLabel}) and use linked AMS source records. Current AP outstanding is shown separately from vendor commitment to avoid treating the same supplier obligation as both a commitment and a paid cost. Collections without dated payment records are not assigned to a reporting month.
             </WorkbookNote>
-            <FinanceDataTable title="Project Finance" description="Planned profit is Contract Value less Vendor Commitment and Other Obligations. Vendor Paid and Vendor Outstanding are calculated from linked IDR vendor bills and their recorded payments; period invoice and expense figures remain live source activity." columns={[{label:'Project'},{label:'Client'},{label:'PIC'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Net project profit · plan',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'Vendor paid · current',align:'right'},{label:'Vendor outstanding · current',align:'right'},{label:'Vendor bills · current',align:'right'},{label:'Project status'},{label:'Project dates'},{label:'Notes'},{label:'Check'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. Finance records can be saved and linked when a project is available." actions={registerAddButton('project-finance','Add project finance record')}/>
+            <FinanceDataTable title="Project Finance" description="Planned profit is Contract Value less Vendor Commitment and Other Obligations. Vendor Paid and Vendor Outstanding are calculated from linked IDR vendor bills and their recorded payments; period invoice and expense figures remain live source activity." columns={[{label:'Project'},{label:'Client'},{label:'PIC'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Net project profit · plan',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'Vendor paid · current',align:'right'},{label:'Vendor outstanding · current',align:'right'},{label:'Vendor bills · current',align:'right'},{label:'Project status'},{label:'Project dates'},{label:'Notes'},{label:'Check'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. Finance records can be saved and linked when a project is available." actions={registerAddButton('project-finance','Add project finance record')} compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[13,16],groups:[{label:'Planned financials',indexes:[3,4,5,6]},{label:'Reporting-period activity',indexes:[7,8,9,10,11,12]}],detailIndexes:[14,15],actionIndex:17}}/>
             {orphanRecords.length>0&&<FinanceDataTable title="Unlinked project finance records" description="These records remain visible until they can be linked to the correct AMS project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>}
           </div>
         );

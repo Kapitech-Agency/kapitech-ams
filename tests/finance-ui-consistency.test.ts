@@ -152,6 +152,29 @@ test('Monthly P&L separates operational preview from the posted-ledger snapshot'
   assert.match(pnlView, /postedLedger\.available/);
 });
 
+test('Project Finance provides a compact card register with the same rows, sorting, pagination, and row actions', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const componentStart = workspace.indexOf('const FinanceDataTable: React.FC');
+  const componentEnd = workspace.indexOf('const WorkbookNote:', componentStart);
+  const component = workspace.slice(componentStart, componentEnd);
+  const projectStart = workspace.indexOf("case 'project-finance': {");
+  const projectEnd = workspace.indexOf("case 'operational-budget':", projectStart);
+  const projectView = workspace.slice(projectStart, projectEnd);
+
+  assert.ok(componentStart >= 0 && componentEnd > componentStart);
+  assert.ok(projectStart >= 0 && projectEnd > projectStart);
+  assert.match(component, /compactCardLayout\?: FinanceCompactCardLayout/);
+  assert.match(component, /data-ams-slug="finance-project-finance-cards"/);
+  assert.match(component, /visibleRows\.map\(\(row\) => \(/);
+  assert.match(component, /setSort\(\(current\) => \(\{ index, direction: current\?\.index === index \? current\.direction : 'asc' \}\)\)/);
+  assert.match(component, /hidden max-w-full overflow-x-auto min-\[1280px\]:block/);
+  assert.match(projectView, /compactCardLayout=\{\{titleIndex:0,subtitleIndexes:\[1,2\],statusIndexes:\[13,16\]/);
+  assert.match(projectView, /label:'Planned financials',indexes:\[3,4,5,6\]/);
+  assert.match(projectView, /label:'Reporting-period activity',indexes:\[7,8,9,10,11,12\]/);
+  assert.match(projectView, /detailIndexes:\[14,15\],actionIndex:17/);
+  assert.match(projectView, /calculateProjectFinanceWorkbookSummary/);
+});
+
 test('Cash & Bank separates cash movement metrics from statement reconciliation controls', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const cashStart = workspace.indexOf("case 'cash-bank': {");
