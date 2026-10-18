@@ -332,3 +332,31 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Cards clarify client/tier identity, monthly committed value, included hours, used-versus-committed hours and threshold coloring, overage rate, billing cycle, renewal date/near-renewal warning, health state, and permission-gated Edit terms action.
 - Preserved the original usage calculation, renewal thresholds, sort/filter/page datasets, and edit permission. The responsive cards display the same visible source records as the table; no financial value or health status is derived differently.
 - Added regression coverage for the compact register, usage/renewal logic, pagination, and edit permission.
+
+## Forty-first implementation slice: Finance Annual Summary hierarchy
+
+- Replaced the repeated KPI strips plus one long table with two task-oriented tables: Annual operating activity and Posted General Ledger.
+- Preserved the same annual calculations, reporting-year context, source rows, GL reconciliation warning, source-basis descriptions, and full-summary CSV export. Existing row identifiers distinguish operating/source values from posted-ledger values.
+- Added Annual Summary regression coverage separating source operating activity from posted-ledger results.
+- Code commit: cb910375f90c35edf364720d3dda87dda5f94e92. Its first test run exposed a case-sensitive assertion only; the source sentence and UI were correct.
+
+## Forty-second implementation slice: Cash Flow summary de-duplication
+
+- Removed two sets of repeated summary cards where identical values were already present in the Posted General Ledger and source cash-movement comparison tables.
+- Kept all three tables, reporting period comparison selector, source-versus-posted accounting disclaimer, calculations, row sources, and all three CSV exports.
+- Added regression coverage for the three retained tables and exports.
+- Code commit: dc6432bfd4d5180a484844701fc71db77c2c8981.
+
+## Forty-third implementation slice: Monthly P&L content hierarchy
+
+- Removed the four source-preview headline cards that repeated metrics already listed in the comparison and detail tables.
+- Renamed the first table to Operational source preview comparison and grouped the three existing Posted GL metrics beneath the source tables in a separate Posted General Ledger snapshot section. This keeps operational proxies visually distinct from journal-backed accounting results.
+- Retained all P&L/source calculations, the Posted GL data and unavailable state, comparison controls, warnings, table rows, source details and CSV exports.
+- Added regression coverage for source-vs-ledger grouping, section order, metrics and exports.
+- Code commit: c6c42442c0dbdc4829fea332d23f976552a2cf64.
+- CI on the test correction commit ab32f676dcd76002f1017e451f21fb278d35af37: AMS CI passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39129352213); AMS Quality Gate passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39129352184).
+- For commit c6c42442c0dbdc4829fea332d23f976552a2cf64, AMS Quality Gate passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39129542635). The AMS CI verify job completed successfully (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39129542634); the workflow final state was pending at the last status query.
+
+## Remaining status after these slices
+
+The structural redesign is still in progress. These changes improve three Finance reporting worksheets; they do not complete Finance's other worksheets or the remaining module/subtab inventory. The Drive reference screenshot remains unreadable through the available tool, so no claim of direct screenshot inspection is made. Authenticated browser visual QA and full viewport/scroll testing remain outstanding.
