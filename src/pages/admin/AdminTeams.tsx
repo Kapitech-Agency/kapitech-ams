@@ -1429,7 +1429,7 @@ export const AdminTeams: React.FC = () => {
                       ]}
                     />
 
-          <section className="rounded-card border border-line bg-panel p-4 data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
+          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 xl:flex-row xl:items-center">
                 <label className="relative min-w-0 flex-1 xl:max-w-sm">
