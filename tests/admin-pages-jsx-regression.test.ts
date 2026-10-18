@@ -626,7 +626,7 @@ test('Inbox opens with contextual controls and its triage workspace, without a r
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
   assert.match(inbox, /<AdminModuleHeader\b/);
   assert.match(inbox, /<AdminSectionTabs\b/);
-  assert.match(inbox, /ariaLabel="Messages worksheets and saved views"/);
+  assert.match(inbox, /ariaLabel="Message categories"/);
   assert.match(inbox, /label: 'Client Requests'.*available: false/);
   assert.match(inbox, /label: 'Project & Support'.*available: false/);
   assert.doesNotMatch(inbox, /key: 'starred', label: 'Starred'/);
