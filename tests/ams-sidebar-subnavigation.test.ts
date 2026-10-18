@@ -105,6 +105,11 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'directory')!, '/admin/clients/all-clients', '?scope=onboarding'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'onboarding')!, '/admin/clients/all-clients', '?scope=onboarding'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'onboarding')!, '/admin/clients/all-clients'), false);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'directory')!, '/admin/clients/all-clients', '?scope=unknown'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'onboarding')!, '/admin/clients/all-clients', '', '#client-onboarding-readiness'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'contracts')!, '/admin/contracts'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'retainers')!, '/admin/clients/retainers'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'sla')!, '/admin/clients/sla-monitoring'), true);
 
   const team = getAmsModuleSubnavigation('team', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'team')!, '/admin/team'), true);
