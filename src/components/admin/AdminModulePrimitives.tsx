@@ -114,7 +114,7 @@ export const AdminTopbarTabs: React.FC<AdminTopbarTabsProps> = ({
     <nav
       ref={navRef}
       aria-label={ariaLabel}
-      className={cn('ams-topbar-tabs ams-topnav-scroll flex h-8 max-w-full min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain', className)}
+      className={cn('ams-topbar-tabs ams-topnav-scroll flex min-h-8 max-w-full min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain', className)}
     >
       {items.filter(canRenderNavigationTab).map((item) => {
         const active = activeKey === item.key;
