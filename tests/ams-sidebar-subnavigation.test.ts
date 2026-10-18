@@ -349,6 +349,17 @@ test('Website CMS Careers normalizes unsupported worksheet queries without chang
   assert.ok(careers.includes("}, { replace: true });"));
   assert.ok(careers.includes("const canManageJobs = canAccessAmsRoute(role, '/admin/cms/careers')"));
   assert.ok(careers.includes("if (tab === 'jobs' && !canManageJobs) return;"));
+  assert.ok(careers.includes("key: 'recruitment-history'"));
+  assert.ok(careers.includes("label: isId ? 'Riwayat Rekrutmen' : 'Recruitment History'"));
+  assert.ok(careers.includes("available: false"));
+  assert.ok(careers.includes('data-ams-navigation-status="target-only"'));
+
+  const cms = getAmsModuleSubnavigation('cms', 'Admin');
+  assert.deepEqual(cms.map((item) => item.label), [
+    'Case Studies', 'Services', 'Insights', 'Testimonials', 'Careers',
+  ]);
+  const applicantOnlyCms = getAmsModuleSubnavigation('cms', 'PM');
+  assert.ok(applicantOnlyCms.some((item) => item.label === 'Applicants' && item.to === '/admin/cms/careers?tab=applicants'));
 });
 
 test('Dashboard invalid view parameters fall back to the sole Overview workspace', () => {
