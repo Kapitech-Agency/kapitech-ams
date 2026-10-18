@@ -30,32 +30,43 @@ Avoid one enormous audit-and-rewrite attempt. Prefer a sequence of focused, inde
 
 ---
 
-## 1.1 Mandatory stage gates for navigation-first work
+## 1.1 Canonical sequencing for the end-to-end AMS initiative
 
-When the active request is to implement or correct AMS navigation, follow the dedicated [Navigation-First Phased Execution Prompt](AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md). The order below is mandatory; it overrides any generic example sequence that might otherwise encourage parallel or broad work:
+For the current delivery initiative, **\`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md\` is the single canonical stage sequence**. Use \`docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md\` for requirement-level status/evidence and \`docs/AMS-END-TO-END-EXECUTION-PROMPT.md\` for the operational prompt. Read the Master Structure, UX, domain and production documents for the requirements they own; do not let their historical or domain-local stage numbers create a competing delivery schedule.
 
-1. **Navigation completion and verification only.** Verify the nine approved primary modules, their workspace ownership, all visible destinations, route/query behavior, active tabs, refresh and browser history. Finance must retain its five approved areas. Do not redesign the main content, perform global CSS cleanup, or start unrelated modules in this stage.
-2. **Main content hierarchy.** Only after the user explicitly authorizes the next stage, proceed module by module, one bounded checkpoint at a time, using the content architecture and role-aware worksheet guides.
-3. **Shared component consistency.** Only after the content-hierarchy stage has been completed and the user authorizes continuation.
-4. **Responsive layout, scroll ownership, and interaction.** Only after the preceding stage has been completed and the user authorizes continuation.
-5. **Cross-module regression and validation.**
-6. **Final diff and delivery review.**
+The required sequence is:
+0. Baseline and preserve current work.
+1. Finish and verify approved navigation.
+2. Shared shell and page geometry.
+3. Feature/content gap register and requirement coverage.
+4. Main-content hierarchy across all nine modules.
+5. Visual, responsive and accessibility review with explicit user sign-off.
+6. Workflow/data/API traceability.
+7. Foundation, security and data-integrity remediation plan.
+8. Core agency vertical workflows.
+9. Finance quote-to-cash, purchase-to-pay and accounting integrity.
+10. Integrations, automation and provider-dependent features.
+11. Security, privacy, reliability and performance hardening.
+12. Full regression, end-to-end tests and UAT.
+13. Data reconciliation, backup, restore and disaster-recovery proof.
+14. Production readiness review and release authorization.
+15. Deployment verification and stabilization.
 
-### Mandatory stage-gate and reporting rules
+### Mandatory execution behavior
 
-- Do not skip, reorder, combine, or silently broaden stages. Work only on the currently authorized stage.
-- Treat discoveries from future stages as deferred findings unless they are necessary to complete the current stage safely.
-- Work in small, independently verifiable slices. For module-based stages, work on one module or clearly bounded module section at a time.
-- Send a durable user-facing checkpoint after the baseline, after meaningful slices, and at every stage boundary. Include the current HEAD/commit, exact changed files, validation actually performed, remaining items, unverified risks, and one precise next task.
-- **After a stage-completion report, stop and wait for the user's explicit instruction before starting the next stage.** A report is not permission to continue.
-- If a tool call fails, times out, or is at risk of interruption, stop scope expansion. Record the last verified commit, whether changes are committed, the exact test state, and the next action. On resumption, refresh main and inspect concurrent changes before editing.
-- Preserve the user's direct-to-main instruction where it has been authorized. Do not create a branch or PR, force-push, or overwrite concurrent changes.
-- Do not modify backend/API/database/authentication/RBAC/Finance calculations or other protected layers as part of a frontend navigation stage. Report a blocker if an issue requires protected scope.
-- Never claim a route, browser interaction, viewport, build, test, CI check, or deployment was verified unless there is concrete evidence.
-- For the current navigation-first request, Stage 1 is the active scope until it meets its acceptance criteria and the user explicitly authorizes continuation. Do not start Stage 2 in the same implementation run.
+- Inspect current \`main\`, source, tests and CI before beginning or resuming; verify and preserve work already completed instead of redoing it.
+- Work in bounded, independently verifiable slices, one module/worksheet/workflow slice at a time.
+- Send a durable report at baseline, after meaningful slices, before a serious blocker/decision, and at each stage milestone. The report must identify commit SHA, changed files, actual checks/results, remaining items, unverified risks and the next task.
+- After a routine slice is reported, **continue to the next already-authorized slice when safe**. Do not ask the user to re-authorize routine steps and do not stop after every report.
+- **Stop at Roadmap Stage 5 for explicit visual/content sign-off** before broad functional workflow implementation. Also stop for a real product, accounting, security, destructive-production or scope decision, or when the user explicitly asks to pause.
+- If a tool call is slow or may time out, shrink the batch, finish and verify the smallest safe unit, report the last verified checkpoint and exact resume action, then re-fetch current \`main\`/CI before resuming.
+- Commit verified checkpoints directly to \`main\` when authorized, as the user requested. Do not create a branch or PR, force-push, overwrite concurrent updates or bypass repository protections.
+- Never treat target documentation as proof of functionality; never claim a test, browser state, deployment or production gate passed without evidence.
+- Keep the feature/content gap register and implementation traceability evidence current as findings and tests change.
+- Full-stack remediation later in the roadmap must follow domain contracts, migration/recovery plans, security controls, acceptance tests and the user's approval for any genuine business-rule/destructive/high-risk decision.
 
-Use the report template in Section 11 and the detailed stage gates in the dedicated prompt.
-
+Use \`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md\` for deliverables and exit gates, \`docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md\` for evidence-based coverage, and the report format in Section 11. The roadmap is the delivery order; this workflow defines the method of executing it safely.
+ 
 ## 2. Read the source of truth first
 
 At the beginning of every task, read:
