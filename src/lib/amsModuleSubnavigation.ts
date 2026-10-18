@@ -157,9 +157,11 @@ export function isAmsModuleSubnavigationItemActive(
     if (itemKey in groups) return groups[itemKey].includes(normalized);
   }
   if (path === '/admin/dashboard') {
-    if (itemKey === 'overview') return !params.get('view') || params.get('view') === 'overview';
-    if (itemKey === 'performance') return params.get('view') === 'performance';
-    if (itemKey === 'analytics') return params.get('view') === 'analytics';
+    const requestedView = params.get('view');
+    const selectedView = requestedView === 'performance' || requestedView === 'analytics' || requestedView === 'overview'
+      ? requestedView
+      : 'overview';
+    return itemKey === selectedView;
   }
   if (path === '/admin/projects') {
     const selected = params.get('projects') || 'all';
