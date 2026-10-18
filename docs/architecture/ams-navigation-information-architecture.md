@@ -1,6 +1,6 @@
 # AMS Navigation and Information Architecture
 
-**Status:** Approved navigation target, updated 16 October 2026.
+**Status:** Approved navigation target, updated 18 October 2026.
 **Authority:** Latest product decision, current route/access implementation, AMS master guide, and implementation traceability register.
 
 ## 1. Global rules
@@ -13,6 +13,19 @@
 - Navigation visibility is not authorization. Existing route guards and server permissions remain authoritative.
 - This is consolidation, not redesign. Preserve existing AMS design tokens, component patterns, shared shell, and Finance business rules.
 - Documentation is not implementation evidence. Verify source and execute tests.
+
+### Navigation depth and breadcrumbs
+
+Use four concepts, but do not render all of them as persistent menu tiers:
+
+1. **Primary module** — one of the nine modules.
+2. **Workspace** — a distinct work area inside a module.
+3. **Worksheet/view** — table modes, content categories, statuses, filters and saved views inside the owning workspace.
+4. **Record detail** — the selected record and its contextual sections, not another menu destination by default.
+
+Keep the persistent navigation to the primary module and current workspace. Put worksheets and state/filter views inside the relevant workspace instead of growing the sidebar into a long list of features.
+
+Breadcrumbs are conditional. Use them for deep record/detail views when the parent path genuinely helps orientation or return navigation. For example, show ancestors `Projects → Project Registry` above a `Website Redesign` record heading. Do not repeat the current page title in both breadcrumb and heading. Do not add breadcrumbs to obvious module roots or primary tab views where the current location is already clear. Breadcrumb links must lead to valid parent destinations and respect existing route/role behavior. At compact widths, collapse the path or offer a clear back-to-parent action without introducing another persistent navigation bar.
 
 ## 2. Approved primary modules
 
@@ -49,10 +62,27 @@ Use the same canonical message/thread records across categories, filters and sav
 Notification targets route to the owning record/module using existing authorization. Careers applicants are managed only in Website CMS → Careers → Applicants. Inbox may provide a contextual shortcut, but it must not expose a competing applicant status, notes or delete workflow. Inbox is not an approval register.
 
 ### 3.3 Projects
-Project views include the existing registry/overview, delivery, budget and archived views. Tasks/Kanban/list are views over the same records. Financial values remain sourced from Finance. Client retainers/SLA belong to Clients, vendor master/time records to Team & Resources, and canonical files to Documents.
+
+Projects has seven workspaces:
+1. **Overview** — source-backed portfolio context and exceptions; it must not duplicate the full registry.
+2. **Project Registry** — one canonical project register. Planning, Active, On Hold, Completed and Archived are filters/saved views, not separate workspaces.
+3. **Tasks & Execution** — Board/Kanban, List, My Tasks, Task Lists and Dependencies over the same task records.
+4. **Planning & Delivery** — brief, scope/deliverables, milestones, timeline, deliverable tracking, internal QA, client review and revision history.
+5. **Content & Campaigns** — content calendar/planning, production pipeline, creative assets/versions, reviews, publishing status/schedule and campaign performance where supported.
+6. **Project Resources** — team, assignments and workload, using availability/capacity from Team & Resources.
+7. **Project Controls** — changes, risks/issues/blockers, project health, budget vs actual, reports and closure.
+
+Project Files are contextual links into Documents, not a second file repository. Finance is authoritative for financial values; Clients owns retainers/SLA and client relationship records; Team & Resources owns people, vendor and time records.
 
 ### 3.4 Clients
-Directory, onboarding, contracts, retainers and SLA monitoring remain contextual views under Clients where supported and role-permitted. Client/account/contact data stay canonical; Project, Finance, Inbox and Documents references are linked views.
+
+Clients has four workspaces:
+1. **Directory** — the canonical company/client and contact directory. Companies and Contacts are worksheet/filter modes; Client 360° is contextual detail for a selected client, not a second directory.
+2. **Onboarding** — checklist, required documents and kickoff readiness.
+3. **Agreements** — contracts/SOWs, retainers/service commitments, renewal schedule and contract history.
+4. **Service & Health** — SLA monitoring, service issues/feedback, client health and service history.
+
+Client Requests and inbound conversations are owned by Inbox. Clients may show linked request context, but must not create a competing request queue or status system. Finance owns quotations, invoices, payments and accounting records. Legacy CRM data may remain for compatibility, but there is no standalone CRM workspace.
 
 ### 3.5 Finance
 Finance keeps five top-level areas:
@@ -68,16 +98,20 @@ Preserve all twenty current worksheet keys and their API/source behavior. The ex
 Navigation consolidation must not change financial formulas, account codes, journal rules, posting, allocations, receivables, payables, reconciliation, closing or workbook mappings.
 
 ### 3.6 Team & Resources
-Team/capacity, vendor/freelancer and time-record features remain subareas, not primary modules. Vendor data stays canonical here and Finance references the same records. Preserve role restrictions. Vendor billing access does not grant team-directory or time-entry access.
+
+Team & Resources has four workspaces: **Team & Capacity**, **People Operations**, **Vendors & Freelancers**, and **Time Tracking**. Team Directory is the canonical team-member identity/profile. People Operations links employment, onboarding/offboarding, leave, training and performance records to that identity; it must not create a competing Employee Directory. Vendor/freelancer records are canonical here and Finance references the same supplier records. Preserve role restrictions: vendor billing access does not grant team-directory or time-entry access.
 
 ### 3.7 Documents
-Documents owns canonical file metadata and versions. Contextual attachment views link to those records. Do not create competing repositories or expose private storage URLs/secrets.
+
+Documents has one canonical **Document Library** workspace. Project & Client Files, SOPs & Policies, Legal & Corporate, Finance & Tax, HR & People, and Security & Infrastructure are categories/filters/saved views within the library, not separate workspaces. Avoid duplicate Overview and All Documents destinations when they show the same register. Contextual attachments link to canonical file/version records. Do not create competing repositories or expose private storage URLs/secrets.
 
 ### 3.8 Website CMS
-Preserve existing editor routes for Portfolio/Case Studies, Services, Insights, Testimonials and Careers. Careers owns supported job-opening and applicant workflows. Do not create a second CMS or show placeholders as functional.
+
+Keep content-type workspaces for Case Studies, Services, Insights, Testimonials and Careers. CMS Overview is distinct only if it provides cross-content publishing/status context and useful drill-downs; it must not duplicate or route to the Case Studies register. Careers contains Jobs, Applicants and Recruitment History as internal worksheets/tabs, not primary/sidebar entries. Careers owns supported job-opening and applicant workflows. Do not create a second CMS or show placeholders as functional.
 
 ### 3.9 Settings
-Settings owns authorized access, configuration, audit and integration screens. Direct route access remains guarded. The release-readiness placeholder is not a navigable feature until verified.
+
+Settings owns authorized access, configuration, audit and integration screens. Keep integrations grouped within one Integrations workspace. Bank Mandiri Kopra H2H may use internal sections/tabs for Overview & Status, Connection & Environment, Accounts & Mapping, Synchronization & Diagnostics, and Audit Trail; do not make every detail a persistent menu level. Preferences remain within the relevant settings surface unless there is a distinct route, permission boundary and workflow. Direct route access remains guarded. The release-readiness placeholder is not a navigable feature until verified.
 
 ## 4. Legacy route compatibility
 
@@ -111,6 +145,8 @@ Do not redirect distinct source-record links indiscriminately. Preserve valid ID
 - [ ] Quotations are accessible inside Finance with the current records/API.
 - [ ] CRM and Proposal legacy routes redirect intentionally. Approval remains protected but unlinked pending dependency review.
 - [ ] No duplicate global/contextual destinations or stale active states.
+- [ ] Worksheets, statuses and saved views stay inside their owning workspace; record details do not add menu depth by default.
+- [ ] Breadcrumbs appear only where parent context improves deep navigation and do not repeat the current page title.
 - [ ] Direct unauthorized routes and server-side permissions remain protected.
 - [ ] Finance worksheets and existing records are preserved.
 - [ ] Build, type, regression and supported E2E checks are executed and reported honestly.
