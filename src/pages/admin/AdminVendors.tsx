@@ -422,6 +422,19 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
       )}
 
       {/* Filter & Search Bar */}
+      <section data-ams-feature-slug="vendor-snapshot" data-ams-slug="vendor-snapshot" aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
+        <div className="mb-3 flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:shrink-0 sm:justify-end">{embedded && <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="inline-flex h-8 min-h-8 items-center gap-2 whitespace-nowrap rounded-control bg-accent px-3 text-[11px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"><Plus size={13}/><span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span></button>}<span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div></div>
+        <AdminMetricStrip slug="vendor-kpis"
+          className="lg:grid-cols-4"
+          metrics={[
+            { id: 'total', label: language === 'id' ? 'Total Mitra Terdaftar' : 'Total vendors', value: vendors.length, context: vendors.filter(v => v.status === 'active').length + ' Active', sparkline: [vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.length], icon: <Users size={16} strokeWidth={1.8} /> },
+            { id: 'freelance', label: language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent', value: vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, context: 'Design, Dev & 3D', sparkline: [vendors.filter(v => v.type === 'freelancer').length, vendors.filter(v => v.type === 'contractor').length, vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
+            { id: 'agency', label: language === 'id' ? 'Partner Agensi' : 'Agency Partners', value: vendors.filter(v => v.type === 'agency_partner').length, context: 'DevOps, Cloud & Legal', sparkline: [vendors.filter(v => v.type === 'saas_vendor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.filter(v => v.type === 'freelancer').length], icon: <Building2 size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
+            { id: 'rating', label: language === 'id' ? 'Rata-rata rating vendor' : 'Average vendor rating', value: averageVendorRating === null ? '—' : <span className="inline-flex items-center gap-1.5">{averageVendorRating.toFixed(1)} <Star size={16} className="text-warning fill-warning" /></span>, context: ratedVendors.length ? (language === 'id' ? 'Dari ' + ratedVendors.length + ' profil vendor dengan rating' : 'Across ' + ratedVendors.length + ' rated vendor profiles') : (language === 'id' ? 'Belum ada data rating' : 'No rating data yet'), sparkline: ratedVendors.slice(0, 8).map(v => Number(v.rating)), icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-fg' }
+          ]}
+        />
+      </section>
+
       <section data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters" className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
         <div className={searchTerm !== undefined ? 'hidden' : 'relative w-full lg:w-96'}>
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
@@ -658,18 +671,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
       )}
 
       {/* Top Summary Metrics */}
-      <section data-ams-feature-slug="vendor-snapshot" data-ams-slug="vendor-snapshot" aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
-        <div className="mb-3 flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:shrink-0 sm:justify-end">{embedded && <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="inline-flex h-8 min-h-8 items-center gap-2 whitespace-nowrap rounded-control bg-accent px-3 text-[11px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"><Plus size={13}/><span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span></button>}<span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div></div>
-        <AdminMetricStrip slug="vendor-kpis"
-          className="lg:grid-cols-4"
-          metrics={[
-            { id: 'total', label: language === 'id' ? 'Total Mitra Terdaftar' : 'Total vendors', value: vendors.length, context: vendors.filter(v => v.status === 'active').length + ' Active', sparkline: [vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.length], icon: <Users size={16} strokeWidth={1.8} /> },
-            { id: 'freelance', label: language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent', value: vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, context: 'Design, Dev & 3D', sparkline: [vendors.filter(v => v.type === 'freelancer').length, vendors.filter(v => v.type === 'contractor').length, vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
-            { id: 'agency', label: language === 'id' ? 'Partner Agensi' : 'Agency Partners', value: vendors.filter(v => v.type === 'agency_partner').length, context: 'DevOps, Cloud & Legal', sparkline: [vendors.filter(v => v.type === 'saas_vendor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.filter(v => v.type === 'freelancer').length], icon: <Building2 size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
-            { id: 'rating', label: language === 'id' ? 'Rata-rata rating vendor' : 'Average vendor rating', value: averageVendorRating === null ? '—' : <span className="inline-flex items-center gap-1.5">{averageVendorRating.toFixed(1)} <Star size={16} className="text-warning fill-warning" /></span>, context: ratedVendors.length ? (language === 'id' ? 'Dari ' + ratedVendors.length + ' profil vendor dengan rating' : 'Across ' + ratedVendors.length + ' rated vendor profiles') : (language === 'id' ? 'Belum ada data rating' : 'No rating data yet'), sparkline: ratedVendors.slice(0, 8).map(v => Number(v.rating)), icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-fg' }
-          ]}
-        />
-      </section>
+
 
       {/* Detail Slideover Drawer */}
       {isDrawerOpen && selectedVendor && (
