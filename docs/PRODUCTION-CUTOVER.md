@@ -125,7 +125,7 @@ Do not declare the application production-ready until:
 
 ## 5. Hostinger handoff
 
-The production source of truth is `main`. The former `production/hostinger` branch is kept only as a compatibility release ref and is currently identical to `main`. Do not develop or hotfix independently on `production/hostinger`.
+The production source of truth is `main`. Do not develop, hotfix, or configure Hostinger to deploy from `production/hostinger`. If that legacy ref still exists, treat it as non-authoritative; do not assume it matches `main`. Verify the hosting application is configured to deploy from `main`.
 
 For Hostinger Node.js Web Apps, configure:
 
