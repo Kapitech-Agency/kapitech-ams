@@ -3134,8 +3134,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
     <AdminPageShell featureSlug="excel-aligned-finance-workspace" className="space-y-3">
       <AdminModuleHeader
         slug="finance-workspace-header"
+        eyebrow={activeGroup.label}
         title="Finance"
-        description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."
+        description={activeTab.description || "Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."}
         actions={(
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>

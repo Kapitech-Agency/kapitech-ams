@@ -103,3 +103,12 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
   - Typecheck, tests, and production build: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39115156063
   - Verify: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39115156045
 
+
+
+## Twelfth implementation slice: Finance worksheet context
+
+- The Finance page header now identifies the selected top-level workspace (Overview & Control, Transactions & Cash, Receivables & Payables, Project Finance, or Accounting & Reports) as its eyebrow and uses the selected worksheet's own description as the subtitle.
+- This closes a context gap where every worksheet repeated the same generic Finance description, forcing users to infer the page's purpose from the selected tab alone.
+- Kept the existing topbar group navigation, secondary worksheet tabs, search, reporting period, data sources, permissions, routes, financial calculations, posting, reconciliation, and transaction behavior unchanged.
+- Added a focused source regression test for the selected workspace and worksheet context.
+- Commit and CI status will be recorded after direct-to-main delivery; no browser visual validation is claimed from source-only inspection.

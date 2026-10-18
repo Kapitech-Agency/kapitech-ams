@@ -236,3 +236,12 @@ test('shared compact actions retain adequate touch targets and visible keyboard 
   assert.match(css, /min-width:40px;\s*min-height:40px/s);
   assert.match(css, /outline:2px solid var\(--accent\)/);
 });
+
+
+test('Finance worksheet header explains the active view and its owning workspace', async () => {
+  const finance = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  assert.match(finance, /eyebrow=\{activeGroup\.label\}/);
+  assert.match(finance, /description=\{activeTab\.description \|\| "Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place\."\}/);
+  assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
+  assert.match(finance, /ariaLabel="Finance views"/);
+});
