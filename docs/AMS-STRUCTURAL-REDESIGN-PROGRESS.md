@@ -151,3 +151,4 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Dashboard's page header now labels the active Overview, Performance, or Analytics workspace and provides a concise description tailored to that view's actual job.
 - This removes the same generic subtitle from three materially different workspaces without changing any route/query state, metrics, calculations, reporting period, permissions, or data sources.
 - Added source regression assertions for all three header contexts.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121845217) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121845263) passed for commit `1666aa72c9529b961b628ee03914b138d6247571`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
