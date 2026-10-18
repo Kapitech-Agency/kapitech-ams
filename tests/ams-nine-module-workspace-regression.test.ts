@@ -174,6 +174,7 @@ test('Website CMS editorial controls use accessible actions and the canonical Ca
   const cmsProjects = await read('src/pages/admin/AdminCmsProjects.tsx');
   const insights = await read('src/pages/admin/AdminCmsInsights.tsx');
   const testimonials = await read('src/pages/admin/AdminCmsTestimonials.tsx');
+  const services = await read('src/pages/admin/AdminCmsServices.tsx');
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
   assert.match(cmsProjects, /featureSlug="cms-projects-module"/);
   assert.match(insights, /ArrowUp/);
@@ -182,6 +183,8 @@ test('Website CMS editorial controls use accessible actions and the canonical Ca
   assert.match(insights, /focus-visible:ring-2/);
   assert.match(testimonials, /<ConfirmDialog/);
   assert.doesNotMatch(testimonials, /<Modal slug="cms-testimonial-delete-modal"/);
+  assert.doesNotMatch(services, /\{servicesList\.length\} offerings/);
+  assert.ok(services.indexOf('slug="cms-services-filters"') < services.indexOf('{filtered.length} of {servicesList.length} services'), 'Service count stays with the filtered register instead of duplicating the header action.');
   assert.match(careers, /cms-careers-applicants/);
   assert.match(careers, /pagedApplicants\.map\(applicant/);
 });

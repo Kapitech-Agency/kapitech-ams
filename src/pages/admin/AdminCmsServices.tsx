@@ -367,17 +367,14 @@ export const AdminCmsServices: React.FC = () => {
           <>Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-fg">/services</code>.</>
         }
         actions={
-          <>
-            <span className="text-xs tabular-nums text-muted">{servicesList.length} offerings</span>
-            <Button
-              type="button"
-              variant="primary"
-              icon={<Plus size={14} />}
-              onClick={() => openServiceEditor()}
-            >
-              Add service
-            </Button>
-          </>
+          <Button
+            type="button"
+            variant="primary"
+            icon={<Plus size={14} />}
+            onClick={() => openServiceEditor()}
+          >
+            Add service
+          </Button>
         }
       />
 
