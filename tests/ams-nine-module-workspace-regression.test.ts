@@ -84,8 +84,11 @@ test('Projects lead with portfolio KPIs while Tasks retain their task-led regist
   const header = projects.indexOf('<AdminModuleHeader');
   const kpis = projects.indexOf('data-ams-feature-slug="projects-kpis"');
   const portfolio = projects.indexOf('title="Project portfolio"');
+  const archiveKpis = projects.indexOf('data-ams-feature-slug="projects-archived-kpis"');
+  const archive = projects.indexOf('title="Archived projects"');
   assert.match(projects, /featureSlug="projects-module"/);
   assert.ok(header >= 0 && kpis > header && portfolio > kpis);
+  assert.ok(archiveKpis >= 0 && archiveKpis < archive);
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-filters"') < tasks.indexOf('data-ams-feature-slug="tasks-table-view"'));
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-table-view"') < tasks.indexOf('data-ams-feature-slug="tasks-kpis"'));
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-kpis"') < tasks.indexOf('slug="tasks-team-workload"'));
