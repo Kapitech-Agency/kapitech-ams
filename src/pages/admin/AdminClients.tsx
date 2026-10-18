@@ -41,7 +41,7 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -837,6 +837,29 @@ export const AdminClients: React.FC = () => {
       </div>
       
 
+      {statusScope === 'lead' ? (
+        <AdminSectionTabs
+          ariaLabel="Client Onboarding worksheets"
+          activeKey=""
+          className="w-full border-b border-line pb-2"
+          items={[
+            { key: 'onboarding-checklist', label: 'Onboarding Checklist', to: '/admin/clients/all-clients?scope=onboarding', available: false },
+            { key: 'required-documents', label: 'Required Documents', to: '/admin/clients/all-clients?scope=onboarding', available: false },
+            { key: 'kickoff-readiness', label: 'Kickoff Readiness', to: '/admin/clients/all-clients?scope=onboarding', available: false },
+          ]}
+        />
+      ) : (
+        <AdminSectionTabs
+          ariaLabel="Client Directory worksheets"
+          activeKey="companies"
+          className="w-full border-b border-line pb-2"
+          items={[
+            { key: 'companies', label: 'Companies', to: '/admin/clients/all-clients' },
+            { key: 'contacts', label: 'Contacts', to: '/admin/clients/all-clients', available: false },
+          ]}
+        />
+      )}
+
       {errorMessage && (
         <div role="alert" aria-live="assertive" className="flex flex-col gap-3 rounded-card border border-danger/25 bg-danger/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-2.5">
@@ -884,7 +907,6 @@ export const AdminClients: React.FC = () => {
           {[
             { id: 'all', label: 'All accounts' },
             { id: 'active', label: 'Active' },
-            { id: 'lead', label: 'Onboarding' },
             { id: 'at-risk', label: 'At-risk' }
           ].map((item) => (
             <button key={item.id} type="button" onClick={() => changeStatusScope(item.id as StatusScope)} className={`inline-flex min-h-9 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${statusScope === item.id ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}>

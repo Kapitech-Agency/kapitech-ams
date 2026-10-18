@@ -317,11 +317,19 @@ The Messages workspace keeps All Messages, Sales Inquiries, Client Requests, and
 
 ### NAV-019: Planning & Delivery worksheet hierarchy is represented without dead links
 
-**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI are required on this checkpoint; browser-level navigation remains unverified).
+**Status:** IMPLEMENTED_VERIFIED (typecheck, regression tests, production build and AMS CI passed at current main checkpoint; browser-level navigation remains unverified).
 
 **Source:** `src/pages/admin/AdminProjects.tsx`, `tests/ams-sidebar-subnavigation.test.ts`.
 
 The Projects → Planning & Delivery workspace now exposes the master-guide worksheet order: Project Brief, Scope & Deliverables, Milestones, Timeline, Deliverable Tracking, Internal Quality Review, Client Review, and Revision History. Project Brief is the only currently navigable worksheet because the existing project record exposes notes, dates, progress, and milestone data in a combined brief/schedule view. Other worksheet entries are visibly target-only and non-interactive until their individual destinations exist. This is navigation-stage work only; no project data, model, API, delivery workflow, or content panel logic changed.
+
+### NAV-020: Client Directory and Onboarding worksheet navigation preserves one canonical client record set
+
+**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI are required on this checkpoint; browser-level navigation remains unverified).
+
+**Source:** `src/pages/admin/AdminClients.tsx`, `src/lib/amsModuleSubnavigation.ts`, `tests/ams-sidebar-subnavigation.test.ts`.
+
+The Directory exposes the live Companies worksheet on the canonical client/account list. Contacts is shown as target-only because contact details remain fields on the canonical client rows; there is no distinct Contacts register/view to navigate to yet. Onboarding remains its own contextual workspace rather than a duplicated status link inside Directory. Onboarding Checklist, Required Documents and Kickoff Readiness are represented as target-only until their dedicated worksheet destinations exist. Existing `scope=onboarding` route compatibility, client record fields, data ownership and permissions remain unchanged.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 

@@ -200,6 +200,17 @@ test('Clients and Team & Resources use persistent workspaces while internal view
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'agreements')!, '/admin/contracts'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'service-health')!, '/admin/clients/sla-monitoring'), true);
 
+  const clientSource = await read('src/pages/admin/AdminClients.tsx');
+  assert.match(clientSource, /ariaLabel="Client Directory worksheets"/);
+  assert.match(clientSource, /key: 'companies', label: 'Companies'/);
+  assert.match(clientSource, /key: 'contacts', label: 'Contacts'.*available: false/);
+  assert.match(clientSource, /ariaLabel="Client Onboarding worksheets"/);
+  assert.match(clientSource, /label: 'Onboarding Checklist'.*available: false/);
+  assert.match(clientSource, /label: 'Required Documents'.*available: false/);
+  assert.match(clientSource, /label: 'Kickoff Readiness'.*available: false/);
+  assert.doesNotMatch(clientSource, /id: 'lead', label: 'Onboarding'/,
+    'Onboarding is a distinct contextual workspace, not a duplicate Directory filter.');
+
   const team = getAmsModuleSubnavigation('team', 'Admin');
   assert.deepEqual(team.map((item) => item.key), ['team', 'people-ops', 'vendors', 'time']);
   assert.equal(team.find((item) => item.key === 'people-ops')?.available, false);
