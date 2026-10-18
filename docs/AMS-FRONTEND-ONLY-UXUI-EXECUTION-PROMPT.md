@@ -1,5 +1,7 @@
 # AI Execution Prompt: AMS Content-First UX/UI Clarity Upgrade (Frontend Only)
 
+> **Execution-order authority:** For the current end-to-end initiative, use [AMS End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md) and [AMS End-to-End Execution Prompt](AMS-END-TO-END-EXECUTION-PROMPT.md). This document defines only the frontend visual/content scope during the roadmap's visual stages; it does not define a competing overall schedule and does not authorize backend or workflow changes on its own.
+
 Act as the senior frontend UX/UI engineer for Kapitech Agency Management System. Execute an evidence-based redesign of the primary content area of all existing AMS modules and their actual subtabs, following the user's Dashboard screenshot as the layout reference.
 
 Repository: Kapitech-Agency/kapitech-ams  
@@ -65,7 +67,7 @@ Confirm actual routes/views before changes. Follow the module content architectu
 - Website CMS: content-type-specific registers/editors, publication state, shared drawer patterns; distinguish Careers jobs from applicants.
 - Settings: grouped configuration and system-state controls with clear impact and existing confirmation/permission behavior.
 
-> **Mandatory sequencing rule:** For the current navigation-first rollout, use [AMS Navigation-First Phased Execution Prompt](AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md) as the schedule and stage gate. Finish and verify navigation first; do not start main-content redesign, global CSS cleanup, responsive cleanup, or unrelated work until the user explicitly authorizes the next stage. Work on one bounded slice at a time, report verified progress to the user, and stop at each stage boundary until instructed to continue. This prompt's module/content guidance applies only when that later stage is authorized.
+> **Mandatory sequencing rule:** Follow the canonical [End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md). This frontend-only prompt covers the navigation, shared-shell, content-gap/design, main-content and visual QA work in the roadmap's visual stages. Carry forward prior verified work; report each meaningful slice with evidence and continue to the next planned visual slice when safe. Obtain explicit user sign-off at the roadmap's visual acceptance gate before broad functional workflow implementation. Do not expand this document's frontend-only permission into backend, database, security-policy or business-rule changes.
 
 ## 5. Work phases: execute sequentially
 
