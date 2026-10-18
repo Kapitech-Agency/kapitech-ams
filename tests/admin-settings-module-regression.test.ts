@@ -16,7 +16,8 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
 
   assert.ok(sidebar.includes('aria-label="Primary navigation"'));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
-  assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  assert.ok(workspace.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search)'));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
   assert.ok(workspace.includes("{ key: 'backup', label: 'System overview', to: '/admin/settings?tab=overview' }"));
   assert.ok(workspace.includes("{ key: 'access', label: 'Access & security', to: '/admin/settings?tab=security' }"));
@@ -192,11 +193,14 @@ test('Audit CSV uses real row separators and neutralizes spreadsheet formulas', 
 test('workspace context navigation is scoped to its owning pages and cannot follow users across unrelated modules', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
 
-  assert.ok(layout.includes("if (path === '/admin/dashboard') return 'dashboard';"));
-  assert.ok(layout.includes("if (path === '/admin/projects' || path === '/admin/tasks') return 'projects';"));
-  assert.ok(layout.includes("if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';"));
-  assert.ok(layout.includes("if (path.startsWith('/admin/cms/')) return 'cms';"));
-  assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search)'));
+  assert.ok(navigation.includes("if (path === '/admin/dashboard') return 'dashboard';"));
+  assert.ok(navigation.includes("if (path === '/admin/projects') return 'projects';"));
+  assert.ok(navigation.includes("if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';"));
+  assert.ok(navigation.includes("if (path.startsWith('/admin/cms/')) return 'cms';"));
+  assert.ok(navigation.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  assert.equal(navigation.includes("if (path === '/admin/tasks') {\n    const params"), true);
   assert.equal(layout.includes("'/admin/documents', '/admin/team', '/admin/time-logs'"), false);
   assert.equal(layout.includes("'/admin/crm', '/admin/clients/all-clients'"), false);
 });
