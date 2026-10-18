@@ -228,7 +228,7 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
   assert.ok(app.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
   assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
-  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="legacy approvals"><AmsNavigationPlaceholder kind="deprecated-approvals" /></ModuleRoute>} />'));
   assert.ok(app.includes("requestedView === 'vendor-directory'"));
   assert.ok(app.includes("requestedView === 'time-logs'"));
   assert.equal(clients.includes("to: '/admin/clients/lead-accounts'"), false);
@@ -269,9 +269,9 @@ test('Project cost actuals come from linked Finance expenses, not delivery progr
   assert.doesNotMatch(projects, /project\.budget \* \(project\.progressPercent \/ 100\)/);
 });
 
-test('Legacy Approval route redirects without loading a retired implementation', async () => {
+test('Legacy Approval route remains protected without loading a retired implementation', async () => {
   const app = await read('src/App.tsx');
-  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="legacy approvals"><AmsNavigationPlaceholder kind="deprecated-approvals" /></ModuleRoute>} />'));
   assert.doesNotMatch(app, /import\(['"]\.\/pages\/admin\/AdminApprovals['"]\)/);
   assert.doesNotMatch(app, /from ['"]\.\/pages\/admin\/AdminApprovals['"]/);
 });
