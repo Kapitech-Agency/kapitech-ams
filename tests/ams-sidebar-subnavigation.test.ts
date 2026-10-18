@@ -70,9 +70,9 @@ test('Inbox exposes only approved workspaces and keeps unavailable destinations 
   assert.equal(projects.find((item) => item.key === 'registry')?.to, '/admin/projects?projects=all');
   assert.equal(projects.find((item) => item.key === 'planning-delivery')?.available, undefined);
   assert.equal(projects.find((item) => item.key === 'planning-delivery')?.to, '/admin/projects?projects=planning-delivery');
-  for (const key of ['content-campaigns', 'resources']) {
-    assert.equal(projects.find((item) => item.key === key)?.available, false, key + ' must not imply a live workspace');
-  }
+  assert.equal(projects.find((item) => item.key === 'resources')?.available, undefined);
+  assert.equal(projects.find((item) => item.key === 'resources')?.to, '/admin/projects?projects=resources');
+  assert.equal(projects.find((item) => item.key === 'content-campaigns')?.available, false, 'content-campaigns must not imply a live workspace');
   assert.equal(projects.find((item) => item.key === 'controls')?.to, '/admin/projects?projects=budget');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   assert.doesNotMatch(layout, /workspaceChildTabItems|Workspace subnavigation/,
@@ -130,8 +130,11 @@ test('Project Registry filters keep the Project Registry workspace active withou
   const controls = projects.find((item) => item.key === 'controls')!;
   const overview = projects.find((item) => item.key === 'overview')!;
   const planning = projects.find((item) => item.key === 'planning-delivery')!;
+  const resources = projects.find((item) => item.key === 'resources')!;
   assert.equal(isAmsModuleSubnavigationItemActive(planning, '/admin/projects', '?projects=planning-delivery'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(resources, '/admin/projects', '?projects=resources'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=planning-delivery'), false);
+  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=resources'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=all'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/projects', '?projects=overview'), true);
@@ -147,8 +150,10 @@ test('Project Registry filters keep the Project Registry workspace active withou
   assert.match(projectSource, /registryStatusView/);
   assert.ok(projectSource.includes('projects-overview-workspace'));
   assert.ok(projectSource.includes('projects-planning-delivery-workspace'));
+  assert.ok(projectSource.includes('projects-resources-workspace'));
   assert.ok(projectSource.includes("requestedView === 'overview'"));
   assert.ok(projectSource.includes("requestedView === 'planning-delivery'"));
+  assert.ok(projectSource.includes("requestedView === 'resources'"));
   assert.match(projectSource, /searchParams\.get\('projects'\)/);
   assert.match(projectSource, /matchesRegistryStatus/);
 });
