@@ -208,7 +208,7 @@ test('All AMS record-entry forms use Drawer instead of Modal', () => {
   assert.ok(modal.includes('data-ams-modal-root="true"') && modal.includes('z-[80]'));
   assert.ok(drawer.includes("document.querySelector('[data-ams-modal-root=\"true\"]')"), 'A modal above a drawer must own focus and keyboard handling.');
 });
-test('Flat sidebar keeps direct links while existing tabs stay in their page workspaces', () => {
+test('Flat sidebar keeps direct links while the shared topbar owns contextual module tabs', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
@@ -216,6 +216,7 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const documents = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
   const finance = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminFinanceWorkspace.tsx'), 'utf8');
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
   const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
@@ -245,7 +246,10 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.ok(dashboard.includes('className="mb-0"'));
   assert.equal(dashboard.includes('ariaLabel="Dashboard view"'), false);
   assert.ok(!dashboard.includes('-mt-2'));
-  assert.ok(inbox.includes('<AdminSectionTabs') && inbox.includes('inboxTabs.map((tab)'));
+  assert.ok(layout.includes('workspace-topbar-navigation') && layout.includes('<AdminSectionTabs'));
+  assert.ok(subnavigation.includes("label: 'Client Requests'") && subnavigation.includes("label: 'All Documents'"));
+  assert.equal(inbox.includes('<AdminSectionTabs'), false, 'Inbox tabs are owned by the shared topbar.');
+  assert.equal(documents.includes('<AdminSectionTabs'), false, 'Documents tabs are owned by the shared topbar.');
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
   assert.ok(sidebar.includes('aria-label="Primary navigation"'), 'Primary navigation stays accessible while CRM and retainer tabs remain contextual.');
@@ -616,7 +620,7 @@ test('Content-first CMS registers use their working area instead of repeated KPI
 test('Inbox opens with contextual controls and its triage workspace, without a redundant KPI dashboard', () => {
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
   assert.match(inbox, /<AdminModuleHeader\b/);
-  assert.match(inbox, /<AdminSectionTabs\b/);
+  assert.doesNotMatch(inbox, /<AdminSectionTabs\b/);
   assert.match(inbox, /<AdminFilterBar\b/);
   assert.match(inbox, /data-ams-slug="inbox-overview-workspace"/);
   assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);
