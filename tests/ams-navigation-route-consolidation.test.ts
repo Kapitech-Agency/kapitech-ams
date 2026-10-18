@@ -64,7 +64,7 @@ test('consolidated aliases keep their canonical module owner and preserve useful
   assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
 
   const moduleNavigation = await read('src/lib/amsModuleSubnavigation.ts');
-  assert.match(layout, /getAmsWorkspaceNavigationModule\(location\.pathname, location\.search\)/);
+  assert.match(layout, /getAmsWorkspaceNavigationModule\(location\.pathname, location\.search, amsRole\)/);
   assert.match(moduleNavigation, /path === '\/admin\/clients' \|\| path\.startsWith\('\/admin\/clients\/'\) \|\| path === '\/admin\/contracts'\) return 'clients'/);
   assert.match(moduleNavigation, /path === '\/admin\/team' \|\| path === '\/admin\/time-logs' \|\| path === '\/admin\/vendors'\) return 'team'/);
   assert.match(moduleNavigation, /if \(path\.startsWith\('\/admin\/cms\/'\)\) return 'cms'/);

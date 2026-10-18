@@ -18,7 +18,7 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(workspace.includes("if (path === '/admin/settings') return 'settings';"));
   assert.equal(workspace.includes("path === '/admin/navigation/release-readiness') return 'settings'"), false);
-  assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search)'));
+  assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search, amsRole)'));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
   assert.ok(workspace.includes("{ key: 'overview', label: 'System Overview', to: '/admin/settings?tab=overview', slug: 'settings-workspace-overview' }"));
   assert.ok(workspace.includes("{ key: 'access', label: 'Users & Access', to: '/admin/settings?tab=security', slug: 'settings-workspace-access' }"));
@@ -195,7 +195,7 @@ test('workspace context navigation is scoped to its owning pages and cannot foll
   const layout = await read('src/pages/admin/AdminLayout.tsx');
 
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');
-  assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search)'));
+  assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search, amsRole)'));
   assert.ok(navigation.includes("if (path === '/admin/dashboard') return 'dashboard';"));
   assert.ok(navigation.includes("if (path === '/admin/projects') return 'projects';"));
   assert.ok(navigation.includes("if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';"));
