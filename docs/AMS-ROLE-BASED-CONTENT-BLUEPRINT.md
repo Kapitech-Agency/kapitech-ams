@@ -28,6 +28,8 @@ It is the content specification that sits between the approved navigation archit
 
 This blueprint defines intended content and presentation. It does not prove that a route, worksheet, data source, API, calculation, integration, permission, or action is implemented. At implementation time, verify the actual repository, routes, data contracts, permissions, and tests before describing any capability as available.
 
+Use `docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md` as the companion specification for worksheet-level persona defaults, visible fields, controls, role-specific emphasis, and visualization decisions. This blueprint explains the common rules and content purpose; the companion matrix makes those defaults concrete across the nine modules.
+
 ## 2. Authority and required companion documents
 
 Follow the precedence and task boundaries in root AGENTS.md. Use the related specifications together:
@@ -226,6 +228,82 @@ KPI strips are not the default for every register.
 - Use a chart only when it improves comparison/trend interpretation; keep exact values and audit/report details available in a table.
 - Do not infer a financial or operational conclusion that the source data does not support.
 
+### 5.9 Reference layout recipes
+
+These wireframes describe content hierarchy, not exact pixels or permission rules. Use existing AMS components/tokens and adapt spacing responsively. They are examples of page anatomy; do not create a separate bespoke design system for each recipe.
+
+**A. Executive / operational overview**
+
+```text
+[Module / workspace title]                         [Primary permitted action]
+[Concise context / selected period]
+
+[Relevant metric]  [Relevant metric]  [Relevant metric]   (optional, source-backed)
+
+[Main exception / decision queue             ] [One distinct supporting trend]
+[Identity | priority/state | owner | deadline ] [Question + period + legend      ]
+[Next action / source-record link             ] [Authorized drill-down if real    ]
+
+[Supporting context or recent meaningful activity, only if useful]
+```
+
+Use this pattern for Dashboard Overview, selected module Overviews, and Finance Executive Summary where the summary drives decisions. If the user must process a queue, make the queue the larger/primary area. Do not add metrics just to fill the row.
+
+**B. Register / directory worksheet**
+
+```text
+[Workspace / worksheet title]                       [Create / other permitted action]
+[Search] [Relevant filters] [Sort] [View]            [Active filter scope / Clear]
+
+[Canonical table or list                                                    ]
+[Identity] [Status] [Owner] [Date / amount] [Related record] [Next action]
+[Pagination / result scope / safe bulk actions when implemented]
+
+[Row selection opens detail; row actions do not accidentally activate the row]
+```
+
+Use this for Project Registry, Client Directory, Accounts Receivable/Payable, Time Logs, Document Library, CMS registers, and similar worksheets. KPI cards are optional and usually unnecessary above a high-throughput table.
+
+**C. Queue / exception worksheet**
+
+```text
+[Queue title]                                            [Permitted action]
+[Scope / priority / due-date filters]
+
+[URGENT or OVERDUE group only if actual records match the condition]
+[Item summary] [Owner] [Due/SLA] [Related record] [Next action]
+[Other actionable groups / clear empty-filter state]
+
+[No chart unless a distinct analytical question adds material value]
+```
+
+Use for Inbox Follow-ups, client issues, review queues, Finance exceptions, onboarding blockers, and close-control tasks. Sort order must be explicit (for example overdue first, then due date); do not silently change business priority or state.
+
+**D. Record detail**
+
+```text
+[Ancestor breadcrumb when useful: Parent workspace]          (optional)
+[Record name / identifier] [Actual status] [Permitted next action]
+[Key identity / owner / dates / relevant summary]
+
+[Main detail section]
+[Related records] [Documents / versions] [Activity/history] (only applicable sections)
+[Clear return path to the owning workspace]
+```
+
+The current record title appears once as the page heading. Breadcrumbs are only for helpful ancestors; do not create another row of persistent navigation. Every related-record panel links to the canonical owner and follows the current user's access.
+
+**E. Role adaptation without changing the page's meaning**
+
+Example: the same Project Registry record source may default to owner/deadline/blocker columns for a Project Manager and status/health/key deadline columns for an executive. The project identity, business status, metric definition, authorized data, and source links remain consistent. A selected persona may not grant additional permissions.
+
+**F. Responsive transformations**
+
+- Desktop: keep the main working surface dominant; use a secondary panel only if both areas remain readable.
+- Tablet: stack secondary context or move record detail into an established compact pattern; preserve identity/status/next action.
+- Mobile: keep key identity, status, deadline and permitted next action discoverable. Allow useful horizontal table scrolling or a compact row/detail path rather than silently removing important fields.
+- All sizes: retain keyboard access, non-hover affordances, active filter scope, truthful statuses, and confirmation for sensitive actions.
+
 ---
 
 ## 6. Chart and visual selection standards
@@ -271,6 +349,33 @@ This is a design heuristic, not a hard limit that may remove critical informatio
 - If period comparison is unavailable or denominator is zero, do not invent a percentage.
 - “Planned vs Actual” must define which plan and which recorded actual values are compared.
 - Do not recalculate or reinterpret formulas to produce a prettier chart.
+
+### 6.5 Metric and visualization specification contract
+
+Before implementing any KPI, status aggregate, trend or chart, document the following. If an item cannot be proven from current source/API/business rules, mark it as a discovery gap or target-only requirement.
+
+| Metric contract field | Required definition |
+|---|---|
+| Metric name and stable UI label | One understandable name; avoid labels that imply a different business measure |
+| Decision question | What decision or interpretation should the number/chart support? |
+| Canonical owner/source | Owning module and existing source endpoint/record/report; Dashboard is an aggregator, not the record owner |
+| Calculation authority | Existing tested business calculation or documented definition. Do not invent a new frontend formula |
+| Unit and dimensions | Currency/unit, percentage/count/duration, applicable category, client/project/status dimensions |
+| Time semantics | Business timezone, period start/end, reporting granularity, as-of date, and whether it is an event date or period-end snapshot |
+| Comparison rule | Prior period/budget/target or none; baseline and denominator semantics must be valid |
+| Freshness and provenance | Last successful update/verified time where available; known source/staleness limitations |
+| Missing/invalid states | Distinguish real zero, no records, partial source, unavailable, stale, error and undefined comparison |
+| Role presentation | Which personas benefit and what prominence/default filter changes; definitions remain the same |
+| Drill-down | Real authorized destination at the correct data grain, or explicitly no drill-down |
+| Acceptance evidence | Source value/report/API contract and relevant tests or reconciliation evidence |
+
+Implementation rules:
+- Do not implement a metric solely because it appears in a wireframe.
+- A percentage is only valid when numerator, denominator and period semantics are defined; if denominator is zero or unavailable, show an appropriate unavailable state.
+- Do not combine unlike units, periods, currencies or accounting meanings on a shared axis.
+- Do not use a chart tooltip or dashboard aggregation to expose information the current user is not authorized to see.
+- A table alternative must remain available when exact values, auditability or row-level actions are important.
+- When no chart is useful, state “No chart needed” and specify the register, queue, timeline, or simple status summary that better serves the task.
 
 ---
 
@@ -908,7 +1013,7 @@ Before a worksheet is designed or redesigned, its specification should contain t
 6. **Information hierarchy:** ordered list of what appears first, second, and in supporting context.
 7. **Required visible data:** record identity, status, owner, dates, amounts/units, source, and linked entities as appropriate.
 8. **Columns/fields:** exact content, useful default ordering, and why each field helps the job.
-9. **Role emphasis matrix:** default metrics/columns/filters/actions that differ by persona; explicit invariants.
+9. **Role emphasis matrix:** default metrics/columns/filters/actions that differ by persona; explicit invariants. Complete the relevant worksheet row in `docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md` and verify it against actual roles/permissions.
 10. **Search and filters:** only filters backed by real fields and useful to the intended job.
 11. **Saved views:** distinguish personal/team saved views from business statuses and canonical worksheets.
 12. **Primary action:** exact supported action and confirmed expected outcome.
@@ -999,6 +1104,7 @@ This specification supports planning and visual UX/UI implementation; it does no
 ## 15. Related specifications
 
 - AGENTS.md
+- docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md
 - AMS-DESIGN-SYSTEM.md
 - docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md
 - docs/architecture/ams-navigation-information-architecture.md
