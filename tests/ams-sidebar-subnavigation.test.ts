@@ -263,6 +263,14 @@ test('role-specific workspace destinations remain permitted and primary links ac
   }
 
   assert.equal(getAmsModuleSubnavigation('projects', 'Freelancer')[0]?.key, 'tasks');
+  assert.equal(
+    isAmsModuleSubnavigationItemActive(
+      getAmsModuleSubnavigation('projects', 'PM').find((item) => item.key === 'tasks')!,
+      '/admin/tasks', '?taskscope=my', '', 'PM'
+    ),
+    true,
+    'PM My Tasks activates Tasks & Execution without changing route permissions.'
+  );
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'PM'), []);
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'Freelancer', true).map((item) => item.key), ['access']);
 });
@@ -286,6 +294,8 @@ test('primary navigation modules and nested views preserve their owning workspac
   assert.equal(getAmsWorkspaceNavigationModule('/admin/finance', '?tab=accounts-receivable'), 'finance');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks'), 'projects');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks', '?taskscope=my'), null);
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks', '?taskscope=my', 'PM'), 'projects',
+    'PM personal tasks remain inside the Projects workspace while preserving the existing route policy.');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/tasks', '?taskscope=my&workspace=project'), 'projects');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/cms/careers', '?tab=applicants'), 'cms');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/team'), 'team');

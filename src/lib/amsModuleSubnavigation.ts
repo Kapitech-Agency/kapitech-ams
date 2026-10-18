@@ -11,7 +11,7 @@ export interface AmsSidebarSubnavigationItem {
   available?: boolean;
 }
 
-export function getAmsWorkspaceNavigationModule(pathname: string, search = ''): AmsSidebarModuleKey | null {
+export function getAmsWorkspaceNavigationModule(pathname: string, search = '', role?: AmsRole): AmsSidebarModuleKey | null {
   const path = pathname.replace(/\/+$/, '') || '/';
   if (path === '/admin/dashboard') return 'dashboard';
   if (path === '/admin/inbox') return 'inbox';
@@ -20,7 +20,7 @@ export function getAmsWorkspaceNavigationModule(pathname: string, search = ''): 
   if (path === '/admin/projects') return 'projects';
   if (path === '/admin/tasks') {
     const params = new URLSearchParams(search);
-    if (params.get('taskscope') === 'my' && params.get('workspace') !== 'project') return null;
+    if (params.get('taskscope') === 'my' && params.get('workspace') !== 'project' && role !== 'PM') return null;
     return 'projects';
   }
   if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';
@@ -125,7 +125,8 @@ export function isAmsModuleSubnavigationItemActive(
   item: Pick<AmsSidebarSubnavigationItem, 'key' | 'to' | 'available'>,
   pathname: string,
   search = '',
-  hash = ''
+  hash = '',
+  role?: AmsRole
 ): boolean {
   if (item.available === false) return false;
   const path = pathname.replace(/\/+$/, '') || '/';
@@ -173,7 +174,7 @@ export function isAmsModuleSubnavigationItemActive(
     if (selected === 'sprint') return itemKey === 'tasks';
     return itemKey === 'registry';
   }
-  if (itemKey === 'tasks' && path === '/admin/tasks') return params.get('taskscope') !== 'my' || params.get('workspace') === 'project';
+  if (itemKey === 'tasks' && path === '/admin/tasks') return params.get('taskscope') !== 'my' || params.get('workspace') === 'project' || role === 'PM';
   if (path === '/admin/clients/all-clients') {
     if (itemKey === 'directory') return params.get('scope') !== 'onboarding' && hash !== '#client-onboarding-readiness';
     if (itemKey === 'onboarding') return params.get('scope') === 'onboarding' || hash === '#client-onboarding-readiness';

@@ -4,6 +4,24 @@ import test from 'node:test';
 
 const read = (file: string) => fs.readFileSync(file, 'utf8');
 
+test('Tasks & Execution exposes canonical worksheets and role-safe query-driven navigation', () => {
+  const workspace = read('src/components/admin/TasksWorkspace.tsx');
+
+  assert.match(workspace, /const TASK_WORKSPACE_VIEWS = \[\s*\{ key: 'board', label: 'Board \/ Kanban' \},\s*\{ key: 'list', label: 'List' \}/);
+  assert.match(workspace, /key: 'task-lists', label: 'Task Lists', available: false/);
+  assert.match(workspace, /key: 'dependencies', label: 'Dependencies', available: false/);
+  assert.ok(workspace.includes("searchParams.get('layout')"));
+  assert.ok(workspace.includes("const layout: 'list' | 'board' = requestedLayout === 'board' ? 'board' : 'list'"));
+  assert.ok(workspace.includes("canonicalParams.set('layout', 'list')"));
+  assert.ok(workspace.includes("setSearchParams(canonicalParams, { replace: true })"));
+  assert.ok(workspace.includes('data-ams-slug="tasks-workspace-tabs"'));
+  assert.ok(workspace.includes('data-ams-slug="tasks-queue-tabs"'));
+  assert.ok(workspace.includes('visibleTaskTabs.map((tab)'));
+  assert.ok(workspace.includes('return canAccessAmsRoute(currentRole, target.pathname, target.search)'));
+  assert.doesNotMatch(workspace, /data-ams-slug="tasks-mobile-tabs"/);
+  assert.doesNotMatch(workspace, /data-ams-slug="tasks-layout-toggle"/);
+});
+
 test('Tasks workspace reads canonical task records and allows tasks on empty projects', () => {
   const workspace = read('src/components/admin/TasksWorkspace.tsx');
   assert.ok(workspace.includes('api.tasks.getAll()'));

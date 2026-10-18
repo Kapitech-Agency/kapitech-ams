@@ -159,7 +159,7 @@ export const AdminLayout: React.FC = () => {
     session?.user?.role
   );
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
-  const workspaceNavigationModule = getAmsWorkspaceNavigationModule(location.pathname, location.search);
+  const workspaceNavigationModule = getAmsWorkspaceNavigationModule(location.pathname, location.search, amsRole);
 
   const mfaSetupRequired = Boolean(
     session?.user
@@ -169,7 +169,7 @@ export const AdminLayout: React.FC = () => {
     ? getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)
     : [];
   const activeWorkspaceTab = workspaceTabItems.find((item) =>
-    isAmsModuleSubnavigationItemActive(item, location.pathname, location.search, location.hash)
+    isAmsModuleSubnavigationItemActive(item, location.pathname, location.search, location.hash, amsRole)
   );
   return (
     <ReportingPeriodProvider>

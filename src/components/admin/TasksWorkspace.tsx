@@ -10,8 +10,6 @@ import {
   Clock3,
   Eye,
   FolderKanban,
-  LayoutGrid,
-  List,
   Pencil,
   Plus,
   RefreshCw,
@@ -26,6 +24,7 @@ import { ProfileIdentity } from './ProfileIdentity';
 import Button from '../ui/Button';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 
 type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -58,12 +57,19 @@ const isUnknownMutationOutcome = (response: { success: boolean; status?: number 
   !response.success && (response.status === undefined || response.status >= 500);
 
 const TASK_TABS = [
-  { key: 'all', label: 'All Tasks', search: '' },
-  { key: 'my', label: 'My Tasks', search: '&taskscope=my' },
-  { key: 'due', label: 'Due & Overdue', search: '&taskscope=due' },
-  { key: 'review', label: 'Review Queue', search: '&taskscope=review' },
-  { key: 'blocked', label: 'Blocked', search: '&taskscope=blocked' },
-  { key: 'completed', label: 'Completed', search: '&taskscope=completed' },
+  { key: 'all', label: 'All Tasks' },
+  { key: 'my', label: 'My Tasks' },
+  { key: 'due', label: 'Due & Overdue' },
+  { key: 'review', label: 'Review Queue' },
+  { key: 'blocked', label: 'Blocked' },
+  { key: 'completed', label: 'Completed' },
+] as const;
+
+const TASK_WORKSPACE_VIEWS = [
+  { key: 'board', label: 'Board / Kanban' },
+  { key: 'list', label: 'List' },
+  { key: 'task-lists', label: 'Task Lists', available: false },
+  { key: 'dependencies', label: 'Dependencies', available: false },
 ] as const;
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -150,8 +156,46 @@ export const TasksWorkspace: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const [searchParams, setSearchParams] = useSearchParams();
   const taskScope = scopeLabels[searchParams.get('taskscope') || 'all'] ? (searchParams.get('taskscope') || 'all') : 'all';
+  const requestedLayout = searchParams.get('layout');
+  const supportedTaskLayouts: readonly string[] = ['board', 'list'];
+  const hasLayoutParameter = searchParams.has('layout');
+  const isSupportedTaskLayout = requestedLayout === null || supportedTaskLayouts.includes(requestedLayout);
+  const layout: 'list' | 'board' = requestedLayout === 'board' ? 'board' : 'list';
   const currentUser = getAdminSession()?.user;
+  const currentRole = getAmsRole(currentUser);
   const canManageTasks = hasAdminPermission('canManageKanbanTasks');
+
+  useEffect(() => {
+    if (!hasLayoutParameter || isSupportedTaskLayout) return;
+    const canonicalParams = new URLSearchParams(searchParams);
+    canonicalParams.set('layout', 'list');
+    setSearchParams(canonicalParams, { replace: true });
+  }, [hasLayoutParameter, isSupportedTaskLayout, searchParams, setSearchParams]);
+
+  const getTaskLayoutHref = (nextLayout: 'list' | 'board') => {
+    const params = new URLSearchParams(searchParams);
+    params.set('layout', nextLayout);
+    return '/admin/tasks?' + params.toString();
+  };
+
+  const getTaskScopeHref = (nextScope: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (nextScope === 'all') params.delete('taskscope');
+    else params.set('taskscope', nextScope);
+
+    if (nextScope === 'my') {
+      if (currentRole === 'PM') params.delete('workspace');
+      else params.set('workspace', 'project');
+    }
+
+    const query = params.toString();
+    return '/admin/tasks' + (query ? '?' + query : '');
+  };
+
+  const visibleTaskTabs = TASK_TABS.filter((tab) => {
+    const target = new URL(getTaskScopeHref(tab.key), 'https://ams.kapitech.local');
+    return canAccessAmsRoute(currentRole, target.pathname, target.search);
+  });
 
   const [records, setRecords] = useState<TaskRecord[]>([]);
   const [projects, setProjects] = useState<TaskProject[]>([]);
@@ -163,7 +207,6 @@ export const TasksWorkspace: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
-  const [layout, setLayout] = useState<'table' | 'board'>('table');
   const [sortKey, setSortKey] = useState<TaskSortKey>('priority');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
@@ -1057,14 +1100,27 @@ export const TasksWorkspace: React.FC = () => {
         />
       </div>
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="tasks-mobile-tabs">
+      <div className="min-w-0" data-ams-slug="tasks-workspace-tabs">
         <AdminSectionTabs
-          ariaLabel="Tasks sections"
+          ariaLabel="Task execution worksheets"
+          activeKey={layout}
+          items={TASK_WORKSPACE_VIEWS.map((view) => ({
+            key: view.key,
+            label: view.label,
+            to: view.key === 'board' || view.key === 'list' ? getTaskLayoutHref(view.key) : '/admin/tasks',
+            available: 'available' in view ? view.available : true
+          }))}
+        />
+      </div>
+
+      <div className="min-w-0" data-ams-slug="tasks-queue-tabs">
+        <AdminSectionTabs
+          ariaLabel="Task queues"
           activeKey={taskScope}
-          items={TASK_TABS.map((tab) => ({
+          items={visibleTaskTabs.map((tab) => ({
             key: tab.key,
             label: tab.label,
-            to: '/admin/tasks' + (tab.search ? '?' + tab.search.replace(/^&/, '') : '')
+            to: getTaskScopeHref(tab.key)
           }))}
         />
       </div>
@@ -1123,14 +1179,7 @@ export const TasksWorkspace: React.FC = () => {
                   <button type="button" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('done')} data-ams-slug="tasks-bulk-done" className="h-8 rounded-control px-2 text-[10px] font-medium text-success hover:bg-success/10 disabled:opacity-40">Done</button>
                 </div>
               )}
-              <div className="inline-flex h-9 shrink-0 items-center gap-0.5 rounded-control border border-line bg-bg p-0.5" aria-label="Task layout" data-ams-slug="tasks-layout-toggle">
-                <button type="button" title="Table view" aria-label="Table view" aria-pressed={layout === 'table'} onClick={() => setLayout('table')} data-ams-slug="tasks-view-table" className={'inline-flex h-8 w-8 items-center justify-center rounded-control ' + (layout === 'table' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}>
-                  <List size={14} />
-                </button>
-                <button type="button" title="Board view" aria-label="Board view" aria-pressed={layout === 'board'} onClick={() => setLayout('board')} data-ams-slug="tasks-view-board" className={'inline-flex h-8 w-8 items-center justify-center rounded-control ' + (layout === 'board' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}>
-                  <LayoutGrid size={14} />
-                </button>
-              </div>
+
             </div>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-muted" data-ams-slug="tasks-filter-summary">
