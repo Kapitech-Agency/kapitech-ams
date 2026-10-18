@@ -58,10 +58,10 @@ export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
   const canManageClients = hasAdminPermission('canManageClients');
-  type InboxTab = 'overview' | 'client' | 'starred';
+  type InboxTab = 'overview' | 'messages' | 'client' | 'starred';
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('view') as InboxTab | null;
-  const activeInboxTab: InboxTab = requestedTab && ['overview', 'client', 'starred'].includes(requestedTab)
+  const activeInboxTab: InboxTab = requestedTab && ['overview', 'messages', 'client', 'starred'].includes(requestedTab)
     ? requestedTab
     : 'overview';
 
@@ -129,7 +129,8 @@ export const AdminInbox: React.FC = () => {
 
   const activeTabItems = useMemo(() => {
     switch (activeInboxTab) {
-      case 'overview': return submissions;
+      case 'overview':
+      case 'messages': return submissions;
       case 'starred': return submissions.filter((item) => !!item.starred);
       case 'client':
         // Keep the Client Requests workspace scoped to actual inquiry records.
@@ -142,7 +143,7 @@ export const AdminInbox: React.FC = () => {
   type TriageScope = 'action' | 'priority' | 'saved';
   const [triageScope, setTriageScope] = useState<TriageScope>('action');
 
-  const isMixedInboxTab = activeInboxTab === 'overview' || activeInboxTab === 'starred';
+  const isMixedInboxTab = activeInboxTab === 'overview' || activeInboxTab === 'messages' || activeInboxTab === 'starred';
   const inboxStatusOptions = [
     { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
     { value: 'new', label: 'Status: New' },
@@ -647,18 +648,20 @@ export const AdminInbox: React.FC = () => {
       
       <AdminModuleHeader slug="inbox-header"
         className="mb-0"
-        title={activeInboxTab === 'overview' ? 'Inbox overview' : activeInboxTab === 'client' ? 'Client inquiries' : 'Starred inbox'}
+        title={activeInboxTab === 'overview' ? 'Inbox Overview' : activeInboxTab === 'messages' ? 'All Messages' : activeInboxTab === 'client' ? 'Sales Inquiries' : 'Starred'}
         description={
           activeInboxTab === 'overview'
             ? (language === 'id'
-              ? 'Pusat kendali seluruh inbound untuk triage, monitoring, dan tindak lanjut.'
-              : 'Operational control center for inbound triage, monitoring, and follow-up.')
-            : activeInboxTab === 'client'
-              ? (language === 'id'
-                ? 'Kelola inquiry klien, prioritas tindak lanjut, dan status respons.'
-                : 'Review client inquiries, prioritize follow-ups, and track response status.')
-            : (language === 'id'
-                  ? 'Kelola record yang disimpan untuk follow-up prioritas.'
+              ? 'Pusat kendali inbound untuk triage, monitoring, dan tindak lanjut.'
+              : 'Operational overview for inbound triage, monitoring, and follow-up.')
+            : activeInboxTab === 'messages'
+              ? (language === 'id' ? 'Semua pesan masuk dari sumber yang tersedia, tidak termasuk pelamar Careers.' : 'All inbound messages from available sources, excluding Careers applicants.')
+              : activeInboxTab === 'client'
+                ? (language === 'id'
+                  ? 'Kelola inquiry calon klien, prioritas tindak lanjut, dan status respons.'
+                  : 'Review sales inquiries, prioritize follow-ups, and track response status.')
+                : (language === 'id'
+                  ? 'Kelola record yang disimpan untuk tindak lanjut prioritas.'
                   : 'Manage records intentionally saved for priority follow-up.')
         }
         actions={(
@@ -706,7 +709,7 @@ export const AdminInbox: React.FC = () => {
       )}
 
       {/* 3. TAB-SPECIFIC CONTROLS */}
-      {activeInboxTab === 'overview' ? (
+      {activeInboxTab === 'overview' || activeInboxTab === 'messages' ? (
         <AdminFilterBar
           slug="inbox-overview-controls"
           searchValue={searchQuery}
