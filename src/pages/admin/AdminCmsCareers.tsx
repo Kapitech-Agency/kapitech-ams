@@ -493,12 +493,23 @@ export const AdminCmsCareers: React.FC = () => {
       <div role="tablist" aria-label={isId ? "Workspace Careers" : "Careers workspace"} className="ams-workspace-tabs inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-panel p-1">
         {([
           ...(canManageJobs ? [{ key: 'jobs' as const, label: isId ? 'Lowongan' : 'Job openings', count: positions.length }] : []),
-          { key: 'applicants' as const, label: isId ? 'Pelamar' : 'Applicants', count: applicantsLoaded ? applicants.length : null }
-        ] as Array<{ key: WorkspaceTab; label: string; count: number | null }>).map(tab => (
+          { key: 'applicants' as const, label: isId ? 'Pelamar' : 'Applicants', count: applicantsLoaded ? applicants.length : null },
+          { key: 'recruitment-history' as const, label: isId ? 'Riwayat Rekrutmen' : 'Recruitment History', count: null, available: false }
+        ] as Array<{ key: WorkspaceTab | 'recruitment-history'; label: string; count: number | null; available?: boolean }>).map(tab => tab.available === false ? (
+          <span
+            key={tab.key}
+            aria-disabled="true"
+            title={isId ? 'Riwayat rekrutmen belum tersedia.' : 'Recruitment history is not available yet.'}
+            data-ams-navigation-status="target-only"
+            className="inline-flex min-h-8 cursor-not-allowed items-center rounded-chip border border-transparent px-3 text-[11px] font-medium text-muted/50"
+          >
+            {tab.label}
+          </span>
+        ) : (
           <button
             key={tab.key}
             type="button"
-            onClick={() => handleWorkspaceTabChange(tab.key)}
+            onClick={() => handleWorkspaceTabChange(tab.key as WorkspaceTab)}
             id={`careers-${tab.key}-tab`}
             role="tab"
             aria-selected={activeTab === tab.key}
@@ -508,7 +519,7 @@ export const AdminCmsCareers: React.FC = () => {
               if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
               event.preventDefault();
               const tabKeys: WorkspaceTab[] = canManageJobs ? ['jobs', 'applicants'] : ['applicants'];
-              const currentIndex = tabKeys.indexOf(tab.key);
+              const currentIndex = tabKeys.indexOf(tab.key as WorkspaceTab);
               const nextIndex = event.key === 'Home'
                 ? 0
                 : event.key === 'End'
