@@ -1761,43 +1761,51 @@ export const AdminTeams: React.FC = () => {
           </AdminFilterBar>
           </div>
 
-          {timeFormOpen && canManageTimeLogs && (
-            <AdminPanel title="New time entry" description="Record actual delivery time against a project and task." className="overflow-hidden">
-              <form onSubmit={saveTimeLog} className="space-y-4 p-4">
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <label className="space-y-1.5">
-                    <span className="text-[11px] text-muted">Project</span>
-                    <CustomSelect value={timeProjectId} onChange={setTimeProjectId} options={[{ value: '', label: 'General' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-[11px] text-muted">Task</span>
-                    <input value={timeTask} onChange={(event) => setTimeTask(event.target.value)} placeholder="Task or activity" className="ams-control w-full" />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-[11px] text-muted">Duration (minutes)</span>
-                    <input type="number" min={1} max={1440} value={timeMinutes} onChange={(event) => setTimeMinutes(Number(event.target.value))} className="ams-control w-full" />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className="text-[11px] text-muted">Date</span>
-                    <input type="date" value={timeDate} onChange={(event) => setTimeDate(event.target.value)} className="ams-control w-full" />
-                  </label>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-                  <label className="space-y-1.5">
-                    <span className="text-[11px] text-muted">Notes</span>
-                    <input value={timeNotes} onChange={(event) => setTimeNotes(event.target.value)} placeholder="Optional context" className="ams-control w-full" />
-                  </label>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="inline-flex h-10 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs">
-                      <input type="checkbox" checked={timeIsBillable} onChange={(event) => setTimeIsBillable(event.target.checked)} className="accent-accent" />
-                      Billable
-                    </label>
-                    <Button type="submit" variant="primary" loading={savingTime}>Save Entry</Button>
-                  </div>
-                </div>
-              </form>
-            </AdminPanel>
-          )}
+          <Drawer
+            open={timeFormOpen && canManageTimeLogs}
+            onClose={() => { if (!savingTime) setTimeFormOpen(false); }}
+            closeOnEscape={!savingTime}
+            size="lg"
+            title="New time entry"
+            description="Record actual delivery time against a project and task."
+            footer={(
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="secondary" onClick={() => setTimeFormOpen(false)} disabled={savingTime}>Cancel</Button>
+                <Button type="submit" form="team-time-entry-form" variant="primary" loading={savingTime}>Save entry</Button>
+              </div>
+            )}
+          >
+            <form id="team-time-entry-form" onSubmit={saveTimeLog} className="space-y-4 p-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <label className="space-y-1.5">
+                  <span className="text-[11px] text-muted">Project</span>
+                  <CustomSelect value={timeProjectId} onChange={setTimeProjectId} options={[{ value: '', label: 'General' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-[11px] text-muted">Task</span>
+                  <input value={timeTask} onChange={(event) => setTimeTask(event.target.value)} placeholder="Task or activity" className="ams-control w-full" />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-[11px] text-muted">Duration (minutes)</span>
+                  <input type="number" min={1} max={1440} value={timeMinutes} onChange={(event) => setTimeMinutes(Number(event.target.value))} className="ams-control w-full" />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-[11px] text-muted">Date</span>
+                  <input type="date" value={timeDate} onChange={(event) => setTimeDate(event.target.value)} className="ams-control w-full" />
+                </label>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                <label className="space-y-1.5">
+                  <span className="text-[11px] text-muted">Notes</span>
+                  <input value={timeNotes} onChange={(event) => setTimeNotes(event.target.value)} placeholder="Optional context" className="ams-control w-full" />
+                </label>
+                <label className="inline-flex h-10 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs">
+                  <input type="checkbox" checked={timeIsBillable} onChange={(event) => setTimeIsBillable(event.target.checked)} className="accent-accent" />
+                  Billable
+                </label>
+              </div>
+            </form>
+          </Drawer>
 
           <AdminPanel slug="time-logs-ledger" title="Time log ledger" description={currentViewDataUnavailable
             ? (filteredLogs.length > 0 ? 'Time log source unavailable. Previously loaded entries remain visible.' : 'Time log data unavailable. Refresh to retry; entry count is not available.')

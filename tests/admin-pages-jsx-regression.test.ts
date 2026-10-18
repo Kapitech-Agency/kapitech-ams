@@ -717,6 +717,9 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   const timePagination = teams.indexOf('slug="time-logs-pagination"');
   assert.ok(timeView >= 0 && timeFilters > timeView && timeLedger > timeFilters);
   assert.ok(timePagination > timeLedger && timeMetrics > timePagination);
+  assert.ok(teams.includes('open={timeFormOpen && canManageTimeLogs}'));
+  assert.ok(teams.includes('form="team-time-entry-form"'));
+  assert.doesNotMatch(teams, /<AdminPanel title="New time entry"/);
   const timeTracking = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTimeLogs.tsx'), 'utf8');
   const standaloneLedger = timeTracking.indexOf('data-ams-feature-slug="time-tracking-ledger"');
   const standaloneLedgerEnd = timeTracking.indexOf('</section>', standaloneLedger);
