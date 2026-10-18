@@ -114,6 +114,10 @@ test('Inbox routes activate their owning workspace and unsupported target views 
   assert.match(inboxSource, /canonicalParams\.set\('view', 'overview'\)/);
   assert.match(inboxSource, /setSearchParams\(canonicalParams, \{ replace: true \}\)/);
   assert.match(inboxSource, /ariaLabel="Message categories"/);
+  assert.match(inboxSource, /ariaLabel="Message saved views"/);
+  assert.match(inboxSource, /label: 'Resolved', to: '\/admin\/inbox\?view=resolved', available: false/);
+  assert.match(inboxSource, /label: 'Archived', to: '\/admin\/inbox\?view=archived', available: false/);
+  assert.match(inboxSource, /\['messages', 'client', 'unread', 'starred'\] as InboxTab\[\]/);
   assert.match(inboxSource, /label: 'Project & Support'.*available: false/);
   assert.doesNotMatch(inboxSource, /key: 'starred', label: 'Starred'/,
     'Starred is a saved view inside Messages, not a message category worksheet.');
@@ -125,7 +129,7 @@ test('Inbox routes activate their owning workspace and unsupported target views 
     'Unread is a saved view on canonical New-status records.');
   assert.match(inboxSource, /case 'unread': return submissions\.filter\(\(item\) => item\.status === 'new'\)/);
   assert.ok(inboxSource.includes("unread: 'unread_messages'"));
-  assert.match(inboxSource, /activeInboxTab === 'messages' \|\| activeInboxTab === 'client'/);
+  assert.match(inboxSource, /\['messages', 'client', 'unread', 'starred'\] as InboxTab\[\]/);
   assert.match(inboxSource, /case 'messages': return submissions/);
   assert.match(inboxSource, /\.filter\(\(item\) => item\.type !== 'career'\)/);
   const app = await read('src/App.tsx');

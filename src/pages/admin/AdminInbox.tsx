@@ -690,18 +690,31 @@ export const AdminInbox: React.FC = () => {
         )}
       />
 
-      {(activeInboxTab === 'messages' || activeInboxTab === 'client') && (
-        <AdminSectionTabs
-          ariaLabel="Message categories"
-          activeKey={activeInboxTab === 'client' ? 'sales-inquiries' : 'all-messages'}
-          className="w-full border-b border-line pb-2"
-          items={[
-            { key: 'all-messages', label: 'All Messages', to: '/admin/inbox?view=messages' },
-            { key: 'sales-inquiries', label: 'Sales Inquiries', to: '/admin/inbox?view=client' },
-            { key: 'client-requests', label: 'Client Requests', to: '/admin/inbox', available: false },
-            { key: 'project-support', label: 'Project & Support', to: '/admin/inbox', available: false },
-          ]}
-        />
+      {(['messages', 'client', 'unread', 'starred'] as InboxTab[]).includes(activeInboxTab) && (
+        <>
+          <AdminSectionTabs
+            ariaLabel="Message categories"
+            activeKey={activeInboxTab === 'client' ? 'sales-inquiries' : 'all-messages'}
+            className="w-full border-b border-line pb-2"
+            items={[
+              { key: 'all-messages', label: 'All Messages', to: '/admin/inbox?view=messages' },
+              { key: 'sales-inquiries', label: 'Sales Inquiries', to: '/admin/inbox?view=client' },
+              { key: 'client-requests', label: 'Client Requests', to: '/admin/inbox', available: false },
+              { key: 'project-support', label: 'Project & Support', to: '/admin/inbox', available: false },
+            ]}
+          />
+          <AdminSectionTabs
+            ariaLabel="Message saved views"
+            activeKey={activeInboxTab === 'unread' || activeInboxTab === 'starred' ? activeInboxTab : ''}
+            className="w-full pb-1"
+            items={[
+              { key: 'unread', label: 'Unread', to: '/admin/inbox?view=unread' },
+              { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred' },
+              { key: 'resolved', label: 'Resolved', to: '/admin/inbox?view=resolved', available: false },
+              { key: 'archived', label: 'Archived', to: '/admin/inbox?view=archived', available: false },
+            ]}
+          />
+        </>
       )}
 
       {loadError && (
