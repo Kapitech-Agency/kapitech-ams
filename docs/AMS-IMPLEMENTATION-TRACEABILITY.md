@@ -4,6 +4,8 @@
 **Status:** Maintained evidence register containing dated audit/checkpoint snapshots. Some entries may not reflect the latest `main` HEAD until re-audited; do not treat historical branch/PR status as a live GitHub status.  
 **Authority:** `AGENTS.md` defines working rules; the master guide defines target requirements. Current implementation status must be re-verified against current source, latest CI results, and production evidence where relevant.
 
+**Delivery-sequence boundary:** This register is the requirement/evidence ledger, not an independent stage plan. Follow [`AMS-END-TO-END-DELIVERY-ROADMAP.md`](AMS-END-TO-END-DELIVERY-ROADMAP.md) for stage order and [`AMS-FEATURE-CONTENT-GAP-REGISTER.md`](AMS-FEATURE-CONTENT-GAP-REGISTER.md) for the wider cross-module coverage inventory. Keep requirement IDs and technical evidence here; link the relevant IDs from the gap register rather than creating duplicate status systems.
+
 ## 1. Mandatory principle
 
 A feature is not implemented merely because it appears in documentation, has a route, responds to a click, changes local state, renders a fixture/mock, or passes a build.
