@@ -27,9 +27,7 @@ test('each module root tab follows the approved Master Structure Guide', () => {
     'Overview', 'Performance', 'Analytics',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('inbox', 'Admin').map((item) => item.label), [
-    'Inbox Overview', 'All Messages', 'Sales Inquiries', 'Client Requests',
-    'Project & Support Requests', 'Follow-ups', 'Starred', 'Resolved & Archived',
-    'Routing & Response Templates',
+    'Overview', 'Messages', 'Follow-ups', 'Routing & Templates',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('projects', 'Admin').map((item) => item.label), [
     'Projects Overview', 'Project Registry', 'Planning & Scope', 'Tasks & Execution',
@@ -63,11 +61,17 @@ test('each module root tab follows the approved Master Structure Guide', () => {
 
 test('documented target-only workspaces are visible but never rendered as fake links', async () => {
   const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
-  for (const key of ['client-requests', 'project-support', 'follow-ups', 'resolved-archived', 'routing-templates']) {
+  for (const key of ['follow-ups', 'routing-templates']) {
     assert.equal(inbox.find((item) => item.key === key)?.available, false, key + ' must remain target-only until implemented');
   }
   assert.equal(inbox.find((item) => item.key === 'messages')?.available, undefined);
-  assert.equal(inbox.find((item) => item.key === 'sales-inquiries')?.available, undefined);
+  assert.equal(inbox.some((item) => item.key === 'sales-inquiries' || item.key === 'client-requests' || item.key === 'project-support'), false,
+    'message categories belong inside Messages, not the Inbox root navigation');
+  const messageWorksheets = getAmsModuleSubnavigationChildren('inbox', 'messages', 'Admin');
+  assert.deepEqual(messageWorksheets.map((item) => item.label), ['All Messages', 'Sales Inquiries', 'Client Requests', 'Project & Support']);
+  for (const key of ['client-requests', 'project-support']) {
+    assert.equal(messageWorksheets.find((item) => item.key === key)?.available, false, key + ' must remain target-only until implemented');
+  }
 
   const projects = getAmsModuleSubnavigation('projects', 'Admin');
   for (const key of ['overview', 'planning-scope', 'resources', 'deliverables', 'content-campaigns', 'changes-risks', 'files', 'reports-closure']) {
@@ -84,10 +88,13 @@ test('existing Inbox routes keep query-driven active state and Careers applicant
   const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=messages'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'sales-inquiries')!, '/admin/inbox', '?view=client'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'starred')!, '/admin/inbox', '?view=starred'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=client'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=starred'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox', '?view=unsupported'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'client-requests')!, '/admin/inbox'), false);
+  const messageWorksheets = getAmsModuleSubnavigationChildren('inbox', 'messages', 'Admin');
+  assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'all-messages')!, '/admin/inbox', '?view=messages'), true);
+  assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'sales-inquiries')!, '/admin/inbox', '?view=client'), true);
+  assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'client-requests')!, '/admin/inbox', '?view=client-requests'), false);
 
   const inboxSource = await read('src/pages/admin/AdminInbox.tsx');
   assert.match(inboxSource, /type InboxTab = 'overview' \| 'messages' \| 'client' \| 'starred'/);
@@ -127,7 +134,7 @@ test('Project Registry parent and supported status filters activate the correct 
 
   const projectSource = await read('src/pages/admin/AdminProjects.tsx');
   assert.match(projectSource, /registryStatusView/);
-  assert.match(projectSource, /projects=planning/);
+  assert.match(projectSource, /searchParams\.get\('projects'\)/);
   assert.match(projectSource, /matchesRegistryStatus/);
 });
 

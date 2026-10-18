@@ -12,7 +12,7 @@ test('Projects module normalizes URL view and keeps layout in sync with browser 
 
   assert.ok(source.includes("const requestedView = searchParams.get('projects');"));
   assert.ok(source.includes("requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'"));
-  assert.ok(source.includes("if (requestedView && !['sprint', 'budget', 'archived'].includes(requestedView))"));
+  assert.ok(source.includes("if (requestedView && !['sprint', 'budget', 'archived', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView))"));
   assert.ok(source.includes("const requestedLayout = searchParams.get('layout')"));
   assert.ok(source.includes("requestedLayout === 'table' ? 'table' : requestedLayout === 'timeline' ? 'timeline' : 'board'"));
   assert.ok(source.includes("searchParams.get('layout') === 'table' ? 'table' : searchParams.get('layout') === 'timeline' ? 'timeline' : 'board'"));

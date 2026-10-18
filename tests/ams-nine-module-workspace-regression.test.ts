@@ -63,7 +63,7 @@ test('Inbox toast feedback follows the stable page header instead of shifting it
 
 test('Inbox heading identifies the active topbar workspace', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  assert.match(inbox, /title=\{activeInboxTab === 'overview' \? 'Inbox overview' : activeInboxTab === 'client' \? 'Client inquiries' : 'Starred inbox'\}/);
+  assert.match(inbox, /title=\{activeInboxTab === 'overview' \? 'Inbox Overview' : activeInboxTab === 'messages' \? 'All Messages' : activeInboxTab === 'client' \? 'Sales Inquiries' : 'Starred'\}/);
 });
 
 test('Inbox remains an inquiry workspace and star state remains accessible', async () => {
@@ -75,8 +75,8 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   assert.match(inbox, /Inbox data unavailable/);
   assert.match(inbox, /The last successfully loaded records remain visible/);
   assert.match(inbox, /Inbox is unavailable/);
-  assert.match(inbox, /case 'client':\s*\/\/ Keep the Client Requests workspace scoped to actual inquiry records\.[\s\S]*?return submissions\.filter\(\(item\) => !item\.type \|\| item\.type === 'inquiry'\)/);
-  assert.match(inbox, /case 'overview': return submissions;/);
+  assert.match(inbox, /case 'client':\s*\/\/ Keep Sales Inquiries scoped to actual inquiry records\.[\s\S]*?return submissions\.filter\(\(item\) => !item\.type \|\| item\.type === 'inquiry'\)/);
+  assert.match(inbox, /case 'overview':\s*case 'messages': return submissions;/);
   assert.match(inbox, /case 'starred': return submissions\.filter\(\(item\) => !!item\.starred\)/);
   assert.doesNotMatch(inbox, /Candidate pipeline|Starred candidate work|inbox-jobs-board/);
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
@@ -338,7 +338,9 @@ test('Projects keep the page title clean and expose data availability in the eye
   const projects = await read('src/pages/admin/AdminProjects.tsx');
   assert.match(projects, /AdminStatusBadge tone=\{serverMode \? 'success' : loading \? 'info' : 'warning'\}/);
   assert.match(projects, /serverMode \? 'Live project data' : loading \? 'Loading project records' : 'Project data unavailable'/);
-  assert.match(projects, /title=\{view === 'all' \? 'Projects' : view === 'sprint' \? 'Sprint & Delivery' : view === 'budget' \? 'Budget vs Actual' : 'Archived Projects'\}/);
+  assert.match(projects, /title=\{view === 'all'/);
+  assert.match(projects, /registryStatusView === 'planning' \? 'Planning'/);
+  assert.match(projects, /registryStatusView === 'completed' \? 'Completed Projects'/);
   assert.match(projects, /data-ams-feature-slug="projects-kpis"/);
 });
 

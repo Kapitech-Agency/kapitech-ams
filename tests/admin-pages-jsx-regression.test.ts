@@ -253,7 +253,7 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
   assert.ok(sidebar.includes('aria-label="Primary navigation"'), 'Primary navigation stays accessible while CRM and retainer tabs remain contextual.');
-  assert.ok(subnavigation.includes("label: 'Client directory'"));
+  assert.ok(subnavigation.includes("label: 'Client Directory'"));
   assert.ok(subnavigation.includes("label: 'Onboarding'"));
   assert.ok(subnavigation.includes("label: 'Retainers'"));
   assert.equal(clients.includes('clients-mobile-tabs'), false);
@@ -577,7 +577,7 @@ test('Flat sidebar visibility follows the nine-module role policy and keeps Sett
   for (const label of ["Dashboard", "Inbox", "Projects", "Clients", "Finance", "Team & Resources", "Documents", "Website CMS"]) {
     assert.ok(navigation.includes("label: '" + label + "'"), 'Missing primary module ' + label);
   }
-  for (const label of ["label: 'Retainers'", "label: 'Capacity'", "label: 'Time tracking'", "label: 'Vendors & freelancers'"]) {
+  for (const label of ["label: 'Retainers'", "label: 'Capacity Allocation'", "label: 'Time Tracking'", "label: 'Vendors & Freelancers'"]) {
     assert.ok(subnavigation.includes(label), 'Missing contextual destination ' + label);
   }
   for (const removed of ["label: 'Sales & Pipeline'", "label: 'Proposals'", "label: 'Approvals'", "label: 'Vendor Ledger'", "label: 'Timesheet Control'"]) {

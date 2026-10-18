@@ -182,7 +182,7 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   for (const label of ["Overview & Control", "Transactions & Cash", "Receivables & Payables", "Project Finance", "Accounting & Reports"]) {
     assert.ok(workbook.includes("label: '" + label + "'"), 'Missing Finance area ' + label);
   }
-  for (const label of ["label: 'Retainers'", "label: 'Capacity'", "label: 'Time tracking'", "label: 'Vendors & freelancers'"]) {
+  for (const label of ["label: 'Retainers'", "label: 'Capacity Allocation'", "label: 'Time Tracking'", "label: 'Vendors & Freelancers'"]) {
     assert.ok(subnavigation.includes(label), 'Missing contextual subarea ' + label);
   }
   for (const removed of ["label: 'Sales & Pipeline'", "label: 'Proposals'", "label: 'Approvals'", "label: 'Vendor Ledger'", "label: 'Timesheet Control'"]) {
@@ -214,7 +214,7 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   assert.ok(layout.includes('AdminNotificationCenter'));
   assert.ok(layout.includes('onLogout={handleLogout}'));
   assert.ok(layout.includes('actionMenu'));
-  assert.ok(subnavigation.includes("label: 'Vendors & freelancers'"));
+  assert.ok(subnavigation.includes("label: 'Vendors & Freelancers'"));
   assert.ok(subnavigation.includes("label: 'Skill matrix'"));
   assert.equal(vendors.includes('data-ams-slug="vendors-mobile-tabs"'), false);
   assert.equal(vendors.includes('<AdminSectionTabs'), false);
@@ -684,7 +684,7 @@ test('Resource Planning assignments persist on project records and distinguish t
   assert.match(teams, /planned weekly allocation and dates/);
   assert.match(teams, /Upcoming resource allocation/);
   assert.match(teams, /No plan means unplanned, not automatically available/);
-  assert.match(navigation, /key: 'capacity', label: 'Capacity', to: '\/admin\/team\?view=capacity-allocation'/);
+  assert.match(navigation, /key: 'capacity-allocation', label: 'Capacity Allocation', to: '\/admin\/team\?view=capacity-allocation'/);
   assert.match(routes, /pickFields\(updates, \['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers'/);
 });
 

@@ -44,15 +44,10 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' },
   ],
   inbox: [
-    { key: 'overview', label: 'Inbox Overview', to: '/admin/inbox?view=overview', slug: 'inbox-tab-overview' },
-    { key: 'messages', label: 'All Messages', to: '/admin/inbox?view=messages', slug: 'inbox-tab-all-messages' },
-    { key: 'sales-inquiries', label: 'Sales Inquiries', to: '/admin/inbox?view=client', slug: 'inbox-tab-sales-inquiries' },
-    { key: 'client-requests', label: 'Client Requests', to: '/admin/inbox', available: false },
-    { key: 'project-support', label: 'Project & Support Requests', to: '/admin/inbox', available: false },
+    { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview', slug: 'inbox-tab-overview' },
+    { key: 'messages', label: 'Messages', to: '/admin/inbox?view=messages', slug: 'inbox-tab-messages' },
     { key: 'follow-ups', label: 'Follow-ups', to: '/admin/inbox', available: false },
-    { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' },
-    { key: 'resolved-archived', label: 'Resolved & Archived', to: '/admin/inbox', available: false },
-    { key: 'routing-templates', label: 'Routing & Response Templates', to: '/admin/inbox', available: false },
+    { key: 'routing-templates', label: 'Routing & Templates', to: '/admin/inbox', available: false },
   ],
   // The old CRM route is a compatibility redirect and owns no new local navigation.
   crm: [],
@@ -121,6 +116,24 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
 };
 
 const MODULE_CHILDREN: Partial<Record<AmsSidebarModuleKey, Record<string, AmsSidebarSubnavigationItem[]>>> = {
+  inbox: {
+    messages: [
+      { key: 'all-messages', label: 'All Messages', to: '/admin/inbox?view=messages' },
+      { key: 'sales-inquiries', label: 'Sales Inquiries', to: '/admin/inbox?view=client' },
+      { key: 'client-requests', label: 'Client Requests', to: '/admin/inbox?view=client-requests', available: false },
+      { key: 'project-support', label: 'Project & Support', to: '/admin/inbox?view=project-support', available: false },
+    ],
+    'follow-ups': [
+      { key: 'due-today', label: 'Due Today', to: '/admin/inbox?view=follow-ups&range=today', available: false },
+      { key: 'upcoming', label: 'Upcoming', to: '/admin/inbox?view=follow-ups&range=upcoming', available: false },
+      { key: 'overdue', label: 'Overdue', to: '/admin/inbox?view=follow-ups&range=overdue', available: false },
+      { key: 'completed', label: 'Completed', to: '/admin/inbox?view=follow-ups&range=completed', available: false },
+    ],
+    'routing-templates': [
+      { key: 'routing-rules', label: 'Routing Rules', to: '/admin/inbox?view=routing', available: false },
+      { key: 'response-templates', label: 'Response Templates', to: '/admin/inbox?view=templates', available: false },
+    ],
+  },
   projects: {
     registry: [
       { key: 'all', label: 'All Projects', to: '/admin/projects' },
@@ -351,15 +364,13 @@ export function isAmsModuleSubnavigationItemActive(
   if (path === '/admin/finance/quotations') return itemKey === 'receivables';
 
   if (path === '/admin/inbox') {
-    const requestedView = params.get('view');
-    const selectedView = requestedView && ['overview', 'messages', 'client', 'starred'].includes(requestedView)
+    const requestedView = params.get('view') || 'overview';
+    const selectedView = ['overview', 'messages', 'client', 'starred', 'client-requests', 'project-support', 'unread', 'resolved', 'archived'].includes(requestedView)
       ? requestedView
       : 'overview';
     return (
       (itemKey === 'overview' && selectedView === 'overview') ||
-      (itemKey === 'messages' && selectedView === 'messages') ||
-      (itemKey === 'sales-inquiries' && selectedView === 'client') ||
-      (itemKey === 'starred' && selectedView === 'starred')
+      (itemKey === 'messages' && selectedView !== 'overview')
     );
   }
 
@@ -434,6 +445,14 @@ export function isAmsModuleSubnavigationChildActive(
   if (item.available === false) return false;
   const path = pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(search);
+  if (path === '/admin/inbox') {
+    const selectedView = params.get('view') || 'overview';
+    if (item.key === 'all-messages') return selectedView === 'messages';
+    if (item.key === 'sales-inquiries') return selectedView === 'client';
+    if (item.key === 'client-requests') return selectedView === 'client-requests';
+    if (item.key === 'project-support') return selectedView === 'project-support';
+    return false;
+  }
   if (path === '/admin/projects') {
     const selectedView = params.get('projects') || 'all';
     if (['all', 'planning', 'active', 'on-hold', 'completed', 'archived'].includes(selectedView)) {

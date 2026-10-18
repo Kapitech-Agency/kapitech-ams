@@ -11,7 +11,7 @@ import {
   isNavigationItemActive,
   normalizeAmsRole,
 } from '../src/lib/amsNavigationAccess';
-import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive } from '../src/lib/amsModuleSubnavigation';
+import { getAmsModuleSubnavigation, getAmsModuleSubnavigationChildren, isAmsModuleSubnavigationItemActive, isAmsModuleSubnavigationChildActive } from '../src/lib/amsModuleSubnavigation';
 
 const flatten = (role: Parameters<typeof getNavigationGroupsForRole>[0]) =>
   getNavigationGroupsForRole(role).flatMap((group) => group.items);
@@ -138,7 +138,7 @@ test('Creative and Freelancer route restrictions remain intact while using the c
 test('contextual navigation preserves the default view of each module', () => {
   const cases: Array<[typeof contextualModules[number], typeof roles[number], string]> = [
     ['dashboard', 'Admin', 'overview'],
-    ['projects', 'Admin', 'all'],
+    ['projects', 'Admin', 'registry'],
     ['clients', 'Admin', 'directory'],
     ['team', 'Admin', 'team'],
     ['cms', 'Admin', 'projects'],
@@ -153,18 +153,19 @@ test('module subnavigation respects feature ownership and role-specific scope', 
   assert.deepEqual(subnav('crm', 'Admin'), []);
   assert.deepEqual(subnav('finance', 'Finance').map((item) => item.key), ['overview', 'transactions', 'receivables', 'projects', 'accounting']);
   assert.deepEqual(subnav('finance', 'PM').map((item) => item.key), ['projects']);
-  assert.deepEqual(subnav('projects', 'Admin').map((item) => item.key), ['all', 'sprint', 'budget', 'archived', 'tasks']);
-  assert.deepEqual(subnav('projects', 'Finance').map((item) => item.key), ['sprint', 'tasks']);
-  assert.deepEqual(subnav('projects', 'Creative').map((item) => item.key), ['sprint', 'tasks']);
+  assert.deepEqual(subnav('inbox', 'Admin').map((item) => item.key), ['overview', 'messages', 'follow-ups', 'routing-templates']);
+  assert.deepEqual(subnav('projects', 'Admin').map((item) => item.key), ['overview', 'registry', 'planning-scope', 'tasks', 'resources', 'deliverables', 'content-campaigns', 'changes-risks', 'budget', 'files', 'reports-closure']);
+  assert.deepEqual(subnav('projects', 'Finance').map((item) => item.key), ['tasks']);
+  assert.deepEqual(subnav('projects', 'Creative').map((item) => item.key), ['tasks']);
   assert.deepEqual(subnav('projects', 'Freelancer').map((item) => item.key), ['tasks']);
-  assert.deepEqual(subnav('clients', 'Admin').map((item) => item.key), ['directory', 'onboarding', 'contracts', 'retainers', 'sla']);
-  assert.deepEqual(subnav('clients', 'Finance').map((item) => item.key), ['directory', 'onboarding', 'contracts', 'sla']);
-  assert.deepEqual(subnav('team', 'Admin').map((item) => item.key), ['team', 'capacity', 'skills', 'vendors', 'time']);
-  assert.deepEqual(subnav('team', 'PM').map((item) => item.key), ['team', 'capacity', 'time']);
+  assert.deepEqual(subnav('clients', 'Admin').map((item) => item.key), ['overview', 'directory', 'onboarding', 'contracts', 'retainers', 'sla', 'growth-health']);
+  assert.deepEqual(subnav('clients', 'Finance').map((item) => item.key), ['overview', 'directory', 'onboarding', 'contracts', 'sla', 'growth-health']);
+  assert.deepEqual(subnav('team', 'Admin').map((item) => item.key), ['team', 'people-ops', 'vendors', 'time']);
+  assert.deepEqual(subnav('team', 'PM').map((item) => item.key), ['team', 'people-ops', 'time']);
   assert.deepEqual(subnav('team', 'Finance').map((item) => item.key), ['vendors']);
-  assert.deepEqual(subnav('cms', 'Admin').map((item) => item.key), ['projects', 'insights', 'testimonials', 'services', 'careers']);
+  assert.deepEqual(subnav('cms', 'Admin').map((item) => item.key), ['overview', 'projects', 'services', 'insights', 'testimonials', 'careers']);
   assert.deepEqual(subnav('cms', 'Creative').map((item) => item.key), ['insights', 'projects', 'testimonials']);
-  assert.deepEqual(subnav('settings', 'Admin').map((item) => item.key), ['backup', 'access', 'audit', 'integrations']);
+  assert.deepEqual(subnav('settings', 'Admin').map((item) => item.key), ['backup', 'access', 'audit', 'integrations', 'preferences']);
   assert.deepEqual(subnav('settings', 'PM'), []);
 });
 
@@ -175,18 +176,22 @@ test('contextual active states follow URL query state for Dashboard, Projects, C
   assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'analytics')!, '/admin/dashboard', '?view=analytics'), true);
 
   const projects = subnav('projects', 'Admin');
-  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=sprint'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=budget'), false);
+  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'tasks')!, '/admin/projects', '?projects=sprint'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'tasks')!, '/admin/projects', '?projects=budget'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'budget')!, '/admin/projects', '?projects=budget'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'archived')!, '/admin/projects', '?projects=archived'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'registry')!, '/admin/projects', '?projects=archived'), true);
+  const registryChildren = getAmsModuleSubnavigationChildren('projects', 'registry', 'Admin');
+  assert.equal(isAmsModuleSubnavigationChildActive(registryChildren.find((item) => item.key === 'archived')!, '/admin/projects', '?projects=archived'), true);
 
   const clients = subnav('clients', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'onboarding')!, '/admin/clients/all-clients', '?scope=onboarding'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'onboarding')!, '/admin/clients/all-clients'), false);
 
-  const team = subnav('team', 'Admin');
-  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'capacity')!, '/admin/team', '?view=capacity-allocation'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'capacity')!, '/admin/team', ''), false);
+  const teamChildren = getAmsModuleSubnavigationChildren('team', 'team', 'Admin');
+  assert.equal(isAmsModuleSubnavigationChildActive(teamChildren.find((item) => item.key === 'capacity-allocation')!, '/admin/team', '?view=capacity-allocation'), true);
+  assert.equal(isAmsModuleSubnavigationChildActive(teamChildren.find((item) => item.key === 'capacity-allocation')!, '/admin/team', ''), false);
+  const settingsOverview = subnav('settings', 'Admin').find((item) => item.key === 'backup')!;
+  assert.equal(isAmsModuleSubnavigationItemActive(settingsOverview, '/admin/settings', ''), true);
 
   const settings = subnav('settings', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'access')!, '/admin/settings', '?tab=security'), true);
