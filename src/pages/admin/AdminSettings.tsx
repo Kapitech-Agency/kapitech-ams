@@ -1167,7 +1167,7 @@ export const AdminSettings: React.FC = () => {
             </div>
           )}
 
-          <div className="min-w-0" tabIndex={0} role="region" aria-label="System audit log">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable system audit log">
             {auditLoading ? (
               <div className="px-5 py-10">{renderSkeleton()}</div>
             ) : auditError && filteredLogs.length === 0 ? (
@@ -1210,7 +1210,7 @@ export const AdminSettings: React.FC = () => {
                   );
                 })}
               </div>
-              <div className="hidden min-[1280px]:block overflow-x-auto">
+              <div className="hidden min-[1280px]:block">
               <table className="settings-system-table min-w-[1080px]">
                 <thead>
                   <tr>

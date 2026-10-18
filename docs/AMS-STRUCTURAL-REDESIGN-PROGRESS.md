@@ -302,3 +302,10 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Added compact card registers under 1,280px for production backup snapshots, system audit entries, and administrator accounts; desktop retains the columnar tables for wide-screen review.
 - Backup cards retain snapshot identifier, UTC creation time, size, verification state, and the existing integrity-check action. Audit cards retain timestamp, actor, event, details, origin/IP, and severity. Account cards retain role, division, account state, MFA state, last login, and the master-only deletion guard.
 - Cards and tables use the same source rows and existing view permissions; no new actions, permissions, API behavior, account mutation logic, backup verification logic, or audit data transformations were introduced. Added regression coverage; CI must pass before this slice is considered validated.
+
+
+## Thirty-seventh implementation slice: preserve one named scroll owner for Settings audit
+
+- Restored the named, keyboard-accessible horizontal scroll region for the system audit log, which is required by the cross-module scroll regression guard.
+- Removed the nested horizontal overflow declaration from the desktop-only audit table wrapper so the outer region owns scrolling once; compact cards remain unaffected.
+- This addresses a genuine accessibility/scroll-boundary regression found by CI without weakening the test or changing audit content/actions.
