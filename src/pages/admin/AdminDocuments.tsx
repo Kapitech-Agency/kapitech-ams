@@ -165,8 +165,17 @@ export const AdminDocuments: React.FC = () => {
     hasAdminPermission('canManageCrm') ||
     hasAdminPermission('canAccessServerAndApi');
 
-  const requestedTab = (searchParams.get('documents') || 'all') as TabKey;
-  const activeTab = DOCUMENT_TABS.some((tab) => tab.key === requestedTab) ? requestedTab : 'all';
+  const requestedTab = searchParams.get('documents') || 'all';
+  const hasDocumentCategoryParam = searchParams.has('documents');
+  const isSupportedDocumentCategory = DOCUMENT_TABS.some((tab) => tab.key === requestedTab);
+  const activeTab: TabKey = isSupportedDocumentCategory ? requestedTab as TabKey : 'all';
+
+  useEffect(() => {
+    if (!hasDocumentCategoryParam || isSupportedDocumentCategory) return;
+    const canonicalParams = new URLSearchParams(searchParams);
+    canonicalParams.delete('documents');
+    setSearchParams(canonicalParams, { replace: true });
+  }, [hasDocumentCategoryParam, isSupportedDocumentCategory, searchParams, setSearchParams]);
 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
