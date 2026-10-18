@@ -93,7 +93,7 @@ The documents below preserve useful context, migration utilities, or earlier rol
 | [PostgreSQL Staging Import](AMS-POSTGRES-STAGING-IMPORT.md) | Staging-only importer. Does not perform the production repository cutover or physical document-object migration. |
 | [Relational Migration Plan](AMS-RELATIONAL-MIGRATION.md) | Earlier logical migration plan. Do not treat its “next stage” list or rollback assumptions as current tasks. |
 | [PostgreSQL Cutover and Rollback Constraints](AMS-POSTGRES-CUTOVER.md) | Earlier cutover safety context; explicitly documents that JSON rollback is blocked under the current production guard. It is not an executable JSON rollback procedure. |
-| [Encrypted Backup Restore Rehearsal](AMS-RESTORE-REHEARSAL.md) | Utility for isolated legacy encrypted-JSON archive rehearsal, not PostgreSQL production recovery. |
+| [PostgreSQL Backup Restore Rehearsal](AMS-RESTORE-REHEARSAL.md) | Staging-only PostgreSQL dump restore into an isolated empty rehearsal database, including migration checksum verification. It is not a production restore command or proof of provider readiness. |
 | [Structural UX/UI Change Map](AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md) | Detailed dated history. See Section 3. |
 
 Historical docs must retain their context but must not state old deployment/migration stages as current facts. If their instructions are reused for staging, verify compatibility with the current scripts and source first.
