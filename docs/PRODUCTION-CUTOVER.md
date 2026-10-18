@@ -34,7 +34,7 @@ KAPITECH_POSTGRES_SSL_REJECT_UNAUTHORIZED=true
 KAPITECH_DATA_ENCRYPTION_KEY=<32-byte key>
 ```
 
-The application refuses production startup when the datasource is not PostgreSQL, the database URL is missing, or the encryption key is invalid.
+The server may keep the web shell available, but the production API is disabled with HTTP 503 while the PostgreSQL source/configuration is invalid or PostgreSQL is not ready. The production runtime validator also rejects missing/invalid required settings. Do not describe a reachable web shell as proof that the API or production data source is ready; verify the readiness endpoint.
 
 ### Initial Master administrator
 
