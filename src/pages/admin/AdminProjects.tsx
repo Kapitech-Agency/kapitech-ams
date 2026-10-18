@@ -51,7 +51,7 @@ type ProjectRecord = AgencyProject & {
   slug: string;
 };
 
-type ProjectsView = 'overview' | 'all' | 'sprint' | 'budget' | 'archived';
+type ProjectsView = 'overview' | 'all' | 'sprint' | 'budget' | 'archived' | 'planning-delivery';
 type ProjectLayout = 'board' | 'table' | 'timeline';
 
 const PROJECT_STATUSES: Array<{ value: ProjectStatus; label: string }> = [
@@ -484,16 +484,28 @@ export const AdminProjects: React.FC = () => {
   const requestedView = searchParams.get('projects');
   const view: ProjectsView = requestedView === 'overview'
     ? 'overview'
-    : requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'
-      ? requestedView
-      : 'all';
+    : requestedView === 'planning-delivery'
+      ? 'planning-delivery'
+      : requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'
+        ? requestedView
+        : 'all';
   const registryStatusView = requestedView && ['planning', 'active', 'on-hold', 'completed'].includes(requestedView)
     ? requestedView
     : null;
   const selectedProjectSlug = searchParams.get('project') || '';
+  const planningProjectId = searchParams.get('planningProject') || '';
+  const planningProject = projects.find((project) => project.id === planningProjectId || project.slug === planningProjectId)
+    || projects.find((project) => project.status !== 'completed')
+    || projects[0]
+    || null;
+  const planningMilestones = planningProject
+    ? [...planningProject.milestones].sort((left, right) =>
+        (left.dueDate || '9999-12-31').localeCompare(right.dueDate || '9999-12-31')
+      )
+    : [];
 
   React.useEffect(() => {
-    if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView)) {
+    if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning-delivery', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView)) {
       const next = new URLSearchParams(searchParams);
       next.delete('projects');
       setSearchParams(next, { replace: true });
@@ -1903,13 +1915,13 @@ export const AdminProjects: React.FC = () => {
         className="mb-0"
         eyebrow={(
           <div className="flex flex-wrap items-center gap-2">
-            <span>{view === 'overview' ? 'Projects / Overview' : view === 'all' ? 'Projects / Project Registry' : 'Projects'}</span>
+            <span>{view === 'overview' ? 'Projects / Overview' : view === 'planning-delivery' ? 'Projects / Planning & Delivery' : view === 'all' ? 'Projects / Project Registry' : 'Projects'}</span>
             <AdminStatusBadge tone={serverMode ? 'success' : loading ? 'info' : 'warning'}>
               {serverMode ? 'Live project data' : loading ? 'Loading project records' : 'Project data unavailable'}
             </AdminStatusBadge>
           </div>
         )}
-        title={view === 'overview' ? 'Project Overview' : view === 'all'
+        title={view === 'overview' ? 'Project Overview' : view === 'planning-delivery' ? 'Planning & Delivery' : view === 'all'
           ? registryStatusView === 'planning' ? 'Planning'
             : registryStatusView === 'active' ? 'Active Projects'
               : registryStatusView === 'on-hold' ? 'On Hold'
@@ -1918,19 +1930,21 @@ export const AdminProjects: React.FC = () => {
         description={
           view === 'overview'
             ? 'Source-backed portfolio summary, delivery exceptions, and project status distribution.'
-            : view === 'all'
-              ? registryStatusView
-                ? 'Project registry filtered by the selected lifecycle status.'
-                : 'Project records, delivery stages, and supported execution controls.'
-              : view === 'sprint'
-                ? 'Move work through execution stages and keep delivery ownership visible.'
-                : view === 'budget'
-                  ? 'Compare each project budget with recorded Finance expenses linked to that project. Delivery progress is never used as a cost estimate.'
-                  : 'Completed projects kept visible for reference, handover history, and future reuse.'
+            : view === 'planning-delivery'
+              ? 'Review the selected project brief, planned dates, recorded milestones, and delivery schedule.'
+              : view === 'all'
+                ? registryStatusView
+                  ? 'Project registry filtered by the selected lifecycle status.'
+                  : 'Project records, delivery stages, and supported execution controls.'
+                : view === 'sprint'
+                  ? 'Move work through execution stages and keep delivery ownership visible.'
+                  : view === 'budget'
+                    ? 'Compare each project budget with recorded Finance expenses linked to that project. Delivery progress is never used as a cost estimate.'
+                    : 'Completed projects kept visible for reference, handover history, and future reuse.'
         }
         actions={(
           <>
-            {view === 'overview' && (
+            {(view === 'overview' || view === 'planning-delivery') && (
               <Button variant="secondary" onClick={() => openView('all')}>Open Project Registry</Button>
             )}
             {view === 'all' && (
@@ -1946,8 +1960,8 @@ export const AdminProjects: React.FC = () => {
                 </button>
               </div>
             )}
-            {view !== 'overview' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
-            {canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
+            {view !== 'overview' && view !== 'planning-delivery' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
+            {canManageProjects && view !== 'planning-delivery' && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
           </>
         )}
       />
@@ -2062,6 +2076,130 @@ export const AdminProjects: React.FC = () => {
               )}
             </AdminPanel>
           </div>
+        </div>
+      )}
+
+      {view === 'planning-delivery' && (
+        <div className="space-y-4" data-ams-feature-slug="projects-planning-delivery-workspace" data-ams-slug="projects-planning-delivery-workspace">
+          {loading && !serverMode ? (
+            <AdminPanel title="Loading planning records" description="Retrieving the current project and milestone records.">
+              <div role="status" aria-label="Loading planning records" className="grid gap-3 p-4 sm:grid-cols-2">
+                {[1, 2, 3, 4].map((item) => <div key={item} className="h-20 animate-pulse rounded-control border border-line bg-bg" />)}
+              </div>
+            </AdminPanel>
+          ) : !serverMode ? (
+            <AdminPanel title="Planning records unavailable" description="Planning & Delivery needs live project records.">
+              <div className="p-4 text-xs leading-5 text-muted" role="status">The project service did not return verified records. No local or sample records are shown.</div>
+            </AdminPanel>
+          ) : !planningProject ? (
+            <AdminPanel title="No project records" description="Planning & Delivery displays the project plan from canonical records.">
+              <div className="p-5 text-xs leading-5 text-muted" role="status">No projects are available in the current source.</div>
+            </AdminPanel>
+          ) : (
+            <>
+              <AdminPanel
+                title="Project brief & schedule"
+                description="Existing project data. Brief notes and milestones are shown as recorded, without inferring acceptance or review outcomes."
+                actions={(
+                  <CustomSelect
+                    value={planningProject.id}
+                    onChange={(value) => {
+                      const next = new URLSearchParams(searchParams);
+                      next.set('planningProject', value);
+                      setSearchParams(next);
+                    }}
+                    options={projects.map((project) => ({ value: project.id, label: project.name }))}
+                    className="w-full sm:w-64"
+                    aria-label="Select project for planning"
+                  />
+                )}
+              >
+                <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-4 sm:p-4">
+                  {[
+                    { label: 'Client', value: planningProject.clientCompany || 'Not linked' },
+                    { label: 'Project owner', value: planningProject.teamLead || 'Unassigned' },
+                    { label: 'Service', value: planningProject.serviceCategory || 'Not specified' },
+                    { label: 'Status', value: statusLabel(planningProject.status) },
+                    { label: 'Start date', value: formatDate(planningProject.startDate) },
+                    { label: 'Target deadline', value: formatDate(planningProject.targetEndDate) },
+                    { label: 'Progress', value: planningProject.progressPercent + '%' },
+                    { label: 'Milestones', value: String(planningProject.milestones.length) },
+                  ].map((field) => (
+                    <div key={field.label} className="min-w-0 rounded-control border border-line bg-bg p-3">
+                      <div className="text-[11px] font-medium text-muted">{field.label}</div>
+                      <div className="mt-1.5 truncate text-xs font-semibold text-fg">{field.value}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-line p-3 sm:p-4">
+                  <div className="text-xs font-semibold text-fg">Project brief notes</div>
+                  {planningProject.notes ? (
+                    <p className="mt-2 whitespace-pre-wrap break-words rounded-control border border-line bg-bg p-3 text-xs leading-5 text-fg">{planningProject.notes}</p>
+                  ) : (
+                    <p className="mt-2 rounded-control border border-line bg-bg p-3 text-xs leading-5 text-muted">No project brief notes are recorded for this project.</p>
+                  )}
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[11px] text-muted">Team: {planningProject.teamMembers.length ? planningProject.teamMembers.join(', ') : 'No project team members recorded'}</span>
+                    <Button variant="secondary" icon={<ArrowUpRight size={13} />} onClick={() => goToSprint(planningProject)}>Open task execution</Button>
+                  </div>
+                </div>
+              </AdminPanel>
+              <AdminPanel
+                title="Milestones & timeline"
+                description="Dates and completion states come from the project's recorded milestone list."
+                actions={(
+                  <span className="rounded-badge border border-line bg-bg px-2.5 py-1.5 text-[10px] font-medium tabular-nums text-muted">
+                    {planningMilestones.filter((milestone) => milestone.completed).length} of {planningMilestones.length} completed
+                  </span>
+                )}
+              >
+                {planningMilestones.length === 0 ? (
+                  <div className="p-5 text-xs leading-5 text-muted" role="status">No milestones have been defined. A timeline cannot be verified until milestone dates are recorded.</div>
+                ) : (
+                  <div className="divide-y divide-line">
+                    {planningMilestones.map((milestone, index) => {
+                      const overdue = !milestone.completed && isOverdue(milestone.dueDate);
+                      return (
+                        <div key={milestone.id} className="grid min-w-0 gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(130px,0.35fr)_auto] sm:items-center sm:gap-4 sm:p-4">
+                          <div className="flex min-w-0 items-start gap-3">
+                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold tabular-nums text-muted">{index + 1}</span>
+                            <span className="min-w-0 break-words text-xs font-semibold text-fg">{milestone.title || 'Untitled milestone'}</span>
+                          </div>
+                          <div className="pl-9 text-xs tabular-nums text-muted sm:pl-0">{formatDate(milestone.dueDate)}</div>
+                          <span className={'inline-flex w-fit rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (
+                            milestone.completed
+                              ? 'border-success/25 bg-success/10 text-success'
+                              : overdue
+                                ? 'border-danger/25 bg-danger/10 text-danger'
+                                : 'border-line bg-bg text-muted'
+                          )}>
+                            {milestone.completed ? 'Completed' : overdue ? 'Overdue' : milestone.dueDate ? 'Upcoming' : 'Date not set'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </AdminPanel>
+              <AdminPanel title="Planning data coverage" description="This workspace shows the planning information currently stored on the canonical project record.">
+                <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
+                  <div className="rounded-control border border-line bg-bg p-3">
+                    <div className="text-xs font-semibold text-fg">Available from current records</div>
+                    <ul className="mt-2 space-y-1.5 text-[11px] leading-5 text-muted">
+                      <li>Project notes, client, owner and service</li>
+                      <li>Start date, deadline and recorded progress</li>
+                      <li>Milestone dates and completion state</li>
+                      <li>Assigned project team and linked task execution</li>
+                    </ul>
+                  </div>
+                  <div className="rounded-control border border-line bg-bg p-3">
+                    <div className="text-xs font-semibold text-fg">Not tracked as separate project records</div>
+                    <p className="mt-2 text-[11px] leading-5 text-muted">Scope and acceptance criteria, deliverable register, internal QA outcomes, client review outcomes, and revision history are not separate records in the current project model. They are not inferred from tasks or milestones.</p>
+                  </div>
+                </div>
+              </AdminPanel>
+            </>
+          )}
         </div>
       )}
 
