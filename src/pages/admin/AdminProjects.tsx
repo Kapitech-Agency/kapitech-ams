@@ -2938,7 +2938,46 @@ export const AdminProjects: React.FC = () => {
           </section>
 
           <AdminPanel title="Budget vs actual" description="Actuals use Finance expense entries linked by project ID. Delivery progress is not used as a cost estimate.">
-            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable project budget comparison table">
+            <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="projects-budget-cards" role="list" aria-label="Budget comparison cards">
+              {pagedBudgetRows.length === 0 ? (
+                <div className="rounded-control border border-line bg-bg p-6 text-center text-xs text-muted" role="status">No projects match the current portfolio filters.</div>
+              ) : pagedBudgetRows.map(row => {
+                const burnPercent = row.project.budget > 0 && row.actual !== null
+                  ? Math.round((row.actual / row.project.budget) * 100)
+                  : null;
+                return (
+                  <article key={row.project.id} role="listitem" data-ams-slug={'projects-budget-card-' + row.project.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <button type="button" onClick={() => openProjectDetail(row.project)} className="min-w-0 flex-1 text-left">
+                        <h3 className="break-words text-sm font-semibold text-fg">{row.project.name}</h3>
+                        <p className="mt-1 break-words text-[11px] text-muted">{row.project.clientCompany || '—'}</p>
+                      </button>
+                      <span className={'inline-flex shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + healthClass(row.project.health)}>{row.project.health || 'Good'}</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                      <div className="min-w-0"><p className="text-[10px] text-muted">Budget</p><p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{formatAmount(row.project.budget, currency)}</p></div>
+                      <div className="min-w-0"><p className="text-[10px] text-muted">Actual to date</p><p className="mt-1 break-words text-xs tabular-nums text-fg">{row.actual === null ? '—' : formatAmount(row.actual, currency)}</p>{row.actual !== null && <p className="mt-1 text-[10px] text-muted">{row.expenseCount} records</p>}</div>
+                      <div className="min-w-0"><p className="text-[10px] text-muted">Remaining</p><p className={'mt-1 break-words text-xs tabular-nums ' + (row.remaining !== null && row.remaining < 0 ? 'font-semibold text-danger' : 'text-fg')}>{row.remaining === null ? '—' : formatAmount(row.remaining, currency)}</p></div>
+                      <div className="min-w-0"><p className="text-[10px] text-muted">Variance</p><p className={'mt-1 break-words text-xs font-semibold tabular-nums ' + (row.variance !== null && row.variance < 0 ? 'text-danger' : row.variance === null ? 'text-muted' : 'text-success')}>{row.variance === null ? '—' : formatAmount(row.variance, currency)}</p></div>
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center justify-between gap-2 text-[10px] text-muted"><span>Delivery progress</span><span className="tabular-nums text-fg">{row.project.progressPercent}%</span></div>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-accent" style={{ width: row.project.progressPercent + '%' }} /></div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center justify-between gap-2 text-[10px] text-muted"><span>Cost / budget</span><span className="tabular-nums text-fg">{burnPercent === null ? '—' : burnPercent + '%'}</span></div>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (burnPercent !== null && burnPercent > 100 ? 'bg-danger' : burnPercent !== null && burnPercent > 85 ? 'bg-warning' : 'bg-success')} style={{ width: Math.min(100, Math.max(0, burnPercent || 0)) + '%' }} /></div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex justify-end border-t border-line pt-3">
+                      <button type="button" onClick={() => openProjectDetail(row.project)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">Project details</button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable project budget comparison table">
               <table className="ams-data-table min-w-[900px] text-left">
                 <thead>
                   <tr><th>Project</th><th>Health</th><th>Budget</th><th>Actual to date</th><th>Remaining</th><th>Delivery</th><th>Budget burn</th><th>Variance</th></tr>
@@ -3054,7 +3093,36 @@ export const AdminProjects: React.FC = () => {
               </div>
             </div>
 
-            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable archived project register">
+            <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="projects-archived-cards" role="list" aria-label="Archived project cards">
+              {pagedArchiveTableRows.length === 0 ? (
+                <div className="rounded-control border border-line bg-bg p-6 text-center text-xs text-muted">{archivedProjects.length ? 'No archived projects match the current filters.' : 'No archived projects yet.'}</div>
+              ) : pagedArchiveTableRows.map(project => (
+                <article key={project.id} role="listitem" data-ams-slug={'archived-project-card-' + project.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 flex-1 text-left">
+                      <h3 className="break-words text-sm font-semibold text-fg">{project.name}</h3>
+                      <p className="mt-1 break-words text-[11px] text-muted">{project.clientCompany || '—'}</p>
+                      <p className="mt-1 text-[10px] text-muted">{project.serviceCategory || 'Delivery'}</p>
+                    </button>
+                    <span className="shrink-0 rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-semibold text-success">Completed</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Completed</p><p className="mt-1 text-xs text-fg">{formatDate(project.targetEndDate)}</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Final budget</p><p className="mt-1 break-words text-xs tabular-nums text-fg">{formatAmount(project.budget, currency)}</p></div>
+                    <div className="col-span-2 min-w-0"><div className="flex items-center justify-between gap-2 text-[10px] text-muted"><span>Final progress</span><span className="tabular-nums text-fg">{project.progressPercent}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-success" style={{ width: project.progressPercent + '%' }} /></div></div>
+                    <div className="col-span-2 min-w-0"><p className="text-[10px] text-muted">Owner</p><div className="mt-1">{project.teamLead ? <ProfileIdentity profile={{ name: project.teamLead, contextLabel: 'Project owner' }} showRole={false} /> : <span className="text-xs text-muted">Unassigned</span>}</div></div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <span className="max-w-full break-all font-mono text-[10px] text-muted">{project.slug}</span>
+                    <div className="flex justify-end gap-1.5">
+                      <button type="button" className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg" onClick={() => openProjectDetail(project)}>View</button>
+                      {canManageProjects && <button type="button" className="inline-flex min-h-9 items-center rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-medium text-accent-text" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable archived project register">
               <table className="ams-data-table min-w-[1020px] text-left">
                 <thead><tr><th>Project</th><th>Client</th><th>Completed</th><th>Budget</th><th>Final progress</th><th>Owner</th><th>Slug</th><th>Actions</th></tr></thead>
                 <tbody>

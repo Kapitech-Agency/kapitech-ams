@@ -1036,3 +1036,17 @@ test('Project Table view switches to portfolio cards on compact widths without l
   assert.ok(projects.includes('canManageProjects && <button type="button" data-primary="true" onClick={() => openEditProject(project)}'));
   assert.ok(projects.includes('onClick={() => openProjectDetail(project)}'));
 });
+
+
+test('Project Budget and Archived workspaces expose compact cards with the same financial and historical context', () => {
+  const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+  assert.ok(projects.includes('data-ams-feature-slug="projects-budget-cards"'));
+  assert.ok(projects.includes('data-ams-feature-slug="projects-archived-cards"'));
+  assert.ok(projects.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(projects.includes('Actual to date'));
+  assert.ok(projects.includes('Cost / budget'));
+  assert.ok(projects.includes('Final progress'));
+  assert.ok(projects.includes('data-ams-slug={\'archived-project-card-\' + project.id}'));
+  assert.ok(projects.includes('row.remaining === null ?'));
+  assert.ok(projects.includes('canManageProjects && <button type="button" className="inline-flex min-h-9 items-center rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-medium text-accent-text" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>'));
+});

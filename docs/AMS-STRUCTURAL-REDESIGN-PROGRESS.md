@@ -275,3 +275,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - The card preserves project/client identity, lifecycle status, delivery progress, recorded cost against budget with source-unavailable state, deadline/overdue context, owner, detail action, and permission-gated edit action.
 - Cards and desktop table use the same server-backed, filtered and paginated page slice; existing export, filters, sort, status semantics, project detail drawer, and lifecycle operations remain unchanged.
 - Added regression assertions for responsive rendering, key financial/delivery labels, and action preservation. Direct-to-`main` CI is checked after this commit; no authenticated browser visual test is claimed.
+
+
+## Thirty-third implementation slice: Projects Budget and Archived responsive workspaces
+
+- Added compact card registers for Budget vs Actual and Archived Projects below 1,280px; the data tables remain available at wide desktop.
+- Budget cards keep budget, source-backed actual-to-date, remaining budget, variance, delivery progress, and spend-to-budget comparison with their existing null/unavailable semantics. No cost was inferred from delivery progress.
+- Archive cards keep completed project/client context, completed date, budget, final progress, owner, slug, detail action, and permission-gated edit action.
+- Both presentations use the existing filtered and paginated project rows; no status transitions, budget formulas, Finance joins, record visibility, API integrations, or permissions changed. Regression coverage added; CI for the current main head remains under verification.
