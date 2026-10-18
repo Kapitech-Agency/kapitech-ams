@@ -271,6 +271,16 @@ Renewal Schedule is available from either Agreements worksheet at `/admin/contra
 
 **Verification:** AMS Quality Gate and AMS CI passed on code SHA `f29e6ba2da1e0a7deb40f86dac75096ef127bdd4`. Quality Gate passed typecheck, 711 regression tests (691 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser-level and role-specific checks remain unverified.
 
+### NAV-016: Inbox Unread is a saved view over canonical New-status records
+
+**Status:** IMPLEMENTED_UNVERIFIED
+
+**Source:** `src/pages/admin/AdminInbox.tsx`, `src/lib/amsModuleSubnavigation.ts`, `tests/ams-sidebar-subnavigation.test.ts`, `tests/admin-pages-jsx-regression.test.ts`.
+
+Messages now exposes an Unread saved view at `/admin/inbox?view=unread`, which filters the same canonical inbound records to records with `status: new`. The current Inbox already uses this state as its pending/unread queue and advances records to `in-review` through the existing Mark Read action. The view has a return link to All Messages and a distinct CSV filename. It is not a separate data store or independent read-receipt model. Resolved and Archived remain unsupported because the current lead status contract does not expose those as separate verified states.
+
+**Verification:** Navigation ownership and source/content regression assertions are added. Quality Gate and AMS CI are pending on the commit. Browser-level keyboard and role-specific checks remain unverified.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
