@@ -830,11 +830,6 @@
 .ams-shell .ams-workspace-topbar-nav .ams-topnav-scroll > a:focus-visible {
   outline-offset: -2px;
 }
-@media (min-width: 900px) {
-  .ams-shell .ams-workspace-topbar-nav {
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 60%, transparent);
-  }
-}
 @media (min-width: 640px) and (max-width: 899px) {
   .ams-shell .ams-page-shell {
     padding: 20px 18px 28px;

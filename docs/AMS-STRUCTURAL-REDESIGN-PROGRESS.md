@@ -68,7 +68,7 @@ Continue with module-specific workspace hierarchy, starting with Finance's prima
 ## Eighth implementation slice: desktop topbar composition and mobile tab fallback
 
 - Re-composed the desktop shell so the contextual module tabs share the primary 52px topbar row with search and global utilities, rather than occupying a separate desktop row below it.
-- Kept the same role-filtered destinations and URL-derived active state. At viewports below 900px, the shell continues to expose the same views through the shared in-page tab primitive; its sticky position is offset below the 52px mobile topbar to avoid overlap.
+- Kept the same role-filtered destinations and URL-derived active state. At viewports below 900px, the shell continues to expose the same views through the shared in-page tab primitive; the mobile tab row uses `top: 0` within the main scroll viewport, which already begins below the mobile topbar.
 - Added/updated regression assertions for the dedicated desktop topbar primitive and mobile fallback.
 - Relevant commits: `d7edd0ff2b273aa2e3ed6c6817183ef3009a8ef0`, `47f29b5abda85d1b603a9ae842770c20e2a68718`, `797c76e5d9fa69a93940c002cd7e611ed974a2c6`.
 - The topbar composition is source-validated; authenticated browser screenshot/viewport verification remains unavailable and is not claimed.
