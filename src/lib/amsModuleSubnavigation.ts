@@ -137,7 +137,7 @@ export function isAmsModuleSubnavigationItemActive(
   if (path === '/admin/finance/quotations') return itemKey === 'receivables';
   if (path === '/admin/inbox') {
     const requestedView = params.get('view') || 'overview';
-    const selectedView = ['overview', 'messages', 'client', 'starred'].includes(requestedView)
+    const selectedView = ['overview', 'messages', 'client', 'unread', 'starred'].includes(requestedView)
       ? requestedView
       : 'overview';
     return itemKey === (selectedView === 'overview' ? 'overview' : 'messages');
