@@ -514,7 +514,7 @@ The findings above are source-level risks and release-control gaps, not claims t
 
 ### PROJ-PLANNING-003: Planning & Delivery exposes source-backed brief, milestones and timeline views
 
-**Status:** IMPLEMENTED_UNVERIFIED pending CI on this batch; browser verification remains outstanding.  
+**Status:** IMPLEMENTED_UNVERIFIED. Typecheck passed on `4d4b4c817f2ca1b7fd54ab33e7643324efb47afa`, but both CI workflows failed at regression tests due to an over-escaped regex in the newly added assertion. This correction fixes that assertion; CI must rerun and pass. Browser verification remains outstanding.  
 **Scope:** Frontend/query navigation and presentation over existing `AgencyProject` and `ProjectMilestone` records only. The current model does not supply separate scope/deliverable, internal QA, client review, revision history or dependency records; those worksheets remain unavailable.
 
 **Source:** `src/pages/admin/AdminProjects.tsx`, `src/lib/projectStore.ts`.  
@@ -531,6 +531,6 @@ The findings above are source-level risks and release-control gaps, not claims t
 **Source:** `src/pages/admin/AdminTimeLogs.tsx`.  
 **Tests:** `tests/ams-sidebar-subnavigation.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`, existing time-log ownership/project-integrity/reconciliation suites.  
 **Acceptance:** Billable, non-billable and unclassified flags remain distinct; project grouping uses only recorded project ID/name; totals stay constrained to the shared reporting period; selection filters the underlying rows; page counts use the filtered set. My Timesheet and Timesheet Control remain unavailable because personal scope and review state were not established.  
-**Validation:** Await AMS Quality Gate and AMS CI for the resulting commit. Local test/build cannot be claimed.  
-**Next action:** Verify CI, then browser-check URL deep links, filters, missing project references and empty-period states. Trace billing effects before making any Finance claim.
+**Validation:** Initial Quality Gate [39157654599](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157654599) and AMS CI [39157654579](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157654579) failed at the same newly added source assertion; typecheck passed, regression tests failed, and production build/later CI stages were skipped. This correction changes test assertions only; new workflow results must verify the resolution. Local test/build cannot be claimed.  
+**Next action:** Confirm the new commit's CI passes, then browser-check URL deep links, filters, missing project references and empty-period states. Trace billing effects before making any Finance claim.
 

@@ -454,6 +454,6 @@ test('Time Tracking activates billing and project worksheets backed by canonical
   assert.match(source, /typeof log\.billable !== 'boolean'/);
   assert.ok(source.includes('Recorded time by project'));
   assert.ok(source.includes('time-billing-classification-summary'));
-  assert.match(source, /key: 'my-timesheet',[^\\n]*available: false/);
-  assert.match(source, /key: 'timesheet-control',[^\\n]*available: false/);
+  assert.ok(source.includes("key: 'my-timesheet', label: 'My Timesheet', to: '/admin/time-logs', available: false"));
+  assert.ok(source.includes("key: 'timesheet-control', label: 'Timesheet Control', to: '/admin/time-logs', available: false"));
 });
