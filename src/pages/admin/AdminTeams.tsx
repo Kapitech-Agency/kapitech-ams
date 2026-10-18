@@ -33,7 +33,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -1166,6 +1166,20 @@ export const AdminTeams: React.FC = () => {
 
 
 
+
+      {(currentView === 'team-directory' || currentView === 'capacity-allocation') && (
+        <AdminSectionTabs
+          ariaLabel="Team and capacity views"
+          activeKey={currentView === 'capacity-allocation' ? 'capacity-allocation' : 'team-directory'}
+          className="w-full border-b border-line pb-2"
+          items={[
+            { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
+            { key: 'roles-departments', label: 'Roles & Departments', to: '/admin/team', available: false },
+            { key: 'capacity-allocation', label: 'Capacity Allocation', to: '/admin/team?view=capacity-allocation' },
+            { key: 'availability-workload', label: 'Availability & Workload', to: '/admin/team', available: false },
+          ]}
+        />
+      )}
 
       {notice && (
         <div className="mb-5 flex items-start gap-3 rounded-card border border-line bg-panel px-4 py-3 text-xs" role="status">

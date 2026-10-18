@@ -9,7 +9,7 @@ import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { toSlug } from '../../lib/slug';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { Drawer } from '../../components/ui/Drawer';
 
@@ -266,6 +266,19 @@ export const AdminTimeLogs: React.FC = () => {
 
 
 
+
+      <AdminSectionTabs
+        ariaLabel="Time Tracking worksheets"
+        activeKey="time-logs"
+        className="w-full border-b border-line pb-2"
+        items={[
+          { key: 'time-logs', label: 'Time Logs', to: '/admin/time-logs' },
+          { key: 'my-timesheet', label: 'My Timesheet', to: '/admin/time-logs', available: false },
+          { key: 'timesheet-control', label: 'Timesheet Control', to: '/admin/time-logs', available: false },
+          { key: 'billable-time', label: 'Billable / Non-billable', to: '/admin/time-logs', available: false },
+          { key: 'time-by-project', label: 'Time by Project', to: '/admin/time-logs', available: false },
+        ]}
+      />
 
         <Drawer
           slug="time-entry-drawer"

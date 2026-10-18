@@ -42,7 +42,7 @@ import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { toSlug } from '../../lib/slug';
 
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
@@ -364,6 +364,20 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
           title={t('admin.nav.vendors')}
           description={language === 'id' ? 'Kelola direktori vendor, keahlian, rate, kontrak, dan status verifikasi.' : 'Manage vendor profiles, skills, rates, contracts, and verification status.'}
         />}
+      {!embedded && (
+        <AdminSectionTabs
+          ariaLabel="Vendors and freelancers worksheets"
+          activeKey="directory"
+          className="w-full border-b border-line pb-2"
+          items={[
+            { key: 'directory', label: 'Directory', to: '/admin/vendors' },
+            { key: 'skills', label: 'Skills & Service Matrix', to: '/admin/vendors', available: false },
+            { key: 'contracts-rates', label: 'Contracts & Rates', to: '/admin/vendors', available: false },
+            { key: 'engagement', label: 'Engagement Status', to: '/admin/vendors', available: false },
+          ]}
+        />
+      )}
+
         <div className="space-y-3" role="status" aria-label="Loading vendors">
           <Skeleton className="h-[72px] rounded-card border border-line bg-panel" />
           <Skeleton className="h-[420px] rounded-card border border-line bg-panel" />
@@ -392,6 +406,20 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
               <span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span>
             </button>
           )}
+        />
+      )}
+
+      {!embedded && (
+        <AdminSectionTabs
+          ariaLabel="Vendors and freelancers worksheets"
+          activeKey="directory"
+          className="w-full border-b border-line pb-2"
+          items={[
+            { key: 'directory', label: 'Directory', to: '/admin/vendors' },
+            { key: 'skills', label: 'Skills & Service Matrix', to: '/admin/vendors', available: false },
+            { key: 'contracts-rates', label: 'Contracts & Rates', to: '/admin/vendors', available: false },
+            { key: 'engagement', label: 'Engagement Status', to: '/admin/vendors', available: false },
+          ]}
         />
       )}
 
