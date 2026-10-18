@@ -216,7 +216,9 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   assert.ok(layout.includes('actionMenu'));
   assert.ok(subnavigation.includes("label: 'Vendors & Freelancers'"));
   assert.match(vendors, /ariaLabel="Vendors and freelancers worksheets"/);
-  assert.match(vendors, /label: 'Skills & Service Matrix', to: '\/admin\/vendors', available: false/);
+  assert.ok(vendors.includes("canViewSkillMatrix = canAccessAmsRoute(navigationRole, '/admin/vendors', '?view=skill-matrix')"));
+  assert.equal(vendors.split("to: '/admin/vendors?view=skill-matrix'").length - 1, 2);
+  assert.equal(vendors.split("...(canViewSkillMatrix ? [{").length - 1, 2);
   assert.equal(vendors.includes('data-ams-slug="vendors-mobile-tabs"'), false);
   assert.equal(teams.includes("to: '/admin/team?view=vendor-directory'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=skill-matrix'"), false);

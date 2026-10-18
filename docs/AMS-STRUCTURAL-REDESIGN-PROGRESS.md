@@ -444,6 +444,6 @@ Responsive review has now added a compact register to Project Finance, Accounts 
 - The vendor directory now links to the existing Skills & Service Matrix only when the current `canAccessAmsRoute` policy permits `/admin/vendors?view=skill-matrix`. Both loading and loaded navigation states use the same gate.
 - The destination already displays source-backed internal role focus and vendor skill/vetted/active coverage. No skill, member proficiency score or vendor record was fabricated.
 - The route policy remains Admin-only for this query. Contracts & Rates and Engagement Status stay disabled. No financial-field visibility or role permission was broadened.
-- Added source-level regression coverage for both tab declarations, the existing route, and the unchanged role policy. CI on the resulting bulk commit remains pending.
+- Added source-level regression coverage for both tab declarations, the existing route, and the unchanged role policy. Initial CI for `b1b26a0f306a32af58d70468189e09555e700252` found one legacy assertion in `tests/frontend-functional-regression.test.ts` still expected the tab to be disabled. Typecheck passed; regression tests failed and build was skipped. This correction updates that expectation; the resulting bulk commit must pass both workflows.
 - The Time Tracking correction commit passed AMS Quality Gate and AMS CI. Planning & Delivery and Time Tracking are CI-verified at source level. Browser interaction, responsive/keyboard QA and Stage 5 approval remain outstanding.
 

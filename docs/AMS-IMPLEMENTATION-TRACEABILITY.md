@@ -537,12 +537,12 @@ The findings above are source-level risks and release-control gaps, not claims t
 
 ### VENDOR-SKILLS-001: Vendor directory links only authorized users to the canonical Skills & Service Matrix
 
-**Status:** IMPLEMENTED_UNVERIFIED pending CI on this batch; authenticated browser verification remains outstanding.  
+**Status:** IMPLEMENTED_UNVERIFIED. Initial CI found one legacy source regression assertion that still expected Skills & Service Matrix to remain disabled. Typecheck passed; regression tests failed on that assertion and production build was skipped. This correction updates the legacy expectation; both workflows must pass on the resulting commit. Authenticated browser verification remains outstanding.
 **Scope:** Navigation connection only. It reuses the current route policy and current matrix page; it does not change role assignments or permission rules.
 
 **Source:** `src/pages/admin/AdminVendors.tsx`, `src/pages/admin/AdminTeams.tsx`, `src/lib/amsNavigationAccess.ts`.  
 **Tests:** `tests/ams-nine-module-workspace-regression.test.ts` checks that both loading/loaded tabs reuse `canAccessAmsRoute`, link to the existing query route and preserve the Admin-only policy.  
 **Acceptance:** Skills & Service Matrix is shown only when the current policy permits `/admin/vendors?view=skill-matrix`. The destination renders existing source-backed internal role-focus and vendor-skill coverage panels. Contracts & Rates and Engagement Status remain disabled.  
-**Validation:** Await AMS Quality Gate and AMS CI for this commit. Local test/build could not be run in the current execution environment.  
-**Next action:** Confirm CI, then browser-verify visibility for an authorized Admin and omission for other roles, direct-route denial and browser navigation in Stage 5.
+**Validation:** AMS Quality Gate [39158112419](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39158112419) and AMS CI [39158112445](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39158112445) failed at regression tests due to the stale assertion in `tests/frontend-functional-regression.test.ts`. The feature source typechecked; build and subsequent CI steps were skipped. Local tests could not be run.
+**Next action:** Confirm both workflows pass on the correction commit, then browser-verify role visibility, direct-route denial and back/forward navigation in Stage 5.
 
