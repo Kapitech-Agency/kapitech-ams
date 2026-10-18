@@ -245,3 +245,13 @@ test('Finance worksheet header explains the active view and its owning workspace
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(finance, /ariaLabel="Finance views"/);
 });
+
+
+test('Careers action feedback does not shift the workspace tab row', async () => {
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+  const header = careers.indexOf('<AdminModuleHeader');
+  const tabs = careers.indexOf('<div role="tablist" aria-label={isId ? "Workspace Careers"');
+  const notice = careers.indexOf('{statusMessage && (', header);
+  const jobsPanel = careers.indexOf("{activeTab === 'jobs' ? (", tabs);
+  assert.ok(header >= 0 && tabs > header && notice > tabs && jobsPanel > notice);
+});

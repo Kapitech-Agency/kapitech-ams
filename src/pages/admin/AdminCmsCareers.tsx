@@ -490,15 +490,6 @@ export const AdminCmsCareers: React.FC = () => {
 
       
 
-      {statusMessage && (
-        <AdminModuleNotice
-          tone={statusMessage.tone}
-          onDismiss={() => setStatusMessage(null)}
-        >
-          {statusMessage.text}
-        </AdminModuleNotice>
-      )}
-
       <div role="tablist" aria-label={isId ? "Workspace Careers" : "Careers workspace"} className="ams-workspace-tabs inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-panel p-1">
         {([
           ...(canManageJobs ? [{ key: 'jobs' as const, label: isId ? 'Lowongan' : 'Job openings', count: positions.length }] : []),
@@ -534,6 +525,15 @@ export const AdminCmsCareers: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {statusMessage && (
+        <AdminModuleNotice
+          tone={statusMessage.tone}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage.text}
+        </AdminModuleNotice>
+      )}
 
       {activeTab === 'jobs' ? (
         <section className="space-y-3" data-ams-feature-slug="cms-careers-list" role="tabpanel" id="careers-jobs-panel" aria-labelledby="careers-jobs-tab" tabIndex={0}>

@@ -112,3 +112,10 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Kept the existing topbar group navigation, secondary worksheet tabs, search, reporting period, data sources, permissions, routes, financial calculations, posting, reconciliation, and transaction behavior unchanged.
 - Added a focused source regression test for the selected workspace and worksheet context.
 - Commit and CI status will be recorded after direct-to-main delivery; no browser visual validation is claimed from source-only inspection.
+
+
+## Thirteenth implementation slice: stable Careers workspace navigation
+
+- Moved Careers' transient success/error notice below the Job openings / Applicants tab row. Saving or deleting a record no longer inserts feedback between the page header and workspace navigation, which could shift the navigation vertically during a workflow.
+- Kept the notice dismissible and retained its source-backed message/tone. No applicant/job state, API call, permission, URL behavior, publication state, or data handling changed.
+- Added a regression assertion for header → workspace tabs → feedback → active panel order.
