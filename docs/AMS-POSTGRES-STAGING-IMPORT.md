@@ -1,6 +1,6 @@
 # AMS JSON → PostgreSQL Staging Importer — Staging Only
 
-This importer is strictly for an explicitly designated staging PostgreSQL environment. It reads the encrypted JSON source without modifying it; it is not a production importer, production cutover procedure, or evidence of the deployed production data source. The historical sequence described here may have advanced. For the production contract, use `README.md`, `docs/PRODUCTION-CUTOVER.md`, `docs/production-cutover-checklist.md`, and `docs/production-readiness-gate.md`.
+This importer is strictly for an explicitly designated staging PostgreSQL environment. It reads the encrypted JSON source without modifying it; it is not a production importer, production cutover procedure, or evidence of the deployed production data source. It does stage/copy individual encrypted private-document objects and verifies their stored hashes as part of staging import, but that does not establish production storage readiness or complete end-to-end recoverability. The historical sequence described here may have advanced. For the production contract, use `README.md`, `docs/PRODUCTION-CUTOVER.md`, `docs/production-cutover-checklist.md`, and `docs/production-readiness-gate.md`.
 
 ## Modes
 
@@ -41,7 +41,7 @@ Import writes are refused when:
 - Target-only rows are never deleted.
 - Secrets are never printed in migration reports.
 - Migration metadata is recorded in `migration_runs`.
-- Document contents are not copied by this phase; only document metadata/access rows are migrated.
+- Private document objects are staged from the configured legacy private-document directory into the configured provider, verified against stored-object hashes, and decrypted to calculate integrity metadata before the metadata transaction commits. This per-object staging verification is not a substitute for production provider readiness, a complete object inventory, or recovery rehearsal.
 
 ## Import scope at the time this procedure was documented — not a live status claim
 
@@ -67,10 +67,10 @@ The following items were outside the scope of this importer when it was document
 
 - CMS services/projects/testimonials/settings
 - notification settings/secrets
-- physical private document storage verification
+- production provider durability, complete private-document object/metadata inventory, and end-to-end recovery verification
 - audit-chain verification against the source before cutover
 - PostgreSQL financial aggregate parity
 - application repository adapter/cutover
 - restore rehearsal and production cutover
 
-Never point this importer at production PostgreSQL or execute it against live production records. This importer does not switch application repositories, perform a full business cutover, or copy and verify physical private-document objects. Do not infer current production mode from this staging guide; verify authorized runtime configuration and `GET /api/system/production-readiness`.
+Never point this importer at production PostgreSQL or execute it against live production records. This importer does not switch application repositories or perform a full business cutover. It stages individual private-document objects during the import path, but does not independently establish production readiness or prove that all required data, objects, backups, and recovery paths are complete. Do not infer current production mode from this staging guide; verify authorized runtime configuration and `GET /api/system/production-readiness`.
