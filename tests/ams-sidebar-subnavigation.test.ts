@@ -362,6 +362,25 @@ test('Website CMS Careers normalizes unsupported worksheet queries without chang
   assert.ok(applicantOnlyCms.some((item) => item.label === 'Applicants' && item.to === '/admin/cms/careers?tab=applicants'));
 });
 
+test('Settings worksheets have canonical route ownership and normalize unknown query values', async () => {
+  const settings = getAmsModuleSubnavigation('settings', 'Admin');
+  assert.deepEqual(settings.map((item) => item.key), ['overview', 'access', 'audit', 'integrations']);
+  assert.deepEqual(settings.map((item) => item.label), ['System Overview', 'Users & Access', 'Audit Log', 'Integrations']);
+
+  assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'overview')!, '/admin/settings'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'overview')!, '/admin/settings', '?tab=overview'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'access')!, '/admin/settings', '?tab=security'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'audit')!, '/admin/settings', '?tab=audit'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'integrations')!, '/admin/settings', '?tab=integrations'), true);
+
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  assert.ok(source.includes("const normalizeTab = (value: string | null): SettingsTab =>"));
+  assert.ok(source.includes("if (value === 'audit') return 'audit';"));
+  assert.ok(source.includes("if (value === 'security' || value === 'profile' || value === 'rbac') return 'security';"));
+  assert.ok(source.includes("if (value === 'integrations' || value === 'branding' || value === 'api') return 'integrations';"));
+  assert.ok(source.includes('setSearchParams({ tab: allowed }, { replace: true });'));
+});
+
 test('Dashboard invalid view parameters fall back to the sole Overview workspace', () => {
   const views = getAmsModuleSubnavigation('dashboard', 'Admin');
   const overview = views.find((item) => item.key === 'overview')!;
