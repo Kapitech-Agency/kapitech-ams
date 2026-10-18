@@ -32,7 +32,7 @@ Avoid one enormous audit-and-rewrite attempt. Prefer a sequence of focused, inde
 
 ## 1.1 Canonical sequencing for the end-to-end AMS initiative
 
-For the current delivery initiative, **\`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md\` is the single canonical stage sequence**. Use \`docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md\` for requirement-level status/evidence and \`docs/AMS-END-TO-END-EXECUTION-PROMPT.md\` for the operational prompt. Read the Master Structure, UX, domain and production documents for the requirements they own; do not let their historical or domain-local stage numbers create a competing delivery schedule.
+For the current delivery initiative, **`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md` is the single canonical stage sequence**. Use `docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md` for requirement-level status/evidence and `docs/AMS-END-TO-END-EXECUTION-PROMPT.md` for the operational prompt. Read the Master Structure, UX, domain and production documents for the requirements they own; do not let their historical or domain-local stage numbers create a competing delivery schedule.
 
 The required sequence is:
 0. Baseline and preserve current work.
@@ -54,18 +54,18 @@ The required sequence is:
 
 ### Mandatory execution behavior
 
-- Inspect current \`main\`, source, tests and CI before beginning or resuming; verify and preserve work already completed instead of redoing it.
+- Inspect current `main`, source, tests and CI before beginning or resuming; verify and preserve work already completed instead of redoing it.
 - Work in bounded, independently verifiable slices, one module/worksheet/workflow slice at a time.
 - Send a durable report at baseline, after meaningful slices, before a serious blocker/decision, and at each stage milestone. The report must identify commit SHA, changed files, actual checks/results, remaining items, unverified risks and the next task.
 - After a routine slice is reported, **continue to the next already-authorized slice when safe**. Do not ask the user to re-authorize routine steps and do not stop after every report.
 - **Stop at Roadmap Stage 5 for explicit visual/content sign-off** before broad functional workflow implementation. Also stop for a real product, accounting, security, destructive-production or scope decision, or when the user explicitly asks to pause.
-- If a tool call is slow or may time out, shrink the batch, finish and verify the smallest safe unit, report the last verified checkpoint and exact resume action, then re-fetch current \`main\`/CI before resuming.
-- Commit verified checkpoints directly to \`main\` when authorized, as the user requested. Do not create a branch or PR, force-push, overwrite concurrent updates or bypass repository protections.
+- If a tool call is slow or may time out, shrink the batch, finish and verify the smallest safe unit, report the last verified checkpoint and exact resume action, then re-fetch current `main`/CI before resuming.
+- Commit verified checkpoints directly to `main` when authorized, as the user requested. Do not create a branch or PR, force-push, overwrite concurrent updates or bypass repository protections.
 - Never treat target documentation as proof of functionality; never claim a test, browser state, deployment or production gate passed without evidence.
 - Keep the feature/content gap register and implementation traceability evidence current as findings and tests change.
 - Full-stack remediation later in the roadmap must follow domain contracts, migration/recovery plans, security controls, acceptance tests and the user's approval for any genuine business-rule/destructive/high-risk decision.
 
-Use \`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md\` for deliverables and exit gates, \`docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md\` for evidence-based coverage, and the report format in Section 11. The roadmap is the delivery order; this workflow defines the method of executing it safely.
+Use `docs/AMS-END-TO-END-DELIVERY-ROADMAP.md` for deliverables and exit gates, `docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md` for evidence-based coverage, and the report format in Section 11. The roadmap is the delivery order; this workflow defines the method of executing it safely.
  
 ## 2. Read the source of truth first
 
