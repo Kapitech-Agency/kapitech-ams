@@ -681,8 +681,8 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   const clientDirectory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
   const clientDirectoryEnd = clients.indexOf('</section>', clientDirectory);
   const clientMetrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
-  assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory && clientMetrics > clientDirectoryEnd);
-  assert.ok(clients.indexOf('slug="client-directory-filters"') < clientDirectory);
+  assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory && clientMetrics > 0 && clientMetrics < clientDirectory);
+  assert.ok(clients.indexOf('slug="client-directory-filters"') > clientMetrics && clients.indexOf('slug="client-directory-filters"') < clientDirectory);
 
   const teamPagination = teams.indexOf('slug="team-directory-pagination"');
   const teamPanelEnd = teams.indexOf('</AdminPanel>', teamPagination);
@@ -701,6 +701,8 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   const timeMetrics = teams.indexOf("slug: 'time-logs-kpi-tracked'");
   assert.ok(timePagination >= 0 && timePanelEnd > timePagination && timeMetrics > timePanelEnd);
   assert.ok(teams.indexOf('slug="time-logs-filters"') < teams.indexOf('slug="time-logs-ledger"'));
+  const timeTracking = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTimeLogs.tsx'), 'utf8');
+  assert.ok(timeTracking.indexOf('slug="time-tracking-kpis"') < timeTracking.indexOf('data-ams-feature-slug="time-tracking-ledger"'));
 });
 
 
@@ -910,6 +912,6 @@ test('Clients header avoids repeating the Active clients metric before the prima
   const header = clients.slice(headerStart, headerEnd);
   assert.doesNotMatch(header, /clientMetrics\\.active|active accounts|AdminStatusBadge/);
   assert.ok(directory > headerEnd);
-  assert.ok(metrics > directory);
+  assert.ok(metrics > headerEnd && metrics < directory);
   assert.ok(clients.includes("id: 'active-clients', label: 'Active clients'"));
 });

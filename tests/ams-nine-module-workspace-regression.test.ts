@@ -89,20 +89,26 @@ test('Projects and Tasks keep registers ahead of supporting summaries', async ()
   assert.match(tasks, /data-ams-feature-slug="tasks-board-view"/);
 });
 
-test('Clients surface the directory before supporting metrics and keeps data gaps explicit', async () => {
+test('Clients surface account health metrics before the directory and keep data gaps explicit', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   assert.match(clients, /featureSlug="clients-module"/);
-  assert.ok(clients.indexOf('data-ams-feature-slug="clients-directory-table"') < clients.indexOf('data-ams-feature-slug="clients-metrics"'));
+  const header = clients.indexOf('<AdminModuleHeader slug="clients-header"');
+  const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
+  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
+  const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
+  assert.ok(header >= 0 && metrics > header && filters > metrics && directory > filters);
   assert.match(clients, /Client directory unavailable/);
   assert.match(clients, /Cumulative billed value/);
 });
 
-test('Client Retainers places the searchable agreement register before supporting KPIs', async () => {
+test('Client Retainers places renewal and usage KPIs before the searchable agreement register', async () => {
   const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
+  const header = retainers.indexOf('<AdminModuleHeader');
+  const metrics = retainers.indexOf('data-ams-feature-slug="retainers-kpis"');
+  const summary = retainers.indexOf('data-ams-feature-slug="retainers-summary"');
   const filters = retainers.indexOf('slug="client-retainers-filters"');
   const directory = retainers.indexOf('data-ams-feature-slug="retainers-directory"');
-  const metrics = retainers.indexOf('data-ams-feature-slug="retainers-kpis"');
-  assert.ok(filters >= 0 && directory > filters && metrics > directory);
+  assert.ok(header >= 0 && metrics > header && summary > metrics && filters > summary && directory > filters);
 });
 
 test('Finance exposes one current worksheet and explicit unavailable source context', async () => {
