@@ -50,7 +50,7 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'tasks', label: 'Tasks & Execution', to: '/admin/tasks', slug: 'projects-workspace-tasks' },
     { key: 'planning-delivery', label: 'Planning & Delivery', to: '/admin/projects?projects=planning-delivery', slug: 'projects-workspace-planning-delivery' },
     { key: 'content-campaigns', label: 'Content & Campaigns', to: '/admin/projects', available: false },
-    { key: 'resources', label: 'Project Resources', to: '/admin/projects', available: false },
+    { key: 'resources', label: 'Project Resources', to: '/admin/projects?projects=resources', slug: 'projects-workspace-resources' },
     { key: 'controls', label: 'Project Controls', to: '/admin/projects?projects=budget', slug: 'projects-workspace-controls' },
   ],
   clients: [
@@ -165,6 +165,7 @@ export function isAmsModuleSubnavigationItemActive(
     const selected = params.get('projects') || 'all';
     if (selected === 'overview') return itemKey === 'overview';
     if (selected === 'planning-delivery') return itemKey === 'planning-delivery';
+    if (selected === 'resources') return itemKey === 'resources';
     if (['all', 'planning', 'active', 'on-hold', 'completed', 'archived'].includes(selected)) return itemKey === 'registry';
     if (selected === 'budget') return itemKey === 'controls';
     if (selected === 'sprint') return itemKey === 'tasks';
