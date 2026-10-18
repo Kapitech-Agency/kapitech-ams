@@ -269,7 +269,7 @@ Dashboard exposes Overview, Performance, and Analytics. A missing or unsupported
 
 Renewal Schedule is available from either Agreements worksheet at `/admin/contracts?view=renewals`. It derives rows from active contract records with a valid renewal or end date, and active retainer terms stored on canonical client records. Active entries without dates remain visible as “Date not set.” Metrics are withheld when either source is unavailable; a partial-source warning avoids treating a failed source as zero. The schedule links back to the owning contract or retainer register and never creates a second renewal dataset, recalculates retainer billing, or automatically expires agreements. Contract History remains target-only.
 
-**Verification:** Source-level regression coverage is added for route ownership, active-only record scope, source completeness messaging, and non-mutating lifecycle handling. Quality Gate and AMS CI are pending on the commit. Browser-level and role-specific checks remain unverified.
+**Verification:** AMS Quality Gate and AMS CI passed on code SHA `f29e6ba2da1e0a7deb40f86dac75096ef127bdd4`. Quality Gate passed typecheck, 711 regression tests (691 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser-level and role-specific checks remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
