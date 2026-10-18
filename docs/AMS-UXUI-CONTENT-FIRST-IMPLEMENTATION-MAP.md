@@ -596,3 +596,35 @@ The redesign remains in progress. Continue source-backed structural review of ev
 The original Dashboard screenshot was not present as an inspectable repository asset in this execution context. The existing content-architecture guideline and prior source-backed reference analysis remain the available structural evidence. Do not claim screenshot reinspection.
 
 Authenticated browser/device visual validation is still unverified. Before calling the redesign complete, inspect the live authenticated UI at 1440, 1280, 1024, 900, 768, 390 and 320px; check long tables/boards, last-column reachability, keyboard/touch scrolling, drawer/modal focus and scroll restoration, reduced motion, light/dark theme, and route/query-state stability. Source tests and successful CI do not substitute for those checks.
+
+
+## Full structural redesign execution checkpoint · Shared topbar navigation and workspace stability · 18 October 2026
+
+This checkpoint extends the earlier nine-module source sweep. It does not mark the full redesign complete.
+
+### Direct-to-main implementation slices
+
+- `3d7a489b4bc018ad876e4b1e749d2549aa54c918`: moved contextual module navigation from the page-header injection point into a persistent shell-owned navigation row immediately below the global topbar. The row is sticky in the main workspace and uses the canonical `AdminSectionTabs` component, preserving role-filtered destinations, route/query active state, and horizontal scroll-to-active behavior.
+- `ddc009ce7d5bee2ad7fbfd182257d5c8f865fc7b`: added Inbox and Documents to the shared contextual navigation, using their existing `view` and `documents` query state. Removed their duplicated page-local tab bars so one visible control owns each destination.
+- `b49ff9d3a9d512846848c073f8ce5fc5881c2e20`: updated source-level regression assertions that still required Inbox tabs to remain inside the old page body. The first test run on the navigation migration exposed those stale assumptions; the test expectations were corrected to verify shell-owned navigation instead. CI and Quality Gate then passed.
+- `caca1b7295fe17c17bb443da24884f931d9ddb24`: removed Finance's conditional two-column/stacked worksheet-navigation layout. Worksheet navigation now uses a consistent responsive row, with the contextual search aligned to the right on desktop when that worksheet supports search. Finance calculations, worksheet keys, source data and permissions were not changed.
+- `cb4f054389b3a518fb93723f336399ddc3ff02cd`: removed the duplicate Services count from the CMS page header, leaving the filtered result count adjacent to the register controls. Removed an unused Settings tab import. Added a source-level regression assertion for the Services count location.
+
+### Automated validation
+
+- [AMS CI for shared topbar navigation regression update](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103165387): passed.
+- [AMS Quality Gate for shared topbar navigation regression update](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103165318): passed.
+- [AMS CI for stable Finance worksheet navigation](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103329454): passed.
+- [AMS Quality Gate for stable Finance worksheet navigation](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103329479): passed.
+- [AMS CI for CMS count cleanup](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103476072): passed.
+- [AMS Quality Gate for CMS count cleanup](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103476052): passed.
+
+These checks validate typechecking, regression tests and production build as configured by the workflows. They do not establish authenticated browser-level visual correctness.
+
+### Current state and remaining acceptance
+
+The shared topbar navigation now covers Dashboard, Inbox, Projects, Clients, Finance, Team & Resources, Documents, Website CMS and Settings through the actual route/subnavigation mapping. Finance retains its secondary worksheet navigation inside the Finance workspace; Careers retains its Jobs/Applicants tabs within Careers. These are distinct navigation levels, not duplicated primary destinations.
+
+The Dashboard reference image from Google Drive still has not been rendered by the available browser/fetch environment. The Drive permission may be correctly configured; this execution environment's inability to render it is not evidence of an access-setting problem. Do not claim that the screenshot has been inspected.
+
+Continue the full module-by-module structural pass and verify every active subtab, data state, drawer/modal, table/board and narrow-width layout. Authenticated browser/device validation at 1440, 1280, 1024, 900, 768, 390 and 320px remains outstanding. Keep all changes frontend-only and commit directly to `main`; do not declare the redesign complete based only on passing CI.
