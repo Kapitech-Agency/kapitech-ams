@@ -1088,3 +1088,14 @@ test('Contracts uses compact cards while preserving lifecycle transitions and ma
   assert.ok(contracts.includes("onClick={() => setDeleteDraftTarget(contract)}"));
   assert.ok(contracts.includes('disabled={!canManage}'));
 });
+
+
+test('Client Retainers uses responsive cards while keeping usage and renewal semantics intact', () => {
+  const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
+  assert.ok(retainers.includes('data-ams-feature-slug="retainers-compact-cards"'));
+  assert.ok(retainers.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(retainers.includes('item.usedHours / Math.max(1, item.committedHours) * 100'));
+  assert.ok(retainers.includes('renewalDays(item.renewal) <= 30'));
+  assert.ok(retainers.includes('canManageRetainers && <button type="button" onClick={() => openRetainerForm(item)}'));
+  assert.ok(retainers.includes('slug="retainers-pagination"'));
+});

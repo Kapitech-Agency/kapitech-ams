@@ -326,7 +326,59 @@ export const AdminClientRetainers: React.FC = () => {
       />
 
       <section data-ams-feature-slug="retainers-directory" data-ams-slug="retainers-directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="Retainer agreements table">
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="min-w-0">
+          <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="retainers-compact-cards" role="list" aria-label="Retainer agreement cards">
+            {isLoading ? Array.from({ length: pageSize }).map((_, index) => (
+              <div key={index} className="rounded-card border border-line bg-bg p-4" role="status" aria-label="Loading retainer">
+                <div className="h-3 w-36 animate-pulse rounded-badge bg-line" />
+                <div className="mt-3 h-3 w-24 animate-pulse rounded-badge bg-line" />
+                <div className="mt-4 h-8 animate-pulse rounded-control bg-line/60" />
+              </div>
+            )) : visible.length ? visible.map((item) => {
+              const usage = Math.round(item.usedHours / Math.max(1, item.committedHours) * 100);
+              const meta = healthMeta[item.health];
+              return (
+                <article key={item.id} data-ams-slug={'client-retainer-card-' + item.id.toLowerCase()} role="listitem" className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-[11px] font-semibold text-fg">{item.initials}</div>
+                      <div className="min-w-0">
+                        <h3 className="break-words text-sm font-semibold text-fg">{item.client}</h3>
+                        <p className="mt-1 break-words text-[10px] text-muted">{item.id} · {tierLabel[item.tier]}</p>
+                      </div>
+                    </div>
+                    <span className={'inline-flex shrink-0 items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-medium ' + meta.className}>
+                      <span className={'h-1.5 w-1.5 rounded-full ' + meta.dot} />{meta.label}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Monthly value</p><p className="mt-1 break-words text-xs font-semibold tabular-nums text-fg">{money(item.monthlyValue)}<span className="ml-0.5 text-[10px] font-normal text-muted">/mo</span></p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Overage rate</p><p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{money(item.overageRate)}<span className="ml-0.5 text-[10px] font-normal text-muted">/hr</span></p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Committed hours</p><p className="mt-1 text-xs tabular-nums text-fg">{item.committedHours} hrs</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Cycle / renewal</p><p className="mt-1 text-xs text-fg">{cycleLabel[item.cycle]}</p><p className={'mt-1 break-words text-[10px] font-medium ' + (renewalDays(item.renewal) <= 30 ? 'text-warning' : 'text-muted')}>Renews {formatDate(item.renewal)}</p></div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="mb-1.5 flex items-center justify-between gap-2 text-[10px] tabular-nums">
+                      <span className="text-muted">Hours used</span>
+                      <span className={usage >= 95 ? 'font-semibold text-danger' : usage >= 80 ? 'font-semibold text-warning' : 'font-medium text-fg'}>{item.usedHours} / {item.committedHours} hrs · {usage}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-line/70"><div className={'h-1.5 rounded-full ' + (usage >= 95 ? 'bg-danger' : usage >= 80 ? 'bg-warning' : 'bg-success')} style={{ width: Math.min(100, usage) + '%' }} /></div>
+                  </div>
+                  <div className="mt-3 flex justify-end border-t border-line pt-3">
+                    {canManageRetainers && <button type="button" onClick={() => openRetainerForm(item)} aria-label={'Edit terms for ' + item.client} title="Edit terms" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={13} aria-hidden="true" />Edit terms</button>}
+                  </div>
+                </article>
+              );
+            }) : (
+              <div className="rounded-control border border-line bg-bg px-4 py-10 text-center">
+                <Search size={18} className="mx-auto text-muted" />
+                <p className="mt-3 text-sm font-medium text-fg">{records.length === 0 ? 'No active retainer agreements.' : 'No matching retainers.'}</p>
+                <p className="mt-1 text-xs text-muted">{records.length === 0 ? 'Create a retainer for a client already listed in Client Directory.' : 'Adjust the search or clear the active filters.'}</p>
+                <button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Reset filters</button>
+              </div>
+            )}
+          </div>
+          <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[1120px] border-collapse text-left">
             <thead className="bg-bg"><tr className="border-b border-line text-[11px] font-medium text-muted">
               <th className="px-4 py-2.5"><SortButton label="Client & contract" sortKey="client" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
@@ -357,6 +409,7 @@ export const AdminClientRetainers: React.FC = () => {
                }) : <tr><td colSpan={8} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">{records.length === 0 ? 'No active retainer agreements.' : 'No matching retainers.'}</p><p className="mt-1 text-xs text-muted">{records.length === 0 ? 'Create a retainer for a client already listed in Client Directory.' : 'Adjust the search or clear the active filters.'}</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
             </tbody>
           </table>
+          </div>
         </div>
         {!isLoading && <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="retainers" slug="retainers-pagination" />}
       </section>

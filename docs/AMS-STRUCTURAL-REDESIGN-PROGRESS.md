@@ -324,3 +324,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Added compact contract cards below 1,280px with title/number/type, client/project, term dates, contract value/currency, lifecycle status, end-date warning, agreement link where available, and the existing context-specific actions.
 - Retained the 980px multi-column table at wide desktop. Cards use the same filtered source records and keep the exact lifecycle conditions for draft editing/deletion, review/signature progression, expired marking, and termination.
 - No signature, approval, status transition, permission, API or contract business rule was changed. Regression assertions added for the responsive view and the manager permission gates.
+
+
+## Fortieth implementation slice: Client Retainers register
+
+- Added a compact retainer-card workspace below 1,280px while retaining the sortable 1,120px table at wide desktop.
+- Cards clarify client/tier identity, monthly committed value, included hours, used-versus-committed hours and threshold coloring, overage rate, billing cycle, renewal date/near-renewal warning, health state, and permission-gated Edit terms action.
+- Preserved the original usage calculation, renewal thresholds, sort/filter/page datasets, and edit permission. The responsive cards display the same visible source records as the table; no financial value or health status is derived differently.
+- Added regression coverage for the compact register, usage/renewal logic, pagination, and edit permission.
