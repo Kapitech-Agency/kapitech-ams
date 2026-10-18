@@ -228,7 +228,7 @@ For every component define default, hover, focus-visible, active, and disabled s
 - 52px high, bottom border `--line`. Keep section tabs on the left and utilities on the right.
 - **Desktop section navigation uses `AdminTopbarTabs` only.** Its links share one geometry: 32px height, 6px radius, 12px horizontal padding, 11px text, 2px visible keyboard focus, transparent border when inactive, subtle panel hover, and a 10–14% accent tint plus light accent border when active. Do not create module-specific tab heights or typography.
 - **Responsive page navigation uses `AdminSectionTabs` only** below 900px. Dashboard, Inbox, Finance, Clients, Retainers, and SLA Monitoring must use the same component, align to the page gutter, and sit immediately after the module header. Do not apply negative top margins or custom grid/pill markup for individual modules.
-- Desktop and mobile tab sets must preserve the same reachable views and active-state semantics. Query-string views must use a shared `activeKey` derived from the URL; the Dashboard Tasks tab must link to `?view=tasks`. Every tab should expose `aria-current="page"` only for the active destination.
+- Desktop and mobile tab sets must preserve the same reachable views and active-state semantics. Query-string views must use a shared `activeKey` derived from the URL. Every tab should expose `aria-current="page"` only for the active destination.
 - Keep data-automation slugs stable where they already exist. Do not bypass the shared tab primitives to add module-specific active/hover/focus styles.
 - Segmented controls inside a view can use their own neutral selected state; do not style every active control red.
 
@@ -331,19 +331,21 @@ One primary button per view region. Buttons that trigger a request show a pendin
 
 ## 8. Product patterns (agency and security)
 
-### Modules (align with the real routes in the repo)
-Sidebar order proposal: Dashboard, Clients, Projects, Tasks, Team, Finance, Documents, System. Settings is the bottom button. Only include modules that exist in the app.
+### Modules (align with the approved navigation architecture)
 
-| Module | Primary content |
+The exact primary-module order and ownership are defined by `docs/architecture/ams-navigation-information-architecture.md` and `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`. The sidebar has nine primary modules; do not add a standalone Tasks, CRM, Proposal, or generic Approval module. Settings may be pinned to the bottom but remains one of the nine modules.
+
+| Primary module | Primary content |
 |---|---|
-| Dashboard | KPI strip (active projects, tasks due this week, overdue tasks, team utilization, monthly revenue, outstanding invoices), revenue vs expenses chart, project delivery, workload by person, expense breakdown |
-| Clients | Client table/cards, detail (contacts, projects, invoices, files) |
-| Projects | Project list/board, status, owner, deadline, budget vs actual |
-| Tasks | Table and board views, assignee, due date, priority |
-| Team | Members, roles, workload |
-| Finance | Income, expenses, invoices, outstanding balances |
-| Documents | Document vault: search, tags, upload, download via the app |
-| System (Master/IT) | Backups, security, audit-style views |
+| Dashboard | Source-backed cross-module operational priorities, delivery health, meaningful trends, exceptions and drill-downs |
+| Inbox | Messages, follow-ups, routing rules and response templates |
+| Projects | Overview, Project Registry, Tasks & Execution, Planning & Delivery, Content & Campaigns, Project Resources, Project Controls |
+| Clients | Directory, onboarding, agreements, service and relationship health |
+| Finance | Overview & Control, Transactions & Cash, Receivables & Payables, Project Finance, Accounting & Reports |
+| Team & Resources | Team & Capacity, People Operations, Vendors & Freelancers, Time Tracking |
+| Documents | One canonical Document Library, with categories and saved views inside the library |
+| Website CMS | Case Studies, Services, Insights, Testimonials, and Careers with internal Jobs, Applicants and Recruitment History views |
+| Settings | System status, users/access, audit, integrations and relevant preferences |
 
 ### Authentication and MFA
 - Login: username + password, generic failure message ("Username or password is incorrect"), never reveal which part failed.
