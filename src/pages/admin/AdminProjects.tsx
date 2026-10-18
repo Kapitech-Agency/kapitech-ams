@@ -51,7 +51,7 @@ type ProjectRecord = AgencyProject & {
   slug: string;
 };
 
-type ProjectsView = 'all' | 'sprint' | 'budget' | 'archived';
+type ProjectsView = 'overview' | 'all' | 'sprint' | 'budget' | 'archived';
 type ProjectLayout = 'board' | 'table' | 'timeline';
 
 const PROJECT_STATUSES: Array<{ value: ProjectStatus; label: string }> = [
@@ -482,16 +482,18 @@ export const AdminProjects: React.FC = () => {
   const [deletingTaskRecord, setDeletingTaskRecord] = useState(false);
 
   const requestedView = searchParams.get('projects');
-  const view: ProjectsView = requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'
-    ? requestedView
-    : 'all';
+  const view: ProjectsView = requestedView === 'overview'
+    ? 'overview'
+    : requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'
+      ? requestedView
+      : 'all';
   const registryStatusView = requestedView && ['planning', 'active', 'on-hold', 'completed'].includes(requestedView)
     ? requestedView
     : null;
   const selectedProjectSlug = searchParams.get('project') || '';
 
   React.useEffect(() => {
-    if (requestedView && !['sprint', 'budget', 'archived', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView)) {
+    if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView)) {
       const next = new URLSearchParams(searchParams);
       next.delete('projects');
       setSearchParams(next, { replace: true });
@@ -877,6 +879,27 @@ export const AdminProjects: React.FC = () => {
       milestonesAtRisk,
     };
   }, [activeProjects]);
+
+  const overviewAttentionProjects = useMemo(() => activeProjects
+    .map((project) => {
+      const issues: string[] = [];
+      if (project.health !== 'Good') issues.push(project.health || 'Delivery health not verified');
+      if (project.tasks.some((task) => task.status !== 'done' && isOverdue(task.dueDate))) issues.push('Overdue task');
+      if (project.milestones.some((milestone) => !milestone.completed && isOverdue(milestone.dueDate))) issues.push('Overdue milestone');
+      return { project, issues };
+    })
+    .filter((item) => item.issues.length > 0)
+    .sort((left, right) =>
+      (left.project.targetEndDate || '9999-12-31').localeCompare(right.project.targetEndDate || '9999-12-31')
+    ),
+  [activeProjects]);
+
+  const projectOverviewStatuses = useMemo(() => [
+    { key: 'planning', label: 'Planning', count: projects.filter((project) => project.status === 'planning').length },
+    { key: 'active', label: 'Active', count: projects.filter((project) => project.status === 'in_progress' || project.status === 'review').length },
+    { key: 'on-hold', label: 'On hold', count: projects.filter((project) => project.status === 'on_hold').length },
+    { key: 'completed', label: 'Completed', count: projects.filter((project) => project.status === 'completed').length },
+  ], [projects]);
 
   const recordedExpenseTotals = useMemo(() => {
     if (projectExpenses === null) return null;
@@ -1880,31 +1903,36 @@ export const AdminProjects: React.FC = () => {
         className="mb-0"
         eyebrow={(
           <div className="flex flex-wrap items-center gap-2">
-            <span>{view === 'all' ? 'Workspace / Projects' : 'Projects'}</span>
+            <span>{view === 'overview' ? 'Projects / Overview' : view === 'all' ? 'Projects / Project Registry' : 'Projects'}</span>
             <AdminStatusBadge tone={serverMode ? 'success' : loading ? 'info' : 'warning'}>
               {serverMode ? 'Live project data' : loading ? 'Loading project records' : 'Project data unavailable'}
             </AdminStatusBadge>
           </div>
         )}
-        title={view === 'all'
+        title={view === 'overview' ? 'Project Overview' : view === 'all'
           ? registryStatusView === 'planning' ? 'Planning'
             : registryStatusView === 'active' ? 'Active Projects'
               : registryStatusView === 'on-hold' ? 'On Hold'
                 : registryStatusView === 'completed' ? 'Completed Projects' : 'Projects'
           : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}
         description={
-          view === 'all'
-            ? registryStatusView
-              ? 'Project registry filtered by the selected lifecycle status.'
-              : 'Project portfolio, delivery stages, resource ownership, and live execution from one workspace.'
-            : view === 'sprint'
-              ? 'Move work through execution stages and keep delivery ownership visible.'
-              : view === 'budget'
-                ? 'Compare each project budget with recorded Finance expenses linked to that project. Delivery progress is never used as a cost estimate.'
-                : 'Completed projects kept visible for reference, handover history, and future reuse.'
+          view === 'overview'
+            ? 'Source-backed portfolio summary, delivery exceptions, and project status distribution.'
+            : view === 'all'
+              ? registryStatusView
+                ? 'Project registry filtered by the selected lifecycle status.'
+                : 'Project records, delivery stages, and supported execution controls.'
+              : view === 'sprint'
+                ? 'Move work through execution stages and keep delivery ownership visible.'
+                : view === 'budget'
+                  ? 'Compare each project budget with recorded Finance expenses linked to that project. Delivery progress is never used as a cost estimate.'
+                  : 'Completed projects kept visible for reference, handover history, and future reuse.'
         }
         actions={(
           <>
+            {view === 'overview' && (
+              <Button variant="secondary" onClick={() => openView('all')}>Open Project Registry</Button>
+            )}
             {view === 'all' && (
               <div className="inline-flex min-h-9 items-center gap-1 rounded-control border border-line bg-panel px-0.5">
                 <button type="button" aria-pressed={projectLayout === 'board'} onClick={() => openLayout('board')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (projectLayout === 'board' ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}>
@@ -1918,7 +1946,7 @@ export const AdminProjects: React.FC = () => {
                 </button>
               </div>
             )}
-            <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>
+            {view !== 'overview' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
             {canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
           </>
         )}
@@ -1954,6 +1982,85 @@ export const AdminProjects: React.FC = () => {
               <p className="mt-1 text-[11px] leading-5 text-muted">{error}</p>
             </div>
             <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">API unavailable</span>
+          </div>
+        </div>
+      )}
+
+      {view === 'overview' && (
+        <div className="space-y-4" data-ams-feature-slug="projects-overview-workspace" data-ams-slug="projects-overview-workspace">
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Project delivery summary">
+            {[
+              { label: 'Open projects', value: serverMode ? String(activeProjects.length) : '—', context: 'Projects not marked completed' },
+              { label: 'Delivery exceptions', value: serverMode ? String(overviewAttentionProjects.length) : '—', context: 'Projects needing a closer review' },
+              { label: 'Open tasks', value: serverMode ? String(metrics.openTasks) : '—', context: 'Tasks not marked Done' },
+              { label: 'Overdue milestones', value: serverMode ? String(metrics.milestonesAtRisk) : '—', context: 'Uncompleted milestones past due' },
+            ].map((metric) => (
+              <article key={metric.label} className="rounded-card border border-line bg-panel p-4" data-ams-slug={'projects-overview-metric-' + metric.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}>
+                <div className="text-xs font-medium text-muted">{metric.label}</div>
+                <div className="mt-3 text-2xl font-semibold tabular-nums text-fg">{metric.value}</div>
+                <div className="mt-1 text-[11px] text-muted">{serverMode ? metric.context : loading ? 'Loading live project records' : 'Live project data unavailable'}</div>
+              </article>
+            ))}
+          </section>
+          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
+            <AdminPanel title="Delivery exceptions" description="Projects with a recorded health concern, overdue task, or overdue milestone.">
+              {loading && !serverMode ? (
+                <div role="status" aria-label="Loading project exceptions" className="grid gap-2 p-4">
+                  {[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
+                </div>
+              ) : !serverMode ? (
+                <div className="p-5" role="status">
+                  <p className="text-sm font-medium text-fg">Project records unavailable</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">The overview needs live project records. Refresh after the project service is restored.</p>
+                </div>
+              ) : overviewAttentionProjects.length === 0 ? (
+                <div className="p-5" role="status">
+                  <p className="text-sm font-medium text-fg">No delivery exceptions detected</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">No recorded project health concerns, overdue tasks, or overdue milestones were found in the current project records.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-line">
+                  {overviewAttentionProjects.slice(0, 8).map(({ project, issues }) => (
+                    <button key={project.id} type="button" onClick={() => openProjectDetail(project)}
+                      className="flex min-h-16 w-full min-w-0 items-start justify-between gap-3 p-3 text-left transition-colors hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent sm:p-4"
+                      data-ams-slug={'projects-overview-exception-' + project.slug}>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-semibold text-fg">{project.name}</span>
+                        <span className="mt-1 block truncate text-[11px] text-muted">{project.clientCompany || 'Client not linked'} · {project.teamLead || 'Owner not assigned'}</span>
+                        <span className="mt-2 flex flex-wrap gap-1.5">
+                          {issues.map((issue) => <span key={issue} className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{issue}</span>)}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right text-[10px] text-muted">{project.targetEndDate || 'No deadline'}<span className="mt-1 block text-accent">View project</span></span>
+                    </button>
+                  ))}
+                  {overviewAttentionProjects.length > 8 && <div className="px-4 py-3 text-[11px] text-muted">Showing 8 of {overviewAttentionProjects.length} projects requiring review.</div>}
+                </div>
+              )}
+            </AdminPanel>
+            <AdminPanel title="Project status distribution" description="Counts from the same canonical project records. Select a status to open its registry view.">
+              {!serverMode ? (
+                <div className="p-5" role="status">
+                  <p className="text-sm font-medium text-fg">Status counts unavailable</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">The project source has not returned a verified record set.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-line">
+                  {projectOverviewStatuses.map((status) => (
+                    <button key={status.key} type="button"
+                      onClick={() => {
+                        const next = new URLSearchParams(searchParams);
+                        next.set('projects', status.key);
+                        setSearchParams(next);
+                      }}
+                      className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs transition-colors hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent">
+                      <span className="text-muted">{status.label}</span>
+                      <span className="font-semibold tabular-nums text-fg">{status.count}<ArrowUpRight size={12} className="ml-1 inline text-muted" aria-hidden="true" /></span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </AdminPanel>
           </div>
         </div>
       )}
