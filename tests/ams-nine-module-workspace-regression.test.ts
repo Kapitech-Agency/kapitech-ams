@@ -34,13 +34,14 @@ test('Retainer value and renewal health summaries precede the searchable retaine
   assert.ok(header >= 0 && kpis > header && summary > kpis && filters > summary && directory > filters);
 });
 
-test('Client KPIs appear before directory filters and the client register', async () => {
+test('Client directory filters and register precede supporting metrics', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   const header = clients.indexOf('<AdminModuleHeader slug="clients-header"');
   const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
   const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
   const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
-  assert.ok(header >= 0 && metrics > header && filters > metrics && directory > filters);
+  const directoryEnd = clients.indexOf('</section>', directory);
+  assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd);
 });
 
 test('Dashboard prioritizes operational KPIs before the primary chart and moves supporting metrics below it', async () => {
@@ -95,14 +96,15 @@ test('Projects prioritize the portfolio register before supporting KPIs while Ta
   assert.match(tasks, /data-ams-feature-slug="tasks-board-view"/);
 });
 
-test('Clients surface account health metrics before the directory and keep data gaps explicit', async () => {
+test('Clients surface account health after the directory and keep data gaps explicit', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   assert.match(clients, /featureSlug="clients-module"/);
   const header = clients.indexOf('<AdminModuleHeader slug="clients-header"');
   const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
   const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
   const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
-  assert.ok(header >= 0 && metrics > header && filters > metrics && directory > filters);
+  const directoryEnd = clients.indexOf('</section>', directory);
+  assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd);
   assert.match(clients, /Client directory unavailable/);
   assert.match(clients, /Cumulative billed value/);
 });

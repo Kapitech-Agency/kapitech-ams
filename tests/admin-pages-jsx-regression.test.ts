@@ -684,8 +684,8 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   const clientDirectory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
   const clientDirectoryEnd = clients.indexOf('</section>', clientDirectory);
   const clientMetrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
-  assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory && clientMetrics > 0 && clientMetrics < clientDirectory);
-  assert.ok(clients.indexOf('slug="client-directory-filters"') > clientMetrics && clients.indexOf('slug="client-directory-filters"') < clientDirectory);
+  assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory && clientMetrics > clientDirectoryEnd);
+  assert.ok(clients.indexOf('slug="client-directory-filters"') > 0 && clients.indexOf('slug="client-directory-filters"') < clientDirectory);
 
   const teamHeader = teams.indexOf('<AdminModuleHeader');
   const teamView = teams.indexOf('data-ams-feature-slug="team-directory"');
