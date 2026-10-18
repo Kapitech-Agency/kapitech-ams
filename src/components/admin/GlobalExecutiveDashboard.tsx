@@ -894,7 +894,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </AdminPanel>
       </div>
 
-        <div className="col-span-full min-w-0" data-ams-feature-slug="dashboard-supporting-metrics">
+        <div className="mt-3 min-w-0" data-ams-feature-slug="dashboard-supporting-metrics">
           <AdminMetricStrip
             className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
             metrics={[
