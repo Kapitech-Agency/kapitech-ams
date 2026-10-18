@@ -670,9 +670,8 @@ test('Project portfolio and archive registers lead their supporting KPI summarie
   const archiveTitle = projects.indexOf('title="Archived projects"');
   const archiveKpis = projects.indexOf('data-ams-feature-slug="projects-archived-kpis"');
   const moduleHeader = projects.indexOf('<AdminModuleHeader');
-  assert.ok(moduleHeader >= 0 && portfolioKpis > moduleHeader && portfolioKpis < portfolioTitle);
-  assert.ok(portfolioTitle >= 0);
-  assert.ok(archiveTitle >= 0 && archiveKpis > moduleHeader && archiveKpis < archiveTitle);
+  assert.ok(moduleHeader >= 0 && portfolioTitle > moduleHeader && portfolioKpis > portfolioTitle);
+  assert.ok(archiveTitle >= 0 && archiveTitle > moduleHeader && archiveKpis > archiveTitle);
   assert.ok(projects.includes('aria-label="Project status quick filters"'));
   assert.ok(projects.includes('slug="projects-directory-filters"'));
 });
