@@ -12,9 +12,9 @@ Do not use this historical guide to select or switch the live production data so
 
 Invalid values fail closed.
 
-## Required cutover gates
+## Historical cutover gates — reference only
 
-All must be true:
+The earlier cutover plan required the following conditions. This list is not a live status report or an alternative to the current production-readiness gate:
 
 1. JSON → PostgreSQL migration completes successfully.
 2. Count reconciliation passes.
