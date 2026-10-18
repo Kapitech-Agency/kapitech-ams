@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
@@ -37,7 +38,29 @@ type ClientContract = {
   updatedAt?: string;
 };
 
-type RelatedRecord = { id: string; name?: string; company?: string; companyName?: string; title?: string };
+type RelatedRecord = {
+  id: string;
+  name?: string;
+  company?: string;
+  companyName?: string;
+  title?: string;
+  activeRetainer?: boolean;
+  retainerId?: string;
+  retainerRenewal?: string;
+  retainerMonthlyValue?: number;
+};
+
+type RenewalScheduleRow = {
+  id: string;
+  source: 'Contract / SOW' | 'Retainer';
+  title: string;
+  clientName: string;
+  date: string;
+  dateLabel: string;
+  status: string;
+  amount: string;
+  href: string;
+};
 
 type ContractForm = {
   title: string;
@@ -98,6 +121,8 @@ const typeLabels: Record<ContractType, string> = {
 const statusOrder: ContractStatus[] = ['draft', 'in_review', 'sent', 'signed', 'active', 'completed'];
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const isDatePast = (value?: string) => Boolean(value && value < todayIso());
+const isIsoDateValue = (value?: string): value is string =>
+  Boolean(value && /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value) && !Number.isNaN(new Date(value + 'T00:00:00').getTime()));
 const formatDate = (value?: string) => {
   if (!value) return 'Not set';
   const date = new Date(value + 'T00:00:00');
@@ -128,9 +153,13 @@ const toForm = (contract: ClientContract): ContractForm => ({
 
 export const AdminContracts: React.FC = () => {
   const canManage = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageCrm') || hasAdminPermission('canManageClients');
+  const [searchParams] = useSearchParams();
+  const isRenewalSchedule = searchParams.get('view') === 'renewals';
   const [contracts, setContracts] = useState<ClientContract[]>([]);
   const [clients, setClients] = useState<RelatedRecord[]>([]);
   const [projects, setProjects] = useState<RelatedRecord[]>([]);
+  const [contractsSourceAvailable, setContractsSourceAvailable] = useState(false);
+  const [clientsSourceAvailable, setClientsSourceAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [transitioningId, setTransitioningId] = useState('');
@@ -155,15 +184,21 @@ export const AdminContracts: React.FC = () => {
         api.clients.getAll(),
         api.projects.getAll()
       ]);
-      if (!contractRes.success || !Array.isArray(contractRes.data?.contracts)) {
+      const contractsAvailable = contractRes.success && Array.isArray(contractRes.data?.contracts);
+      setContractsSourceAvailable(contractsAvailable);
+      if (!contractsAvailable) {
         setError(contractRes.error || 'Contracts could not be loaded.');
         setContracts([]);
       } else {
         setContracts(contractRes.data.contracts as ClientContract[]);
       }
-      setClients(clientRes.success && Array.isArray(clientRes.data?.clients) ? clientRes.data.clients : []);
+      const clientsAvailable = clientRes.success && Array.isArray(clientRes.data?.clients);
+      setClientsSourceAvailable(clientsAvailable);
+      setClients(clientsAvailable ? clientRes.data.clients as RelatedRecord[] : []);
       setProjects(projectRes.success && Array.isArray(projectRes.data?.projects) ? projectRes.data.projects : []);
     } catch (requestError) {
+      setContractsSourceAvailable(false);
+      setClientsSourceAvailable(false);
       setError(requestError instanceof Error ? requestError.message : 'Contracts could not be loaded.');
     } finally {
       setLoading(false);
@@ -185,7 +220,55 @@ export const AdminContracts: React.FC = () => {
   const safePage = Math.min(page, pageCount);
   const visible = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
   const today = todayIso();
-  const expiringSoon = contracts.filter((item) => item.status === 'active' && item.endDate && item.endDate >= today && item.endDate <= new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)).length;
+  const nextThirtyDays = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+  const expiringSoon = contracts.filter((item) => item.status === 'active' && item.endDate && item.endDate >= today && item.endDate <= nextThirtyDays).length;
+  const renewalScheduleRows = useMemo<RenewalScheduleRow[]>(() => {
+    const contractRows = contracts
+      .filter((contract) => contract.status === 'active')
+      .map((contract): RenewalScheduleRow => {
+        const hasRenewalDate = isIsoDateValue(contract.renewalDate);
+        const hasEndDate = isIsoDateValue(contract.endDate);
+        const date = hasRenewalDate ? String(contract.renewalDate) : hasEndDate ? String(contract.endDate) : '';
+        return {
+          id: 'contract:' + contract.id,
+          source: 'Contract / SOW',
+          title: contract.title || contract.contractNumber || 'Untitled agreement',
+          clientName: contract.clientName || 'Client not linked',
+          date,
+          dateLabel: hasRenewalDate ? 'Renewal / review date' : hasEndDate ? 'Agreement end date' : 'Date not recorded',
+          status: statusLabels[contract.status],
+          amount: formatMoney(contract.contractValue, contract.currency === 'USD' ? 'USD' : 'IDR'),
+          href: '/admin/contracts',
+        };
+      });
+    const retainerRows = clients
+      .filter((client) => client.activeRetainer === true)
+      .map((client): RenewalScheduleRow => {
+        const clientName = String(client.company || client.companyName || client.name || 'Unnamed client');
+        const hasRenewalDate = isIsoDateValue(client.retainerRenewal);
+        return {
+          id: 'retainer:' + client.id,
+          source: 'Retainer',
+          title: String(client.retainerId || ('RET-' + client.id)),
+          clientName,
+          date: hasRenewalDate ? String(client.retainerRenewal) : '',
+          dateLabel: hasRenewalDate ? 'Retainer renewal date' : 'Date not recorded',
+          status: 'Active',
+          amount: typeof client.retainerMonthlyValue === 'number' && Number.isFinite(client.retainerMonthlyValue)
+            ? formatMoney(client.retainerMonthlyValue, 'IDR')
+            : 'Not recorded',
+          href: '/admin/clients/retainers',
+        };
+      });
+    return [...contractRows, ...retainerRows].sort((left, right) =>
+      (left.date || '9999-12-31').localeCompare(right.date || '9999-12-31')
+      || left.clientName.localeCompare(right.clientName, undefined, { sensitivity: 'base' })
+    );
+  }, [contracts, clients]);
+  const renewalScheduleSourcesComplete = contractsSourceAvailable && clientsSourceAvailable;
+  const renewalsDueSoon = renewalScheduleRows.filter((row) => row.date && row.date >= today && row.date <= nextThirtyDays).length;
+  const renewalsPastDate = renewalScheduleRows.filter((row) => row.date && row.date < today).length;
+  const renewalsWithoutDate = renewalScheduleRows.filter((row) => !row.date).length;
 
   const openCreate = () => {
     setEditing(null);
@@ -332,23 +415,97 @@ export const AdminContracts: React.FC = () => {
     <AdminPageShell featureSlug="client-contracts-module">
       <AdminModuleHeader
         className="mb-0"
-        title="Contracts & SOW"
-        description="Manage client agreements from draft and review through signature, activation, renewal, and closeout."
-        actions={<Button type="button" variant="primary" onClick={openCreate} disabled={!canManage} icon={<Plus size={14} />}>New Contract</Button>}
+        title={isRenewalSchedule ? 'Renewal Schedule' : 'Contracts & SOW'}
+        description={isRenewalSchedule
+          ? 'Review dates recorded on active contracts and retainers. This schedule is a view over existing records, not a separate renewal register.'
+          : 'Manage client agreements from draft and review through signature, activation, renewal, and closeout.'}
+        actions={isRenewalSchedule
+          ? <Link to="/admin/clients/retainers" className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Retainers</Link>
+          : <Button type="button" variant="primary" onClick={openCreate} disabled={!canManage} icon={<Plus size={14} />}>New Contract</Button>}
       />
 
       <AdminSectionTabs
         ariaLabel="Client Agreements worksheets"
-        activeKey="contracts"
+        activeKey={isRenewalSchedule ? 'renewals' : 'contracts'}
         className="w-full border-b border-line pb-2"
         items={[
           { key: 'contracts', label: 'Contracts & SOWs', to: '/admin/contracts' },
           { key: 'retainers', label: 'Retainers & Service Commitments', to: '/admin/clients/retainers' },
-          { key: 'renewals', label: 'Renewal Schedule', to: '/admin/clients/retainers', available: false },
+          { key: 'renewals', label: 'Renewal Schedule', to: '/admin/contracts?view=renewals' },
           { key: 'history', label: 'Contract History', to: '/admin/contracts', available: false },
         ]}
       />
 
+      {isRenewalSchedule ? (
+        <div className="space-y-4" data-ams-feature-slug="client-renewal-schedule" data-ams-slug="client-renewal-schedule">
+          <AdminMetricStrip
+            slug="client-renewal-schedule-kpis"
+            metrics={[
+              { id: 'agreements', label: 'Active agreements', value: loading || !renewalScheduleSourcesComplete ? '—' : renewalScheduleRows.length, context: 'Contracts and active retainers with stored terms', icon: <FileText size={15} /> },
+              { id: 'due-soon', label: 'Due in 30 days', value: loading || !renewalScheduleSourcesComplete ? '—' : renewalsDueSoon, context: 'Recorded renewal or end dates', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' },
+              { id: 'past-date', label: 'Past dates', value: loading || !renewalScheduleSourcesComplete ? '—' : renewalsPastDate, context: 'Records needing lifecycle review', icon: <ShieldAlert size={15} />, toneClassName: 'text-danger' },
+              { id: 'missing-date', label: 'Dates not recorded', value: loading || !renewalScheduleSourcesComplete ? '—' : renewalsWithoutDate, context: 'Active records without a usable date', icon: <CalendarDays size={15} /> },
+            ]}
+          />
+          {!loading && !renewalScheduleSourcesComplete && (
+            <div className="rounded-control border border-warning/25 bg-warning/5 px-3 py-3 text-xs leading-5 text-muted" role="status">
+              Renewal data is incomplete. {!contractsSourceAvailable ? 'The contract source is unavailable. ' : ''}{!clientsSourceAvailable ? 'The client retainer source is unavailable. ' : ''}Rows from available sources may still appear, but totals are withheld until both sources load.
+            </div>
+          )}
+          <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="Renewal schedule records">
+            <div className="flex flex-col gap-2 border-b border-line p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+              <div>
+                <h2 className="text-sm font-semibold text-fg">Renewal and end-date schedule</h2>
+                <p className="mt-1 text-[11px] leading-5 text-muted">The schedule reads active contracts and saved active retainer terms. It does not create or transition agreement records.</p>
+              </div>
+              <span className="text-[10px] text-muted">{loading ? 'Loading sources' : renewalScheduleSourcesComplete ? renewalScheduleRows.length + ' records' : 'Partial source coverage'}</span>
+            </div>
+            {loading ? (
+              <div className="space-y-2 p-4" role="status" aria-label="Loading renewal schedule">
+                {[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
+              </div>
+            ) : renewalScheduleRows.length === 0 ? (
+              <div className="p-6 text-center" role="status">
+                <CalendarDays size={19} className="mx-auto text-muted" aria-hidden="true" />
+                <p className="mt-3 text-sm font-medium text-fg">{renewalScheduleSourcesComplete ? 'No active agreements have renewal or end-date records.' : 'Renewal schedule cannot be fully verified.'}</p>
+                <p className="mt-1 text-xs leading-5 text-muted">{renewalScheduleSourcesComplete ? 'Add dates to the canonical contract or retainer records to include them in this schedule.' : 'Refresh after both contract and client record sources are available. The page will not treat unavailable data as zero renewals.'}</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-line">
+                {renewalScheduleRows.map((row) => {
+                  const timing = !row.date ? 'Date not set' : row.date < today ? 'Past date' : row.date <= nextThirtyDays ? 'Due in 30 days' : 'Scheduled';
+                  const tone = timing === 'Past date' ? 'border-danger/25 bg-danger/10 text-danger' : timing === 'Due in 30 days' ? 'border-warning/25 bg-warning/10 text-warning' : 'border-line bg-bg text-muted';
+                  return (
+                    <article key={row.id} data-ams-slug={'renewal-schedule-' + row.id.replace(/[^a-zA-Z0-9-]+/g, '-')} className="grid min-w-0 gap-3 p-3 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(110px,0.55fr)_minmax(110px,0.45fr)] sm:items-center sm:gap-4 sm:p-4">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="break-words text-xs font-semibold text-fg">{row.title}</h3>
+                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{row.source}</span>
+                        </div>
+                        <p className="mt-1 break-words text-[11px] text-muted">{row.clientName}</p>
+                        <Link to={row.href} className="mt-1 inline-flex min-h-7 items-center gap-1 text-[10px] text-accent-text hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                          Open source register <ExternalLink size={10} aria-hidden="true" />
+                        </Link>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted">{row.dateLabel}</p>
+                        <p className="mt-1 text-xs font-medium tabular-nums text-fg">{formatDate(row.date)}</p>
+                        <p className="mt-1 text-[10px] text-muted">Lifecycle: {row.status}</p>
+                      </div>
+                      <div className="text-xs font-medium tabular-nums text-fg">{row.amount}</div>
+                      <span className={'inline-flex w-fit rounded-badge border px-2 py-1 text-[10px] font-semibold ' + tone}>{timing}</span>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+          <div className="rounded-card border border-line bg-panel px-4 py-3 text-[11px] leading-5 text-muted">
+            Dates are taken from active agreement records only. Retainer hours and billing eligibility are not recalculated here. Past-dated active records need a human lifecycle review; the schedule does not mark contracts as expired automatically.
+          </div>
+        </div>
+      ) : (
+        <>
       {error && (
         <div role="alert" className="flex flex-col gap-2 rounded-control border border-danger/25 bg-danger/5 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-xs text-fg">{error}</span>
@@ -505,6 +662,9 @@ export const AdminContracts: React.FC = () => {
         <ShieldAlert size={15} className="mt-0.5 shrink-0" />
         <p>Lifecycle status and audit events are stored in AMS. The workflow records review, sending, signature confirmation, activation, and closeout; it does not send emails or apply a legally binding e-signature. Store signed documents in an approved secure location and attach its HTTPS link.</p>
       </section>
+
+        </>
+      )}
 
       <ConfirmDialog
         open={Boolean(pendingStatusChange)}
