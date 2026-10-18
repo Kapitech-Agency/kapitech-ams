@@ -412,7 +412,7 @@ export function isAmsModuleSubnavigationItemActive(
   if (itemKey === 'time') return path === '/admin/time-logs';
   if (path === '/admin/vendors' && itemKey === 'vendors') return true;
 
-  if (itemKey === 'backup' && path === '/admin/settings') return !params.get('tab') || params.get('tab') === 'overview';
+  if ((itemKey === 'overview' || itemKey === 'backup') && path === '/admin/settings') return !params.get('tab') || params.get('tab') === 'overview';
   if (itemKey === 'access' && path === '/admin/settings') return ['profile', 'rbac', 'security'].includes(params.get('tab') || '');
   if (itemKey === 'audit' && path === '/admin/settings') return params.get('tab') === 'audit';
   if (itemKey === 'integrations' && path === '/admin/settings') return ['branding', 'api', 'integrations'].includes(params.get('tab') || '');
