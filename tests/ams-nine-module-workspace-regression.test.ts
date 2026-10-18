@@ -125,6 +125,10 @@ test('Finance exposes one current worksheet and explicit unavailable source cont
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   assert.doesNotMatch(invoicing, /replaces the retired standalone tab/i);
   assert.match(invoicing, /Review invoice tax and retainer billing alongside the related revenue records/);
+  assert.ok(
+    invoicing.indexOf('<FinanceMetricCard label="Total quotations"') > invoicing.indexOf('data-ams-feature-slug="finance-records-section"'),
+    'quotation register should be the primary workspace before supporting pipeline metrics'
+  );
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(finance, /data-ams-slug="finance-active-worksheet"/);
   assert.match(finance, /className="ams-finance-table w-full min-w-\[760px\] border-collapse text-left text-xs"/);
