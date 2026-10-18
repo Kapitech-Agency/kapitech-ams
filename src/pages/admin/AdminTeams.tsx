@@ -45,12 +45,13 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { AgencyVendor, VendorStatus, VendorType } from '../../lib/vendorStore';
 import { formatAmount } from '../../lib/currency';
 
-type TeamView = 'team-directory' | 'vendor-directory' | 'capacity-allocation' | 'skill-matrix' | 'time-logs';
+type TeamView = 'team-directory' | 'roles-departments' | 'vendor-directory' | 'capacity-allocation' | 'skill-matrix' | 'time-logs';
 type TeamDataSource = 'members' | 'vendors' | 'projects' | 'timeLogs';
 type TeamSourceAvailability = Record<TeamDataSource, boolean | null>;
 
 const TEAM_VIEW_DATA_SOURCES: Record<TeamView, TeamDataSource[]> = {
   'team-directory': ['members', 'projects', 'timeLogs'],
+  'roles-departments': ['members'],
   'vendor-directory': ['vendors', 'projects'],
   'capacity-allocation': ['members', 'projects', 'timeLogs'],
   'skill-matrix': ['members', 'vendors'],
@@ -258,7 +259,8 @@ export const AdminTeams: React.FC = () => {
     ? requestedView === 'skill-matrix' ? 'skill-matrix' : 'vendor-directory'
     : location.pathname === '/admin/time-logs'
       ? 'time-logs'
-      : requestedView === 'capacity-allocation' ? 'capacity-allocation' : 'team-directory';
+      : requestedView === 'capacity-allocation' ? 'capacity-allocation'
+        : requestedView === 'roles-departments' ? 'roles-departments' : 'team-directory';
 
   const canManageVendors = hasAdminPermission('canManageVendors');
   const canManageProjects = hasAdminPermission('canManageProjects');
@@ -419,7 +421,9 @@ export const AdminTeams: React.FC = () => {
                   { label: 'Capacity allocation', available: availableSources.projects, error: projectRes.error },
                   { label: 'Time logs', available: availableSources.timeLogs, error: timeRes.error },
                 ]
-              : [
+              : currentView === 'roles-departments'
+                ? [{ label: 'Team directory', available: availableSources.members, error: memberRes.error }]
+                : [
                   { label: 'Team directory', available: availableSources.members, error: memberRes.error },
                   { label: 'Project assignments', available: availableSources.projects, error: projectRes.error },
                   { label: 'Tracked hours', available: availableSources.timeLogs, error: timeRes.error },
@@ -463,6 +467,23 @@ export const AdminTeams: React.FC = () => {
     () => ['all', ...Array.from(new Set(projects.map((project) => project.name).filter(Boolean))).sort()],
     [projects]
   );
+
+  const roleDepartmentRows = useMemo(() => {
+    const groups = new Map<string, { division: string; role: string; members: string[]; activeMembers: number; otherStatusMembers: number }>();
+    members.forEach((member) => {
+      const division = String(member.division || '').trim() || 'Department not set';
+      const role = String(member.role || '').trim() || 'Role not set';
+      const key = division + '\\u0000' + role;
+      const row = groups.get(key) || { division, role, members: [], activeMembers: 0, otherStatusMembers: 0 };
+      row.members.push(member.name);
+      if (String(member.status || 'active').toLowerCase() === 'active') row.activeMembers += 1;
+      else row.otherStatusMembers += 1;
+      groups.set(key, row);
+    });
+    return Array.from(groups.values()).sort((left, right) =>
+      left.division.localeCompare(right.division) || left.role.localeCompare(right.role)
+    );
+  }, [members]);
 
   const memberAllocation = (member: TeamMember): { label: string; tone: 'success' | 'warning' | 'neutral'; percent: number | null } => {
     const status = String(member.status || '').toLowerCase();
@@ -1079,6 +1100,11 @@ export const AdminTeams: React.FC = () => {
         ['Slug', 'Member', 'Username', 'Role', 'Division', 'Status', 'Tracked'],
         ...teamRows.map((member) => [member.slug, member.name, member.username, member.role, member.division, member.status || 'active', sourceAvailability.timeLogs === true ? formatHours(teamTrackedMinutes.get(member.id) ?? 0) : 'Unavailable'])
       ]);
+    } else if (currentView === 'roles-departments') {
+      downloadCsv('kapitech-roles-departments.csv', [
+        ['Department', 'Role', 'Members', 'Active members', 'Other statuses', 'Member names'],
+        ...roleDepartmentRows.map((row) => [row.division, row.role, row.members.length, row.activeMembers, row.otherStatusMembers, row.members.join(', ')])
+      ]);
     } else if (currentView === 'vendor-directory') {
       downloadCsv('kapitech-vendor-directory.csv', [
         ['Slug', 'Vendor', 'Company', 'Type', 'Category', 'Rate', 'Rating', 'Status', 'Vetted'],
@@ -1112,6 +1138,10 @@ export const AdminTeams: React.FC = () => {
     'team-directory': {
       title: 'Team Directory',
       description: 'Manage full-time agency staff, core engineering pods, design teams, and direct reports.'
+    },
+    'roles-departments': {
+      title: 'Roles & Departments',
+      description: 'Review the current roster grouped by the division and role recorded on each team member. This view does not edit application access policies.'
     },
     'vendor-directory': {
       title: 'Vendor & Contractor Directory',
@@ -1167,14 +1197,14 @@ export const AdminTeams: React.FC = () => {
 
 
 
-      {(currentView === 'team-directory' || currentView === 'capacity-allocation') && (
+      {(currentView === 'team-directory' || currentView === 'roles-departments' || currentView === 'capacity-allocation') && (
         <AdminSectionTabs
           ariaLabel="Team and capacity views"
-          activeKey={currentView === 'capacity-allocation' ? 'capacity-allocation' : 'team-directory'}
+          activeKey={currentView === 'capacity-allocation' ? 'capacity-allocation' : currentView === 'roles-departments' ? 'roles-departments' : 'team-directory'}
           className="w-full border-b border-line pb-2"
           items={[
             { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
-            { key: 'roles-departments', label: 'Roles & Departments', to: '/admin/team', available: false },
+            { key: 'roles-departments', label: 'Roles & Departments', to: '/admin/team?view=roles-departments' },
             { key: 'capacity-allocation', label: 'Capacity Allocation', to: '/admin/team?view=capacity-allocation' },
             { key: 'availability-workload', label: 'Availability & Workload', to: '/admin/team', available: false },
           ]}
@@ -1413,6 +1443,38 @@ export const AdminTeams: React.FC = () => {
 
 
                     
+        </div>
+      ) : currentView === 'roles-departments' ? (
+        <div className="space-y-4" data-ams-feature-slug="team-roles-departments" data-ams-slug="team-roles-departments">
+          <AdminMetricStrip metrics={[
+            { id: 'departments', slug: 'team-roles-departments-count', label: 'Departments', value: currentViewDataUnavailable ? '—' : new Set(roleDepartmentRows.map((row) => row.division)).size, context: 'Recorded team divisions', icon: <UsersRound size={15} /> },
+            { id: 'roles', slug: 'team-roles-count', label: 'Role groups', value: currentViewDataUnavailable ? '—' : new Set(roleDepartmentRows.map((row) => row.role)).size, context: 'Recorded team roles', icon: <ShieldCheck size={15} /> },
+            { id: 'members', slug: 'team-role-members-count', label: 'Team members', value: currentViewDataUnavailable ? '—' : members.length, context: 'Canonical team records', icon: <UsersRound size={15} /> },
+            { id: 'active', slug: 'team-role-active-count', label: 'Active records', value: currentViewDataUnavailable ? '—' : members.filter((member) => String(member.status || 'active').toLowerCase() === 'active').length, context: 'Status recorded as active', icon: <CheckCircle2 size={15} /> },
+          ]} />
+          <AdminPanel slug="team-roles-departments-matrix" title="Department and role matrix" description="Counts are grouped from current team member records. They do not grant, remove, or modify system permissions." className="overflow-hidden">
+            {currentViewDataUnavailable ? (
+              <div className="p-5 text-xs leading-5 text-muted" role="status">Team member data is unavailable. Refresh to retry; group counts are not shown as zero.</div>
+            ) : roleDepartmentRows.length === 0 ? (
+              <div className="p-5 text-xs leading-5 text-muted" role="status">No team member records are available for grouping.</div>
+            ) : (
+              <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable department and role matrix">
+                <table className="ams-teams-table min-w-[820px] table-fixed">
+                  <thead><tr>
+                    <th className="w-[20%]">Department</th><th className="w-[20%]">Role</th><th className="w-[12%] text-right">Members</th><th className="w-[14%] text-right">Active</th><th className="w-[14%] text-right">Other status</th><th className="w-[20%]">Member names</th>
+                  </tr></thead>
+                  <tbody>
+                    {roleDepartmentRows.map((row) => (
+                      <tr key={row.division + ':' + row.role} data-ams-slug={'team-role-group-' + row.division.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + row.role.toLowerCase().replace(/[^a-z0-9]+/g, '-')}>
+                        <td className="font-medium text-fg">{row.division}</td><td className="text-fg">{row.role}</td><td className="text-right font-semibold tabular-nums text-fg">{row.members.length}</td><td className="text-right tabular-nums text-fg">{row.activeMembers}</td><td className="text-right tabular-nums text-muted">{row.otherStatusMembers}</td><td className="max-w-[240px] text-xs leading-5 text-muted">{row.members.join(', ')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </AdminPanel>
+          <div className="rounded-card border border-line bg-panel px-4 py-3 text-[11px] leading-5 text-muted">Role and department values come from the team directory. Access control remains managed in Settings and is not changed by this worksheet.</div>
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
