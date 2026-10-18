@@ -66,6 +66,6 @@ At a stage boundary, report whether its exit criteria passed, failed or remain u
 
 ## Production-ready definition
 
-Do not declare production-ready until all mandatory product/workflow tests, Finance integrity checks, security/access controls, migration/reconciliation checks, backup/restore and private-document integrity checks pass; the authenticated \`GET /api/system/production-readiness\` returns HTTP 200 with \`productionReady=true\`; and the intended deployed release passes authorized live smoke tests. Provider-dependent integrations such as Kopra must either pass their independent readiness gate or remain disabled/out of the declared release scope with the user's agreement.
+Do not declare production-ready until all mandatory product/workflow tests, Finance integrity checks, security/access controls, migration/reconciliation checks, backup/restore and private-document integrity checks pass; the authenticated `GET /api/system/production-readiness` returns HTTP 200 with `productionReady=true`; and the intended deployed release passes authorized live smoke tests. Provider-dependent integrations such as Kopra must either pass their independent readiness gate or remain disabled/out of the declared release scope with the user's agreement.
 
 If any required gate is not verifiable, state **not yet production-ready** and identify the exact blocker.
