@@ -82,6 +82,8 @@ Then inspect the actual files and current GitHub state. Documentation defines in
 
 ---
 
+> **Numbering note:** Sections 3–9 below describe generic engineering methods and reporting patterns for standalone tasks. Their local “Phase” numbers are not a second rollout schedule. For the current AMS end-to-end initiative, follow the numbered Stages 0–15 in `docs/AMS-END-TO-END-DELIVERY-ROADMAP.md`; apply the relevant generic method inside the matching roadmap stage.
+
 ## 3. Phase 0 — Establish scope and a safe baseline
 
 Before coding:
