@@ -79,6 +79,67 @@ function canRenderNavigationTab(item: AdminSectionTabItem): boolean {
   return currentMfaSetup || canAccessAmsRoute(role, target.pathname, target.search);
 }
 
+export interface AdminTopbarTabsProps extends Omit<AdminSectionTabsProps, 'variant'> {}
+
+/**
+ * Desktop-only workspace navigation. Keep this distinct from in-page section
+ * tabs so the application shell can own topbar geometry without page-specific
+ * tab styles. Access filtering and active-route semantics match AdminSectionTabs.
+ */
+export const AdminTopbarTabs: React.FC<AdminTopbarTabsProps> = ({
+  items,
+  activeKey,
+  ariaLabel,
+  className
+}) => {
+  const navRef = React.useRef<HTMLElement | null>(null);
+  const activeTabRef = React.useRef<HTMLAnchorElement | null>(null);
+
+  React.useEffect(() => {
+    const nav = navRef.current;
+    const activeTab = activeTabRef.current;
+    if (!nav || !activeTab) return;
+
+    const navBounds = nav.getBoundingClientRect();
+    const tabBounds = activeTab.getBoundingClientRect();
+    const inset = 12;
+    if (tabBounds.left < navBounds.left + inset) {
+      nav.scrollLeft -= navBounds.left + inset - tabBounds.left;
+    } else if (tabBounds.right > navBounds.right - inset) {
+      nav.scrollLeft += tabBounds.right - (navBounds.right - inset);
+    }
+  }, [activeKey]);
+
+  return (
+    <nav
+      ref={navRef}
+      aria-label={ariaLabel}
+      className={cn('ams-topbar-tabs flex h-8 max-w-full min-w-0 items-center gap-1 overflow-x-auto', className)}
+    >
+      {items.filter(canRenderNavigationTab).map((item) => {
+        const active = activeKey === item.key;
+        return (
+          <NavLink
+            key={item.key}
+            to={item.to}
+            ref={active ? activeTabRef : null}
+            aria-current={active ? 'page' : undefined}
+            data-ams-slug={item.slug ?? item.key}
+            className={cn(
+              'inline-flex h-8 min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+              active
+                ? 'border-accent/20 bg-accent/10 font-semibold text-fg'
+                : 'border-transparent text-muted hover:border-line hover:bg-panel-hover hover:text-fg'
+            )}
+          >
+            {item.label}
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+};
+
 export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
   items,
   activeKey,
