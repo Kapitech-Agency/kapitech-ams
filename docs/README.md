@@ -1,6 +1,6 @@
 # Kapitech AMS Documentation Index
 
-**Updated:** 18 October 2026  
+**Updated:** 19 October 2026  
 **Repository:** `Kapitech-Agency/kapitech-ams`  
 **Purpose:** Identify the authoritative product, design, engineering, evidence, and operational documents without confusing target specifications with verified implementation.
 
@@ -65,6 +65,7 @@ Do not restart an independent architecture redesign from the older general promp
 | [AMS E2E and Regression Test Matrix](AMS-E2E-AND-REGRESSION-TEST-MATRIX.md) | Cross-module behavior, Finance, role/security, bank-testing, and release evidence. |
 | [AMS Implementation Traceability Register](AMS-IMPLEMENTATION-TRACEABILITY.md) | Requirement IDs and evidence. Historical rows/PR references are dated snapshots; recheck current branch and workflows. |
 | [AMS AI Phased Implementation Workflow](AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md) | Safe incremental AI execution, audit-first stages, checkpoints, recovery after interruption, validation and delivery reporting. |
+| [AMS Navigation-First Phased Execution Prompt](AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md) | Mandatory current rollout schedule: finish navigation first, then proceed through later stages one bounded slice at a time with user-facing reports and explicit stage gates. |
 | [AMS Workflow Audit](ams-workflow-audit.md) | Historical audit findings as of its stated date; not current implementation status or target navigation authority. |
 
 ## 5. Current documented production and operations references
