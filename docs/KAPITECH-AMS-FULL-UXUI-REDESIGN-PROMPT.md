@@ -8,6 +8,8 @@ Repository: `Kapitech-Agency/kapitech-ams`
 Production application: `https://ams.kapitech.id`
 Delivery branch: `main`
 
+> **Document status and authority:** This is the earlier general full-redesign prompt. For the current execution, use [`AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md`](AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md) as the canonical frontend execution prompt, together with [`AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`](AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md), [`architecture/ams-navigation-information-architecture.md`](architecture/ams-navigation-information-architecture.md), [`AMS-ROLE-BASED-CONTENT-BLUEPRINT.md`](AMS-ROLE-BASED-CONTENT-BLUEPRINT.md), and [`AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md`](AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md). The nine-module navigation and approved workspace hierarchy are already defined. This prompt does not authorize an independent redefinition of that architecture or changes to protected backend, API, authentication, permissions, Finance, business logic, or production behavior. If instructions conflict, follow `AGENTS.md` and the current approved product/domain specifications.
+
 Perform a complete UX/UI structural redesign of Kapitech AMS. This is not visual polish, CSS cleanup alone, or incremental restyling of existing page structures. The current UX/UI is unsatisfactory because page composition, content hierarchy, feature placement, navigation, and the purpose of the main workspace are unclear. Treat these as structural product-design problems.
 
 The user-provided Dashboard reference screenshot is the PRIMARY STRUCTURAL REFERENCE. Study it directly and apply its underlying layout principles throughout the application, adapting them to each module's actual tasks and workflows.
