@@ -102,6 +102,19 @@ CRM, Proposal/Quotation, and generic Approval are not primary modules. Preserve 
 
 Visible navigation items must be accessible to the appropriate roles and lead to functional destinations. Do not show links that only open empty pages.
 
+### 3.1 Navigation depth and breadcrumb policy
+
+Use a clear hierarchy rather than exposing every operational view as a navigation item:
+
+1. **Primary module:** one of the nine modules listed above.
+2. **Workspace:** a distinct job area inside a module, such as Messages, Project Registry, or Document Library.
+3. **Worksheet or view:** a table mode, content category, status view, filter, or saved view inside its owning workspace. These are not additional module/sidebar entries.
+4. **Record detail:** the selected business record and its related sections. A record is context inside its owning workspace, not a new navigation level by default.
+
+Keep persistent navigation to the primary module and the relevant workspace. Do not add a third global menu layer for worksheets, statuses, or individual records.
+
+Breadcrumbs are **conditional, not global**. Use them when a deep record/detail page benefits from a clear return path, especially when it was opened from a registry or linked record. Example: breadcrumb ancestors `Projects → Project Registry`, followed by the page title `Website Redesign`. Do not add breadcrumbs to obvious module roots, Dashboard, Inbox's primary workspaces, or the established Finance tabs when the current location is already clear. Do not repeat the current page title in both the breadcrumb and the page heading. Breadcrumb ancestors must be valid links that respect existing route permissions; the current page heading identifies the destination. On compact screens, collapse the path or provide a clear back-to-parent control without adding a second navigation bar.
+
 ---
 
 ## 4. Module 01 — Dashboard
@@ -238,72 +251,71 @@ Projects is the primary source for delivery management. CRM starts the deal and 
 
 ### 7.1 Navigation Structure
 
-**A. Projects Overview**
+Projects should expose seven clear workspaces. Group related tools within their owning workspace instead of making every feature a direct submenu.
+
+**A. Overview**
+- Portfolio summary, source-backed delivery exceptions, upcoming milestones, and useful drill-downs.
+- Must not duplicate the Project Registry as a second full project list.
 
 **B. Project Registry**
-- Planning
-- Active Projects
-- On Hold
-- Completed
-- Archived
+- One canonical project register.
+- Planning, Active, On Hold, Completed, and Archived are filters or saved views over the same project records, not separate workspaces or separate datasets.
+- Search, sort, status, client, owner, due date, and supported health filters stay with the registry.
 
-**C. Planning & Scope**
-- Project Brief
-- Scope & Deliverables
-- Milestones
-- Timeline
-
-**D. Tasks & Execution**
+**C. Tasks & Execution**
 - Board / Kanban
 - List
 - My Tasks
 - Task Lists
 - Dependencies
 
-**E. Project Resources**
-- Project Team
-- Assignments
-- Workload
+These views operate on the same canonical task records.
 
-**F. Deliverables & Quality**
+**D. Planning & Delivery**
+- Project Brief
+- Scope & Deliverables
+- Milestones
+- Timeline
 - Deliverable Tracking
 - Internal Quality Review
 - Client Review
 - Revision History
 
-**G. Content & Campaign Operations**
+**E. Content & Campaigns**
 - Content Calendar
 - Content Planning & Briefs
 - Content Production Pipeline
 - Creative Assets & Versions
-- Internal Review & Approval
+- Internal Review
 - Client Review & Feedback
 - Revision Tracking
-- Publishing Schedule
-- Publication Status & Links
-- Campaign Tracking
-- Campaign Performance Reports
+- Publishing Schedule & Publication Status
+- Campaign Tracking & Performance
 
-**H. Changes, Risks & Issues**
+Review/approval is a stateful part of the content workflow, not a separate generic Approval module.
+
+**F. Project Resources**
+- Project Team
+- Assignments
+- Workload
+
+People, availability, and capacity remain sourced from Team & Resources.
+
+**G. Project Controls**
 - Change Requests
-- Risks
-- Issues
-- Blockers
-
-**I. Budget & Project Health**
-- Budget Summary
-- Planned vs Actual
+- Risks, Issues & Blockers
+- Budget Summary and Planned vs Actual
 - Delivery Health
+- Reports & Closure Checklist
+- Related Project Files
 
-**J. Project Files**
-
-**K. Project Reports & Closure**
+Related Project Files are contextual links/filter views into the canonical Documents library. Do not create a second project-file repository. Project financial values remain sourced from Finance, and this workspace must not recreate ledgers, journal entries, or Finance calculations.
 
 ### 7.2 Lifecycle project
 
-1. CRM marks the project as ready for handover.
+1. Existing commercial context and the project handover requirements are checked; a project is marked ready only when its required scope and terms are verified.
 2. Handover requirements are checked and the project record is prepared/created.
-3. The project template, brief, scope, deliverables, milestones, timeline, owner, team, and project folder are set.
+3. The project template, brief, scope, deliverables, milestones, timeline, owner, team, and canonical Documents references are set.
 4. Tasks, dependencies, assignments, estimated effort, due dates, and acceptance criteria are created.
 5. Resource availability is checked with Team & Resources.
 6. Work proceeds through board/list views, with progress updated from real task records.
@@ -352,45 +364,39 @@ If automated publishing is not integrated, AMS may still manage the calendar and
 
 ## 8. Module 04 — Clients
 
-Clients manages active accounts and the client relationship lifecycle after a lead becomes an account. Company/contact identity is shared with CRM. Do not create duplicate companies, contacts, contracts, or projects during conversion.
+Clients owns the canonical client/account/contact directory and the post-conversion relationship workspace. Legacy CRM records and consumers may remain for compatibility, but there is no standalone CRM UI or competing client/contact directory. Do not create duplicate companies, contacts, contracts, or projects during conversion.
 
 ### 8.1 Structure
 
-**A. Client Overview**
+Clients has four workspaces. Avoid separate Overview and Directory destinations that show the same client list.
 
-**B. Client Directory**
-- Companies
-- Contacts
-- Client 360°
+**A. Directory**
+- One canonical company/client and contact directory.
+- Companies and Contacts are worksheet/filter modes within the directory, not duplicate directories.
+- Client 360° opens the selected client's contextual detail view; it is not a second client master.
 
-**C. Onboarding**
+**B. Onboarding**
 - Onboarding Checklist
 - Required Documents
 - Kickoff Readiness
 
-**D. Contracts & Agreements**
-- Contract Register
-- Active Contracts
-- Expiring Contracts
+Checklist items must link to the relevant canonical records and must not simulate completed business requirements.
+
+**C. Agreements**
+- Contracts & SOWs
+- Retainers & Service Commitments
+- Renewal Schedule
 - Contract History
 
-**E. Retainers**
-- Retainer Register
-- Included Hours
-- Used & Remaining Hours
-- Renewal Schedule
+Quotation, invoice, payment, and accounting records remain owned by Finance. Agreement views may link to their authorized references.
 
-**F. SLA & Service Operations**
+**D. Service & Health**
 - SLA Monitoring
-- Client Requests
-- Service Issues
-- SLA History
-
-**G. Client Growth & Health**
+- Service Issues & Feedback
 - Client Health
-- Renewal Opportunities
-- Upsell & Cross-sell
-- Feedback & Reviews
+- Service History and relationship context
+
+Client Requests are owned by Inbox. Clients may show linked requests/conversations in Client 360° or service context but must not create a second request queue or separate request status system. Renewal or expansion context belongs with the client relationship; do not recreate a standalone sales pipeline.
 
 ### 8.2 Client 360°
 
@@ -818,26 +824,28 @@ Sandbox testing is not proof of production access. A mock provider used in tests
 
 ### 11.1 Structure
 
+Team & Resources has four workspaces. Keep one canonical identity per team member and link all people operations records to it.
+
 **A. Team & Capacity**
-- Team Directory
+- Team Directory (canonical team-member identity and work profile)
 - Roles & Departments
 - Capacity Allocation
 - Availability & Workload
 
 **B. People Operations**
-- Employee Directory & Profiles
+- People Profiles & Employment Details, linked to Team Directory
 - Employee Onboarding
 - Employee Offboarding
 - Employment Contracts & Status
-- Leave Management
-- Availability & Absence Calendar
+- Leave & Absence
 - Training & Development
-- Performance Reviews
-- Performance History
+- Performance Reviews & History
 - People Operations Reports
 
+People Operations must not introduce a competing Employee Directory or second identity master.
+
 **C. Vendors & Freelancers**
-- Directory
+- Directory (canonical supplier/provider records)
 - Skills & Service Matrix
 - Contracts & Rates
 - Engagement Status
@@ -853,8 +861,8 @@ Sandbox testing is not proof of production access. A mock provider used in tests
 
 Prepared for future expansion, even when some screens can be introduced in phases.
 
-**Employee Directory & Profiles**
-- Employee identity, work contact, job title, department, manager, start date, employment status, skills, secure links to documents, and authorized history.
+**People Profiles & Employment Details**
+- Reuse the canonical Team Directory person identity for work contact, job title, department, manager, start date, employment status, skills, secure document references, and authorized history.
 - Avoid collecting personal data that is not needed for a defined business purpose.
 
 **Onboarding**
@@ -921,14 +929,17 @@ Approved leave → availability calendar → workload/capacity computation → p
 
 ### 12.1 Structure
 
-- Document Overview
-- All Documents
+**Document Library** is the single canonical workspace for files and document records.
+
+The following are categories, filters, or saved views inside that library, not separate top-level workspaces:
 - Project & Client Files
 - SOPs & Policies
 - Legal & Corporate
 - Finance & Tax
 - HR & People
 - Security & Infrastructure
+
+Do not create separate Overview, All Documents, or category destinations when they lead to the same register. A cross-category summary may appear within the library only when it provides distinct, useful information and links into the same canonical records.
 
 ### 12.2 Capabilities
 
@@ -951,15 +962,21 @@ Quotation/invoice PDFs are generated artifacts linked to the canonical document 
 
 ### 13.1 Structure
 
-- CMS Overview
+Website CMS uses content-type workspaces:
 - Case Studies
 - Services
 - Insights
 - Testimonials
 - Careers
-  - Jobs
-  - Applicants
-  - Recruitment History
+
+An optional CMS Overview is valid only as a cross-content publishing/status summary with distinct useful drill-downs. It must not duplicate a content-type register or route Overview to Case Studies.
+
+Careers contains internal worksheets/tabs:
+- Jobs
+- Applicants
+- Recruitment History
+
+These are views inside Careers, not additional primary/sidebar modules. Job opening management and applicant review remain distinct workflows within the same owning workspace.
 
 ### 13.2 CMS workflow
 
@@ -1013,18 +1030,14 @@ Draft → review/preview → publish → verified sync/status → update or unpu
 **D. Integrations**
 - Integration Overview
 - Website & CMS Integrations
-- Bank Integrations
-  - Bank Mandiri Kopra H2H
-  - Connection & Service Status
-  - Account Mapping
-  - Integration Environment
-  - Credentials & Certificate Management
-  - Connection Testing
-  - Synchronization & Status Checks
-  - Error Logs & Diagnostics
-  - Integration Audit Trail
+- Bank Mandiri Kopra H2H
+  - Internal sections/tabs: Overview & Status; Connection & Environment; Accounts & Mapping; Synchronization & Diagnostics; Audit Trail
+  - Credential and certificate management remains permission-restricted and secret-safe.
+
+Keep integration details inside the selected integration workspace. Do not expose every diagnostic/configuration subsection as another persistent navigation layer.
 
 **E. Preferences**
+- Keep personal display/preferences within the relevant settings surface unless there is a genuinely distinct workflow, permission boundary, and route that justify a separate workspace.
 
 ### 14.2 Settings policy
 
@@ -1059,7 +1072,7 @@ Workflow & Automation is a platform capability, not a new sidebar module and not
 | Bank mutation ingested | Propose a reconciliation match | Ambiguous match to human exception queue |
 | Approved leave changes | Recompute availability and warn on project/resource conflict | Do not silently reassign or reschedule commitments |
 | Time entry validated | Update workload/retainer usage/project effort | One authoritative time record; no double counting |
-| Client contract/retainer near renewal | Create/link CRM renewal opportunity or follow-up | Avoid duplicate renewal opportunities |
+| Client contract/retainer near renewal | Create/link a Clients renewal follow-up and, only where required, a compatible legacy opportunity reference | Avoid duplicate renewal records; do not expose a standalone CRM pipeline |
 | CMS content published | Sync public content/status if supported | Confirmed state; retry-safe |
 | Job application received | CMS Careers Applicants | Restricted personal-data access, not sales CRM |
 
@@ -1091,7 +1104,8 @@ This section defines logical ownership. It does not require a full database rewr
 | Contract/SOW/change order | Canonical contract record with secure Documents references | CRM, Clients, Projects, Finance |
 | Client onboarding/retainer/SLA | Clients | Projects, Team & Resources, CRM, Finance |
 | Project/task/deliverable/campaign item | Projects | Clients, Documents, Dashboard, Finance summaries |
-| Employee, leave, training, performance | Team & Resources → People Operations | Projects/capacity, authorized reports and Settings |
+| Employee identity and team membership | Team & Resources → Team Directory | People Operations, Projects/capacity, authorized reports and Settings |
+| Employment, leave, training, performance | Team & Resources → People Operations, linked to Team Directory identity | Authorized reports and capacity views |
 | Vendor/freelancer master | Team & Resources | Finance AP/expense records, Projects, Documents |
 | Time log | Team & Resources → Time Tracking | Projects, Clients retainer use, Finance costing if supported |
 | Invoice, payment, expense, payable, ledger, journal | Finance | CRM/client/project summary and Dashboard |
