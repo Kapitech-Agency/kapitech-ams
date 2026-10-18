@@ -193,6 +193,27 @@ test('Project Registry filters keep the Project Registry workspace active withou
   }
 });
 
+test('Document Library categories remain in the library and normalize unsupported category URLs', async () => {
+  const documentsNavigation = getAmsModuleSubnavigation('documents', 'Admin');
+  assert.deepEqual(documentsNavigation.map((item) => item.label), ['Document Library']);
+
+  const source = await read('src/pages/admin/AdminDocuments.tsx');
+  assert.match(source, /type TabKey = 'all' \| 'project-client' \| 'sops' \| 'legal' \| 'finance' \| 'hr' \| 'infra'/);
+  for (const label of [
+    'All files', 'Project & Client Files', 'SOPs & Policies', 'Legal & Corporate',
+    'Finance & Tax', 'HR & People', 'Security & Infrastructure',
+  ]) {
+    assert.ok(source.includes("label: '" + label + "'"), 'Missing Document Library category: ' + label);
+  }
+  assert.match(source, /const hasDocumentCategoryParam = searchParams\.has\('documents'\)/);
+  assert.match(source, /const isSupportedDocumentCategory = DOCUMENT_TABS\.some\(\(tab\) => tab\.key === requestedTab\)/);
+  assert.match(source, /if \(!hasDocumentCategoryParam \|\| isSupportedDocumentCategory\) return;/);
+  assert.match(source, /canonicalParams\.delete\('documents'\)/);
+  assert.match(source, /setSearchParams\(canonicalParams, \{ replace: true \}\)/);
+  assert.match(source, /if \(value === 'all'\) next\.delete\('documents'\);/);
+  assert.match(source, /else next\.set\('documents', value\);/);
+});
+
 test('Clients and Team & Resources use persistent workspaces while internal views remain inside their pages', async () => {
   const clients = getAmsModuleSubnavigation('clients', 'Admin');
   assert.deepEqual(clients.map((item) => item.key), ['directory', 'onboarding', 'agreements', 'service-health']);
