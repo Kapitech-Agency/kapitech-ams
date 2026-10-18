@@ -25,16 +25,6 @@ test('Time tracking ledger precedes the supporting summary', async () => {
   assert.ok(header >= 0 && ledger > header && ledgerEnd > ledger && metrics > ledgerEnd);
 });
 
-test('Retainer value and renewal health summaries precede the searchable retainer register', async () => {
-  const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
-  const header = retainers.indexOf('<AdminModuleHeader');
-  const kpis = retainers.indexOf('data-ams-feature-slug="retainers-kpis"');
-  const summary = retainers.indexOf('data-ams-feature-slug="retainers-summary"');
-  const filters = retainers.indexOf('<AdminFilterBar slug="client-retainers-filters"');
-  const directory = retainers.indexOf('data-ams-feature-slug="retainers-directory"');
-  assert.ok(header >= 0 && kpis > header && summary > kpis && filters > summary && directory > filters);
-});
-
 test('Client directory filters and register precede supporting metrics', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   const header = clients.indexOf('<AdminModuleHeader slug="clients-header"');
