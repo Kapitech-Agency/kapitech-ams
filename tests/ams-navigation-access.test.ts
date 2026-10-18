@@ -195,7 +195,8 @@ test('contextual active states follow URL query state and Inbox fallbacks mirror
   const projects = subnav('projects', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'tasks')!, '/admin/projects', '?projects=sprint'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'tasks')!, '/admin/projects', '?projects=budget'), false);
-  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'controls')!, '/admin/projects', '?projects=budget'), true);
+  assert.equal(projects.find((item) => item.key === 'controls')?.available, false);
+  assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'controls')!, '/admin/projects', '?projects=budget'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'registry')!, '/admin/projects', '?projects=archived'), true);
 
   const clients = subnav('clients', 'Admin');
