@@ -679,3 +679,11 @@ This is an incremental continuation of the full structural redesign, not a compl
 ### Remaining acceptance
 
 Continue reviewing every active subtab and its contextual content hierarchy, including all Finance worksheets and CMS editors. The full redesign is still in progress. Authenticated browser/device visual acceptance remains outstanding at 1440, 1280, 1024, 900, 768, 390 and 320px; CI success is not evidence of visual E2E validation. The Drive screenshot has not been rendered in this execution environment, so do not claim it was re-inspected.
+
+### Retainer agreement workspace ordering · 18 October 2026
+
+- `a672d308b118e684df65e20d155a10b64597666e`: moved the existing retainer KPI strip and supporting summary after the searchable retainer register. The warning about the current usage-data limitation remains visible before the work area; filters, sort behavior, rows, pagination, permissions and drawer actions are unchanged.
+- `a58709063b654b896d9e92c74185ffcabdd97151`: removed a duplicate stale regression assertion that still required the old KPI-first layout and kept the register-first assertion as the single contract.
+- [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39107062176) and [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39107062181) passed on `a58709063b654b896d9e92c74185ffcabdd97151`.
+
+This closes a source/test discrepancy in the earlier checkpoint: the implementation and regression contract now both place the retainer register before supporting summaries. The complete nine-module/subtab redesign and authenticated browser/device visual acceptance remain outstanding.
