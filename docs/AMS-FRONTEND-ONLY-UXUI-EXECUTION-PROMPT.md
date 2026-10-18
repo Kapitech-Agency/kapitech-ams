@@ -14,10 +14,12 @@ Read in full:
 2. AMS-DESIGN-SYSTEM.md
 3. docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md
 4. docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md
-5. docs/AMS-UX-INTERACTION-STANDARDS.md
-6. docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md
-7. docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md
-8. Relevant Drawer, Modal, Kanban, Finance, navigation architecture, and regression guides for touched views.
+5. docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md
+6. docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md
+7. docs/AMS-UX-INTERACTION-STANDARDS.md
+8. docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md
+9. docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md
+10. Relevant Drawer, Modal, Kanban, Finance, navigation architecture, and regression guides for touched views.
 
 Use actual code and tests as evidence. A target-state guide or route does not prove the feature is implemented.
 
@@ -151,6 +153,7 @@ Review the complete diff and ensure no backend/API/database/auth/RBAC/financial 
 - Do not delete CSS without evidence and regression checks.
 - Do not report a build as proof that UX is good.
 - Do not silently skip a module or subtab.
+- Do not use one generic content layout for every role. Read the role-based blueprint and worksheet matrix, and verify actual permissions before adapting content. Role-aware presentation can prioritize authorized information but must not grant access or change data/business meaning.
 
 ## 7. Required stage report
 
