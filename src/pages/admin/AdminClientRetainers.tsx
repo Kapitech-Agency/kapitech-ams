@@ -308,7 +308,7 @@ export const AdminClientRetainers: React.FC = () => {
         items={[
           { key: 'contracts', label: 'Contracts & SOWs', to: '/admin/contracts' },
           { key: 'retainers', label: 'Retainers & Service Commitments', to: '/admin/clients/retainers' },
-          { key: 'renewals', label: 'Renewal Schedule', to: '/admin/clients/retainers', available: false },
+          { key: 'renewals', label: 'Renewal Schedule', to: '/admin/contracts?view=renewals' },
           { key: 'history', label: 'Contract History', to: '/admin/contracts', available: false },
         ]}
       />
