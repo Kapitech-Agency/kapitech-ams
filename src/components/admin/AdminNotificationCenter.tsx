@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, CheckCheck, AlertCircle, BellOff } from 'lucide-react';
+import { Bell, CheckCheck, AlertCircle, BellOff } from '../../lib/untitled-ui-icon-bridge';
 import Button from '../ui/Button';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';

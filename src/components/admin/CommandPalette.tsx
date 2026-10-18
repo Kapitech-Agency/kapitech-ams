@@ -16,7 +16,7 @@ import {
   FileText,
   FolderOpen,
   Loader2
-} from 'lucide-react';
+} from '../../lib/untitled-ui-icon-bridge';
 import { useLanguage } from '../../lib/LanguageContext';
 import { getAdminSession } from '../../lib/adminAuth';
 import { useRbacRole } from '../../lib/rbacEngine';

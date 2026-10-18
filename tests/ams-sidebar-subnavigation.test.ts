@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   canAccessAmsRoute,
   getNavigationGroupsForRole,
@@ -197,6 +200,25 @@ test('MFA setup preserves exceptional Access without exposing Settings to non-ad
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'PM'), []);
 });
 
+
+test('shared navigation and topbar icon controls use the Untitled UI icon bridge', async () => {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const shellFiles = [
+    'src/components/admin/DynamicAdminSidebar.tsx',
+    'src/pages/admin/AdminLayout.tsx',
+    'src/components/admin/AdminModulePrimitives.tsx',
+    'src/components/admin/AdminNotificationCenter.tsx',
+    'src/components/admin/GlobalTimerControl.tsx',
+    'src/components/admin/CommandPalette.tsx',
+    'src/components/admin/ProfileIdentity.tsx',
+  ];
+
+  for (const file of shellFiles) {
+    const source = await fs.readFile(path.join(root, file), 'utf8');
+    assert.ok(source.includes("untitled-ui-icon-bridge"), file + ' must use the approved icon bridge');
+    assert.equal(/from ['"]lucide-react['"]/.test(source), false, file + ' must not import icons directly from lucide-react');
+  }
+});
 
 test('topbar context follows the owning workspace and keeps personal My Hub separate from Projects', () => {
   assert.equal(getAmsWorkspaceNavigationModule('/admin/dashboard'), 'dashboard');

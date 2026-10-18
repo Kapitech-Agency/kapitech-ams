@@ -10,7 +10,7 @@ import {
   LogOut,
   Phone,
   UserRound,
-} from 'lucide-react';
+} from '../../lib/untitled-ui-icon-bridge';
 import Button from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { Drawer } from '../ui/Drawer';

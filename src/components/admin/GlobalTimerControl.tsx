@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Timer, TimerReset } from 'lucide-react';
+import { Timer, TimerReset } from '../../lib/untitled-ui-icon-bridge';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../ui/Modal';
 import { Drawer } from '../ui/Drawer';
