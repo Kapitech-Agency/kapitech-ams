@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 
-test('retired CRM, proposals, and Approval routes redirect to active workspaces', () => {
+test('retired CRM and Proposal routes redirect while Approval remains protected and deprecated', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
   assert.ok(source.includes('<Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
   assert.ok(source.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
@@ -11,7 +11,7 @@ test('retired CRM, proposals, and Approval routes redirect to active workspaces'
   assert.equal(source.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm"'), false);
   assert.ok(source.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
   assert.ok(source.includes("pathname: '/admin/finance/quotations', search: location.search, hash: location.hash"));
-  assert.ok(source.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(source.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="legacy approvals"><AmsNavigationPlaceholder kind="deprecated-approvals" /></ModuleRoute>} />'));
   assert.ok(!source.includes("import('./pages/admin/AdminApprovals')"));
   assert.ok(source.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
   assert.ok(!source.includes("default: m.AdminApprovals"));
