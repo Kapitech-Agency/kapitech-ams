@@ -144,3 +144,10 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Added regression coverage for the common header spacing contract across all five CMS views.
 - No content, publishing workflow, editor, data, permission, or route behavior changed.
 - [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121672188) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121672144) passed for commit `d58e0defa78101010802539bbf6fa75ac36b0ab2`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
+
+
+## Seventeenth implementation slice: Dashboard subview context
+
+- Dashboard's page header now labels the active Overview, Performance, or Analytics workspace and provides a concise description tailored to that view's actual job.
+- This removes the same generic subtitle from three materially different workspaces without changing any route/query state, metrics, calculations, reporting period, permissions, or data sources.
+- Added source regression assertions for all three header contexts.

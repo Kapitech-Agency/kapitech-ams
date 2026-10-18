@@ -540,8 +540,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
       <AdminModuleHeader slug="dashboard-header"
         className="mb-0"
+        eyebrow={view === 'overview' ? 'Overview' : view === 'performance' ? 'Performance' : 'Analytics'}
         title="Dashboard"
-        description="Agency performance, delivery progress, and financial health at a glance."
+        description={view === 'overview'
+          ? 'Monitor agency delivery, financial movement, team capacity, and operational exceptions.'
+          : view === 'performance'
+            ? 'Track project delivery, task completion, overdue work, and recorded team time.'
+            : 'Review invoice and expense trends, outstanding receivables, and project status for the selected period.'}
         actions={(
           <>
 

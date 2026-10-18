@@ -296,3 +296,12 @@ test('CMS editor headers share the same spacing ownership', async () => {
     assert.match(header, /className="mb-0"/, file + ' should delegate vertical spacing to the page shell');
   }
 });
+
+
+test('Dashboard header context follows the selected Overview, Performance, or Analytics workspace', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  assert.match(dashboard, /eyebrow=\{view === 'overview' \? 'Overview' : view === 'performance' \? 'Performance' : 'Analytics'\}/);
+  assert.match(dashboard, /Monitor agency delivery, financial movement, team capacity, and operational exceptions/);
+  assert.match(dashboard, /Track project delivery, task completion, overdue work, and recorded team time/);
+  assert.match(dashboard, /Review invoice and expense trends, outstanding receivables, and project status for the selected period/);
+});
