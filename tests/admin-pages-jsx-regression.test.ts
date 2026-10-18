@@ -952,3 +952,14 @@ test('Clients header avoids repeating the Active clients metric before the prima
   assert.ok(directoryEnd > directory && metrics > directoryEnd);
   assert.ok(clients.includes("id: 'active-clients', label: 'Active clients'"));
 });
+
+
+test('Team Directory automatically uses cards on compact viewports and keeps the table preference for wide desktop', () => {
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  assert.ok(teams.includes("window.matchMedia('(max-width: 1279px)')"));
+  assert.ok(teams.includes("mediaQuery.addEventListener('change', syncViewport)"));
+  assert.ok(teams.includes("teamDisplay === 'table' && !isCompactViewport"));
+  assert.ok(teams.includes('hidden min-[1280px]:flex items-center gap-2'));
+  assert.ok(teams.includes("onClick={() => setTeamDisplay('table')}"));
+  assert.ok(teams.includes("onClick={() => setTeamDisplay('grid')}"));
+});

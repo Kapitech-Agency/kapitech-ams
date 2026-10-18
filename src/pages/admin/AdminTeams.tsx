@@ -286,6 +286,16 @@ export const AdminTeams: React.FC = () => {
   const [teamPod, setTeamPod] = useState('all');
   const [teamStatus, setTeamStatus] = useState('all');
   const [teamDisplay, setTeamDisplay] = useState<'table' | 'grid'>('table');
+  const [isCompactViewport, setIsCompactViewport] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 1279px)').matches
+  );
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1279px)');
+    const syncViewport = () => setIsCompactViewport(mediaQuery.matches);
+    syncViewport();
+    mediaQuery.addEventListener('change', syncViewport);
+    return () => mediaQuery.removeEventListener('change', syncViewport);
+  }, []);
   const [teamPage, setTeamPage] = useState(1);
   const [teamPageSize, setTeamPageSize] = useState(10);
   const [memberDetail, setMemberDetail] = useState<TeamMember | null>(null);
@@ -1222,7 +1232,7 @@ export const AdminTeams: React.FC = () => {
                   Clear
                 </Button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="hidden min-[1280px]:flex items-center gap-2">
                 <span className="text-[11px] text-muted">Display:</span>
                 <div className="inline-flex items-center gap-0.5 rounded-control border border-line bg-bg p-0.5">
                   <button type="button" aria-pressed={teamDisplay === 'table'} onClick={() => setTeamDisplay('table')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamDisplay === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')} title="Table View">
@@ -1238,7 +1248,7 @@ export const AdminTeams: React.FC = () => {
           </section>
 
           <AdminPanel className="overflow-hidden">
-            {teamDisplay === 'table' ? (
+            {teamDisplay === 'table' && !isCompactViewport ? (
               <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable team directory table">
                 {pagedTeamRows.length === 0 ? (
                   <div className="min-h-[180px] px-5 py-10 text-center">

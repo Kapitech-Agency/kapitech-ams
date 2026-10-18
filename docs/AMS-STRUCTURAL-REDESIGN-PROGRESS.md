@@ -220,3 +220,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Preserved document search/sort/pagination, row actions, secure download availability, delete permission gating, content metadata, and empty/error states.
 - Added regression coverage for the responsive breakpoint and retained desktop table.
 - Source and test updates are committed directly to `main`; full CI status is being checked on the latest commit. Browser screenshot verification is not claimed.
+
+
+## Twenty-sixth implementation slice: responsive Team Directory workspace
+
+- Team Directory now automatically uses its existing card/grid presentation below 1,280px, including compact desktop and tablet widths, instead of defaulting to a wide data table.
+- The explicit Table/Grid switch remains available on wide desktop; the selected desktop preference is retained when resizing back from compact layouts.
+- Added a media-query listener for viewport changes and regression coverage for automatic layout selection and retained desktop controls.
+- Team data, filters, sorting, pagination, member/vendor/time workflows, permissions, role visibility, and data sources remain unchanged. CI is being checked after the direct-to-`main` push; authenticated visual browser testing is not claimed.
