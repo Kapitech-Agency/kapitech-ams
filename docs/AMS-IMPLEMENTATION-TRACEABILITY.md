@@ -231,6 +231,16 @@ Planning & Delivery is addressable at `/admin/projects?projects=planning-deliver
 
 **Verification:** AMS Quality Gate and AMS CI passed on code SHA `ef955a4eff43a1109739e0df01b8a4ca7d3fffbd`. Quality Gate passed typecheck, 707 regression tests (687 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser-level visual and role-specific checks remain unverified.
 
+### NAV-012: Project Resources uses canonical project assignment records
+
+**Status:** IMPLEMENTED_UNVERIFIED
+
+**Source:** `src/lib/amsModuleSubnavigation.ts`, `src/pages/admin/AdminProjects.tsx`, `src/lib/projectStore.ts`, `tests/ams-sidebar-subnavigation.test.ts`, `tests/projects-module-regression.test.ts`.
+
+Project Resources is addressable at `/admin/projects?projects=resources`. It selects an existing project and presents its recorded owner/team membership, optional explicit resource allocation entries, and the same canonical project task assignments. Assignment counts are calculated from task assignee values; resource allocation percentages are shown only when explicit allocation records exist. Cross-project staffing availability, time-log actuals and overload/capacity percentages remain explicitly outside this view and are not inferred from task counts. No API, database, authentication, access policy, Finance logic or business record was changed.
+
+**Verification:** Route ownership and source-content regression assertions are added. Current CI status is pending. Browser-level visual and role-specific checks remain unverified.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
