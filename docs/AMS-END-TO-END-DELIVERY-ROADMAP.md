@@ -2,36 +2,36 @@
 
 **Status:** Canonical execution sequence for the AMS delivery initiative  
 **Last updated:** 19 October 2026  
-**Repository:** \`Kapitech-Agency/kapitech-ams\`  
-**Required delivery branch:** \`main\`  
+**Repository:** `Kapitech-Agency/kapitech-ams`  
+**Required delivery branch:** `main`  
 **Goal:** Move the current repository state through verified navigation, clear module content, complete business workflows, cross-module integrity, testing, operational readiness, and an evidence-backed production release.
 
-> This roadmap defines **order, dependencies, stage gates, and delivery evidence**. It is not proof that any feature is implemented or production is healthy. Always reconcile it against current \`main\`, source code, tests, current CI and authorized runtime evidence.
+> This roadmap defines **order, dependencies, stage gates, and delivery evidence**. It is not proof that any feature is implemented or production is healthy. Always reconcile it against current `main`, source code, tests, current CI and authorized runtime evidence.
 
 ## 1. Source-of-truth hierarchy
 
 Use the documents according to their distinct roles; do not let several documents independently redefine the delivery sequence.
 
 1. **User's latest explicit instruction** — determines current goals and scope, within security and production safeguards.
-2. **\`AGENTS.md\` and \`docs/README.md\`** — task boundaries, documentation authority and repository operating rules.
+2. **`AGENTS.md` and `docs/README.md`** — task boundaries, documentation authority and repository operating rules.
 3. **This roadmap** — canonical end-to-end stage order, prerequisites, exit gates and progression rules.
-4. **\`docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md\`** — current requirement-by-requirement status, evidence, gap owner, dependencies, blockers and next action. Update it from evidence; never fill it with assumptions.
-5. **\`docs/AMS-END-TO-END-EXECUTION-PROMPT.md\`** — copy/paste operating prompt that applies this roadmap to an AI execution session.
-6. **Product and UX authority:** \`docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md\`, \`docs/architecture/ams-navigation-information-architecture.md\`, \`AMS-DESIGN-SYSTEM.md\`, \`docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md\`, \`docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md\`, and \`docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md\`.
-7. **Domain contracts:** \`docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md\`, \`docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md\`, \`docs/AMS-BACKEND-API-AND-DATA-INTEGRITY.md\`, \`docs/FINANCE-EXCEL-ALIGNMENT.md\`, and \`docs/integrations/BANK-MANDIRI-KOPRA-H2H-INTEGRATION.md\`.
-8. **Verification and operations:** \`docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md\`, \`docs/AMS-IMPLEMENTATION-TRACEABILITY.md\`, \`docs/PRODUCTION-CUTOVER.md\`, \`docs/production-cutover-checklist.md\`, \`docs/production-readiness-gate.md\`, \`docs/postgres-backup-dr-runbook.md\`, \`docs/AMS-RESTORE-REHEARSAL.md\`, and \`docs/private-document-vault.md\`.
+4. **`docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md`** — current requirement-by-requirement status, evidence, gap owner, dependencies, blockers and next action. Update it from evidence; never fill it with assumptions.
+5. **`docs/AMS-END-TO-END-EXECUTION-PROMPT.md`** — copy/paste operating prompt that applies this roadmap to an AI execution session.
+6. **Product and UX authority:** `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`, `docs/architecture/ams-navigation-information-architecture.md`, `AMS-DESIGN-SYSTEM.md`, `docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md`, `docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md`, and `docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md`.
+7. **Domain contracts:** `docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md`, `docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md`, `docs/AMS-BACKEND-API-AND-DATA-INTEGRITY.md`, `docs/FINANCE-EXCEL-ALIGNMENT.md`, and `docs/integrations/BANK-MANDIRI-KOPRA-H2H-INTEGRATION.md`.
+8. **Verification and operations:** `docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md`, `docs/AMS-IMPLEMENTATION-TRACEABILITY.md`, `docs/PRODUCTION-CUTOVER.md`, `docs/production-cutover-checklist.md`, `docs/production-readiness-gate.md`, `docs/postgres-backup-dr-runbook.md`, `docs/AMS-RESTORE-REHEARSAL.md`, and `docs/private-document-vault.md`.
 
 When a lower-level document contains an older stage sequence, use it for its domain-specific requirements but follow this roadmap for delivery order. Correct cross-references when discovered. If a genuine product/business/security conflict remains, record it and ask the user; do not silently choose a behavior.
 
 ## 2. Non-negotiable execution rules
 
-- Inspect current \`main\`, current source, recent commits and CI before every new stage or resume after interruption. Preserve correct work already present; do not redo it without evidence.
+- Inspect current `main`, current source, recent commits and CI before every new stage or resume after interruption. Preserve correct work already present; do not redo it without evidence.
 - The approved navigation consists of nine primary modules: Dashboard, Inbox, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings. Finance retains its five approved areas. CRM, Proposal/Quotation and generic Approval are not additional primary modules.
 - Work in small, verifiable slices. Within module-based work, implement one module or clearly bounded worksheet/workflow slice at a time.
 - Send the user a durable report at baseline, after every meaningful slice, before a high-risk decision, and at every stage boundary. Include commit SHA, changed files, verified behavior, exact checks/results, remaining work, unverified items and the next single task.
 - After reporting a routine slice, continue to the next already-authorized task when safe. **Do not wait for approval after every routine slice.** Stop for the visual sign-off gate, material business/product decision, sensitive/destructive production action, scope boundary, unresolved security issue, or when the user explicitly asks to pause.
-- A timeout is not completion. Reduce batch size, checkpoint the last safe unit, report its exact state, then re-fetch \`main\` and the relevant CI/source before resuming. Never repeat already verified changes or assume a commit/deployment/test completed without evidence.
-- Commit verified checkpoints directly to \`main\`, as requested. Do not create a new branch or PR, force-push, or bypass repository protection; report the blocker if direct-to-main is unavailable.
+- A timeout is not completion. Reduce batch size, checkpoint the last safe unit, report its exact state, then re-fetch `main` and the relevant CI/source before resuming. Never repeat already verified changes or assume a commit/deployment/test completed without evidence.
+- Commit verified checkpoints directly to `main`, as requested. Do not create a new branch or PR, force-push, or bypass repository protection; report the blocker if direct-to-main is unavailable.
 - Scope may be full-stack across this end-to-end roadmap as authorized by the user, but every change must follow the technical/domain contract and tests. No unapproved business-rule change, destructive data change, production payment, credential change, or security-control bypass is implied.
 - Treat a UI target as a target until source/tests prove it is functional. Do not use mock data or hardcoded success in production paths.
 - Do not claim “complete,” “E2E passed,” “production-ready,” “deployed,” or “integration works” without the corresponding evidence.
@@ -44,13 +44,13 @@ When a lower-level document contains an older stage sequence, use it for its dom
 
 Actions:
 - Record current main HEAD, latest relevant commits, changed files, relevant GitHub Actions state and any observable baseline failures.
-- Review \`docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md\`, \`docs/AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md\`, recent source commits and tests. These are useful history, not a substitute for current verification.
+- Review `docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md`, `docs/AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md`, recent source commits and tests. These are useful history, not a substitute for current verification.
 - Inventory all nine modules, workspaces, worksheets, routes, major UI/content states, API/data source dependencies, permission boundaries and key cross-module workflows.
 - Populate the gap register with evidence and a status for every requirement. Distinguish verified complete, partial, missing, broken, not tested, target-only and externally blocked.
 
 **Deliverables:** Baseline report, inventory/gap-register initial pass, protected-scope map, ranked first tasks.
 
-**Exit gate:** The next task is based on evidence from current \`main\`; prior work to preserve and existing blockers are explicitly recorded.
+**Exit gate:** The next task is based on evidence from current `main`; prior work to preserve and existing blockers are explicitly recorded.
 
 ### Stage 1 — Complete and verify the approved navigation
 
@@ -86,7 +86,7 @@ For every module/workspace/worksheet and workflow:
 - Mark whether the need is a visual/presentation gap, frontend interaction gap, backend/API gap, data/schema gap, permission/security gap, test gap or provider dependency.
 - Identify duplicate/competing ownership, target-only features, missing acceptance criteria and conflicts between documents.
 
-**Deliverables:** Updated \`AMS-FEATURE-CONTENT-GAP-REGISTER.md\`, ranked by impact and dependency, including open decisions and evidence links.
+**Deliverables:** Updated `AMS-FEATURE-CONTENT-GAP-REGISTER.md`, ranked by impact and dependency, including open decisions and evidence links.
 
 **Exit gate:** Every currently specified module and workflow has an explicit status and next action. Unknowns remain marked unknown, not silently represented as missing or complete.
 
@@ -225,7 +225,7 @@ Run risk-based reviews for authentication/session/CSRF/MFA, server-side RBAC and
 
 **Objective:** Validate behavior from user intent through persisted effects across roles/modules.
 
-Use \`docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md\` and existing test contracts. Include:
+Use `docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md` and existing test contracts. Include:
 - Lint/typecheck, unit/component and production build checks.
 - Navigation/query/deep-link and module/worksheet tests.
 - API validation/authorization/negative tests as applicable.
@@ -253,9 +253,9 @@ Verify all migrations discovered by the current loader, applied version/checksum
 
 **Objective:** Prove release prerequisites before deployment or declaration of readiness.
 
-Follow \`docs/PRODUCTION-CUTOVER.md\`, \`docs/production-cutover-checklist.md\`, \`docs/production-readiness-gate.md\`, \`docs/postgres-backup-dr-runbook.md\` and \`docs/private-document-vault.md\`. Verify current Hostinger repository/branch/domain/runtime configuration with authorized access, current CI, production settings, PostgreSQL, full migration/checksum parity, reviewed reconciliation, active-user MFA, backup/restore evidence, private-document object integrity and required enabled notification configuration.
+Follow `docs/PRODUCTION-CUTOVER.md`, `docs/production-cutover-checklist.md`, `docs/production-readiness-gate.md`, `docs/postgres-backup-dr-runbook.md` and `docs/private-document-vault.md`. Verify current Hostinger repository/branch/domain/runtime configuration with authorized access, current CI, production settings, PostgreSQL, full migration/checksum parity, reviewed reconciliation, active-user MFA, backup/restore evidence, private-document object integrity and required enabled notification configuration.
 
-The documented authenticated \`GET /api/system/production-readiness\` gate must return HTTP 200 with \`productionReady=true\`. HTTP 401 is not a readiness verdict; HTTP 409 means one or more gates are incomplete; HTTP 503 means readiness evaluation did not complete.
+The documented authenticated `GET /api/system/production-readiness` gate must return HTTP 200 with `productionReady=true`. HTTP 401 is not a readiness verdict; HTTP 409 means one or more gates are incomplete; HTTP 503 means readiness evaluation did not complete.
 
 **Deliverables:** Release evidence bundle, explicit go/no-go decision, verified commit and deployment plan, smoke-test plan, incident/recovery contacts and rollback/recovery approach suitable for the current database and deployment.
 
@@ -265,7 +265,7 @@ The documented authenticated \`GET /api/system/production-readiness\` gate must 
 
 **Objective:** Confirm the actual release behaves correctly in the production environment.
 
-- Verify the intended \`main\` commit was deployed to the correct Hostinger project/domain.
+- Verify the intended `main` commit was deployed to the correct Hostinger project/domain.
 - Run non-destructive live smoke tests and authorized authenticated role-specific workflows.
 - Inspect safe application/runtime logs and telemetry, backup freshness, error rates and key workflow indicators.
 - Verify primary modules and critical journeys, including no unexpected duplicate records or financial state change.
@@ -299,7 +299,7 @@ After baseline and each meaningful slice, report:
 - **Stage/slice and status:** complete, in progress, blocked or unverified.
 - **Evidence-based findings:** what current source/test/runtime proves.
 - **Changes:** files and observable behavior.
-- **Commit:** exact SHA and link on \`main\`.
+- **Commit:** exact SHA and link on `main`.
 - **Validation:** actual command/CI/run and result.
 - **Preserved work:** earlier changes verified and not repeated.
 - **Open gaps/blockers:** exact requirement and dependency.
