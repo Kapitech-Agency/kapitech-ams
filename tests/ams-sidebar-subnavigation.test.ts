@@ -107,6 +107,8 @@ test('existing Inbox routes keep query-driven active state and Careers applicant
     'Starred remains a Messages-owned saved view for navigation ownership');
   const messageWorksheets = getAmsModuleSubnavigationChildren('inbox', 'messages', 'Admin');
   assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'all-messages')!, '/admin/inbox', '?view=messages'), true);
+  assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'all-messages')!, '/admin/inbox', '?view=starred'), true,
+    'Starred must remain a saved view owned by the canonical All Messages worksheet');
   assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'sales-inquiries')!, '/admin/inbox', '?view=client'), true);
   assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'client-requests')!, '/admin/inbox', '?view=client-requests'), false);
 
