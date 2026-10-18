@@ -250,6 +250,8 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(dashboard.includes('Live data unavailable'));
   assert.ok(dashboard.includes('buildFinancialTrend(range, invoices, expenses)'));
   assert.ok(dashboard.includes('not a posted profit figure'));
+  assert.ok(dashboard.indexOf('title="Active projects"') < dashboard.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"'), 'The active project workspace must precede secondary dashboard metrics.');
+  assert.ok(dashboard.indexOf('title="Team capacity"') < dashboard.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"'), 'Supporting metrics should follow the primary project and capacity workspace.');
   assert.doesNotMatch(dashboard, /const deliveryBreakdown = \[/);
 });
 
