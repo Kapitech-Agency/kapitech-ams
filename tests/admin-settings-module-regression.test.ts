@@ -7,11 +7,12 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('System Center is a single Admin-only direct link and Settings workspace tabs render in the content area', async () => {
+test('System Center is a single Admin-only direct link and Settings workspace tabs render in the shared topbar', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const navigation = await read('src/lib/amsNavigationAccess.ts');
   const workspace = await read('src/lib/amsModuleSubnavigation.ts');
+  const settings = await read('src/pages/admin/AdminSettings.tsx');
 
   assert.ok(sidebar.includes('aria-label="Primary navigation"'));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
@@ -21,6 +22,9 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   assert.ok(workspace.includes("{ key: 'access', label: 'Access & security', to: '/admin/settings?tab=security' }"));
   assert.ok(workspace.includes("{ key: 'audit', label: 'Audit log', to: '/admin/settings?tab=audit' }"));
   assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));
+  assert.ok(settings.includes("description={activeTab === 'overview'"));
+  assert.ok(settings.includes('Review system health, backup history, and production readiness.'));
+  assert.ok(settings.includes('Search and review server-recorded security and administrative events.'));
   assert.equal(workspace.includes("key: 'readiness'"), false);
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.equal(sidebar.includes('aria-expanded='), false);
