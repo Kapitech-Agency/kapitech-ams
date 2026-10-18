@@ -8,7 +8,7 @@ Before implementation, read:
 
 1. **README.md** — runtime, production safeguards, commands, and deployment constraints.
 2. **AMS-DESIGN-SYSTEM.md** — mandatory visual and interaction system; source of truth for UI.
-3. **docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md** — target-state navigation, modules, worksheets, workflows, cross-module data, Finance, Kopra preparation, migration sequence, and acceptance criteria.
+3. **docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md** — target-state navigation, modules, worksheets, workflows, cross-module data, Finance, Kopra preparation, and domain acceptance criteria.
 4. **The specialized document(s) relevant to the task:**
    - Finance/accounting: **docs/FINANCE-EXCEL-ALIGNMENT.md**
    - Existing business/workflow evidence: **docs/ams-workflow-audit.md**
@@ -17,7 +17,6 @@ Before implementation, read:
    - Kanban/task boards: **docs/AMS-KANBAN-GUIDELINES.md**
    - Module content hierarchy and frontend-only UX/UI execution: **docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md** and **docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md**
    - End-to-end stage sequence, requirement status and execution protocol: **docs/AMS-END-TO-END-DELIVERY-ROADMAP.md**, **docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md**, and **docs/AMS-END-TO-END-EXECUTION-PROMPT.md**.
-   - End-to-end delivery order, requirement status, and mandatory execution prompt: **docs/AMS-END-TO-END-DELIVERY-ROADMAP.md**, **docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md**, and **docs/AMS-END-TO-END-EXECUTION-PROMPT.md**.
    - The navigation-first prompt filename is retained only as a compatibility pointer to the canonical end-to-end prompt; do not treat it as a separate rollout schedule.
    - Detailed role-aware main content and worksheet defaults: **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md** and **docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md**
 - PostgreSQL/schema/cutover/recovery: use the current production runbooks indexed in docs/README.md first. docs/AMS-POSTGRES-*.md and docs/AMS-RELATIONAL-MIGRATION.md include historical/staging references and must not be treated as current production instructions.
