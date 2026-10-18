@@ -316,6 +316,14 @@ test('Dashboard header context follows the selected Overview, Performance, or An
 });
 
 
+test('Dashboard invalid workspace query values normalize to Overview', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  assert.ok(dashboard.includes("const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const"));
+  assert.ok(dashboard.includes("DASHBOARD_WORKSPACE_VIEWS.includes(requestedView as DashboardWorkspaceView)"));
+  assert.ok(dashboard.includes("const hasViewParameter = searchParams.has('view')"));
+  assert.ok(dashboard.includes("navigate('/admin/dashboard', { replace: true })"));
+});
+
 test('Client Onboarding has a distinct header when the onboarding scope is selected', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   assert.match(clients, /eyebrow=\{statusScope === 'lead' \? 'Onboarding workspace' : 'Client directory'\}/);
