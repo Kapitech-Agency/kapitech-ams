@@ -20,9 +20,9 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search)'));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
   assert.ok(workspace.includes("{ key: 'overview', label: 'System Overview', to: '/admin/settings?tab=overview', slug: 'settings-workspace-overview' }"));
-  assert.ok(workspace.includes("{ key: 'access', label: 'Users & Access', to: '/admin/settings?tab=security' }"));
-  assert.ok(workspace.includes("{ key: 'audit', label: 'Audit Log', to: '/admin/settings?tab=audit' }"));
-  assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));
+  assert.ok(workspace.includes("{ key: 'access', label: 'Users & Access', to: '/admin/settings?tab=security', slug: 'settings-workspace-access' }"));
+  assert.ok(workspace.includes("{ key: 'audit', label: 'Audit Log', to: '/admin/settings?tab=audit', slug: 'settings-workspace-audit' }"));
+  assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations', slug: 'settings-workspace-integrations' }"));
   assert.ok(settings.includes("title={activeTab === 'overview'"));
   assert.ok(settings.includes("? 'System overview'"));
   assert.ok(settings.includes("? 'Access & security'"));

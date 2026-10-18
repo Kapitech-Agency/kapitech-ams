@@ -247,8 +247,10 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   assert.equal(dashboard.includes('ariaLabel="Dashboard view"'), false);
   assert.ok(!dashboard.includes('-mt-2'));
   assert.ok(layout.includes('workspace-topbar-navigation') && layout.includes('<AdminSectionTabs'));
-  assert.ok(subnavigation.includes("label: 'Client Requests'") && subnavigation.includes("label: 'All Documents'"));
-  assert.equal(inbox.includes('<AdminSectionTabs'), false, 'Inbox tabs are owned by the shared topbar.');
+  assert.equal(subnavigation.includes("label: 'Client Requests'"), false, 'Client Requests is a worksheet, not a persistent workspace.');
+  assert.equal(subnavigation.includes("label: 'All Documents'"), false, 'Document categories stay inside Document Library.');
+  assert.match(inbox, /ariaLabel="Messages worksheets and saved views"/);
+  assert.equal(documents.includes('<AdminSectionTabs'), false, 'Document categories stay within the Document Library page.');
   assert.equal(documents.includes('<AdminSectionTabs'), false, 'Documents tabs are owned by the shared topbar.');
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));

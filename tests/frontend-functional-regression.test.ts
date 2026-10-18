@@ -215,9 +215,9 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   assert.ok(layout.includes('onLogout={handleLogout}'));
   assert.ok(layout.includes('actionMenu'));
   assert.ok(subnavigation.includes("label: 'Vendors & Freelancers'"));
-  assert.ok(subnavigation.includes("label: 'Skills & Service Matrix'"));
+  assert.match(vendors, /ariaLabel="Vendors and freelancers worksheets"/);
+  assert.match(vendors, /label: 'Skills & Service Matrix', to: '\/admin\/vendors', available: false/);
   assert.equal(vendors.includes('data-ams-slug="vendors-mobile-tabs"'), false);
-  assert.equal(vendors.includes('<AdminSectionTabs'), false);
   assert.equal(teams.includes("to: '/admin/team?view=vendor-directory'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=skill-matrix'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=time-logs'"), false);
