@@ -715,10 +715,12 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   const timeFilters = teams.indexOf('data-ams-feature-slug="time-logs-filters"');
   const timeLedger = teams.indexOf('slug="time-logs-ledger"');
   const timePagination = teams.indexOf('slug="time-logs-pagination"');
-  assert.ok(timeView >= 0 && timeMetrics > timeView && timeMetrics < timeFilters && timeFilters < timeLedger);
-  assert.ok(timePagination > timeLedger);
+  assert.ok(timeView >= 0 && timeFilters > timeView && timeLedger > timeFilters);
+  assert.ok(timePagination > timeLedger && timeMetrics > timePagination);
   const timeTracking = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTimeLogs.tsx'), 'utf8');
-  assert.ok(timeTracking.indexOf('slug="time-tracking-kpis"') < timeTracking.indexOf('data-ams-feature-slug="time-tracking-ledger"'));
+  const standaloneLedger = timeTracking.indexOf('data-ams-feature-slug="time-tracking-ledger"');
+  const standaloneLedgerEnd = timeTracking.indexOf('</section>', standaloneLedger);
+  assert.ok(standaloneLedger >= 0 && standaloneLedgerEnd > standaloneLedger && timeTracking.indexOf('slug="time-tracking-kpis"') > standaloneLedgerEnd);
 });
 
 
