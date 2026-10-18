@@ -185,3 +185,4 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - The Documents header now reflects the selected category instead of repeating the same vault title and description for all six topbar views. "All Documents" retains the overall vault context; each category uses its own title and task-oriented description.
 - The private-vault status badge, search/sort controls, category routing, permissions, download/preview/delete behavior, and document data remain unchanged.
 - Added regression coverage for the category-specific header copy.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122707224) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122707232) passed for commit `8a6be2e48ddf71c036a2b18f2e2eddffc898afa0`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
