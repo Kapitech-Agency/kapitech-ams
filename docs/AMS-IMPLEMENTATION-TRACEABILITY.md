@@ -351,19 +351,34 @@ Team & Capacity exposes Team Directory, Roles & Departments, Capacity Allocation
 
 ### NAV-026: Document Library categories remain in one workspace with canonical query state
 
-**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI required on this checkpoint; browser-level navigation remains unverified).
+**Status:** IMPLEMENTED_VERIFIED (source regression, typecheck, production build and AMS CI passed at source SHA `67931f5dbeb800acb99ab03dd0f60d3ce1212e81`; browser-level navigation remains unverified).
 
 **Source:** `src/pages/admin/AdminDocuments.tsx`, `src/lib/amsModuleSubnavigation.ts`, `tests/ams-sidebar-subnavigation.test.ts`.
 
 Documents has one primary workspace, Document Library. Project & Client Files, SOPs & Policies, Legal & Corporate, Finance & Tax, HR & People, and Security & Infrastructure remain category/filter views in the same canonical library. The current category dropdown preserves its query selection for deep links; an unsupported `documents` value now resolves to All files and removes the invalid parameter via history replacement. No document data, vault logic, mutation path or access policy changed.
 
+**Verification:** [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39155134268) and [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39155134370) passed on source SHA `67931f5dbeb800acb99ab03dd0f60d3ce1212e81`. Browser-level navigation, refresh and back/forward checks remain unverified.
+
 ### NAV-027: Website CMS content-type and Careers worksheet navigation follows route ownership
 
-**Status:** IMPLEMENTED_UNVERIFIED (navigation regression and CI are pending for this checkpoint; browser-level navigation remains unverified).
+**Status:** IMPLEMENTED_VERIFIED (source regression, typecheck, production build and AMS CI passed at source SHA `67931f5dbeb800acb99ab03dd0f60d3ce1212e81`; browser-level navigation remains unverified).
 
 **Source:** `src/lib/amsModuleSubnavigation.ts`, `src/App.tsx`, `src/pages/admin/AdminCmsCareers.tsx`, `tests/ams-sidebar-subnavigation.test.ts`.
 
 Website CMS exposes the five content-type workspaces in order: Case Studies, Services, Insights, Testimonials, and Careers. Careers contains Jobs for roles permitted to manage openings and Applicants for permitted applicant reviewers. Recruitment History is explicitly non-interactive target-only. Unsupported Careers tab queries normalize to the canonical tab for the current role, and the legacy Inbox jobs route redirects to Careers → Applicants. No CMS data, publishing behavior, APIs, or role/access policy changed.
+
+**Verification:** [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39155134268) and [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39155134370) passed on source SHA `67931f5dbeb800acb99ab03dd0f60d3ce1212e81`. Browser-level navigation, direct-entry, refresh and back/forward checks remain unverified.
+
+
+### NAV-028: Settings Integrations exposes the documented nested workspace structure
+
+**Status:** IMPLEMENTED_VERIFIED (source regression, typecheck, production build and AMS CI passed at source SHA `67931f5dbeb800acb99ab03dd0f60d3ce1212e81`; browser-level navigation remains unverified).
+
+**Source:** `src/pages/admin/AdminSettings.tsx`, `src/lib/amsModuleSubnavigation.ts`, `tests/admin-settings-module-regression.test.ts`.
+
+Settings → Integrations now contains internal worksheets for Integration Overview and Website & CMS Integrations. The latter uses the existing CMS metadata form and its existing API path. Bank Mandiri Kopra H2H is present as an explicitly disabled target-only worksheet because the dedicated bank integration workflow is not configured. The nested `integration` query is URL-addressable; unknown or out-of-scope values are removed with history replacement. No backend/API, bank connection, credentials, Finance rules, or access policy was changed.
+
+**Verification:** [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39155134268) and [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39155134370) passed on source SHA `67931f5dbeb800acb99ab03dd0f60d3ce1212e81`. Browser-level keyboard, refresh and back/forward checks remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
