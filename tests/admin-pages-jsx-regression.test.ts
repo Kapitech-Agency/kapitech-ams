@@ -632,6 +632,8 @@ test('Inbox opens with contextual controls and its triage workspace, without a r
   assert.doesNotMatch(inbox, /key: 'starred', label: 'Starred'/);
   assert.doesNotMatch(inbox, /key: 'resolved-archived'/);
   assert.ok(inbox.includes('to="/admin/inbox?view=starred"'), 'Starred stays reachable as a saved view from Messages.');
+  assert.ok(inbox.includes('to="/admin/inbox?view=unread"'), 'Unread stays reachable as a saved view from Messages.');
+  assert.ok(inbox.includes("case 'unread': return submissions.filter((item) => item.status === 'new')"));
   assert.match(inbox, /<AdminFilterBar\b/);
   assert.match(inbox, /data-ams-slug="inbox-overview-workspace"/);
   assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);
