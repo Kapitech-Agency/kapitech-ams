@@ -113,7 +113,7 @@ test('Annual Summary separates source operating activity from posted-ledger resu
   assert.match(annualView, /const postedLedgerSummaryRows = annualRows\.filter\(\(item\) => item\.id\.startsWith\('gl-'\)\)/);
   assert.match(annualView, /Export full summary/);
   assert.match(annualView, /annualRows\.map\(\(item\) => \[item\.metric, item\.amount, item\.basis\]\)/);
-  assert.match(annualView, /Posted journals only/);
+  assert.match(annualView, /posted journals only/i);
 });
 
 test('Cash Flow presents source and posted-ledger comparison tables without duplicated KPI strips', async () => {
