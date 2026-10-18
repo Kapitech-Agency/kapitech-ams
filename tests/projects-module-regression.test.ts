@@ -13,7 +13,7 @@ test('Projects module normalizes URL view and keeps layout in sync with browser 
   assert.ok(source.includes("const requestedView = searchParams.get('projects');"));
   assert.ok(source.includes("const view: ProjectsView = requestedView === 'overview'"));
   assert.ok(source.includes("requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'"));
-  assert.ok(source.includes("if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning-delivery', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView))"));
+  assert.ok(source.includes("if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning-delivery', 'resources', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView))"));
   assert.ok(source.includes("const requestedLayout = searchParams.get('layout')"));
   assert.ok(source.includes("requestedLayout === 'table' ? 'table' : requestedLayout === 'timeline' ? 'timeline' : 'board'"));
   assert.ok(source.includes("searchParams.get('layout') === 'table' ? 'table' : searchParams.get('layout') === 'timeline' ? 'timeline' : 'board'"));
@@ -122,6 +122,10 @@ test('Project overview metrics and sprint project selection describe their actua
   assert.ok(source.includes('Project brief notes'));
   assert.ok(source.includes('Not tracked as separate project records'));
   assert.ok(source.includes("next.set('planningProject', value)"));
+  assert.ok(source.includes('projects-resources-workspace'));
+  assert.ok(source.includes('Recorded resource allocation'));
+  assert.ok(source.includes("next.set('resourcesProject', value)"));
+  assert.ok(source.includes('Capacity and availability'));
   assert.ok(source.includes("value: serverMode ? metrics.averageProgress + '%' : '—'"));
   assert.match(source, /AdminStatusBadge tone=\{serverMode \? 'success' : loading \? 'info' : 'warning'\}/);
   assert.match(source, /serverMode \? 'Live project data' : loading \? 'Loading project records' : 'Project data unavailable'/);
