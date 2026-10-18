@@ -473,6 +473,7 @@ export const AdminProjects: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
   const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
   const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
+  const createProjectRequestHandled = React.useRef(false);
   const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectRecord | null>(null);
   const [editingTask, setEditingTask] = useState<ProjectTask | null>(null);
@@ -1016,6 +1017,22 @@ export const AdminProjects: React.FC = () => {
     setProjectDrawerOpen(true);
     void loadProjectClients();
   };
+
+  React.useEffect(() => {
+    const requestedCreate = searchParams.get('create') === '1';
+    if (!requestedCreate) {
+      createProjectRequestHandled.current = false;
+      return;
+    }
+    if (createProjectRequestHandled.current) return;
+
+    createProjectRequestHandled.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete('create');
+    setSearchParams(next, { replace: true });
+
+    if (canManageProjects) openNewProject();
+  }, [searchParams, setSearchParams, canManageProjects]);
 
   const openEditProject = (project: ProjectRecord) => {
     if (!canManageProjects || saving) return;

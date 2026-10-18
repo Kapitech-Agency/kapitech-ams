@@ -497,3 +497,18 @@ No claim of full data-integrity, production-readiness or financial-statement ver
 The earlier PR #169 adds an isolated mock-fetch API client regression suite covering mutating-request timeout, read timeout and binary upload timeout. This follow-up adapts its assertions to the current API client's clearer messages rather than reverting the newer implementation from PR #168. Combined source/test head `6fb61d4cf4e7ecee9b0d4f385cca66d76d280ded` passed AMS Quality Gate and AMS CI: 572 tests, 552 passed, 0 failed, 20 skipped; typecheck and production build passed; all 8 isolated PostgreSQL integration tests passed; dependency audit found no vulnerabilities in 266 packages; migration packaging and isolated PostgreSQL HTTP smoke checks passed. These checks validate the tested code paths and isolated environment only. Both workflows must pass again on the latest PR head before merging.
 
 The findings above are source-level risks and release-control gaps, not claims that duplicate live payments, a live invoice read mismatch, or unsafe production TLS was observed. No backend endpoint, authentication/RBAC control, database schema/migration, production record, bank operation, finance formula, account mapping or posting rule was modified.
+
+
+## Active main-line checkpoint — 19 October 2026
+
+### DASH-CTA-001: Dashboard project action opens the authorized creation flow
+
+**Status:** IMPLEMENTED_UNVERIFIED pending CI on the resulting bulk commit; authenticated browser verification remains outstanding.  
+**Scope:** Frontend route/presentation only. No API, persistence, business rule, Finance calculation or permission policy change.
+
+**Source:** `src/components/admin/GlobalExecutiveDashboard.tsx`, `src/pages/admin/AdminProjects.tsx`.  
+**Test:** `tests/ams-dashboard-overview-hierarchy.test.ts` asserts permission-aware CTA routing and consumption of the `create=1` query.  
+**Acceptance:** Users with `canManageProjects` see “New project” and open the existing project-creation drawer from Dashboard. Other users receive “Open Projects” and no creation query. The query is removed using replace navigation; the existing permission check remains authoritative.  
+**Validation limits:** Local lint/test/build could not be run in the current execution environment. CI on the resulting commit and browser deep-link/role interaction are required.  
+**Next action:** Confirm the resulting AMS Quality Gate and AMS CI, then verify direct entry, URL cleanup and drawer access during Stage 5.
+

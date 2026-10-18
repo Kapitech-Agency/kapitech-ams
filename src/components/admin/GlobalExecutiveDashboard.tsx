@@ -20,6 +20,7 @@ import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 import { ProfileIdentity } from './ProfileIdentity';
 import { api } from '../../lib/apiClient';
+import { hasAdminPermission } from '../../lib/adminAuth';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
@@ -321,6 +322,7 @@ const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: R
 export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const canManageProjects = hasAdminPermission('canManageProjects');
   const requestedView = searchParams.get('view');
   const hasViewParameter = searchParams.has('view');
   const view: DashboardWorkspaceView = DASHBOARD_WORKSPACE_VIEWS.includes(requestedView as DashboardWorkspaceView)
@@ -563,11 +565,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <>
 
             <Link
-              to="/admin/projects"
+              to={canManageProjects ? '/admin/projects?create=1' : '/admin/projects'}
               className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium sm:min-h-9 sm:w-auto text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <Plus size={14} />
-              New project
+              {canManageProjects ? 'New project' : 'Open Projects'}
             </Link>
           </>
         )}

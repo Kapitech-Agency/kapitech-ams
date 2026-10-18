@@ -57,3 +57,16 @@ test('Dashboard overview keeps operational data and financial labels source-back
   assert.ok(dashboard.includes('not a posted profit figure'), 'Difference must not be relabeled as posted profit');
   assert.ok(dashboard.includes('The dashboard service has not provided a live historical revenue series for this period.'));
 });
+
+test('Dashboard project creation action opens the existing create drawer only for permitted roles', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.match(dashboard, /hasAdminPermission\('canManageProjects'\)/);
+  assert.match(dashboard, /to=\{canManageProjects \? '\/admin\/projects\?create=1' : '\/admin\/projects'\}/);
+  assert.match(dashboard, /\{canManageProjects \? 'New project' : 'Open Projects'\}/);
+  assert.match(projects, /const createProjectRequestHandled = React\.useRef\(false\)/);
+  assert.match(projects, /searchParams\.get\('create'\) === '1'/);
+  assert.match(projects, /next\.delete\('create'\)/);
+  assert.match(projects, /if \(canManageProjects\) openNewProject\(\)/);
+});

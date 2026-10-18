@@ -410,3 +410,14 @@ The structural redesign remains in progress. These stages materially improve fou
 ## Remaining Finance worksheet review
 
 Responsive review has now added a compact register to Project Finance, Accounts Payable, and its installment schedule. Remaining Finance worksheets still need source-by-source layout review, especially Petty Cash, Operational Budget, Project Allocation, Team Fee, Chart of Accounts, Balance Sheet, Journal and Monthly Closing. Other module checkpoint/visual approval remains separate. No authenticated browser/viewport screenshot QA has been performed.
+
+
+## Current main-line checkpoint — 19 October 2026
+
+- Baseline: `ec1b9e5f9d64fd69b5c64bc919ae7441e486d6a9`. The baseline AMS Quality Gate and AMS CI completed successfully. This is evidence for the baseline SHA only, not a pass claim for changes added after it.
+- Stage 0–2 source checks reviewed the nine-module navigation mapping, shell geometry and existing scroll regression guard. Source-level checks are green on the baseline; direct browser navigation, scroll, focus and responsive QA remain unverified and belong in Stage 5.
+- The Stage 3 gap-register checkpoint identifies module workspaces and ten cross-module workflows with conservative statuses and next actions. Inbox Follow-ups, Inbox Routing & Templates, Projects Content & Campaigns, Projects Project Controls, and Team People Operations are unavailable in source and recorded as missing from the approved target.
+- Stage 4 correction in this batch: Dashboard's “New project” action previously opened only the Projects registry. It is now permission-aware. Authorized users use a `create=1` deep link that opens the existing create drawer; other users receive an “Open Projects” link. The Projects page consumes the flag and retains its existing permission guard.
+- Focused regression coverage was added in `tests/ams-dashboard-overview-hierarchy.test.ts`. CI on the new bulk commit is pending until its own workflows finish.
+- No local build, lint or test result is claimed because the repository could not be cloned into the execution runtime. No backend/API/database/authentication/RBAC/business logic or Finance formula was changed. Browser QA and Stage 5 approval remain outstanding.
+
