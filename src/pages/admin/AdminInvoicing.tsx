@@ -2788,6 +2788,17 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     );
   }
 
+  const invoiceSummary = embeddedReceivablesOnly ? (
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <FinanceMetricCard label="Outstanding receivables" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context="Open invoice balances" icon={<WalletCards size={15}/>} toneClassName="text-warning"/>
+              <FinanceMetricCard label="Overdue balance" value={formatFinanceCardAmount(overdueBalance,currency)} context="Past-due invoice balances" icon={<Hourglass size={15}/>} toneClassName="text-danger"/>
+              <FinanceMetricCard label="Open invoices" value={pendingInvoiceCount} context="Issued and not fully paid" icon={<Receipt size={15}/>} />
+              <FinanceMetricCard label="Overdue invoices" value={criticalOverdueCount} context="Require collection follow-up" icon={<AlertCircle size={15}/>} toneClassName="text-danger"/>
+            </section>
+          ) : (
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} sparkline={financeChartData.map((point) => point.outflow)} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
+          );
+
   return (
     <div className="min-w-0 space-y-5">
       {isProposalWorkspace && <AdminModuleHeader className="mb-0" title="Quotations" description="Manage commercial quotations, review stages, validity, and the handoff to invoicing." />}
@@ -3173,16 +3184,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
       ) : (
         <div className="space-y-5">
-          {embeddedReceivablesOnly ? (
-            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-              <FinanceMetricCard label="Outstanding receivables" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context="Open invoice balances" icon={<WalletCards size={15}/>} toneClassName="text-warning"/>
-              <FinanceMetricCard label="Overdue balance" value={formatFinanceCardAmount(overdueBalance,currency)} context="Past-due invoice balances" icon={<Hourglass size={15}/>} toneClassName="text-danger"/>
-              <FinanceMetricCard label="Open invoices" value={pendingInvoiceCount} context="Issued and not fully paid" icon={<Receipt size={15}/>} />
-              <FinanceMetricCard label="Overdue invoices" value={criticalOverdueCount} context="Require collection follow-up" icon={<AlertCircle size={15}/>} toneClassName="text-danger"/>
-            </section>
-          ) : (
-            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} sparkline={financeChartData.map((point) => point.outflow)} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
-          )}
+          {!embedded && invoiceSummary}
+
 {!embedded && (
           <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><div className="shrink-0 rounded-control border border-line bg-bg px-3 py-2 text-right">
   <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">Quarter net cash</p>
@@ -3398,6 +3401,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   </tr>;
 })}
 </tbody></table>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></section>
+{embedded && invoiceSummary}
+
 {embedded && !embeddedReceivablesOnly && (
   <section className="space-y-4 rounded-card border border-line bg-panel p-4 sm:p-5" data-ams-feature-slug="finance-revenue-tax-retainer" data-ams-slug="finance-revenue-tax-retainer">
     <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

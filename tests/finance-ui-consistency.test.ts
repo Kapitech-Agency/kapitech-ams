@@ -597,3 +597,13 @@ test('Cash, petty cash, and payables put their working registers before supporti
   assert.ok(petty.indexOf('title="Petty Cash Ledger"') >= 0);
   assert.ok(petty.indexOf('<AdminMetricStrip metrics={[') > petty.indexOf('title="Petty Cash Ledger"'));
 });
+
+
+test('Embedded invoice and receivable registers lead their supporting KPI summaries', async () => {
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const pagination = invoicing.indexOf('slug="finance-invoices-pagination"');
+  const embeddedSummary = invoicing.indexOf('{embedded && invoiceSummary}', pagination);
+  assert.ok(invoicing.includes('const invoiceSummary = embeddedReceivablesOnly ? ('));
+  assert.ok(invoicing.includes('{!embedded && invoiceSummary}'));
+  assert.ok(pagination >= 0 && embeddedSummary > pagination);
+});
