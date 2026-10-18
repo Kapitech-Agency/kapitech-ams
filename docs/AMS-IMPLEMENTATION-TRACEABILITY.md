@@ -357,6 +357,14 @@ Team & Capacity exposes Team Directory, Roles & Departments, Capacity Allocation
 
 Documents has one primary workspace, Document Library. Project & Client Files, SOPs & Policies, Legal & Corporate, Finance & Tax, HR & People, and Security & Infrastructure remain category/filter views in the same canonical library. The current category dropdown preserves its query selection for deep links; an unsupported `documents` value now resolves to All files and removes the invalid parameter via history replacement. No document data, vault logic, mutation path or access policy changed.
 
+### NAV-027: Website CMS content-type and Careers worksheet navigation follows route ownership
+
+**Status:** IMPLEMENTED_UNVERIFIED (navigation regression and CI are pending for this checkpoint; browser-level navigation remains unverified).
+
+**Source:** `src/lib/amsModuleSubnavigation.ts`, `src/App.tsx`, `src/pages/admin/AdminCmsCareers.tsx`, `tests/ams-sidebar-subnavigation.test.ts`.
+
+Website CMS exposes the five content-type workspaces in order: Case Studies, Services, Insights, Testimonials, and Careers. Careers contains Jobs for roles permitted to manage openings and Applicants for permitted applicant reviewers. Recruitment History is explicitly non-interactive target-only. Unsupported Careers tab queries normalize to the canonical tab for the current role, and the legacy Inbox jobs route redirects to Careers → Applicants. No CMS data, publishing behavior, APIs, or role/access policy changed.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
