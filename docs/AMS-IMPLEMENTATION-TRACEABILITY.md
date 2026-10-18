@@ -1,8 +1,8 @@
 # AMS Implementation Traceability Register
 
 **Purpose:** Prevent AI and human implementers from confusing planned functionality with verified implementation.  
-**Status:** Baseline register template. Update the applicable entries whenever requirements are audited or delivered.  
-**Authority:** AGENTS.md defines working rules; the master guide defines target requirements.
+**Status:** Maintained evidence register containing dated audit/checkpoint snapshots. Some entries may not reflect the latest `main` HEAD until re-audited; do not treat historical branch/PR status as a live GitHub status.  
+**Authority:** `AGENTS.md` defines working rules; the master guide defines target requirements. Current implementation status must be re-verified against current source, latest CI results, and production evidence where relevant.
 
 ## 1. Mandatory principle
 
@@ -10,7 +10,7 @@ A feature is not implemented merely because it appears in documentation, has a r
 
 A capability is verified only when its UI, persisted behavior, API validation, server-side authorization, canonical relationships, failure behavior, cross-module effects, and relevant tests have evidence.
 
-This register defines what must be assessed; it does not claim every feature's current status.
+This register defines what must be assessed; it does not claim every feature's current status. Sections with dated audit/branch/PR references are historical evidence as of the date recorded in that section, not assertions that a branch or PR remains open today. Before making a current status decision, check the latest `main` commit, current workflow runs, relevant source and tests, and production-readiness evidence when applicable.
 
 ## 2. Allowed status vocabulary
 
