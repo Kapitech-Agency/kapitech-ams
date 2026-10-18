@@ -41,7 +41,8 @@ import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
-import { hasAdminPermission } from '../../lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { AgencyVendor, VendorStatus, VendorType } from '../../lib/vendorStore';
 import { formatAmount } from '../../lib/currency';
 
@@ -261,6 +262,8 @@ export const AdminTeams: React.FC = () => {
       ? 'time-logs'
       : requestedView === 'capacity-allocation' ? 'capacity-allocation'
         : requestedView === 'roles-departments' ? 'roles-departments' : 'team-directory';
+  const navigationRole = getAmsRole(getAdminSession()?.user);
+  const canViewSkillMatrix = canAccessAmsRoute(navigationRole, '/admin/vendors', '?view=skill-matrix');
 
   const canManageVendors = hasAdminPermission('canManageVendors');
   const canManageProjects = hasAdminPermission('canManageProjects');
@@ -1207,6 +1210,24 @@ export const AdminTeams: React.FC = () => {
             { key: 'roles-departments', label: 'Roles & Departments', to: '/admin/team?view=roles-departments' },
             { key: 'capacity-allocation', label: 'Capacity Allocation', to: '/admin/team?view=capacity-allocation' },
             { key: 'availability-workload', label: 'Availability & Workload', to: '/admin/team', available: false },
+          ]}
+        />
+      )}
+
+      {(currentView === 'vendor-directory' || currentView === 'skill-matrix') && (
+        <AdminSectionTabs
+          ariaLabel="Vendors and freelancers worksheets"
+          activeKey={currentView === 'skill-matrix' ? 'skills-service-matrix' : 'directory'}
+          className="w-full border-b border-line pb-2"
+          items={[
+            { key: 'directory', label: 'Directory', to: '/admin/vendors' },
+            ...(canViewSkillMatrix ? [{
+              key: 'skills-service-matrix',
+              label: 'Skills & Service Matrix',
+              to: '/admin/vendors?view=skill-matrix',
+            }] : []),
+            { key: 'contracts-rates', label: 'Contracts & Rates', to: '/admin/vendors', available: false },
+            { key: 'engagement-status', label: 'Engagement Status', to: '/admin/vendors', available: false },
           ]}
         />
       )}

@@ -339,6 +339,14 @@ The Directory exposes the live Companies worksheet on the canonical client/accou
 
 Finance retains the five approved areas in order: Overview & Control, Transactions & Cash, Receivables & Payables, Project Finance, Accounting & Reports. The navigation regression maps all 20 entries in `FINANCE_WORKBOOK_GROUPS` to their owner tab, including Chart of Accounts and the reporting/closing worksheets. Quotations remains a dedicated Finance view owned by Receivables & Payables at the existing canonical route; it is not a standalone primary module. No Finance calculations, transactions, APIs, posting behavior or permission rules were changed. Browser interaction, refresh and back/forward navigation remain unverified.
 
+### NAV-025: Team & Resources worksheet navigation follows workspace ownership and route policy
+
+**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI required on this checkpoint; browser-level navigation remains unverified).
+
+**Source:** `src/pages/admin/AdminTeams.tsx`, `src/lib/amsModuleSubnavigation.ts`, `src/lib/amsNavigationAccess.ts`, `tests/ams-sidebar-subnavigation.test.ts`.
+
+Team & Capacity exposes Team Directory, Roles & Departments, Capacity Allocation, and a disabled Availability & Workload view. Vendors & Freelancers exposes its Directory and the Admin-authorized Skills & Service Matrix route, with Contracts & Rates and Engagement Status explicitly target-only. Time Tracking continues to use its canonical Time Logs route. People Operations remains target-only because no separate HR workflow route/model is available. Route access remains based on current route policy; no permissions, person/vendor data, time entries, or business logic changed.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.

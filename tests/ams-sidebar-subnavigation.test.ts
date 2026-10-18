@@ -217,6 +217,17 @@ test('Clients and Team & Resources use persistent workspaces while internal view
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'team')!, '/admin/team'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'vendors')!, '/admin/vendors', '?view=skill-matrix'), true);
 
+  const teamSource = await read('src/pages/admin/AdminTeams.tsx');
+  assert.match(teamSource, /ariaLabel="Team and capacity views"/);
+  assert.match(teamSource, /label: 'Availability & Workload'.*available: false/);
+  assert.match(teamSource, /ariaLabel="Vendors and freelancers worksheets"/);
+  assert.match(teamSource, /key: 'directory', label: 'Directory'/);
+  assert.match(teamSource, /label: 'Skills & Service Matrix'/);
+  assert.ok(teamSource.includes("canAccessAmsRoute(navigationRole, '/admin/vendors', '?view=skill-matrix')"));
+  assert.match(teamSource, /label: 'Contracts & Rates'.*available: false/);
+  assert.match(teamSource, /label: 'Engagement Status'.*available: false/);
+  assert.match(teamSource, /currentView === 'vendor-directory' \|\| currentView === 'skill-matrix'/);
+
   const layout = await fs.readFile(path.join(root, 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   assert.doesNotMatch(layout, /workspaceChildTabItems|Workspace subnavigation/);
 });
