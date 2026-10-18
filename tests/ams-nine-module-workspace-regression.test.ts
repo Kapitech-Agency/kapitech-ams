@@ -168,6 +168,7 @@ test('Team and Resources distinguish unavailable source data from a true zero', 
   assert.match(teams, /Vendor source unavailable\. Previously loaded records remain visible/);
   assert.match(teams, /Time log source unavailable\. Previously loaded entries remain visible/);
   assert.match(vendors, /Failed to load vendors/);
+  assert.doesNotMatch(vendors, /vendors-mobile-tabs|<AdminSectionTabs/);
   assert.match(timeLogs, /Previously loaded records are kept/);
 });
 
