@@ -1394,7 +1394,42 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
-          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
+          <section className="rounded-card border border-line bg-panel p-4" <AdminMetricStrip
+                      metrics={[
+                        {
+                          id: 'active-contractors',
+                          slug: 'vendor-directory-kpi-active-contractors',
+                          label: 'Active Contractors',
+                          value: currentViewDataUnavailable ? '—' : vendors.filter((vendor) => vendor.status === 'active').length,
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : vendorTierCounts.strategic + ' Dedicated · ' + (vendorTierCounts.specialized + vendorTierCounts.adhoc) + ' On-Demand',
+                          
+                          icon: <UsersRound size={15} />
+                        },
+                        {
+                          id: 'external-burn',
+                          slug: 'vendor-directory-kpi-external-burn',
+                          label: 'Monthly External Burn',
+                          value: currentViewDataUnavailable ? '—' : Object.keys(vendorMonthlyBurn).length === 1
+                            ? formatAmount(vendorMonthlyBurn[Object.keys(vendorMonthlyBurn)[0]], Object.keys(vendorMonthlyBurn)[0] as 'IDR' | 'USD')
+                            : Object.keys(vendorMonthlyBurn).length > 1 ? 'Mixed' : '—',
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(Number(amount), currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
+                          
+                          icon: <TrendingUp size={15} />
+                        },
+                        {
+                          id: 'renewals',
+                          slug: 'vendor-directory-kpi-renewals',
+                          label: 'Contract Renewals Due',
+                          value: currentViewDataUnavailable ? '—' : vendorRenewalCount,
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : 'Action required within 30 days',
+                          
+                          icon: <CalendarDays size={15} className="text-warning" />,
+                          toneClassName: 'text-warning'
+                        }
+                      ]}
+                    />
+
+          data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 xl:flex-row xl:items-center">
                 <label className="relative min-w-0 flex-1 xl:max-w-sm">
@@ -1529,40 +1564,7 @@ export const AdminTeams: React.FC = () => {
             <AdminTablePagination total={vendorRows.length} page={vendorPage} pageSize={vendorPageSize} onPageChange={setVendorPage} onPageSizeChange={setVendorPageSize} itemLabel="external vendors" secondaryLabel="Sorted by Rate (High to Low)" slug="vendor-directory-pagination" />
           </AdminPanel>
 
-                    <AdminMetricStrip
-                      metrics={[
-                        {
-                          id: 'active-contractors',
-                          slug: 'vendor-directory-kpi-active-contractors',
-                          label: 'Active Contractors',
-                          value: currentViewDataUnavailable ? '—' : vendors.filter((vendor) => vendor.status === 'active').length,
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : vendorTierCounts.strategic + ' Dedicated · ' + (vendorTierCounts.specialized + vendorTierCounts.adhoc) + ' On-Demand',
-                          
-                          icon: <UsersRound size={15} />
-                        },
-                        {
-                          id: 'external-burn',
-                          slug: 'vendor-directory-kpi-external-burn',
-                          label: 'Monthly External Burn',
-                          value: currentViewDataUnavailable ? '—' : Object.keys(vendorMonthlyBurn).length === 1
-                            ? formatAmount(vendorMonthlyBurn[Object.keys(vendorMonthlyBurn)[0]], Object.keys(vendorMonthlyBurn)[0] as 'IDR' | 'USD')
-                            : Object.keys(vendorMonthlyBurn).length > 1 ? 'Mixed' : '—',
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(Number(amount), currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
-                          
-                          icon: <TrendingUp size={15} />
-                        },
-                        {
-                          id: 'renewals',
-                          slug: 'vendor-directory-kpi-renewals',
-                          label: 'Contract Renewals Due',
-                          value: currentViewDataUnavailable ? '—' : vendorRenewalCount,
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : 'Action required within 30 days',
-                          
-                          icon: <CalendarDays size={15} className="text-warning" />,
-                          toneClassName: 'text-warning'
-                        }
-                      ]}
-                    />
+                    
         </div>
       ) : currentView === 'capacity-allocation' ? (
         <div className="space-y-4" data-ams-feature-slug="capacity-allocation" data-ams-slug="capacity-allocation">

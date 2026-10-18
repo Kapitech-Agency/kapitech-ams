@@ -693,10 +693,12 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   assert.ok(teamPagination > teamFilters);
 
   const vendorFilters = teams.indexOf('data-ams-feature-slug="vendor-directory-filters"');
-  const vendorPagination = teams.indexOf('slug="vendor-directory-pagination"');
-  const vendorPanelEnd = teams.indexOf('</AdminPanel>', vendorPagination);
+  const vendorView = teams.indexOf('data-ams-feature-slug="vendor-directory"');
   const vendorMetrics = teams.indexOf("slug: 'vendor-directory-kpi-active-contractors'");
-  assert.ok(vendorPagination >= 0 && vendorPanelEnd > vendorPagination && vendorMetrics > vendorPanelEnd);
+  const vendorFilters = teams.indexOf('data-ams-feature-slug="vendor-directory-filters"');
+  const vendorPagination = teams.indexOf('slug="vendor-directory-pagination"');
+  assert.ok(vendorView >= 0 && vendorMetrics > vendorView && vendorMetrics < vendorFilters);
+  assert.ok(vendorPagination > vendorFilters);
   const vendors = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminVendors.tsx'), 'utf8');
   const vendorHeader = vendors.indexOf('<AdminModuleHeader');
   const vendorSnapshot = vendors.indexOf('data-ams-feature-slug="vendor-snapshot"');
