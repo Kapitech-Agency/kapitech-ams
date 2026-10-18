@@ -77,6 +77,9 @@ Before any AI-assisted code change, read [AGENTS.md](AGENTS.md). GitHub Copilot 
 
 Core references:
 - [Documentation Index](docs/README.md): document authority, current versus historical/staging references, and reading order.
+- [End-to-End Delivery Roadmap](docs/AMS-END-TO-END-DELIVERY-ROADMAP.md): canonical stage order from current navigation/content work through full testing, production readiness and stabilization.
+- [Feature & Content Gap Register](docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md): requirement-level audit inventory; statuses must be proven from current source and evidence.
+- [End-to-End Execution Prompt](docs/AMS-END-TO-END-EXECUTION-PROMPT.md): operational prompt for bounded, checkpointed, timeout-resilient execution.
 - [AMS Design System](AMS-DESIGN-SYSTEM.md): visual tokens, layout, shared components and interaction rules.
 - [AMS Master Structure & AI Implementation Guide](docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md): target navigation, modules, workflows, shared data, Finance, Kopra H2H preparation, implementation phases and acceptance criteria.
 - [Role-Based Content Blueprint](docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md) and [Worksheet Role Presentation Matrix](docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md): target content and presentation by work persona; neither grants permissions or proves implementation.
