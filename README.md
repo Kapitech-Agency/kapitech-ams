@@ -81,7 +81,7 @@ Core references:
 - [Feature & Content Gap Register](docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md): requirement-level audit inventory; statuses must be proven from current source and evidence.
 - [End-to-End Execution Prompt](docs/AMS-END-TO-END-EXECUTION-PROMPT.md): operational prompt for bounded, checkpointed, timeout-resilient execution.
 - [AMS Design System](AMS-DESIGN-SYSTEM.md): visual tokens, layout, shared components and interaction rules.
-- [AMS Master Structure & AI Implementation Guide](docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md): target navigation, modules, workflows, shared data, Finance, Kopra H2H preparation, implementation phases and acceptance criteria.
+- [AMS Master Structure & AI Implementation Guide](docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md): target modules, workspaces, workflows, shared data, Finance, Kopra H2H constraints and domain acceptance criteria. The overall delivery stage order lives in the End-to-End Delivery Roadmap.
 - [Role-Based Content Blueprint](docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md) and [Worksheet Role Presentation Matrix](docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md): target content and presentation by work persona; neither grants permissions or proves implementation.
 - [Finance Excel Alignment](docs/FINANCE-EXCEL-ALIGNMENT.md): existing Finance process and accounting controls.
 - [AMS Workflow Audit](docs/ams-workflow-audit.md): dated audit evidence; its historical route taxonomy/status must not be mistaken for the current target state.
