@@ -696,6 +696,29 @@ test('Cash, petty cash, and payables put their working registers before supporti
 });
 
 
+test('Accounts Payable and vendor payment schedule use compact cards for dense registers', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const apStart = workspace.indexOf("case 'accounts-payable': {");
+  const apEnd = workspace.indexOf("case 'vendors':", apStart);
+  assert.ok(apStart >= 0 && apEnd > apStart, 'Accounts Payable worksheet should be present.');
+  const ap = workspace.slice(apStart, apEnd);
+  const billRegister = ap.indexOf('title="Accounts Payable register"');
+  const billMetrics = ap.indexOf('<AdminMetricStrip metrics={[', billRegister);
+  const schedule = ap.indexOf('title="Vendor payment schedule"');
+  const contractLinkedNote = ap.indexOf('title="Contract-linked vendor payments"');
+
+  assert.ok(billRegister >= 0 && billMetrics > billRegister && schedule > billMetrics, 'The primary payable register should precede supporting metrics and the installment schedule.');
+  assert.ok(contractLinkedNote > schedule, 'The contract-payment clarification must remain after the bill schedule.');
+  assert.match(ap, /actions=\{registerAddButton\('vendor-bill','Add vendor bill'\)\}[\s\S]*?compactCardLayout=\{\{titleIndex:0,subtitleIndexes:\[1,2\],statusIndexes:\[8\]/);
+  assert.match(ap, /label:'Bill details',indexes:\[3,4,5,6,7\]/);
+  assert.match(ap, /actionIndex:9\}\}/);
+  assert.match(ap, /emptyMessage="No vendor bills have been entered\. Create a bill to see its payment schedule\."[\s\S]*?compactCardLayout=\{\{titleIndex:0,subtitleIndexes:\[1,2\],statusIndexes:\[10\]/);
+  assert.match(ap, /label:'Installments',indexes:\[4,5,6\]/);
+  assert.match(ap, /label:'Settlement',indexes:\[7,8,9\]/);
+  assert.match(ap, /getVendorBillInstallmentSchedule/);
+  assert.match(ap, /registerRecordActions\('vendor-bill',record/);
+});
+
 test('Embedded invoice and receivable registers lead their supporting KPI summaries', async () => {
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const pagination = invoicing.indexOf('slug="finance-invoices-pagination"');

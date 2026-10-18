@@ -2336,6 +2336,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               })}
               emptyMessage="No vendor bills have been recorded yet."
               actions={registerAddButton('vendor-bill','Add vendor bill')}
+              compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[8],groups:[{label:'Bill details',indexes:[3,4,5,6,7]}],actionIndex:9}}
             />
             
             <AdminMetricStrip metrics={[
@@ -2353,6 +2354,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 ]}
                 rows={scheduleRows}
                 emptyMessage="No vendor bills have been entered. Create a bill to see its payment schedule."
+                compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[10],groups:[{label:'Bill amount',indexes:[3]},{label:'Installments',indexes:[4,5,6]},{label:'Settlement',indexes:[7,8,9]}}}
               />
             )}
             <WorkbookNote title="Contract-linked vendor payments">
