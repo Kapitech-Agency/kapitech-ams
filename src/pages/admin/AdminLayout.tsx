@@ -16,7 +16,7 @@ import { AdminNotificationCenter } from '../../components/admin/AdminNotificatio
 import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
 import { getAmsRole } from '../../lib/amsNavigationAccess';
-import { getAmsModuleSubnavigation, getAmsModuleSubnavigationChildren, getAmsWorkspaceNavigationModule, isAmsModuleSubnavigationChildActive, isAmsModuleSubnavigationItemActive } from '../../lib/amsModuleSubnavigation';
+import { getAmsModuleSubnavigation, getAmsWorkspaceNavigationModule, isAmsModuleSubnavigationItemActive } from '../../lib/amsModuleSubnavigation';
 import { AdminSectionTabs, AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
@@ -171,13 +171,6 @@ export const AdminLayout: React.FC = () => {
   const activeWorkspaceTab = workspaceTabItems.find((item) =>
     isAmsModuleSubnavigationItemActive(item, location.pathname, location.search, location.hash)
   );
-  const workspaceChildTabItems = workspaceNavigationModule && activeWorkspaceTab
-    ? getAmsModuleSubnavigationChildren(workspaceNavigationModule, activeWorkspaceTab.key, amsRole, mfaSetupRequired)
-    : [];
-  const activeWorkspaceChildTab = workspaceChildTabItems.find((item) =>
-    isAmsModuleSubnavigationChildActive(item, location.pathname, location.search)
-  );
-
   return (
     <ReportingPeriodProvider>
       <div className="flex flex-col min-[900px]:flex-row selection:bg-accent selection:text-fg ams-shell">
@@ -455,22 +448,6 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
         </header>
-        {workspaceChildTabItems.length > 0 && (
-          <div
-            className="hidden min-[900px]:block sticky top-[52px] z-20 border-b border-line bg-panel"
-            data-ams-slug="workspace-subnavigation"
-          >
-            <div className="mx-auto w-full max-w-[1560px] min-w-0 px-4 sm:px-5 lg:px-6">
-              <AdminSectionTabs
-                ariaLabel="Workspace subnavigation"
-                activeKey={activeWorkspaceChildTab?.key || ''}
-                items={workspaceChildTabItems}
-                variant="secondary"
-                className="w-full py-2"
-              />
-            </div>
-          </div>
-        )}
         {/* Compact in-page navigation fallback for viewports where the desktop topbar is hidden. */}
         {workspaceTabItems.length > 0 && (
           <div
@@ -484,17 +461,6 @@ export const AdminLayout: React.FC = () => {
                 items={workspaceTabItems}
                 className="w-full py-2"
               />
-              {workspaceChildTabItems.length > 0 && (
-                <div className="border-t border-line/70">
-                  <AdminSectionTabs
-                    ariaLabel="Workspace subnavigation"
-                    activeKey={activeWorkspaceChildTab?.key || ''}
-                    items={workspaceChildTabItems}
-                    variant="secondary"
-                    className="w-full py-2"
-                  />
-                </div>
-              )}
             </div>
           </div>
         )}
