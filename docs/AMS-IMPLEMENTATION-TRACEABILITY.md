@@ -281,6 +281,16 @@ Messages now exposes an Unread saved view at `/admin/inbox?view=unread`, which f
 
 **Verification:** AMS Quality Gate passed on code SHA `a76626ae2b3c4809ce19d7f049035effc421887f`: typecheck, 711 regression tests (691 passed, 0 failed, 20 skipped), and production build. AMS CI for that SHA was cancelled before its database/integration/smoke-test steps could be verified, so end-to-end CI is not claimed as passed. Browser-level keyboard and role-specific checks remain unverified.
 
+### NAV-017: Project Controls remains target-only until its dedicated workspace is implemented
+
+**Status:** TARGET_ONLY
+
+**Source:** `src/lib/amsModuleSubnavigation.ts`, `src/pages/admin/AdminProjects.tsx`, `tests/ams-sidebar-subnavigation.test.ts`, `tests/ams-navigation-access.test.ts`.
+
+The Project Controls navigation item is disabled because its former destination, `?projects=budget`, renders only the existing Budget vs Actual view and does not cover the approved Project Controls scope. The legacy Budget vs Actual view remains addressable directly, but it no longer marks Project Controls as the active workspace. Project Controls can be activated after its own source-backed surface includes the relevant project changes, risks, budget health, and closure context. No project record, business rule, API, database, or access policy was changed.
+
+**Verification:** AMS Quality Gate and AMS CI passed on code SHA `e224a5df5d01462d4f76b8b0b1f87bafba1ebe42`. Quality Gate passed typecheck, 711 regression tests (691 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
