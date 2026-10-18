@@ -6,6 +6,8 @@ Required delivery branch: `main`
 
 > **Status semantics:** This file is the compact progress roll-up, updated by the date above. Commit references and CI outcomes in individual slices are historical evidence for those exact commits; they do not prove the latest `main` commit or a live deployment is currently passing. Recheck current `main`, latest GitHub Actions, and authenticated browser/viewport acceptance before closing the redesign. The detailed historical view-by-view record is in [`AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md`](AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md).
 
+> **Delivery-plan authority:** This file tracks structural UX/UI progress only. The overall path through navigation, main content, workflows, E2E, operational recovery and production deployment is defined by [`AMS-END-TO-END-DELIVERY-ROADMAP.md`](AMS-END-TO-END-DELIVERY-ROADMAP.md). Current requirement-by-requirement state belongs in [`AMS-FEATURE-CONTENT-GAP-REGISTER.md`](AMS-FEATURE-CONTENT-GAP-REGISTER.md). The dated/local phase lists below are UX/UI progress context, not a competing end-to-end schedule.
+
 ## Scope
 
 Structural frontend UX/UI redesign only. Preserve all routes, query parameters, existing permissions, live data sources, workflows, APIs, persistence, authentication, RBAC, and financial/business rules. Do not add dependencies or use mock data. The Dashboard screenshot is intended to be the primary structural reference; the provided Google Drive image could not be rendered by the available execution tools, so no claim of direct visual inspection is made.
