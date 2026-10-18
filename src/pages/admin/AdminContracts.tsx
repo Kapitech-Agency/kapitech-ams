@@ -343,7 +343,7 @@ export const AdminContracts: React.FC = () => {
           <Button type="button" variant="secondary" onClick={() => void load()} icon={<RefreshCw size={13} />}>Retry</Button>
         </div>
       )}
-      {notice && <div role="status" className="flex items-center justify-between gap-2 rounded-control border border-success/20 bg-success/5 px-3 py-2 text-xs text-fg"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss message" className="rounded-control p-1 text-muted hover:bg-bg"><X size={13} /></button></div>}
+
 
 
       <section className="rounded-card border border-line bg-panel p-3 sm:p-4">
@@ -425,6 +425,8 @@ export const AdminContracts: React.FC = () => {
         </div>
         <AdminTablePagination total={filtered.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="contracts" slug="contracts-pagination" />
       </section>
+
+      {notice && <div role="status" className="flex items-center justify-between gap-2 rounded-control border border-success/20 bg-success/5 px-3 py-2 text-xs text-fg"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss message" className="rounded-control p-1 text-muted hover:bg-bg"><X size={13} /></button></div>}
 
       <section data-ams-feature-slug="contracts-overview-kpis" data-ams-slug="contracts-overview-kpis" aria-label="Contract overview">
         <AdminMetricStrip

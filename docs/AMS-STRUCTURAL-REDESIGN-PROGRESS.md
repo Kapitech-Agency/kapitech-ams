@@ -159,3 +159,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - When the existing query-backed onboarding scope is selected, the Clients workspace now uses a dedicated "Client Onboarding" title, onboarding-specific eyebrow, and task-oriented description. The default directory keeps its existing title and purpose.
 - This clarifies the difference between the directory and onboarding workflow without adding a route, changing status semantics, or modifying client data, readiness calculations, filters, permissions, or actions.
 - Added source regression coverage for the contextual header and existing query-driven scope.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122034708) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122034444) passed for commit `0ca8889489ae95bc819d3493574a9f3e8faf48b4`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
+
+
+## Nineteenth implementation slice: stable Contracts register during feedback
+
+- Moved the transient contract success notice from directly below the page header to after the searchable, filterable contract register and its pagination, before the supporting overview metrics.
+- Contract lifecycle errors remain separate, visible, and actionable. This placement change affects only the transient success notice; contract records, status transitions, confirmation dialogs, permissions, audit events, and API behavior are unchanged.
+- Added regression coverage for header → register/pagination → notice → supporting metrics order.

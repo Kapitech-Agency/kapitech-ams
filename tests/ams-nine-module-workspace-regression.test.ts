@@ -314,3 +314,13 @@ test('Client Onboarding has a distinct header when the onboarding scope is selec
   assert.match(clients, /Review new client accounts, confirm onboarding readiness, and continue account setup/);
   assert.match(clients, /scope === 'onboarding'/);
 });
+
+
+test('Contracts action feedback follows the primary register and pagination', async () => {
+  const contracts = await read('src/pages/admin/AdminContracts.tsx');
+  const header = contracts.indexOf('title="Contracts & SOW"');
+  const pagination = contracts.indexOf('slug="contracts-pagination"');
+  const notice = contracts.indexOf('{notice && <div role="status"');
+  const metrics = contracts.indexOf('data-ams-feature-slug="contracts-overview-kpis"');
+  assert.ok(header >= 0 && pagination > header && notice > pagination && metrics > notice);
+});
