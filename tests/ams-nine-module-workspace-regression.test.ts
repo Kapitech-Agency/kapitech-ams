@@ -324,6 +324,21 @@ test('Dashboard invalid workspace query values normalize to Overview', async () 
   assert.ok(dashboard.includes("navigate('/admin/dashboard', { replace: true })"));
 });
 
+test('Client Agreements Renewal Schedule uses canonical active contract and retainer dates', async () => {
+  const contracts = await read('src/pages/admin/AdminContracts.tsx');
+  const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
+  assert.ok(contracts.includes("const isRenewalSchedule = searchParams.get('view') === 'renewals'"));
+  assert.ok(contracts.includes("activeKey={isRenewalSchedule ? 'renewals' : 'contracts'}"));
+  assert.ok(contracts.includes("to: '/admin/contracts?view=renewals'"));
+  assert.ok(contracts.includes("contract.status === 'active'"));
+  assert.ok(contracts.includes("client.activeRetainer === true"));
+  assert.ok(contracts.includes('data-ams-feature-slug="client-renewal-schedule"'));
+  assert.ok(contracts.includes('Renewal data is incomplete'));
+  assert.ok(contracts.includes('does not mark contracts as expired automatically'));
+  assert.ok(retainers.includes("to: '/admin/contracts?view=renewals'"));
+  assert.doesNotMatch(retainers, /label: 'Renewal Schedule'.*available: false/);
+});
+
 test('Client Onboarding has a distinct header when the onboarding scope is selected', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   assert.match(clients, /eyebrow=\{statusScope === 'lead' \? 'Onboarding workspace' : 'Client directory'\}/);
