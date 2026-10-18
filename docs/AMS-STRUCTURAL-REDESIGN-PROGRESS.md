@@ -127,3 +127,4 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Careers already follows the same principle with feedback below its Jobs/Applicants tabs.
 - Kept the same dismissible notice, status text/tone, CRUD operations, editor drawers, filters, sorting, pagination, permissions, publication state, routes, and API behavior.
 - Added a regression test asserting the intended header → filter bar → feedback → register order across all four CMS registers.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121347658) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121347649) passed for commit `110f2272e0e16bbb3cbcecbec14f939cd6e9e963`, including typecheck, regression tests, production build, and the configured production/security checks.
