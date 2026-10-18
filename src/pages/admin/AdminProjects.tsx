@@ -485,10 +485,13 @@ export const AdminProjects: React.FC = () => {
   const view: ProjectsView = requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'
     ? requestedView
     : 'all';
+  const registryStatusView = requestedView && ['planning', 'active', 'on-hold', 'completed'].includes(requestedView)
+    ? requestedView
+    : null;
   const selectedProjectSlug = searchParams.get('project') || '';
 
   React.useEffect(() => {
-    if (requestedView && !['sprint', 'budget', 'archived'].includes(requestedView)) {
+    if (requestedView && !['sprint', 'budget', 'archived', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView)) {
       const next = new URLSearchParams(searchParams);
       next.delete('projects');
       setSearchParams(next, { replace: true });
@@ -711,11 +714,17 @@ export const AdminProjects: React.FC = () => {
           .toLowerCase()
           .includes(query);
       const matchesStatus = !projectStatusFilter || project.status === projectStatusFilter;
+      const matchesRegistryStatus = !registryStatusView || (
+        registryStatusView === 'planning' ? project.status === 'planning'
+          : registryStatusView === 'active' ? project.status === 'in_progress' || project.status === 'review'
+            : registryStatusView === 'on-hold' ? project.status === 'on_hold'
+              : project.status === 'completed'
+      );
       const matchesHealth = !projectHealthFilter || project.health === projectHealthFilter;
       const matchesClient = !projectClientFilter || project.clientCompany === projectClientFilter;
       const matchesOwner = !projectOwnerFilter || project.teamLead === projectOwnerFilter;
       const matchesPeriod = matchesInterval(project.startDate, project.targetEndDate, project.createdAt);
-      return matchesQuery && matchesStatus && matchesHealth && matchesClient && matchesOwner && matchesPeriod;
+      return matchesQuery && matchesStatus && matchesRegistryStatus && matchesHealth && matchesClient && matchesOwner && matchesPeriod;
     });
 
     return [...result].sort((a, b) => {
@@ -729,6 +738,7 @@ export const AdminProjects: React.FC = () => {
     projects,
     projectSearch,
     projectStatusFilter,
+    registryStatusView,
     projectHealthFilter,
     projectClientFilter,
     projectOwnerFilter,
@@ -1876,10 +1886,17 @@ export const AdminProjects: React.FC = () => {
             </AdminStatusBadge>
           </div>
         )}
-        title={view === 'all' ? 'Projects' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}
+        title={view === 'all'
+          ? registryStatusView === 'planning' ? 'Planning'
+            : registryStatusView === 'active' ? 'Active Projects'
+              : registryStatusView === 'on-hold' ? 'On Hold'
+                : registryStatusView === 'completed' ? 'Completed Projects' : 'Projects'
+          : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}
         description={
           view === 'all'
-            ? 'Project portfolio, delivery stages, resource ownership, and live execution from one workspace.'
+            ? registryStatusView
+              ? 'Project registry filtered by the selected lifecycle status.'
+              : 'Project portfolio, delivery stages, resource ownership, and live execution from one workspace.'
             : view === 'sprint'
               ? 'Move work through execution stages and keep delivery ownership visible.'
               : view === 'budget'
