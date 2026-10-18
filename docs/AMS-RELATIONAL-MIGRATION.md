@@ -72,9 +72,9 @@ High-value relationships:
 - document_access -> documents / users
 - audit_logs -> users where an actor account exists
 
-## Cutover gates
+## Historical cutover gates — reference only
 
-A production cutover should not proceed until all are true:
+The following conditions were part of the earlier proposed migration plan. They are not a live status report or a substitute for the current production-readiness endpoint:
 
 - Row counts reconcile for every migrated collection.
 - Foreign-key checks pass.
