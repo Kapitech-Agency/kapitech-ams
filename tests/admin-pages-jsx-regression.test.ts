@@ -923,6 +923,19 @@ test('Team member and vendor profile details use shared drawers with fixed actio
 });
 
 
+test('Client directory adapts its primary register for narrow screens without losing core account actions', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  assert.ok(clients.includes('data-ams-slug="clients-directory-cards"'));
+  assert.ok(clients.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(clients.includes('min-w-[980px]'));
+  assert.ok(!clients.includes('min-w-[1240px]'));
+  assert.ok(clients.includes('colSpan={7}'));
+  assert.ok(clients.includes('Primary contact'));
+  assert.ok(clients.includes('getClientStatusTone(client.status)'));
+  assert.ok(clients.includes("aria-label={'View profile for ' + client.company}"));
+  assert.ok(clients.includes("aria-label={'Manage ' + client.company}"));
+});
+
 test('Clients header avoids repeating the Active clients metric before the primary directory', () => {
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
   const headerStart = clients.indexOf('<AdminModuleHeader slug="clients-header"');

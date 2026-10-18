@@ -202,3 +202,13 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Existing view query parameters, record filtering, queue controls, lead/client actions, polling, loading/error states, and permissions remain unchanged.
 - Added regression coverage for the active-workspace heading.
 - Source and test updates were committed directly to `main`. CI status will be checked for the latest commit. Authenticated browser visual QA remains outstanding.
+
+
+## Twenty-fourth implementation slice: responsive Clients directory structure
+
+- Replaced the forced 1,240px Clients directory table as the only presentation with a compact card register below 1,280px and retained the sortable desktop table for wider screens.
+- The mobile/tablet register keeps account identity, real account status, industry, primary contact, recorded billed value, spend-cap health, pagination, view-profile action, and permission-gated edit action.
+- Removed the nonessential slug and derived contract-tier columns from the primary register; the slug remains accessible in the existing client detail drawer, while actual account status is shown directly.
+- Reduced the desktop register's minimum width to 980px and aligned the empty/loading row geometry to the seven displayed columns.
+- Added source regression coverage for the responsive layout, preserved actions, and table geometry. No data model, status semantics, filters, sorting, permissions, route state, API behavior, or SLA calculation changed.
+- Commit is delivered directly to `main`; CI and production build status will be checked after the push. Authenticated browser visual testing is not available from this repository-only run.
