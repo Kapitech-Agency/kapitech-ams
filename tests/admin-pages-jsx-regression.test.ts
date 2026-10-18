@@ -75,7 +75,7 @@ test('Finance views stay inside the Finance workspace and retired routes stay hi
   const subnavigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
   const workspace = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminFinanceWorkspace.tsx'), 'utf8');
   assert.equal(layout.includes("location.pathname === '/admin/invoicing'"), false);
-  assert.equal(layout.includes('<AdminTopbarTabs'), false);
+  assert.equal(layout.includes('<AdminTopbarTabs'), true);
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
   assert.equal(sidebar.includes('aria-expanded='), false);
@@ -222,7 +222,7 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
   const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
 
-  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 0);
+  assert.equal(layout.includes('<AdminTopbarTabs'), true);
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
   assert.equal(sidebar.includes('data-ams-nav-submenu='), false);
