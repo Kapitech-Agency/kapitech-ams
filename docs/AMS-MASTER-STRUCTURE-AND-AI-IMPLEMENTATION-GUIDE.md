@@ -479,13 +479,13 @@ Worksheet definitions in source code have included the following 20 existing wor
 |---|---|---|
 | Executive Summary | Overview & Control | Summary of the selected reporting period |
 | Dashboard | Overview & Control | Validated financial charts/KPIs |
-| Cash & Bank | Cash Management | Recorded bank/cash accounts, balances, and movements |
-| Revenue | Revenue & Receivables | Existing revenue records and invoice workflow |
-| Expenses | Expenses & Payables | Existing expense recording workflow |
-| Petty Cash | Cash Management | Petty cash management |
-| Accounts Receivable | Revenue & Receivables | Invoice balances, aging, and receivable payments |
-| Accounts Payable | Expenses & Payables | Liabilities and payment status |
-| Vendors | Expenses & Payables, reference to master | References supplier/payee records managed in Team & Resources |
+| Cash & Bank | Transactions & Cash | Recorded bank/cash accounts, balances, and movements |
+| Revenue | Transactions & Cash | Existing revenue records and invoice workflow |
+| Expenses | Transactions & Cash | Existing expense recording workflow |
+| Petty Cash | Transactions & Cash | Petty cash management |
+| Accounts Receivable | Receivables & Payables | Invoice balances, aging, and receivable payments |
+| Accounts Payable | Receivables & Payables | Liabilities and payment status |
+| Vendors | Receivables & Payables, reference to Team & Resources master | References supplier/payee records managed in Team & Resources |
 | Project Finance | Project Finance | Project-linked financial information |
 | Operational Budget | Project Finance | Budget operasional |
 | Project Allocation | Project Finance | Existing financial/resource allocation |
@@ -498,14 +498,14 @@ Worksheet definitions in source code have included the following 20 existing wor
 | Monthly Closing | Accounting & Reports | Kontrol penutupan periode |
 | Annual Summary | Accounting & Reports | Annual financial summary |
 
-**New worksheet views needed:**
+**Potential additional views/workflows — target only, not a claim of implementation:**
 
-- Quotations: quotation register and quotation builder.
-- Document Templates: centrally maintained reusable quotation/invoice templates.
-- Bank Accounts, Bank Transactions & Reconciliation, and Bank Mandiri Kopra H2H may be dedicated workspace views/subtabs under Cash Management; whether each is a worksheet ID or nested subview must follow current Finance workspace architecture, without creating duplicate business stores.
+- Quotations: canonical quotation register and builder within Receivables & Payables, using the existing quotation workflow.
+- Document Templates: centrally maintained reusable quotation/invoice templates only if the current data/API and permission contracts support this capability; otherwise record as target-only.
+- Bank Accounts, Bank Transactions & Reconciliation, and Bank Mandiri Kopra H2H may be dedicated views/subtabs under **Transactions & Cash**; whether each is a worksheet ID or nested view must follow the current Finance architecture, without creating duplicate business stores.
 - Purchase & Expense Requests may be a view over a dedicated workflow only if schema and backend support it; do not use a frontend-only status list for real money transactions.
 
-The old Vendors worksheet must not become a second vendor master. It should refer to the canonical vendor record managed in Team & Resources and show finance ledger/payment views. Preserve the existing vendor-payment and expense links, including migration 049 relationships if still current.
+The legacy Vendors worksheet must not become a second vendor master. It refers to the canonical vendor record managed in Team & Resources and exposes only the supported Finance ledger/payment references. Preserve existing vendor-payment and expense links. Verify these links against the current schema and migration history rather than assuming a particular migration number is the latest.
 
 ### 9.3 Existing Finance rules that must be preserved
 
@@ -523,7 +523,7 @@ The old Vendors worksheet must not become a second vendor master. It should refe
 
 ### 9.4 Quotations and templates
 
-Quotation is available from CRM Sales Desk and Finance, but both must operate on one authoritative record.
+The canonical user-facing quotation workspace is in Finance. Legacy CRM/proposal records, routes, and APIs may remain for compatibility where current consumers require them, but they do not authorize a separate CRM Sales Desk or a competing quotation workspace. Quote creation, editing, sending, acceptance, and invoice conversion must use the existing canonical quotation lifecycle and preserve stable IDs, history, and conversion behavior.
 
 **Template catalog for quotation:**
 - Website Development / Company Profile
@@ -605,7 +605,7 @@ Required features:
 - Record exceptions such as budget exceeded, missing receipt, duplicate bill, beneficiary mismatch, rejected request, failed payment, and disputed vendor amount.
 - Reimbursement may need its own type within Expense Control rather than being forced into a purchase-order flow.
 
-### 9.7 Cash Management and bank reconciliation
+### 9.7 Cash, bank and reconciliation controls
 
 - Cash & Bank remains the authoritative Finance cash/bank view. Bank integration enriches it with verified external information.
 - Bank account metadata must safely reference accounts and GL mapping; full bank account numbers should be masked where appropriate.
