@@ -283,3 +283,9 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Budget cards keep budget, source-backed actual-to-date, remaining budget, variance, delivery progress, and spend-to-budget comparison with their existing null/unavailable semantics. No cost was inferred from delivery progress.
 - Archive cards keep completed project/client context, completed date, budget, final progress, owner, slug, detail action, and permission-gated edit action.
 - Both presentations use the existing filtered and paginated project rows; no status transitions, budget formulas, Finance joins, record visibility, API integrations, or permissions changed. Regression coverage added; CI for the current main head remains under verification.
+
+
+## Thirty-fourth implementation slice: Projects responsive table JSX boundary fix
+
+- TypeScript validation reported that the compact project-card view and the wide table were sibling JSX elements in a single conditional branch.
+- Wrapped those two responsive presentations in a fragment so the branch has one valid root, without changing their visibility, data source, pagination, or actions.

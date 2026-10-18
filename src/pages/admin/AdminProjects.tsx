@@ -2314,6 +2314,7 @@ export const AdminProjects: React.FC = () => {
                 onOpenProject={openProjectDetail}
               />
             ) : (
+              <>
               <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="projects-table-cards" role="list" aria-label="Project portfolio cards">
                 {pagedProjectTableRows.length === 0 ? (
                   <div className="rounded-control border border-line bg-bg p-6 text-center" role="status">
@@ -2421,6 +2422,7 @@ export const AdminProjects: React.FC = () => {
 </tbody>
                 </table>
               </div>
+              </>
             )}
             {projectLayout === 'table' && (
               <AdminTablePagination total={filteredProjects.length} page={projectTablePage} pageSize={projectTablePageSize} onPageChange={setProjectTablePage} onPageSizeChange={setProjectTablePageSize} itemLabel="projects" slug="projects-directory-pagination" />
