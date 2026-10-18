@@ -854,7 +854,13 @@ export const AdminSettings: React.FC = () => {
     <AdminPageShell featureSlug="settings-module">
       <AdminModuleHeader slug="settings-header"
         title="Settings"
-        description="Manage system health, access and security, audit history, and connected services."
+        description={activeTab === 'overview'
+          ? 'Review system health, backup history, and production readiness.'
+          : activeTab === 'security'
+            ? 'Review account identity, access, and multi-factor authentication.'
+            : activeTab === 'audit'
+              ? 'Search and review server-recorded security and administrative events.'
+              : 'Review server-managed connections, public metadata, and integration health.'}
         actions={canAccessServer && activeTab === 'overview' ? (
           <>
             <Button
