@@ -310,25 +310,6 @@ export const AdminClientRetainers: React.FC = () => {
 
 
 
-      <section data-ams-feature-slug="retainers-kpis" data-ams-slug="retainers-kpis" aria-label="Retainer metrics">
-        <AdminMetricStrip
-          slug="retainers-kpis"
-          className="md:grid-cols-3 lg:grid-cols-3"
-          metrics={[
-            { id: 'monthly-value', label: 'Monthly retainer value', value: money(mrr), context: 'Current committed recurring value', icon: <ArrowUp size={15} />, toneClassName: 'text-success' },
-            { id: 'committed-hours', label: 'Committed retainer hours', value: allocated.toLocaleString() + ' hrs/mo', context: 'Burned ' + used.toLocaleString() + ' hrs · ' + burn.toFixed(1) + '%', icon: <Clock3 size={15} />, toneClassName: 'text-info' },
-            { id: 'renewals-due', label: 'Renewals due in 30 days', value: renewals.length, context: money(renewalsValue) + ' monthly value', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
-          ]}
-        />
-      </section>
-
-      <section data-ams-feature-slug="retainers-summary" data-ams-slug="retainers-summary" className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="Retainer summary">
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Agency burn: <strong className="text-fg">{burn.toFixed(1)}%</strong></span></div>
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TriangleAlert size={14} className="text-warning" /><span>Near cap: <strong className="text-fg">{nearCap}</strong></span></div>
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><ReceiptText size={14} className="text-info" /><span>Average overage: <strong className="text-fg">{money(avgRate)}/hr</strong></span></div>
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">Client Directory</strong></span></div>
-      </section>
-
       <AdminFilterBar slug="client-retainers-filters"
         searchValue={query}
         onSearchChange={setQuery}
@@ -380,7 +361,24 @@ export const AdminClientRetainers: React.FC = () => {
         {!isLoading && <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="retainers" slug="retainers-pagination" />}
       </section>
 
+      <section data-ams-feature-slug="retainers-kpis" data-ams-slug="retainers-kpis" aria-label="Retainer metrics">
+        <AdminMetricStrip
+          slug="retainers-kpis"
+          className="md:grid-cols-3 lg:grid-cols-3"
+          metrics={[
+            { id: 'monthly-value', label: 'Monthly retainer value', value: money(mrr), context: 'Current committed recurring value', icon: <ArrowUp size={15} />, toneClassName: 'text-success' },
+            { id: 'committed-hours', label: 'Committed retainer hours', value: allocated.toLocaleString() + ' hrs/mo', context: 'Burned ' + used.toLocaleString() + ' hrs · ' + burn.toFixed(1) + '%', icon: <Clock3 size={15} />, toneClassName: 'text-info' },
+            { id: 'renewals-due', label: 'Renewals due in 30 days', value: renewals.length, context: money(renewalsValue) + ' monthly value', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
+          ]}
+        />
+      </section>
 
+      <section data-ams-feature-slug="retainers-summary" data-ams-slug="retainers-summary" className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="Retainer summary">
+        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Agency burn: <strong className="text-fg">{burn.toFixed(1)}%</strong></span></div>
+        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TriangleAlert size={14} className="text-warning" /><span>Near cap: <strong className="text-fg">{nearCap}</strong></span></div>
+        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><ReceiptText size={14} className="text-info" /><span>Average overage: <strong className="text-fg">{money(avgRate)}/hr</strong></span></div>
+        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">Client Directory</strong></span></div>
+      </section>
 
       <Drawer slug="retainer-create-drawer"
         open={retainerFormOpen}

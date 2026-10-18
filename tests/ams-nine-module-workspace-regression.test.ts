@@ -110,14 +110,15 @@ test('Clients surface account health after the directory and keep data gaps expl
   assert.match(clients, /Cumulative billed value/);
 });
 
-test('Client Retainers places renewal and usage KPIs before the searchable agreement register', async () => {
+test('Client Retainers prioritizes the agreement register before supporting summaries', async () => {
   const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
   const header = retainers.indexOf('<AdminModuleHeader');
-  const metrics = retainers.indexOf('data-ams-feature-slug="retainers-kpis"');
-  const summary = retainers.indexOf('data-ams-feature-slug="retainers-summary"');
   const filters = retainers.indexOf('slug="client-retainers-filters"');
   const directory = retainers.indexOf('data-ams-feature-slug="retainers-directory"');
-  assert.ok(header >= 0 && metrics > header && summary > metrics && filters > summary && directory > filters);
+  const directoryEnd = retainers.indexOf('</section>', directory);
+  const metrics = retainers.indexOf('data-ams-feature-slug="retainers-kpis"');
+  const summary = retainers.indexOf('data-ams-feature-slug="retainers-summary"');
+  assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd && summary > metrics);
 });
 
 test('Finance exposes one current worksheet and explicit unavailable source context', async () => {
