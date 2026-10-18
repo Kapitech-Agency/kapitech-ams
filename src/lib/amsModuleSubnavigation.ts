@@ -449,7 +449,9 @@ export function isAmsModuleSubnavigationChildActive(
   const params = new URLSearchParams(search);
   if (path === '/admin/inbox') {
     const selectedView = params.get('view') || 'overview';
-    if (item.key === 'all-messages') return selectedView === 'messages';
+    // Legacy Starred URLs are saved views owned by the Messages workspace,
+    // so keep its canonical worksheet selected rather than implying a new tab.
+    if (item.key === 'all-messages') return selectedView === 'messages' || selectedView === 'starred';
     if (item.key === 'sales-inquiries') return selectedView === 'client';
     if (item.key === 'client-requests') return selectedView === 'client-requests';
     if (item.key === 'project-support') return selectedView === 'project-support';
