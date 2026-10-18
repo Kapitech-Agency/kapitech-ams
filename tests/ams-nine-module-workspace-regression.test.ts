@@ -129,6 +129,14 @@ test('Finance exposes one current worksheet and explicit unavailable source cont
     invoicing.indexOf('<FinanceMetricCard label="Total quotations"') > invoicing.indexOf('data-ams-feature-slug="finance-records-section"'),
     'quotation register should be the primary workspace before supporting pipeline metrics'
   );
+  assert.ok(
+    invoicing.indexOf('data-ams-feature-slug="finance-income-expenses-ledger"') < invoicing.indexOf('<FinanceMetricCard label="Expenses YTD"'),
+    'income and expense ledger should precede its supporting metrics'
+  );
+  assert.ok(
+    invoicing.indexOf('data-ams-feature-slug="finance-vendor-payments-ledger"') < invoicing.indexOf('<FinanceMetricCard label="Scheduled"'),
+    'vendor payment ledger should precede its supporting metrics'
+  );
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(finance, /data-ams-slug="finance-active-worksheet"/);
   assert.match(finance, /className="ams-finance-table w-full min-w-\[760px\] border-collapse text-left text-xs"/);

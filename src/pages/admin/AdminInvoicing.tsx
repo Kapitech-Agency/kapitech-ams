@@ -2938,16 +2938,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-5">
-          {incomeExpenseMode === 'expenses' ? (
-            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-              <FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context="Recorded expense date in the current year" sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>} />
-              <FinanceMetricCard label="Expense records" value={currencyExpenses.filter((expense) => String(expense.date || '').slice(0,4) === String(currentYear)).length} context="Current year · selected currency" icon={<FileText size={15}/>} />
-              <FinanceMetricCard label="Average expense" value={formatFinanceCardAmount(currencyExpenses.length ? currencyExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0) / currencyExpenses.length : 0,currency)} context="Across loaded expense records" icon={<WalletCards size={15}/>} />
-              <FinanceMetricCard label="Recurring expenses" value={currencyExpenses.filter((expense) => expense.recurringInterval && expense.recurringInterval !== 'none').length} context="Scheduled cadence recorded" icon={<RefreshCw size={15}/>} />
-            </section>
-          ) : (
-            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
-          )}
           <section data-ams-feature-slug="finance-income-expenses-ledger" data-ams-slug="finance-income-expenses-ledger" className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Income and expenses ledger">
   <header className="border-b border-line bg-panel p-4 sm:px-5">
     <div className="flex flex-col gap-4">
@@ -3057,17 +3047,20 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       <AdminTablePagination total={filteredExpenses.length} page={expensePage} pageSize={expensePageSize} onPageChange={setExpensePage} onPageSizeChange={setExpensePageSize} itemLabel="expenses" slug="finance-expenses-pagination" />
     </div>
   )}
-</section>
+{incomeExpenseMode === 'expenses' ? (
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context="Recorded expense date in the current year" sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>} />
+              <FinanceMetricCard label="Expense records" value={currencyExpenses.filter((expense) => String(expense.date || '').slice(0,4) === String(currentYear)).length} context="Current year · selected currency" icon={<FileText size={15}/>} />
+              <FinanceMetricCard label="Average expense" value={formatFinanceCardAmount(currencyExpenses.length ? currencyExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0) / currencyExpenses.length : 0,currency)} context="Across loaded expense records" icon={<WalletCards size={15}/>} />
+              <FinanceMetricCard label="Recurring expenses" value={currencyExpenses.filter((expense) => expense.recurringInterval && expense.recurringInterval !== 'none').length} context="Scheduled cadence recorded" icon={<RefreshCw size={15}/>} />
+            </section>
+          ) : (
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
+          )}
+          </section>
         </div>
       ) : financeView === 'vendor-payments' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <FinanceMetricCard label="Scheduled" value={String(vendorPaymentMetrics.scheduled)} context="Upcoming vendor payments" icon={<Clock3 size={15}/>} />
-            <FinanceMetricCard label="Overdue" value={String(vendorPaymentMetrics.overdue)} context="Payments past due" icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger" />
-            <FinanceMetricCard label="Paid" value={formatFinanceCardAmount(vendorPaymentMetrics.paid, currency)} context="Recorded payments" icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success" />
-            <FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(vendorPaymentMetrics.outstanding, currency)} context="Remaining obligations" icon={<WalletCards size={15} className="text-warning"/>} toneClassName="text-warning" />
-          </section>
-
           <section data-ams-feature-slug="finance-vendor-payments-ledger" data-ams-slug="finance-vendor-payments-ledger" className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Vendor payments ledger">
             <header className="border-b border-line bg-panel p-4 sm:px-5">
               <div className="flex flex-col gap-4">
@@ -3144,6 +3137,12 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
               )}
             </div>
             <AdminTablePagination total={filteredVendorPayments.length} page={vendorPaymentPage} pageSize={vendorPaymentPageSize} onPageChange={setVendorPaymentPage} onPageSizeChange={setVendorPaymentPageSize} itemLabel="vendor payments" slug="finance-vendor-payments-pagination" />
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <FinanceMetricCard label="Scheduled" value={String(vendorPaymentMetrics.scheduled)} context="Upcoming vendor payments" icon={<Clock3 size={15}/>} />
+            <FinanceMetricCard label="Overdue" value={String(vendorPaymentMetrics.overdue)} context="Payments past due" icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger" />
+            <FinanceMetricCard label="Paid" value={formatFinanceCardAmount(vendorPaymentMetrics.paid, currency)} context="Recorded payments" icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success" />
+            <FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(vendorPaymentMetrics.outstanding, currency)} context="Remaining obligations" icon={<WalletCards size={15} className="text-warning"/>} toneClassName="text-warning" />
+          </section>
           </section>
         </div>
       ) : financeView === 'tax-retainers' ? (
