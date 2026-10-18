@@ -239,7 +239,7 @@ Planning & Delivery is addressable at `/admin/projects?projects=planning-deliver
 
 Project Resources is addressable at `/admin/projects?projects=resources`. It selects an existing project and presents its recorded owner/team membership, optional explicit resource allocation entries, and the same canonical project task assignments. Assignment counts are calculated from task assignee values; resource allocation percentages are shown only when explicit allocation records exist. Cross-project staffing availability, time-log actuals and overload/capacity percentages remain explicitly outside this view and are not inferred from task counts. No API, database, authentication, access policy, Finance logic or business record was changed.
 
-**Verification:** Route ownership and source-content regression assertions are added. Current CI status is pending. Browser-level visual and role-specific checks remain unverified.
+**Verification:** AMS Quality Gate and AMS CI passed on code SHA `8047cdf531fbcdf2d7e9e7db49ac20c99901cfdf`. Quality Gate passed typecheck, 707 regression tests (687 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser-level visual and role-specific checks remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
