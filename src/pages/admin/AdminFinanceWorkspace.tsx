@@ -3080,30 +3080,36 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           { id: 'gl-cash-out', metric: 'Posted GL cash out', amount: postedYearCashFlow.outflow, basis: postedYearCashFlow.activityCount + ' cash-moving posted journal entries; inter-account transfers net to zero' },
           { id: 'gl-cash-net', metric: 'Posted GL net cash movement', amount: postedYearCashFlow.net, basis: 'Posted journal activity on accounts 1000, 1100 and 1200; bank-statement reconciliation still required' }
         ];
+        const annualOperatingRows = annualRows.filter((item) => !item.id.startsWith('gl-'));
+        const postedLedgerSummaryRows = annualRows.filter((item) => item.id.startsWith('gl-'));
         return (
-          <div className="space-y-4">
+          <div className="space-y-4" data-ams-slug="finance-annual-summary-workspace">
             <div className="flex min-w-0 flex-col gap-1" data-ams-slug="finance-annual-summary-period">
               <h2 className="text-sm font-semibold text-fg">Annual summary · {selectedYear}</h2>
-              <p className="text-xs text-muted">Full-year results follow the reporting year selected in the topbar. The source preview and posted General Ledger are listed separately below.</p>
+              <p className="text-xs text-muted">Full-year source activity and posted accounting results are separated below. Both follow the reporting year selected in the topbar.</p>
             </div>
-            <AdminMetricStrip metrics={[
-              { id: 'year-billed', label: 'Annual invoice value', value: formatMoney(yearBilled), context: selectedYear + ' · issued invoices', icon: <FileText size={15} /> },
-              { id: 'year-collected', label: 'Annual recorded cash in', value: formatMoney(yearCollected), context: 'Invoice payments and saved Cash & Bank inflows', icon: <ArrowDown size={15} /> },
-              { id: 'year-expenses', label: 'Annual recorded expenses', value: formatMoney(yearExpense), context: yearExpenses.length + ' source expense records', icon: <ArrowUpRight size={15} /> },
-              { id: 'year-net', label: 'Net cash movement (proxy)', value: formatMoney(yearCollected - yearOutflow), context: 'Cash-in/out proxy; petty-cash voucher activity is excluded', icon: <CircleDollarSign size={15} /> }
-            ]} />
-            <WorkbookNote tone="warning" title="Posted General Ledger · annual view">
-              These annual accounting metrics use posted journals only. They may not represent final financial statements until every source row is mapped, posted and reconciled. The temporary Opening Balance Equity account must be cleared after opening balances are reviewed.
-            </WorkbookNote>
-            <AdminMetricStrip metrics={[
-              { id: 'annual-gl-revenue', label: 'Posted GL revenue', value: postedYearIncome.journalCount ? formatMoney(postedYearIncome.revenue) : 'No posted activity', context: postedYearIncome.journalCount + ' posted journal entries', icon: <FileText size={15}/> },
-              { id: 'annual-gl-expense', label: 'Posted GL expenses', value: postedYearIncome.journalCount ? formatMoney(postedYearIncome.expense) : 'No posted activity', context: 'Posted expense-account activity', icon: <ArrowUpRight size={15}/> },
-              { id: 'annual-gl-result', label: 'Posted GL result', value: postedYearIncome.journalCount ? formatMoney(postedYearIncome.net) : 'Not available', context: 'Not final profit until reconciled', icon: <CircleDollarSign size={15}/> },
-              { id: 'annual-gl-cashin', label: 'Posted GL cash in', value: postedYearCashFlow.journalCount ? formatMoney(postedYearCashFlow.inflow) : 'No posted activity', context: 'Opening balances excluded', icon: <ArrowDown size={15}/> },
-              { id: 'annual-gl-cashout', label: 'Posted GL cash out', value: postedYearCashFlow.journalCount ? formatMoney(postedYearCashFlow.outflow) : 'No posted activity', context: 'Internal cash transfers net to zero', icon: <ArrowUpRight size={15}/> },
-              { id: 'annual-gl-netcash', label: 'Posted GL net cash', value: postedYearCashFlow.journalCount ? formatMoney(postedYearCashFlow.net) : 'Not available', context: 'Bank statement reconciliation required', icon: <WalletCards size={15}/> }
-            ]} />
-            <FinanceDataTable title="Annual summary" description="IDR-only view. Source-derived operating proxies and posted-ledger accounting figures are listed separately in the same table with their basis clearly labelled." columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={annualRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))} emptyMessage="No records exist for the selected year." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '.csv', ['Metric', 'Amount', 'Basis'], annualRows.map((item) => [item.metric, item.amount, item.basis]))}>Export CSV</Button>} />
+            <FinanceDataTable
+              title="Annual operating activity"
+              description="Source-derived invoice, expense, and recorded cash totals. Cash flow figures are proxies, not reconciled closing cash or posted profit."
+              columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]}
+              rows={annualOperatingRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))}
+              emptyMessage="No source operating activity exists for the selected year."
+              exportable={false}
+              actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '.csv', ['Metric', 'Amount', 'Basis'], annualRows.map((item) => [item.metric, item.amount, item.basis]))}>Export full summary</Button>}
+            />
+            <section className="min-w-0 space-y-3" data-ams-slug="finance-annual-posted-ledger">
+              <WorkbookNote tone="warning" title="Posted General Ledger · annual view">
+                These annual accounting metrics use posted journals only. They may not represent final financial statements until every source row is mapped, posted and reconciled. The temporary Opening Balance Equity account must be cleared after opening balances are reviewed.
+              </WorkbookNote>
+              <FinanceDataTable
+                title="Posted General Ledger"
+                description="Journal-backed annual figures. Review source mapping and reconciliation before relying on these as final accounting results."
+                columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]}
+                rows={postedLedgerSummaryRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))}
+                emptyMessage="No posted General Ledger activity exists for the selected year."
+                exportable={false}
+              />
+            </section>
           </div>
         );
       }

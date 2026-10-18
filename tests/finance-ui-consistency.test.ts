@@ -99,6 +99,23 @@ test('Cash Flow and Annual Summary separate actual cash accounts and exclude int
   assert.match(workspace, /FINANCE_UI_COPY: Record<string, string> = \{[\s\S]*?Perlakukan hasilnya sebagai pergerakan bersih/);
 });
 
+test('Annual Summary separates source operating activity from posted-ledger results', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const annualStart = workspace.indexOf("case 'annual-summary': {");
+  const annualEnd = workspace.indexOf("\n      default:", annualStart);
+  assert.ok(annualStart >= 0 && annualEnd > annualStart, 'Annual Summary worksheet should be present.');
+  const annualView = workspace.slice(annualStart, annualEnd);
+
+  assert.doesNotMatch(annualView, /<AdminMetricStrip/, 'Annual figures should not be repeated in KPI strips and the same summary table.');
+  assert.match(annualView, /title="Annual operating activity"/);
+  assert.match(annualView, /title="Posted General Ledger"/);
+  assert.match(annualView, /const annualOperatingRows = annualRows\.filter\(\(item\) => !item\.id\.startsWith\('gl-'\)\)/);
+  assert.match(annualView, /const postedLedgerSummaryRows = annualRows\.filter\(\(item\) => item\.id\.startsWith\('gl-'\)\)/);
+  assert.match(annualView, /Export full summary/);
+  assert.match(annualView, /annualRows\.map\(\(item\) => \[item\.metric, item\.amount, item\.basis\]\)/);
+  assert.match(annualView, /Posted journals only/);
+});
+
 test('Finance read permission blocks unauthorized register loads and shows an explicit restricted state', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
