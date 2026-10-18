@@ -13,6 +13,7 @@
 - Navigation visibility is not authorization. Existing route guards and server permissions remain authoritative.
 - This is consolidation, not redesign. Preserve existing AMS design tokens, component patterns, shared shell, and Finance business rules.
 - Documentation is not implementation evidence. Verify source and execute tests.
+- Role-based presentation may change useful defaults and content priority, but never creates or expands authorization; see docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md.
 
 ### Navigation depth and breadcrumbs
 
@@ -156,4 +157,5 @@ Do not redirect distinct source-record links indiscriminately. Preserve valid ID
 - `../AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`
 - `../AMS-IMPLEMENTATION-TRACEABILITY.md`
 - `../AMS-UX-INTERACTION-STANDARDS.md`
+- `../AMS-ROLE-BASED-CONTENT-BLUEPRINT.md`
 - `../../AMS-DESIGN-SYSTEM.md`
