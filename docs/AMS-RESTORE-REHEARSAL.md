@@ -1,6 +1,6 @@
-# AMS Encrypted Backup Restore Rehearsal
+# Legacy Encrypted JSON Backup Restore Rehearsal — Isolated Only
 
-The rehearsal restores an encrypted JSON backup into an isolated directory and validates the decrypted AMS schema.
+This rehearsal validates a legacy encrypted JSON backup by restoring it to an isolated directory. Despite the utility filename `scripts/postgres-restore-rehearsal.ts`, this procedure does **not** restore a PostgreSQL database backup and is not a PostgreSQL production disaster-recovery procedure. For current PostgreSQL production recovery, use `docs/postgres-backup-dr-runbook.md` and the readiness/release runbooks.
 
 ## Preconditions
 
@@ -22,8 +22,8 @@ The script:
 5. Writes only an isolated copy with restrictive permissions.
 6. Prints counts and byte sizes without printing database contents or secrets.
 
-## Production safety
+## Safety boundary
 
-This is a rehearsal tool, not a production restore endpoint. It never replaces the live database and does not modify the application data directory.
+This is an isolated legacy-JSON rehearsal tool, not a production restore endpoint. It never replaces the live database and does not modify the application data directory. Do not use it as a substitute for a PostgreSQL restore or to bypass the production data-source guard.
 
 A real disaster recovery restore should first stop application writes, preserve the failed data directory, restore into a controlled location, validate application startup and reconciliation, and only then promote the restored data according to the incident runbook.
