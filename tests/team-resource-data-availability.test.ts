@@ -65,5 +65,5 @@ test('Roles & Departments is an active member-backed worksheet separate from acc
   assert.ok(source.includes('data-ams-feature-slug="team-roles-departments"'));
   assert.ok(source.includes('Role groups'));
   assert.ok(source.includes("downloadCsv('kapitech-roles-departments.csv'"));
-  assert.ok(source.includes('does not grant, remove, or modify system permissions'));
+  assert.ok(source.includes('They do not grant, remove, or modify system permissions'));
 });
