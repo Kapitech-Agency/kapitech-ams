@@ -19,6 +19,7 @@ The current runtime guard blocks production API work when the selected source is
 - `docs/production-cutover-checklist.md` — release evidence checklist.
 - `docs/production-readiness-gate.md` — endpoint semantics and runtime gates.
 - `docs/postgres-backup-dr-runbook.md` — PostgreSQL backup/restore contract and RPO/RTO targets.
+- `docs/AMS-RESTORE-REHEARSAL.md` — isolated PostgreSQL backup restore rehearsal and migration-checksum verification; never a production target.
 - `docs/private-document-vault.md` — private document storage integrity and recovery requirements.
 
 A source-code change, healthy database connection, successful CI run, or backup timestamp alone does not prove production recovery readiness.
