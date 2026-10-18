@@ -148,7 +148,10 @@ test('Project Registry filters keep the Project Registry workspace active withou
       'status filter ' + status + ' stays within Project Registry');
   }
   assert.equal(isAmsModuleSubnavigationItemActive(tasks, '/admin/projects', '?projects=sprint'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(controls, '/admin/projects', '?projects=budget'), true);
+  assert.equal(controls.available, false, 'Project Controls stays target-only until its complete workspace is implemented');
+  assert.equal(controls.slug, undefined, 'Budget vs Actual must not advertise itself as the complete Project Controls workspace');
+  assert.equal(isAmsModuleSubnavigationItemActive(controls, '/admin/projects', '?projects=budget'), false,
+    'Budget vs Actual remains a legacy/internal view rather than an active Project Controls workspace');
 
   const projectSource = await read('src/pages/admin/AdminProjects.tsx');
   assert.match(projectSource, /registryStatusView/);
