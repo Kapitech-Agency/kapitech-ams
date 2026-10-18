@@ -232,7 +232,7 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
     assert.ok(navigation.includes(group), 'Missing primary navigation group ' + group);
   }
   assert.ok(subnavigation.includes("label: 'Retainers'"));
-  assert.equal(primitives.includes('export const AdminTopbarTabs'), false, 'The retired pill-style topbar tabs are removed.');
+  assert.equal(primitives.includes('export const AdminTopbarTabs'), true, 'Desktop workspace navigation uses the dedicated topbar tabs primitive.');
   assert.equal(primitives.includes('AdminCmsSectionTabs'), false, 'CMS uses the shared contextual navigation rather than a second legacy tab component.');
   assert.ok(primitives.includes("'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
   assert.ok(primitives.includes("'border-accent/20 bg-accent/10 font-semibold text-fg'"));
