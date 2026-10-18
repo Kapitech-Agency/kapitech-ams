@@ -391,3 +391,15 @@ test('Time Tracking billing and project views keep summaries tied to the selecte
   assert.match(source, /No entries match this billing filter in the selected period/);
   assert.match(source, /No entries match the selected project in this period/);
 });
+
+test('Vendor Skills & Service Matrix link reuses the existing Admin-only route policy', async () => {
+  const vendors = await read('src/pages/admin/AdminVendors.tsx');
+  const teams = await read('src/pages/admin/AdminTeams.tsx');
+  const access = await read('src/lib/amsNavigationAccess.ts');
+
+  assert.ok(vendors.includes("canViewSkillMatrix = canAccessAmsRoute(navigationRole, '/admin/vendors', '?view=skill-matrix')"));
+  assert.equal(vendors.split("to: '/admin/vendors?view=skill-matrix'").length - 1, 2);
+  assert.equal(vendors.split("...(canViewSkillMatrix ? [{").length - 1, 2);
+  assert.match(teams, /canAccessAmsRoute\(navigationRole, '\/admin\/vendors', '\?view=skill-matrix'\)/);
+  assert.match(access, /if \(path === '\/admin\/vendors' && params\.get\('view'\) === 'skill-matrix'\) return role === 'Admin'/);
+});

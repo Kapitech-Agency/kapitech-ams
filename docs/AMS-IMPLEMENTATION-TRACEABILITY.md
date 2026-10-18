@@ -514,23 +514,35 @@ The findings above are source-level risks and release-control gaps, not claims t
 
 ### PROJ-PLANNING-003: Planning & Delivery exposes source-backed brief, milestones and timeline views
 
-**Status:** IMPLEMENTED_UNVERIFIED. Typecheck passed on `4d4b4c817f2ca1b7fd54ab33e7643324efb47afa`, but both CI workflows failed at regression tests due to an over-escaped regex in the newly added assertion. This correction fixes that assertion; CI must rerun and pass. Browser verification remains outstanding.  
+**Status:** IMPLEMENTED_VERIFIED for source, typecheck, regression tests and production build on `c0c63aea176ced4fc5c72613d056f1d5f28c3352`; authenticated browser verification remains outstanding.
 **Scope:** Frontend/query navigation and presentation over existing `AgencyProject` and `ProjectMilestone` records only. The current model does not supply separate scope/deliverable, internal QA, client review, revision history or dependency records; those worksheets remain unavailable.
 
 **Source:** `src/pages/admin/AdminProjects.tsx`, `src/lib/projectStore.ts`.  
 **Tests:** `tests/ams-sidebar-subnavigation.test.ts`, `tests/projects-module-regression.test.ts`.  
 **Acceptance:** Project Brief, Milestones and Timeline have distinct query state; project selector preserves the active worksheet; unknown worksheet values normalize to Brief; leaving Planning & Delivery removes stale worksheet state; no records are invented and no untracked workflow outcomes are inferred.  
-**Validation:** Must pass AMS Quality Gate and AMS CI on the resulting commit. No local test/build can be claimed.  
-**Next action:** Confirm CI and carry direct entry, refresh/back/forward, keyboard and responsive tests into Stage 5.
+**Validation:** AMS Quality Gate [39157322660](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157322660) and AMS CI [39157322657](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157322657) passed on that source commit. No local test/build can be claimed.
+**Next action:** Carry direct entry, refresh/back/forward, keyboard and responsive tests into Stage 5.
 
 ### TIME-LOGS-002: Billing and project time worksheets are source-backed read-only views
 
-**Status:** IMPLEMENTED_UNVERIFIED pending CI on this batch; browser verification remains outstanding.  
+**Status:** IMPLEMENTED_VERIFIED for source, typecheck, regression tests, production build and AMS CI on descendant commit `9067e10f2d11333ada9b655de72241684e869e15`; authenticated browser verification remains outstanding.
 **Scope:** Frontend filter/query state and aggregation over the existing canonical time log API response. No time-entry mutation, business rule, access policy, billing rule or Finance posting behavior changed.
 
 **Source:** `src/pages/admin/AdminTimeLogs.tsx`.  
 **Tests:** `tests/ams-sidebar-subnavigation.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`, existing time-log ownership/project-integrity/reconciliation suites.  
 **Acceptance:** Billable, non-billable and unclassified flags remain distinct; project grouping uses only recorded project ID/name; totals stay constrained to the shared reporting period; selection filters the underlying rows; page counts use the filtered set. My Timesheet and Timesheet Control remain unavailable because personal scope and review state were not established.  
-**Validation:** Initial Quality Gate [39157654599](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157654599) and AMS CI [39157654579](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157654579) failed at the same newly added source assertion; typecheck passed, regression tests failed, and production build/later CI stages were skipped. This correction changes test assertions only; new workflow results must verify the resolution. Local test/build cannot be claimed.  
-**Next action:** Confirm the new commit's CI passes, then browser-check URL deep links, filters, missing project references and empty-period states. Trace billing effects before making any Finance claim.
+**Validation:** The initial run exposed an over-escaped test regex. Correction commit [9067e10f](https://github.com/Kapitech-Agency/kapitech-ams/commit/9067e10f2d11333ada9b655de72241684e869e15) passed AMS Quality Gate [39157823377](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157823377) and AMS CI [39157823474](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157823474), including regression tests, production build, migration packaging and HTTP smoke test. Feature source from this record is included unchanged in that tested descendant commit. Local test/build cannot be claimed.
+**Next action:** Browser-check URL deep links, filters, missing project references and empty-period states. Trace billing effects before making any Finance claim.
+
+
+### VENDOR-SKILLS-001: Vendor directory links only authorized users to the canonical Skills & Service Matrix
+
+**Status:** IMPLEMENTED_UNVERIFIED pending CI on this batch; authenticated browser verification remains outstanding.  
+**Scope:** Navigation connection only. It reuses the current route policy and current matrix page; it does not change role assignments or permission rules.
+
+**Source:** `src/pages/admin/AdminVendors.tsx`, `src/pages/admin/AdminTeams.tsx`, `src/lib/amsNavigationAccess.ts`.  
+**Tests:** `tests/ams-nine-module-workspace-regression.test.ts` checks that both loading/loaded tabs reuse `canAccessAmsRoute`, link to the existing query route and preserve the Admin-only policy.  
+**Acceptance:** Skills & Service Matrix is shown only when the current policy permits `/admin/vendors?view=skill-matrix`. The destination renders existing source-backed internal role-focus and vendor-skill coverage panels. Contracts & Rates and Engagement Status remain disabled.  
+**Validation:** Await AMS Quality Gate and AMS CI for this commit. Local test/build could not be run in the current execution environment.  
+**Next action:** Confirm CI, then browser-verify visibility for an authorized Admin and omission for other roles, direct-route denial and browser navigation in Stage 5.
 

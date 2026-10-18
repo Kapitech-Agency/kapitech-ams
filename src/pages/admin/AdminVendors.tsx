@@ -39,7 +39,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { api } from '../../lib/apiClient';
-import { hasAdminPermission } from '../../lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { toSlug } from '../../lib/slug';
 
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
@@ -55,6 +56,8 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
+  const navigationRole = getAmsRole(getAdminSession()?.user);
+  const canViewSkillMatrix = canAccessAmsRoute(navigationRole, '/admin/vendors', '?view=skill-matrix');
   const canViewVendors =
     canManageVendors ||
     hasAdminPermission('canViewFinancials') ||
@@ -371,7 +374,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
           className="w-full border-b border-line pb-2"
           items={[
             { key: 'directory', label: 'Directory', to: '/admin/vendors' },
-            { key: 'skills', label: 'Skills & Service Matrix', to: '/admin/vendors', available: false },
+            ...(canViewSkillMatrix ? [{ key: 'skills', label: 'Skills & Service Matrix', to: '/admin/vendors?view=skill-matrix' }] : []),
             { key: 'contracts-rates', label: 'Contracts & Rates', to: '/admin/vendors', available: false },
             { key: 'engagement', label: 'Engagement Status', to: '/admin/vendors', available: false },
           ]}
@@ -416,7 +419,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
           className="w-full border-b border-line pb-2"
           items={[
             { key: 'directory', label: 'Directory', to: '/admin/vendors' },
-            { key: 'skills', label: 'Skills & Service Matrix', to: '/admin/vendors', available: false },
+            ...(canViewSkillMatrix ? [{ key: 'skills', label: 'Skills & Service Matrix', to: '/admin/vendors?view=skill-matrix' }] : []),
             { key: 'contracts-rates', label: 'Contracts & Rates', to: '/admin/vendors', available: false },
             { key: 'engagement', label: 'Engagement Status', to: '/admin/vendors', available: false },
           ]}
