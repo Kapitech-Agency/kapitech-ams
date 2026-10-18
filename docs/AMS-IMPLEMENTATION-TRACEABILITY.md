@@ -259,7 +259,7 @@ Roles & Departments is available inside Team & Capacity at `/admin/team?view=rol
 
 Dashboard exposes Overview, Performance, and Analytics. A missing or unsupported `view` value now renders Overview, activates its navigation tab, and replaces an invalid `view` query with the canonical `/admin/dashboard` URL. This prevents unknown query values from rendering Analytics with no active workspace tab. The existing `view=tasks` compatibility redirect remains in `DashboardWorkspaceRoute`. No dashboard data source, API, role access, or business logic was changed.
 
-**Verification:** Active-tab tests cover unsupported and empty query values. Dashboard route normalization regression coverage is added. Quality Gate and AMS CI are pending on this change. Browser history and keyboard interaction checks remain unverified.
+**Verification:** AMS Quality Gate and AMS CI passed on code SHA `a1d161046c77034a77c74db9fbb1ba4974fe027e`. Quality Gate passed typecheck, 710 regression tests (690 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser history and keyboard interaction checks remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
