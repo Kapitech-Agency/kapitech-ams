@@ -1,6 +1,6 @@
 # AI Coding Agent Instructions — Kapitech AMS
 
-**Read this file before changing anything in this repository.** These rules apply to AI coding agents, assistants, autonomous coding tools, and humans delegating repository work to AI.
+**Read this file before changing anything in this repository.** These rules apply to AI coding agents, assistants, autonomous coding tools, and humans delegating repository work to AI. Start with [`docs/README.md`](docs/README.md) for the documentation authority/index and to distinguish active specifications from historical/staging references.
 
 ## 1. Read the right documentation first
 
@@ -129,6 +129,9 @@ Read domain-specific documents for substantial tasks:
 - UX and spacing/margin/padding: docs/AMS-UX-INTERACTION-STANDARDS.md and AMS-DESIGN-SYSTEM.md.
 - Module content hierarchy and AI frontend-only UX/UI execution: docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md and docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md.
 - Role-based content specification across all nine modules, including worksheet fields, visualization rules, and role-aware presentation: docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md.
+- Concrete per-worksheet persona defaults, fields/columns, controls, and visual choices: docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md.
+- Documentation index and source-of-truth classification: docs/README.md.
+- Current production operations contract: docs/PRODUCTION-CUTOVER.md, docs/production-cutover-checklist.md, docs/production-readiness-gate.md, docs/postgres-backup-dr-runbook.md, and docs/private-document-vault.md. Historical/staging PostgreSQL migration notes must not be treated as live production instructions.
 - Concrete per-worksheet role defaults, fields/columns, controls, persona emphasis, and visualization choice: docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md.
 - Frontend routes/state/API/forms: docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md.
 - Business transitions/side effects: docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md.
