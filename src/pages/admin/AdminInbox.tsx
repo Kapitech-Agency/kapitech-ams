@@ -51,7 +51,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
-import { AdminFilterBar, AdminModuleHeader, AdminSectionTabs, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminModuleHeader, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
@@ -146,12 +146,6 @@ export const AdminInbox: React.FC = () => {
     { value: 'in-review', label: 'Status: In Review' },
     { value: 'contacted', label: 'Status: Contacted' },
     { value: 'closed', label: 'Status: Closed Deal' }
-  ];
-
-  const inboxTabs: Array<{ key: InboxTab; label: string; count: number }> = [
-    { key: 'overview', label: 'Overview', count: submissions.length },
-    { key: 'client', label: 'Client Requests', count: submissions.length },
-    { key: 'starred', label: 'Starred', count: submissions.filter((item) => !!item.starred).length }
   ];
 
   useEffect(() => {
@@ -691,19 +685,6 @@ export const AdminInbox: React.FC = () => {
           <button type="button" onClick={() => void refreshInbox()} disabled={loading} aria-busy={loading || undefined} className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-wait disabled:opacity-60">{loading ? (language === 'id' ? 'Memuat…' : 'Retrying…') : (language === 'id' ? 'Coba lagi' : 'Retry')}</button>
         </div>
       )}
-
-      <div className="min-w-0">
-        <AdminSectionTabs
-          ariaLabel="Inbox sections"
-          activeKey={activeInboxTab}
-          items={inboxTabs.map((tab) => ({
-            key: tab.key,
-            label: tab.label,
-            to: '/admin/inbox?view=' + tab.key,
-            slug: 'inbox-tab-' + tab.key
-          }))}
-        />
-      </div>
 
       {/* Toast Notification */}
       {toastMessage && (

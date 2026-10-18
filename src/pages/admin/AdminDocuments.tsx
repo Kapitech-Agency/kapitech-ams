@@ -29,7 +29,6 @@ import {
   AdminModuleHeader,
   AdminPageShell,
   AdminPanel,
-  AdminSectionTabs,
   AdminStatusBadge,
   AdminTablePagination,
 } from '../../components/admin/AdminModulePrimitives';
@@ -576,17 +575,6 @@ export const AdminDocuments: React.FC = () => {
         />
       </div>
 
-      <div className="min-w-0" data-ams-slug="documents-section-tabs" data-ams-feature-slug="documents-tabs">
-        <AdminSectionTabs
-          ariaLabel="Documents sections"
-          activeKey={activeTab}
-          items={DOCUMENT_TABS.map((tab) => ({
-            key: tab.key,
-            label: tab.label,
-            to: tab.key === 'all' ? '/admin/documents' : '/admin/documents?documents=' + tab.key
-          }))}
-        />
-      </div>
 
 
 

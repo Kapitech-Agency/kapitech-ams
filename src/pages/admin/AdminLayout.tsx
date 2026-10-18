@@ -163,6 +163,8 @@ export const AdminLayout: React.FC = () => {
     const path = location.pathname;
 
     if (path === '/admin/dashboard') return 'dashboard';
+    if (path === '/admin/inbox') return 'inbox';
+    if (path === '/admin/documents') return 'documents';
     if (path === '/admin/finance' || path.startsWith('/admin/finance/')) return 'finance';
     if (path === '/admin/projects' || path === '/admin/tasks') return 'projects';
     if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';

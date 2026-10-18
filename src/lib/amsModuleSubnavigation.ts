@@ -1,6 +1,6 @@
 import { canAccessAmsRoute, type AmsRole } from './amsNavigationAccess';
 
-export type AmsSidebarModuleKey = 'dashboard' | 'crm' | 'projects' | 'finance' | 'clients' | 'team' | 'cms' | 'settings' | 'tasks';
+export type AmsSidebarModuleKey = 'dashboard' | 'inbox' | 'projects' | 'clients' | 'finance' | 'team' | 'documents' | 'cms' | 'settings' | 'crm' | 'tasks';
 
 export interface AmsSidebarSubnavigationItem {
   key: string;
@@ -14,6 +14,11 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'overview', label: 'Overview', to: '/admin/dashboard' },
     { key: 'performance', label: 'Performance', to: '/admin/dashboard?view=performance' },
     { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' },
+  ],
+  inbox: [
+    { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview', slug: 'inbox-tab-overview' },
+    { key: 'client', label: 'Client Requests', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
+    { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' },
   ],
   // The old CRM route is a compatibility redirect and owns no new local navigation.
   crm: [],
@@ -46,6 +51,14 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'skills', label: 'Skill matrix', to: '/admin/vendors?view=skill-matrix' },
     { key: 'vendors', label: 'Vendors & freelancers', to: '/admin/vendors' },
     { key: 'time', label: 'Time tracking', to: '/admin/time-logs' },
+  ],
+  documents: [
+    { key: 'all', label: 'All Documents', to: '/admin/documents', slug: 'documents-tab-all' },
+    { key: 'sops', label: 'SOP & Guides', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
+    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
+    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
+    { key: 'hr', label: 'HR & People', to: '/admin/documents?documents=hr', slug: 'documents-tab-hr' },
+    { key: 'infra', label: 'Security & Keys', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' },
   ],
   cms: [
     { key: 'projects', label: 'Case studies', to: '/admin/cms/projects', slug: 'cms-tab-projects' },
@@ -139,6 +152,9 @@ export function isAmsModuleSubnavigationItemActive(
   const targetPath = target.pathname.replace(/\/+$/, '') || '/';
 
   if (path === '/admin/finance/quotations') return item.key === 'receivables';
+
+  if (path === '/admin/inbox') return item.key === (params.get('view') || 'overview');
+  if (path === '/admin/documents') return item.key === (params.get('documents') || 'all');
 
   if (path === '/admin/finance') {
     const financeGroups: Record<string, string[]> = {

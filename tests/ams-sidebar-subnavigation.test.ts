@@ -8,7 +8,7 @@ import {
 import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive } from '../src/lib/amsModuleSubnavigation';
 
 const roles: AmsRole[] = ['Admin', 'Finance', 'PM', 'Creative', 'Freelancer'];
-const modules = ['dashboard', 'crm', 'projects', 'finance', 'clients', 'team', 'cms', 'settings', 'tasks'] as const;
+const modules = ['dashboard', 'inbox', 'projects', 'clients', 'finance', 'team', 'documents', 'cms', 'settings', 'crm', 'tasks'] as const;
 
 test('module navigation retains its default view even when it shares the sidebar destination', () => {
   const cases: Array<[typeof modules[number], string, string]> = [
@@ -38,6 +38,8 @@ test('module navigation retains its default view even when it shares the sidebar
 
 test('contextual navigation contains only local views owned by the current module', () => {
   assert.deepEqual(getAmsModuleSubnavigation('dashboard', 'Admin').map((item) => item.key), ['overview', 'performance', 'analytics']);
+  assert.deepEqual(getAmsModuleSubnavigation('inbox', 'Admin').map((item) => item.key), ['overview', 'client', 'starred']);
+  assert.deepEqual(getAmsModuleSubnavigation('documents', 'Admin').map((item) => item.key), ['all', 'sops', 'legal', 'finance', 'hr', 'infra']);
   assert.deepEqual(getAmsModuleSubnavigation('crm', 'Admin'), []);
   assert.deepEqual(getAmsModuleSubnavigation('finance', 'Finance').map((item) => item.key), ['overview', 'transactions', 'receivables', 'projects', 'accounting']);
   assert.deepEqual(getAmsModuleSubnavigation('finance', 'PM').map((item) => item.key), ['projects']);
@@ -57,6 +59,15 @@ test('contextual navigation contains only local views owned by the current modul
 });
 
 test('active state follows route and query for Dashboard, Projects, Clients, Team and Settings', () => {
+  const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'client')!, '/admin/inbox', '?view=client'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'starred')!, '/admin/inbox', '?view=starred'), true);
+
+  const documents = getAmsModuleSubnavigation('documents', 'Admin');
+  assert.equal(isAmsModuleSubnavigationItemActive(documents.find((item) => item.key === 'all')!, '/admin/documents'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(documents.find((item) => item.key === 'finance')!, '/admin/documents', '?documents=finance'), true);
+
   const dashboard = getAmsModuleSubnavigation('dashboard', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'overview')!, '/admin/dashboard'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'overview')!, '/admin/dashboard', '?view=performance'), false);
