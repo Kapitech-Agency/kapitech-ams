@@ -194,3 +194,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Existing contextual descriptions, permission-gated controls, MFA setup access, server status sources, audit records, integrations, and all routes/query parameters remain unchanged.
 - Added source regression assertions for the four workspace titles.
 - Source change and regression assertion are committed directly to `main`; CI status will be checked after the push. No authenticated browser screenshot testing is claimed.
+
+
+## Twenty-third implementation slice: Inbox workspace identity
+
+- The Inbox heading now follows the selected Overview, Client inquiries, or Starred workspace. This makes the current task explicit in the content heading as well as the persistent topbar navigation.
+- Existing view query parameters, record filtering, queue controls, lead/client actions, polling, loading/error states, and permissions remain unchanged.
+- Added regression coverage for the active-workspace heading.
+- Source and test updates were committed directly to `main`. CI status will be checked for the latest commit. Authenticated browser visual QA remains outstanding.
