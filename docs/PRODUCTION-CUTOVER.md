@@ -1,6 +1,6 @@
 # Kapitech AMS Production Cutover
 
-This runbook is the operational handoff for the PostgreSQL production deployment.
+This runbook is the operational handoff for the AMS PostgreSQL production deployment. Repository: `Kapitech-Agency/kapitech-ams`. Production application URL: `https://ams.kapitech.id`. These are the documented target identifiers; verify the saved Hostinger application settings before deployment. This document does not prove the live hosting configuration.
 
 ## 1. Runtime
 
@@ -10,7 +10,7 @@ Production must run with:
 - `NODE_ENV=production`
 - `KAPITECH_DATA_SOURCE=postgres`
 - `PORT=3000`
-- `APP_URL=https://kapitech.id`
+- `APP_URL=https://ams.kapitech.id`
 
 The repository uses:
 
@@ -121,7 +121,7 @@ Do not declare the application production-ready until:
 3. Reconciliation evidence is source-hash bound and signed off.
 4. Durable document storage and object integrity verification are healthy.
 5. All active users have MFA enabled.
-6. The production readiness endpoint reports every gate as ready.
+6. The production readiness endpoint (`GET /api/system/production-readiness`) reports every gate as ready. Follow `docs/production-readiness-gate.md` and `docs/production-cutover-checklist.md`; documentation and CI alone do not establish live production readiness.
 
 ## 5. Hostinger handoff
 
@@ -129,7 +129,7 @@ The production source of truth is `main`. The former `production/hostinger` bran
 
 For Hostinger Node.js Web Apps, configure:
 
-- Repository: `Kapitech-Agency/Kapitech-Agency.github.io`
+- Repository: `Kapitech-Agency/kapitech-ams`
 - Branch: `main`
 - Node.js: 22.x
 - Build command: `npm run build`
