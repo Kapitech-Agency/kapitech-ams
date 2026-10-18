@@ -122,6 +122,9 @@ test('Client Retainers places renewal and usage KPIs before the searchable agree
 
 test('Finance exposes one current worksheet and explicit unavailable source context', async () => {
   const finance = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  assert.doesNotMatch(invoicing, /replaces the retired standalone tab/i);
+  assert.match(invoicing, /Review invoice tax and retainer billing alongside the related revenue records/);
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(finance, /data-ams-slug="finance-active-worksheet"/);
   assert.match(finance, /className="ams-finance-table w-full min-w-\[760px\] border-collapse text-left text-xs"/);
