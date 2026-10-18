@@ -72,6 +72,10 @@ Not every screen needs KPI cards. Do not leave blank metric gaps or add meaningl
 - One route must not show contradictory active destinations.
 - Deep links resolve without needing to open a drawer first.
 - Preserve legacy deep links through compatibility behavior when removal could break users or saved references.
+- Keep persistent navigation to the primary module and its current workspace. Worksheets, filters, saved views and individual records do not automatically become another menu layer.
+- Breadcrumbs are optional/contextual, not a global element on every page. Use them on deep record/detail pages only when the ancestor path helps orientation or returning to a parent.
+- Prefer ancestor breadcrumbs such as `Projects → Project Registry` above the current record title. Do not repeat the current page title in the breadcrumb and page heading. Every ancestor link must navigate to the correct authorized parent.
+- Do not add breadcrumbs to obvious module roots or primary tab destinations whose location is already clear. On narrow layouts, collapse the path or use a clear back-to-parent affordance without creating a second tab/navigation row.
 
 ## 6. Tables and registers
 
@@ -122,6 +126,7 @@ Not every screen needs KPI cards. Do not leave blank metric gaps or add meaningl
 - [ ] Header/title/description/actions match shared patterns.
 - [ ] Tabs have consistent placement, geometry, focus and active state.
 - [ ] No duplicate header/redundant toolbar.
+- [ ] Breadcrumbs are contextual, useful, permission-aware, and do not duplicate the current page title.
 - [ ] Panels use canonical surface/padding tokens.
 - [ ] Form errors do not overlap controls.
 - [ ] Table density/numeric alignment/status/actions are consistent.
