@@ -339,6 +339,18 @@ test('role-specific workspace destinations remain permitted and primary links ac
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'Freelancer', true).map((item) => item.key), ['access']);
 });
 
+test('Website CMS Careers normalizes unsupported worksheet queries without changing access policy', async () => {
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+  assert.ok(careers.includes("const hasCanonicalQuery = canManageJobs"));
+  assert.ok(careers.includes("? requestedTab === null || requestedTab === 'applicants'"));
+  assert.ok(careers.includes(": requestedTab === 'applicants';"));
+  assert.ok(careers.includes("if (nextTab === 'applicants') next.set('tab', 'applicants');"));
+  assert.ok(careers.includes("else next.delete('tab');"));
+  assert.ok(careers.includes("}, { replace: true });"));
+  assert.ok(careers.includes("const canManageJobs = canAccessAmsRoute(role, '/admin/cms/careers')"));
+  assert.ok(careers.includes("if (tab === 'jobs' && !canManageJobs) return;"));
+});
+
 test('Dashboard invalid view parameters fall back to the sole Overview workspace', () => {
   const views = getAmsModuleSubnavigation('dashboard', 'Admin');
   const overview = views.find((item) => item.key === 'overview')!;

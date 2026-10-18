@@ -246,7 +246,19 @@ export const AdminCmsCareers: React.FC = () => {
   useEffect(() => {
     const nextTab: WorkspaceTab = canManageJobs && requestedTab !== 'applicants' ? 'jobs' : 'applicants';
     setActiveTab((current) => current === nextTab ? current : nextTab);
-  }, [canManageJobs, requestedTab]);
+
+    const hasCanonicalQuery = canManageJobs
+      ? requestedTab === null || requestedTab === 'applicants'
+      : requestedTab === 'applicants';
+    if (hasCanonicalQuery) return;
+
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (nextTab === 'applicants') next.set('tab', 'applicants');
+      else next.delete('tab');
+      return next;
+    }, { replace: true });
+  }, [canManageJobs, requestedTab, setSearchParams]);
 
   useEffect(() => {
     if (activeTab === 'applicants') void loadApplicants();
