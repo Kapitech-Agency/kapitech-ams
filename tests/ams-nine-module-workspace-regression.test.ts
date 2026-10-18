@@ -35,16 +35,17 @@ test('Client directory filters and register precede supporting metrics', async (
   assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd);
 });
 
-test('Dashboard prioritizes operational KPIs before the primary chart and moves supporting metrics below it', async () => {
+test('Dashboard prioritizes operational KPIs and the primary workspace before supporting metrics', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overview = dashboard.indexOf('data-ams-feature-slug="dashboard-overview"');
   const primaryKpis = dashboard.indexOf("id: 'active-projects'", overview);
   const fourthPrimaryKpi = dashboard.indexOf("id: 'revenue'", primaryKpis);
   const chart = dashboard.indexOf('title="Invoices vs expenses"', fourthPrimaryKpi);
   const supportingMetrics = dashboard.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"', chart);
-  const projects = dashboard.indexOf('title="Active projects"', supportingMetrics);
+  const projects = dashboard.indexOf('title="Active projects"', chart);
+  const teamCapacity = dashboard.indexOf('title="Team capacity"', projects);
   assert.ok(overview < primaryKpis && primaryKpis < fourthPrimaryKpi && fourthPrimaryKpi < chart);
-  assert.ok(chart < supportingMetrics && supportingMetrics < projects);
+  assert.ok(chart < projects && projects < teamCapacity && teamCapacity < supportingMetrics);
   for (const id of ["outstanding", "utilization", "avg-project-value", "net-operating-profit"]) {
     assert.ok(dashboard.indexOf("id: '" + id + "'", supportingMetrics) > supportingMetrics, 'missing supporting KPI ' + id);
   }
