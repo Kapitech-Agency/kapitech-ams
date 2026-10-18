@@ -209,7 +209,7 @@ The direct Inbox workspaces remain Overview, Messages, Follow-ups, and Routing &
 
 The existing `/admin/navigation/release-readiness` route remains intact and keeps its route-access policy, but it no longer receives the persistent Settings workspace tabs. The master architecture marks Release Readiness as a placeholder, not a navigable Settings workspace, until the feature is verified. This corrects contextual navigation only; it does not remove the route, change its guard, or claim that release-readiness telemetry is operational.
 
-**Verification:** Regression assertions now check that the workspace resolver returns `null` for this placeholder while the existing Admin route-access policy remains intact. Fresh CI verification for this change is pending. Browser-level visual and direct-entry checks remain unverified.
+**Verification:** AMS Quality Gate and AMS CI passed on source SHA `e7ca334c7acc26235a3ecf4319fcafed3f7b7448`. The Quality Gate passed typecheck, 707 regression tests (687 passed, 0 failed, 20 skipped), and the production build. AMS CI also passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit (no vulnerabilities in 266 packages), production build, packaged-migration verification, and production HTTP smoke tests. Browser-level visual and direct-entry checks remain unverified; CI success does not by itself prove a production deployment.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
