@@ -801,3 +801,65 @@
 .ams-modal-footer button:not([data-ams-keep-size]),.ams-modal-footer a{min-height:40px;height:40px;padding-inline:12px;font-size:12px;line-height:16px}
 @media(min-width:640px){.ams-modal-footer button:not([data-ams-keep-size]),.ams-modal-footer a{min-height:36px;height:36px}}
 @media(max-width:639px){.ams-modal-header,.ams-modal-body,.ams-modal-footer{padding-inline:16px}.ams-modal-body{padding-block:16px}.ams-modal-footer{padding-bottom:max(16px,env(safe-area-inset-bottom))}}
+
+/* Structural workspace navigation: keep module tabs attached to the shared shell
+   and keep page gutters consistent at every supported viewport. */
+.ams-shell .ams-workspace-topbar-nav {
+  flex: 0 0 auto;
+  min-width: 0;
+  background: var(--panel);
+}
+.ams-shell .ams-workspace-topbar-nav > div {
+  min-width: 0;
+}
+.ams-shell .ams-workspace-topbar-nav .ams-topnav-scroll {
+  min-height: 44px;
+  gap: 4px;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.ams-shell .ams-workspace-topbar-nav .ams-topnav-scroll > a {
+  min-height: 34px;
+  white-space: nowrap;
+}
+.ams-shell .ams-workspace-topbar-nav .ams-topnav-scroll > a[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+  background: color-mix(in srgb, var(--accent) 11%, var(--panel));
+  color: var(--text);
+}
+.ams-shell .ams-workspace-topbar-nav .ams-topnav-scroll > a:focus-visible {
+  outline-offset: -2px;
+}
+@media (min-width: 900px) {
+  .ams-shell .ams-workspace-topbar-nav {
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--line) 60%, transparent);
+  }
+}
+@media (min-width: 640px) and (max-width: 899px) {
+  .ams-shell .ams-page-shell {
+    padding: 20px 18px 28px;
+    gap: 20px;
+  }
+}
+@media (max-width: 639px) {
+  .ams-shell .ams-page-shell {
+    padding: 16px 14px 24px;
+    gap: 18px;
+  }
+  .ams-shell .ams-page-header {
+    gap: 12px;
+    padding-bottom: 12px;
+  }
+  .ams-shell .ams-page-title {
+    font-size: 18px;
+    line-height: 25px;
+  }
+  .ams-shell .ams-workspace-topbar-nav > div {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .ams-shell .ams-workspace-topbar-nav .ams-topnav-scroll {
+    min-height: 42px;
+  }
+}
+
