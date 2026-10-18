@@ -290,7 +290,8 @@ const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: R
         { id: 'analytics-projects', label: 'Active projects', value: snapshot.projects !== null ? String(activeProjects || 0) : '—', icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : 'Live source unavailable' }
       ]} />
 
-      <AdminPanel title="Invoice and expense trend" description="Invoice totals are grouped by issue date; expenses are grouped by recorded date. Their difference is not a posted profit figure." bodyClassName="p-4 sm:p-5">
+      <div className="grid gap-3 min-[1100px]:grid-cols-12">
+      <AdminPanel className="min-[1100px]:col-span-8" title="Invoice and expense trend" description="Invoice totals are grouped by issue date; expenses are grouped by recorded date. Their difference is not a posted profit figure." bodyClassName="p-4 sm:p-5">
         {trend.length >= 2 ? (
           <TrendChart data={trend} primaryLabel="Invoices issued" secondaryLabel="Recorded expenses" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, currency)} ariaLabel="Issued invoices and recorded expenses by period." />
         ) : (
@@ -298,7 +299,7 @@ const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: R
         )}
       </AdminPanel>
 
-      <AdminPanel title="Project status" description="Current project status values from the project register." bodyClassName="p-4 sm:p-5">
+      <AdminPanel className="min-[1100px]:col-span-4" title="Project status" description="Current project status values from the project register." bodyClassName="p-4 sm:p-5">
         {snapshot.projects === null ? <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." /> : (
           <div className="space-y-3">
             {(snapshot.projects || []).reduce((groups: Array<{ status: string; count: number }>, project: any) => {
@@ -310,6 +311,7 @@ const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: R
           </div>
         )}
       </AdminPanel>
+      </div>
     </div>
   );
 };
