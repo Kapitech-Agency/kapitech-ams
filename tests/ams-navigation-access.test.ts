@@ -164,7 +164,7 @@ test('module subnavigation respects feature ownership and role-specific scope', 
   assert.deepEqual(subnav('team', 'PM').map((item) => item.key), ['team', 'people-ops', 'time']);
   assert.deepEqual(subnav('team', 'Finance').map((item) => item.key), ['vendors']);
   assert.deepEqual(subnav('cms', 'Admin').map((item) => item.key), ['overview', 'projects', 'services', 'insights', 'testimonials', 'careers']);
-  assert.deepEqual(subnav('cms', 'Creative').map((item) => item.key), ['insights', 'projects', 'testimonials']);
+  assert.deepEqual(subnav('cms', 'Creative').map((item) => item.key), ['insights', 'overview', 'projects', 'testimonials']);
   assert.deepEqual(subnav('settings', 'Admin').map((item) => item.key), ['backup', 'access', 'audit', 'integrations', 'preferences']);
   assert.deepEqual(subnav('settings', 'PM'), []);
 });
