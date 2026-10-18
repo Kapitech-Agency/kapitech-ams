@@ -9,6 +9,7 @@ import {
   type AmsRole,
 } from '../src/lib/amsNavigationAccess';
 import { getAmsModuleSubnavigation, getAmsWorkspaceNavigationModule, isAmsModuleSubnavigationItemActive } from '../src/lib/amsModuleSubnavigation';
+import { FINANCE_WORKBOOK_GROUPS } from '../src/lib/financeWorkbook.ts';
 
 const roles: AmsRole[] = ['Admin', 'Finance', 'PM', 'Creative', 'Freelancer'];
 const modules = ['dashboard', 'inbox', 'projects', 'clients', 'finance', 'team', 'documents', 'cms', 'settings', 'crm', 'tasks'] as const;
@@ -89,6 +90,27 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'receivables')!, '/admin/finance/quotations'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'projects')!, '/admin/finance', '?tab=project-finance'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'accounting')!, '/admin/finance', '?tab=monthly-closing'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'overview')!, '/admin/finance', '?tab=unknown'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'transactions')!, '/admin/finance', '?tab=unknown'), false);
+
+  const financeGroupForWorksheet: Record<string, string> = {
+    overview: 'overview',
+    transactions: 'transactions',
+    receivables: 'receivables',
+    projects: 'projects',
+    accounting: 'accounting',
+  };
+  for (const group of FINANCE_WORKBOOK_GROUPS) {
+    const topbarItem = finance.find((item) => item.key === financeGroupForWorksheet[group.key]);
+    assert.ok(topbarItem, 'Missing Finance topbar group: ' + group.key);
+    for (const sheet of group.items) {
+      assert.equal(
+        isAmsModuleSubnavigationItemActive(topbarItem!, '/admin/finance', '?tab=' + sheet.key),
+        true,
+        'Finance worksheet must activate its owning topbar area: ' + sheet.key,
+      );
+    }
+  }
 
   const projects = getAmsModuleSubnavigation('projects', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(projects.find((item) => item.key === 'all')!, '/admin/projects'), true);
