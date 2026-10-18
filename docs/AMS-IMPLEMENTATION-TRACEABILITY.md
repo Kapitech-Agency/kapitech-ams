@@ -219,7 +219,7 @@ The existing `/admin/navigation/release-readiness` route remains intact and keep
 
 Projects Overview is separately addressable at `/admin/projects?projects=overview`. It summarizes open projects, recorded delivery exceptions, open tasks, overdue milestones, and counts by project status from the existing project data. The delivery-exception list links to the existing project detail drawer, and status rows link to the corresponding Project Registry filter. Project Registry has an explicit workspace destination at `/admin/projects?projects=all`; the legacy `/admin/projects` entry continues to open the registry. Planning & Delivery, Content & Campaigns, and Project Resources remain target-only until their respective views are implemented. No API, database, RBAC, authentication, finance logic, or business record was changed.
 
-**Verification:** Regression tests assert the distinct workspace route and active state. Browser-level visual and role-specific navigation checks remain unverified until current CI completes.
+**Verification:** AMS Quality Gate passed at source SHA `f5baa3f2b26894dbde9d14e88860562c5fdbbc87`: typecheck, 707 tests (687 passed, 0 failed, 20 skipped), and production build. AMS CI also passed PostgreSQL migrations, security regression, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser-level visual and role-specific navigation checks remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
