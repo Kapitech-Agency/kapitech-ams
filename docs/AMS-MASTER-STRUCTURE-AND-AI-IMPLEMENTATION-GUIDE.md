@@ -1610,6 +1610,9 @@ This guide defines the product target and module requirements. Use specialist do
 
 | Question | Companion document |
 |---|---|
+| What is the canonical stage sequence from current state through production stabilization? | docs/AMS-END-TO-END-DELIVERY-ROADMAP.md |
+| Where are current feature/content gaps, status and supporting evidence recorded? | docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md |
+| What execution prompt and timeout-safe reporting rules apply? | docs/AMS-END-TO-END-EXECUTION-PROMPT.md and docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md |
 | Which requirements exist and which are verified? | docs/AMS-IMPLEMENTATION-TRACEABILITY.md |
 | Which transitions and side effects are valid? | docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md |
 | Which entity owns a field/relationship? | docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md |
@@ -1617,7 +1620,7 @@ This guide defines the product target and module requirements. Use specialist do
 | What should each module/workspace/worksheet display for each role, including columns, actions, and charts? | docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md |
 | What are the concrete persona defaults and worksheet-level field/action priorities? | docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md |
 | How are active, target, historical and staging documents classified? | docs/README.md |
-| What are the concrete default columns, filters, action priorities, and visual choices by persona for each worksheet? | docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md |
+
 | Which frontend route/state/API patterns apply? | docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md |
 | Which backend/API/transaction controls apply? | docs/AMS-BACKEND-API-AND-DATA-INTEGRITY.md |
 | How are E2E/regression results proven? | docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md |
