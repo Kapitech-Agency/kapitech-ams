@@ -565,3 +565,10 @@ The findings above are source-level risks and release-control gaps, not claims t
 **Correction:** Receivables & Payables now opens `/admin/finance?tab=quotations`; the page lists Quotations before the group's existing worksheets. The existing legacy `/admin/finance/quotations` route, Finance permissions, quotation APIs, data records and invoice-conversion behavior remain unchanged.  
 **Validation:** Regression assertions added for destination, active workspace state and worksheet order. The batch must pass both AMS Quality Gate and AMS CI. Browser direct-link, refresh/history and role checks remain Stage 5 requirements. No backend/API/database/accounting logic changed.
 
+
+### CI correction checkpoint — 19 October 2026
+
+**Trigger:** Finance navigation bulk commit `40f646153ae7bb19b8263baa593767d885bb1787`.  
+**Evidence:** AMS Quality Gate [39160813145](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39160813145) passed typecheck but regression tests found two stale/incorrect assertions: a legacy test still expected Receivables & Payables to open Accounts Receivable, and the responsive geometry regex omitted the actual child `> div` and expected spacing not present in CSS. These are test expectation defects; the shell selector and Finance navigation implementation are intentional. AMS CI [39160813121](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39160813121) had passed typecheck and was still running security regression checks at last inspection.  
+**Correction:** Align the legacy navigation assertion with the approved first worksheet, Quotations, and make the shell regression match the actual responsive selector and whitespace. No production logic, accounting calculations, backend, API, database, or authorization code changed. Both workflows must pass for this correction batch before it is marked verified.
+

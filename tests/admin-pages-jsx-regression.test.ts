@@ -81,7 +81,7 @@ test('Finance views stay inside the Finance workspace and retired routes stay hi
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
   assert.ok(navigation.includes("key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary'"));
-  assert.equal(subnavigation.includes("to: '/admin/finance?tab=accounts-receivable'"), true);
+  assert.equal(subnavigation.includes("to: '/admin/finance?tab=quotations'"), true);
   assert.equal(subnavigation.includes("to: '/admin/finance?tab=accounts-payable'"), false);
   assert.equal(subnavigation.includes("to: '/admin/finance?tab=project-finance'"), true);
   const workbook = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/financeWorkbook.ts'), 'utf8');

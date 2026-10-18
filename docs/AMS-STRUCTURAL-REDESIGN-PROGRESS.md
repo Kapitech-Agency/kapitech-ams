@@ -463,3 +463,10 @@ Responsive review has now added a compact register to Project Finance, Accounts 
 - Corrected the root destination to `/admin/finance?tab=quotations` and ordered Quotations before the existing worksheets. Preserved the five top-level Finance areas, legacy quotation URL, existing records/API, role gates and all financial calculations/posting behavior.
 - Added source regression assertions for destination, active state and worksheet order. This batch remains unverified until its matching CI workflows pass. Stage 5 browser checks for direct entry, refresh/back/forward, role visibility and responsive tab behavior remain outstanding.
 
+
+### CI correction checkpoint — 19 October 2026
+
+**Trigger:** Finance navigation bulk commit `40f646153ae7bb19b8263baa593767d885bb1787`.  
+**Evidence:** AMS Quality Gate [39160813145](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39160813145) passed typecheck but regression tests found two stale/incorrect assertions: a legacy test still expected Receivables & Payables to open Accounts Receivable, and the responsive geometry regex omitted the actual child `> div` and expected spacing not present in CSS. These are test expectation defects; the shell selector and Finance navigation implementation are intentional. AMS CI [39160813121](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39160813121) had passed typecheck and was still running security regression checks at last inspection.  
+**Correction:** Align the legacy navigation assertion with the approved first worksheet, Quotations, and make the shell regression match the actual responsive selector and whitespace. No production logic, accounting calculations, backend, API, database, or authorization code changed. Both workflows must pass for this correction batch before it is marked verified.
+
