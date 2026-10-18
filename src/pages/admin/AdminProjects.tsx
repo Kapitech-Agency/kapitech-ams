@@ -1933,6 +1933,57 @@ export const AdminProjects: React.FC = () => {
         <>
     
 
+          <section data-ams-feature-slug="projects-kpis" data-ams-slug="projects-kpis" aria-label="Projects key performance indicators">
+            <AdminMetricStrip
+              className="sm:grid-cols-2 lg:grid-cols-4"
+              metrics={[
+                {
+                  id: 'active-value',
+                  label: 'Total active value',
+                  value: serverMode ? formatAmount(metrics.value, currency) : '—',
+                  change: serverMode ? activeProjects.length + ' active' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-success' : 'text-muted',
+                  context: serverMode ? 'Across active contracts' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <CircleDollarSign size={15} />,
+                  toneClassName: 'text-success',
+                },
+                {
+                  id: 'velocity',
+                  label: 'Average project progress',
+                  value: serverMode ? metrics.averageProgress + '%' : '—',
+                  change: serverMode ? metrics.openTasks + ' open tasks' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-info' : 'text-muted',
+                  context: serverMode ? 'Based on active project progress' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <BarChart3 size={15} />,
+                  toneClassName: 'text-info',
+                },
+                {
+                  id: 'risk',
+                  label: 'Milestones at risk',
+                  value: serverMode ? String(metrics.milestonesAtRisk || metrics.risks) : '—',
+                  change: serverMode ? metrics.risks ? 'Action required' : 'Healthy' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
+                  context: serverMode ? metrics.risks + ' projects need attention' : loading ? 'Loading live project records' : 'Live project data unavailable',
+                  icon: <ShieldAlert size={15} />,
+                  toneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
+                },
+                {
+                  id: 'allocation',
+                  label: 'Resource allocation',
+                  value: serverMode ? metrics.assignedPeople + ' assigned' : '—',
+                  change: serverMode ? activeProjects.length + ' active projects' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: 'text-muted',
+                  context: serverMode ? 'Unique owners & contributors' : loading ? 'Loading live project records' : 'Live project data unavailable',
+
+                  icon: <Users size={15} />,
+                  toneClassName: 'text-fg',
+                },
+              ]}
+            />
+          </section>
+
           <AdminPanel
             title="Project portfolio"
             description={serverMode
@@ -2387,56 +2438,7 @@ export const AdminProjects: React.FC = () => {
             )}
           </AdminPanel>
 
-          <section data-ams-feature-slug="projects-kpis" data-ams-slug="projects-kpis" aria-label="Projects key performance indicators">
-            <AdminMetricStrip
-              className="sm:grid-cols-2 lg:grid-cols-4"
-              metrics={[
-                {
-                  id: 'active-value',
-                  label: 'Total active value',
-                  value: serverMode ? formatAmount(metrics.value, currency) : '—',
-                  change: serverMode ? activeProjects.length + ' active' : loading ? 'Loading records' : 'Unavailable',
-                  changeToneClassName: serverMode ? 'text-success' : 'text-muted',
-                  context: serverMode ? 'Across active contracts' : loading ? 'Loading live project records' : 'Live project data unavailable',
 
-                  icon: <CircleDollarSign size={15} />,
-                  toneClassName: 'text-success',
-                },
-                {
-                  id: 'velocity',
-                  label: 'Average project progress',
-                  value: serverMode ? metrics.averageProgress + '%' : '—',
-                  change: serverMode ? metrics.openTasks + ' open tasks' : loading ? 'Loading records' : 'Unavailable',
-                  changeToneClassName: serverMode ? 'text-info' : 'text-muted',
-                  context: serverMode ? 'Based on active project progress' : loading ? 'Loading live project records' : 'Live project data unavailable',
-
-                  icon: <BarChart3 size={15} />,
-                  toneClassName: 'text-info',
-                },
-                {
-                  id: 'risk',
-                  label: 'Milestones at risk',
-                  value: serverMode ? String(metrics.milestonesAtRisk || metrics.risks) : '—',
-                  change: serverMode ? metrics.risks ? 'Action required' : 'Healthy' : loading ? 'Loading records' : 'Unavailable',
-                  changeToneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
-                  context: serverMode ? metrics.risks + ' projects need attention' : loading ? 'Loading live project records' : 'Live project data unavailable',
-                  icon: <ShieldAlert size={15} />,
-                  toneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
-                },
-                {
-                  id: 'allocation',
-                  label: 'Resource allocation',
-                  value: serverMode ? metrics.assignedPeople + ' assigned' : '—',
-                  change: serverMode ? activeProjects.length + ' active projects' : loading ? 'Loading records' : 'Unavailable',
-                  changeToneClassName: 'text-muted',
-                  context: serverMode ? 'Unique owners & contributors' : loading ? 'Loading live project records' : 'Live project data unavailable',
-
-                  icon: <Users size={15} />,
-                  toneClassName: 'text-fg',
-                },
-              ]}
-            />
-          </section>
         </>
       )}
 

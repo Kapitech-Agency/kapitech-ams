@@ -78,11 +78,14 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
 });
 
-test('Projects and Tasks keep registers ahead of supporting summaries', async () => {
+test('Projects lead with portfolio KPIs while Tasks retain their task-led register structure', async () => {
   const projects = await read('src/pages/admin/AdminProjects.tsx');
   const tasks = await read('src/components/admin/TasksWorkspace.tsx');
+  const header = projects.indexOf('<AdminModuleHeader');
+  const kpis = projects.indexOf('data-ams-feature-slug="projects-kpis"');
+  const portfolio = projects.indexOf('title="Project portfolio"');
   assert.match(projects, /featureSlug="projects-module"/);
-  assert.ok(projects.indexOf('className="ams-projects-table') < projects.indexOf('data-ams-feature-slug="projects-kpis"'));
+  assert.ok(header >= 0 && kpis > header && portfolio > kpis);
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-filters"') < tasks.indexOf('data-ams-feature-slug="tasks-table-view"'));
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-table-view"') < tasks.indexOf('data-ams-feature-slug="tasks-kpis"'));
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-kpis"') < tasks.indexOf('slug="tasks-team-workload"'));
