@@ -58,10 +58,10 @@ export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
   const canManageClients = hasAdminPermission('canManageClients');
-  type InboxTab = 'overview' | 'messages' | 'client' | 'starred';
+  type InboxTab = 'overview' | 'messages' | 'client' | 'unread' | 'starred';
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('view') as InboxTab | null;
-  const activeInboxTab: InboxTab = requestedTab && ['overview', 'messages', 'client', 'starred'].includes(requestedTab)
+  const activeInboxTab: InboxTab = requestedTab && ['overview', 'messages', 'client', 'unread', 'starred'].includes(requestedTab)
     ? requestedTab
     : 'overview';
 
@@ -131,6 +131,7 @@ export const AdminInbox: React.FC = () => {
     switch (activeInboxTab) {
       case 'overview':
       case 'messages': return submissions;
+      case 'unread': return submissions.filter((item) => item.status === 'new');
       case 'starred': return submissions.filter((item) => !!item.starred);
       case 'client':
         // Keep Sales Inquiries scoped to actual inquiry records.
@@ -526,7 +527,7 @@ export const AdminInbox: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'kapitech_' + ({ overview: 'all_inbound', messages: 'all_messages', client: 'sales_inquiries', starred: 'starred' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
+    link.setAttribute('download', 'kapitech_' + ({ overview: 'all_inbound', messages: 'all_messages', client: 'sales_inquiries', unread: 'unread_messages', starred: 'starred' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -648,7 +649,7 @@ export const AdminInbox: React.FC = () => {
       
       <AdminModuleHeader slug="inbox-header"
         className="mb-0"
-        title={activeInboxTab === 'overview' ? 'Inbox Overview' : activeInboxTab === 'messages' ? 'All Messages' : activeInboxTab === 'client' ? 'Sales Inquiries' : 'Starred'}
+        title={activeInboxTab === 'overview' ? 'Inbox Overview' : activeInboxTab === 'messages' ? 'All Messages' : activeInboxTab === 'client' ? 'Sales Inquiries' : activeInboxTab === 'unread' ? 'Unread Messages' : 'Starred'}
         description={
           activeInboxTab === 'overview'
             ? (language === 'id'
@@ -660,16 +661,20 @@ export const AdminInbox: React.FC = () => {
                 ? (language === 'id'
                   ? 'Kelola inquiry calon klien, prioritas tindak lanjut, dan status respons.'
                   : 'Review sales inquiries, prioritize follow-ups, and track response status.')
-                : (language === 'id'
-                  ? 'Kelola record yang disimpan untuk tindak lanjut prioritas.'
-                  : 'Manage records intentionally saved for priority follow-up.')
+                : activeInboxTab === 'unread'
+                  ? (language === 'id'
+                    ? 'Record berstatus New yang saat ini menjadi antrean pesan belum ditangani.'
+                    : 'Records in New status, which the current Inbox uses as its pending or unread queue.')
+                  : (language === 'id'
+                    ? 'Kelola record yang disimpan untuk tindak lanjut prioritas.'
+                    : 'Manage records intentionally saved for priority follow-up.')
         }
         actions={(
           <>
             <span className="text-[11px] tabular-nums text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Data tidak tersedia' : 'Unavailable') : activeTabItems.length + ' total inbound'}</span>
             {canManageCrm && <Link to="/admin/cms/careers?tab=applicants" className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">{language === 'id' ? 'Pelamar Careers' : 'Careers Applicants'}</Link>}
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
-            {metrics.newCount > 0 && activeInboxTab !== 'overview' && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
+            {metrics.newCount > 0 && activeInboxTab !== 'overview' && activeInboxTab !== 'unread' && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
             {activeTabItems.length > 0 && activeInboxTab !== 'overview' && <button type="button" onClick={handleExportCSV} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Download size={14} /><span>Export CSV</span></button>}
           </>
         )}
@@ -723,7 +728,7 @@ export const AdminInbox: React.FC = () => {
       )}
 
       {/* 3. TAB-SPECIFIC CONTROLS */}
-      {activeInboxTab === 'overview' || activeInboxTab === 'messages' ? (
+      {activeInboxTab === 'overview' || activeInboxTab === 'messages' || activeInboxTab === 'unread' ? (
         <AdminFilterBar
           slug="inbox-overview-controls"
           searchValue={searchQuery}
@@ -735,6 +740,22 @@ export const AdminInbox: React.FC = () => {
               <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg">
                 <RefreshCw size={13} />Refresh
               </button>
+              {activeInboxTab === 'messages' && (
+                <Link
+                  to="/admin/inbox?view=unread"
+                  className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  <Mail size={13} />Unread
+                </Link>
+              )}
+              {activeInboxTab === 'unread' && (
+                <Link
+                  to="/admin/inbox?view=messages"
+                  className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  <Inbox size={13} />All Messages
+                </Link>
+              )}
               {activeInboxTab === 'messages' && (
                 <Link
                   to="/admin/inbox?view=starred"
