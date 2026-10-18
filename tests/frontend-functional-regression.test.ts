@@ -199,7 +199,7 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   assert.equal(sidebar.includes('data-ams-nav-submenu='), false);
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
-  assert.equal((layout.match(/<AdminTopbarTabs\\b/g) || []).length, 0);
+  assert.equal((layout.match(/<AdminTopbarTabs\\b/g) || []).length, 1, 'Desktop workspace navigation uses the dedicated topbar tab primitive.');
   assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
   assert.ok(app.includes('<AmsRoleRouteGuard>'));
