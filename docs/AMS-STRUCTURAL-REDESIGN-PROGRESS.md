@@ -119,3 +119,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Moved Careers' transient success/error notice below the Job openings / Applicants tab row. Saving or deleting a record no longer inserts feedback between the page header and workspace navigation, which could shift the navigation vertically during a workflow.
 - Kept the notice dismissible and retained its source-backed message/tone. No applicant/job state, API call, permission, URL behavior, publication state, or data handling changed.
 - Added a regression assertion for header → workspace tabs → feedback → active panel order.
+
+
+## Fourteenth implementation slice: stable CMS register controls
+
+- Moved transient save/delete feedback below the filter bar in Case Studies, Insights, Services, and Testimonials. The page header and search/filter controls now stay in their established position when a success or error message appears.
+- Careers already follows the same principle with feedback below its Jobs/Applicants tabs.
+- Kept the same dismissible notice, status text/tone, CRUD operations, editor drawers, filters, sorting, pagination, permissions, publication state, routes, and API behavior.
+- Added a regression test asserting the intended header → filter bar → feedback → register order across all four CMS registers.

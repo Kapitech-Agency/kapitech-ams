@@ -377,19 +377,6 @@ export const AdminCmsServices: React.FC = () => {
           </Button>
         }
       />
-
-
-      
-
-      {statusMessage && (
-        <AdminModuleNotice
-          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
-          onDismiss={() => setStatusMessage(null)}
-        >
-          {statusMessage}
-        </AdminModuleNotice>
-      )}
-
       <AdminFilterBar
         slug="cms-services-filters"
         searchValue={searchQuery}
@@ -434,6 +421,17 @@ export const AdminCmsServices: React.FC = () => {
           })}
         </div>
       </AdminFilterBar>
+
+{statusMessage && (
+        <AdminModuleNotice
+          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage}
+        </AdminModuleNotice>
+      )}
+
+
 
       <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
         <span>{filtered.length} of {servicesList.length} services</span>

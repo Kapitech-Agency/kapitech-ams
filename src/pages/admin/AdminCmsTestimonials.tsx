@@ -182,20 +182,6 @@ export const AdminCmsTestimonials: React.FC = () => {
           </Button>
         }
       />
-
-      
-      
-      
-
-      {statusMessage && (
-        <AdminModuleNotice
-          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
-          onDismiss={() => setStatusMessage(null)}
-        >
-          {statusMessage}
-        </AdminModuleNotice>
-      )}
-
       <AdminFilterBar
         slug="cms-testimonials-filters"
         searchValue={searchQuery}
@@ -217,6 +203,17 @@ export const AdminCmsTestimonials: React.FC = () => {
           </button>
         )}
       />
+
+{statusMessage && (
+        <AdminModuleNotice
+          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage}
+        </AdminModuleNotice>
+      )}
+
+
 
       <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
         <span>{filteredTestimonials.length} of {testimonials.length} testimonials</span>

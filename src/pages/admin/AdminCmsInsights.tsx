@@ -767,19 +767,6 @@ export const AdminCmsInsights: React.FC = () => {
           : 'Manage editorial articles, SEO, language variants, taxonomy, and the Kapitech Insight publishing workflow.'}
         actions={<Button type="button" variant="primary" icon={<Plus size={14} />} onClick={handleOpenAdd}>Create Insight</Button>}
       />
-
-      
-      
-
-      {statusMessage && (
-        <AdminModuleNotice
-          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
-          onDismiss={() => setStatusMessage(null)}
-        >
-          {statusMessage}
-        </AdminModuleNotice>
-      )}
-
       <AdminFilterBar
         slug="cms-insights-filters"
         searchValue={search}
@@ -818,6 +805,17 @@ export const AdminCmsInsights: React.FC = () => {
           </div>
         )}
       />
+
+{statusMessage && (
+        <AdminModuleNotice
+          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage}
+        </AdminModuleNotice>
+      )}
+
+
 
       <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
         <span>{total} {total === 1 ? 'Insight' : 'Insights'}</span>

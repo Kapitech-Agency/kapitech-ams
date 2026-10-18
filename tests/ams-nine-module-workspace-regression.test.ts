@@ -255,3 +255,21 @@ test('Careers action feedback does not shift the workspace tab row', async () =>
   const jobsPanel = careers.indexOf("{activeTab === 'jobs' ? (", tabs);
   assert.ok(header >= 0 && tabs > header && notice > tabs && jobsPanel > notice);
 });
+
+
+test('CMS feedback notices follow the stable register filter controls', async () => {
+  const cases = [
+    ['src/pages/admin/AdminCmsProjects.tsx', 'cms-projects-filters', 'cms-projects-directory'],
+    ['src/pages/admin/AdminCmsInsights.tsx', 'cms-insights-filters', 'cms-insights-directory'],
+    ['src/pages/admin/AdminCmsServices.tsx', 'cms-services-filters', 'cms-services-directory'],
+    ['src/pages/admin/AdminCmsTestimonials.tsx', 'cms-testimonials-filters', 'cms-testimonials-directory'],
+  ] as const;
+  for (const [file, filterSlug, registerSlug] of cases) {
+    const source = await read(file);
+    const header = source.indexOf('<AdminModuleHeader');
+    const filter = source.indexOf('slug="' + filterSlug + '"');
+    const notice = source.indexOf('{statusMessage && (', header);
+    const register = source.indexOf('slug="' + registerSlug + '"');
+    assert.ok(header >= 0 && filter > header && notice > filter && register > notice, file + ' should keep header and filters stable before transient feedback and the register');
+  }
+});
