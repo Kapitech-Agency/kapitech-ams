@@ -145,6 +145,13 @@ test('Documents mobile row actions use usable touch targets and visible focus', 
   assert.match(mobileList, /canManageDocuments && <button[^>]*aria-label=\{'Delete ' \+ titleOf\(doc\)\}/);
 });
 
+test('Documents keeps the card workspace across compact laptop widths', async () => {
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+  assert.ok(documents.includes('className="min-[1280px]:hidden divide-y divide-line"'));
+  assert.ok(documents.includes('className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar"'));
+  assert.ok(documents.includes('ams-data-table min-w-[1050px]'));
+});
+
 test('Documents distinguishes an unavailable vault from a genuinely empty vault and retains last good rows', async () => {
   const documents = await read('src/pages/admin/AdminDocuments.tsx');
   const loadStart = documents.indexOf('const loadDocuments = async () =>');

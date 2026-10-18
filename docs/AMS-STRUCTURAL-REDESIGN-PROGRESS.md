@@ -212,3 +212,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Reduced the desktop register's minimum width to 980px and aligned the empty/loading row geometry to the seven displayed columns.
 - Added source regression coverage for the responsive layout, preserved actions, and table geometry. No data model, status semantics, filters, sorting, permissions, route state, API behavior, or SLA calculation changed.
 - Commit is delivered directly to `main`; CI and production build status will be checked after the push. Authenticated browser visual testing is not available from this repository-only run.
+
+
+## Twenty-fifth implementation slice: consistent Documents workspace breakpoint
+
+- Kept the existing compact document-card list available through laptop and compact desktop widths; the 1,050px table now appears only at 1,280px and wider, so an 1,024px viewport no longer switches prematurely to a wide table.
+- Preserved document search/sort/pagination, row actions, secure download availability, delete permission gating, content metadata, and empty/error states.
+- Added regression coverage for the responsive breakpoint and retained desktop table.
+- Source and test updates are committed directly to `main`; full CI status is being checked on the latest commit. Browser screenshot verification is not claimed.
