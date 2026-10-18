@@ -20,15 +20,19 @@ Use these rules when documents appear to conflict:
 
 When two active product documents disagree, do not silently choose a more convenient interpretation. Prefer the approved Master Structure + navigation IA for module ownership/navigation; preserve domain-owned business rules; identify the conflict and update the documents together.
 
+For execution sequencing, `AMS-END-TO-END-DELIVERY-ROADMAP.md` is canonical. The feature/content gap register records current requirement status and evidence, not a second schedule. `AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md` remains the target product/workflow specification; its implementation-stage guidance must be read consistently with the roadmap rather than treated as a competing numbered rollout. Routine slices receive reports and continue within the user's authorized scope; stop at the explicit visual sign-off gate and for genuine decision/blocker gates.
+
 ## 2. Canonical product and data specifications
 
 | Document | Purpose / authority |
 |---|---|
 | [AMS Master Structure & AI Implementation Guide](AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md) | Target nine-module architecture, workspaces, workflows, data ownership, Finance, integration boundaries, and acceptance criteria. Target specification, not proof of implementation. |
+| [AMS End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md) | **Single canonical stage sequence** from current baseline through design, workflow completion, validation, operational readiness, deployment verification and stabilization. |
 | [AMS Navigation Information Architecture](architecture/ams-navigation-information-architecture.md) | Approved primary modules, workspace ownership, route/deep-link behavior, breadcrumbs, and legacy-route policy. |
 | [AMS Role-Based Content Blueprint](AMS-ROLE-BASED-CONTENT-BLUEPRINT.md) | Content purpose, page anatomy, chart/metric contracts, role-aware presentation, and cross-module rules. |
 | [AMS Worksheet Role Presentation Matrix](AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md) | Concrete persona emphasis, expected fields/columns, filters/actions, and visualization choice by worksheet. Personas do not grant permissions. |
 | [AMS Data Model and Data Dictionary](AMS-DATA-MODEL-AND-DATA-DICTIONARY.md) | Logical entity ownership, relationships, field definitions, integrity rules, and current-contract cautions. |
+| [AMS Feature & Content Gap Register](AMS-FEATURE-CONTENT-GAP-REGISTER.md) | Requirement-level inventory across modules, content, workflows, data, access, tests and production readiness; statuses must be revalidated against current evidence. |
 | [AMS Business Workflow State Machines](AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md) | Target state transitions, guards, side effects, and required transition tests. Map conceptual states to current enums before coding. |
 | [Finance Excel Alignment](FINANCE-EXCEL-ALIGNMENT.md) | Finance worksheet/source mapping, established calculations, posting controls, workbook alignment, and known limitations. |
 | [Kopra H2H Integration Specification](integrations/BANK-MANDIRI-KOPRA-H2H-INTEGRATION.md) | Planned/provider-dependent bank integration. Official bank contract and approved sandbox evidence are required before connector implementation. |
@@ -65,7 +69,8 @@ Do not restart an independent architecture redesign from the older general promp
 | [AMS E2E and Regression Test Matrix](AMS-E2E-AND-REGRESSION-TEST-MATRIX.md) | Cross-module behavior, Finance, role/security, bank-testing, and release evidence. |
 | [AMS Implementation Traceability Register](AMS-IMPLEMENTATION-TRACEABILITY.md) | Requirement IDs and evidence. Historical rows/PR references are dated snapshots; recheck current branch and workflows. |
 | [AMS AI Phased Implementation Workflow](AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md) | Safe incremental AI execution, audit-first stages, checkpoints, recovery after interruption, validation and delivery reporting. |
-| [AMS Navigation-First Phased Execution Prompt](AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md) | Mandatory current rollout schedule: finish navigation first, then proceed through later stages one bounded slice at a time with user-facing reports and explicit stage gates. |
+| [AMS End-to-End Execution Prompt](AMS-END-TO-END-EXECUTION-PROMPT.md) | Canonical copy/paste operating prompt. It follows the roadmap, carries forward existing changes, requires evidence-based status updates and timeout-safe checkpoints. |
+| [Legacy Navigation-First Prompt](AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md) | Compatibility pointer only. Use the End-to-End Execution Prompt and Delivery Roadmap; this filename is not a separate schedule. |
 | [AMS Workflow Audit](ams-workflow-audit.md) | Historical audit findings as of its stated date; not current implementation status or target navigation authority. |
 
 ## 5. Current documented production and operations references
