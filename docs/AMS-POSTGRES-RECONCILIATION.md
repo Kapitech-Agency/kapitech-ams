@@ -1,6 +1,6 @@
-# JSON → PostgreSQL Reconciliation
+# JSON → PostgreSQL Reconciliation — Historical Staging Procedure
 
-This stage is deliberately read-only against the existing JSON database and does not perform a production cutover.
+This describes an early migration-stage reconciliation utility. Treat it as a historical/staging-only procedure, not as evidence of the current production data source or a production cutover step. The required production contract specifies PostgreSQL in `README.md` and `docs/PRODUCTION-CUTOVER.md`; use `docs/production-readiness-gate.md` and `docs/production-cutover-checklist.md` to assess readiness. Do not point this procedure at live production data or infer runtime mode from this file.
 
 ## Commands
 
@@ -30,7 +30,7 @@ A reconciliation failure exits non-zero and records the report.
 
 The reconciliation command does not insert, update, or delete business records in PostgreSQL. It only reads the JSON source and target and writes a migration-run report.
 
-The production JSON database remains the source of truth until:
+The following gates described the early migration plan. They do not establish that JSON is the current production source. The production contract now documented in `README.md` and `docs/PRODUCTION-CUTOVER.md` requires PostgreSQL; verify the actual authorized runtime and readiness evidence separately. These checks remain useful for an isolated staging migration rehearsal:
 
 1. A deterministic importer is implemented.
 2. A staging copy of production data is imported.
@@ -44,4 +44,4 @@ The production JSON database remains the source of truth until:
 
 ## Important
 
-Do not run reconciliation against a PostgreSQL database that contains unrelated data and interpret count parity as a migration success. Use a dedicated AMS staging database for rehearsal.
+Do not run reconciliation against live production or against a PostgreSQL database that contains unrelated data and interpret count parity as migration success. Use a dedicated, isolated AMS staging database. This utility is not a production rollback tool and does not, by itself, authorize a source switch.
