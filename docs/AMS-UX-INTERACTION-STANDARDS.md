@@ -142,4 +142,5 @@ Not every screen needs KPI cards. Do not leave blank metric gaps or add meaningl
 - docs/AMS-MODAL-GUIDELINES.md
 - docs/AMS-KANBAN-GUIDELINES.md
 - docs/architecture/ams-navigation-information-architecture.md
+- docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md
 - docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md
