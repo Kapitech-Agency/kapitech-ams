@@ -143,3 +143,4 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Aligned the Insights header's bottom-margin ownership with Case Studies, Services, Testimonials, and Careers. The shared page shell now controls the gap between header and subsequent workspace content consistently across CMS content types.
 - Added regression coverage for the common header spacing contract across all five CMS views.
 - No content, publishing workflow, editor, data, permission, or route behavior changed.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121672188) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121672144) passed for commit `d58e0defa78101010802539bbf6fa75ac36b0ab2`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
