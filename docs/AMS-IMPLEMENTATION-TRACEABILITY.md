@@ -537,12 +537,22 @@ The findings above are source-level risks and release-control gaps, not claims t
 
 ### VENDOR-SKILLS-001: Vendor directory links only authorized users to the canonical Skills & Service Matrix
 
-**Status:** IMPLEMENTED_UNVERIFIED. Initial CI found one legacy source regression assertion that still expected Skills & Service Matrix to remain disabled. Typecheck passed; regression tests failed on that assertion and production build was skipped. This correction updates the legacy expectation; both workflows must pass on the resulting commit. Authenticated browser verification remains outstanding.
+**Status:** IMPLEMENTED_VERIFIED for source, typecheck, regression tests and production build on descendant commit `84a0d3b1bf49b02a9720e02dc01a1ab3b7c2d40b`; authenticated browser verification remains outstanding.
 **Scope:** Navigation connection only. It reuses the current route policy and current matrix page; it does not change role assignments or permission rules.
 
 **Source:** `src/pages/admin/AdminVendors.tsx`, `src/pages/admin/AdminTeams.tsx`, `src/lib/amsNavigationAccess.ts`.  
 **Tests:** `tests/ams-nine-module-workspace-regression.test.ts` checks that both loading/loaded tabs reuse `canAccessAmsRoute`, link to the existing query route and preserve the Admin-only policy.  
 **Acceptance:** Skills & Service Matrix is shown only when the current policy permits `/admin/vendors?view=skill-matrix`. The destination renders existing source-backed internal role-focus and vendor-skill coverage panels. Contracts & Rates and Engagement Status remain disabled.  
-**Validation:** AMS Quality Gate [39158112419](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39158112419) and AMS CI [39158112445](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39158112445) failed at regression tests due to the stale assertion in `tests/frontend-functional-regression.test.ts`. The feature source typechecked; build and subsequent CI steps were skipped. Local tests could not be run.
-**Next action:** Confirm both workflows pass on the correction commit, then browser-verify role visibility, direct-route denial and back/forward navigation in Stage 5.
+**Validation:** Initial runs [39158112419](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39158112419) and [39158112445](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39158112445) found an old assertion expecting the tab to stay disabled. Correction commit [84a0d3b1](https://github.com/Kapitech-Agency/kapitech-ams/commit/84a0d3b1bf49b02a9720e02dc01a1ab3b7c2d40b) passed AMS Quality Gate [39158246211](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39158246211) and AMS CI [39158246209](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39158246209), including typecheck, regression tests, production build, migration package and HTTP smoke test. Local tests could not be run.
+**Next action:** Browser-verify authorized tab visibility, direct-route denial and back/forward navigation in Stage 5.
+
+
+### SHELL-GEOMETRY-001: Responsive shell and Dashboard follow the canonical design system
+
+**Status:** IMPLEMENTED_UNVERIFIED pending CI on this batch; browser/viewport verification remains outstanding.  
+**Source:** `src/index.css`; `src/pages/admin/AdminLayout.tsx`; `tests/ams-shared-shell-scroll-regression.test.ts`.  
+**Findings:** The single primary `main` scroller and independent sidebar/drawer scroll regions are already enforced by source and regression tests. All `!important` declarations inspected are scoped to print/export rules. The newer `AMS-DESIGN-SYSTEM.md` contract was being overridden by responsive legacy rules: a 720px Dashboard width cap; 18/24 mobile title; 9/10px ad-hoc radii; 7px KPI gap; repeated page-shell padding/gap; and smaller mobile Dashboard card/header typography.  
+**Change in this batch:** Removed conflicting narrow-screen Dashboard width, duplicate page-shell overrides, title downscaling and ad-hoc radius/padding overrides. Dashboard KPI cards now use radius 12, spacing tokens, 16px padding, readable labels and 20/28 metric values. Topbar utility groups use radius 8 and token spacing. Shared panel header/body geometry stays owned by the shared components.  
+**Tests:** `tests/ams-shared-shell-scroll-regression.test.ts` now asserts canonical page-shell/title/card geometry and prevents the identified responsive overrides from returning.  
+**Validation:** Must pass the new commit's AMS Quality Gate and AMS CI. Browser QA at 1440, 1280, 1024, 900, 768, 390 and 320px, plus keyboard/scroll verification, remain Stage 5 acceptance items. No authenticated browser session was available in the current execution context, so no visual verification is claimed.
 

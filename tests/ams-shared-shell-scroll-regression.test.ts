@@ -52,3 +52,17 @@ test('authenticated shell defines viewport geometry and one primary workspace sc
   assert.match(layout, /overflow-y-auto overscroll-contain px-3\.5 py-4 custom-scrollbar/, 'long sidebar navigation should remain independently scrollable');
   assert.match(layout, /flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar/, 'the mobile navigation drawer should retain its own scroll region');
 });
+
+test('responsive page and dashboard geometry follows canonical design-system tokens', async () => {
+  const css = await read('src/index.css');
+
+  assert.match(css, /\.ams-shell \.ams-page-shell\{display:flex;flex-direction:column;gap:24px;padding:24px 24px 32px\}/);
+  assert.match(css, /\.ams-shell \.ams-page-title\{[^}]*gap:8px[^}]*font-size:20px;line-height:28px/);
+  assert.match(css, /\.ams-shell \.ams-dashboard section\[aria-label="Executive key performance indicators"\] article \{\s*min-height:112px;\s*padding:16px;\s*border-radius:12px;\s*\}/s);
+  assert.doesNotMatch(css, /border-radius:\s*(?:9|10)px/);
+  assert.doesNotMatch(css, /\.ams-shell \.ams-dashboard\s*\{[^}]*max-width:\s*720px/s);
+  assert.doesNotMatch(css, /\.ams-shell \.ams-page-title\{font-size:18px;line-height:24px\}/);
+  assert.doesNotMatch(css, /\.ams-shell \.ams-page-title\s*\{[^}]*font-size:\s*18px;[^}]*line-height:\s*25px/s);
+  assert.doesNotMatch(css, /\.ams-shell \.ams-page-shell\s*\{\s*padding:\s*20px 18px 28px;\s*gap:\s*20px;\s*\}/s);
+  assert.doesNotMatch(css, /\.ams-shell \.ams-page-shell\s*\{\s*padding:\s*16px 14px 24px;\s*gap:\s*18px;\s*\}/s);
+});

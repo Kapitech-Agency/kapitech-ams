@@ -271,7 +271,7 @@
 .ams-shell .ams-full-card{padding:16px}
 .ams-shell .ams-dense-card{padding:12px}
 
-.ams-shell .ams-page-title{display:flex;align-items:center;gap:10px;min-width:0;font-size:20px;line-height:28px;font-weight:600}
+.ams-shell .ams-page-title{display:flex;align-items:center;gap:8px;min-width:0;font-size:20px;line-height:28px;font-weight:600}
 .ams-shell .ams-page-title>svg{width:20px;height:20px;flex:0 0 20px;stroke-width:1.8}.ams-shell .ams-page-title>span{min-width:0;overflow-wrap:anywhere}
 .ams-shell .ams-page-header p{max-width:72ch}
 .ams-shell .ams-kpi{min-width:0;background:transparent;border:0;padding:16px}
@@ -419,18 +419,15 @@
  }
 @media(max-width:599px){
  .ams-shell .ams-page-shell{padding:16px 14px max(24px,env(safe-area-inset-bottom))}
- .ams-shell .ams-page-title{font-size:18px;line-height:24px}.ams-shell .ams-kpi-value{font-size:22px;line-height:28px}
+ .ams-shell .ams-kpi-value{font-size:20px;line-height:28px}
  .ams-shell .ams-dashboard-card .text-2xl{font-size:22px;line-height:28px}.ams-shell .ams-panel{padding:16px}
  .ams-shell .ams-table-scroll table{min-width:680px}
  .ams-shell .ams-mobile-drawer>.relative{width:min(320px,88vw);max-width:88vw}
  .ams-shell table th,.ams-shell table td{white-space:nowrap}
 
- /* Keep dashboard KPIs and cards readable on narrow screens. */
- .ams-shell .ams-dashboard-card{border-radius:10px;padding:13px}
- .ams-shell .ams-dashboard-card .text-2xl{font-size:20px;line-height:26px}
- .ams-shell .ams-dashboard-card .text-xs{font-size:11px}
- .ams-shell .ams-panel{border-radius:10px}
- .ams-shell .ams-panel>div:first-child{padding-inline:14px}
+ /* Card radius/padding and panel-header alignment come from shared components. */
+ .ams-shell .ams-dashboard-card .text-2xl{font-size:20px;line-height:28px}
+ .ams-shell .ams-dashboard-card .text-xs{font-size:12px;line-height:16px}
  .ams-shell .ams-panel>div:last-child{min-width:0}
  .ams-shell .ams-mobile-topbar{height:calc(52px + env(safe-area-inset-top));min-height:calc(52px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top)}
  .ams-shell .ams-mobile-topbar .ams-notification-surface{max-width:calc(100vw - 24px)}
@@ -556,70 +553,49 @@
   margin-top:16px;
 }
 
-/* Temporary mobile dashboard shell — intentionally independent from desktop composition. */
+/* Responsive dashboard layout preserves the shared page and card geometry. */
 @media (max-width: 899px) {
   .ams-shell .ams-dashboard {
     width: 100%;
-    max-width: 720px;
-    margin-inline: auto;
-    padding-bottom: max(32px, env(safe-area-inset-bottom));
-  }
-
-  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] {
-    margin-bottom: 14px;
+    min-width: 0;
   }
 
   .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] > div {
-    gap: 7px;
+    gap: 12px;
   }
 
   .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article {
     min-height: 112px;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 16px;
+    border-radius: 12px;
   }
 
   .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article > div:first-child > span:first-child {
-    max-width: calc(100% - 34px);
-    font-size: 10px;
-    line-height: 14px;
+    max-width: calc(100% - 32px);
+    font-size: 12px;
+    line-height: 16px;
   }
 
   .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article > div:first-child > span:last-child {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
 
   .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article > div:last-child {
-    margin-top: 13px;
+    margin-top: 12px;
   }
 
   .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article .text-2xl {
     font-size: 20px;
-    line-height: 25px;
+    line-height: 28px;
   }
 
   .ams-shell .ams-dashboard .ams-panel {
-    border-radius: 10px;
     overflow: hidden;
   }
 
-  .ams-shell .ams-dashboard .ams-panel > div:first-child {
-    padding: 13px 14px;
-  }
-
-  .ams-shell .ams-dashboard .ams-panel h2 {
-    font-size: 13px;
-    line-height: 18px;
-  }
-
-  .ams-shell .ams-dashboard .ams-panel p {
-    font-size: 10px;
-    line-height: 16px;
-  }
-
   .ams-shell .ams-dashboard .ams-panel .divide-y > article {
-    padding: 13px 14px;
+    padding: 12px 16px;
   }
 }
 
@@ -667,11 +643,11 @@
 .ams-shell .ams-finance-table .tabular-nums{font-variant-numeric:tabular-nums}
 .ams-shell .ams-data-table-shell,.ams-shell .ams-client-table-shell{min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:12px}
 .ams-shell .ams-data-table,.ams-shell .ams-client-table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
-.ams-shell .ams-topbar-utilities,.ams-shell .ams-topbar-mobile-utilities{display:flex;align-items:center;gap:6px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.ams-shell .ams-topbar-utilities,.ams-shell .ams-topbar-mobile-utilities{display:flex;align-items:center;gap:8px;padding:4px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
 .ams-shell .ams-topbar-icon{min-width:36px;min-height:36px;border-radius:8px}
 .ams-shell .ams-topbar-profile{min-height:36px;border-radius:8px}
 @media(max-width:899px){
-  .ams-shell .ams-topbar-mobile-utilities{padding:2px;border-radius:9px}
+  .ams-shell .ams-topbar-mobile-utilities{padding:4px;border-radius:8px}
   .ams-shell .ams-topbar-mobile-utilities .ams-topbar-profile{display:none}
 }
 
@@ -830,25 +806,7 @@
 .ams-shell .ams-workspace-topbar-nav .ams-topnav-scroll > a:focus-visible {
   outline-offset: -2px;
 }
-@media (min-width: 640px) and (max-width: 899px) {
-  .ams-shell .ams-page-shell {
-    padding: 20px 18px 28px;
-    gap: 20px;
-  }
-}
 @media (max-width: 639px) {
-  .ams-shell .ams-page-shell {
-    padding: 16px 14px 24px;
-    gap: 18px;
-  }
-  .ams-shell .ams-page-header {
-    gap: 12px;
-    padding-bottom: 12px;
-  }
-  .ams-shell .ams-page-title {
-    font-size: 18px;
-    line-height: 25px;
-  }
   .ams-shell .ams-workspace-topbar-nav > div {
     padding-left: 10px;
     padding-right: 10px;
