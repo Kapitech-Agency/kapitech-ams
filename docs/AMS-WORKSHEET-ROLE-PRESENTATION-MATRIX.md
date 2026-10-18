@@ -3,7 +3,7 @@
 
 - **Repository:** Kapitech-Agency/kapitech-ams
 - **Status:** Target-state presentation specification; not a permission definition or implementation evidence
-- **Parent specification:** \`docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md\`
+- **Parent specification:** `docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md`
 - **Coverage:** Nine AMS primary modules and their defined workspaces/worksheets
 - **Last updated:** 18 October 2026
 
@@ -14,10 +14,10 @@
 This document takes the role-aware content requirements from the main Content Blueprint down to worksheet-level defaults. It specifies what the main content should emphasize for each kind of work, what information should be scannable first, which fields/controls are useful, and whether a visualization adds genuine value.
 
 It must be read with:
-- \`docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md\` for the detailed worksheet content contracts, shared patterns, data truthfulness, and acceptance criteria.
-- \`docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md\` for target workflows, canonical source ownership, Finance protections, and module requirements.
-- \`docs/architecture/ams-navigation-information-architecture.md\` for approved navigation and route ownership.
-- \`AMS-DESIGN-SYSTEM.md\` and \`docs/AMS-UX-INTERACTION-STANDARDS.md\` for shared visual primitives and behavior.
+- `docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md` for the detailed worksheet content contracts, shared patterns, data truthfulness, and acceptance criteria.
+- `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md` for target workflows, canonical source ownership, Finance protections, and module requirements.
+- `docs/architecture/ams-navigation-information-architecture.md` for approved navigation and route ownership.
+- `AMS-DESIGN-SYSTEM.md` and `docs/AMS-UX-INTERACTION-STANDARDS.md` for shared visual primitives and behavior.
 
 This matrix is not an RBAC definition. The persona names describe intended work needs, not exact current application role names. Before implementation, map them to the actual authorized users, claims, routes, server policies, record visibility, and current fields. Where the actual app lacks a field/data contract, mark it as a gap instead of inventing a value.
 
@@ -301,12 +301,12 @@ Do not resolve these gaps by adding fixture data, assuming permissions based on 
 
 ## 8. Related specifications
 
-- \`AGENTS.md\`
-- \`docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md\`
-- \`docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md\`
-- \`docs/architecture/ams-navigation-information-architecture.md\`
-- \`docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md\`
-- \`docs/AMS-UX-INTERACTION-STANDARDS.md\`
-- \`AMS-DESIGN-SYSTEM.md\`
-- \`docs/AMS-IMPLEMENTATION-TRACEABILITY.md\`
-- \`docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md\`
+- `AGENTS.md`
+- `docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md`
+- `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`
+- `docs/architecture/ams-navigation-information-architecture.md`
+- `docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md`
+- `docs/AMS-UX-INTERACTION-STANDARDS.md`
+- `AMS-DESIGN-SYSTEM.md`
+- `docs/AMS-IMPLEMENTATION-TRACEABILITY.md`
+- `docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md`
