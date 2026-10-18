@@ -65,3 +65,24 @@ Continue with a bounded module-specific structural slice based on the current so
 
 Continue with module-specific workspace hierarchy, starting with Finance's primary workspaces and then the remaining CMS/Settings and module subtabs. Preserve all financial and access behavior; validate each coherent change against CI before reporting it complete.
 
+## Eighth implementation slice: desktop topbar composition and mobile tab fallback
+
+- Re-composed the desktop shell so the contextual module tabs share the primary 52px topbar row with search and global utilities, rather than occupying a separate desktop row below it.
+- Kept the same role-filtered destinations and URL-derived active state. At viewports below 900px, the shell continues to expose the same views through the shared in-page tab primitive; its sticky position is offset below the 52px mobile topbar to avoid overlap.
+- Added/updated regression assertions for the dedicated desktop topbar primitive and mobile fallback.
+- Relevant commits: `d7edd0ff2b273aa2e3ed6c6817183ef3009a8ef0`, `47f29b5abda85d1b603a9ae842770c20e2a68718`, `797c76e5d9fa69a93940c002cd7e611ed974a2c6`.
+- The topbar composition is source-validated; authenticated browser screenshot/viewport verification remains unavailable and is not claimed.
+
+## Ninth implementation slice: Dashboard and Finance content hierarchy
+
+- Dashboard's supporting metric strip no longer sits between the primary chart/delivery context and the Active Projects workspace. Active Projects and Team Capacity now appear first; secondary metrics follow the primary workspace. Added spacing after the moved strip and regression tests for the intended content order.
+- Finance's module header now uses the selected worksheet's existing description when available, making the purpose of each subview clear without changing financial logic or record behavior.
+- Relevant commits: `05118a5fb309b5c0a9017e3a72ac25aab8b00d6b`, `a1716ba97ff7940a49abcbb00aa5eb06d9ddc29c`, `0511dfaf057b8ae67d947d8655c3f1ca3b53ffc6`, `b07be0fc010671b240e2719e7e4963284f89f58b`.
+- GitHub Actions passed on commit `b07be0fc010671b240e2719e7e4963284f89f58b`:
+  - Typecheck, tests, and production build: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39114700265
+  - Verify: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39114700292
+
+## Remaining structural redesign work
+
+The overall task is still in progress. Continue route-by-route review of Dashboard Performance/Analytics, Inbox, Projects/Tasks, Clients, all five Finance workspaces and their worksheets, Team & Resources, Documents, all CMS content types and Careers subviews, and Settings subviews. Review root/inner scroll ownership and validate browser behavior when authenticated access is available. Do not describe this task as complete until every active view has been reviewed and its frontend checks and available visual QA are recorded.
+
