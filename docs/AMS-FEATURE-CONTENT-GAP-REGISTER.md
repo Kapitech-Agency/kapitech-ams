@@ -2,8 +2,8 @@
 
 **Status:** Initial structured register — latest-code audit required before any item can be called missing or complete  
 **Last updated:** 19 October 2026  
-**Repository:** \`Kapitech-Agency/kapitech-ams\`  
-**Current-state authority:** Current \`main\`, current source/tests/CI, and authorized runtime evidence  
+**Repository:** `Kapitech-Agency/kapitech-ams`  
+**Current-state authority:** Current `main`, current source/tests/CI, and authorized runtime evidence  
 **Sequence authority:** [AMS End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md)
 
 > This register is the working inventory of what must be verified for a complete AMS release. It is deliberately **not** a claim that all listed features are missing. Previous navigation, shell, Dashboard, Finance, Inbox, Projects and other changes must be inspected and carried forward before assigning status. Target specifications are not proof of implementation.
@@ -111,7 +111,7 @@ A shared dependency should be fixed before its dependent modules. Never prioriti
 
 - Update this register as meaningful slices are completed; do not bulk-mark a module complete from one test.
 - Reference current commit SHA, file/line or route/test, CI run, runtime evidence or accepted decision.
-- If evidence is historical, label it historical and recheck current \`main\`.
-- Keep the progress roll-up in \`docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md\` for structural UX/UI slices and \`docs/AMS-IMPLEMENTATION-TRACEABILITY.md\` for feature/workflow requirement IDs and evidence.
+- If evidence is historical, label it historical and recheck current `main`.
+- Keep the progress roll-up in `docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md` for structural UX/UI slices and `docs/AMS-IMPLEMENTATION-TRACEABILITY.md` for feature/workflow requirement IDs and evidence.
 - Before a stage is closed, audit rows for that stage and identify remaining unverified/blocked items. No missing evidence is interpreted as success.
 - Do not claim production readiness until Stage 14's operational gate and Stage 15's deployment verification pass.
