@@ -339,7 +339,7 @@ test('Projects keep the page title clean and expose data availability in the eye
   const projects = await read('src/pages/admin/AdminProjects.tsx');
   assert.match(projects, /AdminStatusBadge tone=\{serverMode \? 'success' : loading \? 'info' : 'warning'\}/);
   assert.match(projects, /serverMode \? 'Live project data' : loading \? 'Loading project records' : 'Project data unavailable'/);
-  assert.match(projects, /title=\{view === 'overview' \? 'Project Overview' : view === 'planning-delivery' \? 'Planning & Delivery' : view === 'all'/);
+  assert.match(projects, /title=\{view === 'overview' \? 'Project Overview' : view === 'planning-delivery' \? 'Planning & Delivery' : view === 'resources' \? 'Project Resources' : view === 'all'/);
   assert.match(projects, /registryStatusView === 'planning' \? 'Planning'/);
   assert.match(projects, /registryStatusView === 'completed' \? 'Completed Projects'/);
   assert.match(projects, /data-ams-feature-slug="projects-kpis"/);
