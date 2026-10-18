@@ -2767,13 +2767,14 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote title="Allocation policy">
               Net Project Profit is calculated from contract value less vendor commitment, other obligations and the saved Team Fee milestones for that project. Team Fee is deducted before reserve/reward allocation; negative project results never create negative distributions. Project amounts use saved contract values and obligations, not the general AMS project budget.
             </WorkbookNote>
+
+             <FinanceDataTable title="Project Allocation" description="Amounts and percentages come from each project's saved allocation. The default split above applies only to new records." columns={[{label:'Project'},{label:'Net project profit',align:'right'},{label:'Petty cash reserve',align:'right'},{label:'Emergency fund',align:'right'},{label:'Team Reward',align:'right'},{label:'Company operational fund',align:'right'},{label:'Emergency fund status'},{label:'Actions'}]} rows={records.map((record)=> {
             <AdminMetricStrip metrics={[
               {id:'alloc-petty',label:'Default petty cash reserve',value:'10%',context:'For new allocations',icon:<WalletCards size={15}/>},
               {id:'alloc-emergency',label:'Default emergency fund',value:'10%',context:'For new allocations',icon:<ShieldAlert size={15}/>},
               {id:'alloc-reward',label:'Default Team Reward',value:'10%',context:'For new allocations',icon:<CircleDollarSign size={15}/>},
               {id:'alloc-company',label:'Default company fund',value:'70%',context:'Remainder for new allocations',icon:<Landmark size={15}/>}
             ]}/>
-             <FinanceDataTable title="Project Allocation" description="Amounts and percentages come from each project's saved allocation. The default split above applies only to new records." columns={[{label:'Project'},{label:'Net project profit',align:'right'},{label:'Petty cash reserve',align:'right'},{label:'Emergency fund',align:'right'},{label:'Team Reward',align:'right'},{label:'Company operational fund',align:'right'},{label:'Emergency fund status'},{label:'Actions'}]} rows={records.map((record)=> {
                const pettyPercent = record.payload.pettyCashPercent == null ? null : Number(record.payload.pettyCashPercent);
                const emergencyPercent = record.payload.emergencyPercent == null ? null : Number(record.payload.emergencyPercent);
                const rewardPercent = record.payload.teamRewardPercent == null ? null : Number(record.payload.teamRewardPercent);

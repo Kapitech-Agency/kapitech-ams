@@ -116,6 +116,10 @@ test('Client Retainers prioritizes the agreement register before supporting summ
 
 test('Finance exposes one current worksheet and explicit unavailable source context', async () => {
   const finance = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const allocationStart = finance.indexOf("case 'project-allocation': {");
+  const allocationEnd = finance.indexOf("case 'team-fee':", allocationStart);
+  const allocationView = finance.slice(allocationStart, allocationEnd);
+  assert.ok(allocationView.indexOf('title="Project Allocation"') < allocationView.indexOf('<AdminMetricStrip'), 'The allocation register must precede its default-policy summary.');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   assert.doesNotMatch(invoicing, /replaces the retired standalone tab/i);
   assert.match(invoicing, /Review invoice tax and retainer billing alongside the related revenue records/);
