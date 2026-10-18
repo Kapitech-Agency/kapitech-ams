@@ -229,7 +229,7 @@ Projects Overview is separately addressable at `/admin/projects?projects=overvie
 
 Planning & Delivery is addressable at `/admin/projects?projects=planning-delivery`. It selects a canonical project and displays the existing notes, client, owner, service, dates, status, progress, team and recorded milestone dates/completion. It links to the existing task execution workspace. Scope/acceptance criteria, a separate deliverable register, internal QA outcomes, client-review outcomes, and revision history are labeled as not separately tracked in the current project model; no synthetic records are created. No API, database, role policy, authentication, Finance logic, or business record is changed.
 
-**Verification:** Navigation ownership and source-content regression assertions are added. CI is pending on the commit. Browser-level visual and role-specific checks remain unverified.
+**Verification:** AMS Quality Gate and AMS CI passed on code SHA `ef955a4eff43a1109739e0df01b8a4ca7d3fffbd`. Quality Gate passed typecheck, 707 regression tests (687 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser-level visual and role-specific checks remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
