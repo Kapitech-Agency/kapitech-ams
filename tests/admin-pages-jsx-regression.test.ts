@@ -1075,3 +1075,16 @@ test('Time Logs provides compact cards and preserves owner-based delete permissi
   assert.ok(time.includes('(canDeleteAll || log.userId === getAdminSession()?.user?.id)'));
   assert.ok(time.includes('slug="time-tracking-pagination"'));
 });
+
+
+test('Contracts uses compact cards while preserving lifecycle transitions and manager permission gates', () => {
+  const contracts = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminContracts.tsx'), 'utf8');
+  assert.ok(contracts.includes('data-ams-feature-slug="contracts-compact-cards"'));
+  assert.ok(contracts.includes('hidden min-[1280px]:block overflow-x-auto'));
+  assert.ok(contracts.includes("const next = primaryNext(contract.status)"));
+  assert.ok(contracts.includes("onClick={() => void transition(contract, next)}"));
+  assert.ok(contracts.includes("setPendingStatusChange({ contract, status: 'expired' })"));
+  assert.ok(contracts.includes("setPendingStatusChange({ contract, status: 'terminated' })"));
+  assert.ok(contracts.includes("onClick={() => setDeleteDraftTarget(contract)}"));
+  assert.ok(contracts.includes('disabled={!canManage}'));
+});

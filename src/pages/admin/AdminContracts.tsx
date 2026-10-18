@@ -369,7 +369,55 @@ export const AdminContracts: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 min-w-0">
+          <div className="grid gap-3 min-[1280px]:hidden" data-ams-feature-slug="contracts-compact-cards" role="list" aria-label="Contract and statement of work cards">
+            {loading ? Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="rounded-card border border-line bg-bg p-4" role="status" aria-label="Loading contract">
+                <div className="h-3 w-44 max-w-full animate-pulse rounded-badge bg-line" />
+                <div className="mt-3 h-3 w-28 animate-pulse rounded-badge bg-line" />
+                <div className="mt-4 grid grid-cols-2 gap-3"><div className="h-9 animate-pulse rounded-control bg-line/60" /><div className="h-9 animate-pulse rounded-control bg-line/60" /></div>
+              </div>
+            )) : visible.length ? visible.map((contract) => {
+              const next = primaryNext(contract.status);
+              return (
+                <article key={contract.id} data-ams-slug={'contract-card-' + contract.id} role="listitem" className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="break-words text-sm font-semibold text-fg">{contract.title}</h3>
+                      <p className="mt-1 break-words font-mono text-[10px] text-muted">{contract.contractNumber}</p>
+                      <p className="mt-1 text-[10px] text-muted">{typeLabels[contract.contractType]}</p>
+                    </div>
+                    <span className={'inline-flex shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium ' + statusTones[contract.status]}>{statusLabels[contract.status]}</span>
+                  </div>
+                  <div className="mt-3 border-y border-line py-3">
+                    <p className="text-xs font-medium text-fg">{contract.clientName}</p>
+                    <p className="mt-1 break-words text-[11px] text-muted">{contract.projectName || 'Not linked to a project'}</p>
+                    {contract.documentUrl && <a href={contract.documentUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-8 items-center gap-1.5 text-[11px] text-muted hover:text-fg"><ExternalLink size={12} />Agreement file</a>}
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Start date</p><p className="mt-1 break-words text-xs text-fg">{formatDate(contract.startDate)}</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">End date</p><p className="mt-1 break-words text-xs text-fg">{formatDate(contract.endDate)}</p>{contract.status === 'active' && isDatePast(contract.endDate) && <p className="mt-1 text-[10px] text-danger">End date passed; update lifecycle status</p>}</div>
+                    <div className="col-span-2 min-w-0"><p className="text-[10px] text-muted">Contract value</p><p className="mt-1 break-words text-sm font-semibold tabular-nums text-fg">{formatMoney(contract.contractValue, contract.currency)}</p></div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-line pt-3">
+                    {['draft', 'in_review'].includes(contract.status) && <Button type="button" variant="secondary" className="min-h-9 px-3 text-[10px]" onClick={() => openEdit(contract)} disabled={!canManage}>Edit draft</Button>}
+                    {next && <Button type="button" variant="primary" className="min-h-9 px-3 text-[10px]" onClick={() => void transition(contract, next)} disabled={!canManage || Boolean(transitioningId)} loading={transitioningId === contract.id}>{next === 'in_review' ? 'Send to review' : next === 'sent' ? 'Send for signature' : next === 'signed' ? 'Record signature' : next === 'active' ? 'Activate' : 'Complete'} <ArrowRight size={12} /></Button>}
+                    {contract.status === 'draft' && <Button type="button" variant="secondary" className="min-h-9 px-3 text-[10px]" onClick={() => setDeleteDraftTarget(contract)} disabled={!canManage || Boolean(transitioningId) || Boolean(deleteDraftTarget)} loading={transitioningId === contract.id}><Trash2 size={12} />Delete draft</Button>}
+                    {contract.status === 'active' && isDatePast(contract.endDate) && <Button type="button" variant="secondary" className="min-h-9 px-3 text-[10px]" onClick={() => setPendingStatusChange({ contract, status: 'expired' })} disabled={!canManage || Boolean(transitioningId) || Boolean(pendingStatusChange)}>Mark expired</Button>}
+                    {contract.status === 'active' && <Button type="button" variant="secondary" className="min-h-9 px-3 text-[10px]" onClick={() => setPendingStatusChange({ contract, status: 'terminated' })} disabled={!canManage || Boolean(transitioningId) || Boolean(pendingStatusChange)}>Terminate</Button>}
+                  </div>
+                </article>
+              );
+            }) : (
+              <div className="rounded-card border border-line bg-bg px-4 py-10 text-center">
+                <ClipboardCheck size={20} className="mx-auto text-muted" />
+                <p className="mt-3 text-sm font-medium text-fg">{contracts.length ? 'No contracts match these filters.' : 'No contracts or SOWs recorded yet.'}</p>
+                <p className="mt-1 text-xs leading-5 text-muted">{contracts.length ? 'Clear the search or choose another status.' : 'Create a draft to start the review and signature workflow. This register does not create an e-signature on your behalf.'}</p>
+                {!contracts.length && canManage && <Button type="button" variant="secondary" className="mt-4" onClick={openCreate} icon={<Plus size={13} />}>Create first contract</Button>}
+              </div>
+            )}
+          </div>
+          <div className="hidden min-[1280px]:block overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse text-left">
             <thead><tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
               <th className="px-3 py-3 font-medium">Contract / SOW</th>
@@ -422,6 +470,7 @@ export const AdminContracts: React.FC = () => {
                 </td></tr>}
             </tbody>
           </table>
+          </div>
         </div>
         <AdminTablePagination total={filtered.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="contracts" slug="contracts-pagination" />
       </section>

@@ -317,3 +317,10 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Moved pagination outside the responsive presentation switch so both cards and table use the same source rows and current page.
 - Preserved the existing API, date filtering, total/billable calculations, record removal action and exact owner-or-authorized-role deletion condition.
 - Added regression coverage for the responsive register, billing state, pagination, and delete gate. CI for the current direct-to-main head is checked next.
+
+
+## Thirty-ninth implementation slice: responsive Contracts / SOW register
+
+- Added compact contract cards below 1,280px with title/number/type, client/project, term dates, contract value/currency, lifecycle status, end-date warning, agreement link where available, and the existing context-specific actions.
+- Retained the 980px multi-column table at wide desktop. Cards use the same filtered source records and keep the exact lifecycle conditions for draft editing/deletion, review/signature progression, expired marking, and termination.
+- No signature, approval, status transition, permission, API or contract business rule was changed. Regression assertions added for the responsive view and the manager permission gates.
