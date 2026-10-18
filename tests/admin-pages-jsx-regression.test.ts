@@ -249,7 +249,7 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   assert.ok(layout.includes('workspace-topbar-navigation') && layout.includes('<AdminSectionTabs'));
   assert.equal(subnavigation.includes("label: 'Client Requests'"), false, 'Client Requests is a worksheet, not a persistent workspace.');
   assert.equal(subnavigation.includes("label: 'All Documents'"), false, 'Document categories stay inside Document Library.');
-  assert.match(inbox, /ariaLabel="Messages worksheets and saved views"/);
+  assert.match(inbox, /ariaLabel="Message categories"/);
   assert.equal(documents.includes('<AdminSectionTabs'), false, 'Document categories stay within the Document Library page.');
   assert.equal(documents.includes('<AdminSectionTabs'), false, 'Documents tabs are owned by the shared topbar.');
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
@@ -628,7 +628,10 @@ test('Inbox opens with contextual controls and its triage workspace, without a r
   assert.match(inbox, /<AdminSectionTabs\b/);
   assert.match(inbox, /ariaLabel="Messages worksheets and saved views"/);
   assert.match(inbox, /label: 'Client Requests'.*available: false/);
-  assert.match(inbox, /label: 'Project & Support Requests'.*available: false/);
+  assert.match(inbox, /label: 'Project & Support'.*available: false/);
+  assert.doesNotMatch(inbox, /key: 'starred', label: 'Starred'/);
+  assert.doesNotMatch(inbox, /key: 'resolved-archived'/);
+  assert.ok(inbox.includes('to="/admin/inbox?view=starred"'), 'Starred stays reachable as a saved view from Messages.');
   assert.match(inbox, /<AdminFilterBar\b/);
   assert.match(inbox, /data-ams-slug="inbox-overview-workspace"/);
   assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);

@@ -675,18 +675,16 @@ export const AdminInbox: React.FC = () => {
         )}
       />
 
-      {activeInboxTab !== 'overview' && (
+      {(activeInboxTab === 'messages' || activeInboxTab === 'client') && (
         <AdminSectionTabs
-          ariaLabel="Messages worksheets and saved views"
-          activeKey={activeInboxTab === 'client' ? 'sales-inquiries' : activeInboxTab === 'starred' ? 'starred' : 'all-messages'}
+          ariaLabel="Message categories"
+          activeKey={activeInboxTab === 'client' ? 'sales-inquiries' : 'all-messages'}
           className="w-full border-b border-line pb-2"
           items={[
             { key: 'all-messages', label: 'All Messages', to: '/admin/inbox?view=messages' },
             { key: 'sales-inquiries', label: 'Sales Inquiries', to: '/admin/inbox?view=client' },
             { key: 'client-requests', label: 'Client Requests', to: '/admin/inbox', available: false },
-            { key: 'project-support', label: 'Project & Support Requests', to: '/admin/inbox', available: false },
-            { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred' },
-            { key: 'resolved-archived', label: 'Resolved & Archived', to: '/admin/inbox', available: false },
+            { key: 'project-support', label: 'Project & Support', to: '/admin/inbox', available: false },
           ]}
         />
       )}
@@ -737,6 +735,14 @@ export const AdminInbox: React.FC = () => {
               <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg">
                 <RefreshCw size={13} />Refresh
               </button>
+              {activeInboxTab === 'messages' && (
+                <Link
+                  to="/admin/inbox?view=starred"
+                  className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  <Star size={13} />Starred
+                </Link>
+              )}
               {metrics.newCount > 0 && (
                 <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
                   <Check size={13} />
