@@ -291,6 +291,14 @@ The Project Controls navigation item is disabled because its former destination,
 
 **Verification:** AMS Quality Gate and AMS CI passed on code SHA `e224a5df5d01462d4f76b8b0b1f87bafba1ebe42`. Quality Gate passed typecheck, 711 regression tests (691 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test.
 
+### NAV-018: Inbox invalid view query values normalize to Overview
+
+**Status:** IMPLEMENTED_VERIFIED at source commit `059432b567de1e556c13263deb324309b6467142`.
+
+**Source:** `src/pages/admin/AdminInbox.tsx`, `tests/ams-sidebar-subnavigation.test.ts`, `tests/ams-primary-navigation.test.ts`.
+
+Inbox keeps the approved direct workspace order (Overview, Messages, Follow-ups, Routing & Templates). An unsupported explicit `view` value now resolves to Overview and replaces the query with `view=overview`, while preserving unrelated query parameters. Legacy `view=jobs` compatibility remains owned by the existing route redirect to Website CMS → Careers → Applicants. The Admin primary navigation regression now asserts the exact nine-module sequence with Settings in position nine. AMS Quality Gate and AMS CI both passed at the source commit; browser-level back/forward and visual verification remain unverified.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
