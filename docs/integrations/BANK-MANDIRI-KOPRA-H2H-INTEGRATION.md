@@ -22,7 +22,7 @@ Public product descriptions are not the API contract. Obtain the current bank-is
 
 ## 2. Navigation ownership
 
-**Finance → Cash Management**
+**Finance → Transactions & Cash**
 - Bank Accounts
 - Bank Transactions & Reconciliation
 - Bank Mandiri Kopra H2H
