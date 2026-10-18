@@ -365,7 +365,9 @@ export function isAmsModuleSubnavigationItemActive(
 
   if (path === '/admin/inbox') {
     const requestedView = params.get('view') || 'overview';
-    const selectedView = ['overview', 'messages', 'client', 'starred', 'client-requests', 'project-support', 'unread', 'resolved', 'archived'].includes(requestedView)
+    // Only mirror views the Inbox page actually recognizes. Target-only worksheets
+    // and saved filters must not falsely activate Messages on a fallback Overview.
+    const selectedView = ['overview', 'messages', 'client', 'starred'].includes(requestedView)
       ? requestedView
       : 'overview';
     return (
