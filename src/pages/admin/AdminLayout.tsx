@@ -467,7 +467,7 @@ export const AdminLayout: React.FC = () => {
         {/* Compact in-page navigation fallback for viewports where the desktop topbar is hidden. */}
         {workspaceTabItems.length > 0 && (
           <div
-            className="ams-workspace-topbar-nav sticky top-[52px] z-20 border-b border-line bg-panel min-[900px]:hidden"
+            className="ams-workspace-topbar-nav sticky top-0 z-20 border-b border-line bg-panel min-[900px]:hidden"
             data-ams-slug="workspace-topbar-navigation"
           >
             <div className="mx-auto w-full max-w-[1560px] min-w-0 px-3 sm:px-5">
