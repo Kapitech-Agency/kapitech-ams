@@ -80,7 +80,7 @@ test('documented target-only workspaces are visible but never rendered as fake l
   assert.match(primitives, /item\.available === false/);
 });
 
-test('existing Inbox routes keep query-driven active state and Careers applicants stay in CMS', () => {
+test('existing Inbox routes keep query-driven active state and Careers applicants stay in CMS', async () => {
   const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=messages'), true);
@@ -97,7 +97,7 @@ test('existing Inbox routes keep query-driven active state and Careers applicant
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
 });
 
-test('Project Registry parent and supported status filters activate the correct nested items', () => {
+test('Project Registry parent and supported status filters activate the correct nested items', async () => {
   const projects = getAmsModuleSubnavigation('projects', 'Admin');
   const registry = projects.find((item) => item.key === 'registry')!;
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects'), true);
