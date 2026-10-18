@@ -6,7 +6,7 @@ Scope: frontend UX/UI and content presentation only. This guide does not authori
 
 ## 1. Source of truth
 
-Follow the user's latest explicit instruction and repository rules in AGENTS.md. AMS-DESIGN-SYSTEM.md is the authority for tokens, typography, spacing, component geometry, theme, motion, and accessibility. The AMS master structure guide defines module and workflow ownership. AMS-UX-INTERACTION-STANDARDS.md defines cross-page hierarchy and interaction. AMS-FRONTEND-ENGINEERING-STANDARDS.md defines frontend boundaries. This guide defines content composition by module.
+Follow the user's latest explicit instruction and repository rules in AGENTS.md. AMS-DESIGN-SYSTEM.md is the authority for tokens, typography, spacing, component geometry, theme, motion, and accessibility. The AMS master structure guide defines module and workflow ownership. AMS-UX-INTERACTION-STANDARDS.md defines cross-page hierarchy and interaction. AMS-FRONTEND-ENGINEERING-STANDARDS.md defines frontend boundaries. This guide defines content composition by module. docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md provides the detailed role-aware content contract for every module/workspace/worksheet, including the main question, fields, actions, visualization rationale, source ownership, and states.
 
 Inspect current source code and tests before implementing anything. Requirements describe the target, not proof that a feature exists. Report conflicts rather than silently inventing a new rule.
 
@@ -270,6 +270,7 @@ A view is ready only when its purpose/next action are clear, the main work area 
 - AMS-DESIGN-SYSTEM.md
 - docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md
 - docs/AMS-UX-INTERACTION-STANDARDS.md
+- docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md
 - docs/architecture/ams-navigation-information-architecture.md
 - docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md
 - docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md
