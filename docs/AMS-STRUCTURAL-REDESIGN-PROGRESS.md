@@ -135,3 +135,4 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Removed the inline member-count badge from the Team Directory page title. The page title now follows the same clean title/description/action hierarchy as sibling workspaces; record counts remain in the directory's dedicated supporting summary rather than competing with the title.
 - No team records, count calculations, route state, permissions, or actions changed.
 - Added a source regression assertion that keeps the title free of a duplicate inline count.
+- [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121528692) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121528688) passed for commit `a4d86460030579b5565348556862d3a8a5c46bd9`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
