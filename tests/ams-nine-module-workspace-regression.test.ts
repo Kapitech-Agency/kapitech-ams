@@ -61,6 +61,11 @@ test('Inbox toast feedback follows the stable page header instead of shifting it
   assert.ok(header >= 0 && toast > header, 'toast feedback should render after the module header');
 });
 
+test('Inbox heading identifies the active topbar workspace', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  assert.match(inbox, /title=\{activeInboxTab === 'overview' \? 'Inbox overview' : activeInboxTab === 'client' \? 'Client inquiries' : 'Starred inbox'\}/);
+});
+
 test('Inbox remains an inquiry workspace and star state remains accessible', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   const app = await read('src/App.tsx');
