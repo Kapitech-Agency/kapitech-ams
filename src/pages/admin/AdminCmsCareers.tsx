@@ -391,7 +391,7 @@ export const AdminCmsCareers: React.FC = () => {
     setStatusMessage(null);
     try {
       const result = await api.leads.update(applicant.id, { status });
-      if (!result.success) throw new Error(result.error || 'Applicant status could not be updated. Check CRM / Inbox access.');
+      if (!result.success) throw new Error(result.error || 'Applicant status could not be updated. Check applicant-management access.');
       setApplicants(current => current.map(item => item.id === applicant.id ? { ...item, status } : item));
       setStatusMessage({ text: isId ? 'Status pelamar diperbarui.' : 'Applicant status updated.', tone: 'success' });
     } catch (error) {
@@ -675,9 +675,9 @@ export const AdminCmsCareers: React.FC = () => {
               <div className="flex items-start gap-3">
                 <ShieldAlert size={17} className="mt-0.5 shrink-0 text-warning" />
                 <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-fg">{isId ? 'Inbox pelamar tidak dapat dimuat' : 'Applicant inbox is not available'}</h3>
+                  <h3 className="text-sm font-semibold text-fg">{isId ? 'Pelamar tidak dapat dimuat' : 'Applicants are not available'}</h3>
                   <p className="mt-1 text-xs leading-5 text-muted">{applicantsError}</p>
-                  <p className="mt-2 text-xs leading-5 text-muted">{isId ? 'Pengelolaan pelamar memakai permission CRM / Inbox yang sama dengan pipeline saat ini.' : 'Applicant management uses the same CRM / Inbox permission as the existing pipeline.'}</p>
+                  <p className="mt-2 text-xs leading-5 text-muted">{isId ? 'Coba muat ulang daftar pelamar. Jika masalah berlanjut, minta administrator memeriksa akses Anda.' : 'Retry the applicant list. If the issue persists, ask an administrator to review your access.'}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button type="button" variant="secondary" icon={<RefreshCw size={13} />} onClick={() => void loadApplicants(true)}>{isId ? 'Coba lagi' : 'Try again'}</Button>
 
