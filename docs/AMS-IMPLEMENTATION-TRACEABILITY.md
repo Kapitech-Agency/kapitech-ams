@@ -343,11 +343,19 @@ Finance retains the five approved areas in order: Overview & Control, Transactio
 
 ### NAV-025: Team & Resources worksheet navigation follows workspace ownership and route policy
 
-**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI required on this checkpoint; browser-level navigation remains unverified).
+**Status:** IMPLEMENTED_VERIFIED (source regression, typecheck, production build and AMS CI passed; browser-level navigation remains unverified).
 
 **Source:** `src/pages/admin/AdminTeams.tsx`, `src/lib/amsModuleSubnavigation.ts`, `src/lib/amsNavigationAccess.ts`, `tests/ams-sidebar-subnavigation.test.ts`.
 
 Team & Capacity exposes Team Directory, Roles & Departments, Capacity Allocation, and a disabled Availability & Workload view. Vendors & Freelancers exposes its Directory and the Admin-authorized Skills & Service Matrix route, with Contracts & Rates and Engagement Status explicitly target-only. Time Tracking continues to use its canonical Time Logs route. People Operations remains target-only because no separate HR workflow route/model is available. Route access remains based on current route policy; no permissions, person/vendor data, time entries, or business logic changed.
+
+### NAV-026: Document Library categories remain in one workspace with canonical query state
+
+**Status:** IMPLEMENTED_UNVERIFIED (source regression and CI required on this checkpoint; browser-level navigation remains unverified).
+
+**Source:** `src/pages/admin/AdminDocuments.tsx`, `src/lib/amsModuleSubnavigation.ts`, `tests/ams-sidebar-subnavigation.test.ts`.
+
+Documents has one primary workspace, Document Library. Project & Client Files, SOPs & Policies, Legal & Corporate, Finance & Tax, HR & People, and Security & Infrastructure remain category/filter views in the same canonical library. The current category dropdown preserves its query selection for deep links; an unsupported `documents` value now resolves to All files and removes the invalid parameter via history replacement. No document data, vault logic, mutation path or access policy changed.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
