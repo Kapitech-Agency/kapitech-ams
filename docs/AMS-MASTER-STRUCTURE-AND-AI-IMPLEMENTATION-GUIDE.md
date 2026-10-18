@@ -1236,206 +1236,57 @@ Messages should describe what happened, what was saved, what was not saved, and 
 
 ## 20. Mandatory staged implementation and timeout-safe execution protocol
 
-The AMS target is broad and contains production-critical workflows. Implement it in small, reviewable stages. Never attempt a full-repository rewrite, all-module redesign, or simultaneous implementation of all workflows. The user's latest instruction defines the active scope. This section is mandatory for every AI implementation task.
+This guide defines the target product, module/workflow ownership and domain acceptance requirements. It must not create a competing delivery schedule. The current end-to-end sequence, dependencies, deliverables and exit gates live in:
 
-**Visual-first priority for the current AMS frontend initiative:** The first deliverable is a clear, consistent, reviewable frontend experience. Complete the visual sequence in this section before starting workflow completion, data-model work, or broader functional implementation. The required order is: (1) audit the current navigation and views, (2) fix the approved navigation structure, (3) fix shared shell and page geometry, (4) establish and approve Dashboard content hierarchy, (5) redesign each remaining module workspace one module per checkpoint, and (6) complete visual/responsive review and obtain the user's sign-off. A build, an audit report, or a navigation-only change does not count as completion of the visual phase.
+- \`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md\` — the single canonical stage sequence from baseline through production stabilization.
+- \`docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md\` — current requirement-level status, evidence, dependencies, blockers and next action.
+- \`docs/AMS-END-TO-END-EXECUTION-PROMPT.md\` — the copy/paste instructions for the executing AI.
+- \`docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md\` — execution discipline, verification and timeout recovery.
+- \`docs/AMS-IMPLEMENTATION-TRACEABILITY.md\` — requirement IDs and implementation evidence, revalidated against current \`main\`.
+- \`docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md\` — test coverage and release evidence.
 
-During these visual stages, frontend changes must reuse existing routes, APIs, data sources, design tokens, and supported interactions. Keep the existing behavior intact and verify it has not regressed, but do not expand the task into implementing missing business workflows, adding new functional capabilities, changing backend/API/database/authentication/RBAC, or modifying Finance calculations. Where required functionality is missing, represent the state honestly and record the dependency. Begin workflow/data traceability or broader functional implementation only after visual sign-off and explicit user authorization for that new scope. If a companion instruction suggests a conflicting order or wider scope, follow the latest explicit user scope, flag the inconsistency, and do not silently broaden the task.
+The Master Structure remains authoritative for the target state described in this document. The navigation IA remains authoritative for approved navigation ownership. The design system remains authoritative for visual tokens and interaction standards. Domain guides remain authoritative for Finance, data ownership, workflow state machines, security, APIs, private documents, integrations and production operations. Their local examples or historical stage numbers do not supersede the end-to-end roadmap.
 
-### 20.1 Non-negotiable execution rules
+### 20.1 Required execution behavior
 
-1. **Work in one stage at a time.** Every stage must have a bounded scope, an explicit deliverable, acceptance criteria, and a report. Do not silently combine later stages with the active stage.
-2. **Report and stop at checkpoints.** After each stage, provide the user with a concise report and wait for explicit approval before starting the next stage. Do not treat silence, an earlier approval, or a timeout as approval to continue.
-3. **Give useful progress updates during long tasks.** Send an update before substantial work, when a meaningful checkpoint is reached, when a risk/blocker is found, and before switching to a new stage. Do not remain silent while attempting a large batch of work. Updates must state completed work and any remaining work, not merely that work is in progress.
-4. **Design each work slice to survive timeouts.** Prefer a small, independently verifiable change. Do not begin a large batch that cannot be inspected, tested, reported, and safely checkpointed within the current execution window. If a task is too large, split it further before implementation.
-5. **Preserve a durable resume point.** At every checkpoint, record the last completed stage, exact files changed, commit SHA, checks performed and results, unfinished items, blockers, and the next single action. A continuation after a timeout must read the latest checkpoint and current `main` state first, then continue from the last verified point. Do not repeat completed work or assume uncommitted changes survived.
-6. **Commit completed checkpoints separately.** When the stage passes its exit gate, commit that bounded change directly to `main` in accordance with this repository's approved workflow. Use a specific commit message and report the SHA. Do not create another branch, open a PR, force-push, or bypass a repository protection rule to work around a blocked main-branch write. If direct-to-main delivery is blocked, stop and report the exact blocker instead of silently changing the delivery method.
-7. **Do not commit an incomplete or unverified stage as complete.** Run the relevant checks before reporting completion. If a check cannot be run, state that explicitly and classify the affected requirement as unverified or blocked.
-8. **Do not cross the approved scope boundary.** Navigation work must not become a general UI redesign. Frontend-only work must not change backend/API/database/authentication/RBAC/Finance calculations. Documentation-only work must not change application code. Broader scope requires explicit authorization.
-9. **Keep the actual implementation authoritative.** Before changing a feature, inspect the current code, route, data source, permissions and tests relevant to the active stage. Do not infer that a target feature exists merely because it appears in this guide.
-10. **One module or workflow at a time.** After shared foundations, implement and verify each module/workflow separately. Do not mark multiple modules complete based only on a shared component, successful build or one screenshot.
-11. **Do not hide unresolved issues.** Report any failed test, unverified route, missing API, unclear ownership, security concern, financial discrepancy, external dependency or remaining placeholder. Do not fabricate data or claim a feature works when it does not.
-12. **A timeout is not a completion state.** If execution is interrupted, report the last verified checkpoint when resuming, re-fetch `main`, verify its current SHA and changed files, and continue only with the next unfinished approved action.
+1. **Inspect before editing.** Re-fetch current \`main\`, inspect the latest relevant commits, source, tests and CI. Verify the status of previous work and preserve correct changes; do not restart from zero because a prompt or session changed.
+2. **Follow the roadmap order.** Execute the stages and acceptance criteria in \`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md\`. Do not skip, combine, reorder or silently broaden stages. Findings that belong to later stages are recorded for later unless they are required to safely complete the current stage.
+3. **Work in bounded slices.** Each slice must have a clear outcome, files/flows in scope, validation plan and safe checkpoint. For module-based work, do one module or well-bounded worksheet/workflow slice at a time.
+4. **Report continuously.** Send a durable user-facing report at baseline, after each meaningful slice, when a blocker or significant risk appears, and at each stage gate. Include exact current/committed SHA, changed files, what is verified, tests and results, remaining items, unverified areas and one next action. A commit message alone is not a report.
+5. **Continue after routine reports.** A report is a checkpoint, not an automatic pause request. Continue to the next task within the already-authorized end-to-end scope when safe. Do not ask for permission after each routine slice.
+6. **Honor real approval gates.** Stop at the roadmap's explicit visual/content sign-off before broad functional expansion, and whenever a genuine business/product decision, change to a financial rule, authorization/security decision, destructive or live-production action, scope change or unresolved critical risk requires user input. Do not treat broad roadmap scope as permission for an unreviewed risky operation.
+7. **Timeout recovery.** A timeout is not completion. Shrink the batch, complete and verify the smallest safe unit, and report the last verified commit, exact check status and next task. On resumption, fetch current \`main\`, changed files and CI before editing. Do not repeat already verified work or assume uncommitted changes survived.
+8. **Commit safely.** Commit verified checkpoints directly to \`main\` in line with the user's instruction and repository policy. Never create a branch/PR instead without instruction, force-push, overwrite concurrent work or bypass repo protection. If a main-branch write is blocked, stop and report the actual blocker.
+9. **Respect phase-specific scope.** During visual stages, reuse current routes, APIs, records and supported interactions; do not implement missing business workflows or cross into protected backend/API/data/security/business behavior as opportunistic cleanup. Later full-stack stages must follow their reviewed plan and appropriate tests.
+10. **Use evidence, not assumption.** A documented feature is not proof of functionality. Do not claim a route, field, API, permission, CI result, browser/viewport behavior, external integration or deployment was verified unless the corresponding evidence exists.
+11. **Keep evidence current.** Update the feature/content gap register for requirement-level changes, the structural redesign progress file for UX/UI slices, and the implementation traceability register for workflow/functional evidence. Historical snapshots remain labeled historical until revalidated.
+12. **Avoid unsafe shortcuts.** Do not invent production data; create duplicate record stores; weaken access/security; alter Finance meaning/calculations without approval and reconciliation; run destructive recovery against production; or retry an uncertain external payment blindly.
 
-### 20.2 Required checkpoint report format
+### 20.2 Required progress report
 
-After every stage, report using this structure:
+Use this compact structure for every meaningful slice and stage boundary:
 
-- **Stage and status:** completed, partially completed, blocked, or not started.
-- **Scope:** what was and was not included.
-- **Files changed:** each file and its purpose.
-- **What changed:** observable results, not vague claims.
-- **Verification:** exact tests/commands/checks run and their real pass/fail results.
-- **Not verified / blockers:** missing browser checks, backend requirements, external access, assumptions, failures or remaining work.
-- **Repository state:** target branch, commit SHA, and whether a push occurred. Never claim a deployment unless it was confirmed.
-- **Resume point:** the next single task, with its prerequisites.
+- **Stage/slice and status:** complete, in progress, blocked or not verified.
+- **Verified result:** observable behavior supported by evidence.
+- **Files and changes:** specific repository paths and purpose.
+- **Commit:** exact SHA/link on \`main\`, or clearly state not committed.
+- **Validation:** exact tests/commands/CI and actual pass/fail/pending/not-run result.
+- **Preserved work:** earlier change(s) verified and not repeated.
+- **Remaining gaps/dependencies:** requirement IDs from the gap register where possible.
+- **Risk/unverified:** browser, role, runtime, data, provider or deployment evidence not available.
+- **Next action:** one precise bounded task.
 
-Keep reports short enough to scan, but specific enough for another session or agent to continue without reconstructing the entire task. Report to the user in chat at the end of the stage; a commit message alone does not replace the report.
+### 20.3 Stage-sequence authority
 
-### 20.3 Stage 0 — Read-only preflight and baseline audit
+The required stages are: baseline and preservation; navigation; shared shell/geometry; feature/content gap register; main-content hierarchy for all nine modules; visual/responsive/accessibility review with user sign-off; workflow/data/API traceability; foundation/security/data-integrity plan; core agency vertical workflows; Finance quote-to-cash/purchase-to-pay/accounting integrity; integrations and automation; security/reliability/performance hardening; full regression/E2E/UAT; migration/reconciliation/backup/restore/DR proof; production readiness authorization; and deployment verification/stabilization.
 
-Before the first mutation:
+Use the roadmap for the exact stage numbers, scope, dependencies, deliverables and exit criteria. Do not independently infer that one of these stages has passed. If its acceptance evidence is missing, keep the relevant requirement unverified and do not claim production readiness.
 
-- Confirm repository, target branch, current HEAD, working-tree or pending changes where accessible, and the files that actually exist.
-- Read `AGENTS.md`, this guide, navigation information architecture, design-system and relevant domain/engineering standards.
-- Inspect the existing navigation configuration, route definitions, access rules and route tests before proposing navigation changes.
-- Map the approved nine-module target to actual primary links, contextual subnavigation, routes, redirects, role access and functional destinations.
-- Identify contradictory documentation, duplicate destinations, missing destinations, broken/empty routes and route compatibility risks.
-- Record relevant baseline checks and known verification gaps. Do not infer browser-level behavior from source tests alone.
-- Produce the navigation gap matrix and a bounded implementation plan.
+### 20.4 Production-readiness standard
 
-**Scope boundary:** This is a read-only audit. Do not change application code, APIs, database, permissions, navigation or UI during this stage.
+This specification alone does not make AMS production-ready. Follow the current production runbooks and verify the actual release, authorized runtime configuration, PostgreSQL connectivity/source selection, every migration discovered by the runtime loader and exact checksums, completed/reviewed relational reconciliation, active-user MFA coverage, fresh valid backup, restore rehearsal against the same latest backup artifact, private-document object integrity, enabled notification configuration, current CI and live smoke tests.
 
-**Exit gate:** The user receives the current-vs-target navigation map, identified conflicts/risks, proposed file list and verification plan. Stop and wait for the user's approval before implementing Stage 1.
-
-### 20.4 Stage 1 — Navigation structure and route ownership only
-
-Start with the navigation because all later workspace design depends on it.
-
-- Align the nine primary modules and their order with Section 3 and `docs/architecture/ams-navigation-information-architecture.md`.
-- Define each primary module's contextual submenu, parent-child relationship, canonical route and intended destination.
-- Verify active states, query-driven tabs, deep links, browser history expectations and role-aware navigation against existing route/access policies.
-- Preserve required legacy redirects and canonical record/API behavior. Do not delete features, APIs, data, history or business controls just because a menu is retired.
-- Remove or relink a visible entry only after verifying its replacement destination and dependencies.
-- Test that visible navigation items have permitted, intentional destinations and that no accidental duplicate/empty destinations remain.
-
-**Strict exclusions:** Do not redesign page content, overhaul the shared shell, restyle every module, rebuild workflows, change business logic, change server APIs, edit the database, modify authentication/RBAC policy, or touch Finance calculations in this stage. Only make the smallest layout adjustment needed to expose and validate the approved navigation, and explain it in the report.
-
-**Exit gate:** A reviewer can trace every primary and contextual navigation item to its owner, route, access rule and destination. Route/navigation regression checks pass, and any browser-only checks still unverified are listed. Commit the completed navigation stage to `main`, report the SHA, then stop and wait for explicit user approval.
-
-### 20.5 Stage 2 — Shared workspace shell and page geometry
-
-Only after Stage 1 is approved:
-
-- Normalize the shared shell, page header, tab/subtab placement, content container, and scroll ownership using existing AMS components and design tokens.
-- Use Dashboard as the structural reference. Fix root layout defects rather than adding page-specific spacing workarounds.
-- Preserve consistent header/content geometry when changing tabs; remove duplicate headers and nested padding.
-- Check desktop and narrow-screen layouts, keyboard behavior and shared drawer/modal interactions where affected.
-- Do not change module business content or backend behavior as a side effect.
-
-**Exit gate:** Shared layout checks are documented across representative routes and viewport sizes. No known shared-shell defect remains hidden by a page-specific workaround. Commit, report, and wait for approval.
-
-### 20.6 Stage 3 — Establish the content workspace pattern using Dashboard
-
-Dashboard is the reference for content hierarchy across the AMS.
-
-- Review Dashboard Overview first, then its Performance and Analytics views where implemented.
-- Define page context, navigation/tab hierarchy, relevant source-backed summaries, main analysis area, supporting panels, primary actions and drill-down paths.
-- Use only real/source-backed information. Do not invent KPIs, report values or activity.
-- Keep examples and preview content minimal: one representative item per distinct function is sufficient to assess the structure. Do not fill pages with repetitive dummy records.
-- Distinguish implemented functionality from target-only features and source data that is unavailable.
-
-**Strict exclusions:** Do not use Dashboard approval as permission to redesign all modules in the same change.
-
-**Exit gate:** Dashboard workspace structure is reviewed and approved by the user. Commit and report the stage; wait before applying the pattern to the next module. Approval covers visual structure only, not missing workflow implementation.
-
-### 20.7 Stage 4 — Module workspace design, one module per checkpoint
-
-Apply the approved structure one module at a time, not in one large cross-module batch. A module's relevant subtabs can be included only when the same checkpoint remains independently reviewable.
-
-Recommended sequence:
-1. Inbox.
-2. Projects.
-3. Clients.
-4. Finance.
-5. Team & Resources.
-6. Documents.
-7. Website CMS.
-8. Settings.
-
-Dashboard is covered by Stage 3. This order is a default; change it only when a verified dependency or explicit user priority justifies the change, and report the reason.
-
-For each module:
-
-- Map each subtab to one clear purpose and one canonical view or workflow.
-- Identify the intended operator, primary action, relevant information, filters/views, source records and related-module links.
-- Keep the same record represented consistently across tabs; do not create competing stores or workflows.
-- Show one representative example per function during visual evaluation. Use real permitted data when available; otherwise show an honest empty/unavailable state rather than disguised production data.
-- Make missing capabilities explicit. A UI-only target must not be described as end-to-end functionality.
-- Reuse existing design-system components and the module-specific guidelines.
-
-**Exit gate per module:** Its navigation, workspace hierarchy, content meaning, primary action placement, empty/loading/error/unavailable presentation and responsive behavior are visually checked. Existing supported interactions must remain intact, but this checkpoint does not authorize implementing missing functions. Report and commit this module checkpoint, then wait for approval before starting the next module.
-
-### 20.8 Stage 5 — Visual QA and structural sign-off
-
-After the approved module workspace stages:
-
-- Review representative screen sizes and all changed module pages, tabs and contextual destinations.
-- Check layout shifts, scroll ownership, duplicate headers, unclear labels, dead ends, unsupported KPI values, placeholder controls, keyboard/focus behavior and accessibility-relevant issues.
-- Verify that the approved navigation and content hierarchy remain consistent after module implementation.
-- Separate verified issues from source-level assumptions and browser checks that were not run.
-
-**Exit gate:** Provide a consolidated visual findings report with pass/fail/unverified status and obtain the user's explicit sign-off that the visual phase is accepted. This is a hard stop. Do not begin workflow/data traceability, missing-feature implementation, backend work, or business-function changes as the automatic next step. Wait for a separate user instruction authorizing the next scope.
-
-### 20.9 Stage 6 — Workflow and data traceability audit
-
-This stage may start only after structural sign-off **and a separate explicit user authorization to begin workflow/data work**. Visual sign-off alone does not authorize functional implementation.
-
-- For each approved workflow, map the UI, typed API client, server route/service, persistence/schema, permission enforcement, canonical record ownership, audit trail and related-module effects.
-- Classify capabilities as existing and verified, existing but incomplete, UI-only, backend/API-only, demo-only, schema-required, externally blocked or target-only.
-- Maintain requirement IDs with dependencies, acceptance criteria, failure cases and actual evidence.
-- Identify business rules, security boundaries and Finance regression baselines before proposing implementation.
-- Return a ranked, dependency-aware vertical-slice plan. Do not start implementing every gap at once.
-
-**Exit gate:** User receives a workflow/data traceability matrix and the proposed first vertical slice. Stop for approval.
-
-### 20.10 Stage 7 — Functional implementation in verified vertical slices
-
-Implement one complete user-facing workflow or a small, explicitly bounded part of one workflow at a time.
-
-- Trace the action from UI through validation and canonical persistence to its cross-module outcome.
-- Include pending, success, validation error, permission-denied, stale/conflicting record, source unavailable, timeout/unknown outcome, duplicate/retry and recovery behavior as applicable.
-- Reuse current API contracts and canonical entities. If a backend or schema change is required, stop the frontend-only task and request/obtain explicit full-stack scope before touching it.
-- Add relevant unit, API, persistence, integration, E2E or regression tests according to the risk.
-- Do not use local state, localStorage, mock APIs or fixtures as production persistence.
-- Complete and report one slice before moving to the next; maintain dependency-aware ordering across Inbox, Clients, Projects, Team & Resources, Documents, Website CMS and Settings.
-
-**Exit gate per vertical slice:** The acceptance criteria are supported by actual evidence, relevant tests pass, data/security risks are addressed, and remaining limitations are documented. Commit to `main`, report, and wait for approval.
-
-### 20.11 Stage 8 — Finance-specific integrity and accounting regression
-
-Finance is a high-risk domain and must be audited and implemented separately from ordinary UI work.
-
-- Map all existing Finance worksheet keys into the approved five groups without breaking route/API ownership.
-- Establish baseline values and report outputs before a workflow change.
-- Preserve quotation/invoice identifiers, version histories, valid states, conversion behavior, formulas, account mappings, source records, payment links, journal posting and period-close controls.
-- Test quote, invoice, AR/AP, expenses, cash, vendor references, reconciliation, journals, monthly close and reports based on the specific change.
-- Distinguish quotation value, issued invoice, recognized revenue, payment instruction, bank-confirmed movement, cash received and reconciled ledger state.
-- Do not combine Finance work with unrelated module redesign or enable live bank payments as part of a routine change.
-
-**Exit gate:** Applicable financial regression and reconciliation evidence passes or exact discrepancies are reported and remain blocked. No business-rule change is implied by a navigation/UI change.
-
-### 20.12 Stage 9 — Bank reconciliation foundations and Kopra H2H
-
-Complete reconciliation foundations before H2H payment capabilities.
-
-**Bank reconciliation foundations**
-- Establish canonical bank-account mapping, import/manual reconciliation where approved, stable transaction references, match rules, duplicate detection and exception handling.
-- Test missing/duplicate statement rows, fees, partial/ambiguous matches, reversals/returns and period-close interactions.
-- Keep any connector disabled/feature-flagged until its contract, access and approval are verified.
-
-**Kopra H2H**
-- Obtain and verify the current official Bank Mandiri technical specification, agreement, credentials and sandbox/UAT access.
-- Isolate the server-side provider connector and distinguish non-destructive inquiry from payment submission.
-- Implement callback/status polling, idempotency and timeout/unknown-state handling according to the real contract.
-- Test only features enabled by the verified agreement. Never initiate real transfers as part of CI or ordinary regression tests.
-- Complete bank/UAT certification, security, reconciliation, monitoring, incident response and rollback preparation before production activation.
-- Production transaction submission requires explicit operational approval.
-
-**Exit gate:** Per-feature end-to-end and reconciliation evidence exists, retries cannot duplicate money movement, and every unavailable external requirement is explicitly blocked rather than simulated.
-
-### 20.13 Stage 10 — Final end-to-end validation and release readiness
-
-- Run the relevant lint/typecheck/build, automated tests, API and persistence tests, E2E journeys, regression tests, permission checks and production smoke checks.
-- Validate responsive behavior and browser navigation where applicable.
-- Confirm data migrations and backup/recovery readiness if those are in the approved scope.
-- Verify the intended `main` commit and the repository's current production-release process.
-- Report failures, skips, unrun checks and limitations separately. A successful build alone is not proof of workflow completion.
-- Deploy only when the active task explicitly includes deployment and all required release gates are satisfied.
-
-**Exit gate:** Acceptance criteria have evidence or documented exceptions. Provide the final report and do not claim unverified capabilities are complete.
-
----
+The authenticated \`GET /api/system/production-readiness\` endpoint must return HTTP 200 with \`productionReady=true\` before declaring the documented runtime gate green. HTTP 401 is not a readiness verdict, HTTP 409 means a gate is incomplete, and HTTP 503 means the gate evaluation could not complete. A passing build, healthy database ping, or completed documentation is insufficient. If any mandatory gate or deployed smoke test cannot be verified, report **not yet production-ready** with the exact blocker.
 
 ## 21. Minimum quality and acceptance checklist
 
