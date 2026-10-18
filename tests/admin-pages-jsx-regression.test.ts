@@ -730,7 +730,8 @@ test('Time tracking leads with the time-entry workflow and register before perio
   const pagination = time.indexOf('slug="time-tracking-pagination"');
   const metrics = time.indexOf('time-tracking-kpis');
   assert.ok(form >= 0 && ledger > form);
-  assert.ok(pagination > ledger && metrics > pagination);
+  assert.ok(metrics > form && metrics < ledger, 'time summary appears before the recent-entry register');
+  assert.ok(pagination > ledger);
   assert.ok(time.includes('onClick={() => setFormOpen(true)'));
   assert.ok(time.includes('<Drawer'));
   assert.ok(time.includes('closeOnEscape={!saving}'));
