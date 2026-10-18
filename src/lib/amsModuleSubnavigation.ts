@@ -369,7 +369,8 @@ export function isAmsModuleSubnavigationItemActive(
   if (path === '/admin/projects') {
     const selectedView = params.get('projects') || 'all';
     if (['all', 'planning', 'active', 'on-hold', 'completed', 'archived'].includes(selectedView)) {
-      return itemKey === (selectedView === 'all' ? 'registry' : selectedView);
+      // Registry status filters are nested views under the Project Registry tab.
+      return itemKey === 'registry';
     }
     if (selectedView === 'budget') return itemKey === 'budget';
     if (selectedView === 'sprint') return itemKey === 'tasks';
