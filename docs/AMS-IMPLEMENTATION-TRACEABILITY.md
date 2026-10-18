@@ -241,6 +241,16 @@ Project Resources is addressable at `/admin/projects?projects=resources`. It sel
 
 **Verification:** AMS Quality Gate and AMS CI passed on code SHA `8047cdf531fbcdf2d7e9e7db49ac20c99901cfdf`. Quality Gate passed typecheck, 707 regression tests (687 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser-level visual and role-specific checks remain unverified.
 
+### NAV-013: Roles & Departments uses canonical team member records
+
+**Status:** IMPLEMENTED
+
+**Source:** `src/pages/admin/AdminTeams.tsx`, `tests/team-resource-data-availability.test.ts`.
+
+Roles & Departments is available inside Team & Capacity at `/admin/team?view=roles-departments`. It groups existing team member records by their recorded division and role and shows counts for members, active records, other statuses, and names. Export uses the same grouped records. The worksheet is read-only and does not modify RBAC or account access. People Operations and Availability & Workload remain target-only because onboarding/employment/leave workflows and authoritative leave-calendar data are not yet established in the connected sources.
+
+**Verification:** AMS Quality Gate and AMS CI passed on source SHA `4f176af7c18541762a7b755806ff35597a0096b2`. Quality Gate passed typecheck, 708 regression tests (688 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Manual browser-level and role-specific checks remain unverified.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
