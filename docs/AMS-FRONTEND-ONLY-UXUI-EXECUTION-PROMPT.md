@@ -39,6 +39,14 @@ If a UX/UI issue appears to require a protected change, do not make it. Keep cur
 
 ## 3. Design target and rules
 
+### Global design specification (mandatory)
+
+- `AMS-DESIGN-SYSTEM.md`, especially section 2.7, is the single source of truth for spacing relationships, page gutters, component sizes, type roles, radius, breakpoints, interaction targets and visual states.
+- Do not invent CSS pixel values, one-off margins/paddings, new breakpoints, radii, z-index values or component variants. Use existing tokens/shared primitives and named variants. If a required rule is missing or conflicts with current source, document the gap and propose one central specification correction before implementation.
+- Target WCAG 2.2 Level AA and use WAI-ARIA APG patterns where composite widget behavior is needed. Verify contrast, keyboard, focus, semantic labels, zoom/reflow, non-color cues and reduced motion; do not claim conformance based on build success alone.
+- Use canonical viewport widths and breakpoint-edge checks listed in the Design System. At minimum, touched screens must be inspected at desktop, tablet and mobile widths and at 320 CSS px reflow; check 200% text resize.
+- This task is documentation/reference-aware: design values describe the desired system. Do not claim the current code already matches until the relevant source and rendered behavior have been checked.
+
 Use the user-provided Dashboard screenshot as a structural reference for:
 - one clear page header and purpose;
 - clear contextual navigation and selected state;

@@ -100,6 +100,7 @@ Production deployments are sourced from **main** as configured for Kapitech. Com
 
 - Follow **AMS-DESIGN-SYSTEM.md** and the relevant drawer/modal/kanban guidelines. Inspect current tokens/components instead of trusting memory.
 - Use the existing page shell, topbar/section-tab patterns, spacing, typography, status colors, button hierarchy and table patterns.
+- `AMS-DESIGN-SYSTEM.md` section 2.7 is the exact design geometry contract; target WCAG 2.2 Level AA. Do not invent CSS dimensions, spacing, radii, breakpoints or interaction variants. Report specification/source conflicts instead of silently choosing one.
 - Do not create a second page header under a subtab or change content padding when the user switches tabs.
 - Forms normally use the shared Drawer; modals are for the purposes permitted by the modal guideline. Do not build parallel custom overlay systems.
 - Every interactive control must perform its labeled operation, show pending/disabled behavior, handle errors, and synchronize with the source of truth.

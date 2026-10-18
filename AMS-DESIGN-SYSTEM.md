@@ -168,6 +168,98 @@ Usage: `className="bg-panel border border-line rounded-card p-4 text-fg"`.
 
 Theme switching: set `document.documentElement.dataset.theme` to `"dark"` or `"light"` (default from `prefers-color-scheme`). Set it in a tiny inline script in `index.html` before first paint to avoid a flash. Persisting only the theme choice is fine; never store anything sensitive client-side.
 
+
+## 2.7 Global geometry, interaction and conformance contract
+
+This section turns the visual system into a deterministic implementation contract. The dimensions below are AMS design decisions, not values prescribed by an external accessibility standard. External standards govern accessibility and operability; they do not mandate a universal spacing scale or card design.
+
+### Authority and conflict resolution
+
+- This file is the single source of truth for visual tokens, component geometry, typography, responsive rules, motion and accessibility acceptance.
+- `src/index.css` and shared component source are the implementation to inspect, not permission to introduce a competing rule. When implementation and specification disagree, report the exact mismatch; this documentation contract does not by itself prove the runtime UI conforms.
+- Specialist component documents may narrow a rule for a named component variant. They may not redefine global tokens or create alternate values for the same variant.
+- Page/content blueprints define information architecture and composition, not independent pixel values. When values conflict, follow this file and update the conflicting specialist text.
+- Target accessibility conformance: WCAG 2.2 Level AA, using the WAI-ARIA Authoring Practices Guide for established interaction patterns. WCAG is normative; APG is implementation guidance. A document change, static test or successful build is not proof of conformance.
+- Measure dimensions in CSS pixels. Prefer token classes/variables and existing shared primitives. Do not create arbitrary values when an approved token or named variant applies.
+
+### Canonical spacing map
+
+Use the existing 4px-base scale: `4, 8, 12, 16, 20, 24, 32, 48px`. The scale is intentionally discrete. A value outside it is permitted only when it is part of a named component contract below, a required border/focus geometry, or a documented exceptional content requirement.
+
+| Relationship | Canonical value or behavior |
+|---|---|
+| Page inline gutter | 24px at >=1100px; 20px at 900–1099px; 16px at 600–899px; 14px below 600px, per the page-shell table below |
+| Main page sibling sections | 24px vertical gap owned by `AdminPageShell`; do not add direct-child top/bottom margins |
+| Module title to description | 4px |
+| Module header to its contextual navigation | 12px; treat header + navigation as a grouped unit |
+| Contextual navigation to the page toolbar/work area | 16px |
+| Toolbar control groups | 8px within a group; 12px between distinct groups |
+| Grid/card gutters | 12px unless the page recipe defines a different existing shared component variant |
+| Card/panel inner padding | 16px |
+| Card heading to its content | 12px |
+| Form group vertical gap | 20px |
+| Form grid gap | 12px |
+| Label to input | 6px |
+| Input to helper/error text | 4px |
+| Button icon to label | 8px |
+| Badge icon to label | 4px |
+| Table cell inline padding | 12px |
+| Table cell block padding | 8px standard; 4px compact; cell minimum height follows the named row-density variant |
+| Section heading to supporting explanation | 4px |
+| Overlay/dialog header, body and footer | Follow the named Drawer/Modal contract; do not transfer page spacing into an overlay |
+
+Use CSS `gap` for sibling rhythm. Use internal component padding for content inset. Margins may be used for text-flow semantics or within a component when specified above, but must not compensate for a wrong parent layout. Do not combine page-shell gutter + module-root gutter + content-wrapper gutter.
+
+### Geometry and component size contract
+
+| Element | Canonical geometry | Permitted variants |
+|---|---|---|
+| Sidebar | 220px expanded; 64px collapsed | Below 900px use the approved drawer/sheet behavior |
+| Global topbar | 52px high | Adapt controls at narrow widths without clipping |
+| Main workspace | Fill available width; children use `min-width: 0` where required | No arbitrary max-width on data registers |
+| Reading/explanation text | Aim for 45–80 characters per line; use `max-width: 72ch` where a prose column can be constrained | Do not constrain data tables or dashboards to a reading width |
+| Primary page title | 20/28px, weight 600 | Use the existing typography token; never invent page-specific title sizes |
+| Card/section title | 14/20px, weight 600 | Follow semantic hierarchy, not visual convenience |
+| Standard body/table text | 13/18px, weight 400 | Compact density may change row height, not shrink essential text |
+| Standard input/select | 40px minimum height | 36px compact variant only in dense toolbars/table filters and only when usable; document the variant |
+| Textarea | 88px minimum height | 130px for explicitly marked long editorial content |
+| Button | 36px minimum effective target on desktop; 40px on touch/narrow layouts | Shared compact variant only if the effective hit area meets accessibility rules |
+| Desktop contextual tab | 32px visual height as defined by shared tab primitives | At touch layouts ensure the effective target area remains usable and non-overlapping |
+| Table row | 40px standard; 32px compact | 48px comfortable variant only through a named shared renderer (currently used by Finance) |
+| Table header | 40px | Align header labels and column data consistently |
+| Icon | 16px for ordinary controls/navigation | 20px for prominent actions only; decorative size must not drive clickable target size |
+| Border | 1px `--line` | Use semantic tokens; do not add decorative borders to every nested region |
+| Keyboard focus | 2px outline with 2px offset | Must remain visible, high contrast, unclipped, and not confused with selection |
+| Radius | 5px badge; 6px chip/tab item; 8px control; 12px card/dialog | No ad hoc intermediate radii |
+| Dark-theme shadow | None by default | Surface color + 1px border provides separation |
+| Layering | Use the established shell/overlay layer order | No arbitrary z-index values; overlays must be ordered by role, with the topmost overlay owning focus |
+
+The button/input/tab rows above describe design intent and permitted named variants. During implementation, inspect current source before claiming conformance. If code differs, record an explicit remediation item; do not silently invent exceptions.
+
+### Grid and responsive transformation contract
+
+| Content | >=1100px | 900–1099px | 600–899px | <600px |
+|---|---|---|---|---|
+| App shell | Expanded/collapsible sidebar + workspace | Same shell, compact page gutter | Sidebar becomes drawer; main workspace fills width | Drawer navigation; single-column content by default |
+| KPI/metric strip | Up to six columns when all metrics remain readable | Three columns | Two or three columns based on label length | Two columns where readable; otherwise one |
+| Main analysis + supporting panel | 8/4 or equivalent task-appropriate split | Split only if both columns remain usable | Stack supporting content below the main area | Single-column order by task priority |
+| Ordinary card collections | Four-column maximum when justified by content | Two columns | Two columns only while each remains readable | One column, except compact KPIs when readable |
+| Forms | Use two columns only for related, short fields with adequate width | Reduce columns when labels/control widths become tight | Usually one column for narrow drawers or complex forms | One column |
+| Contextual navigation | Shared desktop tab primitive | Shared desktop tab primitive | Shared in-page tab primitive | Same destinations via horizontal scroll or a deliberate accessible compact pattern |
+| Data tables | Full register as required by task | Preserve key columns and actions | Contained horizontal scrolling or supported compact/detail view | Contained horizontal scrolling or supported compact/detail view; never cause page-wide horizontal overflow |
+
+Canonical visual review widths: **1440, 1280, 1100, 1024, 900, 899, 768, 600, 599, 390 and 320 CSS px**. The 1100, 900 and 600 pairs verify breakpoint edges; not every screenshot must become a permanent artifact, but every affected layout must be checked at relevant widths. Additionally verify browser zoom/text resize up to 200% and WCAG reflow at the equivalent of 320 CSS px wide. Do not solve overflow by hiding meaningful content.
+
+### Contrast, state and movement contract
+
+- WCAG 2.2 AA: normal text contrast >= 4.5:1; large text >= 3:1; required non-text control boundaries, state indicators and graphical information >= 3:1 against adjacent colors. Validate foreground/background pairs in both light and dark themes; the existence of color tokens alone does not prove contrast.
+- Use semantic colors and icon/text labels together. No status, validation, active state or chart meaning may rely on color alone.
+- Interactive targets must satisfy WCAG 2.2 SC 2.5.8 (24 × 24 CSS px minimum unless a documented criterion exception applies). AMS usability target is >=36px effective hit area on desktop and >=40px on touch layouts; a visually compact glyph is allowed only when its effective target meets the target and does not overlap another target.
+- Keyboard focus must be visible, logically ordered, not trapped except by a modal, and not obscured by sticky headers, drawers or overlays. Follow established WAI-ARIA APG interaction patterns for tabs, menus, dialogs, comboboxes and other composite widgets.
+- Support text resizing to 200%, browser zoom, reflow, high-contrast/forced-colors settings, reduced motion, and keyboard-only use.
+- Animation is functional feedback only. Respect `prefers-reduced-motion`; do not require motion, hover, drag, color or sound to discover or operate a feature.
+- If a component pattern has no clear standard, use native semantic HTML first, then the existing shared primitive, then APG guidance where applicable. Do not add ARIA roles without implementing the corresponding keyboard and state behavior.
+
 ---
 
 ## 3. Layout
@@ -279,7 +371,7 @@ One primary button per view region. Buttons that trigger a request show a pendin
 - Always provide sort, search (Fuse.js where client-side), filter, pagination, empty state, and skeleton loading.
 
 ### Inputs
-- Height 36, radius 8, 1px `--line`, `--panel` fill, `--muted` placeholder. Focus: accent outline. Error: `--danger` border plus message below (never color alone). Every input has a visible label.
+- Standard height 40px, radius 8, 1px `--line`, `--panel` fill, `--muted` placeholder. A 36px compact variant is allowed only for dense toolbars/table filters. Focus: 2px accent outline with offset. Error: `--danger` border plus a visible message below (never color alone). Every input has an associated visible label. Touch-layout controls must meet the effective hit-area rule in section 2.7.
 
 ### Tooltip (charts)
 - `--bg` fill, 1px `--line`, radius 8, padding 10px 12px, 12px text. Title (date) in 600, then rows: colored dot + series name left, value right (tabular). Stays inside its card.
@@ -321,11 +413,21 @@ One primary button per view region. Buttons that trigger a request show a pendin
 
 ## 7. Accessibility
 
-- Text contrast ≥ 4.5:1 (3:1 for large text and UI graphics). Use `--accent-text` for crimson text on dark.
-- Full keyboard navigation with visible focus. Logical tab order: sidebar → top bar → content.
-- Charts: `role="img"` with a descriptive `aria-label`, and a table alternative on demand.
-- Touch targets ≥ 40px on mobile. Never rely on hover for essential information.
-- Announce async results (saved, failed) with an `aria-live` region.
+AMS targets **WCAG 2.2 Level AA**. Use the normative [WCAG 2.2 Recommendation](https://www.w3.org/TR/WCAG22/) as the conformance baseline and the [WAI-ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/) for established widget behavior. APG is guidance, not a substitute for WCAG or semantic HTML.
+
+- **Contrast:** normal text >= 4.5:1; large text >= 3:1; meaningful non-text control boundaries, focus indicators and graphical data >= 3:1 against adjacent colors. Verify computed color pairs in light and dark themes.
+- **Keyboard:** all actions work with keyboard alone; preserve logical focus order, visible focus, no unexpected focus loss, and no keyboard trap outside an active modal. Composite widgets follow their established APG key patterns.
+- **Focus:** use a visible 2px `--accent` outline with 2px offset where contrast against both neighboring surfaces is adequate. Never clip the outline or obscure the focused element under sticky content/overlays.
+- **Target size:** formal WCAG 2.2 AA minimum is 24 × 24 CSS px unless a documented criterion exception applies. AMS aims for an effective target of 36px on desktop and 40px on touch layouts. Small icons may have a larger transparent hit area.
+- **Reflow and zoom:** content remains usable at 200% text resize and at 320 CSS px width (400% zoom equivalent), except for content that genuinely requires two-dimensional layout, such as a data table or board. Contain that horizontal scroll within the relevant region; do not create page-wide horizontal overflow.
+- **Semantics:** use native HTML controls before custom ARIA widgets. Every input has a programmatically associated label; errors/help text are associated with the field. Icon-only actions need accessible names. Maintain correct heading order, landmarks, table headers and tab/dialog semantics.
+- **Non-color cues:** pair status colors with text/icon; validation includes readable text; chart series have label/legend or equivalent. Links cannot be distinguished from body text by color alone.
+- **Motion:** honor `prefers-reduced-motion`; avoid unpausable automatic movement when it is not essential. Do not make interactions dependent on hover, drag, animation or sound.
+- **Async feedback:** announce relevant success/error/pending changes through appropriate live-region semantics without repeatedly announcing unchanged content.
+- **Themes and user preferences:** test light/dark, forced colors/high contrast, increased text spacing and reduced motion where supported.
+- **Verification:** use automated checks as a supplement, not a replacement for manual keyboard, screen reader, zoom/reflow and visual contrast review. Do not claim WCAG conformance without recording the tested scope and evidence.
+
+See [WCAG 2.2](https://www.w3.org/TR/WCAG22/) and [WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/).
 
 ---
 
@@ -422,10 +524,10 @@ The exact primary-module order and ownership are defined by `docs/architecture/a
 - [ ] Existing repo tokens/components inspected and reconciled; conflicts reported.
 - [ ] Only tokens from this file are used; no stray hex values.
 - [ ] Dark and light themes both render correctly.
-- [ ] Layout holds at 1440, 1024, 768, and 390 widths.
+- [ ] Affected layouts hold across the canonical widths: 1440, 1280, 1100, 1024, 900/899, 768, 600/599, 390 and 320 CSS px; zoom/text resize and 320px reflow are separately checked.
 - [ ] CMS and Settings submodule navigation is accessible on mobile without relying on the desktop top bar.
 - [ ] Focus states visible; keyboard navigation works; dialogs trap and restore focus.
-- [ ] Text contrast passes; status never relies on color alone.
+- [ ] WCAG 2.2 AA contrast, keyboard, focus visibility, name/role/value, 200% text resize, 320 CSS px reflow, non-color cues and reduced-motion behavior have evidence for the touched scope.
 - [ ] Charts have legends, tooltips, `aria-label`, and consistent series colors.
 - [ ] Loading, empty, and error states exist for data views.
 - [ ] Role-restricted items hidden and 401/403 handled.

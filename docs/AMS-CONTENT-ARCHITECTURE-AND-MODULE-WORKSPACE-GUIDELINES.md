@@ -189,6 +189,11 @@ Primary question: which system setting/security control am I reviewing, and what
 
 ## 5. Shared visual and interaction rules
 
+- Visual dimensions and variants are owned exclusively by `AMS-DESIGN-SYSTEM.md`, including its canonical spacing relationship map, component size contract, responsive transformation matrix and WCAG 2.2 AA target. This document defines content composition, not alternative pixel values.
+- Build each workspace as a clear information hierarchy with task-appropriate density. Do not force every module into the same grid/card recipe; reuse the same tokens, type roles and shared component variants.
+- Group tightly related elements; use the prescribed spacing relationships rather than manual margins. Outer page gutter, section rhythm, card padding, control gaps, and overlay geometry must each have one owner.
+- Content must remain understandable at 200% text resize and a 320 CSS px layout width. Keep tables/boards as contained horizontal-scroll regions when two-dimensional structure is essential; do not create page-wide horizontal scrolling.
+
 - Follow AMS-DESIGN-SYSTEM.md for all tokens, colors, fonts, spacing, radii, states, and sizes.
 - Crimson is a restrained brand/primary accent. Use semantic success, warning, danger, and info colors for operational states.
 - AdminPageShell owns outer page padding. Never add a second gutter, negative-margin workaround, or page-specific shell padding.
@@ -200,6 +205,8 @@ Primary question: which system setting/security control am I reviewing, and what
 - Trace actual usage before removing CSS or UI as legacy. Verify consumers and affected views first.
 
 ## 6. Responsive acceptance
+
+Use the canonical viewport matrix from `AMS-DESIGN-SYSTEM.md`: 1440, 1280, 1100, 1024, 900, 899, 768, 600, 599, 390 and 320 CSS px; validate relevant breakpoint edges and text resize/reflow. The matrix describes acceptance, not permission to create local breakpoints.
 
 Check 1440px, 1024px, 768px, and 390px, and 320px when practical.
 - Required authorized views remain reachable below the navigation breakpoint.

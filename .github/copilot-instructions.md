@@ -27,6 +27,7 @@ For the current end-to-end delivery initiative, the canonical stage sequence is 
 - Do not delete APIs, data, audit trails, quotation conversion, maker-checker or period-close controls because a legacy sidebar item is removed. Keep the existing quotation workflow in Finance; do not build a replacement CRM pipeline or generic approval engine.
 - Preserve Finance formulas, mappings, transaction meaning, reports, journal controls and closing behavior unless a business-rule change is explicitly approved and reconciled.
 - Reuse current components, tokens, API client, stores and permission patterns; do not build parallel systems for convenience.
+- For UI work, treat `AMS-DESIGN-SYSTEM.md` section 2.7 as the single geometry/interaction contract and target WCAG 2.2 Level AA with WAI-ARIA APG widget patterns. Do not invent ad hoc dimensions or breakpoints; report gaps/conflicts explicitly.
 - The frontend is not the source of business logic or permission authority.
 - Never use fixtures as production truth or hardcode success.
 - Preserve session, CSRF, MFA, RBAC, encryption, private document vault and audit controls.

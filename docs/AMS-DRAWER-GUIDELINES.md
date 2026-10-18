@@ -1,6 +1,6 @@
 # AMS Drawer Guidelines
 
-This is the implementation checklist and copy-paste template for every drawer in Kapitech AMS. The shared component is src/components/ui/Drawer.tsx; canonical styles are in src/index.css. Follow AMS-DESIGN-SYSTEM.md as the broader source of truth.
+This is the implementation checklist and copy-paste template for every drawer in Kapitech AMS. The shared component is `src/components/ui/Drawer.tsx`; canonical styles are in `src/index.css`. `AMS-DESIGN-SYSTEM.md` owns global dimensions and the WCAG 2.2 AA target; this file defines only the Drawer variants and interaction contract.
 
 ## Non-negotiable rules
 
@@ -25,7 +25,7 @@ This is the implementation checklist and copy-paste template for every drawer in
 | 3xl | 896px | Long forms or wider structured details |
 | 4xl | 1024px | Bilingual or multi-column editors |
 
-The drawer is full width on narrow screens. Choose the smallest preset that maintains readability. Stack multi-column fields on mobile instead of compressing them.
+The drawer is full width on narrow screens (below 600 CSS px) and must stay within the dynamic viewport and device safe areas. Choose the smallest preset that maintains readability. Stack multi-column fields on mobile instead of compressing them. The panel itself must not cause document-level horizontal overflow.
 
 ## Canonical type scale
 
@@ -53,7 +53,7 @@ Use sentence case. Avoid text below 10px and never use 9px for field labels, ins
 - Input/select height: 40px; text size 13/18; border radius 8px.
 - Textarea: minimum 88px; use data-ams-drawer-size="large" only for a long editorial field that needs a 130px minimum.
 - Form section/card padding: 16px.
-- Footer actions: 36px high and 8px apart. Use shared Button variants.
+- Footer actions: minimum 36px effective target on desktop and 40px on touch layouts, 8px apart. The visible control may be visually compact only when its effective target still meets the Design System target-size rule. Use shared Button variants.
 - The body scrolls; the action footer stays visible.
 
 ## Copy-paste template
@@ -134,5 +134,6 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 - [ ] Labels, descriptions, hints, errors and controls follow the type scale above.
 - [ ] Footer action order is Cancel then primary action; both remain usable on mobile.
 - [ ] Pending state prevents duplicate submissions and accidental close without changing business flow.
-- [ ] Keyboard focus, Escape, and screen-reader names remain functional.
+- [ ] Keyboard focus, Escape, screen-reader names, focus restoration, and overlay stacking remain functional.
+- [ ] Drawer respects dynamic viewport height, safe-area insets, 200% text resize and 320 CSS px reflow.
 - [ ] Typecheck, regression tests, and production build pass.

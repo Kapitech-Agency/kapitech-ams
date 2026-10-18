@@ -70,6 +70,9 @@ Each mutation requires clear target semantics, client feedback, server validatio
 
 ## 7. Layout and domain states
 
+- Treat `AMS-DESIGN-SYSTEM.md` section 2.7 as the exact design geometry contract. Do not invent local spacing, control heights, radius, breakpoints, or layer values. Use documented named variants and report any source/spec conflict before changing either.
+- Target WCAG 2.2 Level AA. The normative baseline is [WCAG 2.2](https://www.w3.org/TR/WCAG22/); use the [WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/) for widget keyboard models. A passing build or automated accessibility scan alone is not proof of conformance.
+
 Follow docs/AMS-UX-INTERACTION-STANDARDS.md and AMS-DESIGN-SYSTEM.md. Do not add one-off spacing to compensate for shell defects. Avoid nested cards, duplicate headers and layout shifts.
 
 Render canonical business state; do not invent page-local calculations for invoice paid/overdue, project complete, SLA breached, journal posted or bank transfer status. Use the approved domain response/helper. Draft, Sent/Issued, Accepted, Posted, Submitted, Confirmed and Reconciled are distinct.
@@ -92,7 +95,8 @@ Render canonical business state; do not invent page-local calculations for invoi
 - [ ] Tab switching causes no duplicate padding/header/layout jump.
 - [ ] Failed optimistic updates restore canonical state.
 - [ ] Duplicate mutation cannot trigger.
-- [ ] Keyboard/focus and responsive behavior work.
+- [ ] Keyboard/focus, contrast and semantics are checked against WCAG 2.2 AA for the touched scope.
+- [ ] Responsive behavior is checked at affected canonical widths, including 320 CSS px reflow and 200% text resize; no hidden/clipped content or unexpected page-level horizontal overflow.
 - [ ] Relevant tests, lint and build were actually run and reported.
 
 ## 10. Related documents

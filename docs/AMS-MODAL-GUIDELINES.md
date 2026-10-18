@@ -1,6 +1,6 @@
 # AMS Modal Guidelines
 
-This is the shared implementation checklist for all centered modals in Kapitech AMS. The visual and interaction source of truth is `src/components/ui/Modal.tsx` with styles in `src/index.css`; use `AMS-DESIGN-SYSTEM.md` for the broader UI system.
+This is the shared implementation checklist for all centered modals in Kapitech AMS. The implementation is `src/components/ui/Modal.tsx` with styles in `src/index.css`; `AMS-DESIGN-SYSTEM.md` owns global tokens, dimensions and the WCAG 2.2 AA target. This guide defines the modal-only variants and interaction contract.
 
 ## When to use a modal
 
@@ -22,6 +22,10 @@ This is the shared implementation checklist for all centered modals in Kapitech 
 | Footer | 16px vertical and 20px horizontal padding, pinned below body |
 | Close button | 36px × 36px |
 | Footer actions | 40px high on mobile, 36px on desktop, 12px horizontal padding |
+
+The shared Modal currently exposes these named max-width variants: `sm` = `max-w-sm` (384px), `md` = `max-w-md` (448px), `lg` = `max-w-lg` (512px), `xl` = `max-w-3xl` (768px), and `2xl` = `max-w-5xl` (1024px). Choose the smallest size that fits the content; never override width at an individual call site. Keep the dialog within the viewport with safe-area-aware outer padding and a bounded height. These widths describe the current named source variants and must be checked against the component whenever the source changes.
+
+On narrow screens, use 16px horizontal content padding and preserve safe-area insets; do not let the close button, title or footer actions collide or clip.
 
 Do not use the page background token as a scrim. `bg-bg/80` creates a pale overlay in light theme instead of dimming the page, which is why the shared modal uses a consistent translucent black backdrop.
 
@@ -93,6 +97,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 
 - [ ] Use the shared `Modal` or `ConfirmDialog`; no page-specific modal shell.
 - [ ] Dialog surface follows `--panel`, `--text`, and `--line`; backdrop is a stable black scrim in light and dark theme.
+- [ ] Width uses an existing named preset; narrow viewports, safe areas, 200% text resize and 320 CSS px reflow do not clip content or hide actions.
 - [ ] The title and description establish a clear hierarchy and use the canonical type scale.
 - [ ] Long content scrolls inside the body; header and footer remain visible.
 - [ ] Destructive action copy names the consequence and target record.

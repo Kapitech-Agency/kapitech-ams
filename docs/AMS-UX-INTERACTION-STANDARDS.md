@@ -21,7 +21,7 @@
 3. This guide owns cross-page application and consistency checks.
 4. A page may add domain-specific hierarchy, not new tokens or parallel primitives.
 
-Resolve code/document conflicts deliberately; do not silently invent alternatives.
+Resolve code/document conflicts deliberately; do not silently invent alternatives. External accessibility baseline: WCAG 2.2 Level AA ([W3C Recommendation](https://www.w3.org/TR/WCAG22/)); use WAI-ARIA APG patterns for composite widgets. The Design System owns AMS-specific dimensions because global accessibility standards do not prescribe one universal page spacing scale.
 
 ## 3. Margin, padding and spacing ownership
 
@@ -35,6 +35,10 @@ Resolve code/document conflicts deliberately; do not silently invent alternative
 - Shared drawer/modal owns overlay header/body/footer geometry.
 - Shared table patterns own row height/cell padding/alignment.
 - Child pages must not add another page gutter when the parent shell already owns it.
+
+### Canonical relationship values
+
+Use the relationship map in `AMS-DESIGN-SYSTEM.md` section 2.7 for exact values. Apply it as follows: the page shell owns outer gutters and 24px page-section rhythm; the header and contextual navigation form one grouped unit; cards own their own 16px internal padding; forms own field rhythm through shared primitives; tables own cell/row density through named variants. Do not copy token values into local CSS or invent one-off values. If a required relationship is not in the map, record it as a specification gap before implementing a new exception.
 
 ### Prohibited layout hacks
 Do not use nested page-edge padding, negative margins to bleed tabs/panels, !important, arbitrary z-index, magic offsets, absolute positioning for ordinary alignment, one-off drawer widths, redundant cards around header controls, or duplicate headers to compensate for broken hierarchy.
@@ -121,6 +125,8 @@ Not every screen needs KPI cards. Do not leave blank metric gaps or add meaningl
 - Provide a non-drag alternative for board operations.
 
 ## 10. Visual consistency regression checklist
+
+Use the canonical viewport matrix from `AMS-DESIGN-SYSTEM.md` and target WCAG 2.2 AA. For touched views, check the viewport widths relevant to the changed breakpoint and also verify 320 CSS px reflow, 200% text resize, keyboard focus not obscured, and sufficient contrast in each enabled theme.
 
 - [ ] One owner for outer page padding.
 - [ ] Header/title/description/actions match shared patterns.

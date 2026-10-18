@@ -71,6 +71,10 @@ A Finance result must state baseline dataset, expected/actual amount, tolerance 
 
 ## 5. UX/UI regression matrix
 
+**Conformance baseline:** target WCAG 2.2 Level AA. Use the normative [WCAG 2.2 Recommendation](https://www.w3.org/TR/WCAG22/) and the [WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/) for widget interactions. Automated checks do not replace manual keyboard, focus, zoom/reflow, theme contrast and assistive-technology review.
+
+Canonical responsive widths are 1440, 1280, 1100, 1024, 900, 899, 768, 600, 599, 390 and 320 CSS px. Check widths relevant to every changed component and the breakpoint edges, plus 200% text resize. 320px reflow may allow contained horizontal scrolling for genuinely two-dimensional data tables/boards, but not for the surrounding page.
+
 | ID | Surface | Checks |
 |---|---|---|
 | UX-REG-001 | Page shell | One owner for outer padding; no compounded gutters |
@@ -82,7 +86,12 @@ A Finance result must state baseline dataset, expected/actual amount, tolerance 
 | UX-REG-007 | Modal | Shared pattern, clear consequence and keyboard/focus |
 | UX-REG-008 | Forms | Visible labels/errors; null/empty/zero handled |
 | UX-REG-009 | States | Loading, empty, no results, stale/unavailable, error and denied distinct |
-| UX-REG-010 | Responsive | No clipped actions or critical desktop-only control |
+| UX-REG-010 | Responsive | No clipped actions or critical desktop-only control; verify canonical breakpoints, 320px reflow and 200% text resize |
+| UX-REG-011 | WCAG 2.2 AA contrast | Text >=4.5:1, large text >=3:1, meaningful non-text controls/data >=3:1 against adjacent colors |
+| UX-REG-012 | Keyboard and focus | All actions keyboard-operable; visible focus is not clipped or obscured; modal focus is managed and restored |
+| UX-REG-013 | Target size | WCAG 2.2 24x24 CSS px minimum unless exception; AMS target 36px desktop / 40px touch layout |
+| UX-REG-014 | Reflow and text resize | No information/function loss at 200% text resize or 320 CSS px width except contained two-dimensional regions where essential |
+| UX-REG-015 | Motion and semantics | Reduced motion supported; status not color-only; names/labels and native semantics verified |
 | UX-REG-011 | Accessibility | Keyboard, focus, labels, state not color-only |
 | UX-REG-012 | Mutation feedback | Success only after persistence; failed optimistic change rolls back |
 

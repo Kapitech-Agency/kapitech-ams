@@ -47,8 +47,8 @@ Finance has five approved areas: **Overview & Control, Transactions & Cash, Rece
 
 | Document | Use it for |
 |---|---|
-| [AMS Design System](../AMS-DESIGN-SYSTEM.md) | Visual authority: tokens, type, geometry, spacing, responsive breakpoints, components, motion, and accessibility. |
-| [AMS UX and Interaction Standards](AMS-UX-INTERACTION-STANDARDS.md) | Cross-page hierarchy, spacing ownership, table/register behavior, overlays, states, responsive/accessibility regression. |
+| [AMS Design System](../AMS-DESIGN-SYSTEM.md) | **Single visual authority:** tokens, exact spacing relationships, component geometry and variants, typography, responsive breakpoint/viewport contract, motion, and WCAG 2.2 AA target. |
+| [AMS UX and Interaction Standards](AMS-UX-INTERACTION-STANDARDS.md) | Applies the canonical visual contract across pages; no competing tokens, dimensions or breakpoint values. |
 | [AMS Content Architecture & Module Workspace Guidelines](AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md) | Page anatomy and the task-specific main working area for each module. |
 | [AMS Frontend-only UX/UI Execution Prompt](AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md) | **Canonical execution prompt for current frontend-only content/UX/UI work.** Requires target docs, source audit, bounded implementation slices, and verification. |
 | [AMS Full UX/UI Redesign Prompt](KAPITECH-AMS-FULL-UXUI-REDESIGN-PROMPT.md) | Historical general-purpose prompt. For the current end-to-end mission use the delivery roadmap and end-to-end prompt; use the frontend-only prompt for a narrowly scoped visual task. |

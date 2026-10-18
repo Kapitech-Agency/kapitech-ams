@@ -16,6 +16,10 @@ These rules apply to the Projects portfolio board, Sprint & Delivery task board,
 
 ## Visual and responsive behavior
 
+- Use the shared card/panel tokens and documented spacing scale. Board lanes use a consistent 12px horizontal gutter; cards within a lane use an 8px vertical gap and 12px inner padding unless a shared card variant defines otherwise.
+- Keep a lane at a readable minimum width (target 280px). Allow the board region to scroll horizontally; never compress all lanes until card titles, status or actions become unreadable, and never make the whole page horizontally scroll as a side effect.
+- At narrow widths, preserve the lane/card interaction contract, keyboard access and touch-friendly action targets. The horizontal scroll region must be discoverable, focusable where appropriate, and operable by touch, keyboard and pointer.
+
 - Use the existing AMS tokens: --panel, --bg, --line, --text, --muted, and --accent. Do not introduce per-board colors or a new card system.
 - Keep lane widths readable, allow horizontal scrolling rather than compressing four stages into narrow cards, and provide a useful empty-lane drop target for authorized users.
 - Make pending writes obvious through disabled controls and existing notices/toasts. Keep counts based on the currently filtered set and ensure a stage move updates counts naturally.
@@ -28,3 +32,4 @@ These rules apply to the Projects portfolio board, Sprint & Delivery task board,
 - Attempt simultaneous card moves and bulk status changes.
 - Confirm read-only roles cannot drag or mutate a status.
 - Test filters/search, completed/blocked queues, small screens, and all empty states.
+- Verify keyboard focus is not obscured, contrast uses semantic tokens, and 320 CSS px reflow does not create page-level horizontal overflow.

@@ -110,6 +110,8 @@ Required principles:
 - Do not add metrics or panels merely to fill space.
 - Avoid excessive whitespace and overcrowding.
 - Preserve existing design-system tokens, component conventions, and brand identity.
+- Treat `AMS-DESIGN-SYSTEM.md` section 2.7 as the exact geometry and conformance contract for spacing relationships, page gutters, control sizes, typography roles, responsive breakpoints, contrast, target sizes and exceptions. Use named variants only; do not invent local dimensions or design tokens.
+- Target WCAG 2.2 Level AA; use WAI-ARIA APG patterns for compound widgets. Verify contrast in both themes, keyboard operation, unclipped/unobscured focus, names/labels, 200% text resize, 320 CSS px reflow, reduced motion and non-color state cues. Do not claim conformance without evidence.
 - Give every action a clear label and predictable placement.
 - Maintain consistent page gutters, content widths, vertical rhythm, and header-to-content spacing.
 - Tab changes must not cause arbitrary layout jumps.
@@ -211,6 +213,10 @@ Provide a root-cause report listing each conflicting scroll rule, why it caused 
 Target top-tier enterprise application quality through clarity, consistency, accessibility, efficiency, and reliable behavior. Do not claim compliance with a specific certification unless tested.
 
 ### Typography and content
+
+- Use the exact typography scale in `AMS-DESIGN-SYSTEM.md`. Do not create page-specific font sizes or reduce essential text to squeeze content.
+- Validate hierarchy and readability with 200% text resize. Avoid truncating essential record identity, amounts, labels, status, deadlines or validation errors.
+
 - Follow repository typography tokens and hierarchy.
 - Distinguish titles, section headings, labels, descriptions, metadata, values, and helper text.
 - Avoid tiny low-contrast metadata and oversized headings that waste workspace.
@@ -218,6 +224,12 @@ Target top-tier enterprise application quality through clarity, consistency, acc
 - Use concise, consistent interface language and sentence case according to product conventions.
 
 ### Spacing and layout
+
+- Apply the Design System's canonical spacing relationship map and page-shell gutter table. Every edge, gap and padding must have exactly one owner.
+- Use `gap` for sibling layout rhythm; component padding for inner space; no nested page gutters, negative-margin bleed, magic offsets or custom breakpoints.
+- Treat compact sizing as a named component variant, not ad hoc compression. Preserve legibility at all supported widths.
+
+
 - Follow the existing spacing scale.
 - Establish predictable content widths, gutters, gaps, and vertical rhythm.
 - Avoid arbitrary one-off margins that make sibling pages inconsistent.
@@ -225,6 +237,11 @@ Target top-tier enterprise application quality through clarity, consistency, acc
 - Use alignment to establish hierarchy, not decorative borders.
 
 ### Color and contrast
+
+- Validate WCAG 2.2 AA contrast pairs in both themes: regular text 4.5:1, large text 3:1, and meaningful non-text UI/graphical information 3:1 against adjacent colors.
+- Keep status meaning redundant through text/icon/shape, not color alone.
+
+
 - Follow canonical AMS palette and semantic tokens.
 - Reserve brand accent for meaningful emphasis and primary actions.
 - Use semantic status colors consistently.
@@ -240,6 +257,10 @@ Target top-tier enterprise application quality through clarity, consistency, acc
 - Avoid unnecessary animation and decorative effects.
 
 ### Responsive behavior
+
+- Use the canonical viewport matrix and exact breakpoint behavior in `AMS-DESIGN-SYSTEM.md`; do not create local breakpoints to patch an individual module.
+- Verify the relevant breakpoint edges, the affected canonical widths, 200% text resize and 320 CSS px reflow. Data tables/boards may scroll inside their own named region when their two-dimensional structure is essential; the page itself must not gain unwanted horizontal scrolling.
+
 Test at minimum: 1440px desktop, 1280px laptop, 1024px compact desktop/tablet landscape, 768px tablet, 390px mobile, and 320px narrow mobile if supported by product requirements.
 
 Do not merely scale down desktop columns. Reflow content deliberately, preserve critical actions, prevent clipped navigation, and make tables/boards usable.
