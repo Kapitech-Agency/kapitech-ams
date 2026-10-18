@@ -6,7 +6,7 @@ In PostgreSQL mode, the runtime gate checks all of the following:
 
 - Production runtime configuration, HTTPS `APP_URL`, PostgreSQL as the configured data source, and a valid data-encryption key.
 - Successful PostgreSQL connectivity.
-- Complete migration version coverage and checksum equality for every migration discovered by the current release's migration loader. The hardening migrations `012_document_vault_integrity`, `013_security_controls`, and `014_notification_secret_removal` are required checkpoints, but they do not replace verification of the rest of the chain. The current repository chain runs through migration 049.
+- Complete migration version coverage and checksum equality for every migration discovered by the current release's migration loader. The hardening migrations `012_document_vault_integrity`, `013_security_controls`, and `014_notification_secret_removal` are required checkpoints, but they do not replace verification of the rest of the discovered chain. Do not use a manually maintained highest migration number as proof of completeness; filenames may share numeric prefixes.
 - Reviewed relational reconciliation with a successful `migration_runs` record, all checks true, the same source hash in the database and environment sign-off, and completion before sign-off.
 - TOTP MFA enabled for every active AMS user.
 - Fresh PostgreSQL backup inside the configured RPO, integrity valid, and restore rehearsal verified against the same latest backup artifact.
