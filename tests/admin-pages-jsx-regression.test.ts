@@ -932,6 +932,8 @@ test('Client directory adapts its primary register for narrow screens without lo
   assert.ok(clients.includes('colSpan={7}'));
   assert.ok(clients.includes('Primary contact'));
   assert.ok(clients.includes('getClientStatusTone(client.status)'));
+  assert.ok(clients.includes('getClientTierLabel(client)'));
+  assert.ok(clients.includes("client.projectsCount >= 5 ? 'Tier 1 Strategic'"));
   assert.ok(clients.includes("aria-label={'View profile for ' + client.company}"));
   assert.ok(clients.includes("aria-label={'Manage ' + client.company}"));
 });

@@ -98,6 +98,9 @@ const formatClientStatusLabel = (value: unknown) => {
   return normalized ? normalized.split(' ').map((word) => word ? word[0].toUpperCase() + word.slice(1) : word).join(' ') : 'Not set';
 };
 
+const getClientTierLabel = (client: AgencyClient) =>
+  client.projectsCount >= 5 ? 'Tier 1 Strategic' : client.status === 'lead' ? 'Project-based' : 'Retainer Core';
+
 const getClientStatusTone = (value: unknown) => {
   const normalized = String(value || '').trim().toLowerCase();
   if (normalized === 'active') return 'border-success/25 bg-success/10 text-success';
@@ -930,6 +933,7 @@ export const AdminClients: React.FC = () => {
                   <div className="min-w-0">
                     <h2 className="break-words text-sm font-semibold text-fg">{client.company}</h2>
                     <p className="mt-1 break-words text-[11px] text-muted">ID: {client.id}{client.location ? ' · ' + client.location : ''}</p>
+                    <p className="mt-1 text-[10px] text-muted">{getClientTierLabel(client)}</p>
                   </div>
                   <span className={'inline-flex shrink-0 items-center rounded-badge border px-2 py-1 text-[10px] font-semibold ' + getClientStatusTone(client.status)}>
                     {formatClientStatusLabel(client.status)}
@@ -998,7 +1002,8 @@ export const AdminClients: React.FC = () => {
                 const clientSlug = getAgencyClientSlug(client as AgencyClient & Record<string, unknown>) || createClientSlug(client.company || client.name || 'client account', client.id);
                 return (
                   <tr key={client.id} data-ams-slug={'client-account-' + clientSlug} className="transition-colors hover:bg-bg/70">
-                    <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[270px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-1 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} · {client.location || 'Location not set'}</span></button></td>
+                    <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[270px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-1 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} · {client.location || 'Location not set'}</span>
+                        <span className="mt-1 block text-[10px] text-muted">{getClientTierLabel(client)}</span></button></td>
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company, companyEmail: client.email, phone: client.phone }} /> : <span className="text-xs text-muted">—</span>}</td>
                     <td className="px-4 py-3"><span className={'inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + getClientStatusTone(client.status)}>{formatClientStatusLabel(client.status)}</span></td>
