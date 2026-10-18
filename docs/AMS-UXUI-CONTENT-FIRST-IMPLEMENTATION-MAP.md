@@ -2,6 +2,8 @@
 
 Date: 17 October 2026
 
+> **Document role:** This is the detailed source/change history and view-by-view implementation map for the content-first UX/UI effort. Historical commit, branch, CI, and remaining-work notes are snapshots from the dates stated and are not a live status feed. [`AMS-STRUCTURAL-REDESIGN-PROGRESS.md`](AMS-STRUCTURAL-REDESIGN-PROGRESS.md) is the compact roll-up checkpoint; verify the latest `main` source and current CI/browser evidence before acting or declaring completion. The redesign remains incomplete until its currently applicable acceptance checks are verified.
+
 ## Scope and boundaries
 
 This map records the source-backed frontend review and implementation order for the content-first workspace task. The required design authority remains `AMS-DESIGN-SYSTEM.md`. Module ownership and allowed workflow remain defined by `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`, the navigation architecture, and the business/workflow contracts. This document does not authorize server, API, database, authentication, RBAC-policy, financial-calculation, or business-logic changes.
