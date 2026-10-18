@@ -1064,3 +1064,14 @@ test('Settings backup, audit, and account registers provide compact cards and ke
   assert.ok(settings.includes('isCurrentMaster && !masterAccount'));
   assert.ok(settings.includes('setConfirmDelete({ id: account.id, name: account.name })'));
 });
+
+
+test('Time Logs provides compact cards and preserves owner-based delete permissions', () => {
+  const time = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTimeLogs.tsx'), 'utf8');
+  assert.ok(time.includes('data-ams-feature-slug="time-log-mobile-cards"'));
+  assert.ok(time.includes('hidden min-[1280px]:block overflow-x-auto'));
+  assert.ok(time.includes('formatMinutes(Number(log.durationMinutes || 0))'));
+  assert.ok(time.includes("log.billable ? 'Billable' : 'Non-billable'"));
+  assert.ok(time.includes('(canDeleteAll || log.userId === getAdminSession()?.user?.id)'));
+  assert.ok(time.includes('slug="time-tracking-pagination"'));
+});

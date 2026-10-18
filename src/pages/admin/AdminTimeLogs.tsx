@@ -358,7 +358,39 @@ export const AdminTimeLogs: React.FC = () => {
               <p className="mt-1 text-xs text-muted">Add the first delivery time entry above.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable time log register">
+            <>
+              <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="time-log-mobile-cards" role="list" aria-label="Time entry cards">
+                {pagedLogs.map(log => (
+                  <article key={log.id} role="listitem" data-ams-slug={'time-log-card-' + log.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] tabular-nums text-muted">{log.date}</p>
+                        <h3 className="mt-1 break-words text-sm font-semibold text-fg">{log.projectName || 'General'}</h3>
+                        <p className="mt-1 break-words text-xs leading-5 text-muted">{log.taskTitle || 'General activity'}</p>
+                      </div>
+                      <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-semibold tabular-nums text-fg">{formatMinutes(Number(log.durationMinutes || 0))}</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted">Team member</p>
+                        <div className="mt-1">{log.user ? <ProfileIdentity profile={{ name: log.user, contextLabel: 'Time entry', id: log.userId }} showRole={false} size="sm" /> : <span className="text-xs text-muted">—</span>}</div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted">Billing type</p>
+                        <span className="mt-1 inline-flex rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-fg">{log.billable ? 'Billable' : 'Non-billable'}</span>
+                      </div>
+                    </div>
+                    {(canDeleteAll || log.userId === getAdminSession()?.user?.id) && (
+                      <div className="mt-3 flex justify-end">
+                        <button type="button" onClick={() => void remove(log)} aria-label={'Delete time entry for ' + (log.user || 'team member') + ' on ' + log.date} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-danger/20 bg-danger/5 px-3 text-[11px] font-medium text-danger hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                          <Trash2 size={13} />Delete entry
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+              <div className="hidden min-[1280px]:block overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable time log register">
               <table className="ams-table w-full min-w-[760px] text-left">
                 <thead className="bg-bg text-xs normal-case tracking-normal text-muted">
                   <tr>
@@ -392,8 +424,9 @@ export const AdminTimeLogs: React.FC = () => {
                   ))}
                 </tbody>
               </table>
-              <AdminTablePagination total={logs.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="time entries" slug="time-tracking-pagination" />
             </div>
+              <AdminTablePagination total={logs.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="time entries" slug="time-tracking-pagination" />
+            </>
           )}
         </section>
 

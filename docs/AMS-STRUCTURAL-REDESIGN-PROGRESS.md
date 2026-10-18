@@ -309,3 +309,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Restored the named, keyboard-accessible horizontal scroll region for the system audit log, which is required by the cross-module scroll regression guard.
 - Removed the nested horizontal overflow declaration from the desktop-only audit table wrapper so the outer region owns scrolling once; compact cards remain unaffected.
 - This addresses a genuine accessibility/scroll-boundary regression found by CI without weakening the test or changing audit content/actions.
+
+
+## Thirty-eighth implementation slice: responsive Team Time Logs register
+
+- Added compact time-entry cards below 1,280px with date, project/task context, team member, duration, billable state, and allowed delete action; the 760px table is retained for wide desktop.
+- Moved pagination outside the responsive presentation switch so both cards and table use the same source rows and current page.
+- Preserved the existing API, date filtering, total/billable calculations, record removal action and exact owner-or-authorized-role deletion condition.
+- Added regression coverage for the responsive register, billing state, pagination, and delete gate. CI for the current direct-to-main head is checked next.
