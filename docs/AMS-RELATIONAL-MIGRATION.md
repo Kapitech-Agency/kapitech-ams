@@ -1,10 +1,10 @@
-# AMS Relational Database Migration Plan
+# AMS Relational Database Migration Plan — Historical Reference
 
 > **Runtime-status clarification:** This document contains foundation/migration guidance and may include statements from an earlier rollout stage. server/data-source.ts supports json/postgres and defaults to json if KAPITECH_DATA_SOURCE is unset; README specifies postgres as the required production configuration. This document alone does not prove the deployed data source. Before migration, rollback or production claims, verify authorized runtime configuration and GET /api/system/production-readiness. Do not switch sources or migrate production data based on this document alone.
 
-## Historical persistence foundation and verification requirement
+## Historical status and verification requirement
 
-The following notes describe the encrypted JSON persistence implementation and its guarantees at the time this plan was authored. Do not use them alone to claim the current production mode; inspect server/data-source.ts, README, authorized runtime configuration and readiness evidence.
+This document records an earlier logical migration plan and is not the current production execution runbook. The following notes describe the encrypted JSON persistence implementation and intended migration principles at the time it was authored. Do not treat statements about the live store, pending drivers, schemas, repositories or cutover stages as current facts. The current required production contract is in `README.md` and `docs/PRODUCTION-CUTOVER.md`; use `docs/production-cutover-checklist.md`, `docs/production-readiness-gate.md`, and `docs/postgres-backup-dr-runbook.md` for operational verification. Confirm current `main`, actual migrations and authorized runtime readiness before acting.
 
 The JSON persistence implementation has included:
 
@@ -17,7 +17,7 @@ The fingerprint guard is a safety net, not a replacement for database transactio
 
 ## Migration principles
 
-1. **Parallel, non-destructive migration.** Keep the JSON database read-only as the rollback source until PostgreSQL verification is complete.
+1. **Historical migration principle:** the original plan kept the JSON database read-only as a possible rollback source during migration. Do not assume that switching production back to JSON is executable; the current production source guard may block it. Follow the current, validated PostgreSQL recovery runbook instead.
 2. **No direct production cutover without a rehearsal.** Run the migration against a production-sized staging copy first.
 3. **Deterministic IDs.** Preserve existing AMS IDs so relationships remain traceable.
 4. **Explicit foreign keys.** Do not infer relationships from display names after migration.
@@ -86,7 +86,7 @@ A production cutover should not proceed until all are true:
 - Application integration tests pass against PostgreSQL.
 - A rollback test has been rehearsed.
 
-## Recommended implementation order
+## Historical recommended implementation order — not an active task list
 
 1. Add PostgreSQL driver and migration tooling.
 2. Define versioned SQL schema and indexes.
@@ -98,4 +98,4 @@ A production cutover should not proceed until all are true:
 8. Keep encrypted JSON snapshot as rollback evidence for the agreed retention period.
 9. Remove JSON persistence only after operational sign-off.
 
-**Important:** this plan intentionally does not add a PostgreSQL dependency or alter production persistence yet. The next implementation step should be the schema/repository layer, followed by a reversible migration command.
+**Historical note:** the plan originally deferred adding a PostgreSQL dependency and identified schema/repository work as the next step. That statement does not describe the current repository. Inspect current `package.json`, `db/postgres/`, migration loader, repositories, tests and the production-readiness gate. Do not start from this old sequence as though those steps were still undone.
