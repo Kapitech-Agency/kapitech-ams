@@ -65,6 +65,8 @@ Confirm actual routes/views before changes. Follow the module content architectu
 - Website CMS: content-type-specific registers/editors, publication state, shared drawer patterns; distinguish Careers jobs from applicants.
 - Settings: grouped configuration and system-state controls with clear impact and existing confirmation/permission behavior.
 
+> **Mandatory sequencing rule:** For the current navigation-first rollout, use [AMS Navigation-First Phased Execution Prompt](AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md) as the schedule and stage gate. Finish and verify navigation first; do not start main-content redesign, global CSS cleanup, responsive cleanup, or unrelated work until the user explicitly authorizes the next stage. Work on one bounded slice at a time, report verified progress to the user, and stop at each stage boundary until instructed to continue. This prompt's module/content guidance applies only when that later stage is authorized.
+
 ## 5. Work phases: execute sequentially
 
 Use docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md. Report durable progress after each phase/slice and continue, except where a true blocker, ambiguity, destructive action, or protected-scope decision requires input.
