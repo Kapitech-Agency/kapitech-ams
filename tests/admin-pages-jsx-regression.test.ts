@@ -926,7 +926,8 @@ test('Clients header avoids repeating the Active clients metric before the prima
   assert.ok(headerStart >= 0 && headerEnd > headerStart);
   const header = clients.slice(headerStart, headerEnd);
   assert.doesNotMatch(header, /clientMetrics\\.active|active accounts|AdminStatusBadge/);
+  const directoryEnd = clients.indexOf('</section>', directory);
   assert.ok(directory > headerEnd);
-  assert.ok(metrics > headerEnd && metrics < directory);
+  assert.ok(directoryEnd > directory && metrics > directoryEnd);
   assert.ok(clients.includes("id: 'active-clients', label: 'Active clients'"));
 });
