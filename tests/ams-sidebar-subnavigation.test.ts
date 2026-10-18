@@ -107,6 +107,12 @@ test('Inbox routes activate their owning workspace and unsupported target views 
 
   const inboxSource = await read('src/pages/admin/AdminInbox.tsx');
   assert.match(inboxSource, /type InboxTab = 'overview' \| 'messages' \| 'client' \| 'unread' \| 'starred'/);
+  assert.match(inboxSource, /const \[searchParams, setSearchParams\] = useSearchParams\(\)/);
+  assert.match(inboxSource, /const supportedInboxViews: readonly string\[\] = \['overview', 'messages', 'client', 'unread', 'starred'\]/);
+  assert.match(inboxSource, /if \(!hasViewParameter \|\| isSupportedInboxView\) return;/);
+  assert.match(inboxSource, /new URLSearchParams\(searchParams\)/);
+  assert.match(inboxSource, /canonicalParams\.set\('view', 'overview'\)/);
+  assert.match(inboxSource, /setSearchParams\(canonicalParams, \{ replace: true \}\)/);
   assert.match(inboxSource, /ariaLabel="Message categories"/);
   assert.match(inboxSource, /label: 'Project & Support'.*available: false/);
   assert.doesNotMatch(inboxSource, /key: 'starred', label: 'Starred'/,

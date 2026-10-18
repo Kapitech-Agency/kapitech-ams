@@ -12,12 +12,15 @@ const items = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) => getPr
 const labels = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) => items(role).map((item) => item.label);
 const key = (role: Parameters<typeof getPrimaryNavigationForRole>[0], target: string) => items(role).find((item) => item.key === target)!;
 
-test('the Admin navigation has exactly eight sidebar modules plus pinned Settings', () => {
+test('primary modules appear in the exact approved order, with Settings ninth', () => {
   assert.deepEqual(labels('Admin'), [
     'Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources', 'Documents', 'Website CMS',
   ]);
   assert.equal(AMS_PRIMARY_SETTINGS_ITEM.label, 'Settings');
   assert.deepEqual(AMS_PRIMARY_SETTINGS_ITEM.allowedRoles, ['Admin']);
+  assert.deepEqual([...labels('Admin'), AMS_PRIMARY_SETTINGS_ITEM.label], [
+    'Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources', 'Documents', 'Website CMS', 'Settings',
+  ]);
   assert.equal(items('Admin').length + 1, 9);
 
   const forbiddenPrimaryLabels = ['CRM', 'Sales & Pipeline', 'Proposals', 'Approvals', 'Vendor Ledger', 'Time Tracking', 'Timesheet Control'];

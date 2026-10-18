@@ -59,11 +59,21 @@ export const AdminInbox: React.FC = () => {
   const canManageCrm = hasAdminPermission('canManageCrm');
   const canManageClients = hasAdminPermission('canManageClients');
   type InboxTab = 'overview' | 'messages' | 'client' | 'unread' | 'starred';
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('view') as InboxTab | null;
-  const activeInboxTab: InboxTab = requestedTab && ['overview', 'messages', 'client', 'unread', 'starred'].includes(requestedTab)
+  const supportedInboxViews: readonly string[] = ['overview', 'messages', 'client', 'unread', 'starred'];
+  const hasViewParameter = searchParams.has('view');
+  const isSupportedInboxView = requestedTab === null || supportedInboxViews.includes(requestedTab);
+  const activeInboxTab: InboxTab = requestedTab && supportedInboxViews.includes(requestedTab)
     ? requestedTab
     : 'overview';
+
+  useEffect(() => {
+    if (!hasViewParameter || isSupportedInboxView) return;
+    const canonicalParams = new URLSearchParams(searchParams);
+    canonicalParams.set('view', 'overview');
+    setSearchParams(canonicalParams, { replace: true });
+  }, [hasViewParameter, isSupportedInboxView, searchParams, setSearchParams]);
 
   // Core Data & Currency
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
