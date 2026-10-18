@@ -8,6 +8,7 @@ const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/Admi
 test('Team & Resources declares the live sources required by each view', () => {
   assert.ok(source.includes("const TEAM_VIEW_DATA_SOURCES: Record<TeamView, TeamDataSource[]>"));
   assert.ok(source.includes("'team-directory': ['members', 'projects', 'timeLogs']"));
+  assert.ok(source.includes("'roles-departments': ['members']"));
   assert.ok(source.includes("'vendor-directory': ['vendors', 'projects']"));
   assert.ok(source.includes("'capacity-allocation': ['members', 'projects', 'timeLogs']"));
   assert.ok(source.includes("'skill-matrix': ['members', 'vendors']"));
@@ -54,4 +55,15 @@ test('Team project and capacity views do not show zero or no-plan states when so
   assert.match(source, /sourceAvailability\.projects === true && !futureCapacityRows\.some/);
   assert.match(source, /sourceAvailability\.timeLogs === true \? \(teamRows\.filter/);
   assert.match(source, /sourceAvailability\.timeLogs === false \? 'Time log data unavailable'/);
+});
+
+
+test('Roles & Departments is an active member-backed worksheet separate from access policy', () => {
+  assert.ok(source.includes("requestedView === 'roles-departments' ? 'roles-departments'"));
+  assert.ok(source.includes("to: '/admin/team?view=roles-departments'"));
+  assert.ok(source.includes("currentView === 'roles-departments' ? 'roles-departments'"));
+  assert.ok(source.includes('data-ams-feature-slug="team-roles-departments"'));
+  assert.ok(source.includes('Role groups'));
+  assert.ok(source.includes("downloadCsv('kapitech-roles-departments.csv'"));
+  assert.ok(source.includes('does not grant, remove, or modify system permissions'));
 });
