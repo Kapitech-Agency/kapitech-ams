@@ -672,8 +672,48 @@ export const AdminInbox: React.FC = () => {
         )}
       />
 
-
-
+      {/* Workspace navigation: keep all Inbox views discoverable and URL-addressable. */}
+      <nav
+        aria-label={language === 'id' ? 'Tampilan workspace Inbox' : 'Inbox workspace views'}
+        data-ams-feature-slug="inbox-workspace-navigation"
+        className="flex flex-wrap items-center gap-1 border-b border-line"
+      >
+        {[
+          {
+            key: 'overview' as InboxTab,
+            label: language === 'id' ? 'Semua inbound' : 'All inbound',
+            icon: <Inbox size={14} aria-hidden="true" />,
+          },
+          {
+            key: 'client' as InboxTab,
+            label: language === 'id' ? 'Inquiry klien' : 'Client inquiries',
+            icon: <MessageSquare size={14} aria-hidden="true" />,
+          },
+          {
+            key: 'starred' as InboxTab,
+            label: language === 'id' ? 'Berbintang' : 'Starred',
+            icon: <Star size={14} aria-hidden="true" />,
+          },
+        ].map((view) => {
+          const isActive = activeInboxTab === view.key;
+          return (
+            <Link
+              key={view.key}
+              to={`/admin/inbox?view=${view.key}`}
+              aria-current={isActive ? 'page' : undefined}
+              className={
+                'inline-flex min-h-10 shrink-0 items-center gap-2 border-b-2 px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
+                (isActive
+                  ? 'border-accent text-fg'
+                  : 'border-transparent text-muted hover:border-line hover:text-fg')
+              }
+            >
+              {view.icon}
+              <span>{view.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       {loadError && (
         <div className="flex flex-col gap-3 rounded-card border border-warning/25 bg-warning/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="inbox-load-unavailable">
