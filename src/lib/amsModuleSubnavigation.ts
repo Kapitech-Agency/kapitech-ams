@@ -135,7 +135,13 @@ export function isAmsModuleSubnavigationItemActive(
   const itemKey = item.key;
 
   if (path === '/admin/finance/quotations') return itemKey === 'receivables';
-  if (path === '/admin/inbox') return itemKey === ((params.get('view') || 'overview') === 'overview' ? 'overview' : 'messages');
+  if (path === '/admin/inbox') {
+    const requestedView = params.get('view') || 'overview';
+    const selectedView = ['overview', 'messages', 'client', 'starred'].includes(requestedView)
+      ? requestedView
+      : 'overview';
+    return itemKey === (selectedView === 'overview' ? 'overview' : 'messages');
+  }
   if (path === '/admin/documents') return itemKey === 'library';
   if (path === '/admin/finance') {
     const groups: Record<string, string[]> = {

@@ -10,9 +10,7 @@ import {
 } from '../src/lib/amsNavigationAccess';
 import {
   getAmsModuleSubnavigation,
-  getAmsModuleSubnavigationChildren,
   getAmsWorkspaceNavigationModule,
-  isAmsModuleSubnavigationChildActive,
   isAmsModuleSubnavigationItemActive,
 } from '../src/lib/amsModuleSubnavigation';
 import { FINANCE_WORKBOOK_GROUPS } from '../src/lib/financeWorkbook.ts';
@@ -30,14 +28,11 @@ test('each module root tab follows the approved Master Structure Guide', () => {
     'Overview', 'Messages', 'Follow-ups', 'Routing & Templates',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('projects', 'Admin').map((item) => item.label), [
-    'Projects Overview', 'Project Registry', 'Planning & Scope', 'Tasks & Execution',
-    'Project Resources', 'Deliverables & Quality', 'Content & Campaign Operations',
-    'Changes, Risks & Issues', 'Budget & Project Health', 'Project Files',
-    'Project Reports & Closure',
+    'Overview', 'Project Registry', 'Tasks & Execution', 'Planning & Delivery',
+    'Content & Campaigns', 'Project Resources', 'Project Controls',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('clients', 'Admin').map((item) => item.label), [
-    'Client Overview', 'Client Directory', 'Onboarding', 'Contracts & Agreements',
-    'Retainers', 'SLA & Service Operations', 'Client Growth & Health',
+    'Directory', 'Onboarding', 'Agreements', 'Service & Health',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('finance', 'Admin').map((item) => item.label), [
     'Overview & Control', 'Transactions & Cash', 'Receivables & Payables',
@@ -47,36 +42,36 @@ test('each module root tab follows the approved Master Structure Guide', () => {
     'Team & Capacity', 'People Operations', 'Vendors & Freelancers', 'Time Tracking',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('documents', 'Admin').map((item) => item.label), [
-    'Document Overview', 'All Documents', 'Project & Client Files', 'SOPs & Policies',
-    'Legal & Corporate', 'Finance & Tax', 'HR & People', 'Security & Infrastructure',
+    'Document Library',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('cms', 'Admin').map((item) => item.label), [
-    'CMS Overview', 'Case Studies', 'Services', 'Insights', 'Testimonials', 'Careers',
+    'Case Studies', 'Services', 'Insights', 'Testimonials', 'Careers',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'Admin').map((item) => item.label), [
-    'System Overview', 'Users & Access', 'Audit Log', 'Integrations', 'Preferences',
+    'System Overview', 'Users & Access', 'Audit Log', 'Integrations',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('crm', 'Admin'), []);
 });
 
-test('documented target-only workspaces are visible but never rendered as fake links', async () => {
+
+test('Inbox exposes only approved workspaces and keeps unavailable destinations non-interactive', async () => {
   const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
+  assert.deepEqual(inbox.map((item) => item.label), ['Overview', 'Messages', 'Follow-ups', 'Routing & Templates']);
   for (const key of ['follow-ups', 'routing-templates']) {
     assert.equal(inbox.find((item) => item.key === key)?.available, false, key + ' must remain target-only until implemented');
   }
   assert.equal(inbox.find((item) => item.key === 'messages')?.available, undefined);
-  assert.equal(inbox.some((item) => item.key === 'sales-inquiries' || item.key === 'client-requests' || item.key === 'project-support'), false,
-    'message categories belong inside Messages, not the Inbox root navigation');
-  const messageWorksheets = getAmsModuleSubnavigationChildren('inbox', 'messages', 'Admin');
-  assert.deepEqual(messageWorksheets.map((item) => item.label), ['All Messages', 'Sales Inquiries', 'Client Requests', 'Project & Support']);
-  for (const key of ['client-requests', 'project-support']) {
-    assert.equal(messageWorksheets.find((item) => item.key === key)?.available, false, key + ' must remain target-only until implemented');
-  }
+  assert.equal(inbox.some((item) => ['sales-inquiries', 'client-requests', 'project-support'].includes(item.key)), false,
+    'message categories must not become persistent global navigation items');
 
   const projects = getAmsModuleSubnavigation('projects', 'Admin');
-  for (const key of ['overview', 'planning-scope', 'resources', 'deliverables', 'content-campaigns', 'changes-risks', 'files', 'reports-closure']) {
+  for (const key of ['overview', 'planning-delivery', 'content-campaigns', 'resources']) {
     assert.equal(projects.find((item) => item.key === key)?.available, false, key + ' must not imply a live workspace');
   }
+  assert.equal(projects.find((item) => item.key === 'controls')?.to, '/admin/projects?projects=budget');
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+  assert.doesNotMatch(layout, /workspaceChildTabItems|Workspace subnavigation/,
+    'global shell must not render a third navigation layer for worksheet categories');
 
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   assert.match(primitives, /data-ams-navigation-status="target-only"/);
@@ -84,33 +79,26 @@ test('documented target-only workspaces are visible but never rendered as fake l
   assert.match(primitives, /item\.available === false/);
 });
 
-test('existing Inbox routes keep query-driven active state and Careers applicants stay in CMS', async () => {
+
+test('Inbox routes activate their owning workspace and unsupported target views fall back to Overview', async () => {
   const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=messages'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=client'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=starred'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox', '?view=unsupported'), true);
-  for (const targetOnlyView of ['client-requests', 'project-support', 'unread', 'resolved', 'archived']) {
-    assert.equal(
-      isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox', '?view=' + targetOnlyView),
-      true,
-      targetOnlyView + ' is not a supported page view and must follow the page fallback to Overview',
-    );
-    assert.equal(
-      isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=' + targetOnlyView),
-      false,
-      targetOnlyView + ' must not falsely activate the Messages workspace',
-    );
+  const overview = inbox.find((item) => item.key === 'overview')!;
+  const messages = inbox.find((item) => item.key === 'messages')!;
+  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=overview'), true);
+  for (const supportedView of ['messages', 'client', 'starred']) {
+    assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + supportedView), true,
+      supportedView + ' must remain owned by Messages');
+    assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + supportedView), false);
   }
-  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=starred'), true,
-    'Starred remains a Messages-owned saved view for navigation ownership');
-  const messageWorksheets = getAmsModuleSubnavigationChildren('inbox', 'messages', 'Admin');
-  assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'all-messages')!, '/admin/inbox', '?view=messages'), true);
-  assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'all-messages')!, '/admin/inbox', '?view=starred'), true,
-    'Starred must remain a saved view owned by the canonical All Messages worksheet');
-  assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'sales-inquiries')!, '/admin/inbox', '?view=client'), true);
-  assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'client-requests')!, '/admin/inbox', '?view=client-requests'), false);
+  for (const unsupportedView of ['client-requests', 'project-support', 'unread', 'resolved', 'archived', 'unsupported']) {
+    assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + unsupportedView), true,
+      unsupportedView + ' is not implemented and must follow the Inbox page fallback to Overview');
+    assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + unsupportedView), false,
+      unsupportedView + ' must not falsely activate Messages');
+  }
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'follow-ups')!, '/admin/inbox', '?view=follow-ups'), false,
+    'target-only workspaces never appear as active functional workspaces');
 
   const inboxSource = await read('src/pages/admin/AdminInbox.tsx');
   assert.match(inboxSource, /type InboxTab = 'overview' \| 'messages' \| 'client' \| 'starred'/);
@@ -120,33 +108,19 @@ test('existing Inbox routes keep query-driven active state and Careers applicant
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
 });
 
-test('Project Registry parent and supported status filters activate the correct nested items', async () => {
+
+test('Project Registry filters keep the Project Registry workspace active without global worksheet navigation', async () => {
   const projects = getAmsModuleSubnavigation('projects', 'Admin');
   const registry = projects.find((item) => item.key === 'registry')!;
+  const tasks = projects.find((item) => item.key === 'tasks')!;
+  const controls = projects.find((item) => item.key === 'controls')!;
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=planning'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=active'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=on-hold'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=completed'), true);
-
-  const children = getAmsModuleSubnavigationChildren('projects', 'registry', 'Admin');
-  assert.deepEqual(children.map((item) => item.label), [
-    'All Projects', 'Planning', 'Active Projects', 'On Hold', 'Completed', 'Archived',
-  ]);
-  for (const [key, query] of [
-    ['all', ''],
-    ['planning', '?projects=planning'],
-    ['active', '?projects=active'],
-    ['on-hold', '?projects=on-hold'],
-    ['completed', '?projects=completed'],
-    ['archived', '?projects=archived'],
-  ] as const) {
-    assert.equal(
-      isAmsModuleSubnavigationChildActive(children.find((item) => item.key === key)!, '/admin/projects', query),
-      true,
-      'Project Registry child must activate for ' + key,
-    );
+  for (const status of ['planning', 'active', 'on-hold', 'completed', 'archived']) {
+    assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=' + status), true,
+      'status filter ' + status + ' stays within Project Registry');
   }
+  assert.equal(isAmsModuleSubnavigationItemActive(tasks, '/admin/projects', '?projects=sprint'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(controls, '/admin/projects', '?projects=budget'), true);
 
   const projectSource = await read('src/pages/admin/AdminProjects.tsx');
   assert.match(projectSource, /registryStatusView/);
@@ -154,35 +128,22 @@ test('Project Registry parent and supported status filters activate the correct 
   assert.match(projectSource, /matchesRegistryStatus/);
 });
 
-test('Client, Team & Resources nested subnavigation mirrors existing routes and labels', () => {
-  const clientCases: Array<[string, string, string]> = [
-    ['onboarding', 'onboarding-checklist', '/admin/clients/all-clients?scope=onboarding'],
-    ['contracts', 'contract-register', '/admin/contracts'],
-    ['retainers', 'retainer-register', '/admin/clients/retainers'],
-    ['sla', 'sla-monitoring', '/admin/clients/sla-monitoring'],
-  ];
-  for (const [parent, key, destination] of clientCases) {
-    const children = getAmsModuleSubnavigationChildren('clients', parent, 'Admin');
-    assert.ok(children.some((item) => item.key === key && item.to === destination));
-  }
-  const clientDirectory = getAmsModuleSubnavigationChildren('clients', 'directory', 'Admin');
-  assert.deepEqual(clientDirectory.map((item) => item.label), ['Companies', 'Contacts', 'Client 360°']);
-  assert.ok(clientDirectory.every((item) => item.available === false), 'the incomplete Client 360 structure must not be presented as functional');
 
-  const team = getAmsModuleSubnavigationChildren('team', 'team', 'Admin');
-  assert.deepEqual(team.map((item) => item.label), [
-    'Team Directory', 'Roles & Departments', 'Capacity Allocation', 'Availability & Workload',
-  ]);
-  assert.equal(isAmsModuleSubnavigationChildActive(team.find((item) => item.key === 'capacity-allocation')!, '/admin/team', '?view=capacity-allocation'), true);
+test('Clients and Team & Resources use persistent workspaces while internal views remain inside their pages', async () => {
+  const clients = getAmsModuleSubnavigation('clients', 'Admin');
+  assert.deepEqual(clients.map((item) => item.key), ['directory', 'onboarding', 'agreements', 'service-health']);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'onboarding')!, '/admin/clients/all-clients', '?scope=onboarding'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'agreements')!, '/admin/contracts'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(clients.find((item) => item.key === 'service-health')!, '/admin/clients/sla-monitoring'), true);
 
-  const vendors = getAmsModuleSubnavigationChildren('team', 'vendors', 'Admin');
-  assert.deepEqual(vendors.map((item) => item.label), [
-    'Directory', 'Skills & Service Matrix', 'Contracts & Rates', 'Engagement Status',
-  ]);
-  assert.equal(isAmsModuleSubnavigationChildActive(vendors.find((item) => item.key === 'vendor-skills')!, '/admin/vendors', '?view=skill-matrix'), true);
+  const team = getAmsModuleSubnavigation('team', 'Admin');
+  assert.deepEqual(team.map((item) => item.key), ['team', 'people-ops', 'vendors', 'time']);
+  assert.equal(team.find((item) => item.key === 'people-ops')?.available, false);
+  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'team')!, '/admin/team'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(team.find((item) => item.key === 'vendors')!, '/admin/vendors', '?view=skill-matrix'), true);
 
-  const teamRoot = getAmsModuleSubnavigation('team', 'Admin');
-  assert.equal(isAmsModuleSubnavigationItemActive(teamRoot.find((item) => item.key === 'vendors')!, '/admin/vendors', '?view=skill-matrix'), true);
+  const layout = await fs.readFile(path.join(root, 'src/pages/admin/AdminLayout.tsx'), 'utf8');
+  assert.doesNotMatch(layout, /workspaceChildTabItems|Workspace subnavigation/);
 });
 
 test('Finance keeps its five canonical areas and every existing worksheet activates its owning area', () => {
@@ -212,7 +173,8 @@ test('Finance keeps its five canonical areas and every existing worksheet activa
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'receivables')!, '/admin/finance/quotations'), true);
 });
 
-test('role-specific subnavigation destinations remain permitted and primary clicks land on an owning tab', () => {
+
+test('role-specific workspace destinations remain permitted and primary links activate one owning workspace', () => {
   for (const role of roles) {
     for (const moduleKey of modules) {
       for (const item of getAmsModuleSubnavigation(moduleKey, role)) {
@@ -222,15 +184,9 @@ test('role-specific subnavigation destinations remain permitted and primary clic
           true,
           role + '/' + moduleKey + '/' + item.key + ' must remain allowed by current route policy',
         );
-      }
-      for (const parent of getAmsModuleSubnavigation(moduleKey, role)) {
-        for (const child of getAmsModuleSubnavigationChildren(moduleKey, parent.key, role)) {
-          const target = new URL(child.to, 'https://ams.kapitech.local');
-          assert.equal(
-            canAccessAmsRoute(role, target.pathname, target.search),
-            true,
-            role + '/' + moduleKey + '/' + parent.key + '/' + child.key + ' must remain allowed by current route policy',
-          );
+        if (item.available === false) {
+          assert.equal(isAmsModuleSubnavigationItemActive(item, target.pathname, target.search), false,
+            role + '/' + moduleKey + '/' + item.key + ' must never appear as an active functional workspace');
         }
       }
     }
@@ -238,12 +194,15 @@ test('role-specific subnavigation destinations remain permitted and primary clic
 
   const cases: Array<[AmsRole, string, string, string]> = [
     ['Admin', 'dashboard-hub', 'dashboard', 'overview'],
+    ['Admin', 'inbox', 'inbox', 'overview'],
     ['Admin', 'project-hub', 'projects', 'registry'],
     ['Finance', 'project-hub', 'projects', 'tasks'],
     ['Creative', 'project-hub', 'projects', 'tasks'],
     ['Admin', 'clients', 'clients', 'directory'],
+    ['Admin', 'finance', 'finance', 'overview'],
     ['Admin', 'team-resources', 'team', 'team'],
     ['Finance', 'team-resources', 'team', 'vendors'],
+    ['Admin', 'documents', 'documents', 'library'],
     ['Admin', 'website-cms', 'cms', 'projects'],
     ['PM', 'website-cms', 'cms', 'insights'],
     ['Creative', 'website-cms', 'cms', 'insights'],
