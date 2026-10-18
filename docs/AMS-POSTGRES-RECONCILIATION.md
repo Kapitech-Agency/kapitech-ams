@@ -9,7 +9,7 @@ This describes an early migration-stage reconciliation utility. Treat it as a hi
 
 ## Reconciliation checks
 
-The current runner records:
+The runner described when this document was authored was designed to record:
 
 - encrypted JSON source SHA-256
 - record counts for core AMS domains
