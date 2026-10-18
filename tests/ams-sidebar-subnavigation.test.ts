@@ -119,8 +119,12 @@ test('Inbox routes activate their owning workspace and unsupported target views 
   assert.match(inboxSource, /label: 'Archived', to: '\/admin\/inbox\?view=archived', available: false/);
   assert.match(inboxSource, /\['messages', 'client', 'unread', 'starred'\] as InboxTab\[\]/);
   assert.match(inboxSource, /label: 'Project & Support'.*available: false/);
-  assert.doesNotMatch(inboxSource, /key: 'starred', label: 'Starred'/,
-    'Starred is a saved view inside Messages, not a message category worksheet.');
+  const messageCategoriesStart = inboxSource.indexOf('ariaLabel="Message categories"');
+  const messageSavedViewsStart = inboxSource.indexOf('ariaLabel="Message saved views"');
+  assert.ok(messageCategoriesStart >= 0 && messageSavedViewsStart > messageCategoriesStart);
+  const messageCategoryNavigation = inboxSource.slice(messageCategoriesStart, messageSavedViewsStart);
+  assert.doesNotMatch(messageCategoryNavigation, /key: 'starred', label: 'Starred'/,
+    'Starred belongs to saved views and must not be part of message categories.');
   assert.doesNotMatch(inboxSource, /key: 'resolved-archived'/,
     'Resolved and Archived belong to status filters, not a combined worksheet tab.');
   assert.ok(inboxSource.includes('to="/admin/inbox?view=starred"'),

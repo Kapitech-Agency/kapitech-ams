@@ -629,7 +629,13 @@ test('Inbox opens with contextual controls and its triage workspace, without a r
   assert.match(inbox, /ariaLabel="Message categories"/);
   assert.match(inbox, /label: 'Client Requests'.*available: false/);
   assert.match(inbox, /label: 'Project & Support'.*available: false/);
-  assert.doesNotMatch(inbox, /key: 'starred', label: 'Starred'/);
+  const messageCategoriesStart = inbox.indexOf('ariaLabel="Message categories"');
+  const messageSavedViewsStart = inbox.indexOf('ariaLabel="Message saved views"');
+  assert.ok(messageCategoriesStart >= 0 && messageSavedViewsStart > messageCategoriesStart);
+  assert.doesNotMatch(
+    inbox.slice(messageCategoriesStart, messageSavedViewsStart),
+    /key: 'starred', label: 'Starred'/
+  );
   assert.doesNotMatch(inbox, /key: 'resolved-archived'/);
   assert.ok(inbox.includes('to="/admin/inbox?view=starred"'), 'Starred stays reachable as a saved view from Messages.');
   assert.ok(inbox.includes('to="/admin/inbox?view=unread"'), 'Unread stays reachable as a saved view from Messages.');
