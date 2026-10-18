@@ -1783,14 +1783,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
       && canAccessAmsRoute(navigationRole, '/admin/finance', '?tab=' + key);
   };
   const sheetItems = [
-    ...activeGroup.items
-      .filter((item) => canShowFinanceWorksheet(item.key))
-      .map((item) => ({
-        key: item.key,
-        label: item.label,
-        to: financeWorksheetDestination(item.key),
-        slug: 'finance-sheet-' + item.key
-      })),
     ...(activeGroup.key === 'receivables' && canShowFinanceWorksheet('quotations')
       ? [{
           key: 'quotations',
@@ -1798,7 +1790,15 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           to: financeWorksheetDestination('quotations'),
           slug: 'finance-view-quotations'
         }]
-      : [])
+      : []),
+    ...activeGroup.items
+      .filter((item) => canShowFinanceWorksheet(item.key))
+      .map((item) => ({
+        key: item.key,
+        label: item.label,
+        to: financeWorksheetDestination(item.key),
+        slug: 'finance-sheet-' + item.key
+      }))
   ];
   const renderLoading = () => (
     <AdminPanel title="Loading finance sources" description="Reading live AMS invoice, expense, project and vendor records.">

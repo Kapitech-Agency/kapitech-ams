@@ -31,7 +31,8 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance views" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
-  assert.match(workspace, /const sheetItems = \[[\s\S]{0,240}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
+  assert.match(workspace, /const sheetItems = \[[\s\S]{0,260}key: 'quotations'[\s\S]{0,260}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
+  assert.ok(workspace.indexOf("key: 'quotations'") < workspace.indexOf('...activeGroup.items'), 'Quotations must be the first worksheet in Receivables & Payables.');
   assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
   assert.match(workspace, /label: item\.label/);
   assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);

@@ -287,7 +287,10 @@ test('Finance keeps its five canonical areas and every existing worksheet activa
       );
     }
   }
-  assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'receivables')!, '/admin/finance/quotations'), true);
+  const receivables = finance.find((item) => item.key === 'receivables')!;
+  assert.equal(receivables.to, '/admin/finance?tab=quotations', 'Receivables & Payables should open on its first approved worksheet.');
+  assert.equal(isAmsModuleSubnavigationItemActive(receivables, '/admin/finance', '?tab=quotations'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(receivables, '/admin/finance/quotations'), true);
 });
 
 

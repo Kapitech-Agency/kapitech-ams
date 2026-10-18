@@ -556,3 +556,12 @@ The findings above are source-level risks and release-control gaps, not claims t
 **Tests:** `tests/ams-shared-shell-scroll-regression.test.ts` now asserts canonical page-shell/title/card geometry and prevents the identified responsive overrides from returning.  
 **Validation:** Must pass the new commit's AMS Quality Gate and AMS CI. Browser QA at 1440, 1280, 1024, 900, 768, 390 and 320px, plus keyboard/scroll verification, remain Stage 5 acceptance items. No authenticated browser session was available in the current execution context, so no visual verification is claimed.
 
+
+### FINANCE-NAV-ARAP-001: Receivables & Payables default destination and worksheet order
+
+**Status:** SOURCE_FIX_IN_BATCH; automated CI and authenticated browser validation pending.  
+**Target:** `src/lib/amsModuleSubnavigation.ts`, `src/pages/admin/AdminFinanceWorkspace.tsx`, `tests/ams-sidebar-subnavigation.test.ts`, `tests/finance-ui-consistency.test.ts`.  
+**Finding:** The approved Master Structure lists Quotations first in Receivables & Payables, but the workspace appended Quotations after Accounts Receivable, Accounts Payable and Vendors. The persistent workspace tab also opened Accounts Receivable instead of the first approved worksheet.  
+**Correction:** Receivables & Payables now opens `/admin/finance?tab=quotations`; the page lists Quotations before the group's existing worksheets. The existing legacy `/admin/finance/quotations` route, Finance permissions, quotation APIs, data records and invoice-conversion behavior remain unchanged.  
+**Validation:** Regression assertions added for destination, active workspace state and worksheet order. The batch must pass both AMS Quality Gate and AMS CI. Browser direct-link, refresh/history and role checks remain Stage 5 requirements. No backend/API/database/accounting logic changed.
+

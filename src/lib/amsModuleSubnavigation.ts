@@ -62,7 +62,7 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
   finance: [
     { key: 'overview', label: 'Overview & Control', to: '/admin/finance?tab=executive-summary', slug: 'finance-workspace-overview-control' },
     { key: 'transactions', label: 'Transactions & Cash', to: '/admin/finance?tab=cash-bank', slug: 'finance-workspace-transactions-cash' },
-    { key: 'receivables', label: 'Receivables & Payables', to: '/admin/finance?tab=accounts-receivable', slug: 'finance-workspace-receivables-payables' },
+    { key: 'receivables', label: 'Receivables & Payables', to: '/admin/finance?tab=quotations', slug: 'finance-workspace-receivables-payables' },
     { key: 'projects', label: 'Project Finance', to: '/admin/finance?tab=project-finance', slug: 'finance-workspace-project-finance' },
     { key: 'accounting', label: 'Accounting & Reports', to: '/admin/finance?tab=journal', slug: 'finance-workspace-accounting-reports' },
   ],

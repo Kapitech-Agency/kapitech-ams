@@ -456,3 +456,10 @@ Responsive review has now added a compact register to Project Finance, Accounts 
 - Added regression assertions for canonical page shell/title/card geometry and the known conflict selectors. Validation is pending the new commit's Quality Gate and AMS CI. Browser checks at 1440, 1280, 1024, 900, 768, 390 and 320px, keyboard access, scroll ownership, horizontal overflow and mobile drawer remain Stage 5 items.
 - No authenticated browser session was available in the current execution context. No authenticated visual approval is claimed. Stage 5 approval remains a hard gate before Stage 6.
 
+
+## Finance navigation correction checkpoint — 19 October 2026
+
+- Source audit found a mismatch with Master Structure §9.1: Quotations belongs first in Receivables & Payables, but the UI appended it after Accounts Receivable, Accounts Payable and Vendors; the workspace root link opened Accounts Receivable.
+- Corrected the root destination to `/admin/finance?tab=quotations` and ordered Quotations before the existing worksheets. Preserved the five top-level Finance areas, legacy quotation URL, existing records/API, role gates and all financial calculations/posting behavior.
+- Added source regression assertions for destination, active state and worksheet order. This batch remains unverified until its matching CI workflows pass. Stage 5 browser checks for direct entry, refresh/back/forward, role visibility and responsive tab behavior remain outstanding.
+
