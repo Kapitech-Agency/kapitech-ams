@@ -189,6 +189,8 @@ test('Website CMS editorial controls use accessible actions and the canonical Ca
   assert.doesNotMatch(services, /\{servicesList\.length\} offerings/);
   assert.ok(services.indexOf('slug="cms-services-filters"') < services.indexOf('{filtered.length} of {servicesList.length} services'), 'Service count stays with the filtered register instead of duplicating the header action.');
   assert.match(careers, /cms-careers-applicants/);
+  assert.match(careers, /Check applicant-management access/);
+  assert.doesNotMatch(careers, /CRM \/ Inbox|Applicant inbox is not available/);
   assert.match(careers, /pagedApplicants\.map\(applicant/);
 });
 
