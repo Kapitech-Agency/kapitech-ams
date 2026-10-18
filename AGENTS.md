@@ -16,6 +16,7 @@ Before implementation, read:
    - Modal/confirmation: **docs/AMS-MODAL-GUIDELINES.md**
    - Kanban/task boards: **docs/AMS-KANBAN-GUIDELINES.md**
    - Module content hierarchy and frontend-only UX/UI execution: **docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md** and **docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md**
+   - Role-aware main content, worksheet field/column specifications, role/persona presentation, chart decisions, and cross-module content consistency: **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md**
    - PostgreSQL/schema/cutover/recovery: the relevant **docs/AMS-POSTGRES-*.md**, **docs/AMS-RELATIONAL-MIGRATION.md**, and recovery runbooks
    - Private documents: **docs/private-document-vault.md**
 
@@ -126,6 +127,7 @@ Read domain-specific documents for substantial tasks:
 - Requirement status/evidence: docs/AMS-IMPLEMENTATION-TRACEABILITY.md.
 - UX and spacing/margin/padding: docs/AMS-UX-INTERACTION-STANDARDS.md and AMS-DESIGN-SYSTEM.md.
 - Module content hierarchy and AI frontend-only UX/UI execution: docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md and docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md.
+- Role-based content specification across all nine modules, including worksheet fields, visualization rules, and role-aware presentation: docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md.
 - Frontend routes/state/API/forms: docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md.
 - Business transitions/side effects: docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md.
 - Logical entities/canonical ownership: docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md.
