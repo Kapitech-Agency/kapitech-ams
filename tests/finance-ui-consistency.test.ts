@@ -571,3 +571,29 @@ test('JSON fallback enforces the same invoice and expense idempotency keys as Po
   assert.ok(expenseCreate.includes('EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT'));
   assert.ok(expenseCreate.includes('replayed:true'));
 });
+
+
+test('Cash, petty cash, and payables put their working registers before supporting KPI strips', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  const cashStart = workspace.indexOf("case 'cash-bank': {");
+  const cashEnd = workspace.indexOf("case 'accounts-receivable':", cashStart);
+  const cash = workspace.slice(cashStart, cashEnd);
+  assert.ok(cashStart >= 0 && cashEnd > cashStart);
+  assert.ok(cash.indexOf('title="Cash & Bank ledger"') >= 0);
+  assert.ok(cash.indexOf('<AdminMetricStrip metrics={[') > cash.indexOf('title="Cash & Bank ledger"'));
+
+  const payableStart = workspace.indexOf("case 'accounts-payable': {");
+  const payableEnd = workspace.indexOf("case 'vendors':", payableStart);
+  const payables = workspace.slice(payableStart, payableEnd);
+  assert.ok(payableStart >= 0 && payableEnd > payableStart);
+  assert.ok(payables.indexOf('title="Accounts Payable register"') >= 0);
+  assert.ok(payables.indexOf('<AdminMetricStrip metrics={[') > payables.indexOf('title="Accounts Payable register"'));
+
+  const pettyStart = workspace.indexOf("case 'petty-cash':");
+  const pettyEnd = workspace.indexOf("case 'monthly-pnl':", pettyStart);
+  const petty = workspace.slice(pettyStart, pettyEnd);
+  assert.ok(pettyStart >= 0 && pettyEnd > pettyStart);
+  assert.ok(petty.indexOf('title="Petty Cash Ledger"') >= 0);
+  assert.ok(petty.indexOf('<AdminMetricStrip metrics={[') > petty.indexOf('title="Petty Cash Ledger"'));
+});

@@ -2087,14 +2087,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 ? 'Set the 1000 Cash & Bank opening balance before treating a running balance as meaningful. Only invoice receipts mapped to account 1000, paid expenses with an explicit 1000 settlement account, and bank-side movements appear here. This is not a bank-statement reconciliation.'
                 : 'Opening balance comes from the saved finance register. Paid expenses must record the actual paid date and settlement account; internal transfers are shown on the bank ledger but excluded from consolidated cash-flow movement. Reconcile to the bank statement before closing the month.'}
             </WorkbookNote>
-            <AdminMetricStrip metrics={[
-              {id:'cash-opening',label:'Opening balance',value:opening === null ? 'Not set' : formatMoney(opening),context:openingDate ? 'Account 1000 · from ' + formatDate(openingDate) : 'Account 1000 · Cash & Bank',icon:<Landmark size={15}/>},
-              {id:'cash-in',label:'Recorded cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowDown size={15}/>},
-              {id:'cash-out',label:'Recorded cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowUpRight size={15}/>},
-              {id:'cash-closing',label:reportPeriodEnabled ? 'Provisional period-end balance' : 'Provisional balance',value:periodClosingBalance === null ? 'Not available' : formatMoney(periodClosingBalance),context:'Opening balance plus recorded movements through period end; unreconciled',icon:<WalletCards size={15}/>},
-              {id:'cash-recon-complete',label:'Reconciled accounts',value:reconciledCount+' / '+reconciliationDiffs.length,context:'Month-end · '+reconciliationMonth,icon:<ShieldAlert size={15}/>},
-              {id:'cash-recon-open',label:'Reconciliation exceptions',value:String(openReconCount),context:'Missing statement evidence or non-zero difference',icon:<CircleDollarSign size={15}/>}
-            ]}/>
+            
             <FinanceDataTable
               title="Cash & Bank ledger"
               description="Transactions stay linked to their AMS source. Use this register for manual adjustments and internal transfers."
@@ -2103,6 +2096,15 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               emptyMessage="No dated cash movement is available. Set an opening balance or record a movement."
               actions={<div className="flex flex-wrap gap-2">{registerAddButton('cash-bank-transaction','Add movement')}{canManageFinanceRecords && <Button type="button" variant="secondary" onClick={() => openCashOpeningForm('1000')}>{opening === null ? 'Set opening balance' : 'Edit opening balance'}</Button>}</div>}
             />
+            
+            <AdminMetricStrip metrics={[
+              {id:'cash-opening',label:'Opening balance',value:opening === null ? 'Not set' : formatMoney(opening),context:openingDate ? 'Account 1000 · from ' + formatDate(openingDate) : 'Account 1000 · Cash & Bank',icon:<Landmark size={15}/>},
+              {id:'cash-in',label:'Recorded cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowDown size={15}/>},
+              {id:'cash-out',label:'Recorded cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowUpRight size={15}/>},
+              {id:'cash-closing',label:reportPeriodEnabled ? 'Provisional period-end balance' : 'Provisional balance',value:periodClosingBalance === null ? 'Not available' : formatMoney(periodClosingBalance),context:'Opening balance plus recorded movements through period end; unreconciled',icon:<WalletCards size={15}/>},
+              {id:'cash-recon-complete',label:'Reconciled accounts',value:reconciledCount+' / '+reconciliationDiffs.length,context:'Month-end · '+reconciliationMonth,icon:<ShieldAlert size={15}/>},
+              {id:'cash-recon-open',label:'Reconciliation exceptions',value:String(openReconCount),context:'Missing statement evidence or non-zero difference',icon:<CircleDollarSign size={15}/>}
+            ]}/>
             <WorkbookNote tone={openReconCount ? 'warning' : 'info'} title={openReconCount ? 'Month-end reconciliation is incomplete' : 'Month-end balances are reconciled'}>
               Reconciliation month: {reconciliationMonth}. Compare every required cash, bank or clearing account to the actual bank statement, processor statement or physical cash count at month end. The server independently validates these records and blocks closing if evidence is missing or the posted ledger differs.
             </WorkbookNote>
@@ -2194,10 +2196,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote title="Vendor bills and linked payments determine payable balances">
               Vendor contracts describe commitments. Accounts Payable is now kept in a separate persistent register; each bill can carry its own due date and payment schedule. Linked expenses remain source records and are not silently converted into bills.
             </WorkbookNote>
-            <AdminMetricStrip metrics={[
-              {id:'ap-bills',label:'Vendor bills',value:String(bills.length),context:'Saved finance register',icon:<FileText size={15}/>},
-              {id:'ap-total',label:'IDR outstanding',value:formatMoney(payableTotalIDR),context:foreignCurrencyBillCount+' non-IDR bills listed separately',icon:<WalletCards size={15} />}
-            ]}/>
+            
             <FinanceDataTable
               title="Accounts Payable register"
               description="Outstanding uses the saved bill balance when available, with the stored paid amount as a legacy fallback. The installment schedule uses linked payment records."
@@ -2225,6 +2224,11 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               emptyMessage="No vendor bills have been recorded yet."
               actions={registerAddButton('vendor-bill','Add vendor bill')}
             />
+            
+            <AdminMetricStrip metrics={[
+              {id:'ap-bills',label:'Vendor bills',value:String(bills.length),context:'Saved finance register',icon:<FileText size={15}/>},
+              {id:'ap-total',label:'IDR outstanding',value:formatMoney(payableTotalIDR),context:foreignCurrencyBillCount+' non-IDR bills listed separately',icon:<WalletCards size={15} />}
+            ]}/>
             {bills.length > 0 && (
               <FinanceDataTable
                 title="Vendor payment schedule"
@@ -2465,13 +2469,15 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote tone={opening===null?'warning':'info'} title={opening===null?'Petty cash needs an opening balance':'Petty cash register connected'}>
               Only posted vouchers affect the petty-cash ledger. Pending/approved vouchers remain visible in workflow but do not change the running balance. The ledger starts at the saved opening date; earlier movements are excluded from the opening-balance roll-forward. Internal transfers are shared with Cash & Bank and are not treated as an expense by themselves.
             </WorkbookNote>
+            
+            <FinanceDataTable title="Petty Cash Ledger" description="Voucher movements and internal cash transfers, sorted by date." columns={[{label:'Date'},{label:'Voucher / reference'},{label:'Description'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'},{label:'Status'},{label:'Actions'}]} rows={rows} emptyMessage="No petty-cash vouchers or transfers are recorded." actions={<div className="flex flex-wrap gap-2">{registerAddButton('petty-cash-voucher','Add voucher')}{canManageFinanceRecords && <><Button variant="secondary" type="button" onClick={()=>openRegisterForm('cash-bank-transaction',undefined,{transactionKind:'bank-to-petty-cash',accountCode:'1000',counterpartAccountCode:'1100',direction:'out',description:'Petty cash top-up'})}>Top up from bank</Button><Button variant="secondary" type="button" onClick={()=>openCashOpeningForm('1100')}>{opening===null?'Set opening balance':'Edit opening balance'}</Button></>}</div>}/>
             <AdminMetricStrip metrics={[
               {id:'petty-opening',label:'Opening balance',value:opening===null?'Not set':formatMoney(opening),context:'Account 1100 · Petty Cash Reserve',icon:<WalletCards size={15}/>},
               {id:'petty-in',label:'Posted cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Posted movements in selected period' : 'Posted voucher receipts',icon:<ArrowDown size={15}/>},
               {id:'petty-out',label:'Posted cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Posted movements in selected period' : 'Posted voucher expenses',icon:<ArrowUpRight size={15}/>},
               {id:'petty-pending',label:'Pending approval',value:String(pending),context:'Vouchers awaiting approve/post',icon:<ShieldAlert size={15}/>}
             ]}/>
-            <FinanceDataTable title="Petty Cash Ledger" description="Voucher movements and internal cash transfers, sorted by date." columns={[{label:'Date'},{label:'Voucher / reference'},{label:'Description'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'},{label:'Status'},{label:'Actions'}]} rows={rows} emptyMessage="No petty-cash vouchers or transfers are recorded." actions={<div className="flex flex-wrap gap-2">{registerAddButton('petty-cash-voucher','Add voucher')}{canManageFinanceRecords && <><Button variant="secondary" type="button" onClick={()=>openRegisterForm('cash-bank-transaction',undefined,{transactionKind:'bank-to-petty-cash',accountCode:'1000',counterpartAccountCode:'1100',direction:'out',description:'Petty cash top-up'})}>Top up from bank</Button><Button variant="secondary" type="button" onClick={()=>openCashOpeningForm('1100')}>{opening===null?'Set opening balance':'Edit opening balance'}</Button></>}</div>}/>
+            
           </div>
         );
       }
