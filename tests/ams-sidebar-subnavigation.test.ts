@@ -91,6 +91,20 @@ test('existing Inbox routes keep query-driven active state and Careers applicant
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=client'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=starred'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox', '?view=unsupported'), true);
+  for (const targetOnlyView of ['client-requests', 'project-support', 'unread', 'resolved', 'archived']) {
+    assert.equal(
+      isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox', '?view=' + targetOnlyView),
+      true,
+      targetOnlyView + ' is not a supported page view and must follow the page fallback to Overview',
+    );
+    assert.equal(
+      isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=' + targetOnlyView),
+      false,
+      targetOnlyView + ' must not falsely activate the Messages workspace',
+    );
+  }
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'messages')!, '/admin/inbox', '?view=starred'), true,
+    'Starred remains a Messages-owned saved view for navigation ownership');
   const messageWorksheets = getAmsModuleSubnavigationChildren('inbox', 'messages', 'Admin');
   assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'all-messages')!, '/admin/inbox', '?view=messages'), true);
   assert.equal(isAmsModuleSubnavigationChildActive(messageWorksheets.find((item) => item.key === 'sales-inquiries')!, '/admin/inbox', '?view=client'), true);
