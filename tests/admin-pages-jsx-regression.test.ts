@@ -977,3 +977,15 @@ test('Inbox Overview keeps queue actions with queue controls and avoids duplicat
   const exportButtons = [...inbox.matchAll(/onClick=\{handleExportCSV\}/g)];
   assert.ok(exportButtons.length >= 2, 'CSV export remains available in the header context and queue toolbar');
 });
+
+
+test('CMS case studies use a task-oriented card register before switching to the wide desktop table', () => {
+  const cms = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsProjects.tsx'), 'utf8');
+  assert.ok(cms.includes('data-ams-feature-slug="cms-projects-mobile-register"'));
+  assert.ok(cms.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(cms.includes('data-ams-slug={\'cms-project-card-\' + project.id}'));
+  assert.ok(cms.includes('onClick={() => handleTogglePublished(project)}'));
+  assert.ok(cms.includes('onClick={() => handleToggleFeatured(project)}'));
+  assert.ok(cms.includes('onClick={() => handleOpenEdit(project)}'));
+  assert.ok(cms.includes('onClick={() => handleDelete(project.id, project.title)}'));
+});

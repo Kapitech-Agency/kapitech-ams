@@ -516,7 +516,47 @@ export const AdminCmsProjects: React.FC = () => {
         </div>
       ) : (
         <AdminDataTableShell slug="cms-projects-directory-table">
-          <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable case study register">
+          <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="cms-projects-mobile-register" role="list" aria-label="Case study cards">
+          {pagedProjects.map((project) => (
+            <article key={project.id} role="listitem" data-ams-slug={'cms-project-card-' + project.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="h-12 w-16 shrink-0 overflow-hidden rounded-control border border-line bg-panel">
+                  {project.image ? <img src={project.image} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-muted"><ImageIcon size={16} /></div>}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="break-words text-sm font-semibold text-fg">{project.title || 'Untitled case study'}</h2>
+                  <p className="mt-1 break-words text-[11px] text-muted">{project.client || 'Client not set'} · /{project.slug || project.id}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span className="inline-flex max-w-full items-center rounded-badge border border-accent/25 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent-text">{project.pillar || 'Unspecified'}</span>
+                    <span className={project.isPublished === false
+                      ? 'inline-flex items-center rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-semibold text-muted'
+                      : 'inline-flex items-center rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-semibold text-success'}>{project.isPublished === false ? 'Draft' : 'Published'}</span>
+                    {project.featured && <span className="inline-flex items-center gap-1 rounded-badge border border-warning/20 bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning"><Star size={10} fill="currentColor" /> Featured</span>}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                <div className="min-w-0"><p className="text-[10px] text-muted">Service</p><p className="mt-1 break-words text-xs text-fg">{project.service || 'Not set'}</p></div>
+                <div className="min-w-0"><p className="text-[10px] text-muted">Year</p><p className="mt-1 text-xs tabular-nums text-fg">{project.year || '—'}</p></div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button type="button" onClick={() => handleTogglePublished(project)} aria-pressed={project.isPublished !== false} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                    <Eye size={12} /> {project.isPublished === false ? 'Publish' : 'Unpublish'}
+                  </button>
+                  <button type="button" onClick={() => handleToggleFeatured(project)} aria-pressed={Boolean(project.featured)} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                    <Star size={12} fill={project.featured ? 'currentColor' : 'none'} /> {project.featured ? 'Featured' : 'Feature'}
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button type="button" onClick={() => handleOpenEdit(project)} data-ams-slug={'cms-project-edit-' + project.id} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Edit ' + project.title} title="Edit case study"><Edit3 size={13} /></button>
+                  <button type="button" onClick={() => handleDelete(project.id, project.title)} data-ams-slug={'cms-project-delete-' + project.id} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Delete ' + project.title} title="Delete case study"><Trash2 size={13} /></button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable case study register">
           <table className="ams-data-table w-full min-w-[1080px] text-left">
             <thead>
               <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">

@@ -236,3 +236,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - On Inbox Overview, moved the mark-read/process-new action into the queue control strip alongside refresh, export, review mode, and reset. Removed duplicate header export/process actions for Overview; those actions remain in the header on the other Inbox tabs where they are not duplicated by the Overview toolbar.
 - Preserved the existing click handlers, permission disabling, polling, filters, route/query state, and record behavior.
 - Added regression coverage for the contextual action placement. CI status will be verified for the newest direct-to-`main` commit; browser interaction testing remains outstanding.
+
+
+## Twenty-eighth implementation slice: CMS Case Studies responsive register
+
+- Added a focused case-study card register for viewports below 1,280px. Each record keeps title/client, pillar, service, year, publication state, featured state, preview image where present, and the same publish/feature/edit/delete actions.
+- Retained the sortable-by-order data register in the desktop table layout at 1,280px and above and kept existing pagination outside the responsive presentation switch, so both layouts use the same current page of source-backed records.
+- Added regression coverage for the mobile card register and preserved handlers.
+- CMS API operations, content normalization, publishing state, permissions, editor drawer, filters, page size, pagination, and record data are unchanged. CI status will be checked for this direct-to-`main` change; authenticated browser visual QA remains outstanding.
