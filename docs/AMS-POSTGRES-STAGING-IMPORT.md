@@ -43,9 +43,9 @@ Import writes are refused when:
 - Migration metadata is recorded in `migration_runs`.
 - Document contents are not copied by this phase; only document metadata/access rows are migrated.
 
-## Current scope
+## Import scope at the time this procedure was documented — not a live status claim
 
-Imported core domains:
+Imported core domains described for this staging importer:
 
 - users and sessions
 - leads
@@ -63,7 +63,7 @@ Imported core domains:
 - notifications
 - audit logs
 
-Still requires a separate reconciliation/import stage:
+The following items were outside the scope of this importer when it was documented; this list does not claim that they remain unimplemented today:
 
 - CMS services/projects/testimonials/settings
 - notification settings/secrets
