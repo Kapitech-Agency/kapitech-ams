@@ -17,7 +17,7 @@ import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
 import { getAmsRole } from '../../lib/amsNavigationAccess';
 import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive, type AmsSidebarModuleKey } from '../../lib/amsModuleSubnavigation';
-import { AdminWorkspaceNavigationContext } from '../../components/admin/AdminModulePrimitives';
+import { AdminSectionTabs } from '../../components/admin/AdminModulePrimitives';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -454,17 +454,24 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
         </header>
-        {/* Page shells render contextual navigation below the page title and description. */}
-        <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
-          <AdminWorkspaceNavigationContext.Provider
-            value={workspaceTabItems.length > 0 ? {
-              items: workspaceTabItems,
-              activeKey: activeWorkspaceTab?.key || '',
-              placement: workspaceNavigationModule === 'finance' ? 'before-header' : 'after-header'
-            } : null}
+        {/* Module tabs belong to the shared topbar, not inside individual page headers. */}
+        {workspaceTabItems.length > 0 && (
+          <div
+            className="ams-workspace-topbar-nav sticky top-0 z-20 border-b border-line bg-panel min-[900px]:top-[52px]"
+            data-ams-slug="workspace-topbar-navigation"
           >
-            <Outlet />
-          </AdminWorkspaceNavigationContext.Provider>
+            <div className="mx-auto w-full max-w-[1560px] min-w-0 px-3 sm:px-5 lg:px-6">
+              <AdminSectionTabs
+                ariaLabel="Module navigation"
+                activeKey={activeWorkspaceTab?.key || ''}
+                items={workspaceTabItems}
+                className="w-full py-2"
+              />
+            </div>
+          </div>
+        )}
+        <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
+          <Outlet />
         </div>
 
       </main>
