@@ -16,7 +16,8 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
 
   assert.ok(sidebar.includes('aria-label="Primary navigation"'));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
-  assert.ok(workspace.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  assert.ok(workspace.includes("if (path === '/admin/settings') return 'settings';"));
+  assert.equal(workspace.includes("path === '/admin/navigation/release-readiness') return 'settings'"), false);
   assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search)'));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
   assert.ok(workspace.includes("{ key: 'overview', label: 'System Overview', to: '/admin/settings?tab=overview', slug: 'settings-workspace-overview' }"));
@@ -199,7 +200,8 @@ test('workspace context navigation is scoped to its owning pages and cannot foll
   assert.ok(navigation.includes("if (path === '/admin/projects') return 'projects';"));
   assert.ok(navigation.includes("if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';"));
   assert.ok(navigation.includes("if (path.startsWith('/admin/cms/')) return 'cms';"));
-  assert.ok(navigation.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  assert.ok(navigation.includes("if (path === '/admin/settings') return 'settings';"));
+  assert.equal(navigation.includes("path === '/admin/navigation/release-readiness') return 'settings'"), false);
   assert.equal(navigation.includes("if (path === '/admin/tasks') {\n    const params"), true);
   assert.equal(layout.includes("'/admin/documents', '/admin/team', '/admin/time-logs'"), false);
   assert.equal(layout.includes("'/admin/crm', '/admin/clients/all-clients'"), false);
