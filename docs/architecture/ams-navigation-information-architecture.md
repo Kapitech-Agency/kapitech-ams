@@ -36,7 +36,17 @@ Settings may remain pinned in the existing system area. It remains the ninth pri
 Local views are Overview, Performance and Analytics. Values are summaries of their source modules. Do not imply an unimplemented activity/analytics route is functional.
 
 ### 3.2 Inbox
-Keep current communication, client inquiry, follow-up, starred and read/unread experiences. Notification targets route to the owning record/module using existing authorization. Careers applicants are managed only in Website CMS → Careers. Inbox may provide a contextual shortcut, but it must not expose a competing applicant status, notes or delete workflow. Inbox is not an approval register.
+
+Inbox has exactly four direct workspace entries:
+
+1. **Overview** — source-backed summary of messages requiring attention, follow-ups, and recent activity.
+2. **Messages** — one canonical message/thread workspace with worksheets for All Messages, Sales Inquiries, Client Requests, and Project & Support. Unread, Starred, Resolved, and Archived are filters or saved views within Messages, not separate sidebar entries.
+3. **Follow-ups** — views for Due Today, Upcoming, Overdue, and Completed over the existing follow-up records. Do not create a duplicate task system.
+4. **Routing & Templates** — internal sections or tabs for Routing Rules and Response Templates. Do not expose each as a separate direct submenu.
+
+Use the same canonical message/thread records across categories, filters and saved views. Resolved and Archived remain distinct statuses even though they are accessed from the same workspace. Other supported filters, such as priority, owner/PIC, channel and date range, belong inside Messages and must not increase sidebar complexity.
+
+Notification targets route to the owning record/module using existing authorization. Careers applicants are managed only in Website CMS → Careers → Applicants. Inbox may provide a contextual shortcut, but it must not expose a competing applicant status, notes or delete workflow. Inbox is not an approval register.
 
 ### 3.3 Projects
 Project views include the existing registry/overview, delivery, budget and archived views. Tasks/Kanban/list are views over the same records. Financial values remain sourced from Finance. Client retainers/SLA belong to Clients, vendor master/time records to Team & Resources, and canonical files to Documents.
