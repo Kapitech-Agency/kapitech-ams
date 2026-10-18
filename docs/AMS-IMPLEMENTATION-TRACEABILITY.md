@@ -261,6 +261,16 @@ Dashboard exposes Overview, Performance, and Analytics. A missing or unsupported
 
 **Verification:** AMS Quality Gate and AMS CI passed on code SHA `a1d161046c77034a77c74db9fbb1ba4974fe027e`. Quality Gate passed typecheck, 710 regression tests (690 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser history and keyboard interaction checks remain unverified.
 
+### NAV-015: Agreements Renewal Schedule aggregates existing contract and retainer dates
+
+**Status:** IMPLEMENTED_UNVERIFIED
+
+**Source:** `src/pages/admin/AdminContracts.tsx`, `src/pages/admin/AdminClientRetainers.tsx`, `tests/ams-nine-module-workspace-regression.test.ts`.
+
+Renewal Schedule is available from either Agreements worksheet at `/admin/contracts?view=renewals`. It derives rows from active contract records with a valid renewal or end date, and active retainer terms stored on canonical client records. Active entries without dates remain visible as “Date not set.” Metrics are withheld when either source is unavailable; a partial-source warning avoids treating a failed source as zero. The schedule links back to the owning contract or retainer register and never creates a second renewal dataset, recalculates retainer billing, or automatically expires agreements. Contract History remains target-only.
+
+**Verification:** Source-level regression coverage is added for route ownership, active-only record scope, source completeness messaging, and non-mutating lifecycle handling. Quality Gate and AMS CI are pending on the commit. Browser-level and role-specific checks remain unverified.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
