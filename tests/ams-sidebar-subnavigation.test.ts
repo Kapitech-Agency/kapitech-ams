@@ -191,7 +191,7 @@ test('Project Registry filters keep the Project Registry workspace active withou
   ]) {
     assert.match(projectSource, new RegExp("key: '" + key + "',[^\\n]*available: false"));
   }
-
+});
 
 test('Clients and Team & Resources use persistent workspaces while internal views remain inside their pages', async () => {
   const clients = getAmsModuleSubnavigation('clients', 'Admin');
