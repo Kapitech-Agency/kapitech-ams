@@ -17,7 +17,7 @@ import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
 import { getAmsRole } from '../../lib/amsNavigationAccess';
 import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive, type AmsSidebarModuleKey } from '../../lib/amsModuleSubnavigation';
-import { AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
+import { AdminSectionTabs, AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -402,7 +402,15 @@ export const AdminLayout: React.FC = () => {
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              {workspaceTabItems.length > 0 && (
+                <AdminTopbarTabs
+                  ariaLabel="Module navigation"
+                  activeKey={activeWorkspaceTab?.key || ''}
+                  items={workspaceTabItems}
+                  className="min-w-0 flex-1"
+                />
+              )}
               <Button
                 type="button"
                 variant="secondary"
@@ -410,10 +418,10 @@ export const AdminLayout: React.FC = () => {
                 aria-label="Search everything in AMS"
                 aria-keyshortcuts="Control+K Meta+K"
                 icon={<Search size={14} />}
-                className="h-8 shrink-0 justify-start gap-2 border-line bg-bg px-2.5"
+                className="h-8 w-8 shrink-0 justify-center border-line bg-bg p-0 xl:w-auto xl:justify-start xl:gap-2 xl:px-2.5"
               >
-                <span className="hidden text-[11px] font-medium sm:inline">Search Everything</span>
-                <kbd className="hidden rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted md:inline">⌘K</kbd>
+                <span className="hidden text-[11px] font-medium xl:inline">Search Everything</span>
+                <kbd className="hidden rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted 2xl:inline">⌘K</kbd>
               </Button>
             </div>
             <div className="flex shrink-0 items-center gap-1">
@@ -456,18 +464,18 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
         </header>
-        {/* Module tabs belong to the shared topbar, not inside individual page headers. */}
+        {/* Compact in-page navigation fallback for viewports where the desktop topbar is hidden. */}
         {workspaceTabItems.length > 0 && (
           <div
-            className="ams-workspace-topbar-nav sticky top-0 z-20 border-b border-line bg-panel min-[900px]:top-[52px]"
+            className="ams-workspace-topbar-nav sticky top-0 z-20 border-b border-line bg-panel min-[900px]:hidden"
             data-ams-slug="workspace-topbar-navigation"
           >
-            <div className="mx-auto w-full max-w-[1560px] min-w-0 px-3 sm:px-5 lg:px-6">
-              <AdminTopbarTabs
+            <div className="mx-auto w-full max-w-[1560px] min-w-0 px-3 sm:px-5">
+              <AdminSectionTabs
                 ariaLabel="Module navigation"
                 activeKey={activeWorkspaceTab?.key || ''}
                 items={workspaceTabItems}
-                className="w-full"
+                className="w-full py-2"
               />
             </div>
           </div>
