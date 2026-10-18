@@ -17,7 +17,7 @@ import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
 import { getAmsRole } from '../../lib/amsNavigationAccess';
 import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive, type AmsSidebarModuleKey } from '../../lib/amsModuleSubnavigation';
-import { AdminSectionTabs } from '../../components/admin/AdminModulePrimitives';
+import { AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -463,11 +463,11 @@ export const AdminLayout: React.FC = () => {
             data-ams-slug="workspace-topbar-navigation"
           >
             <div className="mx-auto w-full max-w-[1560px] min-w-0 px-3 sm:px-5 lg:px-6">
-              <AdminSectionTabs
+              <AdminTopbarTabs
                 ariaLabel="Module navigation"
                 activeKey={activeWorkspaceTab?.key || ''}
                 items={workspaceTabItems}
-                className="w-full py-2"
+                className="w-full"
               />
             </div>
           </div>
