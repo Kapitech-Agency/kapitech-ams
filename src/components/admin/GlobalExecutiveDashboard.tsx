@@ -713,42 +713,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </div>
 
       <div className="mt-3 grid gap-3 min-[1100px]:grid-cols-12">
-        <div className="col-span-full min-w-0" data-ams-feature-slug="dashboard-supporting-metrics">
-          <AdminMetricStrip
-            className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
-            metrics={[
-              {
-                id: 'outstanding', label: 'Outstanding invoices',
-                value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
-                context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                                icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
-              },
-              {
-                id: 'utilization', label: 'Team utilization',
-                value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : '—',
-                context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                                icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
-              },
-              {
-                id: 'avg-project-value', label: 'Avg. active project budget',
-                value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : '—',
-                context: averageActiveBudget != null ? 'Average of active project budgets' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
-                                icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
-              },
-              {
-                id: 'net-operating-profit', label: 'Cash surplus / deficit',
-                value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : '—',
-                context: dashboardOverview.financials?.netOperatingProfit != null || liveCashDifference !== null ? 'Cash collected less recorded expenses; not posted profit' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
-                                icon: <CircleDollarSign size={15} />,
-                toneClassName: dashboardOverview.financials?.netOperatingProfit != null
-                  ? Number(dashboardOverview.financials.netOperatingProfit) >= 0 ? 'text-success' : 'text-danger'
-                  : 'text-fg',
-                slug: 'dashboard-net-operating-profit'
-              }
-            ]}
-          />
-        </div>
-
         <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-0" title="Active projects" description="Current delivery status across the agency portfolio." actions={(
           <Link to="/admin/projects" className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-accent-text">View all <ArrowUpRight size={13} /></Link>
         )}>
@@ -929,6 +893,42 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           </div>
         </AdminPanel>
       </div>
+
+        <div className="col-span-full min-w-0" data-ams-feature-slug="dashboard-supporting-metrics">
+          <AdminMetricStrip
+            className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
+            metrics={[
+              {
+                id: 'outstanding', label: 'Outstanding invoices',
+                value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
+                context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                                icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
+              },
+              {
+                id: 'utilization', label: 'Team utilization',
+                value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : '—',
+                context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
+                                icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
+              },
+              {
+                id: 'avg-project-value', label: 'Avg. active project budget',
+                value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : '—',
+                context: averageActiveBudget != null ? 'Average of active project budgets' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
+                                icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
+              },
+              {
+                id: 'net-operating-profit', label: 'Cash surplus / deficit',
+                value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : '—',
+                context: dashboardOverview.financials?.netOperatingProfit != null || liveCashDifference !== null ? 'Cash collected less recorded expenses; not posted profit' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
+                                icon: <CircleDollarSign size={15} />,
+                toneClassName: dashboardOverview.financials?.netOperatingProfit != null
+                  ? Number(dashboardOverview.financials.netOperatingProfit) >= 0 ? 'text-success' : 'text-danger'
+                  : 'text-fg',
+                slug: 'dashboard-net-operating-profit'
+              }
+            ]}
+          />
+        </div>
 
 
 
