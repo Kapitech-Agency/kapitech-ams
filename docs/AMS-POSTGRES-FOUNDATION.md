@@ -40,7 +40,7 @@ This example describes the initial migration phase only. Never run this document
 
 `npm run db:migrate`
 
-The early foundation step created the initial relational schema; it did not itself import the legacy JSON records. Current migration/schema state must be verified from the current repository and applied-migration records.
+At the time of the original foundation stage, migration 001 created the initial relational schema and did not import the legacy JSON records. The current `npm run db:migrate` command invokes the current migration runner and may apply all pending migrations discovered by the release loader; do not assume it applies only migration 001. Inspect the current script and migration loader, and use an isolated staging database for rehearsal. Verify applied versions/checksums and the authorized readiness evidence before production actions.
 
 ## Historical next-stage plan — reference only
 
