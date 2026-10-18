@@ -6,6 +6,7 @@ Read root AGENTS.md before coding. It defines task boundaries, conflict resoluti
 - Target modules/workflows: docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md and docs/architecture/ams-navigation-information-architecture.md.
 - Requirement status/evidence: docs/AMS-IMPLEMENTATION-TRACEABILITY.md.
 - UI: AMS-DESIGN-SYSTEM.md and docs/AMS-UX-INTERACTION-STANDARDS.md.
+- Main content and role-aware worksheet presentation: docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md and docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md.
 - Shared interactions: docs/AMS-DRAWER-GUIDELINES.md, docs/AMS-MODAL-GUIDELINES.md, docs/AMS-KANBAN-GUIDELINES.md.
 - Frontend: docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md.
 - Business transitions: docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md.
