@@ -247,7 +247,7 @@ The generic Approval item is absent from primary/contextual navigation. Keep exi
 
 ## 7. Module 03 — Projects
 
-Projects is the primary source for delivery management. CRM starts the deal and transfers commercial context; Finance is the authoritative source for financial values. Projects must not create journals or reconstruct Finance values independently.
+Projects is the primary source for delivery management. Existing commercial/opportunity records may supply handover context where required by preserved compatibility workflows; this does not authorize a standalone CRM UI or a new sales pipeline. Finance is the authoritative source for financial values. Projects must not create journals or reconstruct Finance values independently.
 
 ### 7.1 Navigation Structure
 
@@ -333,7 +333,7 @@ Related Project Files are contextual links/filter views into the canonical Docum
 - Board changes must not create duplicate tasks or inconsistent statuses in other views.
 - Filters, search, pagination, grouping, and empty states must behave consistently across views.
 
-### 7.4 Content & Campaign Operations
+### 7.4 Content & Campaigns
 
 Content workflow:
 
@@ -403,7 +403,7 @@ Client Requests are owned by Inbox. Clients may show linked requests/conversatio
 A single client-relationship page summarizing, subject to access permissions:
 
 - Company/contact identity and relationships.
-- CRM opportunities and sales history.
+- Existing commercial/opportunity history, when retained and linked for compatibility; do not provide a separate sales-pipeline workspace.
 - Contracts, SOWs, scope, expiry, and renewal obligations.
 - Active and historical projects, deliverables, risks, and milestones.
 - Finance summaries such as quotation/invoice references, outstanding receivables, and payment status.
