@@ -28,7 +28,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(subnavigation, /finance-tab-receivables-payables/);
   assert.match(subnavigation, /finance-tab-project-finance/);
   assert.match(subnavigation, /finance-tab-accounting-reports/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance views" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance views" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
   assert.match(workspace, /const sheetItems = \[[\s\S]{0,240}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
@@ -64,7 +64,9 @@ test('Finance visible copy describes user workflows, not spreadsheet implementat
 test('Finance workspace groups navigation, search, and alerts using the shared AMS layout patterns', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
-  assert.match(workspace, /<div className="flex min-w-0 justify-start sm:justify-end" data-ams-slug="finance-worksheet-search">/);
+  assert.match(workspace, /className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"[\s\S]{0,280}data-ams-slug="finance-workspace-navigation"/);
+  assert.doesNotMatch(workspace, /SEARCHABLE_FINANCE_TABS\.has\(activeTab\.key\) && activeGroup\.items\.length <= 4/);
+  assert.match(workspace, /<div className="flex min-w-0 w-full justify-start lg:w-72 lg:shrink-0 lg:justify-end" data-ams-slug="finance-worksheet-search">/);
   assert.match(workspace, /\(Boolean\(registerActionError && !editor\) \|\| registerErrors\.length > 0 \|\| sourceErrors\.length > 0\)/);
   assert.match(workspace, /<AdminModuleNotice[\s\S]{0,320}Finance action needs attention/);
   assert.doesNotMatch(workspace, /<WorkbookNote tone="warning" title="Some finance sources are unavailable">/);
