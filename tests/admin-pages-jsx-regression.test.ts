@@ -1024,3 +1024,15 @@ test('Careers job and applicant registers adapt to compact screens without remov
   assert.ok(careers.includes('onClick={() => openApplicantDetails(applicant)}'));
   assert.ok(careers.includes('onClick={() => setDeleteApplicantTarget(applicant)}'));
 });
+
+
+test('Project Table view switches to portfolio cards on compact widths without losing reporting fields or permissions', () => {
+  const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+  assert.ok(projects.includes('data-ams-feature-slug="projects-table-cards"'));
+  assert.ok(projects.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(projects.includes('data-ams-slug={\'project-portfolio-card-\' + project.id}'));
+  assert.ok(projects.includes('Recorded cost / budget'));
+  assert.ok(projects.includes('Delivery progress'));
+  assert.ok(projects.includes('canManageProjects && <button type="button" data-primary="true" onClick={() => openEditProject(project)}'));
+  assert.ok(projects.includes('onClick={() => openProjectDetail(project)}'));
+});

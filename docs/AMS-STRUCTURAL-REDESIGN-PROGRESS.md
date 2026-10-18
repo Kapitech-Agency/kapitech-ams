@@ -267,3 +267,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 
 - Corrected the missing `EyeOff` icon import used by the new Services card publication control after CI TypeScript validation reported it.
 - No behavior or permission changes were made.
+
+
+## Thirty-second implementation slice: Projects Table responsive work surface
+
+- The Projects → Projects (Table view) now presents a card register below 1,280px instead of forcing the 1,080px desktop table into laptop/tablet widths.
+- The card preserves project/client identity, lifecycle status, delivery progress, recorded cost against budget with source-unavailable state, deadline/overdue context, owner, detail action, and permission-gated edit action.
+- Cards and desktop table use the same server-backed, filtered and paginated page slice; existing export, filters, sort, status semantics, project detail drawer, and lifecycle operations remain unchanged.
+- Added regression assertions for responsive rendering, key financial/delivery labels, and action preservation. Direct-to-`main` CI is checked after this commit; no authenticated browser visual test is claimed.

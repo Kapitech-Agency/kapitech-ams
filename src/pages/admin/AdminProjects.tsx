@@ -2314,7 +2314,47 @@ export const AdminProjects: React.FC = () => {
                 onOpenProject={openProjectDetail}
               />
             ) : (
-              <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable project register table">
+              <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="projects-table-cards" role="list" aria-label="Project portfolio cards">
+                {pagedProjectTableRows.length === 0 ? (
+                  <div className="rounded-control border border-line bg-bg p-6 text-center" role="status">
+                    <p className="text-xs font-semibold text-fg">{projects.length === 0 ? 'No projects have been created yet.' : 'No projects match the current filters.'}</p>
+                    {(activeProjectFilters > 0 || projectSort !== 'updated') && <button type="button" onClick={clearProjectFilters} className="mt-3 inline-flex h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">Reset filters</button>}
+                  </div>
+                ) : pagedProjectTableRows.map(project => {
+                  const recordedCost = getRecordedExpense(project.id);
+                  const overdue = isOverdue(project.targetEndDate) && project.status !== 'completed';
+                  return (
+                    <article key={project.id} role="listitem" data-ams-slug={'project-portfolio-card-' + project.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 flex-1 text-left">
+                          <h3 className="break-words text-sm font-semibold text-fg">{project.name}</h3>
+                          <p className="mt-1 break-words text-[11px] text-muted">{project.clientCompany || 'No client linked'}</p>
+                        </button>
+                        <span className={'inline-flex shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span>
+                      </div>
+                      <div className="mt-3 border-y border-line py-3">
+                        <div className="flex items-center justify-between gap-3 text-[11px]">
+                          <span className="text-muted">Delivery progress</span>
+                          <span className="font-semibold tabular-nums text-fg">{project.progressPercent}%</span>
+                        </div>
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel">
+                          <div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} />
+                        </div>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        <div className="min-w-0"><p className="text-[10px] text-muted">Recorded cost / budget</p><p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{recordedCost === null ? '—' : formatAmount(recordedCost, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></p>{recordedCost === null && <p className="mt-1 text-[10px] text-muted">Finance data unavailable</p>}</div>
+                        <div className="min-w-0"><p className="text-[10px] text-muted">Deadline</p><p className={'mt-1 break-words text-xs font-medium ' + (overdue ? 'text-danger' : 'text-fg')}>{formatDate(project.targetEndDate)}</p>{overdue && <p className="mt-1 text-[10px] text-danger">Overdue</p>}</div>
+                        <div className="min-w-0 col-span-2"><p className="text-[10px] text-muted">Owner</p><div className="mt-1">{project.teamLead ? <ProfileIdentity profile={{ name: project.teamLead, contextLabel: 'Project owner' }} showRole={false} /> : <span className="text-xs text-muted">Unassigned</span>}</div></div>
+                      </div>
+                      <div className="mt-3 flex justify-end gap-1.5 border-t border-line pt-3">
+                        <button type="button" onClick={() => openProjectDetail(project)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">View project</button>
+                        {canManageProjects && <button type="button" data-primary="true" onClick={() => openEditProject(project)} className="inline-flex min-h-9 items-center rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-medium text-accent-text hover:bg-accent/15">Edit</button>}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable project register table">
                 <table className="ams-projects-table min-w-[1080px] text-left">
                   <thead>
                     <tr>
