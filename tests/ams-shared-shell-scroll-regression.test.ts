@@ -39,13 +39,8 @@ test('authenticated shell defines viewport geometry and one primary workspace sc
   );
   assert.match(
     styles,
-    /\.ams-shell>main\s*\{[^}]*scrollbar-width:\s*thin;/,
-    'the main scroller should use the shared visible scrollbar policy',
-  );
-  assert.doesNotMatch(
-    styles,
     /\.ams-shell>main\s*\{[^}]*scrollbar-width:\s*auto;/,
-    'the main scroller should not override the shared thin scrollbar policy',
+    'the main scroller should retain its native-width scrollbar for discoverability',
   );
   assert.match(
     styles,
