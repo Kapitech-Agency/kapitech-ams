@@ -281,3 +281,18 @@ test('Team Directory keeps the page title free of a duplicate inline member-coun
   assert.doesNotMatch(team, /Team Directory <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0\.5 text-\[10px\] font-medium text-muted">\{members\.length\} Internal Members<\/span>/);
   assert.match(team, /slug: 'team-directory-kpi-headcount'/);
 });
+
+
+test('CMS editor headers share the same spacing ownership', async () => {
+  for (const file of [
+    'src/pages/admin/AdminCmsProjects.tsx',
+    'src/pages/admin/AdminCmsInsights.tsx',
+    'src/pages/admin/AdminCmsServices.tsx',
+    'src/pages/admin/AdminCmsTestimonials.tsx',
+    'src/pages/admin/AdminCmsCareers.tsx',
+  ]) {
+    const source = await read(file);
+    const header = source.slice(source.indexOf('<AdminModuleHeader'), source.indexOf('/>', source.indexOf('<AdminModuleHeader')) + 2);
+    assert.match(header, /className="mb-0"/, file + ' should delegate vertical spacing to the page shell');
+  }
+});

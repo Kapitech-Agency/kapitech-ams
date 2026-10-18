@@ -761,6 +761,7 @@ export const AdminCmsInsights: React.FC = () => {
     <AdminPageShell featureSlug="cms-insights-module" className="ams-cms-module">
       <AdminModuleHeader
         slug="cms-insights-header"
+        className="mb-0"
         title="Insights"
         description={language === 'id'
           ? 'Kelola artikel editorial, SEO, bahasa, taxonomy, dan publishing workflow Kapitech Insight.'

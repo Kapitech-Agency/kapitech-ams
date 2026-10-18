@@ -136,3 +136,10 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - No team records, count calculations, route state, permissions, or actions changed.
 - Added a source regression assertion that keeps the title free of a duplicate inline count.
 - [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121528692) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121528688) passed for commit `a4d86460030579b5565348556862d3a8a5c46bd9`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
+
+
+## Sixteenth implementation slice: consistent CMS header spacing
+
+- Aligned the Insights header's bottom-margin ownership with Case Studies, Services, Testimonials, and Careers. The shared page shell now controls the gap between header and subsequent workspace content consistently across CMS content types.
+- Added regression coverage for the common header spacing contract across all five CMS views.
+- No content, publishing workflow, editor, data, permission, or route behavior changed.
