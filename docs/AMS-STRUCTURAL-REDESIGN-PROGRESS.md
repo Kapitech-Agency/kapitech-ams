@@ -51,3 +51,17 @@ Required follow-on sequence:
 ## Next action
 
 Continue with a bounded module-specific structural slice based on the current source and this repository's UX/UI guidelines. Commit directly to `main`, inspect the resulting GitHub Actions run, and record exact completion and remaining risks here after each substantial stage.
+
+## Seventh implementation slice: dedicated workspace topbar tabs
+
+- Added `AdminTopbarTabs` to `src/components/admin/AdminModulePrimitives.tsx` as a dedicated shared primitive for the authenticated shell's desktop workspace navigation. It uses the existing navigation access filter, route links, active `aria-current` semantics, stable tab geometry, keyboard focus styling, and active-tab visibility within horizontal overflow.
+- Updated `src/pages/admin/AdminLayout.tsx` to use `AdminTopbarTabs` for the module navigation row instead of reusing the general `AdminSectionTabs` component. Secondary worksheet and in-page tabs continue to use `AdminSectionTabs`.
+- Updated `tests/frontend-functional-regression.test.ts` to assert the dedicated topbar primitive is used exactly once in the shell.
+- Commits on `main`: `9baf3d36868af58d94dc21590c8c29ecfd08201f`, `51af71b9e66cee8acd9a64dfa4fec4315c82e690`, `6356d34a4542a3ea80b5ac74750573e7988a8961`.
+- GitHub Actions for commit `6356d34a4542a3ea80b5ac74750573e7988a8961` was still running at the last check; no pass/fail result is claimed yet.
+- This is a shared navigation foundation slice, not completion of module content redesign. No browser visual validation has been performed in this environment.
+
+## Next action
+
+Continue with module-specific workspace hierarchy, starting with Finance's primary workspaces and then the remaining CMS/Settings and module subtabs. Preserve all financial and access behavior; validate each coherent change against CI before reporting it complete.
+
