@@ -156,7 +156,7 @@
 }
 .ams-shell *,.ams-shell *::before,.ams-shell *::after{box-sizing:border-box}
 .ams-shell>aside{min-width:0;background:var(--panel);border-right:1px solid var(--line)}
-.ams-shell>main{min-width:0;min-height:0;background:var(--bg);overscroll-behavior:none;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:var(--muted) var(--bg)}
+.ams-shell>main{min-width:0;min-height:0;background:var(--bg);overscroll-behavior:none;scrollbar-gutter:stable;scrollbar-width:auto;scrollbar-color:var(--muted) var(--bg)}
 .ams-shell>main>header{height:52px;min-height:52px;background:var(--panel);border-bottom:1px solid var(--line)}
 .ams-shell>main>.ams-content{min-width:0;padding:0}
 .ams-shell .ams-mobile-topbar{height:52px;min-height:52px;background:var(--panel);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
