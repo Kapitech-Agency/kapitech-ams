@@ -1125,9 +1125,7 @@ export const AdminTeams: React.FC = () => {
     <AdminPageShell featureSlug="team-module">
       <AdminModuleHeader
         className="mb-0"
-        title={currentView === 'team-directory'
-          ? <>Team Directory <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{members.length} Internal Members</span></>
-          : pageCopy[currentView].title}
+        title={currentView === 'team-directory' ? 'Team Directory' : pageCopy[currentView].title}
         description={pageCopy[currentView].description}
         actions={
           <>

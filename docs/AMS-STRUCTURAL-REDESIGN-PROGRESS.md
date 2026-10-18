@@ -128,3 +128,10 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Kept the same dismissible notice, status text/tone, CRUD operations, editor drawers, filters, sorting, pagination, permissions, publication state, routes, and API behavior.
 - Added a regression test asserting the intended header → filter bar → feedback → register order across all four CMS registers.
 - [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121347658) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121347649) passed for commit `110f2272e0e16bbb3cbcecbec14f939cd6e9e963`, including typecheck, regression tests, production build, and the configured production/security checks.
+
+
+## Fifteenth implementation slice: consistent Team Directory header
+
+- Removed the inline member-count badge from the Team Directory page title. The page title now follows the same clean title/description/action hierarchy as sibling workspaces; record counts remain in the directory's dedicated supporting summary rather than competing with the title.
+- No team records, count calculations, route state, permissions, or actions changed.
+- Added a source regression assertion that keeps the title free of a duplicate inline count.

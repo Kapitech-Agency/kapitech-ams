@@ -273,3 +273,11 @@ test('CMS feedback notices follow the stable register filter controls', async ()
     assert.ok(header >= 0 && filter > header && notice > filter && register > notice, file + ' should keep header and filters stable before transient feedback and the register');
   }
 });
+
+
+test('Team Directory keeps the page title free of a duplicate inline member-count badge', async () => {
+  const team = await read('src/pages/admin/AdminTeams.tsx');
+  assert.match(team, /title=\{currentView === 'team-directory' \? 'Team Directory' : pageCopy\[currentView\]\.title\}/);
+  assert.doesNotMatch(team, /Team Directory <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0\.5 text-\[10px\] font-medium text-muted">\{members\.length\} Internal Members<\/span>/);
+  assert.match(team, /data-ams-feature-slug="team-directory-kpis"/);
+});
