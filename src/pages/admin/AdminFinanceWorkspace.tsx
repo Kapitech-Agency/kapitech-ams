@@ -2102,6 +2102,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               {id:'cash-in',label:'Recorded cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowDown size={15}/>},
               {id:'cash-out',label:'Recorded cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowUpRight size={15}/>},
               {id:'cash-closing',label:reportPeriodEnabled ? 'Provisional period-end balance' : 'Provisional balance',value:periodClosingBalance === null ? 'Not available' : formatMoney(periodClosingBalance),context:'Opening balance plus recorded movements through period end; unreconciled',icon:<WalletCards size={15}/>},
+            ]}/>
+            <section className="min-w-0 space-y-3" data-ams-slug="finance-statement-reconciliation-workspace" aria-label="Statement reconciliation workspace">
+            <AdminMetricStrip metrics={[
               {id:'cash-recon-complete',label:'Reconciled accounts',value:reconciledCount+' / '+reconciliationDiffs.length,context:'Month-end · '+reconciliationMonth,icon:<ShieldAlert size={15}/>},
               {id:'cash-recon-open',label:'Reconciliation exceptions',value:String(openReconCount),context:'Missing statement evidence or non-zero difference',icon:<CircleDollarSign size={15}/>}
             ]}/>
@@ -2128,6 +2131,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               emptyMessage="No cash/bank account has a posted balance to reconcile for this month."
               actions={registerAddButton('cash-reconciliation','Record reconciliation',{reconciliationMonth,statementDate:reconciliationMonthEnd})}
             />
+            </section>
           </div>
         );
       }

@@ -152,6 +152,27 @@ test('Monthly P&L separates operational preview from the posted-ledger snapshot'
   assert.match(pnlView, /postedLedger\.available/);
 });
 
+test('Cash & Bank separates cash movement metrics from statement reconciliation controls', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const cashStart = workspace.indexOf("case 'cash-bank': {");
+  const cashEnd = workspace.indexOf("case 'accounts-receivable':", cashStart);
+  assert.ok(cashStart >= 0 && cashEnd > cashStart, 'Cash & Bank workspace should be present.');
+  const cash = workspace.slice(cashStart, cashEnd);
+  const ledgerIndex = cash.indexOf('title="Cash & Bank ledger"');
+  const metrics = [...cash.matchAll(/<AdminMetricStrip metrics=\{\[/g)].map((match) => match.index ?? -1);
+  const reconciliationStart = cash.indexOf('data-ams-slug="finance-statement-reconciliation-workspace"');
+  const reconciliation = cash.slice(reconciliationStart);
+
+  assert.ok(ledgerIndex >= 0 && metrics.length === 2 && metrics[0] > ledgerIndex, 'The cash ledger should lead its supporting movement metrics.');
+  assert.ok(reconciliationStart > metrics[0], 'Statement reconciliation should be a distinct later workspace.');
+  assert.ok(reconciliation.indexOf('cash-recon-complete') < reconciliation.indexOf('title={openReconCount'), 'Reconciliation metrics should precede their actionable warning.');
+  assert.ok(reconciliation.indexOf('title={openReconCount') < reconciliation.indexOf("title={'Statement reconciliation"), 'The reconciliation warning should stay attached to its statement table.');
+  assert.match(cash.slice(metrics[0], reconciliationStart), /cash-opening[\s\S]*cash-in[\s\S]*cash-out[\s\S]*cash-closing/);
+  assert.doesNotMatch(cash.slice(metrics[0], reconciliationStart), /cash-recon-complete|cash-recon-open/);
+  assert.match(reconciliation, /cash-recon-complete[\s\S]*cash-recon-open/);
+  assert.match(cash, /postedBalanceAsOf/);
+});
+
 test('Finance read permission blocks unauthorized register loads and shows an explicit restricted state', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
