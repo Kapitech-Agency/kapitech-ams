@@ -34,6 +34,8 @@ The application treats PostgreSQL backup health as production-ready only when a 
 
 The application defaults are **RPO 15 minutes** and **RTO 60 minutes**. These are operational targets, not proof that the infrastructure currently achieves them. The provider and restore rehearsal must demonstrate the target before production cutover.
 
+For the repository's isolated staging restore test, see [`AMS-RESTORE-REHEARSAL.md`](AMS-RESTORE-REHEARSAL.md). It must target a dedicated empty PostgreSQL database and must never be run against production. Passing it does not prove that the actual backup provider, reconciliation, document objects, or live release is ready.
+
 ## Cutover gate
 
 Do not switch production to PostgreSQL solely because migrations and application tests pass. The cutover remains blocked until:
