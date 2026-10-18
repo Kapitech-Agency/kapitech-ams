@@ -360,3 +360,22 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 ## Remaining status after these slices
 
 The structural redesign is still in progress. These changes improve three Finance reporting worksheets; they do not complete Finance's other worksheets or the remaining module/subtab inventory. The Drive reference screenshot remains unreadable through the available tool, so no claim of direct screenshot inspection is made. Authenticated browser visual QA and full viewport/scroll testing remain outstanding.
+
+## Forty-fourth implementation slice: Cash & Bank task grouping
+
+- Preserved the primary Cash & Bank ledger before its supporting metrics, in accordance with the register-first workspace guideline.
+- Split the six values into a four-metric cash ledger group (opening balance, inflows, outflows and provisional balance) and a two-metric statement reconciliation group (reconciled accounts and exceptions). The latter is grouped with its warning and statement-reconciliation table in a named section.
+- No finance formulas, reconciliation gates, record actions or workflow transitions changed. Added regression coverage for ordering and grouping.
+- Code commit: 9bdffa502bc7aff4b3365f4b8037dd4f0ff446eb. AMS CI passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39130102280); AMS Quality Gate passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39130102409).
+
+## Forty-fifth implementation slice: Project Finance compact workspace
+
+- Added a responsive card workspace for the 18-column Project Finance register below 1,280px; the full sortable table remains the desktop presentation at 1,280px and above.
+- Cards group planned financials separately from reporting-period activity, and retain client, PIC, project status, finance checks, dates, notes, row-specific configure/edit actions, and pagination. A compact sort control uses the table's existing sort state so mobile users retain sorting instead of being limited to horizontal scrolling.
+- Both presentations render the same existing row cells and saved project-finance calculations. No backend/API, permission, finance formula, or record-action behavior changed.
+- Added regression coverage for compact/desktop breakpoints, grouping, sort reuse, pagination-driven visible rows and action retention.
+- Code commit: 51dd6e725c9a845e7ee1c3d9fd04f4756932b242. AMS CI passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39130341652); AMS Quality Gate passed (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39130341665).
+
+## Updated overall status
+
+The structural redesign remains in progress. These stages materially improve four Finance report/workspace layouts (Annual Summary, Cash Flow, Monthly P&L, Cash & Bank) and add a focused compact register for Project Finance. Other Finance worksheets and other module/subtab validation remain outstanding. The supplied Drive screenshot remains unreadable to the available fetch/render tool; no direct visual inspection is claimed. Full browser screenshot QA at 1440, 1280, 1024, 768, 390 and 320px, and interactive wheel/trackpad/touch/keyboard scrollbar testing still need to be completed where a live browser session is available.
