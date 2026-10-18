@@ -1238,25 +1238,25 @@ Messages should describe what happened, what was saved, what was not saved, and 
 
 This guide defines the target product, module/workflow ownership and domain acceptance requirements. It must not create a competing delivery schedule. The current end-to-end sequence, dependencies, deliverables and exit gates live in:
 
-- \`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md\` — the single canonical stage sequence from baseline through production stabilization.
-- \`docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md\` — current requirement-level status, evidence, dependencies, blockers and next action.
-- \`docs/AMS-END-TO-END-EXECUTION-PROMPT.md\` — the copy/paste instructions for the executing AI.
-- \`docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md\` — execution discipline, verification and timeout recovery.
-- \`docs/AMS-IMPLEMENTATION-TRACEABILITY.md\` — requirement IDs and implementation evidence, revalidated against current \`main\`.
-- \`docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md\` — test coverage and release evidence.
+- `docs/AMS-END-TO-END-DELIVERY-ROADMAP.md` — the single canonical stage sequence from baseline through production stabilization.
+- `docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md` — current requirement-level status, evidence, dependencies, blockers and next action.
+- `docs/AMS-END-TO-END-EXECUTION-PROMPT.md` — the copy/paste instructions for the executing AI.
+- `docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md` — execution discipline, verification and timeout recovery.
+- `docs/AMS-IMPLEMENTATION-TRACEABILITY.md` — requirement IDs and implementation evidence, revalidated against current `main`.
+- `docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md` — test coverage and release evidence.
 
 The Master Structure remains authoritative for the target state described in this document. The navigation IA remains authoritative for approved navigation ownership. The design system remains authoritative for visual tokens and interaction standards. Domain guides remain authoritative for Finance, data ownership, workflow state machines, security, APIs, private documents, integrations and production operations. Their local examples or historical stage numbers do not supersede the end-to-end roadmap.
 
 ### 20.1 Required execution behavior
 
-1. **Inspect before editing.** Re-fetch current \`main\`, inspect the latest relevant commits, source, tests and CI. Verify the status of previous work and preserve correct changes; do not restart from zero because a prompt or session changed.
-2. **Follow the roadmap order.** Execute the stages and acceptance criteria in \`docs/AMS-END-TO-END-DELIVERY-ROADMAP.md\`. Do not skip, combine, reorder or silently broaden stages. Findings that belong to later stages are recorded for later unless they are required to safely complete the current stage.
+1. **Inspect before editing.** Re-fetch current `main`, inspect the latest relevant commits, source, tests and CI. Verify the status of previous work and preserve correct changes; do not restart from zero because a prompt or session changed.
+2. **Follow the roadmap order.** Execute the stages and acceptance criteria in `docs/AMS-END-TO-END-DELIVERY-ROADMAP.md`. Do not skip, combine, reorder or silently broaden stages. Findings that belong to later stages are recorded for later unless they are required to safely complete the current stage.
 3. **Work in bounded slices.** Each slice must have a clear outcome, files/flows in scope, validation plan and safe checkpoint. For module-based work, do one module or well-bounded worksheet/workflow slice at a time.
 4. **Report continuously.** Send a durable user-facing report at baseline, after each meaningful slice, when a blocker or significant risk appears, and at each stage gate. Include exact current/committed SHA, changed files, what is verified, tests and results, remaining items, unverified areas and one next action. A commit message alone is not a report.
 5. **Continue after routine reports.** A report is a checkpoint, not an automatic pause request. Continue to the next task within the already-authorized end-to-end scope when safe. Do not ask for permission after each routine slice.
 6. **Honor real approval gates.** Stop at the roadmap's explicit visual/content sign-off before broad functional expansion, and whenever a genuine business/product decision, change to a financial rule, authorization/security decision, destructive or live-production action, scope change or unresolved critical risk requires user input. Do not treat broad roadmap scope as permission for an unreviewed risky operation.
-7. **Timeout recovery.** A timeout is not completion. Shrink the batch, complete and verify the smallest safe unit, and report the last verified commit, exact check status and next task. On resumption, fetch current \`main\`, changed files and CI before editing. Do not repeat already verified work or assume uncommitted changes survived.
-8. **Commit safely.** Commit verified checkpoints directly to \`main\` in line with the user's instruction and repository policy. Never create a branch/PR instead without instruction, force-push, overwrite concurrent work or bypass repo protection. If a main-branch write is blocked, stop and report the actual blocker.
+7. **Timeout recovery.** A timeout is not completion. Shrink the batch, complete and verify the smallest safe unit, and report the last verified commit, exact check status and next task. On resumption, fetch current `main`, changed files and CI before editing. Do not repeat already verified work or assume uncommitted changes survived.
+8. **Commit safely.** Commit verified checkpoints directly to `main` in line with the user's instruction and repository policy. Never create a branch/PR instead without instruction, force-push, overwrite concurrent work or bypass repo protection. If a main-branch write is blocked, stop and report the actual blocker.
 9. **Respect phase-specific scope.** During visual stages, reuse current routes, APIs, records and supported interactions; do not implement missing business workflows or cross into protected backend/API/data/security/business behavior as opportunistic cleanup. Later full-stack stages must follow their reviewed plan and appropriate tests.
 10. **Use evidence, not assumption.** A documented feature is not proof of functionality. Do not claim a route, field, API, permission, CI result, browser/viewport behavior, external integration or deployment was verified unless the corresponding evidence exists.
 11. **Keep evidence current.** Update the feature/content gap register for requirement-level changes, the structural redesign progress file for UX/UI slices, and the implementation traceability register for workflow/functional evidence. Historical snapshots remain labeled historical until revalidated.
@@ -1269,7 +1269,7 @@ Use this compact structure for every meaningful slice and stage boundary:
 - **Stage/slice and status:** complete, in progress, blocked or not verified.
 - **Verified result:** observable behavior supported by evidence.
 - **Files and changes:** specific repository paths and purpose.
-- **Commit:** exact SHA/link on \`main\`, or clearly state not committed.
+- **Commit:** exact SHA/link on `main`, or clearly state not committed.
 - **Validation:** exact tests/commands/CI and actual pass/fail/pending/not-run result.
 - **Preserved work:** earlier change(s) verified and not repeated.
 - **Remaining gaps/dependencies:** requirement IDs from the gap register where possible.
@@ -1286,7 +1286,7 @@ Use the roadmap for the exact stage numbers, scope, dependencies, deliverables a
 
 This specification alone does not make AMS production-ready. Follow the current production runbooks and verify the actual release, authorized runtime configuration, PostgreSQL connectivity/source selection, every migration discovered by the runtime loader and exact checksums, completed/reviewed relational reconciliation, active-user MFA coverage, fresh valid backup, restore rehearsal against the same latest backup artifact, private-document object integrity, enabled notification configuration, current CI and live smoke tests.
 
-The authenticated \`GET /api/system/production-readiness\` endpoint must return HTTP 200 with \`productionReady=true\` before declaring the documented runtime gate green. HTTP 401 is not a readiness verdict, HTTP 409 means a gate is incomplete, and HTTP 503 means the gate evaluation could not complete. A passing build, healthy database ping, or completed documentation is insufficient. If any mandatory gate or deployed smoke test cannot be verified, report **not yet production-ready** with the exact blocker.
+The authenticated `GET /api/system/production-readiness` endpoint must return HTTP 200 with `productionReady=true` before declaring the documented runtime gate green. HTTP 401 is not a readiness verdict, HTTP 409 means a gate is incomplete, and HTTP 503 means the gate evaluation could not complete. A passing build, healthy database ping, or completed documentation is insufficient. If any mandatory gate or deployed smoke test cannot be verified, report **not yet production-ready** with the exact blocker.
 
 ## 21. Minimum quality and acceptance checklist
 
