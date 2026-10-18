@@ -134,6 +134,24 @@ test('Cash Flow presents source and posted-ledger comparison tables without dupl
   assert.match(cashFlowView, /Export period detail/);
 });
 
+test('Monthly P&L separates operational preview from the posted-ledger snapshot', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const pnlStart = workspace.indexOf("case 'monthly-pnl': {");
+  const pnlEnd = workspace.indexOf("\n      case 'cash-flow':", pnlStart);
+  assert.ok(pnlStart >= 0 && pnlEnd > pnlStart, 'Monthly P&L worksheet should be present.');
+  const pnlView = workspace.slice(pnlStart, pnlEnd);
+  const comparisonIndex = pnlView.indexOf('title="Operational source preview comparison"');
+  const detailIndex = pnlView.indexOf('title="Operational source preview detail"');
+  const ledgerIndex = pnlView.indexOf('data-ams-slug="finance-pnl-posted-ledger-summary"');
+
+  assert.ok(comparisonIndex >= 0 && detailIndex > comparisonIndex && ledgerIndex > detailIndex, 'Source preview should lead, with posted-ledger figures grouped after its detail.');
+  assert.doesNotMatch(pnlView, /id: 'pnl-revenue'/, 'Source-preview headline values are already represented in the comparison and detail tables.');
+  assert.match(pnlView, /id: 'gl-revenue'/, 'Posted-ledger metrics must remain visible.');
+  assert.match(pnlView, /Export comparison/);
+  assert.match(pnlView, /Export CSV/);
+  assert.match(pnlView, /postedLedger\.available/);
+});
+
 test('Finance read permission blocks unauthorized register loads and shows an explicit restricted state', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 

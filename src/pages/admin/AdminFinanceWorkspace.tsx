@@ -2571,19 +2571,10 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </label>
               )}
             </div>
-            <AdminMetricStrip metrics={[
-              { id: 'pnl-revenue', label: 'Source preview revenue', value: formatMoney(revenue), context: 'Tax-exclusive invoice value · ' + periodLabel, icon: <FileText size={15} /> },
-              { id: 'pnl-direct', label: 'Direct project cost', value: formatMoney(classTotals.directProjectCost), context: 'Based on current category mapping', icon: <Briefcase size={15} /> },
-              { id: 'pnl-operating', label: 'Operating expense', value: formatMoney(classTotals.operatingExpense), context: 'Mapped operating costs', icon: <ArrowUpRight size={15} /> },
-              { id: 'pnl-net', label: 'Net preview', value: formatMoney(netPreview), context: 'Before unclassified ' + formatMoney(classTotals.unclassified), icon: <CircleDollarSign size={15} /> }
-            ]} />
-            <AdminMetricStrip metrics={[
-              { id: 'gl-revenue', label: 'Posted GL revenue', value: postedLedger.available ? formatMoney(postedLedger.revenue) : 'No posted entries', context: postedLedger.journalCount + ' posted journal entries · ' + periodLabel, icon: <FileText size={15} /> },
-              { id: 'gl-expense', label: 'Posted GL expenses', value: postedLedger.available ? formatMoney(postedLedger.expense) : 'No posted entries', context: 'Expense-account activity from posted journals', icon: <ArrowUpRight size={15} /> },
-              { id: 'gl-net', label: 'Posted GL result', value: postedLedger.available ? formatMoney(postedLedger.net) : 'Not available', context: 'Revenue less posted expense-account activity only', icon: <CircleDollarSign size={15} /> }
-            ]} />
+
+
             <FinanceDataTable
-              title="Period comparison"
+              title="Operational source preview comparison"
               description={periodLabel + ' compared with ' + comparisonLabel + '. Change is current minus comparison; percentage is unavailable when the comparison baseline is zero.'}
               columns={[{ label: 'Line item' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
               rows={comparisonRows}
@@ -2593,6 +2584,17 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             />
             <FinanceDataTable title="Operational source preview detail" description="These source-derived values are separate from the Posted GL metrics above and must not be presented as final accounting profit." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected period." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-' + reportPeriodValue + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))}>Export CSV</Button>} />
             <div className="text-xs text-muted">Classified expense total: {formatMoney(classifiedExpense)} · Source records in selected period: {currentPnl.expenses.length} expenses, {currentPnl.invoices.length} invoices.</div>
+            <section className="min-w-0 space-y-3" data-ams-slug="finance-pnl-posted-ledger-summary">
+              <div className="flex min-w-0 flex-col gap-1">
+                <h2 className="text-sm font-semibold text-fg">Posted General Ledger snapshot</h2>
+                <p className="text-xs text-muted">Journal-backed accounting figures for {periodLabel}, separate from the operational source preview above.</p>
+              </div>
+              <AdminMetricStrip metrics={[
+                { id: 'gl-revenue', label: 'Posted GL revenue', value: postedLedger.available ? formatMoney(postedLedger.revenue) : 'No posted entries', context: postedLedger.journalCount + ' posted journal entries · ' + periodLabel, icon: <FileText size={15} /> },
+                { id: 'gl-expense', label: 'Posted GL expenses', value: postedLedger.available ? formatMoney(postedLedger.expense) : 'No posted entries', context: 'Expense-account activity from posted journals', icon: <ArrowUpRight size={15} /> },
+                { id: 'gl-net', label: 'Posted GL result', value: postedLedger.available ? formatMoney(postedLedger.net) : 'Not available', context: 'Revenue less posted expense-account activity only', icon: <CircleDollarSign size={15} /> }
+              ]} />
+            </section>
           </div>
         );
       }
