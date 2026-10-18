@@ -12,7 +12,7 @@ export interface AmsSidebarSubnavigationItem {
 }
 
 export function getAmsWorkspaceNavigationModule(pathname: string, search = ''): AmsSidebarModuleKey | null {
-  const path = pathname.replace(/\\/+$/, '') || '/';
+  const path = pathname.replace(/\/+$/, '') || '/';
 
   if (path === '/admin/dashboard') return 'dashboard';
   if (path === '/admin/inbox') return 'inbox';
@@ -342,10 +342,10 @@ export function isAmsModuleSubnavigationItemActive(
   hash = ''
 ): boolean {
   if (item.available === false) return false;
-  const path = pathname.replace(/\\/+$/, '') || '/';
+  const path = pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(search);
   const target = new URL(item.to, 'https://ams.kapitech.local');
-  const targetPath = target.pathname.replace(/\\/+$/, '') || '/';
+  const targetPath = target.pathname.replace(/\/+$/, '') || '/';
   const itemKey = item.key;
 
   if (path === '/admin/finance/quotations') return itemKey === 'receivables';
@@ -432,7 +432,7 @@ export function isAmsModuleSubnavigationChildActive(
   search = '',
 ): boolean {
   if (item.available === false) return false;
-  const path = pathname.replace(/\\/+$/, '') || '/';
+  const path = pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(search);
   if (path === '/admin/projects') {
     const selectedView = params.get('projects') || 'all';
