@@ -63,9 +63,11 @@ test('consolidated aliases keep their canonical module owner and preserve useful
   assert.ok(app.includes("pathname: '/admin/cms/careers', search: '?tab=applicants'"));
   assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
 
-  assert.match(layout, /path === '\/admin\/clients' \|\| path\.startsWith\('\/admin\/clients\/'\) \|\| path === '\/admin\/contracts'\) return 'clients'/);
-  assert.match(layout, /path === '\/admin\/team' \|\| path === '\/admin\/time-logs' \|\| path === '\/admin\/vendors'\) return 'team'/);
-  assert.match(layout, /if \(path\.startsWith\('\/admin\/cms\/'\)\) return 'cms'/);
+  const moduleNavigation = await read('src/lib/amsModuleSubnavigation.ts');
+  assert.match(layout, /getAmsWorkspaceNavigationModule\(location\.pathname, location\.search\)/);
+  assert.match(moduleNavigation, /path === '\/admin\/clients' \|\| path\.startsWith\('\/admin\/clients\/'\) \|\| path === '\/admin\/contracts'\) return 'clients'/);
+  assert.match(moduleNavigation, /path === '\/admin\/team' \|\| path === '\/admin\/time-logs' \|\| path === '\/admin\/vendors'\) return 'team'/);
+  assert.match(moduleNavigation, /if \(path\.startsWith\('\/admin\/cms\/'\)\) return 'cms'/);
 });
 
 test('legacy routes remain protected and role-scoped while removed modules stay out of navigation', async () => {
