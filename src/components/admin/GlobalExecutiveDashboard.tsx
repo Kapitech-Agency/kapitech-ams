@@ -24,6 +24,8 @@ import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
+const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const;
+type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
 
 interface DashboardProject {
   id: string;
@@ -319,7 +321,17 @@ const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: R
 export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics';
+  const requestedView = searchParams.get('view');
+  const hasViewParameter = searchParams.has('view');
+  const view: DashboardWorkspaceView = DASHBOARD_WORKSPACE_VIEWS.includes(requestedView as DashboardWorkspaceView)
+    ? requestedView as DashboardWorkspaceView
+    : 'overview';
+
+  useEffect(() => {
+    if (hasViewParameter && !DASHBOARD_WORKSPACE_VIEWS.includes(requestedView as DashboardWorkspaceView)) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [hasViewParameter, navigate, requestedView]);
   const { matchesInterval, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const [range, setRange] = useState<RangeKey>('Q2');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
