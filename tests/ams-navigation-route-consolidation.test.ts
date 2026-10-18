@@ -91,7 +91,10 @@ test('legacy routes remain protected and role-scoped while removed modules stay 
   }
 
   const app = await read('src/App.tsx');
-  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="legacy approvals"><AmsNavigationPlaceholder kind="deprecated-approvals" /></ModuleRoute>} />'));
+  const placeholder = await read('src/components/admin/AmsNavigationPlaceholder.tsx');
+  assert.ok(placeholder.includes('Deprecated route · DEPRECATED_PENDING'));
+  assert.ok(placeholder.includes('No approval action is available on this page.'));
   assert.ok(!app.includes('AdminApprovals'));
   assert.ok(!app.includes('const AdminApprovals = lazyWithRetry('));
 });
