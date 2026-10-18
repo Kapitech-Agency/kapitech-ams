@@ -289,3 +289,9 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 
 - TypeScript validation reported that the compact project-card view and the wide table were sibling JSX elements in a single conditional branch.
 - Wrapped those two responsive presentations in a fragment so the branch has one valid root, without changing their visibility, data source, pagination, or actions.
+
+
+## Thirty-fifth implementation slice: Careers regression expectation aligned with responsive presentation
+
+- Updated the Careers interaction test to expect the applicant status selector in both compact-card and wide-table layouts, in addition to the existing selectors in the page/form. This is a presentation duplicate for responsive layouts, not a new status workflow.
+- The test remains strict about using the approved CustomSelect component and rejecting native select elements.

@@ -630,7 +630,8 @@ test('Careers tabs, filters, and modal fields use consistent AMS interactions', 
   assert.match(app, /<InboxWorkspaceRoute \/>/);
   assert.match(careers, /id="careers-jobs-panel"[\s\S]{0,180}aria-labelledby="careers-jobs-tab"/);
   assert.match(careers, /id="careers-applicants-panel"[\s\S]{0,180}aria-labelledby="careers-applicants-tab"/);
-  assert.equal((careers.match(/<CustomSelect\b/g) || []).length, 3);
+  // The applicant status selector is rendered in both compact-card and wide-table presentations.
+  assert.equal((careers.match(/<CustomSelect\b/g) || []).length, 4);
   assert.doesNotMatch(careers, /<select\b/);
   assert.match(careers, /cms-career-language-panel/);
   assert.match(careers, /cms-career-position-form/);
