@@ -2,7 +2,7 @@ import React from 'react';
 import { Activity, ShieldCheck } from 'lucide-react';
 import { AdminPageShell } from './AdminModulePrimitives';
 
-export type NavigationPlaceholderKind = 'activity' | 'readiness';
+export type NavigationPlaceholderKind = 'activity' | 'readiness' | 'deprecated-approvals';
 
 interface AmsNavigationPlaceholderProps {
   kind: NavigationPlaceholderKind;
@@ -27,6 +27,12 @@ const PLACEHOLDER_CONTENT: Record<NavigationPlaceholderKind, {
     eyebrow: 'System monitor placeholder',
     detail: 'The UI does not call the monitoring endpoint in this navigation-only change. Connect the monitor here when its client-facing contract is approved.',
     reference: 'GET /api/system/production-readiness',
+  },
+  'deprecated-approvals': {
+    title: 'Legacy approvals route',
+    description: 'The standalone Approval module is retired from primary navigation.',
+    eyebrow: 'Deprecated route · DEPRECATED_PENDING',
+    detail: 'This restricted compatibility route remains available while existing consumers and workflow ownership are reviewed. Review, posting, and period-closing controls remain in their owning workflows. No approval action is available on this page.',
   },
 };
 
