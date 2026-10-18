@@ -2354,7 +2354,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 ]}
                 rows={scheduleRows}
                 emptyMessage="No vendor bills have been entered. Create a bill to see its payment schedule."
-                compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[10],groups:[{label:'Bill amount',indexes:[3]},{label:'Installments',indexes:[4,5,6]},{label:'Settlement',indexes:[7,8,9]}}}
+                compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[10],groups:[{label:'Bill amount',indexes:[3]},{label:'Installments',indexes:[4,5,6]},{label:'Settlement',indexes:[7,8,9]}]}}
               />
             )}
             <WorkbookNote title="Contract-linked vendor payments">
