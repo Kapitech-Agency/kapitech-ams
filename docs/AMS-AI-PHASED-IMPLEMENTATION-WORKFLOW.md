@@ -30,6 +30,32 @@ Avoid one enormous audit-and-rewrite attempt. Prefer a sequence of focused, inde
 
 ---
 
+## 1.1 Mandatory stage gates for navigation-first work
+
+When the active request is to implement or correct AMS navigation, follow the dedicated [Navigation-First Phased Execution Prompt](AMS-NAVIGATION-FIRST-PHASED-EXECUTION-PROMPT.md). The order below is mandatory; it overrides any generic example sequence that might otherwise encourage parallel or broad work:
+
+1. **Navigation completion and verification only.** Verify the nine approved primary modules, their workspace ownership, all visible destinations, route/query behavior, active tabs, refresh and browser history. Finance must retain its five approved areas. Do not redesign the main content, perform global CSS cleanup, or start unrelated modules in this stage.
+2. **Main content hierarchy.** Only after the user explicitly authorizes the next stage, proceed module by module, one bounded checkpoint at a time, using the content architecture and role-aware worksheet guides.
+3. **Shared component consistency.** Only after the content-hierarchy stage has been completed and the user authorizes continuation.
+4. **Responsive layout, scroll ownership, and interaction.** Only after the preceding stage has been completed and the user authorizes continuation.
+5. **Cross-module regression and validation.**
+6. **Final diff and delivery review.**
+
+### Mandatory stage-gate and reporting rules
+
+- Do not skip, reorder, combine, or silently broaden stages. Work only on the currently authorized stage.
+- Treat discoveries from future stages as deferred findings unless they are necessary to complete the current stage safely.
+- Work in small, independently verifiable slices. For module-based stages, work on one module or clearly bounded module section at a time.
+- Send a durable user-facing checkpoint after the baseline, after meaningful slices, and at every stage boundary. Include the current HEAD/commit, exact changed files, validation actually performed, remaining items, unverified risks, and one precise next task.
+- **After a stage-completion report, stop and wait for the user's explicit instruction before starting the next stage.** A report is not permission to continue.
+- If a tool call fails, times out, or is at risk of interruption, stop scope expansion. Record the last verified commit, whether changes are committed, the exact test state, and the next action. On resumption, refresh main and inspect concurrent changes before editing.
+- Preserve the user's direct-to-main instruction where it has been authorized. Do not create a branch or PR, force-push, or overwrite concurrent changes.
+- Do not modify backend/API/database/authentication/RBAC/Finance calculations or other protected layers as part of a frontend navigation stage. Report a blocker if an issue requires protected scope.
+- Never claim a route, browser interaction, viewport, build, test, CI check, or deployment was verified unless there is concrete evidence.
+- For the current navigation-first request, Stage 1 is the active scope until it meets its acceptance criteria and the user explicitly authorizes continuation. Do not start Stage 2 in the same implementation run.
+
+Use the report template in Section 11 and the detailed stage gates in the dedicated prompt.
+
 ## 2. Read the source of truth first
 
 At the beginning of every task, read:
