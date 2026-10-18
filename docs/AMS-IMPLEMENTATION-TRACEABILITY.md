@@ -189,6 +189,18 @@ The regression suite iterates through Admin, Finance, PM, Creative, and Freelanc
 **Verification:** AMS Quality Gate and AMS CI passed at source SHA `de19e79e369963eac41e5742b3ed4933d5fcb521`. The route/access regression is automated; real-browser interaction, back/forward and responsive visual behavior remain unverified.
 
 
+### NAV-008: Inbox message categories and saved-view navigation hierarchy
+
+**Status:** IMPLEMENTED_UNVERIFIED
+
+**Source:** `src/pages/admin/AdminInbox.tsx`, `src/lib/amsModuleSubnavigation.ts`, `tests/ams-sidebar-subnavigation.test.ts`, `tests/admin-pages-jsx-regression.test.ts`.
+
+The direct Inbox workspaces remain Overview, Messages, Follow-ups, and Routing & Templates. Inside Messages, the category navigation contains All Messages, Sales Inquiries, Client Requests, and Project & Support. Starred remains a supported saved view reachable from Messages controls through `/admin/inbox?view=starred`, rather than appearing beside message-category worksheets. The combined “Resolved & Archived” placeholder was removed from category navigation because these are distinct statuses/views and do not yet have a verified implementation. Client Requests, Project & Support, Follow-ups, and Routing & Templates remain explicitly non-interactive target-only destinations until connected to real workflows.
+
+**Scope and data boundary:** Frontend navigation and regression assertions only. No API, database, authentication/session, CSRF/MFA, RBAC policy, Finance behavior, or business data was changed.
+
+**Verification:** Typecheck passed on follow-up source SHA `15ea467a1b82b3e889b89838b2db7980a7785334`. The first implementation commit `3e21311a309d2749257bf44b8ec88d31b7b289cc` initially failed typecheck because of a malformed test regex; the assertion was corrected in the follow-up commit. CI regression tests and production build did not finish on that follow-up SHA because later commits reached `main` and canceled the run. Therefore, the full test suite/build remain unverified for this navigation change. Browser-level navigation, keyboard, and responsive checks also remain unverified.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
