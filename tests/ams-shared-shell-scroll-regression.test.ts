@@ -58,7 +58,7 @@ test('responsive page and dashboard geometry follows canonical design-system tok
 
   assert.match(css, /\.ams-shell \.ams-page-shell\{display:flex;flex-direction:column;gap:24px;padding:24px 24px 32px\}/);
   assert.match(css, /\.ams-shell \.ams-page-title\{[^}]*gap:8px[^}]*font-size:20px;line-height:28px/);
-  assert.match(css, /\.ams-shell \.ams-dashboard section\[aria-label="Executive key performance indicators"\] > div article \{\s*min-height:\s*112px;\s*padding:\s*16px;\s*border-radius:\s*12px;\s*\}/s);
+  assert.match(css, /\.ams-shell \.ams-dashboard section\[aria-label="Executive key performance indicators"\] article \{\s*min-height:\s*112px;\s*padding:\s*16px;\s*border-radius:\s*12px;\s*\}/s);
   assert.doesNotMatch(css, /border-radius:\s*(?:9|10)px/);
   assert.doesNotMatch(css, /\.ams-shell \.ams-dashboard\s*\{[^}]*max-width:\s*720px/s);
   assert.doesNotMatch(css, /\.ams-shell \.ams-page-title\{font-size:18px;line-height:24px\}/);
