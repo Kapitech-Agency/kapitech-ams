@@ -108,7 +108,7 @@ npm run build
 npm start
 ```
 
-The restore rehearsal target must be an isolated, empty PostgreSQL database. Never point it at production.
+Before running `npm run db:restore-rehearsal`, set `KAPITECH_POSTGRES_REHEARSAL_URL` in the controlled shell/environment to a dedicated, isolated, empty PostgreSQL rehearsal database. The script refuses a missing target, a target containing tables, and a target matching the configured production database URL. Never point the rehearsal at production. See `docs/AMS-RESTORE-REHEARSAL.md` for the exact source-backed checks; a rehearsal pass is not a substitute for business-data reconciliation or the complete readiness gate.
 
 Run `npm run validate:production-env` after the production environment variables are configured and before the final build/start step. The preflight checks the required configuration shape, HTTPS requirements, encryption-key format, durable storage settings, backup/restore evidence format and hash binding, reconciliation evidence format, and optional notification completeness. It never prints secret values and does not replace the dynamic production-readiness endpoint.
 
