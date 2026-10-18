@@ -245,6 +245,10 @@ test('primary navigation modules and nested views preserve their owning workspac
   assert.equal(getAmsWorkspaceNavigationModule('/admin/team', '?view=capacity-allocation'), 'team');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/vendors', '?view=skill-matrix'), 'team');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/time-logs'), 'team');
+  assert.equal(getAmsWorkspaceNavigationModule('/admin/navigation/release-readiness'), null,
+    'Release Readiness remains a protected placeholder, not a Settings workspace.');
+  assert.equal(canAccessAmsRoute('Admin', '/admin/navigation/release-readiness'), true,
+    'Removing contextual tabs must not remove the existing protected route.');
 });
 
 test('shared navigation and topbar icon controls use the Untitled UI icon bridge', async () => {

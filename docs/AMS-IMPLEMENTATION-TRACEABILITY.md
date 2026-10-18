@@ -199,7 +199,17 @@ The direct Inbox workspaces remain Overview, Messages, Follow-ups, and Routing &
 
 **Scope and data boundary:** Frontend navigation and regression assertions only. No API, database, authentication/session, CSRF/MFA, RBAC policy, Finance behavior, or business data was changed.
 
-**Verification:** Typecheck passed on follow-up source SHA `15ea467a1b82b3e889b89838b2db7980a7785334`. The first implementation commit `3e21311a309d2749257bf44b8ec88d31b7b289cc` initially failed typecheck because of a malformed test regex; the assertion was corrected in the follow-up commit. CI regression tests and production build did not finish on that follow-up SHA because later commits reached `main` and canceled the run. Therefore, the full test suite/build remain unverified for this navigation change. Browser-level navigation, keyboard, and responsive checks also remain unverified.
+**Verification:** On follow-up source SHA `2c9e1693af16844a0576c55f4c19bb93f60c1846`, AMS Quality Gate passed typecheck, regression tests (707 tests, 687 passed, 0 failed, 20 skipped), and production build. AMS CI also passed its configured migration, security regression, PostgreSQL integration, dependency audit, packaged-migration verification, production build, and production HTTP smoke-test steps. An earlier test run had exposed a stale aria-label expectation, which was corrected before this successful run. Browser-level navigation, keyboard, and responsive checks remain unverified.
+
+### NAV-009: Release Readiness placeholder does not inherit Settings workspace navigation
+
+**Status:** IMPLEMENTED_UNVERIFIED
+
+**Source:** `src/lib/amsModuleSubnavigation.ts`, `tests/ams-sidebar-subnavigation.test.ts`, `src/App.tsx`, `src/lib/amsNavigationAccess.ts`.
+
+The existing `/admin/navigation/release-readiness` route remains intact and keeps its route-access policy, but it no longer receives the persistent Settings workspace tabs. The master architecture marks Release Readiness as a placeholder, not a navigable Settings workspace, until the feature is verified. This corrects contextual navigation only; it does not remove the route, change its guard, or claim that release-readiness telemetry is operational.
+
+**Verification:** Regression assertions now check that the workspace resolver returns `null` for this placeholder while the existing Admin route-access policy remains intact. Fresh CI verification for this change is pending. Browser-level visual and direct-entry checks remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 

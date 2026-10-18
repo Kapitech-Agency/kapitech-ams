@@ -26,7 +26,7 @@ export function getAmsWorkspaceNavigationModule(pathname: string, search = ''): 
   if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';
   if (path === '/admin/team' || path === '/admin/time-logs' || path === '/admin/vendors') return 'team';
   if (path.startsWith('/admin/cms/')) return 'cms';
-  if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';
+  if (path === '/admin/settings') return 'settings';
   return null;
 }
 
