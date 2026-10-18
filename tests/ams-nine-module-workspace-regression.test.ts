@@ -305,3 +305,12 @@ test('Dashboard header context follows the selected Overview, Performance, or An
   assert.match(dashboard, /Track project delivery, task completion, overdue work, and recorded team time/);
   assert.match(dashboard, /Review invoice and expense trends, outstanding receivables, and project status for the selected period/);
 });
+
+
+test('Client Onboarding has a distinct header when the onboarding scope is selected', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  assert.match(clients, /eyebrow=\{statusScope === 'lead' \? 'Onboarding workspace' : 'Client directory'\}/);
+  assert.match(clients, /title=\{statusScope === 'lead' \? 'Client Onboarding' : 'Clients & Key Accounts'\}/);
+  assert.match(clients, /Review new client accounts, confirm onboarding readiness, and continue account setup/);
+  assert.match(clients, /scope === 'onboarding'/);
+});

@@ -795,8 +795,11 @@ export const AdminClients: React.FC = () => {
         <span className="sr-only" data-ams-feature-slug="clients-key-accounts-tab" data-ams-slug="clients-key-accounts-tab">Clients & Key Accounts</span>
         <AdminModuleHeader slug="clients-header"
           className="mb-0"
-          title="Clients & Key Accounts"
-        description="Directory of enterprise clients, relationship health, spend-cap status, and account operations."
+          eyebrow={statusScope === 'lead' ? 'Onboarding workspace' : 'Client directory'}
+          title={statusScope === 'lead' ? 'Client Onboarding' : 'Clients & Key Accounts'}
+          description={statusScope === 'lead'
+            ? 'Review new client accounts, confirm onboarding readiness, and continue account setup.'
+            : 'Directory of enterprise clients, relationship health, spend-cap status, and account operations.'}
         actions={(
           <>
             <Button type="button" variant="secondary" onClick={() => {

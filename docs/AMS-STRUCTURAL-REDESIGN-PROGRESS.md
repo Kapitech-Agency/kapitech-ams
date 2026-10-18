@@ -152,3 +152,10 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - This removes the same generic subtitle from three materially different workspaces without changing any route/query state, metrics, calculations, reporting period, permissions, or data sources.
 - Added source regression assertions for all three header contexts.
 - [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121845217) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39121845263) passed for commit `1666aa72c9529b961b628ee03914b138d6247571`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
+
+
+## Eighteenth implementation slice: distinguish Client Onboarding from the directory
+
+- When the existing query-backed onboarding scope is selected, the Clients workspace now uses a dedicated "Client Onboarding" title, onboarding-specific eyebrow, and task-oriented description. The default directory keeps its existing title and purpose.
+- This clarifies the difference between the directory and onboarding workflow without adding a route, changing status semantics, or modifying client data, readiness calculations, filters, permissions, or actions.
+- Added source regression coverage for the contextual header and existing query-driven scope.
