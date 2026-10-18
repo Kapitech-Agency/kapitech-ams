@@ -183,11 +183,11 @@ test('contextual active states follow URL query state and Inbox fallbacks mirror
   const overview = inbox.find((item) => item.key === 'overview')!;
   const messages = inbox.find((item) => item.key === 'messages')!;
   assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox'), true);
-  for (const view of ['messages', 'client', 'starred']) {
+  for (const view of ['messages', 'client', 'unread', 'starred']) {
     assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + view), true);
     assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + view), false);
   }
-  for (const view of ['client-requests', 'project-support', 'unread', 'resolved', 'archived', 'unsupported']) {
+  for (const view of ['client-requests', 'project-support', 'resolved', 'archived', 'unsupported']) {
     assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + view), true);
     assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + view), false);
   }
