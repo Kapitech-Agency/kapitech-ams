@@ -279,5 +279,5 @@ test('Team Directory keeps the page title free of a duplicate inline member-coun
   const team = await read('src/pages/admin/AdminTeams.tsx');
   assert.match(team, /title=\{currentView === 'team-directory' \? 'Team Directory' : pageCopy\[currentView\]\.title\}/);
   assert.doesNotMatch(team, /Team Directory <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0\.5 text-\[10px\] font-medium text-muted">\{members\.length\} Internal Members<\/span>/);
-  assert.match(team, /data-ams-feature-slug="team-directory-kpis"/);
+  assert.match(team, /slug: 'team-directory-kpi-headcount'/);
 });
