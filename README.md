@@ -63,13 +63,11 @@ Bundled portfolio fixtures are not seeded into the production CMS. Existing bund
 
 ## Persistence and recovery
 
-Rolling encrypted backups are created before live database replacement. Privileged IT/Master users can request a manual snapshot through the System Backup API.
+**Backup and restore are mode-specific.** In PostgreSQL production, backups must be handled by the configured durable provider/operations scheduler; the application does not create local JSON database backups in PostgreSQL mode. See [`docs/postgres-backup-dr-runbook.md`](docs/postgres-backup-dr-runbook.md) and [`docs/production-readiness-gate.md`](docs/production-readiness-gate.md). Do not treat a JSON file snapshot as a PostgreSQL backup.
 
-Restore utility:
+The repository also contains `scripts/restore-ams-db.mjs` for legacy encrypted JSON archives. Its verification/restore behavior is only for a matching legacy/staging JSON format and is **not** a PostgreSQL production recovery method. Do not run a destructive restore against the live data directory by copying a command from an old note; see [`docs/persistence-and-dr.md`](docs/persistence-and-dr.md) for the distinction and current links.
 
-`node scripts/restore-ams-db.mjs /absolute/path/to/backup.bak --force`
-
-PostgreSQL is the authoritative data source in production. Encrypted JSON persistence remains available for controlled development/test. Current runtime limitation: `server.ts` blocks the production API when `KAPITECH_DATA_SOURCE` is not `postgres`, so a rollback to JSON is not executable under the current production guard. Do not bypass the guard or switch production to a non-production runtime. Any JSON rollback requires a separately authorized change reconciling the startup guard, payment idempotency parity, rollback procedure, verified backups, and reconciliation evidence.
+PostgreSQL is the required production data source in the documented production contract. Encrypted JSON persistence remains available for controlled development/test. Current runtime limitation: `server.ts` blocks the production API when `KAPITECH_DATA_SOURCE` is not `postgres`, so a rollback to JSON is not executable under the current production guard. Do not bypass the guard or switch production to a non-production runtime. Any JSON rollback requires a separately authorized change reconciling the startup guard, payment idempotency parity, rollback procedure, verified backups, and reconciliation evidence.
 
 Release readiness: an authorized security/IT operator must verify `GET /api/system/production-readiness` returns HTTP 200 with `productionReady=true`. The gate checks all migrations and checksums shipped with the release, MFA coverage, reconciliation evidence, backup/restore status, durable document storage, and enabled notification channels. See `docs/production-readiness-gate.md` and `docs/production-cutover-checklist.md`.
 
@@ -78,8 +76,10 @@ Release readiness: an authorized security/IT operator must verify `GET /api/syst
 Before any AI-assisted code change, read [AGENTS.md](AGENTS.md). GitHub Copilot also receives repository-specific rules in [.github/copilot-instructions.md](.github/copilot-instructions.md).
 
 Core references:
+- [Documentation Index](docs/README.md): document authority, current versus historical/staging references, and reading order.
 - [AMS Design System](AMS-DESIGN-SYSTEM.md): visual tokens, layout, shared components and interaction rules.
 - [AMS Master Structure & AI Implementation Guide](docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md): target navigation, modules, workflows, shared data, Finance, Kopra H2H preparation, implementation phases and acceptance criteria.
+- [Role-Based Content Blueprint](docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md) and [Worksheet Role Presentation Matrix](docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md): target content and presentation by work persona; neither grants permissions or proves implementation.
 - [Finance Excel Alignment](docs/FINANCE-EXCEL-ALIGNMENT.md): existing Finance process and accounting controls.
 - [AMS Workflow Audit](docs/ams-workflow-audit.md): dated audit evidence; its historical route taxonomy/status must not be mistaken for the current target state.
 - [Drawer Guidelines](docs/AMS-DRAWER-GUIDELINES.md), [Modal Guidelines](docs/AMS-MODAL-GUIDELINES.md), and [Kanban Guidelines](docs/AMS-KANBAN-GUIDELINES.md): required shared interactions.
@@ -100,6 +100,8 @@ Read AGENTS.md before AI-assisted changes. GitHub Copilot's repository-specific 
 - AMS-DESIGN-SYSTEM.md — exact tokens, layout and shared components.
 - docs/AMS-UX-INTERACTION-STANDARDS.md — hierarchy, spacing ownership, interaction and visual consistency.
 - docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md — content hierarchy and primary work areas for each module.
+- docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md and docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md — role-aware content contracts and worksheet defaults.
+- docs/README.md — documentation authority/index and active-vs-historical classification.
 - docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md — phased AI execution prompt with strict frontend-only limits.
 - docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md — routes, state, API use, forms and mutations.
 - docs/AMS-DRAWER-GUIDELINES.md, docs/AMS-MODAL-GUIDELINES.md, docs/AMS-KANBAN-GUIDELINES.md — shared interaction contracts.
