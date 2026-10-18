@@ -279,7 +279,7 @@ Renewal Schedule is available from either Agreements worksheet at `/admin/contra
 
 Messages now exposes an Unread saved view at `/admin/inbox?view=unread`, which filters the same canonical inbound records to records with `status: new`. The current Inbox already uses this state as its pending/unread queue and advances records to `in-review` through the existing Mark Read action. The view has a return link to All Messages and a distinct CSV filename. It is not a separate data store or independent read-receipt model. Resolved and Archived remain unsupported because the current lead status contract does not expose those as separate verified states.
 
-**Verification:** Navigation ownership and source/content regression assertions are added. Quality Gate and AMS CI are pending on the commit. Browser-level keyboard and role-specific checks remain unverified.
+**Verification:** AMS Quality Gate passed on code SHA `a76626ae2b3c4809ce19d7f049035effc421887f`: typecheck, 711 regression tests (691 passed, 0 failed, 20 skipped), and production build. AMS CI for that SHA was cancelled before its database/integration/smoke-test steps could be verified, so end-to-end CI is not claimed as passed. Browser-level keyboard and role-specific checks remain unverified.
 
 ## 10. End-to-end business workflow audit — 16 October 2026
 
