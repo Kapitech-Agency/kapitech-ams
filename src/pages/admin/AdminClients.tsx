@@ -1355,7 +1355,7 @@ export const AdminClients: React.FC = () => {
             <label htmlFor="client-interaction-next-step" className="mb-1.5 block">Next step</label>
             <input id="client-interaction-next-step" value={interactionForm.nextStep} maxLength={500} disabled={interactionSaving} onChange={event => setInteractionForm(current => ({ ...current, nextStep: event.target.value }))} placeholder="Action owner or follow-up" className="w-full" />
           </div>
-          <p className="text-[10px] leading-4 text-muted">Entries are saved to AMS and visible to users with Client or CRM access. Do not include passwords, payment credentials, or other secrets.</p>
+          <p className="text-[10px] leading-4 text-muted">Entries are saved to AMS and visible to users with client-management access. Do not include passwords, payment credentials, or other secrets.</p>
         </form>
       </Drawer>
 

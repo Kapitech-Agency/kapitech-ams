@@ -98,6 +98,8 @@ test('Clients surface account health after the directory and keep data gaps expl
   assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd);
   assert.match(clients, /Client directory unavailable/);
   assert.match(clients, /Cumulative billed value/);
+  assert.match(clients, /visible to users with client-management access/);
+  assert.doesNotMatch(clients, /Client or CRM access/);
 });
 
 test('Client Retainers prioritizes the agreement register before supporting summaries', async () => {
