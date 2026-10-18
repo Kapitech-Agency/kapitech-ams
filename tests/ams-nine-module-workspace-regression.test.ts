@@ -177,7 +177,8 @@ test('Team and Resources distinguish unavailable source data from a true zero', 
   assert.match(teams, /Vendor source unavailable\. Previously loaded records remain visible/);
   assert.match(teams, /Time log source unavailable\. Previously loaded entries remain visible/);
   assert.match(vendors, /Failed to load vendors/);
-  assert.doesNotMatch(vendors, /vendors-mobile-tabs|<AdminSectionTabs/);
+  assert.doesNotMatch(vendors, /vendors-mobile-tabs/);
+  assert.match(vendors, /ariaLabel="Vendors and freelancers worksheets"/);
   assert.match(timeLogs, /Previously loaded records are kept/);
 });
 
@@ -347,7 +348,7 @@ test('Projects keep the page title clean and expose data availability in the eye
 
 test('Documents header explains the active document category', async () => {
   const documents = await read('src/pages/admin/AdminDocuments.tsx');
-  assert.match(documents, /title=\{activeTab === 'all' \? 'Internal Document Vault' : tabLabel\}/);
+  assert.match(documents, /title=\{activeTab === 'all' \? 'Document Library' : tabLabel\}/);
   assert.match(documents, /activeTab === 'sops'[\s\S]*Operating procedures, process guides, and internal reference documents/);
   assert.match(documents, /activeTab === 'legal'[\s\S]*Corporate records, signed agreements, and legal documentation/);
   assert.match(documents, /activeTab === 'finance'[\s\S]*Finance, invoice, accounting, and tax documents/);

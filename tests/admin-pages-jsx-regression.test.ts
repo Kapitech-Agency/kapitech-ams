@@ -231,7 +231,7 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   for (const group of ["label: 'Workspace'", "label: 'Delivery'", "label: 'Operations'", "label: 'Publishing'"]) {
     assert.ok(navigation.includes(group), 'Missing primary navigation group ' + group);
   }
-  assert.ok(subnavigation.includes("label: 'Retainers'"));
+  assert.ok(subnavigation.includes("label: 'Agreements'"));
   assert.equal(primitives.includes('export const AdminTopbarTabs'), true, 'Desktop workspace navigation uses the dedicated topbar tabs primitive.');
   assert.equal(primitives.includes('AdminCmsSectionTabs'), false, 'CMS uses the shared contextual navigation rather than a second legacy tab component.');
   assert.ok(primitives.includes("'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
@@ -253,9 +253,9 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
   assert.ok(sidebar.includes('aria-label="Primary navigation"'), 'Primary navigation stays accessible while CRM and retainer tabs remain contextual.');
-  assert.ok(subnavigation.includes("label: 'Client Directory'"));
+  assert.ok(subnavigation.includes("label: 'Directory'"));
   assert.ok(subnavigation.includes("label: 'Onboarding'"));
-  assert.ok(subnavigation.includes("label: 'Retainers'"));
+  assert.ok(subnavigation.includes("label: 'Agreements'"));
   assert.equal(clients.includes('clients-mobile-tabs'), false);
   assert.equal(retainers.includes('Clients sections'), false);
   assert.equal(sla.includes('Clients sections'), false);
@@ -577,9 +577,12 @@ test('Flat sidebar visibility follows the nine-module role policy and keeps Sett
   for (const label of ["Dashboard", "Inbox", "Projects", "Clients", "Finance", "Team & Resources", "Documents", "Website CMS"]) {
     assert.ok(navigation.includes("label: '" + label + "'"), 'Missing primary module ' + label);
   }
-  for (const label of ["label: 'Retainers'", "label: 'Capacity Allocation'", "label: 'Time Tracking'", "label: 'Vendors & Freelancers'"]) {
+  for (const label of ["label: 'Agreements'", "label: 'Time Tracking'", "label: 'Vendors & Freelancers'"]) {
     assert.ok(subnavigation.includes(label), 'Missing contextual destination ' + label);
   }
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  assert.match(teams, /key: 'capacity-allocation', label: 'Capacity Allocation', to: '\/admin\/team\?view=capacity-allocation'/,
+    'Capacity Allocation stays an in-page Team worksheet rather than a global workspace tab');
   for (const removed of ["label: 'Sales & Pipeline'", "label: 'Proposals'", "label: 'Approvals'", "label: 'Vendor Ledger'", "label: 'Timesheet Control'"]) {
     assert.equal(navigation.includes(removed), false, 'Retired primary entry remains: ' + removed);
   }
@@ -620,7 +623,10 @@ test('Content-first CMS registers use their working area instead of repeated KPI
 test('Inbox opens with contextual controls and its triage workspace, without a redundant KPI dashboard', () => {
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
   assert.match(inbox, /<AdminModuleHeader\b/);
-  assert.doesNotMatch(inbox, /<AdminSectionTabs\b/);
+  assert.match(inbox, /<AdminSectionTabs\b/);
+  assert.match(inbox, /ariaLabel="Messages worksheets and saved views"/);
+  assert.match(inbox, /label: 'Client Requests'.*available: false/);
+  assert.match(inbox, /label: 'Project & Support Requests'.*available: false/);
   assert.match(inbox, /<AdminFilterBar\b/);
   assert.match(inbox, /data-ams-slug="inbox-overview-workspace"/);
   assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);

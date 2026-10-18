@@ -182,7 +182,7 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   for (const label of ["Overview & Control", "Transactions & Cash", "Receivables & Payables", "Project Finance", "Accounting & Reports"]) {
     assert.ok(workbook.includes("label: '" + label + "'"), 'Missing Finance area ' + label);
   }
-  for (const label of ["label: 'Retainers'", "label: 'Capacity Allocation'", "label: 'Time Tracking'", "label: 'Vendors & Freelancers'"]) {
+  for (const label of ["label: 'Agreements'", "label: 'Time Tracking'", "label: 'Vendors & Freelancers'"]) {
     assert.ok(subnavigation.includes(label), 'Missing contextual subarea ' + label);
   }
   for (const removed of ["label: 'Sales & Pipeline'", "label: 'Proposals'", "label: 'Approvals'", "label: 'Vendor Ledger'", "label: 'Timesheet Control'"]) {
@@ -675,7 +675,6 @@ test('SLA Monitoring never presents fixture telemetry as real client performance
 
 test('Resource Planning assignments persist on project records and distinguish tracked hours from forecasts', async () => {
   const teams = await read('src/pages/admin/AdminTeams.tsx');
-  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
   const routes = await read('server/routes.ts');
 
   assert.match(teams, /const toggleProjectAssignment = async/);
@@ -684,7 +683,7 @@ test('Resource Planning assignments persist on project records and distinguish t
   assert.match(teams, /planned weekly allocation and dates/);
   assert.match(teams, /Upcoming resource allocation/);
   assert.match(teams, /No plan means unplanned, not automatically available/);
-  assert.match(navigation, /key: 'capacity-allocation', label: 'Capacity Allocation', to: '\/admin\/team\?view=capacity-allocation'/);
+  assert.match(teams, /key: 'capacity-allocation', label: 'Capacity Allocation', to: '\/admin\/team\?view=capacity-allocation'/);
   assert.match(routes, /pickFields\(updates, \['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers'/);
 });
 

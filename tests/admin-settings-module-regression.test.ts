@@ -19,7 +19,7 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   assert.ok(workspace.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
   assert.ok(layout.includes('getAmsWorkspaceNavigationModule(location.pathname, location.search)'));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
-  assert.ok(workspace.includes("{ key: 'backup', label: 'System Overview', to: '/admin/settings?tab=overview' }"));
+  assert.ok(workspace.includes("{ key: 'overview', label: 'System Overview', to: '/admin/settings?tab=overview', slug: 'settings-workspace-overview' }"));
   assert.ok(workspace.includes("{ key: 'access', label: 'Users & Access', to: '/admin/settings?tab=security' }"));
   assert.ok(workspace.includes("{ key: 'audit', label: 'Audit Log', to: '/admin/settings?tab=audit' }"));
   assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));

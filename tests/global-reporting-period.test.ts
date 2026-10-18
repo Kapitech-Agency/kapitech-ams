@@ -53,11 +53,11 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
   assert.equal(new Set(worksheetKeys).size, worksheetKeys.length);
   assert.deepEqual([...renderedKeys].sort(), [...worksheetKeys].sort());
   for (const slug of [
-    'finance-tab-overview-control',
-    'finance-tab-transactions-cash',
-    'finance-tab-receivables-payables',
-    'finance-tab-project-finance',
-    'finance-tab-accounting-reports',
+    'finance-workspace-overview-control',
+    'finance-workspace-transactions-cash',
+    'finance-workspace-receivables-payables',
+    'finance-workspace-project-finance',
+    'finance-workspace-accounting-reports',
   ]) {
     assert.ok(subnavigation.includes(slug), 'Missing stable Finance area tab slug ' + slug);
   }

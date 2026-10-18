@@ -22,12 +22,12 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
     assert.ok(workbook.includes("label: '" + area + "'"), 'Missing Finance group ' + area);
   }
   assert.match(workspace, /FINANCE_WORKBOOK_GROUPS/);
-  assert.match(subnavigation, /slug: 'finance-tab-overview-control'/);
-  assert.match(subnavigation, /finance-tab-overview-control/);
-  assert.match(subnavigation, /finance-tab-transactions-cash/);
-  assert.match(subnavigation, /finance-tab-receivables-payables/);
-  assert.match(subnavigation, /finance-tab-project-finance/);
-  assert.match(subnavigation, /finance-tab-accounting-reports/);
+  assert.match(subnavigation, /slug: 'finance-workspace-overview-control'/);
+  assert.match(subnavigation, /finance-workspace-overview-control/);
+  assert.match(subnavigation, /finance-workspace-transactions-cash/);
+  assert.match(subnavigation, /finance-workspace-receivables-payables/);
+  assert.match(subnavigation, /finance-workspace-project-finance/);
+  assert.match(subnavigation, /finance-workspace-accounting-reports/);
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance views" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
@@ -346,8 +346,8 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.ok(sidebar.includes('aria-label="Primary navigation"'));
   assert.ok(navigation.includes('Finance areas') || navigation.includes("label: 'Overview & Control'"));
   assert.equal(navigation.includes("label: 'Profitability & Expenses'"), false);
-  assert.ok(navigation.includes('finance-tab-receivables-payables'));
-  assert.match(navigation, /finance-tab-accounting-reports/);
+  assert.ok(navigation.includes('finance-workspace-receivables-payables'));
+  assert.match(navigation, /finance-workspace-accounting-reports/);
   assert.doesNotMatch(layout, /finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
 
   const summaryStart = workspace.indexOf('const renderSummary =');
