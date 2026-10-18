@@ -66,6 +66,8 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'client')!, '/admin/inbox', '?view=client'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'starred')!, '/admin/inbox', '?view=starred'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'overview')!, '/admin/inbox', '?view=unknown'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'client')!, '/admin/inbox', '?view=unknown'), false);
 
   const documents = getAmsModuleSubnavigation('documents', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(documents.find((item) => item.key === 'all')!, '/admin/documents'), true);
