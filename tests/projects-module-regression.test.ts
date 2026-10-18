@@ -118,7 +118,10 @@ test('Project overview metrics and sprint project selection describe their actua
   assert.ok(source.includes('Delivery exceptions'));
   assert.ok(source.includes('Project status distribution'));
   assert.ok(source.includes('projects-planning-delivery-workspace'));
-  assert.ok(source.includes('Milestones & timeline'));
+  assert.ok(source.includes('title="Project timeline"'));
+  assert.ok(source.includes('title="Milestones"'));
+  assert.ok(source.includes("searchParams.get('planningView')"));
+  assert.ok(source.includes("next.delete('planningView')"));
   assert.ok(source.includes('Project brief notes'));
   assert.ok(source.includes('Not tracked as separate project records'));
   assert.ok(source.includes("next.set('planningProject', value)"));

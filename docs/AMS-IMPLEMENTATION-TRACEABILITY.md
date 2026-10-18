@@ -503,12 +503,23 @@ The findings above are source-level risks and release-control gaps, not claims t
 
 ### DASH-CTA-001: Dashboard project action opens the authorized creation flow
 
-**Status:** IMPLEMENTED_UNVERIFIED pending CI on the resulting bulk commit; authenticated browser verification remains outstanding.  
+**Status:** IMPLEMENTED_VERIFIED for source, typecheck, regression tests and production build on `d26aefe57a2936b710fe7f806e8779713645a7b2`; authenticated browser verification remains outstanding.  
 **Scope:** Frontend route/presentation only. No API, persistence, business rule, Finance calculation or permission policy change.
 
 **Source:** `src/components/admin/GlobalExecutiveDashboard.tsx`, `src/pages/admin/AdminProjects.tsx`.  
 **Test:** `tests/ams-dashboard-overview-hierarchy.test.ts` asserts permission-aware CTA routing and consumption of the `create=1` query.  
 **Acceptance:** Users with `canManageProjects` see “New project” and open the existing project-creation drawer from Dashboard. Other users receive “Open Projects” and no creation query. The query is removed using replace navigation; the existing permission check remains authoritative.  
-**Validation limits:** Local lint/test/build could not be run in the current execution environment. CI on the resulting commit and browser deep-link/role interaction are required.  
-**Next action:** Confirm the resulting AMS Quality Gate and AMS CI, then verify direct entry, URL cleanup and drawer access during Stage 5.
+**Validation:** AMS Quality Gate [39156558846](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39156558846) and AMS CI [39156558805](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39156558805) succeeded on the resulting commit. Local lint/test/build could not be run in the current execution environment. Browser deep-link/role interaction remains outstanding.  
+**Next action:** Verify direct entry, URL cleanup and drawer access in authenticated browser sessions across permitted and read-only roles during Stage 5.
+
+### PROJ-PLANNING-003: Planning & Delivery exposes source-backed brief, milestones and timeline views
+
+**Status:** IMPLEMENTED_UNVERIFIED pending CI on this batch; browser verification remains outstanding.  
+**Scope:** Frontend/query navigation and presentation over existing `AgencyProject` and `ProjectMilestone` records only. The current model does not supply separate scope/deliverable, internal QA, client review, revision history or dependency records; those worksheets remain unavailable.
+
+**Source:** `src/pages/admin/AdminProjects.tsx`, `src/lib/projectStore.ts`.  
+**Tests:** `tests/ams-sidebar-subnavigation.test.ts`, `tests/projects-module-regression.test.ts`.  
+**Acceptance:** Project Brief, Milestones and Timeline have distinct query state; project selector preserves the active worksheet; unknown worksheet values normalize to Brief; leaving Planning & Delivery removes stale worksheet state; no records are invented and no untracked workflow outcomes are inferred.  
+**Validation:** Must pass AMS Quality Gate and AMS CI on the resulting commit. No local test/build can be claimed.  
+**Next action:** Confirm CI and carry direct entry, refresh/back/forward, keyboard and responsive tests into Stage 5.
 

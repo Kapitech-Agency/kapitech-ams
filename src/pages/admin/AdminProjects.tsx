@@ -52,6 +52,7 @@ type ProjectRecord = AgencyProject & {
 };
 
 type ProjectsView = 'overview' | 'all' | 'sprint' | 'budget' | 'archived' | 'planning-delivery' | 'resources';
+type PlanningWorkspaceView = 'brief' | 'milestones' | 'timeline';
 type ProjectLayout = 'board' | 'table' | 'timeline';
 
 const PROJECT_STATUSES: Array<{ value: ProjectStatus; label: string }> = [
@@ -496,6 +497,10 @@ export const AdminProjects: React.FC = () => {
     ? requestedView
     : null;
   const selectedProjectSlug = searchParams.get('project') || '';
+  const requestedPlanningView = searchParams.get('planningView');
+  const planningView: PlanningWorkspaceView = requestedPlanningView === 'milestones' || requestedPlanningView === 'timeline'
+    ? requestedPlanningView
+    : 'brief';
   const planningProjectId = searchParams.get('planningProject') || '';
   const planningProject = projects.find((project) => project.id === planningProjectId || project.slug === planningProjectId)
     || projects.find((project) => project.status !== 'completed')
@@ -535,6 +540,26 @@ export const AdminProjects: React.FC = () => {
     const requestedLayout = searchParams.get('layout');
     setProjectLayout(requestedLayout === 'table' ? 'table' : requestedLayout === 'timeline' ? 'timeline' : 'board');
   }, [searchParams]);
+
+  React.useEffect(() => {
+    const currentPlanningView = searchParams.get('planningView');
+    const supportedPlanningViews: readonly string[] = ['brief', 'milestones', 'timeline'];
+
+    if (view === 'planning-delivery') {
+      if (currentPlanningView && !supportedPlanningViews.includes(currentPlanningView)) {
+        const next = new URLSearchParams(searchParams);
+        next.set('planningView', 'brief');
+        setSearchParams(next, { replace: true });
+      }
+      return;
+    }
+
+    if (currentPlanningView) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('planningView');
+      setSearchParams(next, { replace: true });
+    }
+  }, [view, searchParams, setSearchParams]);
 
   const [projectForm, setProjectForm] = useState({
     name: '',
@@ -1617,6 +1642,7 @@ export const AdminProjects: React.FC = () => {
   const goToSprint = (project?: ProjectRecord) => {
     const next = new URLSearchParams(searchParams);
     next.set('projects', 'sprint');
+    next.delete('planningView');
     if (project) next.set('project', project.slug);
     setSearchParams(next);
     setSelectedProject(null);
@@ -2120,13 +2146,13 @@ export const AdminProjects: React.FC = () => {
         <div className="space-y-4" data-ams-feature-slug="projects-planning-delivery-workspace" data-ams-slug="projects-planning-delivery-workspace">
           <AdminSectionTabs
             ariaLabel="Planning & Delivery worksheets"
-            activeKey="project-brief"
+            activeKey={planningView}
             className="w-full border-b border-line pb-2"
             items={[
-              { key: 'project-brief', label: 'Project Brief', to: '/admin/projects?projects=planning-delivery' },
+              { key: 'brief', label: 'Project Brief', to: '/admin/projects?projects=planning-delivery&planningView=brief' },
               { key: 'scope-deliverables', label: 'Scope & Deliverables', to: '/admin/projects?projects=planning-delivery', available: false },
-              { key: 'milestones', label: 'Milestones', to: '/admin/projects?projects=planning-delivery', available: false },
-              { key: 'timeline', label: 'Timeline', to: '/admin/projects?projects=planning-delivery', available: false },
+              { key: 'milestones', label: 'Milestones', to: '/admin/projects?projects=planning-delivery&planningView=milestones' },
+              { key: 'timeline', label: 'Timeline', to: '/admin/projects?projects=planning-delivery&planningView=timeline' },
               { key: 'deliverable-tracking', label: 'Deliverable Tracking', to: '/admin/projects?projects=planning-delivery', available: false },
               { key: 'internal-quality-review', label: 'Internal Quality Review', to: '/admin/projects?projects=planning-delivery', available: false },
               { key: 'client-review', label: 'Client Review', to: '/admin/projects?projects=planning-delivery', available: false },
@@ -2144,15 +2170,23 @@ export const AdminProjects: React.FC = () => {
               <div className="p-4 text-xs leading-5 text-muted" role="status">The project service did not return verified records. No local or sample records are shown.</div>
             </AdminPanel>
           ) : !planningProject ? (
-            <AdminPanel title="No project records" description="Planning & Delivery displays the project plan from canonical records.">
+            <AdminPanel title="No project records" description="Planning & Delivery displays project details from canonical records.">
               <div className="p-5 text-xs leading-5 text-muted" role="status">No projects are available in the current source.</div>
             </AdminPanel>
           ) : (
             <>
-              <AdminPanel
-                title="Project brief & schedule"
-                description="Existing project data. Brief notes and milestones are shown as recorded, without inferring acceptance or review outcomes."
-                actions={(
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="planning-delivery-context">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium text-muted">Planning & Delivery / {planningView === 'brief' ? 'Project Brief' : planningView === 'milestones' ? 'Milestones' : 'Timeline'}</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    {planningView === 'brief'
+                      ? 'Project ownership, recorded brief notes, dates and delivery status.'
+                      : planningView === 'milestones'
+                        ? 'Milestone names, due dates and completion states recorded on this project.'
+                        : 'Project date range and milestone dates recorded by the project source.'}
+                  </p>
+                </div>
+                <div className="w-full min-w-0 sm:max-w-64">
                   <CustomSelect
                     value={planningProject.id}
                     onChange={(value) => {
@@ -2161,100 +2195,160 @@ export const AdminProjects: React.FC = () => {
                       setSearchParams(next);
                     }}
                     options={projects.map((project) => ({ value: project.id, label: project.name }))}
-                    className="w-full sm:w-64"
+                    className="w-full"
                     aria-label="Select project for planning"
                   />
-                )}
-              >
-                <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-4 sm:p-4">
-                  {[
-                    { label: 'Client', value: planningProject.clientCompany || 'Not linked' },
-                    { label: 'Project owner', value: planningProject.teamLead || 'Unassigned' },
-                    { label: 'Service', value: planningProject.serviceCategory || 'Not specified' },
-                    { label: 'Status', value: statusLabel(planningProject.status) },
-                    { label: 'Start date', value: formatDate(planningProject.startDate) },
-                    { label: 'Target deadline', value: formatDate(planningProject.targetEndDate) },
-                    { label: 'Progress', value: planningProject.progressPercent + '%' },
-                    { label: 'Milestones', value: String(planningProject.milestones.length) },
-                  ].map((field) => (
-                    <div key={field.label} className="min-w-0 rounded-control border border-line bg-bg p-3">
-                      <div className="text-[11px] font-medium text-muted">{field.label}</div>
-                      <div className="mt-1.5 truncate text-xs font-semibold text-fg">{field.value}</div>
-                    </div>
-                  ))}
                 </div>
-                <div className="border-t border-line p-3 sm:p-4">
-                  <div className="text-xs font-semibold text-fg">Project brief notes</div>
-                  {planningProject.notes ? (
-                    <p className="mt-2 whitespace-pre-wrap break-words rounded-control border border-line bg-bg p-3 text-xs leading-5 text-fg">{planningProject.notes}</p>
-                  ) : (
-                    <p className="mt-2 rounded-control border border-line bg-bg p-3 text-xs leading-5 text-muted">No project brief notes are recorded for this project.</p>
-                  )}
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] text-muted">Team: {planningProject.teamMembers.length ? planningProject.teamMembers.join(', ') : 'No project team members recorded'}</span>
-                    <Button variant="secondary" icon={<ArrowUpRight size={13} />} onClick={() => goToSprint(planningProject)}>Open task execution</Button>
-                  </div>
-                </div>
-              </AdminPanel>
-              <AdminPanel
-                title="Milestones & timeline"
-                description="Dates and completion states come from the project's recorded milestone list."
-                actions={(
-                  <span className="rounded-badge border border-line bg-bg px-2.5 py-1.5 text-[10px] font-medium tabular-nums text-muted">
-                    {planningMilestones.filter((milestone) => milestone.completed).length} of {planningMilestones.length} completed
-                  </span>
-                )}
-              >
-                {planningMilestones.length === 0 ? (
-                  <div className="p-5 text-xs leading-5 text-muted" role="status">No milestones have been defined. A timeline cannot be verified until milestone dates are recorded.</div>
-                ) : (
-                  <div className="divide-y divide-line">
-                    {planningMilestones.map((milestone, index) => {
-                      const overdue = !milestone.completed && isOverdue(milestone.dueDate);
-                      return (
-                        <div key={milestone.id} className="grid min-w-0 gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(130px,0.35fr)_auto] sm:items-center sm:gap-4 sm:p-4">
-                          <div className="flex min-w-0 items-start gap-3">
-                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold tabular-nums text-muted">{index + 1}</span>
-                            <span className="min-w-0 break-words text-xs font-semibold text-fg">{milestone.title || 'Untitled milestone'}</span>
-                          </div>
-                          <div className="pl-9 text-xs tabular-nums text-muted sm:pl-0">{formatDate(milestone.dueDate)}</div>
-                          <span className={'inline-flex w-fit rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (
-                            milestone.completed
-                              ? 'border-success/25 bg-success/10 text-success'
-                              : overdue
-                                ? 'border-danger/25 bg-danger/10 text-danger'
-                                : 'border-line bg-bg text-muted'
-                          )}>
-                            {milestone.completed ? 'Completed' : overdue ? 'Overdue' : milestone.dueDate ? 'Upcoming' : 'Date not set'}
-                          </span>
+              </div>
+
+              {planningView === 'brief' && (
+                <>
+                  <AdminPanel
+                    title="Project brief"
+                    description="Current project fields only. Scope approval and review outcomes are not inferred from notes or task status."
+                  >
+                    <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-4 sm:p-4">
+                      {[
+                        { label: 'Client', value: planningProject.clientCompany || 'Not linked' },
+                        { label: 'Project owner', value: planningProject.teamLead || 'Unassigned' },
+                        { label: 'Service', value: planningProject.serviceCategory || 'Not specified' },
+                        { label: 'Status', value: statusLabel(planningProject.status) },
+                        { label: 'Start date', value: formatDate(planningProject.startDate) },
+                        { label: 'Target deadline', value: formatDate(planningProject.targetEndDate) },
+                        { label: 'Recorded progress', value: planningProject.progressPercent + '%' },
+                        { label: 'Recorded milestones', value: String(planningProject.milestones.length) },
+                      ].map((field) => (
+                        <div key={field.label} className="min-w-0 rounded-control border border-line bg-bg p-3">
+                          <div className="text-[11px] font-medium text-muted">{field.label}</div>
+                          <div className="mt-1.5 truncate text-xs font-semibold text-fg">{field.value}</div>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
+                    <div className="border-t border-line p-3 sm:p-4">
+                      <div className="text-xs font-semibold text-fg">Project brief notes</div>
+                      {planningProject.notes ? (
+                        <p className="mt-2 whitespace-pre-wrap break-words rounded-control border border-line bg-bg p-3 text-xs leading-5 text-fg">{planningProject.notes}</p>
+                      ) : (
+                        <p className="mt-2 rounded-control border border-line bg-bg p-3 text-xs leading-5 text-muted">No project brief notes are recorded for this project.</p>
+                      )}
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] text-muted">Team: {planningProject.teamMembers.length ? planningProject.teamMembers.join(', ') : 'No project team members recorded'}</span>
+                        <Button variant="secondary" icon={<ArrowUpRight size={13} />} onClick={() => goToSprint(planningProject)}>Open task execution</Button>
+                      </div>
+                    </div>
+                  </AdminPanel>
+                  <AdminPanel title="Planning data coverage" description="The current project record defines which planning details are actually tracked.">
+                    <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
+                      <div className="rounded-control border border-line bg-bg p-3">
+                        <div className="text-xs font-semibold text-fg">Available from current records</div>
+                        <ul className="mt-2 space-y-1.5 text-[11px] leading-5 text-muted">
+                          <li>Project notes, linked client, owner, service and team</li>
+                          <li>Start date, target deadline and recorded progress</li>
+                          <li>Milestone due dates and completion states</li>
+                          <li>Linked task execution</li>
+                        </ul>
+                      </div>
+                      <div className="rounded-control border border-line bg-bg p-3">
+                        <div className="text-xs font-semibold text-fg">Not tracked as separate project records</div>
+                        <p className="mt-2 text-[11px] leading-5 text-muted">Scope and acceptance criteria, deliverables, internal QA outcomes, client review outcomes and revision history have no separate canonical records in the current project model. These outcomes are not inferred from notes, tasks or milestones.</p>
+                      </div>
+                    </div>
+                  </AdminPanel>
+                </>
+              )}
+
+              {planningView === 'milestones' && (
+                <AdminPanel
+                  title="Milestones"
+                  description="Milestone records linked to the selected project. Completion is shown exactly as recorded."
+                  actions={(
+                    <span className="rounded-badge border border-line bg-bg px-2.5 py-1.5 text-[10px] font-medium tabular-nums text-muted">
+                      {planningMilestones.filter((milestone) => milestone.completed).length} of {planningMilestones.length} completed
+                    </span>
+                  )}
+                >
+                  {planningMilestones.length === 0 ? (
+                    <div className="p-5 text-xs leading-5 text-muted" role="status">No milestones are recorded for this project.</div>
+                  ) : (
+                    <div className="divide-y divide-line">
+                      {planningMilestones.map((milestone, index) => {
+                        const overdue = !milestone.completed && isOverdue(milestone.dueDate);
+                        return (
+                          <div key={milestone.id} className="grid min-w-0 gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(130px,0.35fr)_auto] sm:items-center sm:gap-4 sm:p-4" data-ams-slug={'planning-milestone-' + milestone.id}>
+                            <div className="flex min-w-0 items-start gap-3">
+                              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold tabular-nums text-muted">{index + 1}</span>
+                              <span className="min-w-0 break-words text-xs font-semibold text-fg">{milestone.title || 'Untitled milestone'}</span>
+                            </div>
+                            <div className="pl-9 text-xs tabular-nums text-muted sm:pl-0">{formatDate(milestone.dueDate)}</div>
+                            <span className={'inline-flex w-fit rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (
+                              milestone.completed
+                                ? 'border-success/25 bg-success/10 text-success'
+                                : overdue
+                                  ? 'border-danger/25 bg-danger/10 text-danger'
+                                  : 'border-line bg-bg text-muted'
+                            )}>
+                              {milestone.completed ? 'Completed' : overdue ? 'Overdue' : milestone.dueDate ? 'Upcoming' : 'Date not set'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </AdminPanel>
+              )}
+
+              {planningView === 'timeline' && (
+                <AdminPanel
+                  title="Project timeline"
+                  description="Timeline shows project dates and recorded milestone dates. It does not estimate unrecorded durations or dependencies."
+                >
+                  <div className="grid gap-3 border-b border-line p-3 sm:grid-cols-3 sm:p-4">
+                    <div className="rounded-control border border-line bg-bg p-3">
+                      <div className="text-[11px] font-medium text-muted">Project start</div>
+                      <div className="mt-1.5 text-xs font-semibold text-fg">{formatDate(planningProject.startDate)}</div>
+                    </div>
+                    <div className="rounded-control border border-line bg-bg p-3">
+                      <div className="text-[11px] font-medium text-muted">Target deadline</div>
+                      <div className="mt-1.5 text-xs font-semibold text-fg">{formatDate(planningProject.targetEndDate)}</div>
+                    </div>
+                    <div className="rounded-control border border-line bg-bg p-3">
+                      <div className="text-[11px] font-medium text-muted">Recorded progress</div>
+                      <div className="mt-1.5 text-xs font-semibold text-fg">{planningProject.progressPercent}%</div>
+                    </div>
                   </div>
-                )}
-              </AdminPanel>
-              <AdminPanel title="Planning data coverage" description="This workspace shows the planning information currently stored on the canonical project record.">
-                <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
-                  <div className="rounded-control border border-line bg-bg p-3">
-                    <div className="text-xs font-semibold text-fg">Available from current records</div>
-                    <ul className="mt-2 space-y-1.5 text-[11px] leading-5 text-muted">
-                      <li>Project notes, client, owner and service</li>
-                      <li>Start date, deadline and recorded progress</li>
-                      <li>Milestone dates and completion state</li>
-                      <li>Assigned project team and linked task execution</li>
-                    </ul>
-                  </div>
-                  <div className="rounded-control border border-line bg-bg p-3">
-                    <div className="text-xs font-semibold text-fg">Not tracked as separate project records</div>
-                    <p className="mt-2 text-[11px] leading-5 text-muted">Scope and acceptance criteria, deliverable register, internal QA outcomes, client review outcomes, and revision history are not separate records in the current project model. They are not inferred from tasks or milestones.</p>
-                  </div>
-                </div>
-              </AdminPanel>
+                  {planningMilestones.length === 0 ? (
+                    <div className="p-5 text-xs leading-5 text-muted" role="status">No milestone dates are recorded. The timeline currently shows only the project start and target deadline.</div>
+                  ) : (
+                    <ol className="ml-5 space-y-0 border-l border-line py-4">
+                      {planningMilestones.map((milestone) => {
+                        const overdue = !milestone.completed && isOverdue(milestone.dueDate);
+                        return (
+                          <li key={milestone.id} className="relative pb-5 pl-6 last:pb-0" data-ams-slug={'planning-timeline-' + milestone.id}>
+                            <span className={'absolute -left-[5px] top-1 h-2.5 w-2.5 rounded-full border ' + (
+                              milestone.completed
+                                ? 'border-success bg-success'
+                                : overdue
+                                  ? 'border-danger bg-danger'
+                                  : 'border-line bg-panel'
+                            )} aria-hidden="true" />
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                              <div className="min-w-0">
+                                <p className="break-words text-xs font-semibold text-fg">{milestone.title || 'Untitled milestone'}</p>
+                                <p className="mt-1 text-[11px] text-muted">{milestone.completed ? 'Completed' : overdue ? 'Overdue' : 'Recorded milestone'}</p>
+                              </div>
+                              <span className="shrink-0 text-xs tabular-nums text-muted">{formatDate(milestone.dueDate)}</span>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  )}
+                </AdminPanel>
+              )}
             </>
           )}
         </div>
       )}
-
       {view === 'resources' && (
         <div className="space-y-4" data-ams-feature-slug="projects-resources-workspace" data-ams-slug="projects-resources-workspace">
           {loading && !serverMode ? (

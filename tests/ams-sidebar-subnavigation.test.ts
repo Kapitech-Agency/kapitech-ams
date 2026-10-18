@@ -185,8 +185,18 @@ test('Project Registry filters keep the Project Registry workspace active withou
   for (const label of planningWorksheetLabels) {
     assert.ok(projectSource.includes("label: '" + label + "'"), 'Planning & Delivery worksheet missing: ' + label);
   }
+  assert.match(projectSource, /activeKey=\{planningView\}/);
+  assert.match(projectSource, /planningView === 'brief'/);
+  assert.match(projectSource, /planningView === 'milestones'/);
+  assert.match(projectSource, /planningView === 'timeline'/);
+  assert.match(projectSource, /searchParams\.get\('planningView'\)/);
+  assert.match(projectSource, /next\.set\('planningView', 'brief'\)/);
+  assert.match(projectSource, /next\.delete\('planningView'\)/);
+  assert.ok(projectSource.includes("planningView=brief"));
+  assert.ok(projectSource.includes("planningView=milestones"));
+  assert.ok(projectSource.includes("planningView=timeline"));
   for (const key of [
-    'scope-deliverables', 'milestones', 'timeline', 'deliverable-tracking',
+    'scope-deliverables', 'deliverable-tracking',
     'internal-quality-review', 'client-review', 'revision-history',
   ]) {
     assert.match(projectSource, new RegExp("key: '" + key + "',[^\\n]*available: false"));

@@ -416,8 +416,17 @@ Responsive review has now added a compact register to Project Finance, Accounts 
 
 - Baseline: `ec1b9e5f9d64fd69b5c64bc919ae7441e486d6a9`. The baseline AMS Quality Gate and AMS CI completed successfully. This is evidence for the baseline SHA only, not a pass claim for changes added after it.
 - Stage 0–2 source checks reviewed the nine-module navigation mapping, shell geometry and existing scroll regression guard. Source-level checks are green on the baseline; direct browser navigation, scroll, focus and responsive QA remain unverified and belong in Stage 5.
-- The Stage 3 gap-register checkpoint identifies module workspaces and ten cross-module workflows with conservative statuses and next actions. Inbox Follow-ups, Inbox Routing & Templates, Projects Content & Campaigns, Projects Project Controls, and Team People Operations are unavailable in source and recorded as missing from the approved target.
+- The Stage 3 gap register identifies 36 primary workspaces, 10 cross-module workflows, and the nested disabled worksheets found in source, each with conservative statuses and next actions. Inbox Follow-ups, Inbox Routing & Templates, Projects Content & Campaigns, Projects Project Controls, and Team People Operations are unavailable in source and recorded as missing from the approved target.
 - Stage 4 correction in this batch: Dashboard's “New project” action previously opened only the Projects registry. It is now permission-aware. Authorized users use a `create=1` deep link that opens the existing create drawer; other users receive an “Open Projects” link. The Projects page consumes the flag and retains its existing permission guard.
-- Focused regression coverage was added in `tests/ams-dashboard-overview-hierarchy.test.ts`. CI on the new bulk commit is pending until its own workflows finish.
+- Focused regression coverage was added in `tests/ams-dashboard-overview-hierarchy.test.ts`. Both workflows tied to `d26aefe57a2936b710fe7f806e8779713645a7b2` passed: Quality Gate [39156558846](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39156558846) and AMS CI [39156558805](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39156558805).
 - No local build, lint or test result is claimed because the repository could not be cloned into the execution runtime. No backend/API/database/authentication/RBAC/business logic or Finance formula was changed. Browser QA and Stage 5 approval remain outstanding.
+
+## Stage 4 source-backed Planning & Delivery checkpoint — 19 October 2026
+
+- Promoted Project Brief, Milestones and Timeline to three URL-addressable views using existing canonical project and milestone records.
+- Added normalization for unsupported `planningView` values and removes stale worksheet state on exit. The project selector retains the active worksheet. No deliverable, review, approval, revision, duration or dependency facts are invented.
+- Scope & Deliverables, Deliverable Tracking, Internal Quality Review, Client Review and Revision History remain unavailable because the current project/task schema does not contain separate canonical records for those outcomes.
+- Expanded the gap register with disabled nested worksheets across Inbox, Clients, Projects, Team & Resources, Time Tracking, Vendors, Contracts, SLA, Careers, Tasks and Kopra H2H. Disabled tabs remain off until their source/workflow is verified.
+- Dashboard CTA source/test/typecheck/build evidence is verified on `d26aefe57a2936b710fe7f806e8779713645a7b2`; AMS Quality Gate and AMS CI passed. This Planning & Delivery batch needs its own CI result.
+- No local build/test is claimed because the repository could not be cloned into the runtime. No backend/API/database/authentication/RBAC/business logic, model or Finance formula changed. Authenticated browser visual QA, accessibility checks and Stage 5 approval remain outstanding.
 
