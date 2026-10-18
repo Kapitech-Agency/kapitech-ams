@@ -244,3 +244,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Retained the sortable-by-order data register in the desktop table layout at 1,280px and above and kept existing pagination outside the responsive presentation switch, so both layouts use the same current page of source-backed records.
 - Added regression coverage for the mobile card register and preserved handlers.
 - CMS API operations, content normalization, publishing state, permissions, editor drawer, filters, page size, pagination, and record data are unchanged. CI status will be checked for this direct-to-`main` change; authenticated browser visual QA remains outstanding.
+
+
+## Twenty-ninth implementation slice: CMS service, insight and testimonial registers
+
+- Added compact card registers for Services, Insights, and Testimonials below 1,280px; the existing data tables now render only on wide desktop, where their multi-column metadata remains useful.
+- Cards retain their actual content context and existing actions: service publication/inspection/edit/public link, insight status/language/author/date/edit/language variant/public link/delete, and testimonial publication/rating/quote/location/edit/delete.
+- Existing filters, search, sort state, current page and pagination remain shared between responsive presentations. No new example content, fabricated metrics, backend operations, content state transitions, or permission changes were introduced.
+- Added focused source regression assertions for the responsive registers and action handlers. Full CI status will be checked after the direct-to-`main` push; authenticated browser visual QA remains outstanding.

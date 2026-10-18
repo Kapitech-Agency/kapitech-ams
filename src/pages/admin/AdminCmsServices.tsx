@@ -482,7 +482,58 @@ export const AdminCmsServices: React.FC = () => {
         </div>
       ) : (
         <AdminDataTableShell slug="cms-services-directory">
-          <div data-ams-feature-slug="cms-services-table-scroll" data-ams-slug="cms-services-table-scroll" className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable service register">
+          <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="cms-services-mobile-register" role="list" aria-label="Service cards">
+            {pagedServices.map((item) => (
+              <article key={item.slug} role="listitem" data-ams-slug={'cms-service-card-' + item.slug} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel">{getCategoryIcon(item.category)}</span>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="break-words text-sm font-semibold text-fg">{item.title}</h2>
+                    <p className="mt-1 break-words text-[11px] leading-4 text-muted">{item.heroSubtitle || item.heroSubtitleId || 'No description provided.'}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">{item.category}</span>
+                      <span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (item.isPublished === true ? 'border-success/20 bg-success/10 text-success' : 'border-line bg-panel text-muted')}>{item.isPublished === true ? 'Published' : 'Draft'}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-muted">Content badge</p>
+                    <p className="mt-1 break-words text-xs text-fg">{item.badgeId || item.badge || '—'}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-muted">URL slug</p>
+                    <p className="mt-1 break-all font-mono text-[10px] text-muted">/{item.slug}</p>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <p className="text-[10px] text-muted">Capabilities</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {item.capabilities.slice(0, 3).map((cap, index) => <span key={index} className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">{cap.title || cap.titleId}</span>)}
+                    {item.capabilities.length > 3 && <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">+{item.capabilities.length - 3}</span>}
+                    {item.capabilities.length === 0 && <span className="text-[10px] text-muted">No capabilities listed</span>}
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+                  <button
+                    type="button"
+                    disabled={!item.id || publishingServiceId === item.id}
+                    onClick={() => void handleTogglePublished(item)}
+                    aria-pressed={item.isPublished === true}
+                    className={'inline-flex min-h-9 items-center gap-1.5 rounded-control border px-3 text-[11px] font-semibold disabled:cursor-not-allowed disabled:opacity-50 ' + (item.isPublished === true ? 'border-success/20 bg-success/10 text-success' : 'border-line bg-panel text-muted')}
+                  >
+                    {publishingServiceId === item.id ? 'Saving…' : item.isPublished === true ? <><EyeOff size={12} /> Unpublish</> : <><Eye size={12} /> Publish</>}
+                  </button>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button type="button" onClick={() => setSelectedServiceForDetail(item)} className="inline-flex h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><Eye size={12} /> Inspect</button>
+                    <button type="button" disabled={!item.id} onClick={() => openServiceEditor(item)} className="inline-flex h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><Edit3 size={12} /> Edit</button>
+                    <a href={'https://kapitech.id/services/' + item.slug} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-medium text-accent-text hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><ExternalLink size={11} /> Live</a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div data-ams-feature-slug="cms-services-table-scroll" data-ams-slug="cms-services-table-scroll" className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable service register">
           <table className="ams-data-table w-full min-w-[980px] text-left">
             <thead>
               <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">

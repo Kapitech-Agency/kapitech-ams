@@ -840,7 +840,36 @@ export const AdminCmsInsights: React.FC = () => {
         </div>
       ) : (
         <AdminDataTableShell slug="cms-insights-directory">
-          <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable insights register">
+          <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="cms-insights-mobile-register" role="list" aria-label="Insight cards">
+              {items.map(item => (
+                <article key={item.id} role="listitem" data-ams-slug={'cms-insight-card-' + item.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <button type="button" className="min-w-0 flex-1 text-left" onClick={() => void handleOpenEdit(item)}>
+                      <h2 className="break-words text-sm font-semibold text-fg">{item.title || 'Untitled'}</h2>
+                      <p className="mt-1 break-all font-mono text-[10px] text-muted">{item.slug}</p>
+                    </button>
+                    <AdminStatusBadge tone={statusTone(item.status)}>{item.status}</AdminStatusBadge>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <AdminStatusBadge tone="info">{item.language.toUpperCase()}</AdminStatusBadge>
+                    {item.alternateLanguages && item.alternateLanguages.length > 1 && <span className="inline-flex items-center gap-1 text-[10px] text-muted"><Globe size={12} /> Linked language variants</span>}
+                    <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">{item.category?.displayName || item.category?.slug || 'Uncategorized'}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Author</p><p className="mt-1 break-words text-xs text-fg">{item.author?.name || '—'}</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Published</p><p className="mt-1 text-xs text-fg">{formatDate(item.publishedAt)}</p></div>
+                    <div className="min-w-0 col-span-2"><p className="text-[10px] text-muted">Last updated</p><p className="mt-1 text-xs text-fg">{formatDate(item.updatedAt)}</p></div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap justify-end gap-1.5">
+                    <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" onClick={() => void handleOpenEdit(item)} aria-label={'Edit ' + item.title} title="Edit insight"><Pencil size={13} /></button>
+                    <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" onClick={() => handleOpenVariant(item)} aria-label={'Create language variant for ' + item.title} title="Create language variant"><Globe size={13} /></button>
+                    {item.status === 'published' && <a href={'https://kapitech.id/insights/' + item.slug} target="_blank" rel="noreferrer" className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Open public insight ' + item.title} title="Open public insight"><ArrowUpRight size={13} /></a>}
+                    <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" onClick={() => setDeleteTarget(item)} aria-label={'Delete ' + item.title} title="Delete insight"><Trash2 size={13} /></button>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable insights register">
             <table className="ams-data-table w-full min-w-[1080px] text-left">
               <thead>
                 <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">

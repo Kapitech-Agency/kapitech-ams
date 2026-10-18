@@ -989,3 +989,24 @@ test('CMS case studies use a task-oriented card register before switching to the
   assert.ok(cms.includes('onClick={() => handleOpenEdit(project)}'));
   assert.ok(cms.includes('onClick={() => handleDelete(project.id, project.title)}'));
 });
+
+
+test('CMS Services, Insights, and Testimonials use compact registers below the wide-table breakpoint', () => {
+  const services = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsServices.tsx'), 'utf8');
+  assert.ok(services.includes('data-ams-feature-slug="cms-services-mobile-register"'));
+  assert.ok(services.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(services.includes('onClick={() => void handleTogglePublished(item)}'));
+  assert.ok(services.includes('onClick={() => setSelectedServiceForDetail(item)}'));
+
+  const insights = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsInsights.tsx'), 'utf8');
+  assert.ok(insights.includes('data-ams-feature-slug="cms-insights-mobile-register"'));
+  assert.ok(insights.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(insights.includes('onClick={() => handleOpenVariant(item)}'));
+  assert.ok(insights.includes('onClick={() => setDeleteTarget(item)}'));
+
+  const testimonials = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsTestimonials.tsx'), 'utf8');
+  assert.ok(testimonials.includes('data-ams-feature-slug="cms-testimonials-mobile-register"'));
+  assert.ok(testimonials.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(testimonials.includes('onClick={() => void handleTogglePublished(item)}'));
+  assert.ok(testimonials.includes('onClick={() => handleOpenEdit(item)}'));
+});

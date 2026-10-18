@@ -249,7 +249,33 @@ export const AdminCmsTestimonials: React.FC = () => {
         </div>
       ) : (
         <AdminDataTableShell slug="cms-testimonials-directory">
-          <div data-ams-feature-slug="cms-testimonials-table-scroll" data-ams-slug="cms-testimonials-table-scroll" className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable testimonials register">
+          <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="cms-testimonials-mobile-register" role="list" aria-label="Testimonial cards">
+              {pagedTestimonials.map((item) => (
+                <article key={item.id} role="listitem" data-ams-slug={'cms-testimonial-card-' + item.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-semibold text-fg">{item.author}</p>
+                      <p className="mt-1 break-words text-[11px] text-muted">{item.company || 'Company not set'}{item.role ? ' · ' + item.role : ''}</p>
+                    </div>
+                    <span className={'inline-flex shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (item.isPublished === true ? 'border-success/20 bg-success/10 text-success' : 'border-line bg-panel text-muted')}>{item.isPublished === true ? 'Published' : 'Draft'}</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-1 text-warning" aria-label={String(item.rating || 5) + ' out of 5 stars'}>
+                    {[...Array(item.rating || 5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                    <span className="ml-1 text-[10px] text-muted">{item.rating || 5}/5</span>
+                  </div>
+                  <blockquote className="mt-3 border-l-2 border-line pl-3 text-xs leading-5 text-fg">“{item.quoteId || item.quote || 'No quote provided.'}”</blockquote>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+                    <span className="inline-flex min-w-0 items-center gap-1.5 break-words text-[10px] text-muted"><MapPin size={11} className="shrink-0" />{item.location || 'Location not set'}</span>
+                    <div className="flex flex-wrap justify-end gap-1.5">
+                      <button type="button" onClick={() => void handleTogglePublished(item)} className={["inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border px-3 text-[10px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", item.isPublished === true ? "border-success/20 bg-success/10 text-success" : "border-line bg-panel text-muted hover:text-fg"].join(" ")} aria-pressed={item.isPublished === true} aria-label={(item.isPublished === true ? "Unpublish " : "Publish ") + item.author} title={item.isPublished === true ? "Move to draft" : "Publish testimonial"}>{item.isPublished === true ? <Eye size={12} /> : <EyeOff size={12} />}{item.isPublished === true ? "Published" : "Publish"}</button>
+                      <button type="button" onClick={() => handleOpenEdit(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Edit ' + item.author} title="Edit testimonial"><Edit3 size={13} /></button>
+                      <button type="button" onClick={() => setDeleteTarget({ id: item.id, author: item.author })} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Delete ' + item.author} title="Delete testimonial"><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div data-ams-feature-slug="cms-testimonials-table-scroll" data-ams-slug="cms-testimonials-table-scroll" className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable testimonials register">
             <table className="ams-data-table w-full min-w-[980px] text-left">
               <thead>
                 <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
