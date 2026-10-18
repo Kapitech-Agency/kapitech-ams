@@ -2678,16 +2678,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </label>
               )}
             </div>
-            <AdminMetricStrip metrics={[
-              { id: 'gl-cash-in-period', label: 'Posted GL cash in', value: postedCurrentFlow.journalCount ? formatMoney(postedCurrentFlow.inflow) : 'No posted activity', context: postedCurrentFlow.activityCount + ' cash-moving journal entries · ' + periodLabel, icon: <ArrowDown size={15} /> },
-              { id: 'gl-cash-out-period', label: 'Posted GL cash out', value: postedCurrentFlow.journalCount ? formatMoney(postedCurrentFlow.outflow) : 'No posted activity', context: 'Posted General Journal only', icon: <ArrowUpRight size={15} /> },
-              { id: 'gl-cash-net-period', label: 'Posted GL net cash', value: postedCurrentFlow.journalCount ? formatMoney(postedCurrentFlow.net) : 'Not available', context: 'Opening balances excluded; internal transfers net to zero', icon: <CircleDollarSign size={15} /> }
-            ]} />
-            <AdminMetricStrip metrics={[
-              { id: 'cash-in-period', label: 'Recorded cash in (proxy)', value: formatMoney(currentFlow.inflow), context: periodLabel, icon: <ArrowDown size={15} /> },
-              { id: 'cash-out-period', label: 'Cash out', value: formatMoney(currentFlow.outflow), context: periodLabel, icon: <ArrowUpRight size={15} /> },
-              { id: 'cash-net-period', label: 'Net movement (proxy)', value: formatMoney(currentFlow.net), context: 'Compared periods are calculated from recorded source rows', icon: <CircleDollarSign size={15} /> }
-            ]} />
             <FinanceDataTable
               title="Posted General Ledger cash flow"
               description={periodLabel + ' compared with ' + comparisonLabel + '. These values use posted journal activity only and exclude opening balances; bank-statement reconciliation is still required.'}

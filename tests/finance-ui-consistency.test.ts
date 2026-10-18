@@ -116,6 +116,24 @@ test('Annual Summary separates source operating activity from posted-ledger resu
   assert.match(annualView, /Posted journals only/);
 });
 
+test('Cash Flow presents source and posted-ledger comparison tables without duplicated KPI strips', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const cashFlowStart = workspace.indexOf("case 'cash-flow': {");
+  const cashFlowEnd = workspace.indexOf("\n      case 'monthly-closing':", cashFlowStart);
+  assert.ok(cashFlowStart >= 0 && cashFlowEnd > cashFlowStart, 'Cash Flow worksheet should be present.');
+  const cashFlowView = workspace.slice(cashFlowStart, cashFlowEnd);
+
+  assert.doesNotMatch(cashFlowView, /<AdminMetricStrip/, 'Cash flow summary values should not be duplicated above comparison tables.');
+  assert.match(cashFlowView, /title="Posted General Ledger cash flow"/);
+  assert.match(cashFlowView, /title="Source cash movement comparison \(proxy\)"/);
+  assert.match(cashFlowView, /title="Recorded source cash movement by Month \(proxy\)"/);
+  assert.match(cashFlowView, /const postedFlowRows = postedFlowMetrics\.map/);
+  assert.match(cashFlowView, /const flowComparisonRows = flowComparisonMetrics\.map/);
+  assert.match(cashFlowView, /Export posted GL/);
+  assert.match(cashFlowView, /Export comparison/);
+  assert.match(cashFlowView, /Export period detail/);
+});
+
 test('Finance read permission blocks unauthorized register loads and shows an explicit restricted state', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
