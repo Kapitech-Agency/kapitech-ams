@@ -845,10 +845,10 @@ test('Vendor directory prioritizes its register, then the snapshot, and uses the
   const pagination = vendors.indexOf('slug="vendor-directory-pagination"');
   const snapshot = vendors.indexOf('data-ams-feature-slug="vendor-snapshot"');
   const detailDrawer = vendors.indexOf('slug="vendor-detail-drawer"');
+  assert.ok(snapshot > 0 && snapshot < filters, 'vendor snapshot leads the directory controls');
   assert.ok(filters >= 0 && directory > filters);
   assert.ok(emptyState > directory && pagination > emptyState);
-  assert.ok(snapshot > pagination);
-  assert.ok(detailDrawer > snapshot);
+  assert.ok(detailDrawer > pagination);
   assert.equal(vendors.includes('<Modal'), false);
   assert.ok(vendors.includes('footer={('));
   assert.ok(vendors.includes("handleOpenEdit(selectedVendor)"));
