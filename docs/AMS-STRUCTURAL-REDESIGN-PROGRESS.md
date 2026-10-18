@@ -186,3 +186,11 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - The private-vault status badge, search/sort controls, category routing, permissions, download/preview/delete behavior, and document data remain unchanged.
 - Added regression coverage for the category-specific header copy.
 - [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122707224) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39122707232) passed for commit `8a6be2e48ddf71c036a2b18f2e2eddffc898afa0`, including typecheck, regression tests, production build, PostgreSQL integration, dependency audit, and production HTTP smoke test.
+
+
+## Twenty-second implementation slice: Settings workspace identity
+
+- The Settings page title now identifies the active topbar workspace: System overview, Access & security, Audit log, or Integrations. The active destination is reflected in both navigation and the page heading, rather than showing the same generic title across four different jobs.
+- Existing contextual descriptions, permission-gated controls, MFA setup access, server status sources, audit records, integrations, and all routes/query parameters remain unchanged.
+- Added source regression assertions for the four workspace titles.
+- Source change and regression assertion are committed directly to `main`; CI status will be checked after the push. No authenticated browser screenshot testing is claimed.

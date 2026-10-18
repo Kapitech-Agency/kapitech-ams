@@ -22,6 +22,11 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   assert.ok(workspace.includes("{ key: 'access', label: 'Access & security', to: '/admin/settings?tab=security' }"));
   assert.ok(workspace.includes("{ key: 'audit', label: 'Audit log', to: '/admin/settings?tab=audit' }"));
   assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));
+  assert.ok(settings.includes("title={activeTab === 'overview'"));
+  assert.ok(settings.includes("? 'System overview'"));
+  assert.ok(settings.includes("? 'Access & security'"));
+  assert.ok(settings.includes("? 'Audit log'"));
+  assert.ok(settings.includes(": 'Integrations'}"));
   assert.ok(settings.includes("description={activeTab === 'overview'"));
   assert.ok(settings.includes('Review system health, backup history, and production readiness.'));
   assert.ok(settings.includes('Search and review server-recorded security and administrative events.'));

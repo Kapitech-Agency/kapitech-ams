@@ -853,7 +853,13 @@ export const AdminSettings: React.FC = () => {
   return (
     <AdminPageShell featureSlug="settings-module">
       <AdminModuleHeader slug="settings-header"
-        title="Settings"
+        title={activeTab === 'overview'
+          ? 'System overview'
+          : activeTab === 'security'
+            ? 'Access & security'
+            : activeTab === 'audit'
+              ? 'Audit log'
+              : 'Integrations'}
         description={activeTab === 'overview'
           ? 'Review system health, backup history, and production readiness.'
           : activeTab === 'security'
