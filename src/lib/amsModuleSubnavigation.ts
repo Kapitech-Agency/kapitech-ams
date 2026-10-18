@@ -249,6 +249,22 @@ const MODULE_CHILDREN: Partial<Record<AmsSidebarModuleKey, Record<string, AmsSid
       { key: 'time-by-project', label: 'Time by Project', to: '/admin/time-logs', available: false },
     ],
   },
+  settings: {
+    integrations: [
+      { key: 'integration-overview', label: 'Integration Overview', to: '/admin/settings?tab=integrations' },
+      { key: 'website-cms-integrations', label: 'Website & CMS Integrations', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'bank-integrations', label: 'Bank Integrations', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'kopra-h2h', label: 'Bank Mandiri Kopra H2H', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'connection-service-status', label: 'Connection & Service Status', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'account-mapping', label: 'Account Mapping', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'integration-environment', label: 'Integration Environment', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'credentials-certificates', label: 'Credentials & Certificate Management', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'connection-testing', label: 'Connection Testing', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'synchronization-status', label: 'Synchronization & Status Checks', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'error-diagnostics', label: 'Error Logs & Diagnostics', to: '/admin/settings?tab=integrations', available: false },
+      { key: 'integration-audit', label: 'Integration Audit Trail', to: '/admin/settings?tab=integrations', available: false },
+    ],
+  },
 };
 
 export function getAmsModuleSubnavigation(
