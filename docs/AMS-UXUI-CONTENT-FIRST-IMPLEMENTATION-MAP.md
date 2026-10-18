@@ -637,3 +637,22 @@ Continue the full module-by-module structural pass and verify every active subta
 - [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103613440) and [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103613434) passed for the resulting source commit.
 
 The next work remains module-specific content hierarchy and responsive interaction review. The screenshot reference remains unverified in this environment, and authenticated browser visual acceptance is still outstanding.
+
+
+### Register-first workspace pass · Projects, Clients, Team & Resources, Time Tracking, and Finance · 18 October 2026
+
+- `0d7fd077a7b0ed5cbf30074089e05d77ab837d25`: moved active-project and archived-project KPI strips below their primary portfolio registers. Corrected regression expectations so the test title and actual content hierarchy agree.
+- `f73cfacc1d2889aee0c4f4590635b1cd74a97ff7` and `66c233b33d9bb67c7db5d6c881cae9e90b23301d`: moved client account metrics after the searchable directory and pagination. The first quality-gate run surfaced a second stale ordering assertion in the general page regression suite; that assertion was corrected to verify the directory-first hierarchy.
+- `af4517c7cc63a57d2874ebb61351b1945ef26427`: moved Team Directory, Team Vendor Directory, and the Team workspace Time Tracking summaries after their primary registers. This slice was re-applied from the clean parent source after an initial JSX transformation error; the resulting source passed typecheck and the subsequent corrected test run.
+- `b1a4211e04fd16b6178c0315c632c74025261204`: replaced the inline New Time Entry panel in Team & Resources with the shared Drawer pattern, keeping form fields, validation, save action, and permission guard intact. The standalone Time Tracking page already uses a Drawer.
+- `f7b72f17ded0d5f8c611e86580529ff6b740fefa`: moved Finance Cash & Bank, Accounts Payable, and Petty Cash KPI strips below their primary registers while retaining reconciliation notes, payment schedule and linked payment workflows in place.
+
+### Validation for the register-first pass
+
+- [Project portfolio/archive order · AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103813371) and [Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39103813305): passed.
+- [Team/time drawer and summary order · AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39104413800) and [Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39104413791): passed.
+- [Finance register-first order · AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39104607254) and [Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39104607318): passed.
+
+The main content rule for directory and transaction views is now explicit: filters and the actionable register come first; supporting KPI summaries follow the register unless the view is intentionally analytical (for example, Dashboard, P&L, cash-flow analysis, or allocation configuration). The existing vendor snapshot placement in the Finance-embedded Vendor Directory is intentionally preserved as its own summary-led workflow.
+
+Authenticated visual E2E review remains outstanding. Continue checking the remaining subtabs and responsive states before declaring completion.
