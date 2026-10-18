@@ -1,45 +1,47 @@
-# AMS Navigation-First Phased Execution Prompt
+# AMS Phased UX/UI Execution Prompt: Navigation + Main Content
 
 **Repository:** Kapitech-Agency/kapitech-ams  
 **Required delivery branch:** main  
-**Purpose:** Execute the approved AMS navigation structure first, then proceed through content hierarchy, shared components, responsive behavior, and regression testing in tightly bounded stages. This prompt is intentionally strict because previous implementation attempts drifted into unrelated work and were interrupted by timeouts.
+**Scope:** Complete the approved navigation implementation and the ongoing main-content UX/UI redesign, then finish shared-component consistency, responsive/scroll fixes, regression validation, and delivery review. This is a full rollout plan, not a navigation-only task.
 
 ## Copy-paste execution instruction
 
-Act as the senior engineer implementing the currently approved Kapitech AMS plan. Read and obey AGENTS.md, README.md, docs/README.md, docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md, docs/architecture/ams-navigation-information-architecture.md, docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md, and the other applicable UX/UI guidelines before editing.
+Act as the senior frontend engineer responsible for completing the current AMS navigation and structural UX/UI work. Read and obey AGENTS.md, README.md, docs/README.md, docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md, docs/architecture/ams-navigation-information-architecture.md, docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md, docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md, docs/AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md, and all applicable UX/UI/content/role/domain guides.
 
-### Non-negotiable execution rules
+The goal is to finish the current work coherently. **Do not interpret this prompt as permission to only work on navigation and ignore the main-content redesign.** Navigation is the first gate; main-content implementation and verification are an explicit major stage immediately afterwards. Some navigation, shared-shell and main-content changes already exist in main. Preserve and continue that work rather than restarting from zero.
 
-1. **Follow the stage order exactly. Do not skip, combine, or reorder stages.**
-2. **The current active task is Stage 1: finish and verify navigation. Do not start content redesign, global CSS cleanup, responsive redesign, unrelated module improvements, or any other later stage until Stage 1 has passed its acceptance criteria and the user explicitly instructs you to continue.**
-3. Work on **one bounded stage, and within module-based stages one module at a time**. Do not attempt a full-repository rewrite in one tool call or one long, uncheckpointed run.
-4. Send the user a durable progress report when the baseline is established, after every meaningful implementation slice, and at the completion of each stage. Then **stop and wait for the user's instruction to continue to the next stage**. Do not silently proceed into the next stage after a report.
-5. Before every write, confirm the current main HEAD and preserve concurrent changes. The user has requested direct-to-main delivery: commit directly to main, without creating a branch or PR, unless the user explicitly changes that instruction. Never force-push or overwrite a concurrent update.
-6. Do not report a change or test as complete without evidence from the current source, exact command result, or relevant GitHub Actions run.
-7. If an unexpected issue belongs to a later stage, record it under “Deferred to Stage [N]”; do not fix it prematurely. If a true blocker or protected-layer decision prevents progress, stop and report the exact blocker.
-8. If an operation risks timing out, shrink the current batch. Make a safe checkpoint, report the last verified commit and exact remaining task, then stop. On resumption, re-fetch main and the relevant files before continuing. Never rely on assumptions from before a timeout.
+## Non-negotiable execution and reporting rules
 
-## Stage 0 — Baseline and scope lock
+1. Follow the stage sequence in this document. Do not skip, reorder, combine, or silently broaden stages.
+2. Before implementation, inspect the current main, recent commits, progress document, change map, relevant source and tests. Build a per-view status inventory: verified complete, partially complete, not started, failing, or not verified.
+3. The existing progress document contains prior work on shared navigation geometry, Dashboard hierarchy/Analytics/progress presentation, Finance worksheet context, and other structural slices. Treat these as **existing work to verify and carry forward**, not as an instruction to repeat or as proof that the latest source is fully correct. Inspect recent commits as well; do not rely on historical snapshots alone.
+4. Work in small, independently verifiable slices. Within the main-content stage, handle one module or a clearly bounded portion of one module at a time. Avoid one large unbounded refactor or a single enormous tool operation.
+5. **Report progress to the user at the baseline, after each meaningful slice, and at each stage milestone. Then continue to the next planned slice/stage automatically when safe.** Do not wait for the user to re-authorize every routine next step. Stop and ask only for a true blocker, material ambiguity in business/product decisions, destructive action, protected-scope change, or when the user explicitly asks you to pause.
+6. If tool delivery or the context may time out, reduce the batch size, finish and verify the smallest safe unit, checkpoint it, and send the user a durable report before proceeding. A report must identify the last verified commit and exact next task so work can resume without repeating good changes.
+7. Before every write, refresh current main and preserve concurrent updates. The user has required **direct-to-main delivery**: do not create a branch or PR, force-push, or overwrite newer work.
+8. A passing build alone does not prove navigation correctness or good UX. Never claim a source route, interaction, viewport, browser flow, CI job, or deployment was verified without evidence.
+9. If an issue belongs to a later stage, record it as deferred and do not fix it prematurely. Do not let one unrelated finding redirect the active task.
+10. Keep changes within frontend UX/UI and focused frontend tests. Respect all protected scopes listed below.
 
-Before changing code:
+## Stage 0 — Baseline and carry-forward inventory
 
-- Confirm repository, current main HEAD, recent related commits, current CI state, and the existing navigation implementation.
-- Read the current navigation IA, master structure, progress register, and relevant route/navigation tests.
-- Inventory what is already correct, incomplete, broken, or unverified. Continue from the actual current state; do not redo completed work merely to follow a checklist.
-- Define the files and behavior in scope for the active stage.
-- Report: baseline HEAD, what is already complete, confirmed navigation gaps, allowed files, protected areas, first bounded implementation slice, and tests to run.
+Before editing implementation code:
 
-Do not change source files during this baseline report unless a tiny, necessary documentation correction is explicitly within the task. Then proceed only with Stage 1.
+- Confirm repository, current main HEAD, recent commits, related changes, and latest relevant CI state.
+- Read the navigation IA, master structure, current progress roll-up, content-first implementation map, and relevant route/module tests.
+- Inventory the nine primary modules, workspaces, worksheets, major content areas, and affected routes.
+- For every view, record: status; existing source-backed behavior; what is already changed in main; remaining concrete defect; affected files; tests and browser evidence available; next action.
+- Specifically verify existing structural slices rather than assuming completion: shared navigation/shell geometry; Dashboard overview, analytics and project-progress presentation; Finance workspace/worksheet context; Inbox saved views; Projects/Tasks worksheets and workspace structure; and any relevant recent module commits.
+- Identify whether there are failing checks on the baseline and distinguish pre-existing failures from new regressions.
+- Report the baseline HEAD, verified work to preserve, remaining Stage 1 navigation gaps, carried-forward main-content gaps, protected boundaries, and first bounded task.
 
-## Stage 1 — Complete and verify navigation only
+**Do not restart previous work simply because this prompt is being introduced.** Continue from current source and verified repository history.
 
-**This is the active stage. Do not work on later stages yet.**
+## Stage 1 — Finish and verify approved navigation
 
-Use docs/architecture/ams-navigation-information-architecture.md and the master structure guide as the target. Verify actual code before treating a documented destination as implemented.
+Use docs/architecture/ams-navigation-information-architecture.md and docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md as the approved target. This stage means completing and verifying the remaining navigation gaps, not rewriting routes or repeating already valid changes.
 
-### Required navigation structure
-
-The nine primary modules are:
+### Required primary modules
 
 1. Dashboard
 2. Inbox
@@ -51,9 +53,9 @@ The nine primary modules are:
 8. Website CMS
 9. Settings
 
-CRM, Proposal/Quotation, and generic Approval must not be primary modules. Removing these menu entries does not authorize deleting their historical records, routes, APIs, permissions, maker-checker controls, or compatibility behavior.
+CRM, Proposal/Quotation, and generic Approval are not primary sidebar modules. Removing a menu entry does not authorize deleting historical records, APIs, route compatibility, permissions, maker-checker controls, or transaction history.
 
-Finance must retain these five primary areas:
+Finance must retain these five top-level areas:
 
 - Overview & Control
 - Transactions & Cash
@@ -61,105 +63,154 @@ Finance must retain these five primary areas:
 - Project Finance
 - Accounting & Reports
 
-Follow the navigation IA for the approved workspace and worksheet ownership in every other module. Do not invent a new navigation hierarchy or make each filter/status into a sidebar item.
+Follow the approved navigation IA for the workspaces and worksheet ownership inside each other module. Keep the hierarchy primary module → workspace → worksheet/filter/saved view → selected record detail. Do not promote every status, filter, saved view or record detail to a persistent sidebar item.
 
-### Navigation implementation checklist
+### Navigation acceptance checks
 
-- Map every visible primary destination, workspace tab, and relevant worksheet tab to its canonical current route or supported query state.
-- Ensure each destination opens the correct owning module and view; no unrelated fallback pages, dead links, duplicate destinations, blank content, or incorrect tab labels.
-- The selected tab must agree with the URL and remain correct after direct URL entry, refresh, and browser back/forward navigation.
-- Verify the overview/default view remains reachable where it is required, even where its URL matches the module root.
-- Check that navigation is reachable for permitted roles and does not expose unauthorized destinations. Do not change server authorization or invent new permissions.
-- Preserve query parameters, record identifiers, canonical write paths, existing route guards, and legacy compatibility behavior.
-- Ensure menu depth follows primary module → workspace → worksheet/filter/saved view → selected record detail. Do not turn every worksheet, filter, or record detail into a persistent sidebar level.
-- Make only navigation-related frontend changes and tightly targeted navigation regression tests. Do not use this stage to redesign page content, rework global CSS, clean unrelated legacy code, change API/data behavior, or add dependencies.
+- Every visible module/workspace/tab destination maps to the correct canonical route or supported query state and opens content owned by that destination.
+- No wrong-module fallback, dead link, duplicate destination, blank destination, incorrect tab label, or unreachable required Overview/workspace remains untracked.
+- Active tab, URL/query state, direct URL loading, refresh, and browser back/forward behavior agree.
+- Role-filtered navigation remains aligned with actual route policy. Do not change server authorization or treat menu visibility as security.
+- Existing identifiers, query parameters, route guards, canonical write paths and legacy compatibility behavior are preserved.
+- Run relevant navigation tests and applicable lint/typecheck/build checks; record exact outcomes.
+- Document any environment limitation explicitly. Never report untested browser behavior as verified.
 
-### Stage 1 acceptance gate
+Only navigation-focused implementation changes should be introduced in this stage. Preserve the content changes already in main; do not revert them or expand them opportunistically during navigation fixes.
 
-Stage 1 is complete only when:
+When the navigation acceptance criteria pass, report the outcome and proceed to Stage 2. Do not stop merely to ask for permission to start the next planned stage.
 
-- All nine primary modules and their approved workspace/subnavigation structure have been compared with the navigation IA.
-- Every visible navigation destination has been checked against the actual route/view; all exceptions are documented.
-- URL state, active tab, direct loading, refresh, and browser history behavior are verified to the extent the environment allows.
-- Relevant navigation tests and applicable build/type/lint checks have run, with exact outcomes recorded. If any check cannot run, say so; do not imply it passed.
-- The final diff contains only changes appropriate to Stage 1, and the commit is on main.
+## Stage 2 — Finish the main-content hierarchy module by module
 
-After the acceptance gate is met, deliver the Stage 1 report and **STOP**. Wait until the user explicitly says to continue before starting Stage 2.
+**This stage is a core deliverable of the full rollout. Do not omit it after navigation.** Use the content architecture guide, role-based content blueprint, worksheet presentation matrix, design system, UX interaction standards, and actual source/test evidence.
 
-## Stage 2 — Main content hierarchy, one module per checkpoint
+For each page/view, answer these questions before changing it:
 
-Start only after the user authorizes continuation from Stage 1. Follow the content architecture guide, role-based content blueprint, worksheet matrix, design system, and actual source.
+- Where am I, and what is this view for?
+- What primary job does this workspace help the user complete?
+- What is the dominant work area: queue, register, board, report, detail workspace, editor, or settings group?
+- What context, period, owner, status, filters, metadata, supported actions and supporting panel are required?
+- What is already correct and should be kept?
+- What is the smallest frontend change that resolves the verified content-hierarchy problem?
+- Which tests and neighboring views may regress?
 
-For each module, identify the user's primary task, main working area, information order, needed context, filters, supported actions, and truthful loading/empty/error/unavailable states. Do not make every page look like the Dashboard and do not add fake KPI cards or data.
+Do not merely recolor existing pages. Do not copy the Dashboard composition onto all modules. Do not add meaningless cards, invented KPI values, fake/demo records, unsupported actions, duplicate toolbars, or a second competing record system. Use clear loading, populated, empty, no-match, stale/unavailable, access-restricted, error, pending and success states where applicable.
 
-Work through the following sequence, rechecking current main so existing completed work is not repeated:
+### Main-content work order
 
-1. Dashboard — Overview, Performance, Analytics.
-2. Inbox.
-3. Projects and Tasks.
-4. Clients.
-5. Finance — all five primary areas and the relevant worksheets.
-6. Team & Resources.
-7. Documents.
-8. Website CMS — content types and Careers → Applicants.
-9. Settings.
+Reconcile this list against current source and the view-by-view map before editing. Existing finished items must be marked verified and retained; incomplete items must continue from their current state.
 
-**Implement one module or one clearly bounded portion of a module at a time.** Run the relevant checks, commit a safe verified slice to main, report its result and remaining items, and stop for the user's instruction before starting the next module. Never claim a module is complete if any active view within its declared scope was skipped.
+1. **Dashboard**
+   - Overview, Performance and Analytics.
+   - Verify content ordering, source and period context, main project/delivery workspace, supporting metrics, chart legends/units, responsive panel proportions, unavailable progress values and drill-downs.
+   - Historical commits describe some Dashboard hierarchy and Analytics work already performed. Verify latest main rather than redoing those changes blindly.
 
-## Stage 3 — Shared component consistency
+2. **Inbox**
+   - Overview, canonical Messages queue, message categories/saved views, Follow-ups, and Routing & Templates according to current capability and approved IA.
+   - Keep Careers applicants in Website CMS → Careers → Applicants; do not introduce a second applicant workflow.
+   - Make queue/detail hierarchy, owner, status, priority, due date, source and supported next actions clear.
 
-Start only after Stage 2 is complete and authorized. Address confirmed shared root causes such as duplicate headers, inconsistent contextual tabs, page gutter ownership, repeated toolbars, shared table behavior, drawer/modal patterns, and tab-switch layout shifts.
+3. **Projects and Tasks**
+   - Overview, Project Registry, Tasks & Execution worksheets, Planning & Delivery, Content & Campaigns, Project Resources, and Project Controls as supported by actual implementation.
+   - Verify route/view identity, task list/board semantics, project and client identity, stage, owner, deadline, progress, milestones and cost meaning.
+   - Keep Project Files linked to the canonical Documents workspace. Do not invent target-only controls.
 
-Inspect every affected consumer before changing a shared primitive. Avoid broad refactors. Test the affected module and neighboring consumers. Report and stop at the stage boundary.
+4. **Clients**
+   - Directory, onboarding, agreements, retainers/SLA and service/health workspaces as implemented.
+   - Keep canonical client records and linked requests; do not recreate an Inbox request queue or a standalone CRM.
 
-## Stage 4 — Responsive layout, scrolling, and interaction
+5. **Finance**
+   - All five approved areas and relevant worksheets, not just the module header.
+   - Verify each area has the right dominant register/report/control and does not simply repeat Overview KPIs.
+   - Preserve formulas, values, posting, journal behavior, invoice/quotation records, receivables/payables, period controls, allocation, reconciliation, permissions and APIs exactly as they are.
+   - Quotations remain in Finance; do not create a second proposal/quote store.
 
-Start only after Stage 3 is complete and authorized. Fix source-confirmed issues in page/shell scroll ownership, clipping, horizontal overflow, responsive control placement, table/board usability, keyboard navigation, focus behavior, reduced motion, drawers, and modals.
+6. **Team & Resources**
+   - Team & Capacity, People Operations, Vendors & Freelancers, and Time & Availability according to approved IA and actual role access.
+   - Keep confidential fields and existing authorization behavior intact.
 
-Where practical, verify at 1440, 1024, 768, 390, and 320 pixels. Separate source-level checks from real browser verification; never claim screenshots, viewport tests, or authenticated production checks were performed if they were not.
+7. **Documents**
+   - Searchable document register and clear metadata, version/record identity, access state and supported actions.
+   - Preserve the private document vault and authorized attachment behavior.
 
-Report and stop at the stage boundary.
+8. **Website CMS**
+   - Each actual content type/editor, publication state, and Careers jobs versus applicants.
+   - Preserve publish permissions, status semantics and existing content records.
 
-## Stage 5 — Cross-module regression and validation
+9. **Settings**
+   - Group actual settings by task and risk; clarify current state, explanation and supported save/apply actions.
+   - Preserve authentication, MFA, access, audit, integration and system-security behavior.
 
-Start only after Stage 4 is complete and authorized. Run the applicable lint/typecheck, production build, route/navigation tests, frontend regression tests, and relevant cross-module journeys. Recheck permissions and protected business behavior without changing those protected layers.
+### Required per-module execution loop
 
-If a new failure is introduced, stop unrelated work and repair or revert the responsible slice before proceeding. Record exact commands, commit SHA, CI run, pass/fail result, and any untested scenario.
+For each module or bounded worksheet group:
 
-Report and stop at the stage boundary.
+1. Inspect the current page component, route/state, shared primitives, role presentation contract, tests and recent commit history.
+2. Record the concrete problem and planned frontend-only change.
+3. Implement the smallest coherent change.
+4. Run the targeted relevant tests and applicable checks.
+5. Review the diff and commit a safe verified slice directly to main.
+6. Report the changed paths, visible behavior, exact tests/results, commit SHA, unresolved views and the next planned slice.
+7. Continue to the next module/slice automatically when safe. Do not stop for routine approval, but do stop when a genuine decision or blocker requires the user.
 
-## Stage 6 — Final diff and delivery review
+Do not declare a module complete until every active view in the declared scope has been checked or explicitly listed as unverified/blocked.
 
-Start only after Stage 5 is complete and authorized. Review the full task diff against the original baseline. Confirm no unexpected backend/API/database/authentication/RBAC, Finance calculation, integration, dependency, or unrelated file changes occurred. Verify current main HEAD, relevant CI, and deployment evidence separately.
+## Stage 3 — Complete shared-component and page-shell consistency
 
-Do not claim production deployment or authenticated visual QA unless verified. Deliver a final report of completed scope, deferred work, commits, exact test evidence, unverified items, and any remaining risk.
+Begin after the required main-content areas have been reviewed, while carrying forward any shared primitives already implemented. Inspect and address only evidenced remaining root causes, such as:
 
-## Protected scope for navigation and frontend stages
+- Duplicate module headers, navigation strips or toolbars.
+- Inconsistent workspace/worksheet tab hierarchy and active styling.
+- Gutter/spacing ownership and page-shell width.
+- Table/register row identity, density, filters and action alignment.
+- Shared drawer, modal, confirmation and empty-state patterns.
+- Layout shifts when changing tabs or query states.
+- Shared component behavior inconsistent across modules.
 
-Unless the user gives a separate explicit authorization, do not modify:
+Inspect all affected consumers before changing a shared primitive. Do not create parallel components or conduct an indiscriminate CSS rewrite. Verify the changed module and neighboring consumers.
 
-- Backend/server implementation, API contracts, database/schema/migrations, persistence or source-of-truth rules.
-- Authentication, sessions, CSRF, MFA/TOTP, authorization policy/RBAC, or server security controls.
-- Finance calculations, journal posting, payment/reconciliation rules, period locks, maker-checker behavior, or canonical business records.
-- Notifications, integrations, private document storage, backups, or production configuration.
-- Dependency manifests or lockfiles.
+## Stage 4 — Responsive layout, overflow, scroll ownership and accessibility
 
-If a navigation symptom appears to require one of these changes, preserve the protected behavior and report the blocker rather than crossing the boundary.
+Trace actual ownership across body, shell, main content and local tables/boards before changing overflow. Fix verified issues only; do not remove clipping, scroll-lock or positioning rules based on guesses.
 
-## Required progress report format
+Where browser access is available, check 1440, 1024, 768, 390 and 320 pixel widths. Confirm there is no unintended page-wide horizontal scrolling, clipped controls, overlapping actions, unreadable text, broken table identity, inaccessible tabs, trapped focus, or incorrect drawer/modal behavior. Verify keyboard use, focus restoration and reduced-motion behavior when relevant.
 
-Use this report after the baseline, after meaningful slices, and at every stage boundary:
+Clearly separate source/test evidence from authenticated browser validation. If browser access is unavailable, report it as unverified rather than claiming the visual QA passed.
 
-### Stage [number] — [name]
+## Stage 5 — Cross-module regression and complete validation
+
+Run the current repository's real scripts for lint/typecheck, production build, navigation tests, relevant frontend regression suites, and any targeted cross-module journeys. Do not guess script names; inspect package scripts. Recheck direct routes, refresh, browser history, active workspace state, role-based visibility, table/drawer/modal behavior and truthful data states.
+
+For each check, record exact command or CI run, commit SHA and outcome. If a regression is introduced, stop unrelated work, diagnose and fix or revert that slice before continuing. Do not weaken tests just to get a green result.
+
+## Stage 6 — Final diff, progress record and delivery
+
+- Fetch the latest main and review the complete diff for the rollout.
+- Confirm no protected backend/API/database/authentication/RBAC/Finance formula/integration/dependency scope was changed.
+- Update docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md with completed slices and exact evidence; retain historical notes as historical rather than claiming they represent current HEAD.
+- Verify relevant current CI results, and separately state if Hostinger deployment or authenticated production/browser QA was not verified.
+- Report completed scope, remaining/unverified items, commits, test/build/CI results, risks and next action.
+
+## Protected scope
+
+Unless the user authorizes it as a separate task, do not change backend/server code, API contracts, database/schema/migrations, persistence/source-of-truth rules, authentication/session/CSRF/MFA, authorization policy/RBAC, encryption, audit, financial calculations or posting, payment/reconciliation rules, period locks, maker-checker behavior, integrations, private document storage, backup/recovery infrastructure, production configuration, dependencies or lockfiles.
+
+If a UI/navigation issue needs a protected change, preserve the current safe behavior and report the exact blocker instead of crossing the boundary.
+
+## Mandatory progress report format
+
+Use this after baseline and every meaningful implementation slice:
+
+### Stage [number] — [stage name] / [module or slice]
 
 - **Status:** Complete / In progress / Blocked
-- **Verified result:** What is actually finished.
-- **Changed files and behavior:** Paths and concise description, or “No files changed”.
-- **Commit:** Exact main commit SHA and link, or “Not committed”.
-- **Validation:** Exact checks and observed results. Mark pending, failed, or not run honestly.
-- **Remaining in this stage:** Concrete checklist items.
-- **Deferred to later stage:** Findings deliberately not addressed now.
-- **Risk / unverified:** Browser/runtime/role states not actually verified.
-- **Next action:** One exact bounded task.
+- **Verified result:** Only what is supported by current evidence.
+- **Changed files and user-visible behavior:** Paths and a short description, or “No files changed”.
+- **Commit:** Exact main SHA and link, or “Not committed”.
+- **Validation:** Exact checks and observed results; mark pending, failed or not run honestly.
+- **Already completed and preserved:** Relevant earlier slices not repeated.
+- **Remaining in this stage:** Specific unresolved views/tasks.
+- **Deferred to later stage:** Issues intentionally not addressed yet.
+- **Risk / unverified:** Browser, viewport, role or runtime coverage not actually tested.
+- **Next action:** One precise bounded slice from the sequence.
 
-End every stage-completion report with an explicit statement that implementation is paused at the stage gate and will not proceed until the user directs the next stage. Do not append unrelated enhancements or start another stage after that report.
+Send the report before the user is left without a durable checkpoint or the run risks a timeout. Then continue to the next planned slice when safe. Pause only for a true blocker, material decision, protected-scope boundary, explicit user request to pause, or when the current change has not passed its required safety checks.
