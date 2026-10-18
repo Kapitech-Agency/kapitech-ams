@@ -125,14 +125,14 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
           data-ams-slug={item.slug ?? item.key}
           className={cn(
             variant === 'primary'
-              ? 'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'
+              ? 'relative inline-flex min-h-10 shrink-0 items-center border-b-2 px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset'
               : 'inline-flex min-h-8 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
             active
               ? variant === 'primary'
-                ? 'border-accent/20 bg-accent/10 font-semibold text-fg'
+                ? 'border-accent bg-transparent font-semibold text-fg'
                 : 'border-line bg-panel font-semibold text-fg'
               : variant === 'primary'
-                ? 'border-transparent text-muted hover:border-line hover:bg-panel hover:text-fg'
+                ? 'border-transparent bg-transparent text-muted hover:border-line hover:text-fg'
                 : 'border-transparent text-muted hover:border-line hover:bg-panel hover:text-fg'
           )}
         >
