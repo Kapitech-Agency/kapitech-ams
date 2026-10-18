@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, AlertTriangle, ExternalLink, FileText } from 'lucide-react';
-import { AdminModuleHeader, AdminPageShell, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 
 const slaSetupRequirements = [
   {
@@ -30,6 +30,18 @@ export const AdminClientSlaMonitoring: React.FC = () => {
       />
 
       
+
+      <AdminSectionTabs
+        ariaLabel="Service and health worksheets"
+        activeKey="sla-monitoring"
+        className="w-full border-b border-line pb-2"
+        items={[
+          { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
+          { key: 'service-issues', label: 'Service Issues & Feedback', to: '/admin/clients/sla-monitoring', available: false },
+          { key: 'client-health', label: 'Client Health', to: '/admin/clients/sla-monitoring', available: false },
+          { key: 'service-history', label: 'Service History', to: '/admin/clients/sla-monitoring', available: false },
+        ]}
+      />
 
       <section className="rounded-card border border-warning/25 bg-warning/5 p-4 sm:p-5" role="status" aria-live="polite" data-ams-slug="sla-telemetry-not-configured">
         <div className="flex items-start gap-3">

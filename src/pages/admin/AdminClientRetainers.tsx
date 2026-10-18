@@ -301,6 +301,18 @@ export const AdminClientRetainers: React.FC = () => {
         )}
       />
 
+      <AdminSectionTabs
+        ariaLabel="Client Agreements worksheets"
+        activeKey="retainers"
+        className="w-full border-b border-line pb-2"
+        items={[
+          { key: 'contracts', label: 'Contracts & SOWs', to: '/admin/contracts' },
+          { key: 'retainers', label: 'Retainers & Service Commitments', to: '/admin/clients/retainers' },
+          { key: 'renewals', label: 'Renewal Schedule', to: '/admin/clients/retainers', available: false },
+          { key: 'history', label: 'Contract History', to: '/admin/contracts', available: false },
+        ]}
+      />
+
       <div className="flex items-start gap-3 rounded-card border border-warning/25 bg-warning/5 px-3 py-3 text-xs text-muted" role="status" aria-live="polite" data-ams-slug="retainer-time-log-reconciliation-state">
         <TriangleAlert size={15} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
         <p className="leading-5">Hours used currently reflect the saved Client Directory field. AMS does not yet reconcile Time Logs with retainer billing cycles and eligible-entry rules. Verify usage before applying overage or billing.</p>

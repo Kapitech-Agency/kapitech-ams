@@ -6,7 +6,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type ContractStatus = 'draft' | 'in_review' | 'sent' | 'signed' | 'active' | 'completed' | 'expired' | 'terminated';
 type ContractType = 'msa' | 'sow' | 'service_agreement' | 'nda' | 'change_order';
@@ -335,6 +335,18 @@ export const AdminContracts: React.FC = () => {
         title="Contracts & SOW"
         description="Manage client agreements from draft and review through signature, activation, renewal, and closeout."
         actions={<Button type="button" variant="primary" onClick={openCreate} disabled={!canManage} icon={<Plus size={14} />}>New Contract</Button>}
+      />
+
+      <AdminSectionTabs
+        ariaLabel="Client Agreements worksheets"
+        activeKey="contracts"
+        className="w-full border-b border-line pb-2"
+        items={[
+          { key: 'contracts', label: 'Contracts & SOWs', to: '/admin/contracts' },
+          { key: 'retainers', label: 'Retainers & Service Commitments', to: '/admin/clients/retainers' },
+          { key: 'renewals', label: 'Renewal Schedule', to: '/admin/clients/retainers', available: false },
+          { key: 'history', label: 'Contract History', to: '/admin/contracts', available: false },
+        ]}
       />
 
       {error && (
