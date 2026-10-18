@@ -94,9 +94,11 @@ KAPITECH_RELATIONAL_RECONCILIATION_SOURCE_SHA256=<64-hex SHA-256>
 
 The stored `migration_runs` record must be a successful `encrypted-json` reconciliation run with matching source hash, complete checks, and completion time not later than the signoff timestamp.
 
-## 3. Migration and DR commands
+## 3. Controlled cutover and DR commands
 
-Run from the repository root:
+**This section is for a separately approved migration/cutover or backup-rehearsal procedure, not a routine redeploy checklist.** Do not run reconciliation/import commands against the live production database merely because they appear here. Confirm the intended source and target explicitly, use an isolated staging environment first, and follow the current change/release approval. `db:reconcile` compares the encrypted JSON source with PostgreSQL and records a migration-run report; use it only within an authorized migration/reconciliation plan, not as an everyday post-deployment command.
+
+Run only the applicable commands from the repository root:
 
 ```bash
 npm ci
