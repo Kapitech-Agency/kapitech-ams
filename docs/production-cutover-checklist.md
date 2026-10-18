@@ -12,7 +12,7 @@ Use this checklist for an initial PostgreSQL cutover and for release readiness c
 - `KAPITECH_DATA_ENCRYPTION_KEY` is configured as a valid 32-byte key.
 - `KAPITECH_RELATIONAL_RECONCILIATION_VERIFIED_AT` and `KAPITECH_RELATIONAL_RECONCILIATION_SOURCE_SHA256` match the completed, reviewed reconciliation evidence.
 - The latest `migration_runs` record has status `succeeded`, all reconciliation checks are true, its source hash matches the signed-off hash, and the reconciliation completed before sign-off.
-- Every migration discovered by the current release's runtime loader exists in `schema_migrations` with the exact expected checksum. The repository migration chain currently includes migrations through 049. Presence of only hardening migrations 012 to 014 is not sufficient.
+- Every migration discovered by the current release's runtime loader exists in `schema_migrations` with the exact expected checksum. Compare the complete discovered migration set with applied migration records; do not infer completeness from a manually maintained highest numeric prefix. Distinct migration filenames may share a numeric prefix, and hardening migrations 012–014 do not replace verification of the complete chain.
 - Every active AMS user has TOTP MFA enabled.
 - The PostgreSQL backup provider reports a recent backup inside the configured RPO, valid integrity metadata, and a successful restore rehearsal for the same latest backup artifact.
 - Durable document storage is configured and healthy. All private documents have integrity metadata and their stored objects pass integrity verification.
