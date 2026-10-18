@@ -17,7 +17,7 @@ Before implementation, read:
    - Kanban/task boards: **docs/AMS-KANBAN-GUIDELINES.md**
    - Module content hierarchy and frontend-only UX/UI execution: **docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md** and **docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md**
    - Detailed role-aware main content and worksheet defaults: **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md** and **docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md**
-   - PostgreSQL/schema/cutover/recovery: the relevant **docs/AMS-POSTGRES-*.md**, **docs/AMS-RELATIONAL-MIGRATION.md**, and recovery runbooks
+- PostgreSQL/schema/cutover/recovery: use the current production runbooks indexed in docs/README.md first. docs/AMS-POSTGRES-*.md and docs/AMS-RELATIONAL-MIGRATION.md include historical/staging references and must not be treated as current production instructions.
    - Private documents: **docs/private-document-vault.md**
 
 Do not read one file, infer the rest, and begin a broad rewrite. Inspect the actual files and connected flows relevant to the task.
@@ -130,8 +130,6 @@ Read domain-specific documents for substantial tasks:
 - Role-based content specification across all nine modules, including worksheet fields, visualization rules, and role-aware presentation: docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md.
 - Concrete per-worksheet role defaults, fields/columns, controls and visualization decisions: docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md.
 - Documentation authority/index: docs/README.md.
-- Concrete per-worksheet persona defaults, fields/columns, controls, and visual choices: docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md.
-- Documentation index and source-of-truth classification: docs/README.md.
 - Current production operations contract: docs/PRODUCTION-CUTOVER.md, docs/production-cutover-checklist.md, docs/production-readiness-gate.md, docs/postgres-backup-dr-runbook.md, and docs/private-document-vault.md. Historical/staging PostgreSQL migration notes must not be treated as live production instructions.
 - Frontend routes/state/API/forms: docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md.
 - Business transitions/side effects: docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md.
