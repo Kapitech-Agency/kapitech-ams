@@ -211,6 +211,16 @@ The existing `/admin/navigation/release-readiness` route remains intact and keep
 
 **Verification:** AMS Quality Gate and AMS CI passed on source SHA `e7ca334c7acc26235a3ecf4319fcafed3f7b7448`. The Quality Gate passed typecheck, 707 regression tests (687 passed, 0 failed, 20 skipped), and the production build. AMS CI also passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit (no vulnerabilities in 266 packages), production build, packaged-migration verification, and production HTTP smoke tests. Browser-level visual and direct-entry checks remain unverified; CI success does not by itself prove a production deployment.
 
+### NAV-010: Projects Overview has a distinct source-backed workspace
+
+**Status:** IMPLEMENTED_UNVERIFIED
+
+**Source:** `src/lib/amsModuleSubnavigation.ts`, `src/pages/admin/AdminProjects.tsx`, `tests/ams-sidebar-subnavigation.test.ts`, `tests/projects-module-regression.test.ts`.
+
+Projects Overview is separately addressable at `/admin/projects?projects=overview`. It summarizes open projects, recorded delivery exceptions, open tasks, overdue milestones, and counts by project status from the existing project data. The delivery-exception list links to the existing project detail drawer, and status rows link to the corresponding Project Registry filter. Project Registry has an explicit workspace destination at `/admin/projects?projects=all`; the legacy `/admin/projects` entry continues to open the registry. Planning & Delivery, Content & Campaigns, and Project Resources remain target-only until their respective views are implemented. No API, database, RBAC, authentication, finance logic, or business record was changed.
+
+**Verification:** Regression tests assert the distinct workspace route and active state. Browser-level visual and role-specific navigation checks remain unverified until current CI completes.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
