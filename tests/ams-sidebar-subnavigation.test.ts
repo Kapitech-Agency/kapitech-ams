@@ -91,12 +91,12 @@ test('Inbox routes activate their owning workspace and unsupported target views 
   const messages = inbox.find((item) => item.key === 'messages')!;
   assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=overview'), true);
-  for (const supportedView of ['messages', 'client', 'starred']) {
+  for (const supportedView of ['messages', 'client', 'unread', 'starred']) {
     assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + supportedView), true,
       supportedView + ' must remain owned by Messages');
     assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + supportedView), false);
   }
-  for (const unsupportedView of ['client-requests', 'project-support', 'unread', 'resolved', 'archived', 'unsupported']) {
+  for (const unsupportedView of ['client-requests', 'project-support', 'resolved', 'archived', 'unsupported']) {
     assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + unsupportedView), true,
       unsupportedView + ' is not implemented and must follow the Inbox page fallback to Overview');
     assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + unsupportedView), false,
@@ -106,7 +106,7 @@ test('Inbox routes activate their owning workspace and unsupported target views 
     'target-only workspaces never appear as active functional workspaces');
 
   const inboxSource = await read('src/pages/admin/AdminInbox.tsx');
-  assert.match(inboxSource, /type InboxTab = 'overview' \| 'messages' \| 'client' \| 'starred'/);
+  assert.match(inboxSource, /type InboxTab = 'overview' \| 'messages' \| 'client' \| 'unread' \| 'starred'/);
   assert.match(inboxSource, /ariaLabel="Message categories"/);
   assert.match(inboxSource, /label: 'Project & Support'.*available: false/);
   assert.doesNotMatch(inboxSource, /key: 'starred', label: 'Starred'/,
@@ -115,6 +115,10 @@ test('Inbox routes activate their owning workspace and unsupported target views 
     'Resolved and Archived belong to status filters, not a combined worksheet tab.');
   assert.ok(inboxSource.includes('to="/admin/inbox?view=starred"'),
     'The existing Starred view remains reachable from Messages controls.');
+  assert.ok(inboxSource.includes('to="/admin/inbox?view=unread"'),
+    'Unread is a saved view on canonical New-status records.');
+  assert.match(inboxSource, /case 'unread': return submissions\.filter\(\(item\) => item\.status === 'new'\)/);
+  assert.ok(inboxSource.includes("unread: 'unread_messages'"));
   assert.match(inboxSource, /activeInboxTab === 'messages' \|\| activeInboxTab === 'client'/);
   assert.match(inboxSource, /case 'messages': return submissions/);
   assert.match(inboxSource, /\.filter\(\(item\) => item\.type !== 'career'\)/);
