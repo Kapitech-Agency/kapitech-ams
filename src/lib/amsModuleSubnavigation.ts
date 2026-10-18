@@ -389,7 +389,7 @@ export function isAmsModuleSubnavigationItemActive(
   if (itemKey === 'sla') return path === '/admin/clients/sla-monitoring';
 
   if (itemKey === 'team' && path === '/admin/team') return true;
-  if (itemKey === 'vendors') return path === '/admin/vendors' && params.get('view') !== 'skill-matrix';
+  if (itemKey === 'vendors') return path === '/admin/vendors';
   if (itemKey === 'time') return path === '/admin/time-logs';
   if (path === '/admin/vendors' && itemKey === 'vendors') return true;
 
