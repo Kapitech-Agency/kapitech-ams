@@ -19,7 +19,7 @@ Before implementation, read:
    - End-to-end stage sequence, requirement status and execution protocol: **docs/AMS-END-TO-END-DELIVERY-ROADMAP.md**, **docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md**, and **docs/AMS-END-TO-END-EXECUTION-PROMPT.md**.
    - The navigation-first prompt filename is retained only as a compatibility pointer to the canonical end-to-end prompt; do not treat it as a separate rollout schedule.
    - Detailed role-aware main content and worksheet defaults: **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md** and **docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md**
-- PostgreSQL/schema/cutover/recovery: use the current production runbooks indexed in docs/README.md first. docs/AMS-POSTGRES-*.md and docs/AMS-RELATIONAL-MIGRATION.md include historical/staging references and must not be treated as current production instructions.
+   - PostgreSQL/schema/cutover/recovery: use the current production runbooks indexed in docs/README.md first. docs/AMS-POSTGRES-*.md and docs/AMS-RELATIONAL-MIGRATION.md include historical/staging references and must not be treated as current production instructions.
    - Private documents: **docs/private-document-vault.md**
 
 Do not read one file, infer the rest, and begin a broad rewrite. Inspect the actual files and connected flows relevant to the task.
@@ -32,9 +32,10 @@ Use this order of authority:
 2. Current production-critical security/data-integrity controls and actual code/API/database behavior, unless the user explicitly authorizes a reviewed business change.
 3. Specialized, current technical contracts for the domain being changed (database, accounting, permissions, bank provider, document storage).
 4. **AMS-DESIGN-SYSTEM.md** for visual style and component interaction rules.
-5. **AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md** for the intended future module/navigation/workflow architecture.
-6. Specialized domain guides and audit documents for the factual evidence and rules they cover.
-7. Older audit snapshots, comments, memory, assumptions, and examples.
+5. **AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md** for target product/module/workflow requirements.
+6. **docs/AMS-END-TO-END-DELIVERY-ROADMAP.md** for rollout stage order only; **docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md** for current evidence-backed status. These do not override domain contracts or observed current behavior.
+7. Specialized domain guides and audit documents for the factual evidence and rules they cover.
+8. Older audit snapshots, comments, memory, assumptions, and examples.
 
 The master structure guide is a **target-state specification**, not proof that every listed feature already exists. Older audit documents are snapshots of their audit date, not automatically the latest implementation status. If two documents disagree, do not silently blend them: identify the exact conflict, verify the code and data contract, preserve safe existing behavior, and update documentation to reflect the decision.
 
