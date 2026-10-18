@@ -1394,7 +1394,7 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
-          <section className="rounded-card border border-line bg-panel p-4" <AdminMetricStrip
+          <AdminMetricStrip
                       metrics={[
                         {
                           id: 'active-contractors',
@@ -1429,7 +1429,7 @@ export const AdminTeams: React.FC = () => {
                       ]}
                     />
 
-          data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
+          <section className="rounded-card border border-line bg-panel p-4 data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 xl:flex-row xl:items-center">
                 <label className="relative min-w-0 flex-1 xl:max-w-sm">
