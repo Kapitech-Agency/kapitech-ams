@@ -38,7 +38,8 @@ At the beginning of every task, read:
 2. **README.md** for runtime, production, and deployment constraints.
 3. **AMS-DESIGN-SYSTEM.md** for the exact UI tokens, layout, and shared component rules.
 4. **docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md** for the approved module taxonomy, intended workflows, and target architecture.
-5. The specialized documents applicable to the requested work, including UX interaction standards, navigation information architecture, implementation traceability, business workflow state machines, frontend engineering, E2E regression matrix, Finance alignment, drawer/modal/kanban guides, or database/security runbooks.
+5. For main content/role-aware UX, read **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md** and **docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md** in full, alongside the content architecture and UX standards.
+6. The specialized documents applicable to the requested work, including UX interaction standards, navigation information architecture, implementation traceability, business workflow state machines, frontend engineering, E2E regression matrix, Finance alignment, drawer/modal/kanban guides, or database/security runbooks.
 
 Then inspect the actual files and current GitHub state. Documentation defines intent and constraints; it is not proof that a feature exists or has shipped. If instructions conflict, follow the precedence in AGENTS.md and report material conflicts instead of silently choosing one.
 
@@ -69,7 +70,7 @@ Do not invent access to a local working tree, browser session, production databa
 
 ## 4. Phase 1 — Evidence-based discovery and audit
 
-Trace the request end to end. Inspect the canonical route, module shell, page component, shared primitives, state/URL handling, API client, server contracts, persistence, permission checks, and relevant tests as required by scope.
+Trace the request end to end. Inspect the canonical route, module shell, page component, shared primitives, state/URL handling, API client, server contracts, persistence, permission checks, and relevant tests as required by scope. For role-aware content, map each target worksheet to its role-presentation-matrix row and confirm that proposed defaults do not alter permissions or canonical data meaning.
 
 Classify each relevant capability honestly:
 
