@@ -176,7 +176,7 @@ export const AdminLayout: React.FC = () => {
 
   return (
     <ReportingPeriodProvider>
-      <div className="h-screen w-full bg-bg text-fg flex flex-col min-[900px]:flex-row selection:bg-accent selection:text-fg font-sans antialiased overflow-hidden ams-shell">
+      <div className="flex flex-col min-[900px]:flex-row selection:bg-accent selection:text-fg ams-shell">
       
       {/* Universal Command Palette */}
       <CommandPalette 
@@ -384,7 +384,7 @@ export const AdminLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* MAIN CONTENT AREA & DESKTOP STICKY TOPBAR */}
       {/* ------------------------------------------------------------- */}
-      <main className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-y-auto overscroll-none bg-bg custom-scrollbar">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto custom-scrollbar">
         
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
