@@ -14,6 +14,9 @@ test('Dashboard preserves useful finance context and two-column mobile KPI layou
   assert.match(dashboard, /data-ams-slug="dashboard-finance-chart-legend"/);
   assert.doesNotMatch(dashboard, /className="hidden items-center gap-3 text-\[11px\] text-muted sm:flex"/);
   assert.match(dashboard, /Issued invoice value and recorded expenses/);
+  assert.match(dashboard, /project\.progress == null \? '—' : project\.progress \+ '%'/, 'Unreported project progress must be shown as unavailable, not as null%.');
+  assert.match(dashboard, /width: \(project\.progress \?\? 0\) \+ '%'/);
+  assert.match(dashboard, /width: \(projectDetails\.progress \?\? 0\) \+ '%'/);
 });
 
 test('Time tracking ledger precedes the supporting summary', async () => {

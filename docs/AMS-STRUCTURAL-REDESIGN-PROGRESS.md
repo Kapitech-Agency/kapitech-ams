@@ -82,6 +82,13 @@ Continue with module-specific workspace hierarchy, starting with Finance's prima
   - Typecheck, tests, and production build: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39114700265
   - Verify: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39114700292
 
+## Eleventh implementation slice: Dashboard project progress states
+
+- Updated the desktop Active Projects register to display an em dash when a project's progress is not reported, rather than exposing the JavaScript string `null%`.
+- Kept the mobile project card's existing unavailable label and made the desktop register and project-detail progress bars safely render zero visual fill when no progress value exists. No project records or progress values are inferred.
+- Added source-level regression assertions for the unavailable label and safe bar widths.
+- This is a bounded data-presentation correction within Dashboard Overview; it does not complete the remaining module/subtab redesign or substitute for browser visual QA.
+
 ## Remaining structural redesign work
 
 The overall task is still in progress. Continue route-by-route review of Dashboard Performance/Analytics, Inbox, Projects/Tasks, Clients, all five Finance workspaces and their worksheets, Team & Resources, Documents, all CMS content types and Careers subviews, and Settings subviews. Review root/inner scroll ownership and validate browser behavior when authenticated access is available. Do not describe this task as complete until every active view has been reviewed and its frontend checks and available visual QA are recorded.

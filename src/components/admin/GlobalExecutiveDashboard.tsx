@@ -806,7 +806,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <tr key={project.id} className="border-t border-line transition-colors hover:bg-panel-hover">
                     <td className="px-4 py-3 sm:px-5"><div className="font-medium text-xs text-fg">{project.name}</div><div className="mt-0.5 text-[11px] text-muted">{project.client}</div></td>
                     <td className="px-3 py-3"><span className={['inline-flex items-center rounded-badge border px-2 py-1 text-[11px] font-medium', toneClasses[project.statusTone]].join(' ')}>{project.status}</span></td>
-                    <td className="px-3 py-3"><div className="flex min-w-[150px] items-center gap-2"><div className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')} style={{ width: project.progress + '%' }} /></div><span className="w-8 text-right text-[11px] tabular-nums text-muted">{project.progress}%</span></div></td>
+                    <td className="px-3 py-3"><div className="flex min-w-[150px] items-center gap-2"><div className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')} style={{ width: (project.progress ?? 0) + '%' }} /></div><span className="w-8 text-right text-[11px] tabular-nums text-muted">{project.progress == null ? '—' : project.progress + '%'}</span></div></td>
                     <td className="px-3 py-3"><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold text-fg">{project.lead.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><span className="text-xs text-muted">{project.lead}</span></div></td>
                     <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{project.budget}</td>
                     <td className="relative px-2 py-3 text-right" data-dashboard-project-actions>
@@ -996,7 +996,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <div className="mt-2 h-2 overflow-hidden rounded-sm bg-line">
                 <div
                   className={['h-full rounded-sm', progressClasses[projectDetails.statusTone]].join(' ')}
-                  style={{ width: projectDetails.progress + '%' }}
+                  style={{ width: (projectDetails.progress ?? 0) + '%' }}
                 />
               </div>
             </div>
