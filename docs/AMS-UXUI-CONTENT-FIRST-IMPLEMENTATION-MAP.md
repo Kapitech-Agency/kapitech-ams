@@ -1,6 +1,7 @@
 # AMS Content-First UX/UI Implementation Map
 
-Date: 17 October 2026
+Historical baseline date: 17 October 2026  
+Roadmap cross-reference updated: 19 October 2026 (historical implementation entries not reverified by this documentation change)
 
 > **Document role:** This is the detailed source/change history and view-by-view implementation map for the content-first UX/UI effort. Historical commit, branch, CI, and remaining-work notes are snapshots from the dates stated and are not a live status feed. [`AMS-STRUCTURAL-REDESIGN-PROGRESS.md`](AMS-STRUCTURAL-REDESIGN-PROGRESS.md) is the compact roll-up checkpoint; verify the latest `main` source and current CI/browser evidence before acting or declaring completion. The redesign remains incomplete until its currently applicable acceptance checks are verified. **Historical row and status notes** (including older module/subtab labels in the initial inventory) describe the state captured at that checkpoint; they do not supersede the currently approved structure in `AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md` or `architecture/ams-navigation-information-architecture.md`.
 
