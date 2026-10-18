@@ -86,3 +86,13 @@ Continue with module-specific workspace hierarchy, starting with Finance's prima
 
 The overall task is still in progress. Continue route-by-route review of Dashboard Performance/Analytics, Inbox, Projects/Tasks, Clients, all five Finance workspaces and their worksheets, Team & Resources, Documents, all CMS content types and Careers subviews, and Settings subviews. Review root/inner scroll ownership and validate browser behavior when authenticated access is available. Do not describe this task as complete until every active view has been reviewed and its frontend checks and available visual QA are recorded.
 
+## Tenth implementation slice: Dashboard Analytics composition
+
+- Reorganized Dashboard Analytics into a responsive 12-column layout on wide screens: the invoice/expense trend owns the main column (8/12) and project status is a supporting column (4/12). At smaller widths, the panels naturally stack.
+- Kept all data sources, calculations, period scope, unavailable states and chart semantics unchanged.
+- Added a regression assertion for the responsive panel hierarchy.
+- Commit: `cd2f32071f9e66dc8e5f8ed9a94d59c89e038020`.
+- GitHub Actions passed for the implementation commit:
+  - Typecheck, tests, and production build: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39115156063
+  - Verify: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39115156045
+
