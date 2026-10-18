@@ -1010,3 +1010,17 @@ test('CMS Services, Insights, and Testimonials use compact registers below the w
   assert.ok(testimonials.includes('onClick={() => void handleTogglePublished(item)}'));
   assert.ok(testimonials.includes('onClick={() => handleOpenEdit(item)}'));
 });
+
+
+test('Careers job and applicant registers adapt to compact screens without removing workflow actions', () => {
+  const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
+  assert.ok(careers.includes('data-ams-feature-slug="cms-careers-jobs-cards"'));
+  assert.ok(careers.includes('data-ams-feature-slug="cms-careers-applicants-cards"'));
+  assert.ok(careers.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(careers.includes('onClick={() => void togglePublished(position)}'));
+  assert.ok(careers.includes('onClick={() => openEditEditor(position)}'));
+  assert.ok(careers.includes('onClick={() => setDeleteJobTarget(position)}'));
+  assert.ok(careers.includes('onChange={(value) => void updateApplicantStatus(applicant, value)}'));
+  assert.ok(careers.includes('onClick={() => openApplicantDetails(applicant)}'));
+  assert.ok(careers.includes('onClick={() => setDeleteApplicantTarget(applicant)}'));
+});

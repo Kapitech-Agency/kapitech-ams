@@ -580,7 +580,45 @@ export const AdminCmsCareers: React.FC = () => {
             </div>
           ) : (
             <AdminDataTableShell slug="cms-careers-jobs-table">
-              <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable job openings register">
+              <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="cms-careers-jobs-cards" role="list" aria-label={isId ? 'Kartu lowongan kerja' : 'Job opening cards'}>
+                {pagedPositions.map(position => {
+                  const applicantCount = applicantsLoaded
+                    ? applicants.filter(item => String(item.positionTitle || '').toLowerCase() === position.title.toLowerCase() || String(item.positionTitle || '').toLowerCase() === position.titleId.toLowerCase()).length
+                    : null;
+                  return (
+                    <article key={position.id} role="listitem" data-ams-slug={'career-job-card-' + position.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted"><Briefcase size={15} /></span>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="break-words text-sm font-semibold text-fg">{position.title || (isId ? 'Posisi tanpa judul' : 'Untitled position')}</h3>
+                          {position.titleId && <p className="mt-1 break-words text-[11px] text-muted">{position.titleId}</p>}
+                          <p className="mt-1 break-all font-mono text-[10px] text-muted">/{position.slug}</p>
+                        </div>
+                        <span className={'inline-flex shrink-0 items-center gap-1 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (position.isPublished ? 'border-success/25 bg-success/10 text-success' : 'border-line bg-panel text-muted')}>
+                          <span className={'h-1.5 w-1.5 rounded-full ' + (position.isPublished ? 'bg-success' : 'bg-muted')} />
+                          {position.isPublished ? (isId ? 'Live' : 'Published') : 'Draft'}
+                        </span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                        <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Departemen' : 'Department'}</p><p className="mt-1 break-words text-xs text-fg">{position.department || '—'}</p></div>
+                        <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Jenis kerja' : 'Work type'}</p><p className="mt-1 break-words text-xs text-fg">{position.type} · {position.workplace}</p></div>
+                        <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Lokasi' : 'Location'}</p><p className="mt-1 break-words text-xs text-fg">{position.location || '—'}</p></div>
+                        <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Pelamar' : 'Applicants'}</p><p className="mt-1 text-xs font-medium tabular-nums text-fg">{applicantCount === null ? '—' : applicantCount}</p></div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <button type="button" onClick={() => void togglePublished(position)} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover" title={position.isPublished ? 'Unpublish' : 'Publish'}>
+                          {position.isPublished ? <EyeOff size={12} /> : <Eye size={12} />}{position.isPublished ? (isId ? 'Sembunyikan' : 'Unpublish') : 'Publish'}
+                        </button>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <button type="button" onClick={() => openEditEditor(position)} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover"><Pencil size={12} />{isId ? 'Edit' : 'Edit'}</button>
+                          <button type="button" onClick={() => setDeleteJobTarget(position)} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-danger/20 bg-danger/5 text-danger hover:bg-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={(isId ? 'Hapus ' : 'Delete ') + position.title}><Trash2 size={13} /></button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable job openings register">
                 <table className="ams-data-table w-full min-w-[900px] text-left">
                   <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                     <th className="px-4 py-3">{isId ? 'Lowongan' : 'Position'}</th>
@@ -694,7 +732,56 @@ export const AdminCmsCareers: React.FC = () => {
             </div>
           ) : (
             <AdminDataTableShell slug="cms-careers-applicants-table">
-              <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable applicants register">
+              <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="cms-careers-applicants-cards" role="list" aria-label={isId ? 'Kartu pelamar' : 'Applicant cards'}>
+                {pagedApplicants.map(applicant => {
+                  const resume = safeExternalUrl(applicant.resumeUrl);
+                  const portfolio = safeExternalUrl(applicant.portfolioUrl);
+                  return (
+                    <article key={applicant.id} role="listitem" data-ams-slug={'career-applicant-card-' + applicant.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="break-words text-sm font-semibold text-fg">{applicant.fullName || (isId ? 'Nama belum tersedia' : 'Unnamed applicant')}</h3>
+                          <a href={'mailto:' + applicant.email} className="mt-1 block break-all text-[11px] text-muted hover:text-accent-text">{applicant.email}</a>
+                          {applicant.phone && <p className="mt-1 text-[10px] text-muted">{applicant.phone}</p>}
+                        </div>
+                        <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-fg">{statusLabel(applicant.status)}</span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
+                        <div className="min-w-0 col-span-2"><p className="text-[10px] text-muted">{isId ? 'Posisi dilamar' : 'Applied position'}</p><p className="mt-1 break-words text-xs text-fg">{applicant.positionTitle || (isId ? 'Posisi tidak ditentukan' : 'Position not specified')}</p><p className="mt-1 text-[10px] text-muted">{applicant.source || 'Careers'}</p></div>
+                        <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Tanggal masuk' : 'Received'}</p><p className="mt-1 text-xs text-fg">{applicant.createdAt ? new Date(applicant.createdAt).toLocaleDateString(isId ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</p></div>
+                        <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Dokumen' : 'Documents'}</p><div className="mt-1 flex flex-wrap gap-1.5">{resume && <a href={resume} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-panel px-2 text-[10px] text-fg hover:border-accent/30"><FileText size={11} />CV</a>}{portfolio && <a href={portfolio} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-panel px-2 text-[10px] text-fg hover:border-accent/30"><ExternalLink size={11} />Portfolio</a>}{!resume && !portfolio && <span className="text-[10px] text-muted">—</span>}</div></div>
+                      </div>
+                      <div className="mt-3">
+                        <label className="text-[10px] font-medium text-muted" htmlFor={'careers-applicant-card-status-' + applicant.id}>{isId ? 'Ubah status' : 'Update status'}</label>
+                        <div className="mt-1">
+                          <CustomSelect
+                            value={applicant.status || 'new'}
+                            disabled={updatingApplicantId === applicant.id}
+                            onChange={(value) => void updateApplicantStatus(applicant, value)}
+                            options={[
+                              ...statusOptions,
+                              ...(applicant.status && !statusOptions.some(option => option.value === applicant.status)
+                                ? [{ value: applicant.status, label: statusLabel(applicant.status) }]
+                                : [])
+                            ]}
+                            size="xs"
+                            className="w-full"
+                            triggerClassName="w-full px-2 text-[10px]"
+                            aria-label={'Status for ' + applicant.fullName}
+                            slug={'careers-applicant-card-status-' + applicant.id}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap justify-end gap-1.5 border-t border-line pt-3">
+                        <button type="button" onClick={() => openApplicantDetails(applicant)} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] text-fg hover:border-accent/30 hover:bg-panel-hover"><Eye size={12} />{isId ? 'Detail' : 'Details'}</button>
+                        <a href={'mailto:' + applicant.email} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] text-fg hover:bg-panel-hover"><Send size={12} />Email</a>
+                        <button type="button" onClick={() => setDeleteApplicantTarget(applicant)} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-danger/20 bg-danger/5 text-danger hover:bg-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={(isId ? 'Hapus pelamar ' : 'Delete applicant ') + applicant.fullName}><Trash2 size={13} /></button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable applicants register">
                 <table className="ams-data-table w-full min-w-[980px] text-left">
                   <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                     <th className="px-4 py-3">{isId ? 'Pelamar' : 'Applicant'}</th>

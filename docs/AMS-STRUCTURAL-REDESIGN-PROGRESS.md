@@ -252,3 +252,12 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Cards retain their actual content context and existing actions: service publication/inspection/edit/public link, insight status/language/author/date/edit/language variant/public link/delete, and testimonial publication/rating/quote/location/edit/delete.
 - Existing filters, search, sort state, current page and pagination remain shared between responsive presentations. No new example content, fabricated metrics, backend operations, content state transitions, or permission changes were introduced.
 - Added focused source regression assertions for the responsive registers and action handlers. Full CI status will be checked after the direct-to-`main` push; authenticated browser visual QA remains outstanding.
+
+
+## Thirtieth implementation slice: CMS Careers job and applicant registers
+
+- Added compact responsive card registers for Careers job openings and applicants below 1,280px; wide tables remain the presentation at 1,280px and wider.
+- Job cards keep role identity, department, work type, workplace, location, publication state, source-backed applicant count, and existing publish/unpublish, edit, and delete actions.
+- Applicant cards keep applicant identity/contact, applied position, received date, safe resume/portfolio links, existing status selector, detail action, email action, and delete action.
+- Reused the same filtered/paginated source records across card and table layouts. Job/applicant APIs, permissions, status transitions, file URL safety checks, existing editor/detail drawers, and candidate associations are unchanged.
+- Added regression coverage for both layouts and important workflow handlers. The commit is delivered directly to `main`; CI and Quality Gate status will be checked next. Browser testing with an authenticated AMS session remains outstanding.
