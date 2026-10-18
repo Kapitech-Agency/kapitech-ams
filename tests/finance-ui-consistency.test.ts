@@ -10,7 +10,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   const navigation = await read('src/lib/amsNavigationAccess.ts');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const workbook = await read('src/lib/financeWorkbook.ts');
-  assert.doesNotMatch(layout, /<AdminTopbarTabs/);
+  assert.match(layout, /<AdminTopbarTabs/);
   assert.doesNotMatch(layout, /active-module-title|aria-label="Current module"/);
   assert.match(sidebar, /aria-label="Primary navigation"/);
   assert.match(sidebar, /data-ams-navigation-layout="flat"/);
