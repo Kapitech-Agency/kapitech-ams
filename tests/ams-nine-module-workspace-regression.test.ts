@@ -333,3 +333,14 @@ test('Projects keep the page title clean and expose data availability in the eye
   assert.match(projects, /title=\{view === 'all' \? 'Projects' : view === 'sprint' \? 'Sprint & Delivery' : view === 'budget' \? 'Budget vs Actual' : 'Archived Projects'\}/);
   assert.match(projects, /data-ams-feature-slug="projects-kpis"/);
 });
+
+
+test('Documents header explains the active document category', async () => {
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+  assert.match(documents, /title=\{activeTab === 'all' \? 'Internal Document Vault' : tabLabel\}/);
+  assert.match(documents, /activeTab === 'sops'[\s\S]*Operating procedures, process guides, and internal reference documents/);
+  assert.match(documents, /activeTab === 'legal'[\s\S]*Corporate records, signed agreements, and legal documentation/);
+  assert.match(documents, /activeTab === 'finance'[\s\S]*Finance, invoice, accounting, and tax documents/);
+  assert.match(documents, /activeTab === 'hr'[\s\S]*HR policies, personnel records, and people-operations documents/);
+  assert.match(documents, /Security, infrastructure, and access-control documentation/);
+});

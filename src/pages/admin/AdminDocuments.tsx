@@ -550,8 +550,18 @@ export const AdminDocuments: React.FC = () => {
       <div data-ams-slug="documents-header">
         <AdminModuleHeader
           className="mb-0"
-          title="Internal Document Vault"
-          description="Secure internal repository for SOPs, legal records, finance documents, and technical assets."
+          title={activeTab === 'all' ? 'Internal Document Vault' : tabLabel}
+          description={activeTab === 'all'
+            ? 'Secure internal repository for SOPs, legal records, finance documents, and technical assets.'
+            : activeTab === 'sops'
+              ? 'Operating procedures, process guides, and internal reference documents.'
+              : activeTab === 'legal'
+                ? 'Corporate records, signed agreements, and legal documentation.'
+                : activeTab === 'finance'
+                  ? 'Finance, invoice, accounting, and tax documents.'
+                  : activeTab === 'hr'
+                    ? 'HR policies, personnel records, and people-operations documents.'
+                    : 'Security, infrastructure, and access-control documentation.'}
           eyebrow={(
             <AdminStatusBadge tone="info" icon={<LockKeyhole size={12} />}>
               Private vault
