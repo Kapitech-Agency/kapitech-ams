@@ -95,7 +95,7 @@ const clientInteractionLabel = (type: ClientInteractionType) =>
 
 const formatClientStatusLabel = (value: unknown) => {
   const normalized = String(value || '').trim().replace(/[_-]+/g, ' ');
-  return normalized ? normalized.replace(/\\b\\w/g, (character) => character.toUpperCase()) : 'Not set';
+  return normalized ? normalized.split(' ').map((word) => word ? word[0].toUpperCase() + word.slice(1) : word).join(' ') : 'Not set';
 };
 
 const getClientStatusTone = (value: unknown) => {
