@@ -185,6 +185,15 @@ test('route navigation resets the actual AMS workspace scroller', async () => {
   assert.match(app, /window\.scrollTo\(\{ top: 0, left: 0, behavior: 'auto' \}\)/);
 });
 
+test('workspace grids, feature regions, and module header actions cannot force page-level horizontal overflow', async () => {
+  const css = await read('src/index.css');
+  assert.match(css, /\.ams-shell \.ams-page-shell>:not\(\[hidden\]\):not\(\.fixed\)\{min-width:0;max-width:100%\}/);
+  assert.match(css, /\.ams-shell \.ams-page-shell \.grid>:not\(\[hidden\]\)\{min-width:0\}/);
+  assert.match(css, /\.ams-shell \.ams-page-shell \[data-ams-feature-slug\]\{min-width:0\}/);
+  assert.match(css, /\.ams-shell \.ams-page-header>div:last-child\{flex:0 1 auto;max-width:100%\}/);
+  assert.match(css, /\.ams-shell \.ams-workspace-navigation nav\{width:100%;min-width:0\}/);
+});
+
 test('AMS viewport has one intentional vertical scroll owner without body overflow side effects', async () => {
   const css = await read('src/index.css');
   assert.match(css, /body\s*\{[^}]*overflow-x:\s*clip;/s);
