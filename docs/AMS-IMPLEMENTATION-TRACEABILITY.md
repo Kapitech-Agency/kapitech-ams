@@ -299,6 +299,14 @@ The Project Controls navigation item is disabled because its former destination,
 
 Inbox keeps the approved direct workspace order (Overview, Messages, Follow-ups, Routing & Templates). An unsupported explicit `view` value now resolves to Overview and replaces the query with `view=overview`, while preserving unrelated query parameters. Legacy `view=jobs` compatibility remains owned by the existing route redirect to Website CMS → Careers → Applicants. The Admin primary navigation regression now asserts the exact nine-module sequence with Settings in position nine. AMS Quality Gate and AMS CI both passed at the source commit; browser-level back/forward and visual verification remain unverified.
 
+### NAV-019: Tasks & Execution worksheet navigation is URL-addressable and role-aware
+
+**Status:** IMPLEMENTED_VERIFIED at source checkpoint `6e0e4959b47b66c7a8e18af49aca7363bc81466d`.
+
+**Source:** `src/components/admin/TasksWorkspace.tsx`, `src/lib/amsModuleSubnavigation.ts`, `src/pages/admin/AdminLayout.tsx`, `tests/task-workspace-data-parity-regression.test.ts`, `tests/ams-sidebar-subnavigation.test.ts`.
+
+Tasks & Execution now exposes Board / Kanban and List as query-driven worksheets at all viewport widths. The task queues (All Tasks, My Tasks, Due & Overdue, Review Queue, Blocked, Completed) remain views of the same task records and are shown at desktop and compact widths. Unsupported `layout` values resolve to List without dropping other query parameters. Task Lists and Dependencies remain visible as unavailable targets until backed by actual workflows. Role-aware workspace ownership keeps a PM's `taskscope=my` view under Projects while preserving existing route access rules. AMS Quality Gate and AMS CI passed at the tested checkpoint. Browser-level responsive interaction and visual sign-off remain unverified.
+
 ## 10. End-to-end business workflow audit — 16 October 2026
 
 **Checkpoint:** Navigation branch `feat/ams-nine-module-navigation-2026-10-16` at `abd71d5343ed668b24a0f73d1cf40d594a36204b`, with navigation PR #167 still open. Audit changes are isolated on `audit/ams-e2e-workflow-2026-10-16`; audit PR #168 is based on the navigation branch and remains unmerged. Audit source checkpoint `5f27dc2defbd3172d6734c26845035e19cb35f42` passed the AMS Quality Gate and AMS CI. No production deployment or production-record mutation was performed.
