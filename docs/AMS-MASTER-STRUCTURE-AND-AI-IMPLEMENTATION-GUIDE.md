@@ -160,15 +160,30 @@ Do not combine revenue, issued invoices, cash received, profit, and account bala
 
 ### 5.1 Structure
 
-- Inbox Overview
-- All Messages
-- Sales Inquiries
-- Client Requests
-- Project & Support Requests
-- Follow-ups
-- Starred
-- Resolved & Archived
-- Routing & Response Templates
+Inbox uses four direct workspace entries. Message categories and personal/status views must be grouped inside their owning workspace instead of becoming separate sidebar submenus.
+
+1. **Overview**
+   - Source-backed summary of incoming messages and work requiring attention.
+   - Show actionable counts, upcoming/overdue follow-ups, and recent activity only when the data is available and permitted.
+
+2. **Messages**
+   - **Worksheets:** All Messages, Sales Inquiries, Client Requests, Project & Support.
+   - **Filters / saved views:** Unread, Starred, Resolved, Archived.
+   - **Shared message workspace:** Search, priority, status, owner/PIC, channel, date range and other supported filters belong in this workspace rather than creating more sidebar items.
+   - Message categories, status filters and saved views must refer to the same canonical message/thread records. They must not create duplicate datasets or independent message workflows.
+   - Resolved and Archived remain distinct statuses. Grouping them in the same workspace does not combine their business meaning.
+
+3. **Follow-ups**
+   - **Views:** Due Today, Upcoming, Overdue, Completed.
+   - Present the related message/thread, owner/PIC, due date, status and supported next action.
+   - These are views of the existing follow-up records, not new records or a duplicate task system.
+
+4. **Routing & Templates**
+   - **Routing Rules:** Existing, supported rules for category, channel, ownership/PIC and message distribution.
+   - **Response Templates:** Manage and use supported response templates.
+   - Use internal tabs or a clear section switcher for these two areas. Do not expose each as a separate direct Inbox submenu.
+
+**Navigation rule:** The Inbox sidebar/submenu must contain only Overview, Messages, Follow-ups, and Routing & Templates. All other message categories and views belong within these workspaces as worksheets, filters or saved views.
 
 Job applications are not sales leads and must not be managed in Inbox; they belong in Website CMS → Careers → Applicants. Website inquiries may enter Inbox.
 
