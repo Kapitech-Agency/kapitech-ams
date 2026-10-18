@@ -1,6 +1,6 @@
-# AMS JSON → PostgreSQL staging importer
+# AMS JSON → PostgreSQL Staging Importer — Staging Only
 
-The importer is the next controlled step after reconciliation. It reads the encrypted JSON store without modifying it and can write only to an explicitly designated staging PostgreSQL environment.
+This importer is strictly for an explicitly designated staging PostgreSQL environment. It reads the encrypted JSON source without modifying it; it is not a production importer, production cutover procedure, or evidence of the deployed production data source. The historical sequence described here may have advanced. For the production contract, use `README.md`, `docs/PRODUCTION-CUTOVER.md`, `docs/production-cutover-checklist.md`, and `docs/production-readiness-gate.md`.
 
 ## Modes
 
@@ -73,4 +73,4 @@ Still requires a separate reconciliation/import stage:
 - application repository adapter/cutover
 - restore rehearsal and production cutover
 
-Do not point the importer at production PostgreSQL. Production JSON remains the source of truth until the full validation and cutover gates are completed.
+Never point this importer at production PostgreSQL or execute it against live production records. This importer does not switch application repositories, perform a full business cutover, or copy and verify physical private-document objects. Do not infer current production mode from this staging guide; verify authorized runtime configuration and `GET /api/system/production-readiness`.
