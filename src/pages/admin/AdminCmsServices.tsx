@@ -20,6 +20,7 @@ import {
   X,
   Clock,
   Eye,
+  EyeOff,
   Sliders,
   DollarSign,
   TrendingUp

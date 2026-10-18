@@ -261,3 +261,9 @@ The overall task is still in progress. Continue route-by-route review of Dashboa
 - Applicant cards keep applicant identity/contact, applied position, received date, safe resume/portfolio links, existing status selector, detail action, email action, and delete action.
 - Reused the same filtered/paginated source records across card and table layouts. Job/applicant APIs, permissions, status transitions, file URL safety checks, existing editor/detail drawers, and candidate associations are unchanged.
 - Added regression coverage for both layouts and important workflow handlers. The commit is delivered directly to `main`; CI and Quality Gate status will be checked next. Browser testing with an authenticated AMS session remains outstanding.
+
+
+## Thirty-first implementation slice: CMS responsive register type-check correction
+
+- Corrected the missing `EyeOff` icon import used by the new Services card publication control after CI TypeScript validation reported it.
+- No behavior or permission changes were made.
