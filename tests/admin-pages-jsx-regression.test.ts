@@ -685,10 +685,13 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory && clientMetrics > 0 && clientMetrics < clientDirectory);
   assert.ok(clients.indexOf('slug="client-directory-filters"') > clientMetrics && clients.indexOf('slug="client-directory-filters"') < clientDirectory);
 
-  const teamPagination = teams.indexOf('slug="team-directory-pagination"');
-  const teamPanelEnd = teams.indexOf('</AdminPanel>', teamPagination);
+  const teamHeader = teams.indexOf('<AdminModuleHeader');
+  const teamView = teams.indexOf('data-ams-feature-slug="team-directory"');
   const teamMetrics = teams.indexOf("slug: 'team-directory-kpi-headcount'");
-  assert.ok(teamPagination >= 0 && teamPanelEnd > teamPagination && teamMetrics > teamPanelEnd);
+  const teamFilters = teams.indexOf('data-ams-feature-slug="team-directory-filters"');
+  const teamPagination = teams.indexOf('slug="team-directory-pagination"');
+  assert.ok(teamHeader >= 0 && teamView > teamHeader && teamMetrics > teamView && teamMetrics < teamFilters);
+  assert.ok(teamPagination > teamFilters);
 
   const vendorPagination = teams.indexOf('slug="vendor-directory-pagination"');
   const vendorPanelEnd = teams.indexOf('</AdminPanel>', vendorPagination);

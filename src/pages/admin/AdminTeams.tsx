@@ -1192,7 +1192,50 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'team-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="team-directory" data-ams-slug="team-directory">
-          
+          <AdminMetricStrip
+                      metrics={[
+                        {
+                          id: 'headcount',
+                          slug: 'team-directory-kpi-headcount',
+                          label: 'Total headcount',
+                          value: currentViewDataUnavailable ? '—' : teamMetrics.headcount,
+                          context: currentViewDataUnavailable ? 'Live source unavailable' : sourceAvailability.timeLogs === true ? (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries' : sourceAvailability.timeLogs === false ? 'Time log data unavailable' : 'Loading time log data',
+                          
+                          icon: <UsersRound size={15} />
+                        },
+                        {
+                          id: 'engineering',
+                          slug: 'team-directory-kpi-engineering',
+                          label: 'Engineering & tech',
+                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
+                          context: 'Backend, Frontend, DevOps & QA',
+                          
+                          icon: <BarChart3 size={15} />,
+                          toneClassName: 'text-info'
+                        },
+                        {
+                          id: 'design',
+                          slug: 'team-directory-kpi-product-design',
+                          label: 'Product & design',
+                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
+                          context: 'UI/UX, Product Strategy & Systems',
+                          
+                          icon: <LayoutGrid size={15} />,
+                          toneClassName: 'text-info'
+                        },
+                        {
+                          id: 'operations',
+                          slug: 'team-directory-kpi-operations',
+                          label: 'Operations & delivery',
+                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
+                          context: 'Delivery, PMs, Operations & Client Work',
+                          
+                          icon: <UsersRound size={15} />
+                        }
+                      ]}
+                    />
+
+                    
           <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="team-directory-filters" data-ams-slug="team-directory-filters">
             
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -1347,48 +1390,7 @@ export const AdminTeams: React.FC = () => {
           <AdminTablePagination total={teamRows.length} page={teamPage} pageSize={teamPageSize} onPageChange={setTeamPage} onPageSizeChange={setTeamPageSize} itemLabel="members" slug="team-directory-pagination" />
           </AdminPanel>
 
-                    <AdminMetricStrip
-                      metrics={[
-                        {
-                          id: 'headcount',
-                          slug: 'team-directory-kpi-headcount',
-                          label: 'Total headcount',
-                          value: currentViewDataUnavailable ? '—' : teamMetrics.headcount,
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : sourceAvailability.timeLogs === true ? (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries' : sourceAvailability.timeLogs === false ? 'Time log data unavailable' : 'Loading time log data',
-                          
-                          icon: <UsersRound size={15} />
-                        },
-                        {
-                          id: 'engineering',
-                          slug: 'team-directory-kpi-engineering',
-                          label: 'Engineering & tech',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
-                          context: 'Backend, Frontend, DevOps & QA',
-                          
-                          icon: <BarChart3 size={15} />,
-                          toneClassName: 'text-info'
-                        },
-                        {
-                          id: 'design',
-                          slug: 'team-directory-kpi-product-design',
-                          label: 'Product & design',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
-                          context: 'UI/UX, Product Strategy & Systems',
-                          
-                          icon: <LayoutGrid size={15} />,
-                          toneClassName: 'text-info'
-                        },
-                        {
-                          id: 'operations',
-                          slug: 'team-directory-kpi-operations',
-                          label: 'Operations & delivery',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
-                          context: 'Delivery, PMs, Operations & Client Work',
-                          
-                          icon: <UsersRound size={15} />
-                        }
-                      ]}
-                    />
+                    
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
