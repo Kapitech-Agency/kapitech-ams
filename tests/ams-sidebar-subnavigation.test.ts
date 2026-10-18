@@ -254,6 +254,19 @@ test('role-specific workspace destinations remain permitted and primary links ac
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'Freelancer', true).map((item) => item.key), ['access']);
 });
 
+test('Dashboard invalid view parameters fall back to the sole Overview workspace', () => {
+  const views = getAmsModuleSubnavigation('dashboard', 'Admin');
+  const overview = views.find((item) => item.key === 'overview')!;
+  const performance = views.find((item) => item.key === 'performance')!;
+  const analytics = views.find((item) => item.key === 'analytics')!;
+  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/dashboard', '?view=unknown'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(performance, '/admin/dashboard', '?view=unknown'), false);
+  assert.equal(isAmsModuleSubnavigationItemActive(analytics, '/admin/dashboard', '?view=unknown'), false);
+  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/dashboard', '?view='), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/dashboard', '?view=performance'), false);
+  assert.equal(isAmsModuleSubnavigationItemActive(performance, '/admin/dashboard', '?view=performance'), true);
+});
+
 test('primary navigation modules and nested views preserve their owning workspace', () => {
   assert.equal(getAmsWorkspaceNavigationModule('/admin/dashboard'), 'dashboard');
   assert.equal(getAmsWorkspaceNavigationModule('/admin/inbox', '?view=messages'), 'inbox');
