@@ -40,9 +40,9 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   assert.equal(quickActions.includes('min-[390px]'), false, 'Quick actions must not introduce a 390px breakpoint.');
   assert.equal(quickActions.includes('min-[760px]'), false, 'Quick actions must not introduce a 760px breakpoint.');
   assert.doesNotMatch(quickActions, /label:\s*'New project'/, 'New project already belongs in the page header, so it must not be duplicated');
-  const trendPicker = overview.indexOf('data-ams-slug="dashboard-trend-period"');
-  assert.ok(trendPicker > quickActions.indexOf('data-ams-feature-slug="dashboard-quick-actions"') && trendPicker < chartStart,
-    'The trend-period control should sit in the chart header after Quick Actions.');
+  const trendPicker = overview.indexOf('<DashboardTrendRangePicker range={range} onChange={setRange} />');
+  assert.ok(trendPicker > chartStart && trendPicker < projectsStart,
+    'The trend-period control should sit in the chart header before the project register.');
 
   for (const label of ['Review tasks', 'Log time', 'View invoices', 'View clients', 'View documents']) {
     assert.ok(quickActions.includes("label: '" + label + "'"), 'Missing quick action: ' + label);
