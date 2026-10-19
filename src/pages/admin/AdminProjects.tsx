@@ -2449,10 +2449,12 @@ export const AdminProjects: React.FC = () => {
             </AdminPanel>
           ) : (
             <>
-              <AdminPanel
-                title="Project team & assignments"
-                description="Select a project to review its recorded team, resource allocation entries, and tasks."
-                actions={(
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" data-ams-slug="project-resources-scope">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-fg">Selected project</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">Review recorded allocation periods first, then the project roster and task assignments. Cross-project capacity remains in Team & Resources.</p>
+                </div>
+                <div className="w-full min-w-0 sm:max-w-64">
                   <CustomSelect
                     value={resourcesProject.id}
                     onChange={(value) => {
@@ -2461,100 +2463,27 @@ export const AdminProjects: React.FC = () => {
                       setSearchParams(next);
                     }}
                     options={projects.map((project) => ({ value: project.id, label: project.name }))}
-                    className="w-full sm:w-64"
+                    className="w-full"
                     aria-label="Select project for resources"
                   />
-                )}
-              >
-                <section className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-4 sm:p-4" aria-label="Project resource summary">
-                  {[
-                    { label: 'Team members', value: String(resourcesTeamNames.length), context: 'Unique names recorded on this project' },
-                    { label: 'Allocation entries', value: String(resourcesAllocations.length), context: 'Explicit allocation records only' },
-                    { label: 'Assigned tasks', value: String(resourcesAssignedTasks.length), context: 'Tasks with a recorded assignee' },
-                    { label: 'Unassigned tasks', value: String(resourcesUnassignedTasks.length), context: 'Tasks without a recorded assignee' },
-                  ].map((metric) => (
-                    <article key={metric.label} className="rounded-control border border-line bg-bg p-3">
-                      <div className="text-[11px] font-medium text-muted">{metric.label}</div>
-                      <div className="mt-2 text-xl font-semibold tabular-nums text-fg">{metric.value}</div>
-                      <div className="mt-1 text-[10px] leading-4 text-muted">{metric.context}</div>
-                    </article>
-                  ))}
-                </section>
-                <div className="grid min-w-0 gap-4 border-t border-line p-3 sm:p-4 xl:grid-cols-2">
-                  <section className="min-w-0">
-                    <h3 className="text-xs font-semibold text-fg">Project team</h3>
-                    <p className="mt-1 text-[11px] leading-5 text-muted">Team membership comes from the selected project record. It does not establish current availability.</p>
-                    {resourcesTeamNames.length === 0 ? (
-                      <div className="mt-3 rounded-control border border-line bg-bg p-4 text-xs text-muted" role="status">No project owner or team members are recorded.</div>
-                    ) : (
-                      <div className="mt-3 divide-y divide-line rounded-control border border-line bg-bg">
-                        {resourcesTeamNames.map((name) => {
-                          const allocationRecords = resourcesAllocations.filter((allocation) => allocation.memberName.trim().toLowerCase() === name.toLowerCase());
-                          const matchingTasks = resourcesTasks.filter((task) => String(task.assignedTo || '').trim().toLowerCase() === name.toLowerCase());
-                          return (
-                            <div key={name} className="flex min-w-0 items-start justify-between gap-3 p-3">
-                              <div className="min-w-0">
-                                <div className="truncate text-xs font-medium text-fg">{name}</div>
-                                <div className="mt-1 text-[10px] text-muted">{name === resourcesProject.teamLead ? 'Project owner' : 'Project team member'}</div>
-                                <div className="mt-1 text-[10px] text-muted">{matchingTasks.length} task records matched by assignee name</div>
-                              </div>
-                              <div className="shrink-0 text-right text-[10px] tabular-nums text-muted">
-                                {allocationRecords.length
-                                  ? allocationRecords.map((allocation) => allocation.allocationPercent + '%').join(', ')
-                                  : 'No allocation recorded'}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </section>
-                  <section className="min-w-0">
-                    <h3 className="text-xs font-semibold text-fg">Recorded resource allocation</h3>
-                    <p className="mt-1 text-[11px] leading-5 text-muted">Only explicit allocation entries are shown. Percentages are not derived from task counts.</p>
-                    {resourcesAllocations.length === 0 ? (
-                      <div className="mt-3 rounded-control border border-line bg-bg p-4 text-xs leading-5 text-muted" role="status">No resource allocation entries are recorded for this project.</div>
-                    ) : (
-                      <div className="mt-3 overflow-x-auto rounded-control border border-line">
-                        <table className="w-full min-w-[420px] text-left">
-                          <thead className="bg-bg text-[10px] font-medium text-muted">
-                            <tr><th className="p-3">Person</th><th className="p-3 text-right">Allocation</th><th className="p-3">Period</th></tr>
-                          </thead>
-                          <tbody className="divide-y divide-line text-xs">
-                            {resourcesAllocations.map((allocation, index) => (
-                              <tr key={allocation.memberId + ':' + index}>
-                                <td className="p-3 font-medium text-fg">{allocation.memberName || 'Name not recorded'}</td>
-                                <td className="p-3 text-right font-semibold tabular-nums text-fg">{allocation.allocationPercent}%</td>
-                                <td className="p-3 text-[10px] leading-4 text-muted">{formatDate(allocation.startDate)} to {formatDate(allocation.endDate)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </section>
                 </div>
-              </AdminPanel>
+              </div>
 
-              <AdminPanel title="Project task assignments" description="This is a project-scoped view of existing task records, not a separate task or capacity system.">
-                {resourcesTasks.length === 0 ? (
-                  <div className="p-5 text-xs leading-5 text-muted" role="status">No tasks are recorded for this project.</div>
+              <AdminPanel title="Recorded resource allocation" description="Canonical allocation entries for the selected project. Percentages and dates are shown only when explicitly recorded.">
+                {resourcesAllocations.length === 0 ? (
+                  <div className="p-5 text-xs leading-5 text-muted" role="status">No resource allocation entries are recorded for this project.</div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[620px] text-left">
+                    <table className="w-full min-w-[420px] text-left">
                       <thead className="bg-bg text-[10px] font-medium text-muted">
-                        <tr><th className="p-3">Task</th><th className="p-3">Assignee</th><th className="p-3">Status</th><th className="p-3">Priority</th><th className="p-3">Due date</th></tr>
+                        <tr><th className="p-3">Person</th><th className="p-3 text-right">Allocation</th><th className="p-3">Period</th></tr>
                       </thead>
                       <tbody className="divide-y divide-line text-xs">
-                        {[...resourcesTasks].sort((left, right) =>
-                          (left.dueDate || '9999-12-31').localeCompare(right.dueDate || '9999-12-31')
-                        ).map((task) => (
-                          <tr key={task.id}>
-                            <td className="max-w-[300px] p-3"><div className="truncate font-medium text-fg">{task.title}</div><div className="mt-1 text-[10px] text-muted">{resourcesProject.name}</div></td>
-                            <td className="p-3 text-muted">{String(task.assignedTo || '').trim() || 'Unassigned'}</td>
-                            <td className="p-3 text-muted">{task.status === 'todo' ? 'To do' : task.status === 'in_progress' ? 'In progress' : task.status === 'review' ? 'Review' : 'Done'}</td>
-                            <td className="p-3 text-muted">{task.priority}</td>
-                            <td className="p-3 whitespace-nowrap text-muted">{formatDate(task.dueDate)}</td>
+                        {resourcesAllocations.map((allocation, index) => (
+                          <tr key={allocation.memberId + ':' + index}>
+                            <td className="p-3 font-medium text-fg">{allocation.memberName || 'Name not recorded'}</td>
+                            <td className="p-3 text-right font-semibold tabular-nums text-fg">{allocation.allocationPercent}%</td>
+                            <td className="p-3 text-[10px] leading-4 text-muted">{formatDate(allocation.startDate)} to {formatDate(allocation.endDate)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -2562,9 +2491,57 @@ export const AdminProjects: React.FC = () => {
                   </div>
                 )}
               </AdminPanel>
-              <AdminPanel title="Capacity and availability" description="Authoritative staffing capacity remains in Team & Resources.">
-                <div className="p-4 text-xs leading-5 text-muted">This project workspace does not infer cross-project availability, time-log totals, or overload percentages from assignment counts. Use the existing Team & Resources and Time Tracking sources for those records.</div>
-              </AdminPanel>
+
+              <div className="grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]" data-ams-slug="project-resource-assignment-context">
+                <AdminPanel title="Project team" description="Membership comes from the selected project record and does not establish current staff availability.">
+                  {resourcesTeamNames.length === 0 ? (
+                    <div className="p-4 text-xs leading-5 text-muted" role="status">No project owner or team members are recorded.</div>
+                  ) : (
+                    <div className="divide-y divide-line">
+                      {resourcesTeamNames.map((name) => (
+                        <div key={name} className="flex min-w-0 items-start justify-between gap-3 p-3">
+                          <div className="min-w-0">
+                            <div className="break-words text-xs font-medium text-fg">{name}</div>
+                            <div className="mt-1 text-[10px] text-muted">{name === resourcesProject.teamLead ? 'Project owner' : 'Project team member'}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </AdminPanel>
+
+                <AdminPanel title="Project task assignments" description="A project-scoped view of canonical task records, not a separate task or capacity system.">
+                  {resourcesTasks.length === 0 ? (
+                    <div className="p-5 text-xs leading-5 text-muted" role="status">No tasks are recorded for this project.</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[620px] text-left">
+                        <thead className="bg-bg text-[10px] font-medium text-muted">
+                          <tr><th className="p-3">Task</th><th className="p-3">Assignee</th><th className="p-3">Status</th><th className="p-3">Priority</th><th className="p-3">Due date</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-line text-xs">
+                          {[...resourcesTasks].sort((left, right) =>
+                            (left.dueDate || '9999-12-31').localeCompare(right.dueDate || '9999-12-31')
+                          ).map((task) => (
+                            <tr key={task.id}>
+                              <td className="max-w-[300px] p-3"><div className="truncate font-medium text-fg">{task.title}</div><div className="mt-1 text-[10px] text-muted">{resourcesProject.name}</div></td>
+                              <td className="p-3 text-muted">{String(task.assignedTo || '').trim() || 'Unassigned'}</td>
+                              <td className="p-3 text-muted">{task.status === 'todo' ? 'To do' : task.status === 'in_progress' ? 'In progress' : task.status === 'review' ? 'Review' : 'Done'}</td>
+                              <td className="p-3 text-muted">{task.priority}</td>
+                              <td className="p-3 whitespace-nowrap text-muted">{formatDate(task.dueDate)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </AdminPanel>
+              </div>
+
+              <aside className="flex min-w-0 flex-col gap-1 border-l-2 border-line pl-3 py-1" aria-label="Capacity and availability" data-ams-slug="project-capacity-boundary" role="note">
+                <h3 className="text-xs font-semibold text-muted">Capacity and availability</h3>
+                <p className="text-[11px] leading-5 text-muted">This project workspace does not infer cross-project availability, time-log totals, or overload percentages from assignment counts. Use the existing Team & Resources and Time Tracking sources for those records.</p>
+              </aside>
             </>
           )}
         </div>
