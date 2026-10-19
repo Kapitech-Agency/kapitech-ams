@@ -702,3 +702,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. The posted-ledger Balance Sheet now inserts Total assets, Total liabilities, and Total equity including current earnings after the matching account groups. Values reuse existing aggregate variables and current posted-journal/account-normal-balance logic. Current earnings remain separately identified; account 3200 opening offset and source exception warnings remain.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts statement section order, subtotal-to-existing-variable bindings, posted-only source status and retained exception/offset disclosures. No formula, posting, API, database or permission behavior changed. Exact-SHA CI and Quality Gate plus Stage 5 responsive/accessibility checks remain.
+
+
+### FIN-PNL-STATEMENT-001: Present posted General Ledger P&L as formal rows
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. The operating preview comparison and source detail remain primary for operational review. The separate posted General Ledger result now uses a three-row `FinanceDataTable` for Revenue, Expense-account activity, and Posted GL result, with measurement basis, selected-period posted journal count and an export action. The source values come from the existing `getPostedLedgerIncomeStatement` helper; no accounting calculation or posting behavior changes. Empty periods show a dash plus explicit no-posted-entry text, not implied zero.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts the report table follows operating preview, row definitions/bases, export, and honest no-posted-entry handling. Both AMS workflows must pass on the exact commit; Stage 5 browser/role/responsive/accessibility checks remain required.

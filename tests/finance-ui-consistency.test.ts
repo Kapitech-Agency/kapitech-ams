@@ -168,7 +168,16 @@ test('Monthly P&L separates operational preview from the posted-ledger snapshot'
 
   assert.ok(comparisonIndex >= 0 && detailIndex > comparisonIndex && ledgerIndex > detailIndex, 'Source preview should lead, with posted-ledger figures grouped after its detail.');
   assert.doesNotMatch(pnlView, /id: 'pnl-revenue'/, 'Source-preview headline values are already represented in the comparison and detail tables.');
-  assert.match(pnlView, /id: 'gl-revenue'/, 'Posted-ledger metrics must remain visible.');
+  assert.match(pnlView, /id: 'gl-revenue'/, 'Posted-ledger statement rows must remain visible.');
+  const postedLedgerTable = pnlView.indexOf('title="Posted General Ledger income statement"');
+  assert.ok(postedLedgerTable > detailIndex, 'The formal posted-ledger statement follows the operational preview.');
+  assert.match(pnlView, /id: 'gl-expense'/);
+  assert.match(pnlView, /id: 'gl-net'/);
+  assert.match(pnlView, /Posted Revenue account credits less debits/);
+  assert.match(pnlView, /Posted Expense account debits less credits/);
+  assert.match(pnlView, /Posted Revenue less posted Expense-account activity; resolve source exceptions before relying on this as profit/);
+  assert.match(pnlView, /Export posted GL/);
+  assert.match(pnlView, /No posted journal entries returned for the selected period/);
   assert.match(pnlView, /Export comparison/);
   assert.match(pnlView, /Export CSV/);
   assert.match(pnlView, /postedLedger\.available/);

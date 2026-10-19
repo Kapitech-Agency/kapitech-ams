@@ -2688,6 +2688,23 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           const changePercent = item.comparison === 0 ? (item.current === 0 ? '0.0%' : 'N/A') : ((change / Math.abs(item.comparison)) * 100).toFixed(1) + '%';
           return { id: item.id, cells: [item.label, formatMoney(item.current), formatMoney(item.comparison), formatMoney(change), changePercent] };
         });
+        const postedLedgerRows: TableRow[] = [
+          {
+            id: 'gl-revenue',
+            cells: ['Revenue', postedLedger.available ? formatMoney(postedLedger.revenue) : '—',
+              postedLedger.available ? 'Posted Revenue account credits less debits' : 'No posted journal entries returned for the selected period']
+          },
+          {
+            id: 'gl-expense',
+            cells: ['Expense-account activity', postedLedger.available ? formatMoney(postedLedger.expense) : '—',
+              postedLedger.available ? 'Posted Expense account debits less credits' : 'No posted journal entries returned for the selected period']
+          },
+          {
+            id: 'gl-net',
+            cells: ['Posted GL result · not final profit', postedLedger.available ? formatMoney(postedLedger.net) : '—',
+              postedLedger.available ? 'Posted Revenue less posted Expense-account activity; resolve source exceptions before relying on this as profit' : 'Unavailable without posted journal entries for the selected period']
+          }
+        ];
         return (
           <div className="space-y-4">
             <WorkbookNote tone="warning" title="Operational source preview · not the posted General Ledger">
@@ -2731,11 +2748,15 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 <h2 className="text-sm font-semibold text-fg">Posted General Ledger snapshot</h2>
                 <p className="text-xs text-muted">Journal-backed accounting figures for {periodLabel}, separate from the operational source preview above.</p>
               </div>
-              <AdminMetricStrip metrics={[
-                { id: 'gl-revenue', label: 'Posted GL revenue', value: postedLedger.available ? formatMoney(postedLedger.revenue) : 'No posted entries', context: postedLedger.journalCount + ' posted journal entries · ' + periodLabel, icon: <FileText size={15} /> },
-                { id: 'gl-expense', label: 'Posted GL expenses', value: postedLedger.available ? formatMoney(postedLedger.expense) : 'No posted entries', context: 'Expense-account activity from posted journals', icon: <ArrowUpRight size={15} /> },
-                { id: 'gl-net', label: 'Posted GL result', value: postedLedger.available ? formatMoney(postedLedger.net) : 'Not available', context: 'Revenue less posted expense-account activity only', icon: <CircleDollarSign size={15} /> }
-              ]} />
+              <FinanceDataTable
+                title="Posted General Ledger income statement"
+                description={periodLabel + '. ' + postedLedger.journalCount + ' posted journal entries. Only posted journal lines in mapped Revenue and Expense accounts contribute. Unmapped source rows and drafts remain outside this snapshot.'}
+                columns={[{ label: 'Statement line' }, { label: 'Amount (IDR)', align: 'right' }, { label: 'Measurement basis' }]}
+                rows={postedLedgerRows}
+                emptyMessage="No posted journal entries were returned for the selected period."
+                exportable={false}
+                actions={postedLedger.available ? <Button type="button" variant="secondary" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-posted-gl-pnl-' + reportPeriodValue + '.csv', ['Statement line', 'Amount IDR', 'Measurement basis'], postedLedgerRows.map((row) => [String(row.cells[0]), String(row.cells[1]), String(row.cells[2])]))}>Export posted GL</Button> : null}
+              />
             </section>
           </div>
         );

@@ -766,3 +766,27 @@ On restoration checkpoint `2a21a1707fc2d915b13e2ffa93637e6aac7ff863`, Typecheck 
 Chart of Accounts was reviewed against the specification. The canonical register contains account code, name, type, normal balance, description, active status and management action. Default accounts are reference-only; custom accounts support existing record actions; global worksheet search filters both sets. The source explicitly states that adding an account does not automatically update posting/report mappings. No code change was needed for this audit. Stage 5 still needs authenticated keyboard/role/route verification.
 
 **Next Stage 4 slice:** Monthly P&L and Cash Flow. Verify formal line/subtotal hierarchy and comparison/source labels against existing posted-ledger calculations, without changing accounting formulas.
+
+
+## Stage 4 view design record — Finance · Accounting & Reports · Monthly P&L
+
+**View ID:** VIEW-FIN-ACCOUNTING, Monthly P&L worksheet.
+**Implementation status:** formal posted General Ledger table added after source-operating preview; exact-SHA CI and Quality Gate required before source/test verification.
+
+1. **Owner/persona.** Finance → Accounting & Reports → Monthly P&L. Finance operators compare operational billing/cost preview with posted accounting activity for the shared reporting period.
+2. **Primary task.** Review operating source trends and inspect separate posted General Ledger revenue, expense and result from recognized journal activity.
+3. **Decision.** What does the operating source preview indicate, what has been posted to mapped accounting accounts, and which source exceptions still prevent treating the result as final profit?
+4. **Primary surface.** Operating source comparison table and detail remain first; a formal posted-ledger income statement table follows. This avoids presenting posted accounting only as isolated KPI cards.
+5. **Content order.** Operational source preview warning; comparison controls and current-versus-comparison table; source detail and expense classification note; posted GL income statement table and export.
+6. **Fields and semantics.** Existing selected-period invoice/expense data remains unchanged. Posted GL rows use existing `getPostedLedgerIncomeStatement(startDate,endDate)` aggregates: Revenue account credits less debits, Expense account debits less credits, and posted result as revenue less posted expenses. Journal count and exact period are stated. No entry means an em dash with explicit “No posted journal entries” measurement text rather than an implied zero.
+7. **Controls.** Existing shared reporting period and comparison mode remain the selectors. Posted-GL export includes the same displayed row labels, values and measurement basis; it appears only when posted entries exist. No accounting mutation is introduced.
+8. **Canonical ownership/breadcrumb.** Source invoice/expense records remain the operational preview; journal entries and Chart of Accounts remain the posted accounting source. No ledger copy or breadcrumb at worksheet root.
+9. **Role-aware display.** Existing Finance route/record permissions are unchanged. The table only displays values already derived by the existing posted-ledger helper.
+10. **States/recovery.** Source errors continue to use global Finance notices. If the selected period returns no posted journals, amount cells are not rendered as 0; the basis states no posted entries were returned. Drafts/unmapped source rows remain excluded and disclosed.
+11. **Responsive behavior.** Existing FinanceDataTable contains horizontal overflow and preserves three columns; Stage 5 must verify narrow-width readability and exports at 1100, 900, 600, 390 and 320px.
+12. **Accessibility.** Semantic column headers and explicit statement-line/basis text; no status depends on color. Export is named for posted GL and only enabled when entries exist. Keyboard/focus, screen-reader and zoom remain browser-unverified.
+13. **Regression tests.** Assert source comparison → source detail → formal posted-ledger table, row IDs, source basis, no-posted-entry state, export behavior and availability guard.
+14. **Dependencies.** Uses existing posted ledger calculations. No income/expense formula, account mapping, accounting post, API, database, or permission behavior changes.
+15. **Acceptance.** Posted General Ledger results read as a formal statement rather than a duplicated KPI strip, and remain separate from operational-source preview/profit proxy. Accounting remains partially complete pending Stage 5 visual checks and independent live-role/source validation.
+
+**Next Stage 4 slice:** Confirm Finance source/period and role states in the remaining worksheets, then move to another module with a proven structural gap. Keep Finance partially complete until Stage 5 browser sign-off.
