@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
-import { getDefaultRetainerRenewalDate } from '../../lib/retainerDateDefaults';
+import { formatRetainerRenewalDate, getDefaultRetainerRenewalDate, getRetainerRenewalDays } from '../../lib/retainerDateDefaults';
 import {
   ArrowUp,
   ArrowUpDown,
@@ -56,13 +56,12 @@ const healthMeta: Record<Health, { label: string; dot: string; className: string
   'overage-risk': { label: 'Overage Risk', dot: 'bg-danger', className: 'border-danger/20 bg-danger/10 text-danger' }
 };
 const money = (value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value);
-const formatDate = (value: string) => {
-  const date = new Date(value);
-  return value && !Number.isNaN(date.getTime())
-    ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
-    : 'Not set';
+const formatDate = (value: string) => formatRetainerRenewalDate(value);
+const renewalDays = (value: string) => getRetainerRenewalDays(value);
+const isRenewalHighlighted = (value: string) => {
+  const days = renewalDays(value);
+  return days !== null && days <= 30;
 };
-const renewalDays = (value: string) => Math.ceil((new Date(value).getTime() - Date.now()) / 86400000);
 const mapClientRetainer = (client: AgencyClient): Retainer => {
   const committedHours = Math.max(0, Number(client.retainerCommittedHours) || 0);
   const usedHours = Math.max(0, Number(client.retainerUsedHours) || 0);
@@ -183,7 +182,10 @@ export const AdminClientRetainers: React.FC = () => {
   const allocated = records.reduce((sum, item) => sum + item.committedHours, 0);
   const used = records.reduce((sum, item) => sum + item.usedHours, 0);
   const burn = allocated ? (used / allocated) * 100 : 0;
-  const renewals = records.filter((item) => renewalDays(item.renewal) >= 0 && renewalDays(item.renewal) <= 30);
+  const renewals = records.filter((item) => {
+    const days = renewalDays(item.renewal);
+    return days !== null && days >= 0 && days <= 30;
+  });
   const renewalsValue = renewals.reduce((sum, item) => sum + item.monthlyValue, 0);
   const nearCap = records.filter((item) => item.health === 'near-cap').length;
   const avgRate = records.length ? records.reduce((sum, item) => sum + item.overageRate, 0) / records.length : 0;
@@ -368,7 +370,7 @@ export const AdminClientRetainers: React.FC = () => {
                     <div className="min-w-0"><p className="text-[10px] text-muted">Monthly value</p><p className="mt-1 break-words text-xs font-semibold tabular-nums text-fg">{money(item.monthlyValue)}<span className="ml-0.5 text-[10px] font-normal text-muted">/mo</span></p></div>
                     <div className="min-w-0"><p className="text-[10px] text-muted">Overage rate</p><p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{money(item.overageRate)}<span className="ml-0.5 text-[10px] font-normal text-muted">/hr</span></p></div>
                     <div className="min-w-0"><p className="text-[10px] text-muted">Committed hours</p><p className="mt-1 text-xs tabular-nums text-fg">{item.committedHours} hrs</p></div>
-                    <div className="min-w-0"><p className="text-[10px] text-muted">Cycle / renewal</p><p className="mt-1 text-xs text-fg">{cycleLabel[item.cycle]}</p><p className={'mt-1 break-words text-[10px] font-medium ' + (renewalDays(item.renewal) <= 30 ? 'text-warning' : 'text-muted')}>Renews {formatDate(item.renewal)}</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Cycle / renewal</p><p className="mt-1 text-xs text-fg">{cycleLabel[item.cycle]}</p><p className={'mt-1 break-words text-[10px] font-medium ' + (isRenewalHighlighted(item.renewal) ? 'text-warning' : 'text-muted')}>Renews {formatDate(item.renewal)}</p></div>
                   </div>
                   <div className="mt-3">
                     <div className="mb-1.5 flex items-center justify-between gap-2 text-[10px] tabular-nums">
@@ -411,7 +413,7 @@ export const AdminClientRetainers: React.FC = () => {
                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{item.committedHours} hrs</td>
                    <td className="px-4 py-3"><div className="w-44 max-w-full"><div className="mb-1 flex items-center justify-between text-[10px] tabular-nums"><span className="font-medium text-fg">{item.usedHours} / {item.committedHours} hrs</span><span className={usage >= 95 ? 'font-semibold text-danger' : usage >= 80 ? 'font-semibold text-warning' : 'text-muted'}>{usage}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-line/70"><div className={`h-1.5 rounded-full ${usage >= 95 ? 'bg-danger' : usage >= 80 ? 'bg-warning' : 'bg-success'}`} style={{ width: Math.min(100, usage) + '%' }} /></div></div></td>
                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{money(item.overageRate)}<span className="ml-0.5 text-[10px] text-muted">/hr</span></td>
-                   <td className="px-4 py-3 text-[11px] text-muted"><div>{cycleLabel[item.cycle]}</div><div className={(renewalDays(item.renewal) <= 30 ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>Renews {formatDate(item.renewal)}</div></td>
+                   <td className="px-4 py-3 text-[11px] text-muted"><div>{cycleLabel[item.cycle]}</div><div className={(isRenewalHighlighted(item.renewal) ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>Renews {formatDate(item.renewal)}</div></td>
                    <td className="px-4 py-3 text-center"><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${meta.className}`}><span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />{meta.label}{usage >= 80 ? ` · ${usage}%` : ''}</span></td>
                    <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
                      {canManageRetainers && <>
