@@ -96,6 +96,10 @@ test('Dashboard trend range is selectable in Overview and Analytics without a du
   assert.match(dashboard, /<AnalyticsView snapshot=\{operationalSnapshot\} range=\{range\} onRangeChange=\{setRange\} \/>/);
   assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false,
     'The overview should not duplicate the legend already rendered by TrendChart.');
-  assert.match(charts, /role="img"[\s\S]{0,180}primaryLabel/);
-  assert.match(charts, /\{secondaryLabel && <span/);
+  assert.ok(charts.includes('<div className="relative min-w-0" role="img" aria-label={ariaLabel}>'),
+    'TrendChart should expose its chart with an accessible summary.');
+  assert.ok(charts.includes('<span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>'),
+    'TrendChart should render its own primary-series legend.');
+  assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'),
+    'TrendChart should render its own comparison-series legend.');
 });

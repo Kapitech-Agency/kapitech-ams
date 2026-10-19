@@ -247,7 +247,7 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   ]) assert.ok(dashboard.includes(sourceCall), 'Dashboard source missing: ' + sourceCall);
 
   assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />'));
-  assert.ok(dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} />'));
+  assert.ok(dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} onRangeChange={setRange} />'));
   const analyticsView = dashboard.slice(dashboard.indexOf('const AnalyticsView:'), dashboard.indexOf('export const GlobalExecutiveDashboard'));
   assert.ok(analyticsView.includes('min-[1100px]:grid-cols-12'), 'Analytics should balance the trend chart with its supporting project-status panel on wide screens.');
   assert.ok(analyticsView.includes('min-[1100px]:col-span-8') && analyticsView.includes('min-[1100px]:col-span-4'));
