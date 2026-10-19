@@ -375,7 +375,9 @@ export const AdminCmsCareers: React.FC = () => {
       if (!result.success || !result.data?.position) throw new Error(result.error || 'Publication status could not be updated.');
       const updated = normalizeCareer(result.data.position as CareerPosition);
       setPositions(current => current.map(item => item.id === updated.id ? updated : item));
-      setStatusMessage({ text: updated.isPublished ? (isId ? 'Lowongan sekarang tampil di public site.' : 'Job is now live on the public site.') : (isId ? 'Lowongan disimpan sebagai draft.' : 'Job saved as draft.'), tone: 'success' });
+      setStatusMessage({ text: updated.isPublished
+        ? (isId ? 'Status CMS tersimpan sebagai Dipublikasikan. Periksa halaman Careers publik untuk memastikan visibilitas.' : 'CMS status saved as Published. Verify the public Careers page to confirm visibility.')
+        : (isId ? 'Status CMS tersimpan sebagai Draf. Periksa halaman Careers publik untuk memastikan perubahan visibilitas.' : 'CMS status saved as Draft. Verify the public Careers page to confirm visibility changes.'), tone: 'success' });
     } catch (error) {
       setStatusMessage({ text: error instanceof Error ? error.message : 'Publication status could not be updated.', tone: 'danger' });
     }
@@ -461,8 +463,8 @@ export const AdminCmsCareers: React.FC = () => {
         loading={deletingJob}
         title={isId ? 'Hapus lowongan?' : 'Delete job opening?'}
         description={isId
-          ? 'Lowongan akan dihapus dari public site. Data lamaran yang sudah masuk tidak ikut dihapus.'
-          : 'This opening will be removed from the public site. Existing applications will be retained.'}
+          ? 'Lowongan ini akan dihapus dari CMS. Data lamaran yang sudah masuk tetap tersimpan. Periksa halaman Careers publik setelah penghapusan untuk memastikan perubahan visibilitas.'
+          : 'This job record will be deleted from the CMS. Existing applications will be retained. Verify the public Careers page after deletion to confirm visibility changes.'}
         confirmLabel={isId ? 'Hapus lowongan' : 'Delete opening'}
         onConfirm={() => void confirmDeleteJob()}
       />

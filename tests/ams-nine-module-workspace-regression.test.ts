@@ -246,6 +246,18 @@ test('Testimonial publish feedback confirms saved CMS state, not unverified publ
   assert.match(testimonials, /await loadData\(\)/);
 });
 
+test('Careers publish feedback confirms saved CMS state, not unverified public visibility', async () => {
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+  assert.match(careers, /CMS status saved as Published\. Verify the public Careers page to confirm visibility\./);
+  assert.match(careers, /CMS status saved as Draft\. Verify the public Careers page to confirm visibility changes\./);
+  assert.match(careers, /This job record will be deleted from the CMS\. Existing applications will be retained\. Verify the public Careers page after deletion to confirm visibility changes\./);
+  assert.doesNotMatch(careers, /Job is now live on the public site\.|This opening will be removed from the public site\.|Lowongan sekarang tampil di public site\.|Lowongan akan dihapus dari public site\./,
+    'A saved CMS flag or deleted CMS record is not independent verification of deployed public output.');
+  assert.match(careers, /api\.cms\.updateCareer\(position\.id, \{ isPublished: !position\.isPublished \}\)/);
+  assert.match(careers, /api\.cms\.deleteCareer\(target\.id\)/);
+  assert.match(careers, /Existing applications will be retained/);
+});
+
 test('Website CMS editorial controls use accessible actions and the canonical Careers applicant workspace', async () => {
   const cmsProjects = await read('src/pages/admin/AdminCmsProjects.tsx');
   const insights = await read('src/pages/admin/AdminCmsInsights.tsx');

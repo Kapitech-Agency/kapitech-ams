@@ -1074,3 +1074,25 @@ Quality Gate and CI on `4542f6de4fbd114f5f7696c105709a660cbb4358` failed because
 15. **Acceptance.** Editors can tell that the CMS flag was saved and know that public visibility remains to be checked. Keep the view partially complete until Stage 5/9 confirms authorized mutation, public output and recovery behavior.
 
 **Next Stage 4 slice:** Continue Website CMS review with Insights and Careers only where source-backed defects are verified; do not invent recruitment/publication workflow beyond current canonical records.
+
+
+## Stage 4 view design record — Website CMS · Careers · publication and deletion feedback
+
+**View ID:** VIEW-CMS-CAREERS, Jobs worksheet.
+**Implementation status:** Feedback now distinguishes CMS mutation results from independently verified public output. Verify the resulting exact SHA with both workflows before source/test sign-off.
+
+1. **Owner/persona.** Website CMS → Careers → Jobs. Authorized editors maintain bilingual job records and the stored publication flag. Applicant records remain a separate restricted worksheet.
+2. **Primary task.** Change a job's CMS publication flag or delete a job record without implying that a deployed public page was independently checked.
+3. **Decision.** Was the CMS publication field saved or the CMS record deleted, and has public Careers output been verified afterwards?
+4. **Primary surface.** Existing jobs register, filters, editor and delete-confirmation dialog. No new publish workspace or external verification endpoint.
+5. **Content order.** Existing workspace tabs and editor/register remain unchanged. Toggle/save/delete feedback follows the confirmed response and explains the next verification action.
+6. **Fields and semantics.** The UI mutates the canonical job record and its isPublished field. Success confirms the CMS response, not public page/CDN/cache state. Existing applicant records remain after job deletion.
+7. **Controls.** Existing api.cms.updateCareer and api.cms.deleteCareer mutations remain. No new backend route, publish step or public-site health probe is added.
+8. **Canonical ownership/breadcrumb.** Job records stay in the Careers CMS workspace; applicant records stay in the restricted Applicants tab. The message does not create a duplicate public status.
+9. **Role-aware presentation.** Existing job-management permission and applicant access policy remain unchanged. No authorization policy was added.
+10. **States/recovery.** Mutation errors still use existing error feedback. Success distinguishes saved CMS Published/Draft state; delete warning describes the CMS record deletion and retention of applications, then directs editor to verify public visibility changes.
+11. **Responsive behavior.** Existing jobs register/editor geometry remains; longer notices must be checked for wrapping at 1100/900/600/390/320px.
+12. **Accessibility.** Existing visible status notice and confirmation dialog remain. Keyboard focus, screen-reader announcement, and dialog reading order require browser review.
+13. **Regression tests.** Assert the new published/draft wording, CMS-record deletion semantics, retained applications and rejection of prior unsupported public-live claims.
+14. **Dependencies.** Runtime Careers page and public application persistence require authorized browser/output verification. No backend, public route, API contract or applicant workflow changed.
+15. **Acceptance.** Operators get an accurate report of the CMS mutation and a specific next step to verify actual public output. The view stays partially complete pending Stage 5/9 role, browser, public submission and responsive verification.
