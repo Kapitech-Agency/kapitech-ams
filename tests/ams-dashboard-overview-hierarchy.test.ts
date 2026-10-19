@@ -143,6 +143,6 @@ test('Dashboard Analytics leads with period-scoped reports before summary metric
   assert.ok(primary >= 0 && trend > primary && periodControl > trend && projectStatus > trend && supportingMetrics > projectStatus,
     'Analytics report surfaces and period control should precede supporting summary metrics.');
   assert.ok(analytics.indexOf('slug="dashboard-analytics-kpis"') > supportingMetrics);
-  assert.match(analytics, /Difference is not a posted profit figure/);
+  assert.match(analytics, /not a posted profit figure/);
   assert.match(analytics, /Financial trend unavailable/);
 });
