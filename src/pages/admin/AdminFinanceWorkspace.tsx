@@ -3127,9 +3127,12 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         const balanced = Math.abs(balanceDifference) <= 0.01;
         const ledgerRows = [
           ...assetAccounts.map((account) => ({ id: 'asset-' + account.code, cells: ['Assets', account.code, account.name, formatMoney(accountBalance(account.code, 'Asset')), 'Posted journals through ' + formatDate(asOfDate)] })),
+          { id: 'assets-total', cells: ['Assets', '', <strong className="font-semibold text-fg">Total assets</strong>, <strong className="font-semibold tabular-nums">{formatMoney(totalAssets)}</strong>, 'Section subtotal · ' + formatDate(asOfDate)] },
           ...liabilityAccounts.map((account) => ({ id: 'liability-' + account.code, cells: ['Liabilities', account.code, account.name, formatMoney(accountBalance(account.code, 'Liability')), 'Posted journals through ' + formatDate(asOfDate)] })),
+          { id: 'liabilities-total', cells: ['Liabilities', '', <strong className="font-semibold text-fg">Total liabilities</strong>, <strong className="font-semibold tabular-nums">{formatMoney(totalLiabilities)}</strong>, 'Section subtotal · ' + formatDate(asOfDate)] },
           ...equityAccounts.map((account) => ({ id: 'equity-' + account.code, cells: ['Equity', account.code, account.name + (account.code === '3200' ? ' · temporary opening offset' : ''), formatMoney(accountBalance(account.code, 'Equity')), 'Posted journals through ' + formatDate(asOfDate)] })),
-          { id: 'equity-current-earnings', cells: ['Equity', 'CURRENT-EARNINGS', 'Cumulative earnings not yet closed to retained earnings', formatMoney(currentEarnings), 'Revenue less expense account balances through ' + formatDate(asOfDate)] }
+          { id: 'equity-current-earnings', cells: ['Equity', 'CURRENT-EARNINGS', 'Cumulative earnings not yet closed to retained earnings', formatMoney(currentEarnings), 'Revenue less expense account balances through ' + formatDate(asOfDate)] },
+          { id: 'equity-total', cells: ['Equity', '', <strong className="font-semibold text-fg">Total equity incl. current earnings</strong>, <strong className="font-semibold tabular-nums">{formatMoney(totalEquity)}</strong>, 'Section subtotal · ' + formatDate(asOfDate)] }
         ];
         return (
           <div className="space-y-4">
@@ -3144,7 +3147,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             ]} />
             <FinanceDataTable
               title="Posted General Ledger Balance Sheet"
-              description={'Trial balance by normal account balance at ' + formatDate(asOfDate) + '. Current earnings are calculated from posted Revenue and Expense accounts; unresolved source items are disclosed above.'}
+              description={'Balance Sheet grouped by Assets, Liabilities and Equity at ' + formatDate(asOfDate) + ', with section subtotals. Current earnings are calculated from posted Revenue and Expense accounts; unresolved source items are disclosed above.'}
               columns={[{label:'Section'},{label:'Code'},{label:'Account'},{label:'Balance (IDR)',align:'right'},{label:'Basis'}]}
               rows={ledgerRows}
               emptyMessage="No posted journal activity exists through the selected date."

@@ -738,3 +738,31 @@ On restoration checkpoint `2a21a1707fc2d915b13e2ffa93637e6aac7ff863`, Typecheck 
 15. **Acceptance.** The task-oriented source posting queue is the first primary surface, with source actions beside it; persisted journal records and reference mapping follow without being mistaken for pending source work. Overall Accounting remains partially complete pending Chart of Accounts and report/control review plus Stage 5 browser checks.
 
 **Next Stage 4 slice:** Chart of Accounts. Verify default-vs-custom account presentation, canonical account search, and that custom account edits do not imply automatic posting/report mapping changes.
+
+
+## Stage 4 view design record — Finance · Accounting & Reports · Balance Sheet
+
+**View ID:** VIEW-FIN-ACCOUNTING, Balance Sheet worksheet.
+**Implementation status:** formal posted-ledger section subtotals added to `main`; verify exact-SHA CI and Quality Gate before source/test verification is complete.
+
+1. **Owner/persona.** Finance → Accounting & Reports → Balance Sheet. Finance leads inspect assets, liabilities, equity, opening offsets and source exceptions as of the selected report date.
+2. **Primary task.** Reconcile the formal accounting equation to posted journal balances at the selected date and understand which source/account exceptions block confidence.
+3. **Decision.** What are total assets, liabilities and equity including current earnings, is the accounting equation balanced, and which source exceptions or temporary opening offsets remain?
+4. **Primary surface.** Formal Balance Sheet table, with explicit subtotals after Assets, Liabilities and Equity account groups; KPI strip retains fast totals and equation summary.
+5. **Content order.** Existing posted-source exception/offset note; headline totals and accounting equation; grouped statement rows with subtotals; opening balance register as supporting reconciliation/input surface.
+6. **Fields and semantics.** Existing as-of date, account code/name/type, posted account balance, current earnings, section subtotal and source basis. Current earnings remain separate until closed to retained earnings. Account 3200 remains explicitly temporary.
+7. **Controls.** Existing shared reporting-period control sets the statement date; export remains on the posted ledger table. Opening-balance create/edit stays subject to existing permission and maker-checker/posting behavior.
+8. **Canonical ownership/breadcrumb.** Account catalog remains owned by Chart of Accounts; posted journal lines are the sole source for displayed balances; opening balances remain separate canonical records. No duplicate ledger, changed posting or breadcrumb at worksheet root.
+9. **Role-aware display.** Existing Finance route permissions and record-level actions remain unchanged.
+10. **States/recovery.** Existing note exposes unbalanced equation, source exceptions and non-zero opening offset. Table still identifies posted-only basis and opening balance register retains its real empty state. No values are filled from non-posted invoices/expenses/openings.
+11. **Responsive behavior.** Existing FinanceDataTable containment/export and KPI strip remain; added subtotal rows reuse the same table columns and do not create new horizontal layout. Stage 5 must validate at 1100, 900, 600, 390 and 320px.
+12. **Accessibility.** Subtotal labels and values use semantic strong emphasis, remain textual and do not rely on row color; column headings and existing table semantics remain. Keyboard/export and text resizing need browser validation.
+13. **Regression tests.** Assert asset subtotal precedes liability subtotal, current earnings precedes total equity, totals bind to existing aggregate variables, and balances are sourced from posted journals with source exception/3200 warnings retained.
+14. **Dependencies.** No accounting calculation, account-normal-balance logic, posting lifecycle, FX, opening-entry, API or period-close behavior changes. Current earnings remain preliminary until closing/reconciliation policy completes.
+15. **Acceptance.** The formal statement clearly exposes section subtotals and retained earnings/current-earnings distinction while preserving posted-only source semantics. Overall Accounting remains partially complete until independent P&L/Cash Flow review and Stage 5 visual/runtime checks pass.
+
+### Source audit checkpoint — Chart of Accounts
+
+Chart of Accounts was reviewed against the specification. The canonical register contains account code, name, type, normal balance, description, active status and management action. Default accounts are reference-only; custom accounts support existing record actions; global worksheet search filters both sets. The source explicitly states that adding an account does not automatically update posting/report mappings. No code change was needed for this audit. Stage 5 still needs authenticated keyboard/role/route verification.
+
+**Next Stage 4 slice:** Monthly P&L and Cash Flow. Verify formal line/subtotal hierarchy and comparison/source labels against existing posted-ledger calculations, without changing accounting formulas.

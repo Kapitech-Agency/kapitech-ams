@@ -695,3 +695,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`, Journal. The source posting queue now leads the worksheet and owns Generate source drafts. The persisted General Journal register follows with Add journal entry; mapping reference follows and offers a route to canonical Chart of Accounts. The queue stays a source projection, not a second journal store. No posting, permission or business logic changed.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts order, correct placement of both existing actions and the Chart of Accounts link. Exact-SHA CI/QG plus Stage 5 responsive, keyboard and route/history checks remain required.
+
+
+### FIN-BS-SUBTOTALS-001: Formal Balance Sheet section subtotals
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. The posted-ledger Balance Sheet now inserts Total assets, Total liabilities, and Total equity including current earnings after the matching account groups. Values reuse existing aggregate variables and current posted-journal/account-normal-balance logic. Current earnings remain separately identified; account 3200 opening offset and source exception warnings remain.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts statement section order, subtotal-to-existing-variable bindings, posted-only source status and retained exception/offset disclosures. No formula, posting, API, database or permission behavior changed. Exact-SHA CI and Quality Gate plus Stage 5 responsive/accessibility checks remain.

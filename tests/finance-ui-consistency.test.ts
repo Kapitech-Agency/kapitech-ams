@@ -856,3 +856,25 @@ test('Journal prioritizes the source posting queue and links account mapping to 
   assert.match(mappingStart >= 0 ? journal.slice(mappingStart) : '', /Review Chart of Accounts/);
   assert.match(journal, /navigate\('\/admin\/finance\?tab=chart-of-accounts'\)/);
 });
+
+
+test('Balance Sheet presents formal Assets, Liabilities, and Equity subtotals from posted ledger totals', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("case 'balance-sheet': {");
+  const end = workspace.indexOf("case 'journal': {", start);
+  assert.ok(start >= 0 && end > start, 'Balance Sheet worksheet should be present.');
+  const balanceSheet = workspace.slice(start, end);
+  const assetsSubtotal = balanceSheet.indexOf("id: 'assets-total'");
+  const liabilitiesSubtotal = balanceSheet.indexOf("id: 'liabilities-total'");
+  const currentEarnings = balanceSheet.indexOf("id: 'equity-current-earnings'");
+  const equitySubtotal = balanceSheet.indexOf("id: 'equity-total'");
+  assert.ok(assetsSubtotal >= 0 && liabilitiesSubtotal > assetsSubtotal && currentEarnings > liabilitiesSubtotal && equitySubtotal > currentEarnings,
+    'Formal statement order must group Assets, Liabilities, and Equity with current earnings before total equity.');
+  assert.match(balanceSheet, /Total assets[\s\S]*?formatMoney\(totalAssets\)/);
+  assert.match(balanceSheet, /Total liabilities[\s\S]*?formatMoney\(totalLiabilities\)/);
+  assert.match(balanceSheet, /Total equity incl\. current earnings[\s\S]*?formatMoney\(totalEquity\)/);
+  assert.match(balanceSheet, /const postedJournals = getRegisterRecords\('journal-entry'\)\.filter\(\(record\) => \{[\s\S]*?record\.status !== 'posted'/);
+  assert.match(balanceSheet, /Assets, Liabilities and Equity[\s\S]*?with section subtotals/);
+  assert.match(balanceSheet, /sourceExceptionCount/);
+  assert.match(balanceSheet, /openingOffset/);
+});
