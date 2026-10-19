@@ -151,7 +151,7 @@ export const AdminInbox: React.FC = () => {
     }
   }, [activeInboxTab, submissions]);
 
-  type TriageScope = 'action' | 'priority' | 'saved';
+  type TriageScope = 'action' | 'unassigned' | 'priority' | 'saved';
   const [triageScope, setTriageScope] = useState<TriageScope>('action');
 
   const isMixedInboxTab = activeInboxTab === 'overview' || activeInboxTab === 'messages' || activeInboxTab === 'starred';
@@ -492,9 +492,11 @@ export const AdminInbox: React.FC = () => {
       .filter((item) =>
         triageScope === 'action'
           ? item.status === 'new'
-          : triageScope === 'priority'
-            ? item.priority === 'urgent' || item.priority === 'high'
-            : !!item.starred
+          : triageScope === 'unassigned'
+            ? !String(item.assignedTo || '').trim()
+            : triageScope === 'priority'
+              ? item.priority === 'urgent' || item.priority === 'high'
+              : !!item.starred
       )
       .sort((a, b) => {
         const priorityRank = (item: ContactSubmission) =>
@@ -933,6 +935,7 @@ export const AdminInbox: React.FC = () => {
               <div className="mt-3 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
                 {[
                   { key: 'action' as TriageScope, label: 'Needs action', count: filteredItems.filter((item) => item.status === 'new').length },
+                  { key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems.filter((item) => !String(item.assignedTo || '').trim()).length },
                   { key: 'priority' as TriageScope, label: 'Priority', count: filteredItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length },
                   { key: 'saved' as TriageScope, label: 'Saved', count: filteredItems.filter((item) => !!item.starred).length }
                 ].map((scope) => (
@@ -964,8 +967,8 @@ export const AdminInbox: React.FC = () => {
                         <Check size={15} className="text-success" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-fg">{loadError && submissions.length === 0 ? (language === 'id' ? 'Inbox tidak tersedia' : 'Inbox unavailable') : triageScope === 'action' ? 'No records need action' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}</p>
-                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Sumber data gagal dimuat. Coba lagi untuk memverifikasi antrean.' : 'The inbox source failed to load. Retry to verify this queue.') : triageScope === 'action' ? 'New inbound records will appear here automatically.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
+                        <p className="text-xs font-medium text-fg">{loadError && submissions.length === 0 ? (language === 'id' ? 'Inbox tidak tersedia' : 'Inbox unavailable') : triageScope === 'action' ? 'No records need action' : triageScope === 'unassigned' ? 'No unassigned records' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}</p>
+                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Sumber data gagal dimuat. Coba lagi untuk memverifikasi antrean.' : 'The inbox source failed to load. Retry to verify this queue.') : triageScope === 'action' ? 'New inbound records will appear here automatically.' : triageScope === 'unassigned' ? 'Every current record in this queue has an assigned owner.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
                       </div>
                     </div>
                   </div>

@@ -503,3 +503,14 @@ test('Inbox All Messages exposes source-backed status and priority filters befor
   assert.match(inbox, /\[activeTabItems, filterStatus, filterPriority, searchQuery, matchesDate\]/);
   assert.doesNotMatch(inbox, /activeInboxTab === 'overview' && \([\s\S]{0,180}inbox-message-status-filter/);
 });
+
+
+test('Inbox Overview exposes a source-backed Unassigned triage scope', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  assert.match(inbox, /type TriageScope = 'action' \| 'unassigned' \| 'priority' \| 'saved'/);
+  assert.match(inbox, /key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems\.filter\(\(item\) => !String\(item\.assignedTo \|\| ''\)\.trim\(\)\)\.length/);
+  assert.match(inbox, /triageScope === 'unassigned'[\s\S]{0,90}!String\(item\.assignedTo \|\| ''\)\.trim\(\)/);
+  assert.match(inbox, /No unassigned records/);
+  assert.match(inbox, /Every current record in this queue has an assigned owner/);
+  assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
+});
