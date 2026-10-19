@@ -39,7 +39,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.ok(worksheetAccessStart >= 0 && worksheetAccessEnd > worksheetAccessStart, 'Worksheet access filtering should be explicit.');
   assert.ok(worksheetAccess.includes('canAccessAmsRoute'), 'Worksheet access must continue to respect Finance role permissions.');
   assert.equal(worksheetAccess.includes('sidebarDestinations'), false, 'A worksheet must not disappear just because its URL is also the primary Finance destination.');
-  assert.match(workspace, /key: 'executive-summary', sheet: '00', label: 'Executive Summary'/);
+  assert.match(workbook, /key: 'executive-summary', sheet: '00', label: 'Executive Summary'/);
   assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
   assert.match(workspace, /label: item\.label/);
   assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
