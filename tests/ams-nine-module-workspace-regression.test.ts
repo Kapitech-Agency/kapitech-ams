@@ -7,10 +7,12 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Dashboard preserves useful finance context and two-column mobile KPI layout', async () => {
+test('Dashboard preserves finance context and canonical responsive KPI breakpoints', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /featureSlug="dashboard-module"/);
-  assert.match(dashboard, /min-\[390px\]:grid-cols-2 min-\[760px\]:grid-cols-4/);
+  const canonicalKpiGrid = 'className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"';
+  assert.ok(dashboard.includes(canonicalKpiGrid), 'Dashboard KPI strips should use canonical breakpoints');
+  assert.equal(dashboard.split(canonicalKpiGrid).length - 1, 2, 'primary and supporting KPI strips should share the canonical grid contract');
   assert.match(dashboard, /data-ams-slug="dashboard-finance-chart-legend"/);
   assert.doesNotMatch(dashboard, /className="hidden items-center gap-3 text-\[11px\] text-muted sm:flex"/);
   assert.match(dashboard, /Issued invoice value and recorded expenses/);

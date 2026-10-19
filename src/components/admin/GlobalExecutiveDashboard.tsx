@@ -933,7 +933,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
         <div className="mt-3 min-w-0" data-ams-feature-slug="dashboard-supporting-metrics">
           <AdminMetricStrip
-            className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
+            className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"
             metrics={[
               {
                 id: 'outstanding', label: 'Outstanding invoices',
