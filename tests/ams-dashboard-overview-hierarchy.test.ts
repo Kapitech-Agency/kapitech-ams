@@ -103,3 +103,25 @@ test('Dashboard trend range is selectable in Overview and Analytics without a du
   assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'),
     'TrendChart should render its own comparison-series legend.');
 });
+
+
+test('Dashboard Performance prioritizes task/project analysis before supporting metrics', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('const PerformanceView: React.FC');
+  const end = dashboard.indexOf('const AnalyticsView: React.FC', start);
+  assert.ok(start >= 0 && end > start, 'Performance workspace should have a bounded source section');
+  const performance = dashboard.slice(start, end);
+  const primary = performance.indexOf('data-ams-feature-slug="dashboard-performance-primary"');
+  const taskAnalysis = performance.indexOf('title="Task completion"', primary);
+  const projectExceptions = performance.indexOf('title="Projects needing attention"', taskAnalysis);
+  const weeklyTime = performance.indexOf('title="Tracked time this week"', projectExceptions);
+  const supportingMetrics = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"', weeklyTime);
+  assert.ok(primary >= 0 && taskAnalysis > primary && projectExceptions > taskAnalysis && weeklyTime > projectExceptions && supportingMetrics > weeklyTime,
+    'Task completion and project exceptions should lead, followed by time context and supporting metrics.');
+  assert.match(performance, /Other open tasks/);
+  assert.match(performance, /status\.count \/ tasks\.length \* 100/);
+  assert.match(performance, /date < mondayKey \|\| date > today/);
+  assert.match(performance, /Recorded time from \$\{mondayKey\} through \$\{today\}/);
+  assert.match(performance, /Open Tasks/);
+  assert.match(performance, /Open tasks with a blocked status/);
+});

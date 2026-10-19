@@ -212,7 +212,9 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
   const projectRows = snapshot.projects || [];
   const activeProjects = projectRows.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
   const completedTasks = tasks.filter((task) => isFinishedWork(task.status)).length;
-  const blockedTasks = tasks.filter((task) => String(task.status || '').toLowerCase().includes('block')).length;
+  const blockedTasks = tasks.filter((task) =>
+    !isFinishedWork(task.status) && String(task.status || '').toLowerCase().includes('block')
+  ).length;
   const today = localDateKey(new Date());
   const overdueTasks = tasks.filter((task) => {
     const due = dateKey(task.dueDate || task.deadline);
@@ -232,72 +234,128 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
   const mondayKey = localDateKey(monday);
   const memberTime = (snapshot.timeLogs || []).reduce((map: Map<string, number>, log: any) => {
     const date = dateKey(log.date || log.createdAt);
-    if (!date || date < mondayKey) return map;
+    if (!date || date < mondayKey || date > today) return map;
     const identity = String(log.user || log.userName || log.assignee || log.userId || 'Unassigned');
     map.set(identity, (map.get(identity) || 0) + (Number(log.durationMinutes ?? log.minutes ?? 0) || 0));
     return map;
   }, new Map<string, number>());
   const workload = Array.from(memberTime.entries()).map(([name, minutes]) => ({ name, minutes })).sort((a, b) => b.minutes - a.minutes).slice(0, 8);
-  const deliveryBreakdown = buildProjectDeliveryBreakdown(activeProjects);
   const needsAttention = activeProjects.filter((project) => {
     const state = String(project.health || project.status || '').toLowerCase();
     const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
     return /risk|delay|blocked|hold|issue/.test(state) || (due && due < today);
   }).slice(0, 8);
+  const otherOpenTasks = Math.max(0, tasks.length - completedTasks - blockedTasks);
+  const taskStatusBreakdown = [
+    { id: 'completed', label: 'Completed', count: completedTasks, tone: 'bg-success' },
+    { id: 'blocked', label: 'Blocked', count: blockedTasks, tone: 'bg-danger' },
+    { id: 'other-open', label: 'Other open tasks', count: otherOpenTasks, tone: 'bg-info' },
+  ];
 
   if (snapshot.loading) return <DashboardUnavailable title="Loading performance data" description="Project, task, and time records are being loaded from AMS." />;
 
   return (
-    <div className="space-y-4">
-      <AdminMetricStrip metrics={[
-        { id: 'performance-projects', label: 'Active projects', value: activeProjectValue, icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Project records' : 'Live source unavailable' },
-        { id: 'performance-tasks', label: 'Tasks tracked', value: taskCount === null ? '—' : String(taskCount), icon: <CheckCircle2 size={15} />, context: snapshot.tasks !== null ? 'Task records' : 'Live source unavailable' },
-        { id: 'performance-overdue', label: 'Overdue tasks', value: overdueValue, icon: <CalendarDays size={15} />, toneClassName: 'text-warning', context: snapshot.tasks !== null ? 'Open tasks past due date' : 'Not available' },
-        { id: 'performance-blocked', label: 'Blocked tasks', value: blockedValue, icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', context: snapshot.tasks !== null ? 'Task status' : 'Not available' },
-      ]} />
-
-      <div className="grid gap-4 min-[1100px]:grid-cols-2">
-        <AdminPanel title="Task completion" description="Completion and status totals derived from the task records." bodyClassName="p-4 sm:p-5">
+    <div className="space-y-4" data-ams-feature-slug="dashboard-performance-workspace">
+      <section className="grid gap-4 min-[1100px]:grid-cols-2" data-ams-feature-slug="dashboard-performance-primary">
+        <AdminPanel
+          title="Task completion"
+          description="Task status distribution from the current task register. The status counts below account for all returned tasks."
+          actions={(
+            <Link to="/admin/tasks" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
+              Open Tasks <ArrowUpRight size={13} />
+            </Link>
+          )}
+          bodyClassName="p-4 sm:p-5"
+        >
           {snapshot.tasks === null ? <DashboardUnavailable title="Task status unavailable" description="The task service did not return data for the current role." /> : tasks.length === 0 ? (
             <p className="py-8 text-center text-xs text-muted">No task records found for this workspace.</p>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-end justify-between gap-3"><div><p className="text-3xl font-semibold tabular-nums text-fg">{completionValue}</p><p className="mt-1 text-xs text-muted">{completedTasks} of {tasks.length} tasks completed</p></div><AdminStatusBadge tone={completedTasks === tasks.length ? 'success' : 'info'}>{completedTasks === tasks.length ? 'Complete' : 'In progress'}</AdminStatusBadge></div>
-              <div className="flex h-2 overflow-hidden rounded-full bg-line">
-                <div className="h-full bg-success" style={{ width: (completedTasks / tasks.length * 100) + '%' }} />
-                <div className="h-full bg-warning" style={{ width: (blockedTasks / tasks.length * 100) + '%' }} />
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-3xl font-semibold tabular-nums text-fg">{completionValue}</p>
+                  <p className="mt-1 text-xs text-muted">{completedTasks} of {tasks.length} tasks completed</p>
+                </div>
+                <AdminStatusBadge tone={completedTasks === tasks.length ? 'success' : 'info'}>
+                  {completedTasks === tasks.length ? 'Complete' : 'In progress'}
+                </AdminStatusBadge>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Completed</p><p className="mt-1 text-lg font-semibold tabular-nums text-fg">{completedTasks}</p></div>
-                <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Remaining</p><p className="mt-1 text-lg font-semibold tabular-nums text-fg">{tasks.length - completedTasks}</p></div>
+              <div className="space-y-3" aria-label="Task status distribution">
+                {taskStatusBreakdown.map((status) => {
+                  const percentage = tasks.length ? Math.round(status.count / tasks.length * 100) : 0;
+                  return (
+                    <div key={status.id} className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-3 text-xs">
+                        <span className="text-muted">{status.label}</span>
+                        <span className="shrink-0 font-medium tabular-nums text-fg">{status.count} <span className="font-normal text-muted">({percentage}%)</span></span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-line">
+                        <div className={'h-full rounded-full ' + status.tone} style={{ width: percentage + '%' }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
         </AdminPanel>
-        <AdminPanel title="Projects needing attention" description="Projects with an explicit risk flag or a past target date." bodyClassName="p-4 sm:p-5">
-          {snapshot.projects === null ? <DashboardUnavailable title="Project status unavailable" description="Project risk cannot be calculated because live project records were not returned." /> : needsAttention.length === 0 ? (
-            <p className="py-8 text-center text-xs text-muted">No project risk flags or overdue target dates were found.</p>
-          ) : (
-            <div className="space-y-2">
-              {needsAttention.map((project: any) => {
-                const overdue = Boolean(dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline) && dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline) < today);
-                return <div key={String(project.id || project.slug || project.name)} className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg p-3"><div className="min-w-0"><p className="truncate text-xs font-medium text-fg">{project.name || project.title || 'Untitled project'}</p><p className="mt-1 truncate text-[10px] text-muted">{project.clientName || project.client || 'Client not linked'} · {project.status || project.health || 'Status not set'}</p></div><AdminStatusBadge tone={overdue ? 'danger' : 'warning'}>{overdue ? 'Overdue' : 'At risk'}</AdminStatusBadge></div>;
-              })}
-            </div>
-          )}
-        </AdminPanel>
-      </div>
 
-      <AdminPanel title="Tracked time this week" description="Hours recorded since Monday. This is logged time, not a forecast of remaining capacity." bodyClassName="p-4 sm:p-5">
-        {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking service did not return records for this role." /> : workload.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted">No time entries recorded since {mondayKey}.</p>
+        <AdminPanel
+          title="Projects needing attention"
+          description="Active projects with an explicit risk flag or a target date before today."
+          bodyClassName="p-0"
+        >
+          {snapshot.projects === null ? <div className="p-4"><DashboardUnavailable title="Project status unavailable" description="Project risk cannot be calculated because live project records were not returned." /></div> : needsAttention.length === 0 ? (
+            <p className="px-4 py-8 text-center text-xs text-muted">No project risk flags or overdue target dates were found.</p>
+          ) : (
+            <div className="divide-y divide-line">
+              {needsAttention.map((project: any) => {
+                const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
+                const overdue = Boolean(due && due < today);
+                return (
+                  <div key={String(project.id || project.slug || project.name)} className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="break-words text-xs font-medium text-fg">{project.name || project.title || 'Untitled project'}</p>
+                      <p className="mt-1 break-words text-[10px] text-muted">{project.clientName || project.client || 'Client not linked'} · {project.status || project.health || 'Status not set'}</p>
+                      {due && <p className="mt-1 text-[10px] tabular-nums text-muted">Target {due}</p>}
+                    </div>
+                    <AdminStatusBadge tone={overdue ? 'danger' : 'warning'}>{overdue ? 'Overdue' : 'At risk'}</AdminStatusBadge>
+                  </div>
+                );
+              })}
+              {activeProjects.length > needsAttention.length && <div className="px-4 py-3 text-[10px] text-muted">Showing up to 8 projects with attention signals.</div>}
+            </div>
+          )}
+        </AdminPanel>
+      </section>
+
+      <AdminPanel
+        title="Tracked time this week"
+        description={`Recorded time from ${mondayKey} through ${today}. Logged time is not a forecast of remaining capacity.`}
+        bodyClassName="p-4 sm:p-5"
+      >
+        {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking service did not return records for the current role." /> : workload.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted">No time entries recorded during this week so far.</p>
         ) : (
           <div className="space-y-3">
-            {workload.map((member) => <div key={member.name} className="flex items-center justify-between gap-3"><span className="min-w-0 truncate text-xs font-medium text-fg">{member.name}</span><span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span></div>)}
+            {workload.map((member) => (
+              <div key={member.name} className="flex min-w-0 items-center justify-between gap-3">
+                <span className="min-w-0 break-words text-xs font-medium text-fg">{member.name}</span>
+                <span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span>
+              </div>
+            ))}
           </div>
         )}
       </AdminPanel>
-      <div className="flex justify-end"><Link to="/admin/tasks" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Tasks <ArrowUpRight size={13} /></Link></div>
+
+      <section data-ams-feature-slug="dashboard-performance-supporting-metrics" aria-label="Performance summary metrics">
+        <AdminMetricStrip slug="dashboard-performance-kpis" metrics={[
+          { id: 'performance-projects', label: 'Active projects', value: activeProjectValue, icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : 'Live source unavailable' },
+          { id: 'performance-tasks', label: 'Tasks tracked', value: taskCount === null ? '—' : String(taskCount), icon: <CheckCircle2 size={15} />, context: snapshot.tasks !== null ? 'Current task records' : 'Live source unavailable' },
+          { id: 'performance-overdue', label: 'Overdue tasks', value: overdueValue, icon: <CalendarDays size={15} />, toneClassName: 'text-warning', context: snapshot.tasks !== null ? 'Open tasks past due date' : 'Not available' },
+          { id: 'performance-blocked', label: 'Blocked tasks', value: blockedValue, icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', context: snapshot.tasks !== null ? 'Open tasks with a blocked status' : 'Not available' },
+        ]} />
+      </section>
     </div>
   );
 };
