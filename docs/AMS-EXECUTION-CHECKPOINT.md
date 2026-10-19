@@ -15,13 +15,13 @@ Latest application/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest source/test commit | 088a3cadd4260f89a040f876daf2404e602cb1c5 |
-| Commit | [fix(clients): align Client 360 data with existing permissions](https://github.com/Kapitech-Agency/kapitech-ams/commit/088a3cadd4260f89a040f876daf2404e602cb1c5) |
-| Changed application source | src/pages/admin/AdminProjects.tsx; src/pages/admin/AdminClients.tsx (Projects Planning + Clients Directory/Client 360 structure) |
-| Regression tests | tests/projects-module-regression.test.ts; tests/ams-nine-module-workspace-regression.test.ts; tests/admin-pages-jsx-regression.test.ts; tests/ams-client-detail-data-state-regression.test.ts |
-| AMS CI | **Passed on exact SHA**: [run 39269329377](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39269329377) |
-| AMS Quality Gate | **Passed on exact SHA**: [run 39269329548](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39269329548) |
-| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on 088a3cadd4260f89a040f876daf2404e602cb1c5. |
+| Latest source/test commit | 952203b70ead573edf994d7a53e51ab46eab12fe |
+| Commit | [test(clients): accept onboarding mobile card label](https://github.com/Kapitech-Agency/kapitech-ams/commit/952203b70ead573edf994d7a53e51ab46eab12fe) |
+| Changed application source | src/pages/admin/AdminProjects.tsx; src/pages/admin/AdminClients.tsx (Projects Planning, Directory/Client 360, Onboarding Lead register) |
+| Regression tests | tests/projects-module-regression.test.ts; tests/ams-nine-module-workspace-regression.test.ts; tests/admin-pages-jsx-regression.test.ts; tests/ams-client-detail-data-state-regression.test.ts; tests/ams-scrollbar-and-table-regression.test.ts |
+| AMS CI | **Passed on exact SHA**: [run 39273628957](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39273628957) |
+| AMS Quality Gate | **Passed on exact SHA**: [run 39273628833](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39273628833) |
+| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on 952203b70ead573edf994d7a53e51ab46eab12fe. |
 
 ### Recent verified frontend slices
 
@@ -59,7 +59,7 @@ Re-verify live source and CI on every resume; this list is a dated recovery poin
 
 1. **Rehydrate:** fetch current `main`, recent history, relevant source and exact current CI/Quality Gate results.
 2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, Clients scope-aware exports/evidence-based Onboarding copy, Retainer local-date defaults and Renewal Schedule calendar-day handling have successful exact-SHA evidence.
-3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Projects Planning, Project Resources, the Content & Campaigns/Project Controls blockers, and Clients Directory/Client 360 now have source/test evidence. Latest exact-SHA validation passed on 088a3cadd4260f89a040f876daf2404e602cb1c5. Next in canonical module order: Clients → Onboarding. Keep checklist, required-document evidence and kickoff readiness unavailable until canonical records/ownership exist.
+3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Projects Planning/Resources and Clients Directory/Client 360/Onboarding Lead register now have source/test evidence. Latest exact-SHA validation passed on 952203b70ead573edf994d7a53e51ab46eab12fe. Next in canonical Clients order: Agreements. Review Contracts & SOWs, Retainers & Service Commitments, Renewal Schedule and Contract History; preserve unsupported canonical version history as unavailable.
 4. **Validate one bounded slice:** inspect current source/tests and gap row, make the smallest complete change, retain negative-path regression tests, verify both CI workflows on the source/test SHA, then update checkpoint and gap evidence.
 5. **Release gate remains closed:** authenticated browser/viewport/accessibility review and explicit user sign-off are still required at Stage 5. No authenticated screenshot or browser visual/keyboard/touch test has been performed in this execution. Do not start broad Stage 6 workflow/backend implementation before approval.
 
@@ -119,4 +119,11 @@ When the user says “lanjutkan” or similar, do not ask them to restate the ta
 - Source boundaries: no new contact master, account owner model, onboarding evidence or approval state was fabricated. Project Campaigns/Project Controls remain unavailable due missing canonical data models.
 - Browser status: NOT VERIFIED. Authenticated drawer, role, keyboard, responsive and CSV download verification remain Stage 5 work; user sign-off is still required before broad Stage 6+.
 - Next single action: continue to Clients → Onboarding. Verify checklist/evidence readiness requirements against current model and preserve unavailable worksheets where canonical records are absent.
+
+### Current Stage 4 structural checkpoint · Clients Onboarding Lead register · 19 October 2026
+
+- Verified source/test commit: 952203b70ead573edf994d7a53e51ab46eab12fe. Exact-SHA AMS Quality Gate [39273628833](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39273628833) and AMS CI [39273628957](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39273628957) passed.
+- Structural result: onboarding scope uses a named Lead register/mobile card pattern with primary contact, recorded email/phone, industry/location, Lead status and created/updated dates instead of normal Directory billing/spend-cap context. Directory scope remains unchanged. URL scope, existing actions and data semantics are preserved.
+- Boundary: checklist, required-document evidence, owner/due-date requirements and kickoff readiness are absent from the canonical model. Those worksheets remain unavailable. No browser evidence has been captured; Stage 5 user sign-off is still required.
+- Next single action: continue to Clients → Agreements and assess the four documented agreement areas against current sources.
 
