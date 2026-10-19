@@ -996,3 +996,8 @@ Implementation: remove silent fallback from an explicit resourcesProject URL. Ve
 13. **Regression tests.** Assert that the register stays primary and distinct unavailable/empty states remain, while the component no longer imports or invokes `useReportingPeriod`/unlabelled `matchesDate` for documents. Search and category matching remain connected to the canonical collection.
 14. **Dependencies.** Current document source/interface does not expose a version-history chronology view. Do not fabricate version history or create a second repository. Verify backend/vault object integrity only through the existing protected contract.
 15. **Acceptance.** Older documents remain discoverable through visible search/category/sort regardless of global reporting period; security, source failure, actual stored-object integrity and browser/device acceptance remain open until verified in Stage 5.
+
+
+### Document Library global-period regression correction — 19 October 2026
+
+The first Quality Gate for `8e6f6dda44c70049f45237aad229b3a620fdf842` failed because `tests/global-reporting-period.test.ts` still required Document Library to use `matchesDate(updatedAt/uploadedAt/createdAt)`, contradicting the content-first specification and the revised visible-filter ownership. The test now preserves the global reporting-period shell and asserts that Documents does not inherit the period invisibly. Re-run the complete Quality Gate and AMS CI on the corrective SHA before marking Document Library source/test verified.

@@ -150,7 +150,8 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.ok(inbox.includes('matchesDate(item.createdAt)'));
   assert.ok(tasks.includes('matchesDate(task.dueDate || task.createdAt)'));
   assert.ok(projects.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
-  assert.ok(documents.includes('matchesDate(doc.updatedAt || doc.uploadedAt || doc.uploadedDate || (doc as any).createdAt)'));
+  assert.doesNotMatch(documents, /useReportingPeriod\(\)/, 'Document Library is excluded from implicit global-period scoping.');
+  assert.doesNotMatch(documents, /matchesDate\(doc\.updatedAt/, 'Document date metadata is not a hidden list filter without a visible date control.');
   assert.ok(teams.includes('matchesDate(log.date)'));
   assert.ok(dashboard.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
   assert.ok(settings.includes('backups.filter((backup) => matchesDate(backup.createdAt))'));
