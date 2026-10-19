@@ -1,6 +1,6 @@
 # AI Coding Agent Instructions — Kapitech AMS
 
-**Read this file before changing anything in this repository.** These rules apply to AI coding agents, assistants, autonomous coding tools, and humans delegating repository work to AI. Start with [`docs/README.md`](docs/README.md) for the documentation authority/index and to distinguish active specifications from historical/staging references.
+**Read this file before changing anything in this repository.** These rules apply to AI coding agents, assistants, autonomous coding tools, and humans delegating repository work to AI. Start with [`docs/README.md`](docs/README.md) for the documentation authority/index and to distinguish active specifications from historical/staging references. After any timeout, interruption, context reset, or short continuation request (for example, “lanjutkan”), automatically follow [`docs/AMS-RESUME-AFTER-INTERRUPTION.md`](docs/AMS-RESUME-AFTER-INTERRUPTION.md) and restore state from [`docs/AMS-EXECUTION-CHECKPOINT.md`](docs/AMS-EXECUTION-CHECKPOINT.md). Do not ask the user to restate a scope already established by the conversation and repository docs.
 
 ## 1. Read the right documentation first
 
@@ -154,3 +154,8 @@ Older PostgreSQL foundation/cutover files may describe earlier rollout stages. T
 ### 10.2 Target documents are not implementation evidence
 
 The master architecture, navigation, state machine and data dictionary define intended behavior. They do not prove the feature, relationship, API or permission is implemented. Use traceability to connect every requirement to current source, server validation, schema, access policy and tests. Implement approved targets through scoped changes/migrations rather than assuming they are already live.
+
+
+## 11. Mandatory resume after timeout or interruption
+
+Read [`docs/AMS-RESUME-AFTER-INTERRUPTION.md`](docs/AMS-RESUME-AFTER-INTERRUPTION.md) and [`docs/AMS-EXECUTION-CHECKPOINT.md`](docs/AMS-EXECUTION-CHECKPOINT.md) before continuing an interrupted task. Fetch live `main` and current CI first; verify whether the previous write or commit succeeded; diagnose failed checks before unrelated feature work; preserve completed slices; resume the earliest unmet item in the canonical roadmap; and update the checkpoint after each meaningful slice. A checkpoint SHA is a dated snapshot, never proof of current HEAD. A short message such as “lanjutkan dari titik terakhir” triggers this procedure; do not request another master prompt or restart from zero.
