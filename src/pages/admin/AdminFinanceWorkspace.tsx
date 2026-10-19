@@ -3281,12 +3281,12 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         className="mb-0"
       />
       <div
-        className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+        className="flex min-w-0 flex-col gap-3 min-[1100px]:flex-row min-[1100px]:items-center min-[1100px]:justify-between"
         data-ams-slug="finance-workspace-navigation"
       >
-        {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="w-full min-w-0 lg:flex-1" variant="primary" />}
+        {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="w-full min-w-0 min-[1100px]:flex-1" variant="primary" />}
         {SEARCHABLE_FINANCE_TABS.has(activeTab.key) && (
-          <div className="flex min-w-0 w-full justify-start lg:w-72 lg:shrink-0 lg:justify-end" data-ams-slug="finance-worksheet-search">
+          <div className="flex min-w-0 w-full justify-start min-[1100px]:w-72 min-[1100px]:shrink-0 min-[1100px]:justify-end" data-ams-slug="finance-worksheet-search">
             <label className="relative block w-full">
               <Search size={14} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input

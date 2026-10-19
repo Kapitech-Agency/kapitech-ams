@@ -75,9 +75,11 @@ test('Finance visible copy describes user workflows, not spreadsheet implementat
 test('Finance workspace groups navigation, search, and alerts using the shared AMS layout patterns', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
-  assert.match(workspace, /className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"[\s\S]{0,280}data-ams-slug="finance-workspace-navigation"/);
+  assert.match(workspace, /className="flex min-w-0 flex-col gap-3 min-\\[1100px\\]:flex-row min-\\[1100px\\]:items-center min-\\[1100px\\]:justify-between"[\s\S]{0,280}data-ams-slug="finance-workspace-navigation"/);
   assert.doesNotMatch(workspace, /SEARCHABLE_FINANCE_TABS\.has\(activeTab\.key\) && activeGroup\.items\.length <= 4/);
-  assert.match(workspace, /<div className="flex min-w-0 w-full justify-start lg:w-72 lg:shrink-0 lg:justify-end" data-ams-slug="finance-worksheet-search">/);
+  assert.match(workspace, /<div className="flex min-w-0 w-full justify-start min-\\[1100px\\]:w-72 min-\\[1100px\\]:shrink-0 min-\\[1100px\\]:justify-end" data-ams-slug="finance-worksheet-search">/);
+  assert.doesNotMatch(workspace, /finance-workspace-navigation[\\s\\S]{0,100}lg:flex-row/,
+    'Finance worksheet navigation stays stacked until the canonical 1100px breakpoint.');
   assert.match(workspace, /\(Boolean\(registerActionError && !editor\) \|\| registerErrors\.length > 0 \|\| sourceErrors\.length > 0\)/);
   assert.match(workspace, /<AdminModuleNotice[\s\S]{0,320}Finance action needs attention/);
   assert.doesNotMatch(workspace, /<WorkbookNote tone="warning" title="Some finance sources are unavailable">/);
