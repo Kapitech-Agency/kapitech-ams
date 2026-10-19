@@ -760,6 +760,34 @@ export const AdminInbox: React.FC = () => {
           searchLabel="Search inbound"
           actions={(
             <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
+              {activeInboxTab === 'messages' && (
+                <>
+                  <div className="w-[150px] shrink-0">
+                    <CustomSelect
+                      value={filterStatus}
+                      onChange={setFilterStatus}
+                      options={inboxStatusOptions}
+                      aria-label="Filter messages by status"
+                      slug="inbox-message-status-filter"
+                    />
+                  </div>
+                  <div className="w-[150px] shrink-0">
+                    <CustomSelect
+                      value={filterPriority}
+                      onChange={setFilterPriority}
+                      options={[
+                        { value: 'all', label: 'All priorities' },
+                        { value: 'urgent', label: 'Urgent' },
+                        { value: 'high', label: 'High' },
+                        { value: 'normal', label: 'Normal' },
+                        { value: 'low', label: 'Low' },
+                      ]}
+                      aria-label="Filter messages by priority"
+                      slug="inbox-message-priority-filter"
+                    />
+                  </div>
+                </>
+              )}
               <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg">
                 <RefreshCw size={13} />Refresh
               </button>

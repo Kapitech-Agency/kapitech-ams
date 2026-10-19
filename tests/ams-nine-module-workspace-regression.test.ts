@@ -487,3 +487,19 @@ test('Inbox Overview prioritizes triage and selected-record review without dupli
   assert.match(inbox, /min-\[1100px\]:grid-cols-\[minmax\(0,1\.15fr\)_minmax\(360px,0\.85fr\)\]/);
   assert.doesNotMatch(overview, /lg:grid-cols-\[minmax\(0,1\.15fr\)_minmax\(360px,0\.85fr\)\]/);
 });
+
+
+test('Inbox All Messages exposes source-backed status and priority filters before the register', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const controls = inbox.indexOf('slug="inbox-overview-controls"');
+  const messageFilterGate = inbox.indexOf("{activeInboxTab === 'messages' && (", controls);
+  const statusFilter = inbox.indexOf('slug="inbox-message-status-filter"', controls);
+  const priorityFilter = inbox.indexOf('slug="inbox-message-priority-filter"', controls);
+  const register = inbox.indexOf('data-ams-feature-slug="inbox-leads-directory"', controls);
+  assert.ok(controls >= 0 && messageFilterGate > controls && statusFilter > messageFilterGate && priorityFilter > statusFilter && register > priorityFilter,
+    'Status and priority filters belong to All Messages controls before the register.');
+  assert.match(inbox, /value=\{filterStatus\}[\s\S]{0,180}options=\{inboxStatusOptions\}/);
+  assert.match(inbox, /value=\{filterPriority\}[\s\S]{0,450}value: 'urgent'[\s\S]{0,120}value: 'high'/);
+  assert.match(inbox, /\[activeTabItems, filterStatus, filterPriority, searchQuery, matchesDate\]/);
+  assert.doesNotMatch(inbox, /activeInboxTab === 'overview' && \([\s\S]{0,180}inbox-message-status-filter/);
+});
