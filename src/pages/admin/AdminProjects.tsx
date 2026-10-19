@@ -2163,6 +2163,27 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'planning-delivery' && (
         <div className="space-y-4" data-ams-feature-slug="projects-planning-delivery-workspace" data-ams-slug="projects-planning-delivery-workspace">
+          {serverMode && planningProject && (
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" data-ams-slug="planning-delivery-scope">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-fg">Selected project</p>
+                <p className="mt-1 text-[11px] leading-5 text-muted">This selection scopes the Project Brief, Milestones and Timeline worksheets.</p>
+              </div>
+              <div className="w-full min-w-0 sm:max-w-64">
+                <CustomSelect
+                  value={planningProject.id}
+                  onChange={(value) => {
+                    const next = new URLSearchParams(searchParams);
+                    next.set('planningProject', value);
+                    setSearchParams(next);
+                  }}
+                  options={projects.map((project) => ({ value: project.id, label: project.name }))}
+                  className="w-full"
+                  aria-label="Select project for planning"
+                />
+              </div>
+            </div>
+          )}
           <AdminSectionTabs
             ariaLabel="Planning & Delivery worksheets"
             activeKey={planningView}
@@ -2233,86 +2254,50 @@ export const AdminProjects: React.FC = () => {
             </AdminPanel>
           ) : (
             <>
-              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="planning-delivery-context">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-muted">Planning & Delivery / {planningView === 'brief' ? 'Project Brief' : planningView === 'milestones' ? 'Milestones' : 'Timeline'}</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">
-                    {planningView === 'brief'
-                      ? 'Project ownership, recorded brief notes, dates and delivery status.'
-                      : planningView === 'milestones'
-                        ? 'Milestone names, due dates and completion states recorded on this project.'
-                        : 'Project date range and milestone dates recorded by the project source.'}
-                  </p>
-                </div>
-                <div className="w-full min-w-0 sm:max-w-64">
-                  <CustomSelect
-                    value={planningProject.id}
-                    onChange={(value) => {
-                      const next = new URLSearchParams(searchParams);
-                      next.set('planningProject', value);
-                      setSearchParams(next);
-                    }}
-                    options={projects.map((project) => ({ value: project.id, label: project.name }))}
-                    className="w-full"
-                    aria-label="Select project for planning"
-                  />
-                </div>
-              </div>
-
               {planningView === 'brief' && (
-                <>
-                  <AdminPanel
-                    title="Project brief"
-                    description="Current project fields only. Scope approval and review outcomes are not inferred from notes or task status."
-                  >
-                    <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-4 sm:p-4">
-                      {[
-                        { label: 'Client', value: planningProject.clientCompany || 'Not linked' },
-                        { label: 'Project owner', value: planningProject.teamLead || 'Unassigned' },
-                        { label: 'Service', value: planningProject.serviceCategory || 'Not specified' },
-                        { label: 'Status', value: statusLabel(planningProject.status) },
-                        { label: 'Start date', value: formatDate(planningProject.startDate) },
-                        { label: 'Target deadline', value: formatDate(planningProject.targetEndDate) },
-                        { label: 'Recorded progress', value: planningProject.progressPercent + '%' },
-                        { label: 'Recorded milestones', value: String(planningProject.milestones.length) },
-                      ].map((field) => (
-                        <div key={field.label} className="min-w-0 rounded-control border border-line bg-bg p-3">
-                          <div className="text-[11px] font-medium text-muted">{field.label}</div>
-                          <div className="mt-1.5 truncate text-xs font-semibold text-fg">{field.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="border-t border-line p-3 sm:p-4">
+                <AdminPanel
+                  title="Project brief"
+                  description="Review recorded project notes and the source-backed context for this project. Formal scope and review outcomes remain separate only when canonical records exist."
+                >
+                  <div className="grid min-w-0 gap-0 min-[1100px]:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]" data-ams-slug="planning-project-brief">
+                    <section className="min-w-0 p-4 sm:p-5" aria-label="Project brief notes">
                       <div className="text-xs font-semibold text-fg">Project brief notes</div>
                       {planningProject.notes ? (
-                        <p className="mt-2 whitespace-pre-wrap break-words rounded-control border border-line bg-bg p-3 text-xs leading-5 text-fg">{planningProject.notes}</p>
+                        <p className="mt-3 whitespace-pre-wrap break-words rounded-control border border-line bg-bg p-3 text-xs leading-5 text-fg">{planningProject.notes}</p>
                       ) : (
-                        <p className="mt-2 rounded-control border border-line bg-bg p-3 text-xs leading-5 text-muted">No project brief notes are recorded for this project.</p>
+                        <p className="mt-3 rounded-control border border-dashed border-line p-4 text-xs leading-5 text-muted" role="status">No project brief notes are recorded for this project.</p>
                       )}
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[11px] text-muted">Team: {planningProject.teamMembers.length ? planningProject.teamMembers.join(', ') : 'No project team members recorded'}</span>
+                      <div className="mt-4 border-l-2 border-line pl-3" role="note" data-ams-slug="planning-brief-record-boundary">
+                        <p className="text-[11px] font-semibold text-muted">Not tracked as separate project records</p>
+                        <p className="mt-1 text-[11px] leading-5 text-muted">Scope and acceptance criteria, deliverables, internal QA outcomes, client review outcomes and revision history have no separate canonical records in the current project model. These outcomes are not inferred from notes, tasks or milestones.</p>
+                      </div>
+                      <div className="mt-4">
                         <Button variant="secondary" icon={<ArrowUpRight size={13} />} onClick={() => goToSprint(planningProject)}>Open task execution</Button>
                       </div>
-                    </div>
-                  </AdminPanel>
-                  <AdminPanel title="Planning data coverage" description="The current project record defines which planning details are actually tracked.">
-                    <div className="grid gap-3 p-3 sm:grid-cols-2 sm:p-4">
-                      <div className="rounded-control border border-line bg-bg p-3">
-                        <div className="text-xs font-semibold text-fg">Available from current records</div>
-                        <ul className="mt-2 space-y-1.5 text-[11px] leading-5 text-muted">
-                          <li>Project notes, linked client, owner, service and team</li>
-                          <li>Start date, target deadline and recorded progress</li>
-                          <li>Milestone due dates and completion states</li>
-                          <li>Linked task execution</li>
-                        </ul>
-                      </div>
-                      <div className="rounded-control border border-line bg-bg p-3">
-                        <div className="text-xs font-semibold text-fg">Not tracked as separate project records</div>
-                        <p className="mt-2 text-[11px] leading-5 text-muted">Scope and acceptance criteria, deliverables, internal QA outcomes, client review outcomes and revision history have no separate canonical records in the current project model. These outcomes are not inferred from notes, tasks or milestones.</p>
-                      </div>
-                    </div>
-                  </AdminPanel>
-                </>
+                    </section>
+                    <aside className="min-w-0 border-t border-line p-4 sm:p-5 min-[1100px]:border-l min-[1100px]:border-t-0" aria-label="Project context">
+                      <div className="text-xs font-semibold text-fg">Project context</div>
+                      <dl className="mt-3 divide-y divide-line">
+                        {[
+                          { label: 'Client', value: planningProject.clientCompany || 'Not linked' },
+                          { label: 'Project owner', value: planningProject.teamLead || 'Unassigned' },
+                          { label: 'Service', value: planningProject.serviceCategory || 'Not specified' },
+                          { label: 'Status', value: statusLabel(planningProject.status) },
+                          { label: 'Start date', value: formatDate(planningProject.startDate) },
+                          { label: 'Target deadline', value: formatDate(planningProject.targetEndDate) },
+                          { label: 'Recorded progress', value: planningProject.progressPercent + '%' },
+                          { label: 'Recorded milestones', value: String(planningProject.milestones.length) },
+                          { label: 'Team members', value: planningProject.teamMembers.length ? planningProject.teamMembers.join(', ') : 'No project team members recorded' },
+                        ].map((field) => (
+                          <div key={field.label} className="grid min-w-0 gap-1 py-2.5 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:gap-3">
+                            <dt className="text-[11px] font-medium text-muted">{field.label}</dt>
+                            <dd className="min-w-0 break-words text-xs font-semibold text-fg sm:text-right">{field.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </aside>
+                  </div>
+                </AdminPanel>
               )}
 
               {planningView === 'milestones' && (
