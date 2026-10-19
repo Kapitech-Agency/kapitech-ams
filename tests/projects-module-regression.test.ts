@@ -325,3 +325,35 @@ test('Planning & Delivery puts project scope before worksheet tabs and makes the
   assert.match(workspace, /next\.set\('planningProject', value\)/, 'Changing scope must keep the canonical project query state.');
 });
 
+test('Project Resources leads with allocations and keeps capacity semantics separate', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const workspaceStart = source.indexOf("      {view === 'resources' && (");
+  const workspaceEnd = source.indexOf("      {view === 'all' && (", workspaceStart);
+  assert.ok(workspaceStart >= 0 && workspaceEnd > workspaceStart, 'Project Resources should remain a bounded workspace.');
+  const workspace = source.slice(workspaceStart, workspaceEnd);
+
+  const scopeIndex = workspace.indexOf('data-ams-slug="project-resources-scope"');
+  const allocationIndex = workspace.indexOf('title="Recorded resource allocation"');
+  const teamIndex = workspace.indexOf('title="Project team"');
+  const taskIndex = workspace.indexOf('title="Project task assignments"');
+  const capacityIndex = workspace.indexOf('data-ams-slug="project-capacity-boundary"');
+  assert.ok(scopeIndex >= 0 && allocationIndex > scopeIndex, 'The selected project must be clear before the allocation register.');
+  assert.ok(teamIndex > allocationIndex && taskIndex > teamIndex && capacityIndex > taskIndex,
+    'Allocation is primary; the team and task registers follow, with capacity limitations kept secondary.');
+  assert.doesNotMatch(workspace, /aria-label="Project resource summary"/, 'A KPI strip must not precede the actual resource records.');
+  assert.doesNotMatch(workspace, /label: '(?:Team members|Allocation entries|Assigned tasks|Unassigned tasks)'/,
+    'Summary cards must not duplicate the record surfaces below.');
+  assert.match(workspace, /allocation\.allocationPercent/);
+  assert.match(workspace, /formatDate\(allocation\.startDate\)/);
+  assert.match(workspace, /formatDate\(allocation\.endDate\)/);
+  assert.match(workspace, /String\(task\.assignedTo \|\| ''\)\.trim\(\) \|\| 'Unassigned'/);
+  assert.match(workspace, /Capacity and availability/);
+  assert.match(workspace, /does not infer cross-project availability, time-log totals, or overload percentages/);
+  assert.doesNotMatch(workspace, /matchingTasks|allocationRecords/, 'The project team view should not imply a cross-source identity join based only on display names.');
+  assert.match(workspace, /next\.set\('resourcesProject', value\)/);
+  assert.match(workspace, /next\.delete\('resourcesProject'\)/);
+  assert.match(workspace, /The selected project is not available in the current source\. AMS will not substitute another project automatically\./);
+  assert.match(workspace, /No resource allocation entries are recorded for this project\./);
+  assert.match(workspace, /No tasks are recorded for this project\./);
+});
+
