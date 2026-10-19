@@ -384,3 +384,41 @@ test('Planning & Delivery Milestones keeps the canonical register primary and di
     'The worksheet must not fabricate milestone owners, dependency records, or sample milestones.');
 });
 
+test('Planning & Delivery Timeline leads with chronological recorded task and milestone dates', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const workspaceStart = source.indexOf("      {view === 'planning-delivery' && (");
+  const workspaceEnd = source.indexOf("      {view === 'resources' && (", workspaceStart);
+  assert.ok(workspaceStart >= 0 && workspaceEnd > workspaceStart, 'Planning & Delivery should remain a bounded workspace.');
+  const workspace = source.slice(workspaceStart, workspaceEnd);
+  const scopeIndex = workspace.indexOf('data-ams-slug="planning-delivery-scope"');
+  const tabsIndex = workspace.indexOf('ariaLabel="Planning & Delivery worksheets"');
+  const timelineIndex = workspace.indexOf("planningView === 'timeline'");
+  const timelineEnd = workspace.indexOf("              </>", timelineIndex);
+  assert.ok(scopeIndex >= 0 && tabsIndex > scopeIndex && timelineIndex > tabsIndex && timelineEnd > timelineIndex,
+    'Timeline should remain project-scoped under the common worksheet navigation.');
+  const timeline = workspace.slice(timelineIndex, timelineEnd);
+  assert.match(timeline, /title="Project timeline"/);
+  assert.match(timeline, /aria-label="Recorded project timeline"/);
+  assert.match(timeline, /planningTimelineItems\.map\(\(item\) =>/);
+  assert.match(timeline, /aria-label="Project date context"/);
+  assert.match(timeline, /Project start/);
+  assert.match(timeline, /Target deadline/);
+  assert.match(timeline, /Recorded progress/);
+  assert.match(timeline, /No task or milestone due dates are recorded for this project\./);
+  assert.match(timeline, /Dependency tracking unavailable/);
+  assert.match(timeline, /do not store timeline dependency links/);
+  assert.doesNotMatch(timeline, /sm:grid-cols-3|rounded-control border border-line bg-bg p-3/,
+    'The timeline list, not a KPI tile strip, must be the main working surface.');
+
+  const entriesStart = source.indexOf('  const planningTimelineItems = [');
+  const entriesEnd = source.indexOf('  const resourcesProjectId =', entriesStart);
+  assert.ok(entriesStart >= 0 && entriesEnd > entriesStart, 'Timeline event composition should be bounded beside canonical project selection.');
+  const entries = source.slice(entriesStart, entriesEnd);
+  assert.match(entries, /planningMilestones\s*\.filter\(\(milestone\) => Boolean\(milestone\.dueDate\)\)/);
+  assert.match(entries, /planningProject\?\.tasks/);
+  assert.match(entries, /\.filter\(\(task\) => Boolean\(task\.dueDate\)\)/);
+  assert.match(entries, /\.sort\(\(left, right\) => left\.date\.localeCompare\(right\.date\)\)/);
+  assert.doesNotMatch(entries, /dependencyId|estimatedDuration|fakeTimeline|demoTimeline/,
+    'Timeline must not create dependencies or duration estimates absent from current records.');
+});
+
