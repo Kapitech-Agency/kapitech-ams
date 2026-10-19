@@ -744,3 +744,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. Operational Budget tracks whether the expense source has ever loaded successfully. A successful empty response remains a valid zero; a first-load error presents Actual, Variance and row count as unavailable. If a later refresh fails, last-known actuals remain visible with a stale label and variance is withheld until recovery. A real retry reuses the current Finance loader. No API, formula, persistence, payment, posting or permission behavior changed.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts source-loaded tracking, unavailable/stale states, variance suppression, retry wiring and the existing fresh-source budget-minus-actual formula. Verify both AMS CI and Quality Gate on this exact commit; authenticated browser/viewport evidence remains Stage 5.
+
+
+### FIN-PROJECT-SOURCE-001: Project Finance distinguishes failed and empty project sources
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. Project Finance tracks whether the core Projects source has succeeded. A valid successful empty response continues to mean no projects returned; a first-load error uses an unavailable empty state and a retry action; a later failure keeps last-known project rows visible but marks the source stale. No API or Finance calculations change.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts successful-source tracking, the real retry callback, stale vs initial-unavailable copy and the conditional empty-state message. `SUB-FIN-PROJECT-ALLOCATION-PERIOD` remains blocked because the canonical allocation editor does not define a period field.

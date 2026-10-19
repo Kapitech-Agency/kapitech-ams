@@ -906,3 +906,27 @@ Implementation: remove silent fallback from an explicit resourcesProject URL. Ve
 15. **Acceptance.** A successful empty expense result can show zero, but a failed initial load cannot. Stale values are labeled and variance is withheld until source recovery. Finance Project remains partially complete until Allocation/Team Fee are audited and Stage 5 browser evidence is collected.
 
 **Next Stage 4 slice:** Finance → Project Allocation and Team Fee source/period semantics, then continue the remaining active worksheets before Stage 5 review.
+
+
+## Stage 4 view design record — Finance · Project Finance · source recovery
+
+**View ID:** VIEW-FIN-PROJECT, Project Finance main register.
+**Status:** Source-state and regression changes were prepared on `main`; verify the exact commit through both CI workflows before source/test sign-off.
+
+1. **Owner/persona.** Finance → Project Finance. Finance operators review each canonical AMS project alongside its configured financial inputs and source-derived activity.
+2. **Primary task.** Inspect project finance configuration, linked invoices/collections/costs and vendor obligations without mistaking a failed project fetch for an empty portfolio.
+3. **Decision.** Is there truly no project, or did the project source fail on initial load or a later refresh?
+4. **Primary surface.** Existing one-row-per-project financial register with existing compact-card layout, source-derived activity and setup actions.
+5. **Content order.** Project finance/source-coverage context; source unavailable/stale recovery note when needed; canonical project finance register; existing unlinked Finance records table where applicable.
+6. **Fields and semantics.** Project identity from core project source; planning inputs from the saved Project Finance record; billing/collections/expense/AP values retain their existing periods and measurement definitions. No profitability formula change.
+7. **Controls.** The existing period selector, Finance worksheet search, Configure and record editor controls remain. Retry invokes `loadData(true)` and adds no write action.
+8. **Canonical ownership/breadcrumb.** Project identity remains owned by the Projects source; Finance owns project-finance inputs and vendor obligations. No new project record or breadcrumb.
+9. **Role-aware display.** Existing Finance permissions and source handlers remain unchanged.
+10. **States/recovery.** Successful empty project response continues to show the genuine empty state. Initial request failure shows unavailable and a retry. Later refresh failure retains known projects, labels their data as stale, and keeps the source error visible. No inferred project value is written.
+11. **Responsive behavior.** Existing compact cards/table layout stays unchanged; recovery note stacks on narrow screens. Validate 1280/1100/900/600/390/320px in Stage 5.
+12. **Accessibility.** Source note uses role=status, clear heading and visible retry button; stale/unavailable states use explicit words, not color alone. Keyboard/focus remains Stage 5.
+13. **Regression tests.** Assert successful-source tracking, error label detection, initial-unavailable vs true-empty semantics, stale-on-refresh message, real retry control and empty-message conditional.
+14. **Dependencies.** Core projects source is authoritative; no API/backend, financial formulas, persistence or policy change. Project Allocation has no canonical effective-period field; it remains a current saved allocation until a proper history/period model is approved.
+15. **Acceptance.** Project Finance cannot represent a failed first-load as a genuinely empty project set. The view remains partially complete until Stage 5 source/recovery/role/browser checks pass and the Project Allocation period dependency is addressed at the appropriate data-model stage.
+
+**Next Stage 4 slice:** Complete the remaining active Finance Project Allocation and Team Fee review without inventing period history, then audit Team & Resources, Documents, Website CMS and Settings worksheets using the same source-state acceptance standard.

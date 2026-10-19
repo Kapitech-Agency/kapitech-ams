@@ -183,6 +183,23 @@ test('Monthly P&L separates operational preview from the posted-ledger snapshot'
   assert.match(pnlView, /postedLedger\.available/);
 });
 
+test('Project Finance distinguishes unavailable project source from a valid empty project response', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  assert.match(workspace, /const \[hasSuccessfulProjectSource, setHasSuccessfulProjectSource\] = useState\(false\)/);
+  assert.match(workspace, /setProjects\(Array\.isArray\(projectSource\.data\?\.projects\) \? projectSource\.data\.projects as AgencyProject\[\] : \[\]\);\s*setHasSuccessfulProjectSource\(true\)/);
+  const start = workspace.indexOf("case 'project-finance': {");
+  const end = workspace.indexOf("case 'operational-budget':", start);
+  assert.ok(start >= 0 && end > start, 'Project Finance worksheet should be available.');
+  const project = workspace.slice(start, end);
+  assert.match(project, /sourceErrors\.some\(\(error\) => error\.startsWith\('Projects:'\)\)/);
+  assert.match(project, /Project source is stale/);
+  assert.match(project, /Project source unavailable/);
+  assert.match(project, /Last successfully loaded projects remain visible as stale/);
+  assert.match(project, /No successful project source has loaded/);
+  assert.match(project, /onClick=\{\(\) => void loadData\(true\)\} disabled=\{refreshing\}/);
+  assert.match(project, /emptyMessage=\{projectSourceBlocked && !hasSuccessfulProjectSource \? 'Project source is unavailable/);
+});
+
 test('Project Finance provides a compact card register with the same rows, sorting, pagination, and row actions', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const componentStart = workspace.indexOf('const FinanceDataTable: React.FC');
