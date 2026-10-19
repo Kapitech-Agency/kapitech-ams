@@ -706,3 +706,11 @@ This closes a source/test discrepancy in the earlier checkpoint: the implementat
 - Regression: [17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1](https://github.com/Kapitech-Agency/kapitech-ams/commit/17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1).
 - Exact-SHA validation passed: [AMS CI 39262004358](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262004358), [AMS Quality Gate 39262004291](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262004291).
 - Status is partial pending Stage 5 visual/accessibility evidence and validation against the canonical Team & Resources/Time Tracking sources. Next canonical worksheet review is Planning & Delivery → Milestones, then Timeline.
+
+## Structural checkpoint · Projects Planning worksheets and unavailable-workspace evidence · 19 October 2026
+
+- Milestones: the existing title/date/status register remains the primary surface because that hierarchy fits the supported model. [Source update aa13bccaf19a37bf76418cbb76f32f7a75fcf1e4](https://github.com/Kapitech-Agency/kapitech-ams/commit/aa13bccaf19a37bf76418cbb76f32f7a75fcf1e4) makes missing milestone-specific owner/dependency fields explicit. Exact-SHA [AMS CI 39262877900](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262877900) and [Quality Gate 39262877908](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262877908) passed.
+- Timeline: [source aacc1f60e63144ef616eba0fe446129c71d7db13](https://github.com/Kapitech-Agency/kapitech-ams/commit/aacc1f60e63144ef616eba0fe446129c71d7db13) replaces KPI-first/milestone-only emphasis with a chronological list of real task and milestone due dates, then shows project date context. No dependency or estimated duration is inferred.
+- Focused regression: [cc9c46c82f7a5e514371683142b2c4725e28e8c2](https://github.com/Kapitech-Agency/kapitech-ams/commit/cc9c46c82f7a5e514371683142b2c4725e28e8c2); exact-SHA [AMS CI 39263459463](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459463) and [Quality Gate 39263459363](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459363) passed.
+- Content & Campaigns and Project Controls stay unavailable while their canonical records/relationships/permissions are absent. Stage 5 visual, viewport and keyboard acceptance is still pending.
+
