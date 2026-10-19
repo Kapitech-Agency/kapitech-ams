@@ -931,8 +931,7 @@ export const AdminClients: React.FC = () => {
             : [
                 { id: 'all', label: 'All accounts' },
                 { id: 'active', label: 'Active' },
-                { id: 'at-risk', label: 'At-risk' },
-                { id: 'lead', label: 'Onboarding' }
+                { id: 'at-risk', label: 'At-risk' }
               ]
           ).map((item) => (
             <button key={item.id} type="button" aria-pressed={statusScope === item.id} onClick={() => changeStatusScope(item.id as StatusScope)} className={`inline-flex min-h-9 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${statusScope === item.id ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}>

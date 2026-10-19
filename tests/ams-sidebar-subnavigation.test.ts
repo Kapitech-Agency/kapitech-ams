@@ -251,6 +251,8 @@ test('Clients and Team & Resources use persistent workspaces while internal view
   assert.match(clientSource, /label: 'Kickoff Readiness'.*available: false/);
   assert.doesNotMatch(clientSource, /id: 'lead', label: 'Onboarding'/,
     'Onboarding is a distinct contextual workspace, not a duplicate Directory filter.');
+  assert.match(clientSource, /ariaLabel="Client Onboarding worksheets"/);
+  assert.match(clientSource, /data-ams-feature-slug="clients-onboarding-source-boundary"/);
 
   const team = getAmsModuleSubnavigation('team', 'Admin');
   assert.deepEqual(team.map((item) => item.key), ['team', 'people-ops', 'vendors', 'time']);

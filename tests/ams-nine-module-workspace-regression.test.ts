@@ -125,7 +125,7 @@ test('Clients surface account health after the directory and keep data gaps expl
   assert.match(clients, /Profile completeness does not mean onboarding has been approved/);
   assert.match(clients, /statusScope !== 'lead' && \(/);
   assert.match(clients, /aria-pressed=\{statusScope === item\.id\}/);
-  assert.match(clients, /label: 'Onboarding'/);
+  assert.doesNotMatch(clients, /id: 'lead', label: 'Onboarding'/, 'Onboarding is reached through the module workspace navigation, not a duplicate Directory scope control.');
   assert.match(clients, /label: 'Onboarding accounts'/);
 });
 
