@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, ClipboardCheck, ExternalLink, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type ContractStatus = 'draft' | 'in_review' | 'sent' | 'signed' | 'active' | 'completed' | 'expired' | 'terminated';
 type ContractType = 'msa' | 'sow' | 'service_agreement' | 'nda' | 'change_order';
@@ -232,7 +232,6 @@ export const AdminContracts: React.FC = () => {
   const visible = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
   const today = todayIso();
   const nextThirtyDays = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-  const expiringSoon = contracts.filter((item) => item.status === 'active' && item.endDate && item.endDate >= today && item.endDate <= nextThirtyDays).length;
   const renewalScheduleRows = useMemo<RenewalScheduleRow[]>(() => {
     const contractRows = contracts
       .filter((contract) => contract.status === 'active')
@@ -688,18 +687,6 @@ export const AdminContracts: React.FC = () => {
 
       {notice && <div role="status" className="flex items-center justify-between gap-2 rounded-control border border-success/20 bg-success/5 px-3 py-2 text-xs text-fg"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss message" className="rounded-control p-1 text-muted hover:bg-bg"><X size={13} /></button></div>}
 
-      <section data-ams-feature-slug="contracts-overview-kpis" data-ams-slug="contracts-overview-kpis" aria-label="Contract overview">
-        <AdminMetricStrip
-          slug="contracts-overview-kpis"
-          metrics={[
-            { id: 'drafts', label: 'Drafts', value: loading ? '—' : contracts.filter((item) => item.status === 'draft').length, context: 'Not yet submitted for review', icon: <FileText size={15} /> },
-            { id: 'in-workflow', label: 'In workflow', value: loading ? '—' : contracts.filter((item) => ['in_review', 'sent', 'signed'].includes(item.status)).length, context: 'Review and signature pending', icon: <RefreshCw size={15} />, toneClassName: 'text-info' },
-            { id: 'active-agreements', label: 'Active agreements', value: loading ? '—' : contracts.filter((item) => item.status === 'active').length, context: 'Currently in force', icon: <CheckCircle2 size={15} />, toneClassName: 'text-success' },
-            { id: 'renewal-expiry-watch', label: 'Renewal / expiry watch', value: loading ? '—' : expiringSoon, context: 'Active agreements ending within 30 days', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
-          ]}
-        />
-      </section>
-
       <section className="flex items-start gap-3 rounded-card border border-line bg-panel px-4 py-3 text-xs text-muted">
         <ShieldAlert size={15} className="mt-0.5 shrink-0" />
         <p>Lifecycle status and audit events are stored in AMS. The workflow records review, sending, signature confirmation, activation, and closeout; it does not send emails or apply a legally binding e-signature. Store signed documents in an approved secure location and attach its HTTPS link.</p>
@@ -767,7 +754,7 @@ export const AdminContracts: React.FC = () => {
         slug="client-contract-detail-drawer"
         open={Boolean(selectedContract)}
         onClose={() => setSelectedContract(null)}
-        size="xl"
+        size="3xl"
         title={selectedContract?.title || 'Agreement details'}
         description={selectedContract ? (selectedContract.contractNumber + ' · ' + selectedContract.clientName) : undefined}
         footer={(
@@ -807,6 +794,7 @@ export const AdminContracts: React.FC = () => {
               </dl>
             </section>
 
+            {canManage ? (
             <section className="rounded-card border border-line bg-panel p-4" aria-label="Agreement scope and obligations">
               <h3 className="text-xs font-semibold text-fg">Scope and deliverables</h3>
               {selectedContract.scope ? (
@@ -829,6 +817,14 @@ export const AdminContracts: React.FC = () => {
                 <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-fg">{selectedContract.paymentTerms || 'No payment terms are recorded on this agreement.'}</p>
               </div>
             </section>
+
+
+            ) : (
+              <section className="rounded-card border border-line bg-panel p-4" aria-label="Agreement scope and obligations" role="status">
+                <h3 className="text-xs font-semibold text-fg">Scope and obligations</h3>
+                <p className="mt-2 text-xs leading-5 text-muted">Detailed scope, deliverables and payment terms are restricted to the existing contract-management permission scope.</p>
+              </section>
+            )}
 
             <section className="rounded-card border border-line bg-panel p-4" aria-label="Agreement document and history boundary">
               <h3 className="text-xs font-semibold text-fg">Agreement document</h3>

@@ -509,13 +509,14 @@ test('Client Onboarding has a distinct header when the onboarding scope is selec
 });
 
 
-test('Contracts action feedback follows the primary register and pagination', async () => {
+test('Contracts action feedback follows the primary register and avoids duplicate status KPIs', async () => {
   const contracts = await read('src/pages/admin/AdminContracts.tsx');
   const header = contracts.indexOf("title={isRenewalSchedule ? 'Renewal Schedule' : 'Contracts & SOW'}");
   const pagination = contracts.indexOf('slug="contracts-pagination"');
   const notice = contracts.indexOf('{notice && <div role="status"');
-  const metrics = contracts.indexOf('data-ams-feature-slug="contracts-overview-kpis"');
-  assert.ok(header >= 0 && pagination > header && notice > pagination && metrics > notice);
+  assert.ok(header >= 0 && pagination > header && notice > pagination);
+  assert.equal(contracts.includes('contracts-overview-kpis'), false,
+    'The register already exposes agreement status; a duplicate KPI strip is not required.');
 });
 
 
@@ -837,6 +838,10 @@ test('Contracts & SOWs exposes saved agreement details without simulating Contra
     'Selected agreement details should follow the canonical card and desktop registers.');
   assert.match(contracts, /onClick=\{\(\) => setSelectedContract\(contract\)\}>View details<\/Button>/);
   assert.match(contracts, /data-ams-slug="contract-current-detail"/);
+  assert.equal(contracts.includes('contracts-overview-kpis'), false, 'The canonical agreement register must not be followed by duplicated status KPIs.');
+  assert.match(contracts, /size="3xl"/);
+  assert.match(contracts, /canManage \? \([\s\S]*Agreement scope and obligations/);
+  assert.match(contracts, /Detailed scope, deliverables and payment terms are restricted to the existing contract-management permission scope/);
   assert.match(contracts, /Current agreement summary/);
   for (const field of [
     'selectedContract.clientName',
