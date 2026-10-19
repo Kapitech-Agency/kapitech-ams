@@ -2303,7 +2303,7 @@ export const AdminProjects: React.FC = () => {
               {planningView === 'milestones' && (
                 <AdminPanel
                   title="Milestones"
-                  description="Milestone records linked to the selected project. Completion is shown exactly as recorded."
+                  description="Milestone title, due date and completion come from the selected project records. Milestone-specific owners and dependencies are not stored in the current model."
                   actions={(
                     <span className="rounded-badge border border-line bg-bg px-2.5 py-1.5 text-[10px] font-medium tabular-nums text-muted">
                       {planningMilestones.filter((milestone) => milestone.completed).length} of {planningMilestones.length} completed
