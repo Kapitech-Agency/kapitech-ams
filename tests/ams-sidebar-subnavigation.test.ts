@@ -202,9 +202,11 @@ test('Project Registry filters keep the Project Registry workspace active withou
   assert.match(projectSource, /searchParams\.get\('planningView'\)/);
   assert.match(projectSource, /next\.set\('planningView', 'brief'\)/);
   assert.match(projectSource, /next\.delete\('planningView'\)/);
-  assert.ok(projectSource.includes("planningView=brief"));
-  assert.ok(projectSource.includes("planningView=milestones"));
-  assert.ok(projectSource.includes("planningView=timeline"));
+  assert.match(projectSource, /const planningWorksheetHref = \(worksheet: PlanningWorkspaceView\) => \{/);
+  assert.match(projectSource, /const next = new URLSearchParams\(searchParams\);\s*next\.set\('projects', 'planning-delivery'\);\s*next\.set\('planningView', worksheet\);/);
+  for (const worksheet of ['brief', 'milestones', 'timeline']) {
+    assert.ok(projectSource.includes("to: planningWorksheetHref('" + worksheet + "')"), 'Active Planning worksheet must preserve its query context: ' + worksheet);
+  }
   for (const key of [
     'scope-deliverables', 'deliverable-tracking',
     'internal-quality-review', 'client-review', 'revision-history',
