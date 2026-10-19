@@ -904,6 +904,7 @@ export const AdminClients: React.FC = () => {
             {statusScope !== 'lead' && (
               <div className="w-full shrink-0 sm:w-40">
                 <CustomSelect
+                  slug="clients-status-filter"
                   aria-label={language === 'id' ? 'Filter status klien' : 'Filter client status'}
                   value={statusFilter}
                   onChange={(value) => setStatusFilter(value as 'all' | AgencyClient['status'])}
@@ -911,7 +912,6 @@ export const AdminClients: React.FC = () => {
                     { value: 'all', label: language === 'id' ? 'Semua status' : 'All statuses' },
                     ...STATUS_OPTIONS,
                   ]}
-                  slug="clients-status-filter"
                 />
               </div>
             )}
