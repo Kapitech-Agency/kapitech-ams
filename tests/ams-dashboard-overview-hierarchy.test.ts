@@ -40,6 +40,10 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   assert.equal(quickActions.includes('min-[390px]'), false, 'Quick actions must not introduce a 390px breakpoint.');
   assert.equal(quickActions.includes('min-[760px]'), false, 'Quick actions must not introduce a 760px breakpoint.');
   assert.doesNotMatch(quickActions, /label:\s*'New project'/, 'New project already belongs in the page header, so it must not be duplicated');
+  const trendPicker = overview.indexOf('data-ams-slug="dashboard-trend-period"');
+  assert.ok(trendPicker > quickActions.indexOf('data-ams-feature-slug="dashboard-quick-actions"') && trendPicker < chartStart,
+    'The trend-period control should sit in the chart header after Quick Actions.');
+
   for (const label of ['Review tasks', 'Log time', 'View invoices', 'View clients', 'View documents']) {
     assert.ok(quickActions.includes("label: '" + label + "'"), 'Missing quick action: ' + label);
   }
@@ -72,4 +76,26 @@ test('Dashboard project creation action opens the existing create drawer only fo
   assert.match(projects, /searchParams\.get\('create'\) === '1'/);
   assert.match(projects, /next\.delete\('create'\)/);
   assert.match(projects, /if \(canManageProjects\) openNewProject\(\)/);
+});
+
+
+test('Dashboard trend range is selectable in Overview and Analytics without a duplicate legend', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const charts = await read('src/components/charts/DashboardCharts.tsx');
+
+  assert.match(dashboard, /const \[range, setRange\] = useState<RangeKey>\('30D'\)/);
+  assert.ok(dashboard.includes("{ value: '30D', label: '30 days' }"));
+  assert.ok(dashboard.includes("{ value: 'Q2', label: 'Q2 (Apr–Jun)' }"));
+  assert.ok(dashboard.includes("{ value: 'YTD', label: 'Year to date' }"));
+  assert.ok(dashboard.includes("{ value: '12M', label: '12 months' }"));
+  assert.match(dashboard, /role="group"[\s\S]{0,80}aria-label="Trend period"/);
+  assert.match(dashboard, /aria-pressed=\{active\}/);
+  assert.match(dashboard, /onClick=\{\(\) => onChange\(option\.value\)\}/);
+  assert.match(dashboard, /<DashboardTrendRangePicker range=\{range\} onChange=\{setRange\} \/>/);
+  assert.match(dashboard, /<DashboardTrendRangePicker range=\{range\} onChange=\{onRangeChange\} \/>/);
+  assert.match(dashboard, /<AnalyticsView snapshot=\{operationalSnapshot\} range=\{range\} onRangeChange=\{setRange\} \/>/);
+  assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false,
+    'The overview should not duplicate the legend already rendered by TrendChart.');
+  assert.match(charts, /role="img"[\s\S]{0,180}primaryLabel/);
+  assert.match(charts, /\{secondaryLabel && <span/);
 });

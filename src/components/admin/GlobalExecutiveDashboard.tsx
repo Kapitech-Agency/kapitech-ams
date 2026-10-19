@@ -167,6 +167,46 @@ const DashboardUnavailable: React.FC<{ title: string; description: string }> = (
   </div>
 );
 
+
+const DASHBOARD_TREND_RANGES: Array<{ value: RangeKey; label: string }> = [
+  { value: '30D', label: '30 days' },
+  { value: 'Q2', label: 'Q2 (Apr–Jun)' },
+  { value: 'YTD', label: 'Year to date' },
+  { value: '12M', label: '12 months' },
+];
+
+const DashboardTrendRangePicker: React.FC<{
+  range: RangeKey;
+  onChange: (range: RangeKey) => void;
+}> = ({ range, onChange }) => (
+  <div
+    role="group"
+    aria-label="Trend period"
+    data-ams-slug="dashboard-trend-period"
+    className="flex min-w-0 flex-wrap items-center gap-1.5"
+  >
+    {DASHBOARD_TREND_RANGES.map((option) => {
+      const active = range === option.value;
+      return (
+        <button
+          key={option.value}
+          type="button"
+          aria-pressed={active}
+          onClick={() => onChange(option.value)}
+          className={[
+            'inline-flex min-h-10 min-[1100px]:min-h-9 items-center justify-center rounded-control border px-2.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+            active
+              ? 'border-accent/20 bg-accent/10 text-fg'
+              : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg',
+          ].join(' ')}
+        >
+          {option.label}
+        </button>
+      );
+    })}
+  </div>
+);
+
 const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({ snapshot }) => {
   const tasks = snapshot.tasks || [];
   const projectRows = snapshot.projects || [];
@@ -262,7 +302,11 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
   );
 };
 
-const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: RangeKey }> = ({ snapshot, range }) => {
+const AnalyticsView: React.FC<{
+  snapshot: DashboardOperationalSnapshot;
+  range: RangeKey;
+  onRangeChange: (range: RangeKey) => void;
+}> = ({ snapshot, range, onRangeChange }) => {
   const currency = 'IDR';
   const invoiceRows = snapshot.invoices || [];
   const expenseRows = snapshot.expenses || [];
@@ -294,7 +338,7 @@ const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: R
       ]} />
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
-      <AdminPanel className="min-[1100px]:col-span-8" title="Invoice and expense trend" description="Invoice totals are grouped by issue date; expenses are grouped by recorded date. Their difference is not a posted profit figure." bodyClassName="p-4 sm:p-5">
+      <AdminPanel className="min-[1100px]:col-span-8" title="Invoice and expense trend" description="Invoice totals are grouped by issue date; expenses are grouped by recorded date. Their difference is not a posted profit figure." actions={<DashboardTrendRangePicker range={range} onChange={onRangeChange} />} bodyClassName="p-4 sm:p-5">
         {trend.length >= 2 ? (
           <TrendChart data={trend} primaryLabel="Invoices issued" secondaryLabel="Recorded expenses" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, currency)} ariaLabel="Issued invoices and recorded expenses by period." />
         ) : (
@@ -335,7 +379,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     }
   }, [hasViewParameter, navigate, requestedView]);
   const { matchesInterval, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
-  const [range, setRange] = useState<RangeKey>('Q2');
+  const [range, setRange] = useState<RangeKey>('30D');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
   const [projectActionPosition, setProjectActionPosition] = useState<{ top: number; left: number } | null>(null);
@@ -651,13 +695,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </section>
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description="Issued invoice value and recorded expenses by record date. The difference is not a posted profit figure." actions={(
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted" data-ams-slug="dashboard-finance-chart-legend">
-            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Invoices issued</span>
-            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-info" /> Expenses recorded</span>
-            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-success" /> Difference</span>
-          </div>
-        )}>
+        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description="Issued invoice value and recorded expenses by record date. The difference is not a posted profit figure." actions={<DashboardTrendRangePicker range={range} onChange={setRange} />}>
           {revenueData.length >= 2 ? (
             <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + range + '.'} />
           ) : (
@@ -973,7 +1011,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       ) : view === 'performance' ? (
         <PerformanceView snapshot={operationalSnapshot} />
       ) : (
-        <AnalyticsView snapshot={operationalSnapshot} range={range} />
+        <AnalyticsView snapshot={operationalSnapshot} range={range} onRangeChange={setRange} />
       )}
       <Modal
         open={Boolean(projectDetails)}

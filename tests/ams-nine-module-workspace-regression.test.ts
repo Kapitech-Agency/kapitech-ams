@@ -13,7 +13,8 @@ test('Dashboard preserves finance context and canonical responsive KPI breakpoin
   const canonicalKpiGrid = 'className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"';
   assert.ok(dashboard.includes(canonicalKpiGrid), 'Dashboard KPI strips should use canonical breakpoints');
   assert.equal(dashboard.split(canonicalKpiGrid).length - 1, 2, 'primary and supporting KPI strips should share the canonical grid contract');
-  assert.match(dashboard, /data-ams-slug="dashboard-finance-chart-legend"/);
+  assert.match(dashboard, /<DashboardTrendRangePicker range=\{range\} onChange=\{setRange\} \/>/);
+  assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false);
   assert.doesNotMatch(dashboard, /className="hidden items-center gap-3 text-\[11px\] text-muted sm:flex"/);
   assert.match(dashboard, /Issued invoice value and recorded expenses/);
   assert.match(dashboard, /project\.progress == null \? '—' : project\.progress \+ '%'/, 'Unreported project progress must be shown as unavailable, not as null%.');
