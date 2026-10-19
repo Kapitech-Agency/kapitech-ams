@@ -236,6 +236,16 @@ test('Case Study publish feedback confirms saved CMS state, not unverified live 
   assert.match(projects, /payload\.isPublished/);
 });
 
+test('Testimonial publish feedback confirms saved CMS state, not unverified public visibility', async () => {
+  const testimonials = await read('src/pages/admin/AdminCmsTestimonials.tsx');
+  assert.match(testimonials, /CMS status saved as Published\. Verify the public Testimonials page to confirm visibility\./);
+  assert.match(testimonials, /CMS status saved as Draft\. Verify the public Testimonials page to confirm visibility changes\./);
+  assert.doesNotMatch(testimonials, /Testimonial published successfully to the website|Testimonial published successfully\.|Testimonial unpublished from the public site\./,
+    'A successful CMS write is not an independent check that public output is visible or hidden.');
+  assert.match(testimonials, /api\.cms\.updateTestimonial\(item\.id, \{ isPublished: nextPublished \}\)/);
+  assert.match(testimonials, /await loadData\(\)/);
+});
+
 test('Website CMS editorial controls use accessible actions and the canonical Careers applicant workspace', async () => {
   const cmsProjects = await read('src/pages/admin/AdminCmsProjects.tsx');
   const insights = await read('src/pages/admin/AdminCmsInsights.tsx');

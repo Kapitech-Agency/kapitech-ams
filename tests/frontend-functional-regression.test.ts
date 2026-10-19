@@ -549,6 +549,9 @@ test('CMS testimonials require explicit publication and can be published from th
   assert.match(testimonials, /isPublished: false/);
   assert.match(testimonials, /handleTogglePublished/);
   assert.match(testimonials, /isPublished === true/);
+  assert.match(testimonials, /CMS status saved as Published\. Verify the public Testimonials page to confirm visibility\./);
+  assert.match(testimonials, /CMS status saved as Draft\. Verify the public Testimonials page to confirm visibility changes\./);
+  assert.doesNotMatch(testimonials, /Testimonial published successfully to the website|Testimonial published successfully\.|Testimonial unpublished from the public site\.|Testimoni berhasil dipublikasikan ke website/);
   assert.match(routes, /isPublished: item\.isPublished === true,[\s\S]{0,100}createdAt: now/);
 });
 

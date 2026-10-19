@@ -80,8 +80,8 @@ export const AdminCmsTestimonials: React.FC = () => {
       } else {
         await loadData();
         setStatusMessage(nextPublished
-          ? (language === 'id' ? 'Testimoni berhasil dipublikasikan.' : 'Testimonial published successfully.')
-          : (language === 'id' ? 'Testimoni dipindahkan ke draft.' : 'Testimonial moved to draft.'));
+          ? (language === 'id' ? 'Status CMS tersimpan sebagai Dipublikasikan. Periksa halaman Testimoni publik untuk memastikan visibilitas.' : 'CMS status saved as Published. Verify the public Testimonials page to confirm visibility.')
+          : (language === 'id' ? 'Status CMS tersimpan sebagai Draf. Periksa halaman Testimoni publik untuk memastikan perubahan visibilitas.' : 'CMS status saved as Draft. Verify the public Testimonials page to confirm visibility changes.'));
       }
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : (language === 'id' ? 'Status publikasi gagal diperbarui.' : 'Publication status could not be updated.'));
@@ -152,8 +152,8 @@ export const AdminCmsTestimonials: React.FC = () => {
       setEditingItem(null);
       await loadData();
       setStatusMessage(editingItem.isPublished === true
-        ? (language === 'id' ? 'Testimoni berhasil dipublikasikan ke website.' : 'Testimonial published successfully to the website.')
-        : (language === 'id' ? 'Testimoni disimpan sebagai draft. Publikasikan dari daftar saat siap.' : 'Testimonial saved as a draft. Publish it from the directory when ready.'));
+        ? (language === 'id' ? 'Status CMS tersimpan sebagai Dipublikasikan. Periksa halaman Testimoni publik untuk memastikan visibilitas.' : 'CMS status saved as Published. Verify the public Testimonials page to confirm visibility.')
+        : (language === 'id' ? 'Testimoni disimpan sebagai Draf di CMS. Publikasikan dari daftar saat siap.' : 'Testimonial saved as a draft in the CMS. Publish it from the directory when ready.'));
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to save testimonial.');
     } finally {

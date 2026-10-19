@@ -1050,3 +1050,27 @@ The first Quality Gate for `8e6f6dda44c70049f45237aad229b3a620fdf842` failed bec
 ### Case Studies publication-copy test correction — 19 October 2026
 
 Quality Gate and CI on `4542f6de4fbd114f5f7696c105709a660cbb4358` failed because `tests/frontend-functional-regression.test.ts` still required the former message "Case study published successfully to live site!". The source change deliberately avoids that unsupported claim and confirms only the saved CMS flag. The regression assertion now checks the revised message and rejects the old live-site claim while preserving assertions for legacy published records, draft defaults and the server-side public filter. Re-run both workflows on the corrective SHA.
+
+
+## Stage 4 view design record — Website CMS · Testimonials · publication feedback
+
+**View ID:** VIEW-CMS-TESTIMONIALS, Testimonials workspace.
+**Implementation status:** UI success feedback has been aligned with the confirmed CMS mutation response. Verify the resulting exact SHA through both workflows before considering source/test verification complete.
+
+1. **Owner/persona.** Website CMS → Testimonials. Authorized content editors maintain testimonial quote, author, rating, attribution and saved publication flag.
+2. **Primary task.** Save testimonial content or change its publication flag, then verify public output when publication visibility matters.
+3. **Decision.** Did the CMS record update succeed, and has the public Testimonials output actually been checked?
+4. **Primary surface.** Existing searchable testimonial directory and edit form, with explicit publication toggle and delete confirmation.
+5. **Content order.** Existing header, search, result count, testimonial register/cards and editor/delete dialogs remain unchanged. Status feedback follows successful API response and states exactly what was saved plus the next public verification action.
+6. **Fields and semantics.** isPublished is the persisted CMS record flag. For public users, the current /cms/testimonials API filters explicit isPublished === false drafts while retaining older testimonials without the flag. This server rule does not independently prove that a deployed page, CDN or cache has refreshed.
+7. **Controls.** Existing save/create/delete and api.cms.updateTestimonial mutation remain unchanged. No second publish API, local publication cache, or automatic public health probe is added.
+8. **Canonical ownership/breadcrumb.** Testimonial CMS record remains canonical. No new list/source, duplicate public state or breadcrumb is introduced.
+9. **Role-aware presentation.** Existing CMS route permission and canManageCmsContent server authorization remain unchanged.
+10. **States/recovery.** API failures still display the current error response. Successful publish/unpublish messages now say the CMS state was saved and ask editors to verify public visibility. Saving a draft says it remains a draft in the CMS. The interface no longer equates a successful write with verified live output.
+11. **Responsive behavior.** Structural register/editor layout is unchanged; Stage 5 must verify cards, directory search, confirmation dialogs and status notices at design-system breakpoints.
+12. **Accessibility.** Existing labeled search, publication buttons, accessible confirmation dialog and visible dismissible status notice remain. Keyboard focus and screen-reader announcement require browser evidence.
+13. **Regression tests.** Functional and nine-module workspace tests assert CMS-state wording, reject unsupported public-live claims, and preserve canonical API update and server-side public filtering.
+14. **Dependencies.** Actual live public response/cache/deployed page is not verified in this source-only change. Do not claim runtime publication verification without checking the supported public environment.
+15. **Acceptance.** Editors can tell that the CMS flag was saved and know that public visibility remains to be checked. Keep the view partially complete until Stage 5/9 confirms authorized mutation, public output and recovery behavior.
+
+**Next Stage 4 slice:** Continue Website CMS review with Insights and Careers only where source-backed defects are verified; do not invent recruitment/publication workflow beyond current canonical records.

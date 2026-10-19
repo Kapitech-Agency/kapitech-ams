@@ -792,3 +792,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 
 
 **Case Studies publication-copy regression correction:** Quality Gate [39225942437](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39225942437) failed on an outdated assertion in `tests/frontend-functional-regression.test.ts` that required the old public-live success string. The assertion now expects CMS-state wording and explicitly rejects the old claim. Publication flags, draft defaults and public route filtering remain untouched; verify both workflows on the corrective SHA.
+
+
+### CMS-TESTIMONIALS-PUBLISH-STATE-001: Distinguish saved testimonial flag from live public output
+
+**Source:** src/pages/admin/AdminCmsTestimonials.tsx. Toggle and save success copy now confirms that the CMS publication state was saved and asks the editor to verify the public Testimonials page. The UI no longer states that public output has been confirmed visible or hidden. Existing CMS API, persisted isPublished field, legacy flag defaults and public response filter remain untouched.
+
+**Tests:** tests/ams-nine-module-workspace-regression.test.ts and tests/frontend-functional-regression.test.ts assert accurate saved-state wording and reject the previous live-publication claim. Exact-SHA CI and Quality Gate plus public-render/browser checks remain required.
