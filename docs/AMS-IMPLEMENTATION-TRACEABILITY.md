@@ -758,3 +758,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`, Project Allocation. Existing record definitions include project, contract value, vendor commitment, obligations, Team Fee total, allocation percentages and status, but no effective month/quarter. The existing policy note now states that this is the saved allocation per project, not a historical period snapshot. The selected reporting period does not create history.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts the user-facing limitation and rejects a fabricated effective-period filter. A canonical effective-date/history field remains a Stage 6 data-model dependency.
+
+
+### FIN-TEAM-FEE-SOURCE-001: Team Fee separates source states and date semantics
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`, Team Fee. The supplementary member-fee register and core expense source now each distinguish source-unavailable from a valid empty response; failed refresh labels last-known data stale, and the existing Finance loader provides retry. Copy explains that member milestones filter by due date (or creation date without one), while the displayed paid date is informational and expense source rows use expense date. No settlement, payment or accounting logic changed.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts per-source failure/empty/stale states, retry, dynamic empty messaging and date semantics. Any per-installment due-date/history model remains a later canonical data dependency. Exact-SHA CI and Quality Gate plus Stage 5 browser validation remain required.

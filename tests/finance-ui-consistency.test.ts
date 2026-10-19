@@ -509,6 +509,25 @@ test('Operational Budget distinguishes expense-source failure from a valid zero 
   assert.match(budget, /expenseSourceBlocked\s*\?\s*hasSuccessfulExpenseSource\s*\?/);
 });
 
+test('Team Fee distinguishes allocation and expense source failures from valid empty registers', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("case 'team-fee': {");
+  const end = workspace.indexOf("case 'balance-sheet':", start);
+  assert.ok(start >= 0 && end > start, 'Team Fee worksheet should be available.');
+  const fee = workspace.slice(start, end);
+  assert.match(fee, /registerErrors\.some\(\(error\) => error\.startsWith\('Finance register team-fee:'\)\)/);
+  assert.match(fee, /Object\.prototype\.hasOwnProperty\.call\(registerRecords,'team-fee'\)/);
+  assert.match(fee, /sourceErrors\.some\(\(error\) => error\.startsWith\('Expenses:'\)\)/);
+  assert.match(fee, /hasSuccessfulExpenseSource \? 'Expense source data is stale/);
+  assert.match(fee, /No successful Team Fee allocation response has loaded/);
+  assert.match(fee, /No successful expense source has loaded/);
+  assert.match(fee, /onClick=\{\(\) => void loadData\(true\)\} disabled=\{refreshing\}/);
+  assert.match(fee, /emptyMessage=\{teamFeeSourceBlocked \? hasSuccessfulTeamFeeSource/);
+  assert.match(fee, /emptyMessage=\{expenseSourceBlocked \? hasSuccessfulExpenseSource/);
+  assert.match(fee, /Period filtering for member milestones uses due date/);
+  assert.match(fee, /paid date is informational/);
+});
+
 test('Project Allocation explains defaults and displays the saved percentage per record', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const start = workspace.indexOf("case 'project-allocation': {");

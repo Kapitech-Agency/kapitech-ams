@@ -952,3 +952,25 @@ Implementation: remove silent fallback from an explicit resourcesProject URL. Ve
 13. **Regression tests.** Assert the limitation copy and guard against filtering allocations by a fabricated effective-period property.
 14. **Dependencies.** A canonical period/effective-date/history field must be defined in Stage 6/data ownership before period-wise allocation is possible. Do not infer it from `createdAt`.
 15. **Acceptance.** Users understand that they are seeing saved allocations, not a historical reporting-period series. This subview remains partially complete and dependency-blocked for historical periods.
+
+
+## Stage 4 view design record — Finance · Project Finance · Team Fee
+
+**View ID:** VIEW-FIN-PROJECT, Team Fee worksheet.
+**Status:** Source-state feedback and period semantics are implemented in source; verify the resulting commit through both CI workflows before source/test sign-off.
+
+1. **Owner/persona.** Finance → Project Finance → Team Fee. Finance operators review member-level fee milestones and separately inspect expenses categorized as Project Team Fee.
+2. **Primary task.** Find a fee milestone, understand its due/payment state and distinguish the planned entitlement record from recorded expense costs.
+3. **Decision.** Does the member-fee register or expense source truly have no matching rows, or did the corresponding source fail/unavailable refresh?
+4. **Primary surface.** Two canonical source tables kept separate: Project Team Fee allocation and Project Team Fee expense sources.
+5. **Content order.** Shared note explaining separate ownership and date semantics; source unavailable/stale recovery when needed; member-fee table; separately classified expense-source table.
+6. **Fields and semantics.** Fee record: project/member/reference/role/amount/due date/paid date/payment status. Expense source: date/project/description/amount/record state. The fee table filters on due date or creation date when no due date exists; displayed paid date is informational and does not drive this schedule filter. Expense rows use expense date.
+7. **Controls.** Existing Finance reporting period and search remain. A source recovery button invokes the existing `loadData(true)`; it does not create or change fee/payment records.
+8. **Canonical ownership/breadcrumb.** The supplementary `team-fee` register owns member-level entitlement state. Core AMS expense records own classified expense costs. Expense cost is not automatically treated as payment settlement. No duplicate dataset or breadcrumb.
+9. **Role-aware display.** Existing finance access policy, register permissions and action helpers remain unchanged.
+10. **States/recovery.** Missing successful Team Fee source response shows unavailable rather than an empty register. A later failure labels last-known fee records as stale. Expense source has equivalent first-load unavailable and later-stale distinction using its existing successful-load flag. Empty states differ between source failure and a valid successful response with no matches.
+11. **Responsive behavior.** The existing FinanceDataTable layout remains unchanged. The source note and retry button wrap on narrow widths; verify 1100/900/600/390/320px during Stage 5.
+12. **Accessibility.** State feedback uses role=status and visible retry label; stale/unavailable wording carries meaning without relying on color. Keyboard/focus still requires browser validation.
+13. **Regression tests.** Assert per-source failure detection, successful-empty distinction, stale copy, real retry, conditional empty messaging and due-date/creation-date period semantics.
+14. **Dependencies.** A separate due date per installment is not currently stored; current member fee filter semantics are explicitly stated. No payment logic or API behavior changes.
+15. **Acceptance.** Team Fee never claims an empty register solely because its request failed, keeps member entitlement separate from classified expense cost, and states how period filtering works. View remains partially complete pending Stage 5 browser/source validation.
