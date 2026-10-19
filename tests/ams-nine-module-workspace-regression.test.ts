@@ -54,7 +54,7 @@ test('Client directory filters and register precede supporting metrics', async (
 test('Client directory CSV preserves unrecorded billed values and identifies the stored currency', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   const exportStart = clients.indexOf('const rows = filteredClients.map');
-  const exportEnd = clients.indexOf('const blob = new Blob', exportStart);
+  const exportEnd = clients.indexOf('const url = URL.createObjectURL', exportStart);
   assert.ok(exportStart >= 0 && exportEnd > exportStart, 'Client directory CSV export block must be identifiable.');
   const csvExport = clients.slice(exportStart, exportEnd);
 
