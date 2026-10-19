@@ -620,3 +620,29 @@ test('Client profile relationship action is not duplicated inside the timeline h
   assert.ok(clients.includes('onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log interaction</Button>'),
     'The persistent drawer footer remains the single main relationship action.');
 });
+
+
+
+test('Clients Service & Health keeps unsupported telemetry metrics and worksheets unavailable', async () => {
+  const serviceHealth = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
+  assert.match(serviceHealth, /title="SLA Monitoring"/);
+  assert.match(serviceHealth, /Telemetry not configured/);
+  assert.match(serviceHealth, /No verified SLA telemetry source/);
+  assert.match(serviceHealth, /uptime, MTTR, compliance, incident history, and snapshots are unavailable/);
+  assert.match(serviceHealth, /No sample accounts or simulated performance values are shown/);
+  assert.match(serviceHealth, /data-ams-slug="sla-telemetry-not-configured"/);
+  assert.match(serviceHealth, /data-ams-slug="sla-monitoring-setup"/);
+  assert.match(serviceHealth, /Define each service commitment/);
+  assert.match(serviceHealth, /Connect a telemetry source/);
+  assert.match(serviceHealth, /Verify incident and recovery timestamps/);
+  assert.match(serviceHealth, /to="\/admin\/contracts"/);
+  for (const worksheet of [
+    /label: 'Service Issues & Feedback'.*available: false/,
+    /label: 'Client Health'.*available: false/,
+    /label: 'Service History'.*available: false/,
+  ]) {
+    assert.match(serviceHealth, worksheet, 'unsupported Service & Health worksheets must remain target-only');
+  }
+  assert.doesNotMatch(serviceHealth, /\b(?:99\.9|99\.|MTTR:\s*\d|\d+% uptime)\b/,
+    'telemetry-dependent SLA performance must not be fabricated');
+});
