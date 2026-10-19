@@ -28,11 +28,18 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(subnavigation, /finance-workspace-receivables-payables/);
   assert.match(subnavigation, /finance-workspace-project-finance/);
   assert.match(subnavigation, /finance-workspace-accounting-reports/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance views" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1"/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
   assert.match(workspace, /const sheetItems = \[[\s\S]{0,260}key: 'quotations'[\s\S]{0,260}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
   assert.ok(workspace.indexOf("key: 'quotations'") < workspace.indexOf('...activeGroup.items'), 'Quotations must be the first worksheet in Receivables & Payables.');
+  const worksheetAccessStart = workspace.indexOf('const canShowFinanceWorksheet =');
+  const worksheetAccessEnd = workspace.indexOf('const sheetItems =', worksheetAccessStart);
+  const worksheetAccess = workspace.slice(worksheetAccessStart, worksheetAccessEnd);
+  assert.ok(worksheetAccessStart >= 0 && worksheetAccessEnd > worksheetAccessStart, 'Worksheet access filtering should be explicit.');
+  assert.ok(worksheetAccess.includes('canAccessAmsRoute'), 'Worksheet access must continue to respect Finance role permissions.');
+  assert.equal(worksheetAccess.includes('sidebarDestinations'), false, 'A worksheet must not disappear just because its URL is also the primary Finance destination.');
+  assert.match(workspace, /key: 'executive-summary', sheet: '00', label: 'Executive Summary'/);
   assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
   assert.match(workspace, /label: item\.label/);
   assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
@@ -57,7 +64,7 @@ test('Finance visible copy describes user workflows, not spreadsheet implementat
   ]) {
     assert.equal(workspace.includes(implementationPhrase), false, 'Visible Finance copy should not expose implementation wording: ' + implementationPhrase);
   }
-  assert.ok(workspace.includes('Finance views'));
+  assert.ok(workspace.includes('Finance worksheets'));
   assert.ok(workspace.includes('Project name / project reference'));
   assert.doesNotMatch(workbook, /description: '[^']*(?:workbook|Excel)[^']*'/i);
 });

@@ -16,7 +16,7 @@ import type { AgencyProject } from '../../lib/projectStore';
 import { VENDOR_EVENT_NAME } from '../../lib/vendorStore';
 import type { AgencyVendor, VendorContract } from '../../lib/vendorStore';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
-import { canAccessAmsRoute, getAmsNavigationDestinationSignature, getAmsRole, getAmsSidebarDestinationSignatures } from '../../lib/amsNavigationAccess';
+import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { AdminProjectProfitability } from './AdminProjectProfitability';
 import {
   calculateProjectFinanceWorkbookSummary,
@@ -1775,13 +1775,10 @@ const FinanceWorkbookWorkspace: React.FC = () => {
   };
 
   const navigationRole = getAmsRole(getAdminSession()?.user);
-  const sidebarDestinations = getAmsSidebarDestinationSignatures(navigationRole);
   const financeWorksheetDestination = (key: string) => '/admin/finance?tab=' + key;
-  const canShowFinanceWorksheet = (key: string) => {
-    const destination = getAmsNavigationDestinationSignature(financeWorksheetDestination(key));
-    return !sidebarDestinations.has(destination)
-      && canAccessAmsRoute(navigationRole, '/admin/finance', '?tab=' + key);
-  };
+  // Worksheet tabs remain visible when their destination intentionally matches the Finance module root.
+  const canShowFinanceWorksheet = (key: string) =>
+    canAccessAmsRoute(navigationRole, '/admin/finance', '?tab=' + key);
   const sheetItems = [
     ...(activeGroup.key === 'receivables' && canShowFinanceWorksheet('quotations')
       ? [{
@@ -3263,7 +3260,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
         data-ams-slug="finance-workspace-navigation"
       >
-        {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance views" activeKey={activeTab.key} items={sheetItems} className="w-full min-w-0 lg:flex-1" variant="secondary" />}
+        {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="w-full min-w-0 lg:flex-1" variant="secondary" />}
         {SEARCHABLE_FINANCE_TABS.has(activeTab.key) && (
           <div className="flex min-w-0 w-full justify-start lg:w-72 lg:shrink-0 lg:justify-end" data-ams-slug="finance-worksheet-search">
             <label className="relative block w-full">

@@ -475,3 +475,8 @@ Responsive review has now added a compact register to Project Finance, Accounts 
 
 The first correction commit `b6abb278d95587bc46326facb6294ee6be7271da` updated the Finance assertion but its CSS regex still included an extra `> div` that the actual KPI card selector does not contain. AMS Quality Gate [39160999440](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39160999440) therefore still failed only the responsive geometry regression. The test now matches the actual `section[aria-label="Executive key performance indicators"] article` selector and accepts the existing whitespace around CSS values. The Finance assertion correction remains in place. Revalidate both workflows on this follow-up commit before marking the batch verified.
 
+
+
+## Finance navigation follow-up — worksheet visibility collision (19 October 2026)
+
+The prior Quotations-only adjustment was not a complete navigation fix. The worksheet filter suppressed **Executive Summary** because its destination intentionally duplicates the primary Finance navigation destination (/admin/finance?tab=executive-summary). Removed the unrelated sidebar-destination exclusion from worksheet visibility; role-based route checks remain. Renamed the in-page row to **Finance worksheets** to distinguish it from the five Finance group tabs. Added route-order/active-state and visibility regression assertions. This is a frontend navigation-only change; validate the new commit through both CI workflows before calling the source fix complete. Browser authentication, visual review, and deployed-site verification remain outstanding.

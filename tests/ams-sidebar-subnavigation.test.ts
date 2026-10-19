@@ -34,10 +34,20 @@ test('each module root tab follows the approved Master Structure Guide', () => {
   assert.deepEqual(getAmsModuleSubnavigation('clients', 'Admin').map((item) => item.label), [
     'Directory', 'Onboarding', 'Agreements', 'Service & Health',
   ]);
-  assert.deepEqual(getAmsModuleSubnavigation('finance', 'Admin').map((item) => item.label), [
+  const financeNavigation = getAmsModuleSubnavigation('finance', 'Admin');
+  assert.deepEqual(financeNavigation.map((item) => item.label), [
     'Overview & Control', 'Transactions & Cash', 'Receivables & Payables',
     'Project Finance', 'Accounting & Reports',
   ]);
+  assert.deepEqual(financeNavigation.map((item) => item.to), [
+    '/admin/finance?tab=executive-summary',
+    '/admin/finance?tab=cash-bank',
+    '/admin/finance?tab=quotations',
+    '/admin/finance?tab=project-finance',
+    '/admin/finance?tab=journal',
+  ]);
+  assert.equal(isAmsModuleSubnavigationItemActive(financeNavigation[0], '/admin/finance', '?tab=executive-summary'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(financeNavigation[2], '/admin/finance', '?tab=quotations'), true);
   assert.deepEqual(getAmsModuleSubnavigation('team', 'Admin').map((item) => item.label), [
     'Team & Capacity', 'People Operations', 'Vendors & Freelancers', 'Time Tracking',
   ]);

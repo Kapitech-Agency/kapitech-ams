@@ -577,3 +577,11 @@ The findings above are source-level risks and release-control gaps, not claims t
 
 The first correction commit `b6abb278d95587bc46326facb6294ee6be7271da` updated the Finance assertion but its CSS regex still included an extra `> div` that the actual KPI card selector does not contain. AMS Quality Gate [39160999440](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39160999440) therefore still failed only the responsive geometry regression. The test now matches the actual `section[aria-label="Executive key performance indicators"] article` selector and accepts the existing whitespace around CSS values. The Finance assertion correction remains in place. Revalidate both workflows on this follow-up commit before marking the batch verified.
 
+
+
+### Finance navigation follow-up — primary route collision
+
+**Date:** 19 October 2026. **Scope:** Finance frontend navigation only.  
+**Root cause:** The worksheet visibility helper compared each worksheet destination against primary sidebar destinations and hid a worksheet whenever the URLs matched. Finance's primary destination intentionally opens Executive Summary, so that same rule removed Executive Summary from Overview & Control's worksheet row. The previous Quotations ordering fix did not address this collision, which explains why the navigation still appeared incomplete.  
+**Correction:** Worksheet visibility now checks route permission only. A URL shared with the parent module is not grounds to hide a worksheet. The worksheet navigation is explicitly labelled **Finance worksheets**, while the persistent five-area navigation remains the group-level navigation. Quotation remains first under Receivables & Payables. Regression tests now cover all five group destinations, active state, the worksheet visibility rule, permissions and Quotation ordering.  
+**Boundaries:** No server/API/database/auth/RBAC/finance calculation or posting logic changed. Verify the resulting commit with both AMS CI and AMS Quality Gate; authenticated browser checks and production deployment verification remain separate gates.
