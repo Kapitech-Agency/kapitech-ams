@@ -11,10 +11,11 @@
 
 ## 1. Purpose and how to use this matrix
 
-This document takes the role-aware content requirements from the main Content Blueprint down to worksheet-level defaults. It specifies what the main content should emphasize for each kind of work, what information should be scannable first, which fields/controls are useful, and whether a visualization adds genuine value.
+This document takes the role-aware content requirements from the Main Content Blueprint down to worksheet-level defaults. It specifies what each persona should scan first, useful fields/controls, and whether a visualization adds real value. It does not redefine workspace structure or required content order.
 
 It must be read with:
-- `docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md` for the detailed worksheet content contracts, shared patterns, data truthfulness, and acceptance criteria.
+- `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` for the baseline workspace composition, required relative region order, and structural acceptance contract.
+- `docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md` for the detailed role-aware worksheet content contracts, shared patterns, data truthfulness, and acceptance criteria.
 - `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md` for target workflows, canonical source ownership, Finance protections, and module requirements.
 - `docs/architecture/ams-navigation-information-architecture.md` for approved navigation and route ownership.
 - `AMS-DESIGN-SYSTEM.md` and `docs/AMS-UX-INTERACTION-STANDARDS.md` for shared visual primitives and behavior.
