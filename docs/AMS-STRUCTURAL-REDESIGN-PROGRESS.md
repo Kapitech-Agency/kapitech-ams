@@ -1147,3 +1147,8 @@ Quality Gate [39229655648](https://github.com/Kapitech-Agency/kapitech-ams/actio
 13. **Regression tests.** Assert Available/not Connected wording and explicit distinction from the production-readiness notification gate.
 14. **Dependencies.** A truthful configured/connected/last-checked/delivery result requires provider status fields/contract not exposed by the notification-settings GET response. Do not invent a client-side provider check or expose secrets; track for Stage 10 after contract/configuration verification.
 15. **Acceptance.** A successful settings fetch is not shown as Connected. A distinct readiness signal determines delivery readiness, and missing provider contract information remains an explicit limitation. Overall Settings stays partial pending Stage 5 visual/role review and Stage 10 integration verification.
+
+
+### Settings notification regression assertion correction — 19 October 2026
+
+The Quality Gate and AMS CI runs on `74755c5b5005a09b59bdd1bc950d76ec24a71fe0` passed typecheck but failed the new notification semantics test because it looked for `label={notificationLabel}`; the actual `SummaryCard` contract uses `status={notificationLabel}`. The test now asserts the real prop. The Settings source change remains unchanged: API success means settings are available, while delivery readiness comes from the separate production-readiness gate. Re-run both workflows on this corrective commit.

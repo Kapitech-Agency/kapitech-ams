@@ -133,7 +133,7 @@ test('Notification settings availability stays separate from provider delivery r
   assert.match(source, /useState<'available' \| 'unavailable' \| 'checking'>\('checking'\)/);
   assert.match(source, /setNotificationStatus\('available'\)/);
   assert.match(source, /Settings request succeeded; delivery readiness is reported separately below/);
-  assert.match(source, /label=\{notificationLabel\}/);
+  assert.match(source, /status=\{notificationLabel\}/);
   assert.match(source, /productionReadiness\?\.gates\?\.notifications/);
   assert.match(source, /\['Notification settings', notificationStatus === 'available' \? 'Available'/);
   assert.doesNotMatch(source, /notificationStatus === 'connected'|Provider credentials remain server-side/,

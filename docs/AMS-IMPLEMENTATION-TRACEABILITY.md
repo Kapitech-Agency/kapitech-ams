@@ -823,3 +823,6 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** src/pages/admin/AdminSettings.tsx. A successful api.notifications.getSettings request is now represented as Available, with neutral treatment and an explanation that delivery readiness is reported separately below. The existing production-readiness gate remains the delivery readiness signal. No API, provider configuration or secret exposure changed.
 
 **Tests:** tests/admin-settings-module-regression.test.ts asserts the settings request state enum, availability wording, readiness-gate separation and rejection of Connected semantics for the settings request. Exact-SHA CI and Quality Gate plus Stage 5 route/keyboard/responsive review and Stage 10 provider contract verification remain required.
+
+
+**Settings regression follow-up:** Runs [39230395340](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39230395340) and [39230395335](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39230395335) failed only the new source assertion expecting `label={notificationLabel}`; `SummaryCard` exposes it as `status={notificationLabel}`. The assertion is corrected to match the actual component contract. Verify the new SHA through typecheck, regression tests, build and AMS CI.
