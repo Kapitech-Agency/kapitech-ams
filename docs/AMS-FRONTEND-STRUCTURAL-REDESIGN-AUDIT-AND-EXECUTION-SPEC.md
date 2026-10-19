@@ -45,7 +45,7 @@ Read the following before implementing a structural view, and follow their inter
 15. [AMS Stage-by-Stage Execution Checklist](AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md)
 16. Relevant interaction, frontend engineering, Finance, Drawer, Modal, Kanban, accessibility, security, and regression documentation for the actual view.
 
-The main-content specification controls the target information architecture; the Master Structure and Navigation IA control module/route ownership; the Design System controls visual tokens and geometry; the gap register tracks evidence-backed implementation status. Historical implementation-map entries are not automatically current. When two documents conflict, follow the precedence in AGENTS.md, inspect source/test evidence, and document unresolved conflicts rather than guessing.
+The Main-Content Restructuring Specification controls the target main-content composition and relative region order for each workspace; it does not replace the Navigation IA. The Master Structure controls product/workflow ownership; the Navigation IA controls approved destinations and navigation depth; the Design System controls visual tokens and geometry; the Role-Based Content Blueprint and Worksheet Role Presentation Matrix refine role-aware emphasis without changing baseline content requirements or permissions; the gap register tracks evidence-backed implementation status. Historical implementation-map entries are not automatically current. When two documents conflict, follow the precedence in AGENTS.md, inspect source/test evidence, and document unresolved conflicts rather than guessing.
 
 ## 3. Audit snapshot and evidence limits
 
