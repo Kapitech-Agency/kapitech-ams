@@ -520,6 +520,26 @@ export const AdminProjects: React.FC = () => {
         (left.dueDate || '9999-12-31').localeCompare(right.dueDate || '9999-12-31')
       )
     : [];
+  const planningTimelineItems = [
+    ...planningMilestones
+      .filter((milestone) => Boolean(milestone.dueDate))
+      .map((milestone) => ({
+        id: 'milestone-' + milestone.id,
+        kind: 'Milestone',
+        title: milestone.title || 'Untitled milestone',
+        date: milestone.dueDate,
+        state: milestone.completed ? 'Completed' : isOverdue(milestone.dueDate) ? 'Overdue' : 'Upcoming',
+      })),
+    ...(planningProject?.tasks || [])
+      .filter((task) => Boolean(task.dueDate))
+      .map((task) => ({
+        id: 'task-' + task.id,
+        kind: 'Task',
+        title: task.title || 'Untitled task',
+        date: task.dueDate,
+        state: task.status === 'todo' ? 'To do' : task.status === 'in_progress' ? 'In progress' : task.status === 'review' ? 'Review' : 'Done',
+      })),
+  ].sort((left, right) => left.date.localeCompare(right.date));
   const resourcesProjectId = searchParams.get('resourcesProject') || '';
   const resourcesProject = resourcesProjectId
     ? projects.find((project) => project.id === resourcesProjectId || project.slug === resourcesProjectId) || null
@@ -2343,49 +2363,54 @@ export const AdminProjects: React.FC = () => {
               {planningView === 'timeline' && (
                 <AdminPanel
                   title="Project timeline"
-                  description="Timeline shows project dates and recorded milestone dates. It does not estimate unrecorded durations or dependencies."
+                  description="Timeline orders recorded task and milestone due dates chronologically alongside project dates. Dependency links are not tracked in the current project/task models."
                 >
-                  <div className="grid gap-3 border-b border-line p-3 sm:grid-cols-3 sm:p-4">
-                    <div className="rounded-control border border-line bg-bg p-3">
-                      <div className="text-[11px] font-medium text-muted">Project start</div>
-                      <div className="mt-1.5 text-xs font-semibold text-fg">{formatDate(planningProject.startDate)}</div>
-                    </div>
-                    <div className="rounded-control border border-line bg-bg p-3">
-                      <div className="text-[11px] font-medium text-muted">Target deadline</div>
-                      <div className="mt-1.5 text-xs font-semibold text-fg">{formatDate(planningProject.targetEndDate)}</div>
-                    </div>
-                    <div className="rounded-control border border-line bg-bg p-3">
-                      <div className="text-[11px] font-medium text-muted">Recorded progress</div>
-                      <div className="mt-1.5 text-xs font-semibold text-fg">{planningProject.progressPercent}%</div>
-                    </div>
-                  </div>
-                  {planningMilestones.length === 0 ? (
-                    <div className="p-5 text-xs leading-5 text-muted" role="status">No milestone dates are recorded. The timeline currently shows only the project start and target deadline.</div>
-                  ) : (
-                    <ol className="ml-5 space-y-0 border-l border-line py-4">
-                      {planningMilestones.map((milestone) => {
-                        const overdue = !milestone.completed && isOverdue(milestone.dueDate);
-                        return (
-                          <li key={milestone.id} className="relative pb-5 pl-6 last:pb-0" data-ams-slug={'planning-timeline-' + milestone.id}>
-                            <span className={'absolute -left-[5px] top-1 h-2.5 w-2.5 rounded-full border ' + (
-                              milestone.completed
-                                ? 'border-success bg-success'
-                                : overdue
-                                  ? 'border-danger bg-danger'
-                                  : 'border-line bg-panel'
-                            )} aria-hidden="true" />
-                            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                              <div className="min-w-0">
-                                <p className="break-words text-xs font-semibold text-fg">{milestone.title || 'Untitled milestone'}</p>
-                                <p className="mt-1 text-[11px] text-muted">{milestone.completed ? 'Completed' : overdue ? 'Overdue' : 'Recorded milestone'}</p>
+                  <div className="grid min-w-0 gap-0 min-[1100px]:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)]" data-ams-slug="planning-project-timeline">
+                    <section className="min-w-0 p-4 sm:p-5" aria-label="Recorded project timeline">
+                      <h3 className="text-xs font-semibold text-fg">Recorded timeline</h3>
+                      <p className="mt-1 text-[11px] leading-5 text-muted">Task and milestone dates are shown only when the canonical record has a due date. Entries are ordered by their recorded date.</p>
+                      {planningTimelineItems.length === 0 ? (
+                        <div className="mt-3 rounded-control border border-dashed border-line p-4 text-xs leading-5 text-muted" role="status">No task or milestone due dates are recorded for this project. Project start and target dates remain available in the project context.</div>
+                      ) : (
+                        <ol className="mt-3 ml-2 space-y-0 border-l border-line py-2">
+                          {planningTimelineItems.map((item) => (
+                            <li key={item.id} className="relative pb-5 pl-6 last:pb-0">
+                              <span className="absolute -left-[5px] top-1 h-2.5 w-2.5 rounded-full border border-line bg-panel" aria-hidden="true" />
+                              <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">{item.kind}</p>
+                                  <p className="mt-1 break-words text-xs font-semibold text-fg">{item.title}</p>
+                                  <p className="mt-1 text-[11px] text-muted">{item.state}</p>
+                                </div>
+                                <time className="shrink-0 text-xs tabular-nums text-muted" dateTime={item.date}>{formatDate(item.date)}</time>
                               </div>
-                              <span className="shrink-0 text-xs tabular-nums text-muted">{formatDate(milestone.dueDate)}</span>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  )}
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </section>
+                    <aside className="min-w-0 border-t border-line p-4 sm:p-5 min-[1100px]:border-l min-[1100px]:border-t-0" aria-label="Project date context">
+                      <h3 className="text-xs font-semibold text-fg">Project date context</h3>
+                      <dl className="mt-3 divide-y divide-line">
+                        {[
+                          { label: 'Project start', value: formatDate(planningProject.startDate) },
+                          { label: 'Target deadline', value: formatDate(planningProject.targetEndDate) },
+                          { label: 'Recorded progress', value: planningProject.progressPercent + '%' },
+                          { label: 'Milestone due dates', value: String(planningMilestones.filter((milestone) => Boolean(milestone.dueDate)).length) },
+                          { label: 'Task due dates', value: String((planningProject.tasks || []).filter((task) => Boolean(task.dueDate)).length) },
+                        ].map((field) => (
+                          <div key={field.label} className="grid min-w-0 gap-1 py-2.5 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:gap-3">
+                            <dt className="text-[11px] font-medium text-muted">{field.label}</dt>
+                            <dd className="min-w-0 break-words text-xs font-semibold text-fg sm:text-right">{field.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <div className="mt-4 border-l-2 border-line pl-3" role="note" data-ams-slug="planning-timeline-dependency-boundary">
+                        <p className="text-[11px] font-semibold text-muted">Dependency tracking unavailable</p>
+                        <p className="mt-1 text-[11px] leading-5 text-muted">Current project and task records do not store timeline dependency links. AMS does not infer dependency chains or estimated durations.</p>
+                      </div>
+                    </aside>
+                  </div>
                 </AdminPanel>
               )}
             </>
