@@ -15,20 +15,21 @@ Latest application source snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest application source commit | `87b53aa61cd7c973869da73ef4273c8cb5f4cc7e` |
-| Commit | [fix(inbox): align register copy with inquiry records](https://github.com/Kapitech-Agency/kapitech-ams/commit/87b53aa61cd7c973869da73ef4273c8cb5f4cc7e) |
+| Latest application source commit | `926291d005bbdef2c1e06779d28145d230606ddf` |
+| Commit | [fix(inbox): remove residual applicant card branch](https://github.com/Kapitech-Agency/kapitech-ams/commit/926291d005bbdef2c1e06779d28145d230606ddf) |
 | Changed source/test | `src/pages/admin/AdminInbox.tsx`; `tests/ams-nine-module-workspace-regression.test.ts` |
-| AMS CI | **Passed** on this SHA: [run 39245274600](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39245274600) |
-| AMS Quality Gate | **Passed** on this SHA: [run 39245274582](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39245274582) |
-| Validation detail | Typecheck, regression tests, production build, and production HTTP smoke test passed. |
+| AMS CI | **Passed** on this SHA: [run 39246295872](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246295872) |
+| AMS Quality Gate | **Passed** on this SHA: [run 39246295800](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246295800) |
+| Validation detail | Typecheck, regression tests and production build passed in Quality Gate. AMS CI security regression tests, production build and production HTTP smoke test passed. |
 
 ### Recent verified source slices
 
-- [Settings backup-history correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba): desktop backup rows use per-snapshot `backupVerificationFor(backup)`; both CI workflows passed on the source SHA.
+- [Settings backup-history correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba): desktop backup rows use per-snapshot `backupVerificationFor(backup)`; both CI workflows passed on that source SHA.
 - [Dashboard money truthfulness correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/febd4f42a18718230dd2ebccec5b975a0083ef68): non-finite monetary values display unavailable rather than numeric zero; both CI workflows passed.
-- [Inbox register semantics correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/87b53aa61cd7c973869da73ef4273c8cb5f4cc7e): generic Inbox table labels no longer mix applicant experience into the budget column. Its empty state no longer says applications will appear in Inbox. The Careers source filter and compatibility link to CMS Applicants remain. Both CI workflows passed on the exact SHA.
+- [Inbox register semantics correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/87b53aa61cd7c973869da73ef4273c8cb5f4cc7e): generic table labels now reflect services and budget, and the empty state refers only to inquiries; both CI workflows passed.
+- [Inbox applicant-presentation cleanup](https://github.com/Kapitech-Agency/kapitech-ams/commit/926291d005bbdef2c1e06779d28145d230606ddf): removed the final unreachable applicant-only branches, fields and status choices from Inbox presentation. The one ingress filter `item.type !== 'career'`, the legacy redirect and CMS Careers → Applicants route remain. A regression assertion allows optional whitespace when checking for candidate-specific conditional branches. AMS CI and Quality Gate both passed on this exact SHA.
 
-Prior CI failures on `2afe419030b861064258531167c98398e89b5661` were resolved by the Settings correction and are not current failures. This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch `main` and the exact workflow results before acting; a following documentation-only commit does not change the tested application source snapshot.
+The older CI failures on `2afe419030b861064258531167c98398e89b5661` are resolved by the verified Settings correction and are not current failures. This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch `main` and workflow results before acting; a documentation-only commit does not change the application source snapshot that was tested.
 
 ## 2. Active delivery stage
 
@@ -48,12 +49,12 @@ Recent repository history includes further work/tests for **Website CMS, Finance
 
 ## 3. Immediate resume sequence
 
-Re-verify live source and CI on every resume; this list records the tested source state and the next authorized task.
+Re-verify live source and CI on every resume; this list records the tested source state and next authorized task.
 
-1. **Rehydrate live state:** fetch current `main`, recent commits, relevant source, and latest AMS CI/Quality Gate results.
-2. **Preserve verified fixes:** Settings backup-history, Dashboard money availability, and Inbox register-semantics corrections all have successful exact-SHA CI evidence. Do not reapply without evidence of regression.
-3. **Continue Stage 4:** run a bounded source-level consumer audit of remaining Careers-specific presentation branches in `AdminInbox.tsx`. Remove them only where the `refreshInbox` source filter and all selection paths prove the UI branch unreachable. Preserve the Careers exclusion filter, legacy redirect, CMS Applicants route, API, permissions, and applicant data. Keep any branch if its reachability cannot be excluded from current source evidence.
-4. **Validate and checkpoint:** keep regression strength, verify the exact source diff and CI runs, update the progress record and affected gap rows.
+1. **Rehydrate live state:** fetch current `main`, recent commits, relevant source and latest AMS CI/Quality Gate results.
+2. **Preserve verified fixes:** Settings backup-history, Dashboard money availability, Inbox content copy, and Inbox applicant-presentation cleanup all have successful exact-SHA CI evidence. Do not repeat them without a demonstrated regression.
+3. **Continue Stage 4 in canonical order:** proceed to Projects, beginning with Overview/Registry and then Tasks & Execution, Planning & Delivery, and Resources. Inspect current code/tests before choosing a defect. Do not infer project progress, capacity, dependencies or data fields that the current model does not provide; unavailable worksheets remain unavailable.
+4. **Validate one bounded slice:** keep regression coverage, inspect the exact source diff, verify CI on the code SHA, then update this checkpoint and the affected gap rows.
 5. **Keep the release gate:** authenticated browser/viewport review and explicit user sign-off remain outstanding at Stage 5. No authenticated production/browser session has been established, so screenshots, computed-layout, keyboard/touch and visual acceptance are not claimed. Do not begin broad Stage 6 workflow/backend implementation before user sign-off.
 
 ## 4. Checkpoint update template

@@ -1226,3 +1226,16 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Scope review: copy/presentation and frontend regression coverage only. No API, route, applicant source, server permission, data model, or business workflow changed.
 - Remaining acceptance: Stage 5 still needs authenticated keyboard, selected-view/browser history, responsive and visual review. No authenticated screenshot/viewport test was performed in this source-only session.
 - Next action: source-audit residual applicant-specific branches in Inbox, remove only branches proven unreachable from the filtered record set, and preserve CMS Careers as the single applicant workspace.
+
+
+## Stage 4 source/test checkpoint · Inbox applicant-presentation ownership · 19 October 2026
+
+- Application commit: [`926291d005bbdef2c1e06779d28145d230606ddf`](https://github.com/Kapitech-Agency/kapitech-ams/commit/926291d005bbdef2c1e06779d28145d230606ddf).
+- Changed files: `src/pages/admin/AdminInbox.tsx`; `tests/ams-nine-module-workspace-regression.test.ts`.
+- Source audit established that every detail selection originates from `submissions` and that `refreshInbox` filters `type === 'career'` before setting that state. Selection resynchronization also reads only from the filtered state. Applicant-only cards/links/status choices in Inbox were therefore unreachable from supported Inbox records.
+- Cleanup removed applicant type branches and resume/portfolio/LinkedIn fields from Inbox search, triage and detail rendering; removed career status badges/options, interview/screening action, and an unused detail-tab state; simplified starred and split-list identity to contact/inquiry fields. It did not alter the API, record type, status persistence, permissions, CMS applicant presentation or route compatibility.
+- Preserved the canonical boundary: exactly one `item.type !== 'career'` ingress filter remains; the direct link to `/admin/cms/careers?tab=applicants` and the legacy redirect remain. The CMS Careers Applicants register/detail continues to own applicants.
+- Regression test: `Inbox keeps Careers applicant presentation in the canonical CMS workspace`. The assertion uses optional whitespace around `===` to guard against formatting variants and checks the source filter, compatibility route and CMS Applicants view.
+- Exact-SHA validation: AMS Quality Gate [39246295800 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246295800); AMS CI [39246295872 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246295872). Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed.
+- Remaining acceptance: Inbox stays partially complete until Stage 5 validates roles, keyboard, selected-record behavior, responsive widths and browser history in an authorized browser session. No screenshot or authenticated runtime check was performed here.
+- Next action: Stage 4 continues to Projects → Overview/Registry, using current-source evidence and the main-content specification; preserve unsupported Project Controls/Campaigns as unavailable until canonical models exist.
