@@ -498,7 +498,8 @@ test('Client Onboarding has a distinct header when the onboarding scope is selec
   const clients = await read('src/pages/admin/AdminClients.tsx');
   assert.match(clients, /eyebrow=\{statusScope === 'lead' \? 'Onboarding workspace' : 'Client directory'\}/);
   assert.match(clients, /title=\{statusScope === 'lead' \? 'Client Onboarding' : 'Clients & Key Accounts'\}/);
-  assert.match(clients, /Review new client accounts, confirm onboarding readiness, and continue account setup/);
+  assert.match(clients, /Review prospective client accounts and recorded profile details/);
+  assert.match(clients, /Profile completeness does not mean onboarding has been approved/);
   assert.match(clients, /scope === 'onboarding'/);
 });
 

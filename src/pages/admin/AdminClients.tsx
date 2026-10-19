@@ -809,7 +809,7 @@ export const AdminClients: React.FC = () => {
           eyebrow={statusScope === 'lead' ? 'Onboarding workspace' : 'Client directory'}
           title={statusScope === 'lead' ? 'Client Onboarding' : 'Clients & Key Accounts'}
           description={statusScope === 'lead'
-            ? 'Review new client accounts, confirm onboarding readiness, and continue account setup.'
+            ? 'Review prospective client accounts and recorded profile details.'
             : 'Directory of enterprise clients, relationship health, spend-cap status, and account operations.'}
         actions={(
           <>
