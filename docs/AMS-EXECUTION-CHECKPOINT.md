@@ -15,13 +15,13 @@ Latest application/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest source/test commit | cc9c46c82f7a5e514371683142b2c4725e28e8c2 |
-| Commit | [test(projects): fix timeline workspace boundary](https://github.com/Kapitech-Agency/kapitech-ams/commit/cc9c46c82f7a5e514371683142b2c4725e28e8c2) |
-| Changed application source | src/pages/admin/AdminProjects.tsx (Project Brief, Project Resources, Milestones field boundary, Timeline structure) |
-| Regression tests | tests/projects-module-regression.test.ts (Project Brief, allocation-first Resources, Milestones field limits, chronological Timeline) |
-| AMS CI | **Passed on exact SHA**: [run 39263459463](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459463) |
-| AMS Quality Gate | **Passed on exact SHA**: [run 39263459363](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459363) |
-| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on cc9c46c82f7a5e514371683142b2c4725e28e8c2. |
+| Latest source/test commit | 088a3cadd4260f89a040f876daf2404e602cb1c5 |
+| Commit | [fix(clients): align Client 360 data with existing permissions](https://github.com/Kapitech-Agency/kapitech-ams/commit/088a3cadd4260f89a040f876daf2404e602cb1c5) |
+| Changed application source | src/pages/admin/AdminProjects.tsx; src/pages/admin/AdminClients.tsx (Projects Planning + Clients Directory/Client 360 structure) |
+| Regression tests | tests/projects-module-regression.test.ts; tests/ams-nine-module-workspace-regression.test.ts; tests/admin-pages-jsx-regression.test.ts; tests/ams-client-detail-data-state-regression.test.ts |
+| AMS CI | **Passed on exact SHA**: [run 39269329377](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39269329377) |
+| AMS Quality Gate | **Passed on exact SHA**: [run 39269329548](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39269329548) |
+| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on 088a3cadd4260f89a040f876daf2404e602cb1c5. |
 
 ### Recent verified frontend slices
 
@@ -59,7 +59,7 @@ Re-verify live source and CI on every resume; this list is a dated recovery poin
 
 1. **Rehydrate:** fetch current `main`, recent history, relevant source and exact current CI/Quality Gate results.
 2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, Clients scope-aware exports/evidence-based Onboarding copy, Retainer local-date defaults and Renewal Schedule calendar-day handling have successful exact-SHA evidence.
-3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Project Brief, Project Resources, Milestones field-boundary messaging and Timeline chronology now have source/test evidence; the latest tested SHA is cc9c46c82f7a5e514371683142b2c4725e28e8c2. Verify Content & Campaigns and Project Controls blockers against model/navigation source, keep them unavailable, then proceed to Clients → Directory.
+3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Projects Planning, Project Resources, the Content & Campaigns/Project Controls blockers, and Clients Directory/Client 360 now have source/test evidence. Latest exact-SHA validation passed on 088a3cadd4260f89a040f876daf2404e602cb1c5. Next in canonical module order: Clients → Onboarding. Keep checklist, required-document evidence and kickoff readiness unavailable until canonical records/ownership exist.
 4. **Validate one bounded slice:** inspect current source/tests and gap row, make the smallest complete change, retain negative-path regression tests, verify both CI workflows on the source/test SHA, then update checkpoint and gap evidence.
 5. **Release gate remains closed:** authenticated browser/viewport/accessibility review and explicit user sign-off are still required at Stage 5. No authenticated screenshot or browser visual/keyboard/touch test has been performed in this execution. Do not start broad Stage 6 workflow/backend implementation before approval.
 
@@ -111,3 +111,12 @@ When the user says “lanjutkan” or similar, do not ask them to restate the ta
 - Unsupported features remain unavailable: Content & Campaigns has no verified canonical project/campaign relation; Project Controls has no verified canonical risk/change/control records.
 - Browser status: NOT VERIFIED. No authenticated browser screenshots or responsive/keyboard session was captured; Stage 5 sign-off remains required.
 - Next single action: complete source evidence for Content & Campaigns and Project Controls blockers, then begin Clients → Directory structural review/implementation.
+
+### Current Stage 4 structural checkpoint · Clients Directory and Client 360 · 19 October 2026
+
+- Verified source/test commit: 088a3cadd4260f89a040f876daf2404e602cb1c5. Exact-SHA AMS CI [39269329377](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39269329377) and Quality Gate [39269329548](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39269329548) both passed.
+- Structural work: removed duplicate Clients Directory KPI strip/calculation, made recorded retainer/renewal context visible in the account register, and added Client 360 linked-record panels for Projects, Inbox conversions, Finance invoices and Documents using explicit relationships and existing permission scopes.
+- Source boundaries: no new contact master, account owner model, onboarding evidence or approval state was fabricated. Project Campaigns/Project Controls remain unavailable due missing canonical data models.
+- Browser status: NOT VERIFIED. Authenticated drawer, role, keyboard, responsive and CSV download verification remain Stage 5 work; user sign-off is still required before broad Stage 6+.
+- Next single action: continue to Clients → Onboarding. Verify checklist/evidence readiness requirements against current model and preserve unavailable worksheets where canonical records are absent.
+
