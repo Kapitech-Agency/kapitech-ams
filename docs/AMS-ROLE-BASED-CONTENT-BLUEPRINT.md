@@ -32,7 +32,7 @@ Use `docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md` as the companion specificat
 
 ## 2. Authority and required companion documents
 
-Follow the precedence and task boundaries in root AGENTS.md. Use the related specifications together:
+Follow the precedence and task boundaries in root AGENTS.md. Use the related specifications together. The Main-Content Restructuring Specification defines the baseline composition and required content order of each workspace. This blueprint defines role-aware emphasis and presentation inside that composition, subject to existing permissions and canonical source contracts.
 
 1. **docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md** — target modules, worksheets, workflow responsibilities, cross-module ownership, Finance boundaries, and business rules.
 2. **docs/architecture/ams-navigation-information-architecture.md** — approved primary modules, workspaces, navigation depth, routes, and destination ownership.
