@@ -1213,3 +1213,16 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Scope review: source-backed frontend display behavior and regression coverage only. No data source, calculation formula, API, database, Finance workflow, permission, backend or business rule was changed.
 - Remaining acceptance: Dashboard Overview, Performance and Analytics remain partially complete until authenticated role/direct-route, chart/data, keyboard, responsive and visual review. No browser screenshot or live viewport test was captured here.
 - Next action: continue Stage 4 in the documented order with the earliest concrete Inbox/Projects source-level gap. Follow-up and routing surfaces without canonical contracts remain unavailable rather than simulated.
+
+
+## Stage 4 source/test checkpoint · Inbox register semantics · 19 October 2026
+
+- Application commit: [`87b53aa61cd7c973869da73ef4273c8cb5f4cc7e`](https://github.com/Kapitech-Agency/kapitech-ams/commit/87b53aa61cd7c973869da73ef4273c8cb5f4cc7e).
+- Changed files: `src/pages/admin/AdminInbox.tsx`; `tests/ams-nine-module-workspace-regression.test.ts`.
+- Confirmed presentation gap: the general Inbox register used “Services / Specialty” and “Budget / Experience” headings for all inbound views even though Careers records are excluded from Inbox. The split-view empty state said “New inquiries and applications will appear here”, incorrectly implying applicants are managed there.
+- Correction: generic Inbox table headings consistently read “Requested Services” and “Budget” with Indonesian equivalents; empty copy now refers only to new inquiries. The ingress filter excluding `type === 'career'`, and link/legacy route to Website CMS → Careers → Applicants, remain unchanged.
+- Regression coverage: added `Inbox table labels and empty state reflect the inquiry-only workspace` in `tests/ams-nine-module-workspace-regression.test.ts`. It checks the rendered table's semantic labels, rejects the mixed experience/applicant wording, and guards the Careers source filter.
+- Exact-SHA validation: [AMS Quality Gate 39245274582 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39245274582); [AMS CI 39245274600 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39245274600). The Quality Gate typecheck, regression tests and production build passed; AMS CI's typecheck, regression/security tests, production build and production HTTP smoke test passed.
+- Scope review: copy/presentation and frontend regression coverage only. No API, route, applicant source, server permission, data model, or business workflow changed.
+- Remaining acceptance: Stage 5 still needs authenticated keyboard, selected-view/browser history, responsive and visual review. No authenticated screenshot/viewport test was performed in this source-only session.
+- Next action: source-audit residual applicant-specific branches in Inbox, remove only branches proven unreachable from the filtered record set, and preserve CMS Careers as the single applicant workspace.
