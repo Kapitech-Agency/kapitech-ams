@@ -183,6 +183,7 @@ export const AdminContracts: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ClientContract | null>(null);
+  const [selectedContract, setSelectedContract] = useState<ClientContract | null>(null);
   const [form, setForm] = useState<ContractForm>(emptyForm());
 
   const load = async () => {
@@ -288,6 +289,7 @@ export const AdminContracts: React.FC = () => {
   const renewalScheduleSourcesComplete = contractsSourceAvailable && clientsSourceAvailable;
 
   const openCreate = () => {
+    setSelectedContract(null);
     setEditing(null);
     setForm(emptyForm());
     setError('');
@@ -295,6 +297,7 @@ export const AdminContracts: React.FC = () => {
   };
 
   const openEdit = (contract: ClientContract) => {
+    setSelectedContract(null);
     setEditing(contract);
     setForm(toForm(contract));
     setError('');
@@ -606,6 +609,7 @@ export const AdminContracts: React.FC = () => {
                     <div className="col-span-2 min-w-0"><p className="text-[10px] text-muted">Contract value</p><p className="mt-1 break-words text-sm font-semibold tabular-nums text-fg">{formatMoney(contract.contractValue, contract.currency)}</p></div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5 border-t border-line pt-3">
+                    <Button type="button" variant="secondary" className="min-h-9 px-3 text-[10px]" onClick={() => setSelectedContract(contract)}>View details</Button>
                     {['draft', 'in_review'].includes(contract.status) && <Button type="button" variant="secondary" className="min-h-9 px-3 text-[10px]" onClick={() => openEdit(contract)} disabled={!canManage}>Edit draft</Button>}
                     {next && <Button type="button" variant="primary" className="min-h-9 px-3 text-[10px]" onClick={() => void transition(contract, next)} disabled={!canManage || Boolean(transitioningId)} loading={transitioningId === contract.id}>{next === 'in_review' ? 'Send to review' : next === 'sent' ? 'Send for signature' : next === 'signed' ? 'Record signature' : next === 'active' ? 'Activate' : 'Complete'} <ArrowRight size={12} /></Button>}
                     {contract.status === 'draft' && <Button type="button" variant="secondary" className="min-h-9 px-3 text-[10px]" onClick={() => setDeleteDraftTarget(contract)} disabled={!canManage || Boolean(transitioningId) || Boolean(deleteDraftTarget)} loading={transitioningId === contract.id}><Trash2 size={12} />Delete draft</Button>}
@@ -659,6 +663,7 @@ export const AdminContracts: React.FC = () => {
                       </td>
                       <td className="px-3 py-3 align-top">
                         <div className="flex flex-wrap items-center justify-end gap-1.5">
+                          <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => setSelectedContract(contract)}>View details</Button>
                           {['draft', 'in_review'].includes(contract.status) && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => openEdit(contract)} disabled={!canManage}>Edit draft</Button>}
                           {next && <Button type="button" variant="primary" className="h-8 px-2 text-[10px]" onClick={() => void transition(contract, next)} disabled={!canManage || Boolean(transitioningId)} loading={transitioningId === contract.id}>{next === 'in_review' ? 'Send to review' : next === 'sent' ? 'Send for signature' : next === 'signed' ? 'Record signature' : next === 'active' ? 'Activate' : 'Complete'} <ArrowRight size={12} /></Button>}
                           {contract.status === 'draft' && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => setDeleteDraftTarget(contract)} disabled={!canManage || Boolean(transitioningId) || Boolean(deleteDraftTarget)} loading={transitioningId === contract.id}><Trash2 size={12} /> Delete draft</Button>}
@@ -756,6 +761,91 @@ export const AdminContracts: React.FC = () => {
           <label className="block space-y-1.5"><span className="text-[11px] text-muted">Payment terms</span><textarea rows={2} className="ams-control w-full" value={form.paymentTerms} onChange={(event) => updateForm('paymentTerms', event.target.value)} maxLength={2000} placeholder="Milestones, due dates, tax, late fees…" /></label>
           <label className="block space-y-1.5"><span className="text-[11px] text-muted">Internal notes</span><textarea rows={2} className="ams-control w-full" value={form.notes} onChange={(event) => updateForm('notes', event.target.value)} maxLength={3000} placeholder="Internal handover or approval context" /></label>
         </form>
+      </Drawer>
+
+      <Drawer
+        slug="client-contract-detail-drawer"
+        open={Boolean(selectedContract)}
+        onClose={() => setSelectedContract(null)}
+        size="xl"
+        title={selectedContract?.title || 'Agreement details'}
+        description={selectedContract ? (selectedContract.contractNumber + ' · ' + selectedContract.clientName) : undefined}
+        footer={(
+          <div className="flex flex-wrap justify-end gap-2">
+            {selectedContract && ['draft', 'in_review'].includes(selectedContract.status) && (
+              <Button type="button" variant="secondary" onClick={() => openEdit(selectedContract)} disabled={!canManage}>Edit draft</Button>
+            )}
+            <Button type="button" variant="secondary" onClick={() => setSelectedContract(null)}>Close</Button>
+          </div>
+        )}
+      >
+        {selectedContract && (
+          <div className="space-y-5" data-ams-feature-slug="contract-current-detail" data-ams-slug="contract-current-detail">
+            <section className="rounded-card border border-line bg-bg p-4" aria-label="Current agreement summary">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-mono text-[11px] text-muted">{selectedContract.contractNumber}</p>
+                  <h3 className="mt-1 break-words text-sm font-semibold text-fg">{selectedContract.title}</h3>
+                  <p className="mt-1 text-xs text-muted">{typeLabels[selectedContract.contractType]}</p>
+                </div>
+                <span className={'inline-flex shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusTones[selectedContract.status]}>{statusLabels[selectedContract.status]}</span>
+              </div>
+              <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: 'Client', value: selectedContract.clientName || 'Client not recorded' },
+                  { label: 'Project', value: selectedContract.projectName || 'Not linked to a project' },
+                  { label: 'Contract value', value: formatMoney(selectedContract.contractValue, selectedContract.currency) },
+                  { label: 'Start date', value: formatDate(selectedContract.startDate) },
+                  { label: 'End date', value: formatDate(selectedContract.endDate) },
+                  { label: 'Renewal / review date', value: formatDate(selectedContract.renewalDate) },
+                ].map((item) => (
+                  <div key={item.label} className="min-w-0 border-t border-line pt-2.5">
+                    <dt className="text-[10px] font-medium text-muted">{item.label}</dt>
+                    <dd className="mt-1 break-words text-xs font-medium text-fg">{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+
+            <section className="rounded-card border border-line bg-panel p-4" aria-label="Agreement scope and obligations">
+              <h3 className="text-xs font-semibold text-fg">Scope and deliverables</h3>
+              {selectedContract.scope ? (
+                <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-fg">{selectedContract.scope}</p>
+              ) : (
+                <p className="mt-2 text-xs leading-5 text-muted">No scope text is recorded on this agreement.</p>
+              )}
+              <div className="mt-4 border-t border-line pt-3">
+                <h4 className="text-[11px] font-semibold text-muted">Recorded deliverables</h4>
+                {selectedContract.deliverables?.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-fg">
+                    {selectedContract.deliverables.map((deliverable, index) => <li key={selectedContract.id + '-deliverable-' + index}>{deliverable}</li>)}
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-xs leading-5 text-muted">No deliverable list is recorded on this agreement.</p>
+                )}
+              </div>
+              <div className="mt-4 border-t border-line pt-3">
+                <h4 className="text-[11px] font-semibold text-muted">Payment terms</h4>
+                <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-fg">{selectedContract.paymentTerms || 'No payment terms are recorded on this agreement.'}</p>
+              </div>
+            </section>
+
+            <section className="rounded-card border border-line bg-panel p-4" aria-label="Agreement document and history boundary">
+              <h3 className="text-xs font-semibold text-fg">Agreement document</h3>
+              {selectedContract.documentUrl ? (
+                <a href={selectedContract.documentUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-9 items-center gap-2 break-all text-xs font-medium text-accent-text hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                  <ExternalLink size={13} aria-hidden="true" /> Open saved agreement file
+                </a>
+              ) : (
+                <p className="mt-2 text-xs leading-5 text-muted">No agreement document link is recorded.</p>
+              )}
+              <div className="mt-4 border-l-2 border-line pl-3" role="note" data-ams-slug="contract-history-source-boundary">
+                <p className="text-[11px] font-semibold text-muted">Current saved record only</p>
+                <p className="mt-1 text-[11px] leading-5 text-muted">This view shows the latest saved agreement fields and recorded lifecycle status. The Contract History worksheet remains unavailable because a dedicated versioned agreement history has not been verified; prior terms are not reconstructed from the update timestamp.</p>
+              </div>
+            </section>
+          </div>
+        )}
       </Drawer>
     </AdminPageShell>
   );
