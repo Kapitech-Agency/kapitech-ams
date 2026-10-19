@@ -1134,8 +1134,8 @@ export const AdminInbox: React.FC = () => {
                   <th className="p-3 w-10 text-center">★</th>
                   <th className="p-3">{activeInboxTab === 'client' ? (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company') : (language === 'id' ? 'Inbound & Konteks' : 'Inbound & Context')}</th>
                   <th className="p-3">{language === 'id' ? 'Kanal' : 'Channel'}</th>
-                  <th className="p-3">{activeInboxTab === 'client' ? (language === 'id' ? 'Layanan Diminta' : 'Requested Services') : (language === 'id' ? 'Layanan / Spesialisasi' : 'Services / Specialty')}</th>
-                  <th className="p-3">{activeInboxTab === 'client' ? (language === 'id' ? 'Anggaran' : 'Budget') : (language === 'id' ? 'Anggaran / Pengalaman' : 'Budget / Experience')}</th>
+                  <th className="p-3">{language === 'id' ? 'Layanan Diminta' : 'Requested Services'}</th>
+                  <th className="p-3">{language === 'id' ? 'Anggaran' : 'Budget'}</th>
                   <th className="p-3">{language === 'id' ? 'Status' : 'Status'}</th>
                   <th className="p-3">{language === 'id' ? 'Waktu' : 'Date'}</th>
                   <th className="p-3 text-right">{language === 'id' ? 'Aksi' : 'Actions'}</th>
@@ -1217,7 +1217,7 @@ export const AdminInbox: React.FC = () => {
                           </div>
                         </td>
 
-                        {/* Value / Experience */}
+                        {/* Budget */}
                         <td className="p-3 font-semibold text-fg">
 {item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided')}
                         </td>
@@ -1331,7 +1331,7 @@ export const AdminInbox: React.FC = () => {
               <div className="flex min-h-[420px] flex-col items-center justify-center rounded-card border border-line bg-panel px-6 py-10 text-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-card border border-line bg-bg text-muted"><Inbox size={18} /></div>
                 <p className="mt-3 text-xs font-medium text-fg">{loadError && submissions.length === 0 ? (language === 'id' ? 'Inbox tidak tersedia' : 'Inbox unavailable') : submissions.length === 0 ? 'No inbound records yet' : 'No matching records'}</p>
-                <p className="mt-1 max-w-xs text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Coba muat ulang untuk memverifikasi data masuk.' : 'Retry to verify incoming records.') : submissions.length === 0 ? 'New inquiries and applications will appear here as they arrive.' : 'Try another search or reset the active filters.'}</p>
+                <p className="mt-1 max-w-xs text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Coba muat ulang untuk memverifikasi data masuk.' : 'Retry to verify incoming records.') : submissions.length === 0 ? 'New inquiries will appear here as they arrive.' : 'Try another search or reset the active filters.'}</p>
                 {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
                   <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); }} className="mt-4 inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg"><Filter size={11} />Reset filters</button>
                 )}

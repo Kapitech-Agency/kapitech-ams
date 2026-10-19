@@ -80,6 +80,23 @@ test('Inbox heading identifies the active topbar workspace', async () => {
   assert.match(inbox, /title=\{activeInboxTab === 'overview' \? 'Inbox Overview' : activeInboxTab === 'messages' \? 'All Messages' : activeInboxTab === 'client' \? 'Sales Inquiries' : activeInboxTab === 'unread' \? 'Unread Messages' : 'Starred'\}/);
 });
 
+test('Inbox table labels and empty state reflect the inquiry-only workspace', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const tableStart = inbox.indexOf('/* DENSE SPREADSHEET TABLE VIEW */');
+  const tableEnd = inbox.indexOf('/* SPLIT MASTER-DETAIL VIEW', tableStart);
+  assert.ok(tableStart >= 0 && tableEnd > tableStart, 'missing Inbox register view boundary');
+  const table = inbox.slice(tableStart, tableEnd);
+
+  assert.ok(table.includes("{language === 'id' ? 'Layanan Diminta' : 'Requested Services'}"));
+  assert.ok(table.includes("{language === 'id' ? 'Anggaran' : 'Budget'}"));
+  assert.doesNotMatch(table, /Services \/ Specialty|Layanan \/ Spesialisasi|Budget \/ Experience|Anggaran \/ Pengalaman|Value \/ Experience/);
+  assert.ok(inbox.includes("'New inquiries will appear here as they arrive.'"));
+  assert.equal(inbox.includes("'New inquiries and applications will appear here as they arrive.'"), false);
+
+  // Applicant records remain excluded at the source boundary and managed in CMS Careers.
+  assert.match(inbox, /\.filter\(\(item\) => item\.type !== 'career'\)/);
+});
+
 test('Inbox remains an inquiry workspace and star state remains accessible', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   const app = await read('src/App.tsx');
