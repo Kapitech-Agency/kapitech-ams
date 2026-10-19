@@ -117,6 +117,21 @@ test('Project overview metrics and sprint project selection describe their actua
   assert.ok(source.includes("title={view === 'overview' ? 'Project Overview'"));
   assert.ok(source.includes('Delivery exceptions'));
   assert.ok(source.includes('Project status distribution'));
+  const overviewStart = source.indexOf('data-ams-feature-slug="projects-overview-workspace"');
+  const overviewEnd = source.indexOf("{view === 'planning-delivery' && (", overviewStart);
+  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, 'Project Overview should have a bounded source section');
+  const overview = source.slice(overviewStart, overviewEnd);
+  const primary = overview.indexOf('data-ams-feature-slug="projects-overview-primary"');
+  const exceptions = overview.indexOf('title="Delivery exceptions"', primary);
+  const distribution = overview.indexOf('title="Project status distribution"', exceptions);
+  const supporting = overview.indexOf('data-ams-feature-slug="projects-overview-supporting-metrics"', distribution);
+  const summary = overview.indexOf('aria-label="Project delivery summary"', supporting);
+  assert.ok(primary >= 0 && exceptions > primary && distribution > exceptions && supporting > distribution && summary > supporting,
+    'Delivery exceptions and status distribution should lead the supporting summary metrics.');
+  assert.doesNotMatch(overview.slice(supporting, summary), /label: 'Delivery exceptions'/,
+    'The exception count must not be duplicated as a KPI alongside the exception register.');
+  assert.match(overview, /min-\[1100px\]:grid-cols-\[minmax\(0,1\.45fr\)_minmax\(280px,0\.75fr\)\]/);
+  assert.doesNotMatch(overview, /xl:grid-cols-\[minmax\(0,1\.45fr\)_minmax\(280px,0\.75fr\)\]/);
   assert.ok(source.includes('projects-planning-delivery-workspace'));
   assert.ok(source.includes('title="Project timeline"'));
   assert.ok(source.includes('title="Milestones"'));

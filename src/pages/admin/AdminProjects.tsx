@@ -2065,21 +2065,7 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'overview' && (
         <div className="space-y-4" data-ams-feature-slug="projects-overview-workspace" data-ams-slug="projects-overview-workspace">
-          <section className="grid gap-3 min-[600px]:grid-cols-2 min-[1100px]:grid-cols-4" aria-label="Project delivery summary">
-            {[
-              { label: 'Open projects', value: serverMode ? String(activeProjects.length) : '—', context: 'Projects not marked completed' },
-              { label: 'Delivery exceptions', value: serverMode ? String(overviewAttentionProjects.length) : '—', context: 'Projects needing a closer review' },
-              { label: 'Open tasks', value: serverMode ? String(metrics.openTasks) : '—', context: 'Tasks not marked Done' },
-              { label: 'Overdue milestones', value: serverMode ? String(metrics.milestonesAtRisk) : '—', context: 'Uncompleted milestones past due' },
-            ].map((metric) => (
-              <article key={metric.label} className="rounded-card border border-line bg-panel p-4" data-ams-slug={'projects-overview-metric-' + metric.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}>
-                <div className="text-xs font-medium text-muted">{metric.label}</div>
-                <div className="mt-3 text-2xl font-semibold tabular-nums text-fg">{metric.value}</div>
-                <div className="mt-1 text-[11px] text-muted">{serverMode ? metric.context : loading ? 'Loading live project records' : 'Live project data unavailable'}</div>
-              </article>
-            ))}
-          </section>
-          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
+          <section className="grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]" data-ams-feature-slug="projects-overview-primary" aria-label="Delivery exceptions and project status">
             <AdminPanel title="Delivery exceptions" description="Projects with a recorded health concern, overdue task, or overdue milestone.">
               {loading && !serverMode ? (
                 <div role="status" aria-label="Loading project exceptions" className="grid gap-2 p-4">
@@ -2138,7 +2124,20 @@ export const AdminProjects: React.FC = () => {
                 </div>
               )}
             </AdminPanel>
-          </div>
+          </section>
+          <section className="grid gap-3 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3" data-ams-feature-slug="projects-overview-supporting-metrics" aria-label="Project delivery summary">
+            {[
+              { label: 'Open projects', value: serverMode ? String(activeProjects.length) : '—', context: 'Projects not marked completed' },
+              { label: 'Open tasks', value: serverMode ? String(metrics.openTasks) : '—', context: 'Tasks not marked Done' },
+              { label: 'Overdue milestones', value: serverMode ? String(metrics.milestonesAtRisk) : '—', context: 'Uncompleted milestones past due' },
+            ].map((metric) => (
+              <article key={metric.label} className="rounded-card border border-line bg-panel p-4" data-ams-slug={'projects-overview-metric-' + metric.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}>
+                <div className="text-xs font-medium text-muted">{metric.label}</div>
+                <div className="mt-3 text-2xl font-semibold tabular-nums text-fg">{metric.value}</div>
+                <div className="mt-1 text-[11px] text-muted">{serverMode ? metric.context : loading ? 'Loading live project records' : 'Live project data unavailable'}</div>
+              </article>
+            ))}
+          </section>
         </div>
       )}
 
