@@ -417,3 +417,16 @@ test('Inbox inquiry status cards follow canonical responsive breakpoints', async
   assert.equal(inbox.includes('className="grid grid-cols-2 gap-2 sm:grid-cols-4"'), false,
     'The status summary must not switch to four columns at the generic 640px breakpoint.');
 });
+
+
+test('Projects Overview summary follows canonical responsive breakpoints', async () => {
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+  const overviewStart = projects.indexOf('data-ams-feature-slug="projects-overview-workspace"');
+  const overviewEnd = projects.indexOf("{view === 'planning-delivery' && (", overviewStart);
+  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, 'The Project Overview workspace should be identifiable');
+  const overview = projects.slice(overviewStart, overviewEnd);
+  assert.ok(overview.includes('className="grid gap-3 min-[600px]:grid-cols-2 min-[1100px]:grid-cols-4" aria-label="Project delivery summary"'),
+    'Project summary KPIs should remain stacked on narrow screens, use two columns from 600px and four from 1100px.');
+  assert.equal(overview.includes('sm:grid-cols-2 xl:grid-cols-4'), false,
+    'Project overview KPI geometry must not depend on generic 640px and 1280px breakpoints.');
+});

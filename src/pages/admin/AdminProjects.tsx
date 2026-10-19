@@ -2065,7 +2065,7 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'overview' && (
         <div className="space-y-4" data-ams-feature-slug="projects-overview-workspace" data-ams-slug="projects-overview-workspace">
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Project delivery summary">
+          <section className="grid gap-3 min-[600px]:grid-cols-2 min-[1100px]:grid-cols-4" aria-label="Project delivery summary">
             {[
               { label: 'Open projects', value: serverMode ? String(activeProjects.length) : '—', context: 'Projects not marked completed' },
               { label: 'Delivery exceptions', value: serverMode ? String(overviewAttentionProjects.length) : '—', context: 'Projects needing a closer review' },
