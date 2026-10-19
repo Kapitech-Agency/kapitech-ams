@@ -6,6 +6,8 @@
 
 > **Critical:** A document describes intent, a procedure, or evidence within its stated scope. It does not prove that a feature is implemented, that a historical branch/PR is still current, or that production is healthy. Verify current `main`, relevant source and tests, current CI, and authorized production-readiness evidence before taking action.
 
+> **Resume after timeout/interruption:** Follow [AMS Resume After Timeout or Interruption Protocol](AMS-RESUME-AFTER-INTERRUPTION.md) and restore the working pointer from [AMS Execution Checkpoint](AMS-EXECUTION-CHECKPOINT.md). A short “continue/lanjutkan” follow-up means resume the same task after verifying live repository state; it is not a request to restart or ask for the master prompt again.
+
 ## 1. Authority and conflict-resolution rules
 
 Use these rules when documents appear to conflict:
