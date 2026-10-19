@@ -826,3 +826,36 @@ test('Client Onboarding uses an onboarding-specific primary register', async () 
     'The onboarding register must focus on lead contactability, not established-client financial indicators.');
   assert.match(clients, /No lead accounts yet\. Create a lead to begin onboarding review\./);
 });
+
+
+test('Contracts & SOWs exposes saved agreement details without simulating Contract History', async () => {
+  const contracts = await read('src/pages/admin/AdminContracts.tsx');
+  const register = contracts.indexOf('data-ams-feature-slug="contracts-compact-cards"');
+  const desktopRegister = contracts.indexOf('<table className="w-full min-w-[980px] border-collapse text-left">');
+  const detailDrawer = contracts.indexOf('slug="client-contract-detail-drawer"');
+  assert.ok(register >= 0 && desktopRegister > register && detailDrawer > desktopRegister,
+    'Selected agreement details should follow the canonical card and desktop registers.');
+  assert.match(contracts, /onClick=\{\(\) => setSelectedContract\(contract\)\}>View details<\/Button>/);
+  assert.match(contracts, /data-ams-slug="contract-current-detail"/);
+  assert.match(contracts, /Current agreement summary/);
+  for (const field of [
+    'selectedContract.clientName',
+    'selectedContract.projectName',
+    'selectedContract.contractValue',
+    'selectedContract.startDate',
+    'selectedContract.endDate',
+    'selectedContract.renewalDate',
+    'selectedContract.scope',
+    'selectedContract.deliverables',
+    'selectedContract.paymentTerms',
+  ]) assert.ok(contracts.includes(field), 'Missing source-backed agreement detail field: ' + field);
+  assert.match(contracts, /Open saved agreement file/);
+  assert.match(contracts, /No scope text is recorded on this agreement/);
+  assert.match(contracts, /No deliverable list is recorded on this agreement/);
+  assert.match(contracts, /No payment terms are recorded on this agreement/);
+  assert.match(contracts, /Contract History worksheet remains unavailable/);
+  assert.match(contracts, /prior terms are not reconstructed from the update timestamp/);
+  assert.match(contracts, /setSelectedContract\(null\)/);
+  assert.doesNotMatch(contracts.slice(detailDrawer), /api\.contracts\.(create|update|transition|delete)\(/,
+    'The detail drawer must not introduce a new agreement mutation path.');
+});
