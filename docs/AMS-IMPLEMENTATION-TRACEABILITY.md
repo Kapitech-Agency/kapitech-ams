@@ -836,3 +836,6 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 
 
 **Annual Summary test follow-up:** Runs [39231399160](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39231399160) and [39231399029](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39231399029) failed test 330 because the test expected single-quoted dictionary entries but `FINANCE_UI_COPY` uses double-quoted keys and values. The assertion now checks the exact double-quoted map values for English and Indonesian. Source calculation and published content changes remain unchanged.
+
+
+**Annual Summary assertion cleanup:** Exact-SHA runs [39231747201](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39231747201) and [39231747102](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39231747102) still failed test 330 due one remaining old regex that expected single-quoted dictionary keys. The exact dictionary membership checks already assert the actual double-quoted entries; the stale regex is removed. Source translation dictionary and financial calculations remain unchanged.

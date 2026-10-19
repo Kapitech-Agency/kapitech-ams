@@ -1162,3 +1162,8 @@ The operational Annual Summary measure uses `reportInvoices` filtered through `i
 ### Annual Summary localization assertion correction — 19 October 2026
 
 CI and Quality Gate on `ed739f44032b2881e8c5fdca95cec421a6fa5d5a` passed typecheck but failed one Annual Summary regression assertion because the test expected single-quoted object keys while `FINANCE_UI_COPY` is represented with double-quoted keys/values. The source label and dictionary updates were present. The assertion now checks the exact double-quoted dictionary entries; no UI or calculation behavior changed. Re-run both workflows on this follow-up SHA.
+
+
+### Annual Summary translation test cleanup — 19 October 2026
+
+On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a duplicate legacy assertion with single-quoted keys remained after the exact double-quoted dictionary checks were added. The stale assertion is removed; source translation entries remain unchanged. Re-run both workflows on the corrective SHA.
