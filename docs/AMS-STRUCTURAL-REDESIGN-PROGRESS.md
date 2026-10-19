@@ -1,6 +1,6 @@
 # Kapitech AMS Structural UX/UI Redesign Progress
 
-Progress evidence last recorded: 18 October 2026  
+Progress evidence last recorded: 19 October 2026  
 Documentation cross-reference updated: 19 October 2026 (no new UI or browser verification implied)
 Repository: `Kapitech-Agency/kapitech-ams`
 Required delivery branch: `main`
@@ -485,3 +485,13 @@ The prior Quotations-only adjustment was not a complete navigation fix. The work
 ## Finance worksheet active-state color correction (19 October 2026)
 
 The Finance worksheet row had `variant="secondary"`, which intentionally rendered the selected worksheet with neutral panel styling. This did not follow the AMS design system's primary contextual-tab active state. Switched the Finance worksheet tabs to the shared `AdminSectionTabs` `primary` variant. The selected worksheet now uses the standard crimson accent tint (`bg-accent/10`) and crimson-accent border (`border-accent/20`), while keeping readable foreground text, keyboard focus treatment, URL-driven active state, and shared component geometry. Regression checks now require the primary variant and verify that its selected style is tied to the shared accent token. No backend, API, authorization, database, or financial logic changed.
+
+
+## Latest execution checkpoint — 19 October 2026
+
+- Navigation stage preserved: current `main` already contains the approved nine-module navigation and the five Finance primary areas. This execution did not recreate the sidebar, routes, tabs or worksheets.
+- Stage 2 shell follow-up: commit `55ae212b936dd92671bad764baa1c91904999cff` moved the mobile topbar's safe-area-aware height contract into the entire below-900px drawer range and removed the duplicate narrow-only rule. Its new regression test initially failed because the test regex was over-escaped, not because the source selector was absent. Commit `00387bb643e895a7f1bd4cfa31bf161ef09fdd64` corrected the matcher. Both workflows then passed on that SHA: AMS CI [39198573319](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39198573319), Quality Gate [39198573222](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39198573222).
+- Stage 4 Dashboard Overview slice: commit `78fe090409640e989a60700b1465186d42bf872f` replaced the off-contract 390px/760px responsive grid thresholds with the design system's 600px/900px/1100px thresholds for KPI and Quick Actions content. Regression assertions were aligned with the intended geometry. Both workflows passed on this exact source SHA: AMS CI [39198777481](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39198777481), Quality Gate [39198777527](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39198777527).
+- CI ran typecheck, regression tests, production build, and the configured integration/security/production smoke stages. No local test/build result is claimed because this execution used the GitHub repository interface rather than a local repository checkout.
+- Remaining: Dashboard is not complete. Continue source-by-source through Performance and Analytics, then Inbox, Projects, Clients, Finance worksheets, Team & Resources, Documents, Website CMS and Settings as Stage 4 permits. Preserve unavailable worksheets when their canonical data/workflow is absent.
+- Production check: no authenticated production browser session or post-login screenshots were available. Stage 5 visual, responsive, keyboard/accessibility acceptance and explicit user sign-off remain outstanding. No deployment success is claimed.
