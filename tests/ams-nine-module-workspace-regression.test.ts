@@ -514,3 +514,14 @@ test('Inbox Overview exposes a source-backed Unassigned triage scope', async () 
   assert.match(inbox, /Every current record in this queue has an assigned owner/);
   assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
 });
+
+
+test('Inbox triage reports the full matching count and avoids an inferred follow-up action', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  assert.match(inbox, /const visibleTriageItems = triageItems\.slice\(0, 8\)/);
+  assert.match(inbox, /Showing \${visibleTriageItems\.length} of \${triageItems\.length} matching records/);
+  assert.match(inbox, /visibleTriageItems\.map\(\(item\) =>/);
+  assert.doesNotMatch(inbox, /Showing the next 8 records/);
+  assert.doesNotMatch(inbox, /Next follow-up/);
+  assert.match(inbox, /triageItems\.length > visibleTriageItems\.length/);
+});

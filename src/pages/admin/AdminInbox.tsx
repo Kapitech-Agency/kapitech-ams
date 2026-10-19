@@ -505,9 +505,9 @@ export const AdminInbox: React.FC = () => {
         const scoreA = priorityRank(a) * 10 + statusRank(a);
         const scoreB = priorityRank(b) * 10 + statusRank(b);
         return scoreA - scoreB || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      })
-      .slice(0, 8);
+      });
   }, [filteredItems, triageScope]);
+  const visibleTriageItems = triageItems.slice(0, 8);
 
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
@@ -974,7 +974,7 @@ export const AdminInbox: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                triageItems.map((item) => {
+                visibleTriageItems.map((item) => {
                   const isCareer = item.type === 'career';
                   return (
                     <button
@@ -1020,7 +1020,7 @@ export const AdminInbox: React.FC = () => {
 
             <div className="border-t border-line bg-bg/50 px-4 py-2.5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-[10px] leading-4 text-muted">{triageItems.length > 0 ? 'Showing the next 8 records, ordered by priority and age.' : 'The queue updates automatically as new inbound records arrive.'}</p>
+                <p className="text-[10px] leading-4 text-muted">{triageItems.length > visibleTriageItems.length ? `Showing ${visibleTriageItems.length} of ${triageItems.length} matching records, ordered by priority and age.` : triageItems.length > 0 ? `${visibleTriageItems.length} matching records, ordered by priority and age.` : 'The queue updates automatically as new inbound records arrive.'}</p>
                 <button type="button" onClick={() => { setViewMode('split'); setFilterStatus('new'); }} className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg">
                   <Filter size={11} />Open filtered list
                 </button>
@@ -1120,7 +1120,7 @@ export const AdminInbox: React.FC = () => {
               {key:'client',title:'Starred client work',description:'Saved sales opportunities and follow-up threads.',items:filteredItems.filter((item)=>item.type!=='career')}
             ].map((group)=><div key={group.key} className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line px-4 py-3.5"><div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">{group.title}</h3><p className="mt-0.5 text-[11px] text-muted">{group.description}</p></div><span className="text-[11px] tabular-nums text-muted">{group.items.length}</span></div></div><div className="divide-y divide-line">{group.items.map((item)=><div key={item.id} className="px-4 py-3 hover:bg-panel-hover transition-colors"><div className="flex items-start gap-3"><div className="min-w-0 flex-1"><div className="flex items-center gap-1.5 flex-wrap">{renderChannelBadge(item.type)}{renderStatusBadge(item.status)}{renderPriorityBadge(item.priority)}</div><div className="mt-1.5 flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-xs font-semibold text-fg">{item.fullName}</p><p className="truncate text-[11px] text-muted">{item.type==='career'?(item.positionTitle||item.specialty||item.email):(item.company||item.email)}</p></div><span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span></div><p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted">{item.message||'No message content.'}</p><div className="mt-2 flex flex-wrap items-center justify-between gap-2"><span className="font-mono text-[10px] text-muted/75">/{getSubmissionSlug(item)}</span><div className="flex items-center gap-1.5"><button type="button" onClick={(e)=>handleToggleStar(e,item.id,item.starred)} disabled={!canManageCrm} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-warning/30 bg-warning/10 px-2.5 text-[10px] font-medium text-warning hover:bg-warning/15"><Star size={11} className="fill-warning"/>Remove</button><button type="button" onClick={()=>{handleSelectSubmission(item);setViewMode('split');}} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg">Review<ChevronRight size={11}/></button></div></div></div></div></div>) }{group.items.length===0&&<div className="p-12 text-center"><Star size={20} className="mx-auto mb-2 text-line"/><p className="text-xs text-muted">No starred records in this queue.</p></div>}</div></div>)}
           </div>
-          <div className="rounded-card border border-line bg-panel p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold text-fg">Next follow-up</p><p className="mt-0.5 text-[11px] text-muted">Open the most urgent saved record without scanning the whole queue.</p></div>{(()=>{const next=[...filteredItems].sort((a,b)=>{const rank=(item:ContactSubmission)=>item.priority==='urgent'?0:item.priority==='high'?1:item.status==='new'?2:3;return rank(a)-rank(b);})[0];return next?<button type="button" onClick={()=>{handleSelectSubmission(next);setViewMode('split');}} className="inline-flex min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><ChevronRight size={14}/>Review {next.fullName}</button>:<span className="text-[11px] text-muted">Queue is clear.</span>;})()}</div></div>
+
         </section>
       ) : viewMode === 'table' ? (
         /* DENSE SPREADSHEET TABLE VIEW */
