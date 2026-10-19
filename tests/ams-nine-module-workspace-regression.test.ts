@@ -430,3 +430,34 @@ test('Projects Overview summary follows canonical responsive breakpoints', async
   assert.equal(overview.includes('sm:grid-cols-2 xl:grid-cols-4'), false,
     'Project overview KPI geometry must not depend on generic 640px and 1280px breakpoints.');
 });
+
+
+test('Shared metric strips use canonical breakpoints and match their metric count', async () => {
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
+  const vendors = await read('src/pages/admin/AdminVendors.tsx');
+
+  assert.ok(primitives.includes("if (metricCount <= 1) return 'grid-cols-1';"));
+  assert.ok(primitives.includes("if (metricCount === 2) return 'grid-cols-1 min-[600px]:grid-cols-2';"));
+  assert.ok(primitives.includes("if (metricCount === 3) return 'grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3';"));
+  assert.ok(primitives.includes("return 'grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4';"));
+  assert.ok(primitives.includes("getAdminMetricStripGridClassName(metrics.length)"));
+  assert.doesNotMatch(primitives, /sm:grid-cols-2 lg:grid-cols-4/);
+
+  const clientMetricStart = clients.indexOf('<AdminMetricStrip slug="clients-kpis"');
+  const clientMetricEnd = clients.indexOf('metrics={[', clientMetricStart);
+  assert.ok(clientMetricStart >= 0 && clientMetricEnd > clientMetricStart);
+  assert.equal(clients.slice(clientMetricStart, clientMetricEnd).includes('className="lg:grid-cols-3"'), false);
+
+  const retainerMetricStart = retainers.indexOf('<AdminMetricStrip');
+  const retainerMetricEnd = retainers.indexOf('metrics={[', retainerMetricStart);
+  assert.ok(retainerMetricStart >= 0 && retainerMetricEnd > retainerMetricStart);
+  assert.equal(retainers.slice(retainerMetricStart, retainerMetricEnd).includes('md:grid-cols-3 lg:grid-cols-3'), false);
+  assert.ok(retainers.includes('className="grid grid-cols-1 gap-3 text-[11px] text-muted min-[600px]:grid-cols-2 min-[1100px]:grid-cols-4"'));
+
+  const vendorMetricStart = vendors.indexOf('<AdminMetricStrip slug="vendor-kpis"');
+  const vendorMetricEnd = vendors.indexOf('metrics={[', vendorMetricStart);
+  assert.ok(vendorMetricStart >= 0 && vendorMetricEnd > vendorMetricStart);
+  assert.equal(vendors.slice(vendorMetricStart, vendorMetricEnd).includes('className="lg:grid-cols-4"'), false);
+});

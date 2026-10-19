@@ -487,8 +487,15 @@ export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = (
   </article>
 );
 
+const getAdminMetricStripGridClassName = (metricCount: number): string => {
+  if (metricCount <= 1) return 'grid-cols-1';
+  if (metricCount === 2) return 'grid-cols-1 min-[600px]:grid-cols-2';
+  if (metricCount === 3) return 'grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3';
+  return 'grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4';
+};
+
 export const AdminMetricStrip: React.FC<AdminMetricStripProps> = ({ metrics, className, itemClassName, slug }) => (
-  <div data-ams-feature-slug={slug} data-ams-slug={slug} className={cn('grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4', className)}>
+  <div data-ams-feature-slug={slug} data-ams-slug={slug} className={cn('grid gap-3', getAdminMetricStripGridClassName(metrics.length), className)}>
     {metrics.map((metric) => <AdminMetricCard key={metric.id || String(metric.label)} {...metric} className={itemClassName} />)}
   </div>
 );
