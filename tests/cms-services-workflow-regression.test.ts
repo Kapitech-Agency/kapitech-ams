@@ -26,6 +26,10 @@ test('Service publish status is explicit and visible in the CMS directory', () =
   assert.ok(page.includes('await api.cms.updateService(service.id, { isPublished: nextPublished })'));
   assert.ok(page.includes("item.isPublished === true ? 'Published' : 'Draft'"));
   assert.ok(page.includes('onClick={() => void handleTogglePublished(item)}'));
+  assert.ok(page.includes('CMS status saved as Published. Verify the public Services page to confirm visibility.'));
+  assert.ok(page.includes('CMS status saved as Draft. Verify the public Services page to confirm the service is no longer visible.'));
+  assert.doesNotMatch(page, /Service published successfully\.|Service unpublished and hidden from the public website\.|Service saved and published\./,
+    'The UI confirms the CMS flag was saved, not that the public site was independently verified.');
   assert.ok(routes.includes('isPublished: item.isPublished === true'));
   assert.match(routes, /source\.filter\(\(item: any\) =>\s*item\.isPublished === true/);
 });

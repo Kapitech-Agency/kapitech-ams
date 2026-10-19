@@ -282,8 +282,8 @@ export const AdminCmsServices: React.FC = () => {
       setSelectedServiceForDetail((current) => current && (current.id === saved.id || current.slug === saved.slug) ? saved : current);
       resetServiceEditor();
       setStatusMessage(newIsPublished
-        ? (language === 'id' ? 'Layanan disimpan dan dipublikasikan.' : 'Service saved and published.')
-        : (language === 'id' ? 'Layanan disimpan sebagai draft.' : 'Service saved as draft.'));
+        ? (language === 'id' ? 'Status CMS tersimpan sebagai Published. Periksa halaman Services publik untuk memastikan visibilitas.' : 'CMS status saved as Published. Verify the public Services page to confirm visibility.')
+        : (language === 'id' ? 'Status CMS tersimpan sebagai Draft. Periksa halaman Services publik untuk memastikan perubahan visibilitas.' : 'Service status saved as Draft in CMS. Verify the public Services page to confirm visibility changes.'));
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : (language === 'id' ? 'Layanan gagal disimpan.' : 'Service could not be saved.'));
     } finally {
@@ -307,8 +307,8 @@ export const AdminCmsServices: React.FC = () => {
       setServicesList((current) => current.map((item) => item.id === service.id ? saved : item));
       setSelectedServiceForDetail((current) => current?.id === service.id ? saved : current);
       setStatusMessage(nextPublished
-        ? (language === 'id' ? 'Layanan berhasil dipublikasikan.' : 'Service published successfully.')
-        : (language === 'id' ? 'Layanan disimpan sebagai draft dan disembunyikan dari website.' : 'Service unpublished and hidden from the public website.'));
+        ? (language === 'id' ? 'Status CMS tersimpan sebagai Published. Periksa halaman Services publik untuk memastikan visibilitas.' : 'CMS status saved as Published. Verify the public Services page to confirm visibility.')
+        : (language === 'id' ? 'Status CMS tersimpan sebagai Draft. Periksa halaman Services publik untuk memastikan layanan tidak lagi terlihat.' : 'CMS status saved as Draft. Verify the public Services page to confirm the service is no longer visible.'));
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Publication status could not be updated.');
     } finally {

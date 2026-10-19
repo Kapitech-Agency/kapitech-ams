@@ -1001,3 +1001,25 @@ Implementation: remove silent fallback from an explicit resourcesProject URL. Ve
 ### Document Library global-period regression correction — 19 October 2026
 
 The first Quality Gate for `8e6f6dda44c70049f45237aad229b3a620fdf842` failed because `tests/global-reporting-period.test.ts` still required Document Library to use `matchesDate(updatedAt/uploadedAt/createdAt)`, contradicting the content-first specification and the revised visible-filter ownership. The test now preserves the global reporting-period shell and asserts that Documents does not inherit the period invisibly. Re-run the complete Quality Gate and AMS CI on the corrective SHA before marking Document Library source/test verified.
+
+
+## Stage 4 view design record — Website CMS · Services · publication feedback
+
+**View ID:** VIEW-CMS-SERVICES, service register/editor.
+**Status:** Publication feedback now distinguishes saved CMS state from independently verified public output. Verify the resulting commit on both workflows before calling source/test verified.
+
+1. **Owner/persona.** Website CMS → Services. Authorized content editor maintains Creative & IT service records and their publication flag.
+2. **Primary task.** Save a service draft or set its CMS publication flag, then confirm whether the public Services page actually reflects the saved state.
+3. **Decision.** Did the CMS mutation succeed, and has public rendering been independently verified?
+4. **Primary surface.** Existing service register/editor and publication-state controls.
+5. **Content order.** Existing search/category/register and selected service editor remain unchanged. Status feedback follows the successful API response and explains the next verification step.
+6. **Fields and semantics.** `isPublished` represents the saved CMS record flag. It does not constitute a runtime/browser probe of public page content or cache state.
+7. **Controls.** Existing save and publish/unpublish calls remain. No second publish action, public-health endpoint or automatic request is added.
+8. **Canonical ownership/breadcrumb.** Service CMS record remains canonical and feeds public service responses filtered by publication flag. No duplicate data.
+9. **Role-aware display.** Existing route permissions and API mutation authority remain unchanged.
+10. **States/recovery.** API failure continues to show an error. API success now says the CMS status was saved and asks the editor to verify public visibility; it does not state that the live page was independently confirmed.
+11. **Responsive behavior.** Only status copy changed; existing responsive register/editor layout is retained. Viewport verification is Stage 5.
+12. **Accessibility.** Existing status message remains visible/announced by the current component; copy now accurately names the confirmed state and next action. Keyboard/browser verification remains Stage 5.
+13. **Regression tests.** Assert saved-CMS-state wording for publish/unpublish and reject prior messages claiming live-site visibility.
+14. **Dependencies.** Independent public rendering/cache verification is currently manual/supported-runtime evidence. No backend, API, integration, or publication workflow changes are in this slice.
+15. **Acceptance.** A successful CMS mutation is reported as saved publication state; public visibility remains explicitly unverified until the public Services response/page is checked. The view stays partially complete until Stage 5/browser review.

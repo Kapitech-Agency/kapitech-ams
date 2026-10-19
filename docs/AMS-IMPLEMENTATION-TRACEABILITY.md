@@ -775,3 +775,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 
 
 **Document period-filter regression correction:** Quality Gate [39224785364](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39224785364) and AMS CI [39224785447](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39224785447) failed because an existing global-period test still expected the old `matchesDate(doc.updatedAt...)` call. The test now verifies the reporting-period shell remains available while Documents is excluded from invisible date scoping. Keep the UX fix and validate both workflows on the corrective commit.
+
+
+### CMS-SERVICES-PUBLISH-STATE-001: Do not equate saved publication flag with live-site verification
+
+**Source:** `src/pages/admin/AdminCmsServices.tsx`. Save and toggle actions already check the CMS API response and update the canonical record's `isPublished` field. User-facing success messages now confirm that the CMS status was saved and direct the editor to verify the public Services page; they no longer claim that the service was independently confirmed visible or hidden on the public website. Mutation APIs, stored fields and public response filtering remain unchanged.
+
+**Tests:** `tests/cms-services-workflow-regression.test.ts` asserts accurate CMS-state feedback and rejects old messages asserting public visibility. Actual public rendering and responsive/browser behavior remain Stage 5 verification.
