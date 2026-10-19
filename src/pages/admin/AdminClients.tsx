@@ -902,7 +902,45 @@ export const AdminClients: React.FC = () => {
         actions={(
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             {statusScope !== 'lead' && (
-              <div className="w-full shrink-0 sm:w-56">
+              <div className="w-full shrink-0 sm:w-40">
+                <CustomSelect
+                  aria-label={language === 'id' ? 'Filter status klien' : 'Filter client status'}
+                  value={statusFilter}
+                  onChange={(value) => setStatusFilter(value as 'all' | AgencyClient['status'])}
+                  options={[
+                    { value: 'all', label: language === 'id' ? 'Semua status' : 'All statuses' },
+                    ...STATUS_OPTIONS,
+                  ]}
+                  slug="clients-status-filter"
+                />
+              </div>
+            )}
+            <div className="w-full shrink-0 sm:w-44">
+              <CustomSelect
+                aria-label={language === 'id' ? 'Filter industri' : 'Filter industry'}
+                value={industryFilter}
+                onChange={setIndustryFilter}
+                options={[
+                  { value: 'all', label: language === 'id' ? 'Semua industri' : 'All industries' },
+                  ...industryOptions.map((industry) => ({ value: industry, label: industry })),
+                ]}
+                slug="clients-industry-filter"
+              />
+            </div>
+            <div className="w-full shrink-0 sm:w-44">
+              <CustomSelect
+                aria-label={language === 'id' ? 'Filter lokasi' : 'Filter location'}
+                value={locationFilter}
+                onChange={setLocationFilter}
+                options={[
+                  { value: 'all', label: language === 'id' ? 'Semua lokasi' : 'All locations' },
+                  ...locationOptions.map((location) => ({ value: location, label: location })),
+                ]}
+                slug="clients-location-filter"
+              />
+            </div>
+            {statusScope !== 'lead' && (
+              <div className="w-full shrink-0 sm:w-48">
                 <CustomSelect
                   aria-label={language === 'id' ? 'Filter kesehatan batas belanja' : 'Filter spend cap health'}
                   value={slaFilter}
@@ -915,6 +953,7 @@ export const AdminClients: React.FC = () => {
                     { value: 'not-configured', label: language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured' },
                     { value: 'spend-not-recorded', label: language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded' }
                   ]}
+                  slug="clients-spend-cap-filter"
                 />
               </div>
             )}

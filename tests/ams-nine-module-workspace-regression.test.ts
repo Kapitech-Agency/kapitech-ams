@@ -39,6 +39,15 @@ test('Client directory filters and register precede supporting metrics', async (
   const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
   const directoryEnd = clients.indexOf('</section>', directory);
   assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd);
+  const filterBar = clients.slice(filters, directory);
+  assert.match(filterBar, /slug="clients-status-filter"/);
+  assert.match(filterBar, /value=\{statusFilter\}/);
+  assert.match(filterBar, /slug="clients-industry-filter"/);
+  assert.match(filterBar, /value=\{industryFilter\}/);
+  assert.match(filterBar, /slug="clients-location-filter"/);
+  assert.match(filterBar, /value=\{locationFilter\}/);
+  assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,450}slug="clients-status-filter"/);
+  assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,1200}slug="clients-spend-cap-filter"/);
 });
 
 test('Dashboard prioritizes operational KPIs and the primary workspace before supporting metrics', async () => {
@@ -548,4 +557,26 @@ test('Client Onboarding keeps account scope controls separate from spend-cap fil
   assert.match(filterBar, /id: 'lead', label: 'Onboarding accounts'/);
   assert.match(clients, /setStatusFilter\('all'\);\s*setSlaFilter\('all'\);\s*setPage\(1\);/);
   assert.match(clients, /if \(requestedScope !== statusScope\) \{[\s\S]{0,160}setSlaFilter\('all'\)/);
+});
+
+
+test('Client Directory exposes canonical status, industry and location filters', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
+  const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"', filters);
+  const filterBar = clients.slice(filters, directory);
+  assert.ok(filters >= 0 && directory > filters);
+  for (const [slug, value] of [
+    ['clients-status-filter', 'statusFilter'],
+    ['clients-industry-filter', 'industryFilter'],
+    ['clients-location-filter', 'locationFilter'],
+  ]) {
+    assert.ok(filterBar.includes('slug="' + slug + '"'), 'Missing directory filter ' + slug);
+    assert.ok(filterBar.includes('value={' + value + '}'), 'Filter does not use existing state ' + value);
+  }
+  assert.match(filterBar, /industryOptions\.map\(\(industry\) => \(\{ value: industry, label: industry \}\)\)/);
+  assert.match(filterBar, /locationOptions\.map\(\(location\) => \(\{ value: location, label: location \}\)\)/);
+  assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,450}slug="clients-status-filter"/);
+  assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,1200}slug="clients-spend-cap-filter"/);
+  assert.match(clients, /\[searchQuery, statusFilter, industryFilter, locationFilter, slaFilter, statusScope, sortKey, sortDirection\]/);
 });
