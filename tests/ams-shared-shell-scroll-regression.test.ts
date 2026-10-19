@@ -64,7 +64,7 @@ test('mobile shell topbar reserves the safe-area inset across every drawer viewp
     '.ams-shell .ams-mobile-topbar{height:calc(52px + env(safe-area-inset-top));min-height:calc(52px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);padding-left:14px;padding-right:14px}',
   ), 'all drawer-width layouts must reserve the top safe area without shrinking the 52px content row');
   assert.equal(
-    (css.match(/\\.ams-shell \\.ams-mobile-topbar\\{height:calc\\(52px \\+ env\\(safe-area-inset-top\\)\\)/g) || []).length,
+      (css.match(/\.ams-shell \.ams-mobile-topbar\{height:calc\(52px \+ env\(safe-area-inset-top\)\)/g) || []).length,
     1,
     'the safe-area height contract must have one responsive owner',
   );
