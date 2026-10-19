@@ -685,3 +685,8 @@ On `b93f08e595831489bd85b15d9107303b9fa06730`, both AMS workflows failed on four
 15. **Acceptance.** Annual Summary fulfills comparable-period analysis without combining source operating figures with the posted ledger or presenting proxy metrics as final accounting outcomes. The worksheet stays partially complete pending independent review of remaining accounting worksheets and Stage 5 visual/runtime checks.
 
 **Next Stage 4 slice:** Review Journal + Chart of Accounts as a related source-to-posting path, then Monthly Closing and Balance Sheet controls. Keep all finance formulas, posting and permission logic unchanged.
+
+
+### Annual Summary regression assertion correction — 19 October 2026
+
+On restoration checkpoint `2a21a1707fc2d915b13e2ffa93637e6aac7ff863`, Typecheck passed and the new Annual Summary comparison regression passed. One pre-existing test still required the Cash & Bank year filter to compare directly with `selectedYear`; the implementation now correctly factors that same filter into `buildAnnualSnapshot(year)` and calls it for both selected and previous years. The fix updates the assertion to verify the shared year parameter and both invocations. Production build was skipped because the regression job stopped at this test; re-run both workflows on the correction SHA before claiming success.
