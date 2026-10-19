@@ -1239,3 +1239,17 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Exact-SHA validation: AMS Quality Gate [39246295800 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246295800); AMS CI [39246295872 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246295872). Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed.
 - Remaining acceptance: Inbox stays partially complete until Stage 5 validates roles, keyboard, selected-record behavior, responsive widths and browser history in an authorized browser session. No screenshot or authenticated runtime check was performed here.
 - Next action: Stage 4 continues to Projects → Overview/Registry, using current-source evidence and the main-content specification; preserve unsupported Project Controls/Campaigns as unavailable until canonical models exist.
+
+
+## Stage 4 source/test checkpoint · Tasks local calendar defaults · 19 October 2026
+
+- Application commit: [`af65907022d9973b3859145e0971bf22a6caf343`](https://github.com/Kapitech-Agency/kapitech-ams/commit/af65907022d9973b3859145e0971bf22a6caf343).
+- Changed files: `src/components/admin/TasksWorkspace.tsx`; `tests/task-workspace-data-parity-regression.test.ts`.
+- Confirmed defect: both initial task form state and the New Task action used `new Date().toISOString().slice(0, 10)`. Since an HTML date input expects a local calendar date, UTC string truncation can produce the previous/next-looking date for users around local midnight outside UTC.
+- Correction: `formatLocalDateInputValue` now composes `YYYY-MM-DD` from local `getFullYear()`, `getMonth()` and `getDate()`; both existing default call sites use the same helper. Existing due dates, due/overdue calculations, API fields, permissions, and task status behavior were not changed.
+- Regression coverage: test `Tasks & Execution task-date defaults use the local calendar rather than UTC date slicing` asserts local date-component formatting, both creation defaults, and absence of the UTC ISO-slice default.
+- Exact-SHA validation: AMS CI [39246972955 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246972955); AMS Quality Gate [39246972981 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246972981). Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed.
+- Scope review: task form frontend default and regression coverage only. No server/API/data model/persistence/auth/permissions/workflow behavior changed.
+- Remaining acceptance: Tasks & Execution is still partially complete pending authorized browser review of board/list filters, task detail, keyboard actions, responsive viewports and actual local date input behavior. No authenticated screenshot or viewport session was performed here.
+- Next action: continue Stage 4 in Projects → Planning & Delivery, keeping unavailable canonical scope/QA/review/revision features disabled.
+
