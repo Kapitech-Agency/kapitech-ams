@@ -833,3 +833,26 @@ test('Monthly Closing separates checklist completion from authoritative source v
   assert.match(closing, /This workspace does not guess a separate readiness score/);
   assert.match(closing, /disabled=\{locked\|\|completed!==WORKBOOK_CLOSING_ITEMS\.length\|\|registerSaving\}/);
 });
+
+
+test('Journal prioritizes the source posting queue and links account mapping to Chart of Accounts', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("case 'journal': {");
+  const end = workspace.indexOf("case 'annual-summary': {", start);
+  assert.ok(start >= 0 && end > start, 'Journal worksheet should be present.');
+  const journal = workspace.slice(start, end);
+  const queueStart = journal.indexOf('title="Source transaction posting queue"');
+  const registerStart = journal.indexOf('title="General Journal"');
+  const mappingStart = journal.indexOf('title="Journal account mapping"');
+  assert.ok(queueStart >= 0 && registerStart > queueStart && mappingStart > registerStart,
+    'Source review queue should lead, followed by canonical journal register and reference mapping.');
+  const queue = journal.slice(queueStart, registerStart);
+  const register = journal.slice(registerStart, mappingStart);
+  assert.match(queue, /Generate source drafts/);
+  assert.match(queue, /syncSourceJournalDrafts/);
+  assert.match(register, /registerAddButton\('journal-entry','Add journal entry'\)/);
+  assert.doesNotMatch(register, /Generate source drafts/,
+    'Source draft generation should be attached to the queue it populates.');
+  assert.match(mappingStart >= 0 ? journal.slice(mappingStart) : '', /Review Chart of Accounts/);
+  assert.match(journal, /navigate\('\/admin\/finance\?tab=chart-of-accounts'\)/);
+});

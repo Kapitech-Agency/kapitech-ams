@@ -688,3 +688,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx` Monthly Closing. The checklist remains a canonical `monthly-closing` register; the final close gate is enforced by the existing server and PostgreSQL finance workbook repository. The UI now describes the exact high-level server checks and provides direct Journal and Cash & Bank review routes. It does not calculate or persist a parallel readiness status.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts the workspace layer order, server-gate descriptions, canonical tabs and unchanged close-disabled condition. No backend/API/database/permission/payment/period-close behavior changed. Exact-SHA CI and Quality Gate and Stage 5 browser/responsive checks remain required.
+
+
+### FIN-JOURNAL-QUEUE-001: Put source transaction posting queue before journal register
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`, Journal. The source posting queue now leads the worksheet and owns Generate source drafts. The persisted General Journal register follows with Add journal entry; mapping reference follows and offers a route to canonical Chart of Accounts. The queue stays a source projection, not a second journal store. No posting, permission or business logic changed.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts order, correct placement of both existing actions and the Chart of Accounts link. Exact-SHA CI/QG plus Stage 5 responsive, keyboard and route/history checks remain required.

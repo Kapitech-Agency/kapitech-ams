@@ -714,3 +714,27 @@ On restoration checkpoint `2a21a1707fc2d915b13e2ffa93637e6aac7ff863`, Typecheck 
 15. **Acceptance.** Users can distinguish checklist progress from validated close preconditions and reach source evidence before requesting period closure. Overall Accounting remains partially complete until the other worksheets and Stage 5 browser/accessibility checks pass.
 
 **Next Stage 4 slice:** Journal + Chart of Accounts relationship. Review the Journal posting queue and account mapping context to ensure the canonical account reference is discoverable without implying that custom accounts automatically change posted ledger calculations.
+
+
+## Stage 4 view design record — Finance · Accounting & Reports · Journal
+
+**View ID:** VIEW-FIN-ACCOUNTING, Journal worksheet.
+**Implementation status:** queue-first content order and canonical account-reference handoff committed to `main`; exact-SHA CI and Quality Gate are required before source/test verification.
+
+1. **Owner/persona.** Finance → Accounting & Reports → Journal. Finance operators review source-to-journal state, generate drafts, and authorize manual journal records under existing permissions.
+2. **Primary task.** Identify source transactions ready for accounting review, draft/posted state or skipped source mapping, then open the canonical General Journal entry if needed.
+3. **Decision.** Which source rows have eligible posting drafts, are already posted, remain in draft, or were skipped for a reason requiring review?
+4. **Primary surface.** Source transaction posting queue. It is the workflow triage surface and contains the draft-generation action; the persisted General Journal register follows as the canonical record/history surface.
+5. **Content order.** Draft-only source sync notice and any sync result; source transaction posting queue and Generate source drafts action; General Journal register with Add journal entry; Journal account mapping reference with Chart of Accounts handoff.
+6. **Fields and semantics.** Source date/reference/type/description/amount and current matching journal state or skip reason derive from invoice, expense, cash-bank, vendor bill/payment and opening-balance canonical records. Source queue rows are explicitly not journal entries. General Journal rows retain persisted entry status and actions; posted entries are immutable.
+7. **Controls.** Generate source drafts remains gated by existing `canManageFinanceRecords`, uses the existing `syncSourceJournalDrafts()` action and disabled/loading states. Add journal entry remains on the General Journal register. Mapping reference navigates to `/admin/finance?tab=chart-of-accounts`.
+8. **Canonical ownership/breadcrumb.** Journal entries own posted/draft accounting records; source data remains in invoice/expense/cash/vendor registers. Chart of Accounts remains canonical account catalogue. No duplicate journal data or breadcrumb is introduced.
+9. **Role-aware display.** Existing Finance permission and maker-checker rules remain unchanged. Review links are navigation only.
+10. **States/recovery.** Existing source sync result note, queue skipped reason, table empty state, register records and global Finance source availability notice remain. No source item is reported as posted until the canonical journal status says posted.
+11. **Responsive behavior.** Existing FinanceDataTable controls remain; queue and journal register can horizontally contain dense columns. Validate 1100, 900, 600, 390 and 320px in Stage 5.
+12. **Accessibility.** Table titles/descriptions identify queue versus record register; button label is visible, keyboard-operable and accompanied by loading/disabled state. Focus, screen-reader and zoom behavior require browser validation.
+13. **Regression tests.** Assert queue → register → mapping order, Generate source drafts in the queue, Add journal entry on register, and the Chart of Accounts navigation destination.
+14. **Dependencies.** Account mappings, draft validation, maker-checker approval/posting, API, persistence and accounting rules remain source-owned and unchanged.
+15. **Acceptance.** The task-oriented source posting queue is the first primary surface, with source actions beside it; persisted journal records and reference mapping follow without being mistaken for pending source work. Overall Accounting remains partially complete pending Chart of Accounts and report/control review plus Stage 5 browser checks.
+
+**Next Stage 4 slice:** Chart of Accounts. Verify default-vs-custom account presentation, canonical account search, and that custom account edits do not imply automatic posting/report mapping changes.
