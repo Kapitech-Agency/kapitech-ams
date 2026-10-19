@@ -788,7 +788,8 @@ test('Client 360 exposes only canonically linked records behind existing permiss
   assert.match(clients, /String\(lead\.convertedClientId \|\| ''\)\.trim\(\) === clientId/);
   assert.match(clients, /if \(canViewClientProjects\)/);
   assert.match(clients, /if \(canViewClientFinance\)/);
-  assert.match(clients, /if \(canManageClientInteractions\)/);
+  assert.match(clients, /const canViewClientInbox = hasAdminPermission\('canManageCrm'\)/);
+  assert.match(clients, /if \(canViewClientInbox\)/);
   assert.match(clients, /state\.status === 'restricted'/);
   assert.match(clients, /state\.status === 'error'/);
   assert.match(clients, /No invoice is explicitly linked to this client\./);

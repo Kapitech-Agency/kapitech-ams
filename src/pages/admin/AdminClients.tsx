@@ -290,6 +290,7 @@ export const AdminClients: React.FC = () => {
   const canManageClientInteractions = canManageClients || hasAdminPermission('canManageCrm');
   const canViewClientProjects = hasAdminPermission('canManageProjects');
   const canViewClientFinance = hasAdminPermission('canViewFinancials');
+  const canViewClientInbox = hasAdminPermission('canManageCrm');
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
@@ -564,7 +565,7 @@ export const AdminClients: React.FC = () => {
     begin(canViewClientProjects, setClientRelatedProjects);
     begin(canViewClientFinance, setClientRelatedInvoices);
     begin(true, setClientRelatedDocuments);
-    begin(canManageClientInteractions, setClientRelatedInbox);
+    begin(canViewClientInbox, setClientRelatedInbox);
 
     if (canViewClientProjects) {
       void api.projects.getAll().then((response) => {
@@ -616,7 +617,7 @@ export const AdminClients: React.FC = () => {
       if (active) setClientRelatedDocuments({ status: 'error', records: [] });
     });
 
-    if (canManageClientInteractions) {
+    if (canViewClientInbox) {
       void api.leads.getAll().then((response) => {
         if (!active) return;
         if (!response.success || !Array.isArray(response.data?.leads)) {
@@ -633,7 +634,7 @@ export const AdminClients: React.FC = () => {
     }
 
     return () => { active = false; };
-  }, [selectedClient?.id, canViewClientProjects, canViewClientFinance, canManageClientInteractions, clientRelatedReloadKey]);
+  }, [selectedClient?.id, canViewClientProjects, canViewClientFinance, canViewClientInbox, clientRelatedReloadKey]);
 
 
 
@@ -1456,7 +1457,7 @@ export const AdminClients: React.FC = () => {
                     <div><h4 className="text-xs font-semibold text-fg">Projects &amp; delivery</h4><p className="mt-1 text-[10px] text-muted">Projects linked by client ID.</p></div>
                     <Link to="/admin/projects" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Register</Link>
                   </div>
-                  {renderClientLinkedRecords(clientRelatedProjects, 'No projects are explicitly linked to this client.', (records) => (
+                  {renderClientLinkedRecords<ClientProjectReference>(clientRelatedProjects, 'No projects are explicitly linked to this client.', (records) => (
                     <div className="divide-y divide-line">
                       {records.slice(0, 5).map((project) => (
                         <article key={project.id} className="flex min-w-0 items-start justify-between gap-2 px-3 py-3">
@@ -1477,7 +1478,7 @@ export const AdminClients: React.FC = () => {
                     <div><h4 className="text-xs font-semibold text-fg">Inbox history</h4><p className="mt-1 text-[10px] text-muted">Inbox inquiries explicitly converted to this client.</p></div>
                     <Link to="/admin/inbox?view=client" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Inbox</Link>
                   </div>
-                  {renderClientLinkedRecords(clientRelatedInbox, 'No Inbox inquiry is explicitly linked to this client.', (records) => (
+                  {renderClientLinkedRecords<ClientInboxReference>(clientRelatedInbox, 'No Inbox inquiry is explicitly linked to this client.', (records) => (
                     <div className="divide-y divide-line">
                       {records.slice(0, 5).map((lead) => (
                         <article key={lead.id} className="flex min-w-0 items-start justify-between gap-2 px-3 py-3">
@@ -1498,7 +1499,7 @@ export const AdminClients: React.FC = () => {
                     <div><h4 className="text-xs font-semibold text-fg">Finance references</h4><p className="mt-1 text-[10px] text-muted">Invoice records linked by client ID.</p></div>
                     <Link to="/admin/finance?tab=accounts-receivable" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Finance</Link>
                   </div>
-                  {renderClientLinkedRecords(clientRelatedInvoices, 'No invoice is explicitly linked to this client.', (records) => (
+                  {renderClientLinkedRecords<ClientInvoiceReference>(clientRelatedInvoices, 'No invoice is explicitly linked to this client.', (records) => (
                     <div className="divide-y divide-line">
                       {records.slice(0, 5).map((invoice) => (
                         <article key={invoice.id} className="flex min-w-0 items-start justify-between gap-2 px-3 py-3">
@@ -1518,7 +1519,7 @@ export const AdminClients: React.FC = () => {
                     <div><h4 className="text-xs font-semibold text-fg">Documents</h4><p className="mt-1 text-[10px] text-muted">Files linked by client ID.</p></div>
                     <Link to="/admin/documents?documents=project-client" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Documents</Link>
                   </div>
-                  {renderClientLinkedRecords(clientRelatedDocuments, 'No document is explicitly linked to this client.', (records) => (
+                  {renderClientLinkedRecords<ClientDocumentReference>(clientRelatedDocuments, 'No document is explicitly linked to this client.', (records) => (
                     <div className="divide-y divide-line">
                       {records.slice(0, 5).map((document) => (
                         <article key={document.id} className="flex min-w-0 items-start justify-between gap-2 px-3 py-3">
