@@ -3,6 +3,7 @@
 **Product:** Kapitech Agency Management System (AMS)  
 **Primary stage:** Stage 4 — Main-content hierarchy across all nine modules  
 **Status:** Mandatory target specification; implementation must be proven with source, test and runtime evidence  
+**Last updated:** 19 October 2026  
 **Authority:** Master Structure and Navigation IA define product ownership and approved navigation; this document defines the target main-content composition and relative region order for each workspace; the Role-Based Content Blueprint and Worksheet Role Presentation Matrix refine role-aware content; AMS-DESIGN-SYSTEM.md defines visual tokens/geometry; the End-to-End Delivery Roadmap defines stage order. The Feature & Content Gap Register records verified implementation status, not a competing target.
 
 > **This is a structural overhaul, not a cosmetic revision.** Re-derive each page from Kapitech's real agency tasks, canonical records, user decisions and role needs. Rebuild the content hierarchy and main working area if the current structure is wrong. Do not preserve an unsuitable layout simply because it already exists. Preserve correct data sources, routes, supported business behavior, permissions, accounting logic and security boundaries.
