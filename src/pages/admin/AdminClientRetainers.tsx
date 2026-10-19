@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
+import { getDefaultRetainerRenewalDate } from '../../lib/retainerDateDefaults';
 import {
   ArrowUp,
   ArrowUpDown,
@@ -125,7 +126,7 @@ export const AdminClientRetainers: React.FC = () => {
   const [retainerCommittedHours, setRetainerCommittedHours] = useState('160');
   const [retainerOverageRate, setRetainerOverageRate] = useState('650000');
   const [retainerCycle, setRetainerCycle] = useState<Cycle>('monthly');
-  const [retainerRenewal, setRetainerRenewal] = useState(() => new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 10));
+  const [retainerRenewal, setRetainerRenewal] = useState(() => getDefaultRetainerRenewalDate());
   const [message, setMessage] = useState<string | null>(null);
   const [pageSize, setPageSize] = useState(10);
 
@@ -204,7 +205,7 @@ export const AdminClientRetainers: React.FC = () => {
     setRetainerCommittedHours(String(record?.committedHours ?? 160));
     setRetainerOverageRate(String(record?.overageRate ?? 650000));
     setRetainerCycle(record?.cycle || 'monthly');
-    setRetainerRenewal(record?.renewal || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 10));
+    setRetainerRenewal(record?.renewal || getDefaultRetainerRenewalDate());
     setMessage(null);
     setRetainerFormOpen(true);
   };
