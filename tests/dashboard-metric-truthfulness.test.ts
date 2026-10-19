@@ -29,3 +29,11 @@ test('missing project status, progress, and budget are not presented as healthy 
   assert.ok(dashboard.includes("project.progress == null ? '—' : project.progress + '%'"));
   assert.ok(dashboard.includes("projectDetails.progress == null ? 'Progress unavailable' : projectDetails.progress + '% complete'"));
 });
+
+test('invalid Dashboard money values remain unavailable instead of being displayed as zero', () => {
+  assert.match(
+    dashboard,
+    /const formatLiveMoney = \(value: number, currency: string\) => \{\s*if \(!Number\.isFinite\(value\)\) return '—';\s*return new Intl\.NumberFormat\('en-US', \{ style: 'currency', currency: currency \|\| 'IDR', maximumFractionDigits: 0 \}\)\.format\(value\);\s*\};/
+  );
+  assert.doesNotMatch(dashboard, /Number\.isFinite\(value\) \? value : 0/);
+});

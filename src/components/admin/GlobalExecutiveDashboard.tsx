@@ -57,7 +57,10 @@ const progressClasses = {
   info: 'bg-info',
 } as const;
 
-const formatLiveMoney = (value: number, currency: string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const formatLiveMoney = (value: number, currency: string) => {
+  if (!Number.isFinite(value)) return '—';
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(value);
+};
 
 
 type DashboardOperationalSnapshot = {
