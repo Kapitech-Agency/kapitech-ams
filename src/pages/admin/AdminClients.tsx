@@ -27,8 +27,6 @@ import {
   Search,
   ShieldAlert,
   Trash2,
-  TrendingUp,
-  ShieldCheck,
   Users,
   X
 } from 'lucide-react';
@@ -41,7 +39,7 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -517,29 +515,6 @@ export const AdminClients: React.FC = () => {
     () => clients.filter((client) => getClientSlaState(client) === 'over'),
     [clients]
   );
-
-  const clientMetrics = useMemo(() => {
-    const states = clients.map((client) => ({ client, state: getClientSlaState(client) }));
-    const configured = states.filter(({ state }) => state !== 'not-configured');
-    const recorded = configured.filter(({ state }) => state !== 'spend-not-recorded');
-    const healthy = recorded.filter(({ state }) => state === 'healthy').length;
-    const hasCompleteBilledData = clients.length > 0 && clients.every((client) =>
-      typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend)
-    );
-
-    return {
-      total: clients.length,
-      active: clients.filter((client) => client.status === 'active').length,
-      leads: clients.filter((client) => client.status === 'lead').length,
-      overBudget: states.filter(({ state }) => state === 'over').length,
-      atRisk: states.filter(({ state }) => state === 'near' || state === 'over').length,
-      configuredSla: configured.length,
-      recordedSla: recorded.length,
-      missingSlaSpend: configured.length - recorded.length,
-      slaCompliance: recorded.length ? Math.round((healthy / recorded.length) * 1000) / 10 : null,
-      totalBilled: hasCompleteBilledData ? clients.reduce((sum, client) => sum + client.totalSpend, 0) : null
-    };
-  }, [clients]);
 
   const resetFilters = () => {
     setSearchQuery('');
