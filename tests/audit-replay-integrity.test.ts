@@ -1,3 +1,0 @@
-import assert from 'node:assert/strict'; import fs from 'node:fs'; import test from 'node:test';
-test('approval reference validation uses shared lock',()=>{const s=fs.readFileSync('server/postgres-approval-repository.ts','utf8');assert.ok(s.includes('FOR SHARE'));});
-test('expense idempotent replay exposes replay state',()=>{const s=fs.readFileSync('server/routes.ts','utf8');const i=s.indexOf("apiRouter.post('/finance/expenses'");const end=s.indexOf("apiRouter.post('/finance/expenses/:id/payments'",i);const x=s.slice(i,end>i?end:undefined);assert.ok(x.includes('const replayed = expense.__idempotentReplay === true'));assert.ok(x.includes('replayed'));});

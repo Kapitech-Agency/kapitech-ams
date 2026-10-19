@@ -661,3 +661,27 @@ On `b93f08e595831489bd85b15d9107303b9fa06730`, both AMS workflows failed on four
 15. **Acceptance.** Petty Cash users can discover the official reconciliation workspace without misreading a local balance as reconciled. View remains partially complete until route, period and evidence states are browser-verified in Stage 5.
 
 **Next Stage 4 slice:** Finance → Accounting & Reports. Review Journal and Chart of Accounts first, then Monthly P&L, Cash Flow, Balance Sheet, Monthly Closing and Annual Summary against posted-only source rules.
+
+
+## Stage 4 view design record — Finance · Accounting & Reports · Annual Summary
+
+**View ID:** VIEW-FIN-ACCOUNTING, Annual Summary worksheet.
+**Implementation status:** comparison-first structural update committed on `main`; verify the resulting exact SHA through AMS CI and AMS Quality Gate before calling source/test verified.
+
+1. **Owner/persona.** Finance → Accounting & Reports → Annual Summary. Finance leads and authorized executives compare annual operational sources with posted ledger results.
+2. **Primary task.** Compare a selected calendar year to the previous calendar year while distinguishing source records from posted accounting activity.
+3. **Decision.** Which recorded operational and posted-ledger measures changed year over year, on what source basis, and what remains a proxy or incomplete?
+4. **Primary surface.** Two formal comparison tables, not an KPI dashboard. Operating activity and posted General Ledger are separated.
+5. **Content order.** Selected vs previous year heading and difference explanation; annual operating activity comparison; posted GL comparison under an accounting limitation note. Duplicated single-year tables/KPIs are not retained.
+6. **Fields and semantics.** IDR invoice value excluding tax, recorded collections, expenses, recorded outflow proxy and net cash movement proxy; posted GL revenue, expense, net result not final profit, and posted cash in/out/net. Every row shows selected-year amount, previous-year amount, numerical difference and measurement basis.
+7. **Controls.** Shared Finance topbar year selection controls the selected year. Previous year is derived as selected year minus one. Each table has a CSV action containing the comparison values and basis. No additional year selector or financial mutation is added.
+8. **Canonical ownership/breadcrumb.** Reads existing issued invoice, expense, Cash & Bank movement and posted-journal helpers. No duplicate ledger or breadcrumb at Finance worksheet level.
+9. **Role-aware display.** Existing Finance route/permission policy remains unchanged; no source records or privileged fields are exposed beyond current worksheet policy.
+10. **States/recovery.** Empty state differentiates no returned source activity from absent data through the existing Finance source-availability notice. Table descriptions state that partial source availability requires retry before interpreting differences. Posted GL rows use posted journals only; unresolved mappings remain excluded.
+11. **Responsive behavior.** Uses the existing FinanceDataTable with horizontal containment and row/card behavior. Stage 5 must verify 1100, 900, 600, 390 and 320px and no page-shell overflow.
+12. **Accessibility.** Semantic comparison column headings, explicit year names, exact numeric amounts, row-level measurement basis and non-color difference semantics. Keyboard, focus, screen-reader and text zoom need browser review.
+13. **Regression tests.** Assert same-source annual snapshots for current/previous years, selected-minus-prior arithmetic, operating/posted ledger separation, measurement basis, posted-only limitation, year labels and export actions.
+14. **Dependencies.** Source-derived revenue/cash/expense figures remain operational values, not reconciled profit or closing cash. Posting, tax, FX, account mapping and period-close logic remain untouched.
+15. **Acceptance.** Annual Summary fulfills comparable-period analysis without combining source operating figures with the posted ledger or presenting proxy metrics as final accounting outcomes. The worksheet stays partially complete pending independent review of remaining accounting worksheets and Stage 5 visual/runtime checks.
+
+**Next Stage 4 slice:** Review Journal + Chart of Accounts as a related source-to-posting path, then Monthly Closing and Balance Sheet controls. Keep all finance formulas, posting and permission logic unchanged.

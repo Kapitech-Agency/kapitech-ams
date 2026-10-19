@@ -112,21 +112,30 @@ test('Cash Flow and Annual Summary separate actual cash accounts and exclude int
   assert.match(workspace, /FINANCE_UI_COPY: Record<string, string> = \{[\s\S]*?Perlakukan hasilnya sebagai pergerakan bersih/);
 });
 
-test('Annual Summary separates source operating activity from posted-ledger results', async () => {
+test('Annual Summary compares selected and previous years while preserving operating versus posted-ledger sources', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const annualStart = workspace.indexOf("case 'annual-summary': {");
   const annualEnd = workspace.indexOf("\n      default:", annualStart);
   assert.ok(annualStart >= 0 && annualEnd > annualStart, 'Annual Summary worksheet should be present.');
   const annualView = workspace.slice(annualStart, annualEnd);
 
-  assert.doesNotMatch(annualView, /<AdminMetricStrip/, 'Annual figures should not be repeated in KPI strips and the same summary table.');
-  assert.match(annualView, /title="Annual operating activity"/);
-  assert.match(annualView, /title="Posted General Ledger"/);
-  assert.match(annualView, /const annualOperatingRows = annualRows\.filter\(\(item\) => !item\.id\.startsWith\('gl-'\)\)/);
-  assert.match(annualView, /const postedLedgerSummaryRows = annualRows\.filter\(\(item\) => item\.id\.startsWith\('gl-'\)\)/);
-  assert.match(annualView, /Export full summary/);
-  assert.match(annualView, /annualRows\.map\(\(item\) => \[item\.metric, item\.amount, item\.basis\]\)/);
-  assert.match(annualView, /posted journals only/i);
+  assert.doesNotMatch(annualView, /<AdminMetricStrip/, 'Annual figures should not be repeated in a KPI strip and comparison tables.');
+  assert.match(annualView, /const previousYear = String\(Number\(selectedYear\) - 1\)/);
+  assert.match(annualView, /buildAnnualSnapshot\(selectedYear\)/);
+  assert.match(annualView, /buildAnnualSnapshot\(previousYear\)/);
+  assert.match(annualView, /const previousRowsById = new Map\(previousSnapshot\.rows\.map/);
+  assert.match(annualView, /difference: item\.amount - previousAmount/);
+  assert.match(annualView, /title="Annual operating activity comparison"/);
+  assert.match(annualView, /title="Posted General Ledger comparison"/);
+  assert.match(annualView, /const annualOperatingRows = annualComparisonRows\.filter\(\(item\) => !item\.id\.startsWith\('gl-'\)\)/);
+  assert.match(annualView, /const postedLedgerSummaryRows = annualComparisonRows\.filter\(\(item\) => item\.id\.startsWith\('gl-'\)\)/);
+  assert.match(annualView, /Measurement basis/);
+  assert.match(annualView, /Only posted journal lines contribute/);
+  assert.match(annualView, /difference is selected year minus previous year/i);
+  assert.match(annualView, /If the Finance source notice above indicates incomplete availability/);
+  assert.match(annualView, /Export posted GL comparison/);
+  assert.match(annualView, /selected year \/ ' \+ previousSnapshot\.postedJournalCount \+ ' previous year/);
+  assert.match(annualView, /selectedSnapshot\.postedCashActivityCount \+ ' selected year \/ ' \+ previousSnapshot\.postedCashActivityCount/);
 });
 
 test('Cash Flow presents source and posted-ledger comparison tables without duplicated KPI strips', async () => {

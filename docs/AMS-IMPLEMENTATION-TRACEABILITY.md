@@ -671,3 +671,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 **Source:** src/pages/admin/AdminFinanceWorkspace.tsx, Petty Cash worksheet. Ledger remains primary; a clear handoff points to /admin/finance?tab=cash-bank, where Cash & Bank owns statement/cash-count reconciliation evidence for account 1100. No duplicate reconciliation record, formula, permission or payment behavior was added.
 
 **Tests:** tests/finance-ui-consistency.test.ts asserts handoff placement after the ledger, intended destination and absence of a second cash-reconciliation writer inside Petty Cash. Exact-SHA CI and Quality Gate plus Stage 5 browser/period verification remain required.
+
+
+### FIN-ANNUAL-COMPARISON-001: Annual Summary compares comparable calendar years
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. Selected year comes from the existing Finance reporting-period control; previous year derives from the selected calendar year. Source-operating rows and posted General Ledger rows remain separate, with selected amount, previous amount, difference and measurement basis per line. Source cash values remain labelled proxies; posted GL metrics remain posted-only and preliminary until reconciled.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` verifies selected/previous-year snapshots, current-minus-prior arithmetic, separate source/ledger sections, posting basis, partial-source wording and CSV comparison actions. Exact-SHA CI and Quality Gate plus Stage 5 year-selection/responsive/accessibility verification remain required.

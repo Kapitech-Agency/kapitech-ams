@@ -3191,57 +3191,93 @@ const FinanceWorkbookWorkspace: React.FC = () => {
       }
       case 'annual-summary': {
         const selectedYear = String(Number(reportPeriodValue.slice(0, 4)) || new Date().getFullYear());
-        const yearInvoices = idrInvoices.filter((invoice) => getYearKey(getInvoiceDate(invoice)) === selectedYear);
-        const yearExpenses = idrExpenses.filter((expense) => getYearKey(expense.date) === selectedYear);
-        const yearCollections = cashMovements.filter((movement) => movement.currency === 'IDR' && ['1000','1100','1200'].includes(movement.accountCode) && movement.source !== 'Internal transfer' && getYearKey(movement.date) === selectedYear);
-        const yearBilled = sumAmounts<AgencyInvoice>(yearInvoices, (invoice) => Math.max(0, (Number(invoice.total) || 0) - (Number(invoice.taxAmount) || 0)));
-        const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
-        const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
-        const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
-        const postedYearIncome = getPostedLedgerIncomeStatement(selectedYear + '-01-01', selectedYear + '-12-31');
-        const postedYearCashFlow = getPostedLedgerCashFlow(selectedYear + '-01-01', selectedYear + '-12-31');
-        const postedBasis = postedYearIncome.journalCount + ' posted journal entries; incomplete source mapping remains excluded until resolved.';
-        const annualRows = [
-          { id: 'a-revenue', metric: 'Annual Revenue / Invoice Value (IDR)', amount: yearBilled, basis: 'IDR invoice issue date' },
-          { id: 'a-collected', metric: 'Annual recorded cash in', amount: yearCollected, basis: 'Invoice payments and saved Cash & Bank inflows; excludes petty-cash voucher receipts' },
-          { id: 'a-expense', metric: 'Annual Recorded Expenses', amount: yearExpense, basis: 'Expense date' },
-          { id: 'a-outflow', metric: 'Recorded cash outflow (proxy)', amount: yearOutflow, basis: 'AMS expense dates and saved Cash & Bank movements; excludes petty-cash vouchers' },
-          { id: 'a-net', metric: 'Net Cash Movement (proxy)', amount: yearCollected - yearOutflow, basis: 'Recorded cash in minus outflow proxy; cash transfers and petty-cash voucher activity are not a complete consolidated view' },
-          { id: 'gl-revenue', metric: 'Posted GL revenue', amount: postedYearIncome.revenue, basis: postedBasis },
-          { id: 'gl-expense', metric: 'Posted GL expenses', amount: postedYearIncome.expense, basis: postedBasis },
-          { id: 'gl-result', metric: 'Posted GL result · not final profit', amount: postedYearIncome.net, basis: 'Posted revenue minus posted expense-account activity; reconcile all source exceptions before relying on this as profit' },
-          { id: 'gl-cash-in', metric: 'Posted GL cash in', amount: postedYearCashFlow.inflow, basis: postedYearCashFlow.activityCount + ' cash-moving posted journal entries; opening balances excluded' },
-          { id: 'gl-cash-out', metric: 'Posted GL cash out', amount: postedYearCashFlow.outflow, basis: postedYearCashFlow.activityCount + ' cash-moving posted journal entries; inter-account transfers net to zero' },
-          { id: 'gl-cash-net', metric: 'Posted GL net cash movement', amount: postedYearCashFlow.net, basis: 'Posted journal activity on accounts 1000, 1100 and 1200; bank-statement reconciliation still required' }
+        const previousYear = String(Number(selectedYear) - 1);
+        const buildAnnualSnapshot = (year: string) => {
+          const yearInvoices = idrInvoices.filter((invoice) => getYearKey(getInvoiceDate(invoice)) === year);
+          const yearExpenses = idrExpenses.filter((expense) => getYearKey(expense.date) === year);
+          const yearCollections = cashMovements.filter((movement) => movement.currency === 'IDR' && ['1000','1100','1200'].includes(movement.accountCode) && movement.source !== 'Internal transfer' && getYearKey(movement.date) === year);
+          const yearBilled = sumAmounts<AgencyInvoice>(yearInvoices, (invoice) => Math.max(0, (Number(invoice.total) || 0) - (Number(invoice.taxAmount) || 0)));
+          const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
+          const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
+          const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
+          const postedYearIncome = getPostedLedgerIncomeStatement(year + '-01-01', year + '-12-31');
+          const postedYearCashFlow = getPostedLedgerCashFlow(year + '-01-01', year + '-12-31');
+          const postedBasis = postedYearIncome.journalCount + ' posted journal entries; incomplete source mapping remains excluded until resolved.';
+          const rows = [
+            { id: 'a-revenue', metric: 'Annual Revenue / Invoice Value (IDR)', amount: yearBilled, basis: 'IDR invoice issue date' },
+            { id: 'a-collected', metric: 'Annual recorded cash in', amount: yearCollected, basis: 'Invoice payments and saved Cash & Bank inflows; excludes petty-cash voucher receipts' },
+            { id: 'a-expense', metric: 'Annual Recorded Expenses', amount: yearExpense, basis: 'Expense date' },
+            { id: 'a-outflow', metric: 'Recorded cash outflow (proxy)', amount: yearOutflow, basis: 'AMS expense dates and saved Cash & Bank movements; excludes petty-cash vouchers' },
+            { id: 'a-net', metric: 'Net Cash Movement (proxy)', amount: yearCollected - yearOutflow, basis: 'Recorded cash in minus outflow proxy; cash transfers and petty-cash voucher activity are not a complete consolidated view' },
+            { id: 'gl-revenue', metric: 'Posted GL revenue', amount: postedYearIncome.revenue, basis: postedBasis },
+            { id: 'gl-expense', metric: 'Posted GL expenses', amount: postedYearIncome.expense, basis: postedBasis },
+            { id: 'gl-result', metric: 'Posted GL result · not final profit', amount: postedYearIncome.net, basis: 'Posted revenue minus posted expense-account activity; reconcile all source exceptions before relying on this as profit' },
+            { id: 'gl-cash-in', metric: 'Posted GL cash in', amount: postedYearCashFlow.inflow, basis: postedYearCashFlow.activityCount + ' cash-moving posted journal entries; opening balances excluded' },
+            { id: 'gl-cash-out', metric: 'Posted GL cash out', amount: postedYearCashFlow.outflow, basis: postedYearCashFlow.activityCount + ' cash-moving posted journal entries; opening balances excluded' },
+            { id: 'gl-cash-net', metric: 'Posted GL net cash movement', amount: postedYearCashFlow.net, basis: 'Posted journal activity on accounts 1000, 1100 and 1200; bank-statement reconciliation still required' }
+          ];
+          return {
+            rows,
+            postedJournalCount: postedYearIncome.journalCount,
+            postedCashActivityCount: postedYearCashFlow.activityCount
+          };
+        };
+        const selectedSnapshot = buildAnnualSnapshot(selectedYear);
+        const previousSnapshot = buildAnnualSnapshot(previousYear);
+        const annualRows = selectedSnapshot.rows;
+        const previousRowsById = new Map(previousSnapshot.rows.map((item) => [item.id, item] as const));
+        const annualComparisonRows = annualRows.map((item) => {
+          const previous = previousRowsById.get(item.id);
+          const previousAmount = previous?.amount ?? 0;
+          const comparisonBasis = item.id.startsWith('gl-cash-')
+            ? 'Posted cash-moving journal entries: ' + selectedSnapshot.postedCashActivityCount + ' selected year / ' + previousSnapshot.postedCashActivityCount + ' previous year; opening balances are excluded.'
+            : item.id.startsWith('gl-')
+              ? 'Posted journal entries: ' + selectedSnapshot.postedJournalCount + ' selected year / ' + previousSnapshot.postedJournalCount + ' previous year; incomplete source mapping remains excluded until resolved.'
+              : item.basis;
+          return {
+            ...item,
+            previousAmount,
+            difference: item.amount - previousAmount,
+            comparisonBasis
+          };
+        });
+        const annualOperatingRows = annualComparisonRows.filter((item) => !item.id.startsWith('gl-'));
+        const postedLedgerSummaryRows = annualComparisonRows.filter((item) => item.id.startsWith('gl-'));
+        const comparisonColumns = [
+          { label: 'Metric' },
+          { label: selectedYear + ' · selected', align: 'right' as const },
+          { label: previousYear + ' · previous', align: 'right' as const },
+          { label: 'Difference', align: 'right' as const },
+          { label: 'Measurement basis' }
         ];
-        const annualOperatingRows = annualRows.filter((item) => !item.id.startsWith('gl-'));
-        const postedLedgerSummaryRows = annualRows.filter((item) => item.id.startsWith('gl-'));
+        const exportComparisonRows = annualComparisonRows.map((item) => [item.metric, item.amount, item.previousAmount, item.difference, item.comparisonBasis]);
         return (
           <div className="space-y-4" data-ams-slug="finance-annual-summary-workspace">
             <div className="flex min-w-0 flex-col gap-1" data-ams-slug="finance-annual-summary-period">
-              <h2 className="text-sm font-semibold text-fg">Annual summary · {selectedYear}</h2>
-              <p className="text-xs text-muted">Full-year source activity and posted accounting results are separated below. Both follow the reporting year selected in the topbar.</p>
+              <h2 className="text-sm font-semibold text-fg">Annual summary · {selectedYear} vs {previousYear}</h2>
+              <p className="text-xs text-muted">Compares the selected reporting year with the previous calendar year. Difference is selected year minus previous year. A positive expense or outflow difference means the recorded amount increased, not that performance improved.</p>
             </div>
             <FinanceDataTable
-              title="Annual operating activity"
-              description="Source-derived invoice, expense, and recorded cash totals. Cash flow figures are proxies, not reconciled closing cash or posted profit."
-              columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]}
-              rows={annualOperatingRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))}
-              emptyMessage="No source operating activity exists for the selected year."
+              title="Annual operating activity comparison"
+              description="Source-derived invoice, expense and recorded cash totals. Cash flow figures are proxies, not reconciled closing cash or posted profit. If the Finance source notice above indicates incomplete availability, retry before relying on the comparison."
+              columns={comparisonColumns}
+              rows={annualOperatingRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), formatMoney(item.previousAmount), formatMoney(item.difference), item.comparisonBasis] }))}
+              emptyMessage="No source operating activity exists for either reporting year."
               exportable={false}
-              actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '.csv', ['Metric', 'Amount', 'Basis'], annualRows.map((item) => [item.metric, item.amount, item.basis]))}>Export full summary</Button>}
+              actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '-vs-' + previousYear + '.csv', ['Metric', selectedYear, previousYear, 'Difference', 'Measurement basis'], exportComparisonRows)}>{'Export ' + selectedYear + ' vs ' + previousYear}</Button>}
             />
             <section className="min-w-0 space-y-3" data-ams-slug="finance-annual-posted-ledger">
-              <WorkbookNote tone="warning" title="Posted General Ledger · annual view">
+              <WorkbookNote tone="warning" title="Posted General Ledger · annual comparison">
                 These annual accounting metrics use posted journals only. They may not represent final financial statements until every source row is mapped, posted and reconciled. The temporary Opening Balance Equity account must be cleared after opening balances are reviewed.
               </WorkbookNote>
               <FinanceDataTable
-                title="Posted General Ledger"
-                description="Journal-backed annual figures. Review source mapping and reconciliation before relying on these as final accounting results."
-                columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]}
-                rows={postedLedgerSummaryRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))}
-                emptyMessage="No posted General Ledger activity exists for the selected year."
+                title="Posted General Ledger comparison"
+                description="Journal-backed annual figures for both years. Only posted journal lines contribute. Review unresolved mappings and bank reconciliation before relying on these as final accounting results."
+                columns={comparisonColumns}
+                rows={postedLedgerSummaryRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), formatMoney(item.previousAmount), formatMoney(item.difference), item.comparisonBasis] }))}
+                emptyMessage="No posted General Ledger activity exists for either reporting year."
                 exportable={false}
+                actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '-vs-' + previousYear + '-posted-gl.csv', ['Metric', selectedYear, previousYear, 'Difference', 'Measurement basis'], postedLedgerSummaryRows.map((item) => [item.metric, item.amount, item.previousAmount, item.difference, item.comparisonBasis]))}>Export posted GL comparison</Button>}
               />
             </section>
           </div>
