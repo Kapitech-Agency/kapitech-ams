@@ -270,3 +270,25 @@ test('Project Resources never substitutes a different project for an invalid URL
   assert.match(source, /data-ams-slug="resources-project-clear-selection"/);
   assert.match(source, /next\.delete\('resourcesProject'\)/);
 });
+
+test('Planning & Delivery preserves the selected project across active worksheet tabs', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const helperStart = source.indexOf('const planningWorksheetHref = (worksheet: PlanningWorkspaceView) => {');
+  const helperEnd = source.indexOf('const planningProject = planningProjectId', helperStart);
+  assert.ok(helperStart >= 0 && helperEnd > helperStart, 'Planning worksheet URL helper should be declared beside the selected-project context.');
+  const helper = source.slice(helperStart, helperEnd);
+
+  assert.ok(helper.includes('const next = new URLSearchParams(searchParams);'));
+  assert.ok(helper.includes("next.set('projects', 'planning-delivery');"));
+  assert.ok(helper.includes("next.set('planningView', worksheet);"));
+  assert.ok(helper.includes("return '/admin/projects?' + next.toString();"));
+
+  const tabsStart = source.indexOf('ariaLabel="Planning & Delivery worksheets"');
+  const tabsEnd = source.indexOf('          />', tabsStart);
+  assert.ok(tabsStart >= 0 && tabsEnd > tabsStart, 'Planning & Delivery worksheet tabs should be identifiable.');
+  const tabs = source.slice(tabsStart, tabsEnd);
+  assert.match(tabs, /key: 'brief', label: 'Project Brief', to: planningWorksheetHref\('brief'\)/);
+  assert.match(tabs, /key: 'milestones', label: 'Milestones', to: planningWorksheetHref\('milestones'\)/);
+  assert.match(tabs, /key: 'timeline', label: 'Timeline', to: planningWorksheetHref\('timeline'\)/);
+  assert.doesNotMatch(tabs, /key: '(?:brief|milestones|timeline)'[^\n]*to: '\/admin\/projects\?projects=planning-delivery/);
+});

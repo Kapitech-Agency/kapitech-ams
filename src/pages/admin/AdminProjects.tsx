@@ -504,6 +504,12 @@ export const AdminProjects: React.FC = () => {
     ? requestedPlanningView
     : 'brief';
   const planningProjectId = searchParams.get('planningProject') || '';
+  const planningWorksheetHref = (worksheet: PlanningWorkspaceView) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('projects', 'planning-delivery');
+    next.set('planningView', worksheet);
+    return '/admin/projects?' + next.toString();
+  };
   const planningProject = planningProjectId
     ? projects.find((project) => project.id === planningProjectId || project.slug === planningProjectId) || null
     : projects.find((project) => project.status !== 'completed')
@@ -2162,10 +2168,10 @@ export const AdminProjects: React.FC = () => {
             activeKey={planningView}
             className="w-full border-b border-line pb-2"
             items={[
-              { key: 'brief', label: 'Project Brief', to: '/admin/projects?projects=planning-delivery&planningView=brief' },
+              { key: 'brief', label: 'Project Brief', to: planningWorksheetHref('brief') },
               { key: 'scope-deliverables', label: 'Scope & Deliverables', to: '/admin/projects?projects=planning-delivery', available: false },
-              { key: 'milestones', label: 'Milestones', to: '/admin/projects?projects=planning-delivery&planningView=milestones' },
-              { key: 'timeline', label: 'Timeline', to: '/admin/projects?projects=planning-delivery&planningView=timeline' },
+              { key: 'milestones', label: 'Milestones', to: planningWorksheetHref('milestones') },
+              { key: 'timeline', label: 'Timeline', to: planningWorksheetHref('timeline') },
               { key: 'deliverable-tracking', label: 'Deliverable Tracking', to: '/admin/projects?projects=planning-delivery', available: false },
               { key: 'internal-quality-review', label: 'Internal Quality Review', to: '/admin/projects?projects=planning-delivery', available: false },
               { key: 'client-review', label: 'Client Review', to: '/admin/projects?projects=planning-delivery', available: false },
