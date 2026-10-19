@@ -825,8 +825,8 @@ export const AdminClients: React.FC = () => {
         actions={(
           <>
             <Button type="button" variant="secondary" onClick={() => {
-              const rows = filteredClients.map((client) => [client.id, client.slug, client.name, client.company, client.industry || '', client.status, client.projectsCount, client.totalSpend || 0, client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
-              const csv = ['Client ID,Slug,Contact,Company,Industry,Status,Projects,Total Spend,Location', ...rows].join('\\n');
+              const rows = filteredClients.map((client) => [client.id, client.slug, client.name, client.company, client.industry || '', client.status, client.projectsCount, typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? client.totalSpend : '', client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
+              const csv = ['Client ID,Slug,Contact,Company,Industry,Status,Projects,Cumulative billed value (IDR),Location', ...rows].join('\\n');
               const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const anchor = document.createElement('a');

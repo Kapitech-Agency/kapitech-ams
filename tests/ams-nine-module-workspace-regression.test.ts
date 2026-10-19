@@ -50,6 +50,19 @@ test('Client directory filters and register precede supporting metrics', async (
   assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,1200}slug="clients-spend-cap-filter"/);
 });
 
+
+test('Client directory CSV preserves unrecorded billed values and identifies the stored currency', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const exportStart = clients.indexOf('const rows = filteredClients.map');
+  const exportEnd = clients.indexOf('const blob = new Blob', exportStart);
+  assert.ok(exportStart >= 0 && exportEnd > exportStart, 'Client directory CSV export block must be identifiable.');
+  const csvExport = clients.slice(exportStart, exportEnd);
+
+  assert.match(csvExport, /typeof client\.totalSpend === 'number' && Number\.isFinite\(client\.totalSpend\) \? client\.totalSpend : ''/);
+  assert.ok(csvExport.includes('Cumulative billed value (IDR)'));
+  assert.doesNotMatch(csvExport, /client\.totalSpend \|\| 0/);
+});
+
 test('Dashboard prioritizes operational KPIs and the primary workspace before supporting metrics', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overview = dashboard.indexOf('data-ams-feature-slug="dashboard-overview"');
