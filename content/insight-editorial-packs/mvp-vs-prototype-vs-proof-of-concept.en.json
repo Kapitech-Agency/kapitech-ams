@@ -1,0 +1,719 @@
+{
+  "format": "kapitech-insight-editorial-pack/v2",
+  "runtime": "migration-seed-source",
+  "note": "English editorial source for the public Insight platform. Structured blocks are delivered through AMS PostgreSQL and prerendered for public search discovery.",
+  "seo": {
+    "title": "MVP vs Prototype vs PoC: Which Should Your Business Choose? | Kapitech",
+    "description": "Compare MVP, Prototype, and Proof of Concept, what each validates, and how to choose the smallest test for your biggest product risk.",
+    "slug": "mvp-vs-prototype-vs-proof-of-concept-guide",
+    "canonicalUrl": "https://kapitech.id/insights/mvp-vs-prototype-vs-proof-of-concept-guide",
+    "ogImage": "/insights/mvp-vs-prototype-vs-proof-of-concept/hero-en.svg"
+  },
+  "editorial": {
+    "language": "en",
+    "categorySlug": "product-technology",
+    "authorSlug": "kapitech-editorial-team",
+    "status": "published",
+    "isFeatured": true,
+    "readingTime": 15,
+    "editorialMeta": {
+      "editorialType": "Guide"
+    },
+    "tags": [
+      {
+        "slug": "mvp",
+        "name": "MVP"
+      },
+      {
+        "slug": "prototype",
+        "name": "Prototype"
+      },
+      {
+        "slug": "proof-of-concept",
+        "name": "Proof of Concept"
+      },
+      {
+        "slug": "product-validation",
+        "name": "Product Validation"
+      },
+      {
+        "slug": "digital-product",
+        "name": "Digital Product"
+      },
+      {
+        "slug": "product-discovery",
+        "name": "Product Discovery"
+      },
+      {
+        "slug": "ux-design",
+        "name": "UX Design"
+      }
+    ],
+    "coverImage": "/insights/mvp-vs-prototype-vs-proof-of-concept/hero-en.svg",
+    "title": "MVP vs Prototype vs Proof of Concept: Which One Should Your Business Choose?",
+    "excerpt": "Prototype, MVP, and Proof of Concept reduce different kinds of uncertainty. Learn what each validates, what it cannot prove, how to compare them, and how to choose the smallest credible experiment for your biggest product risk.",
+    "keyTakeaways": [
+      "Choose a Prototype when the biggest uncertainty is whether users can understand and use the experience.",
+      "Choose an MVP when the biggest uncertainty is whether real users will adopt and value the core product.",
+      "Choose a Proof of Concept when a critical technical assumption could invalidate the wider product plan.",
+      "Prototype, MVP, and PoC are not mandatory stages. Use one or combine methods based on the risk in front of you.",
+      "Define the validation question, evidence threshold, and decision before you build the experiment.",
+      "Technical feasibility, product value, and production readiness are separate questions."
+    ],
+    "content": [
+      {
+        "type": "paragraph",
+        "text": "When a company wants to build a new digital product, the conversation often jumps straight to features, technology, timelines, and budget. Those things matter, but they do not answer the first question that should shape the work: what could still make the product fail?"
+      },
+      {
+        "type": "paragraph",
+        "text": "That uncertainty may be about the experience, the value of the product, or the technology underneath it. A team can have a convincing business idea and still not know whether users will understand the workflow. It can have a strong prototype and still not know whether real customers will adopt it. It can also have a clear product direction while a critical integration, data source, or performance requirement remains unproven."
+      },
+      {
+        "type": "paragraph",
+        "text": "Prototype, MVP, and Proof of Concept are often treated as three sizes of the same product. They are not. Each is a validation instrument designed to produce a different kind of evidence."
+      },
+      {
+        "type": "paragraph",
+        "text": "The most useful mental model in this article is simple: **choose the smallest thing that can answer your biggest uncertainty**. That principle keeps design and engineering focused on decisions instead of deliverables."
+      },
+      {
+        "type": "callout",
+        "title": "The principle",
+        "text": "Do not choose a method because the label sounds more advanced. Choose it because it can reduce the risk that matters most right now.",
+        "tone": "info"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "The 30-second answer"
+      },
+      {
+        "type": "table",
+        "headers": [
+          "Approach",
+          "Best for",
+          "Main question",
+          "Typical evidence"
+        ],
+        "rows": [
+          [
+            "Prototype",
+            "Experience risk",
+            "Can users understand and use the experience?",
+            "Observed usability, comprehension, task success, feedback"
+          ],
+          [
+            "MVP",
+            "Product-value risk",
+            "Will real users adopt and value the core solution?",
+            "Usage, activation, retention, conversion, operational behavior"
+          ],
+          [
+            "Proof of Concept",
+            "Technical risk",
+            "Can the critical technical approach work?",
+            "Integration results, performance, accuracy, reliability, constraints"
+          ]
+        ]
+      },
+      {
+        "type": "image",
+        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/validate.svg",
+        "alt": "Prototype validates user experience, MVP validates product value, and Proof of Concept validates technical feasibility",
+        "caption": "The three approaches are different because the questions are different: experience, product value, and technical feasibility.",
+        "width": 1400,
+        "height": 760
+      },
+      {
+        "type": "paragraph",
+        "text": "There is no universal rule that says every product should move through Prototype, then PoC, then MVP. The right order depends on which unanswered question could cause the most expensive mistake."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "What Is a Prototype?"
+      },
+      {
+        "type": "paragraph",
+        "text": "A Prototype is a representation of a proposed experience that is detailed enough to test how people understand, navigate, and complete key tasks. It can be a low-fidelity sketch, a clickable flow, or a high-fidelity interface. The important part is not the visual polish. The important part is whether it lets you observe the behavior you are uncertain about."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "What does a Prototype validate?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Prototype testing is most useful when the uncertainty sits in information hierarchy, navigation, interaction, workflow, wording, or task completion. Nielsen Norman Group describes prototype testing as usability testing on a representation of a product before the live product exists. See [NN/g's prototype testing guidance](https://media.nngroup.com/media/articles/attachments/glossary-ux-research.pdf)."
+      },
+      {
+        "type": "paragraph",
+        "text": "A good prototype therefore gives the team evidence about whether users understand the intended flow, where they hesitate, what they expect next, and which parts of the experience need to change."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "What does a Prototype not prove?"
+      },
+      {
+        "type": "paragraph",
+        "text": "A convincing prototype does not automatically prove market demand, production reliability, backend architecture, security, or technical scalability. It can show that an experience makes sense to a user without proving that the full system can support it."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "When should you build one?"
+      },
+      {
+        "type": "list",
+        "ordered": false,
+        "items": [
+          "Core workflows are still changing.",
+          "Users may interpret the interface or process differently from the team.",
+          "Stakeholders disagree about how the product should work.",
+          "The cost of changing the experience after development would be high.",
+          "You need to compare alternatives before choosing an implementation direction."
+        ]
+      },
+      {
+        "type": "callout",
+        "title": "Useful rule",
+        "text": "If the biggest risk is “we may be designing the wrong experience,” a Prototype is usually a better first experiment than a full MVP.",
+        "tone": "neutral"
+      },
+      {
+        "type": "promo",
+        "eyebrow": "MVP & PRODUCT DESIGN",
+        "title": "Validate the experience before you engineer it",
+        "description": "Kapitech helps turn uncertain product flows into testable UX prototypes and a focused MVP scope your engineering team can act on.",
+        "ctaLabel": "Explore MVP & Product Design",
+        "ctaUrl": "https://kapitech.id/solutions/mvp-design",
+        "serviceReference": "Product discovery • UX prototyping • MVP scope"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "What Is an MVP?"
+      },
+      {
+        "type": "paragraph",
+        "text": "A Minimum Viable Product is a working product that is deliberately scoped to test a meaningful value hypothesis with real users. Its purpose is not simply to ship a smaller product. Its purpose is to generate validated learning with enough real usage to inform the next product decision."
+      },
+      {
+        "type": "paragraph",
+        "text": "Eric Ries frames an MVP around validated learning: the team builds the minimum version needed to learn whether a product hypothesis is working. That means the scope should follow the learning goal, not a fixed feature count. See [The Lean Startup explanation of an MVP](https://leanstartup.co/resources/articles/what-is-an-mvp/)."
+      },
+      {
+        "type": "image",
+        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/learning-loop.svg",
+        "alt": "MVP learning loop from problem and core solution to real users, feedback, learning, and iteration",
+        "caption": "An MVP is a learning loop. The product is the instrument used to collect evidence and decide what to build next.",
+        "width": 1400,
+        "height": 820
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "What does an MVP validate?"
+      },
+      {
+        "type": "list",
+        "ordered": false,
+        "items": [
+          "Whether the core value proposition leads to meaningful user behavior.",
+          "Whether users activate, complete the key task, return, or convert.",
+          "Whether the product solves a problem strongly enough to change an existing behavior.",
+          "Which parts of the workflow create value and which parts are unnecessary."
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "What does an MVP not automatically prove?"
+      },
+      {
+        "type": "paragraph",
+        "text": "An MVP can provide strong evidence of value while still needing more work for enterprise security, reliability, scale, operational tooling, accessibility, or broader feature coverage. Production readiness is a separate decision from whether the core value deserves continued investment."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "When should you build one?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Build an MVP when the problem and target user are clear enough that real usage can answer a value question. If the team still does not know whether users can understand the basic workflow, testing that experience first may be more efficient."
+      },
+      {
+        "type": "callout",
+        "title": "Remember",
+        "text": "An MVP should be as small as possible **without becoming too small to produce trustworthy evidence**. The goal is not minimum code. The goal is minimum credible learning.",
+        "tone": "info"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "What Is a Proof of Concept?"
+      },
+      {
+        "type": "paragraph",
+        "text": "A Proof of Concept, or PoC, is a focused technical experiment used to determine whether a critical approach is feasible enough to continue. It is most valuable when one technical unknown could invalidate a broader product plan."
+      },
+      {
+        "type": "paragraph",
+        "text": "Typical PoC questions include whether a legacy API can deliver the required data within an acceptable latency, whether an external service can support the required integration pattern, whether an AI model reaches a minimum accuracy threshold on a real dataset, or whether a particular architecture can meet a known constraint."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "What makes a PoC useful?"
+      },
+      {
+        "type": "list",
+        "ordered": false,
+        "items": [
+          "A single, explicit technical question.",
+          "A deliberately narrow scope.",
+          "Clear success and failure criteria.",
+          "A measurable test condition.",
+          "A decision attached to the result."
+        ]
+      },
+      {
+        "type": "paragraph",
+        "text": "Guidance from [digital.gov.au](https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles) treats a PoC as a focused experiment for validating feasibility before greater investment. [IBM](https://www.ibm.com/think/insights/guide-to-experimenting-new-ai-technologies) similarly recommends focused experimentation when evaluating new technologies and their fit with existing systems."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "When should you build one?"
+      },
+      {
+        "type": "paragraph",
+        "text": "Use a PoC when the technical unknown is both important and expensive to discover late. If the underlying technology is already proven and the bigger uncertainty is user value or usability, a PoC may add little value."
+      },
+      {
+        "type": "quote",
+        "text": "A successful PoC answers “can this work under the tested conditions?” It does not answer “should we build the entire product?”"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "The Real Difference Between Prototype, MVP and PoC"
+      },
+      {
+        "type": "paragraph",
+        "text": "The clearest distinction is not the artifact itself. It is the evidence you need after the experiment. A prototype may be built in design software, an MVP may include production code, and a PoC may contain almost no polished interface. What matters is the question each artifact is designed to answer."
+      },
+      {
+        "type": "table",
+        "headers": [
+          "Dimension",
+          "Prototype",
+          "MVP",
+          "PoC"
+        ],
+        "rows": [
+          [
+            "Primary purpose",
+            "Validate experience",
+            "Validate product value",
+            "Validate technical feasibility"
+          ],
+          [
+            "Main question",
+            "Can users use it?",
+            "Will users value it?",
+            "Can we build it?"
+          ],
+          [
+            "Primary risk",
+            "User experience",
+            "Adoption and value",
+            "Technical failure"
+          ],
+          [
+            "Real users",
+            "Useful, not always required",
+            "Central to the test",
+            "Usually not the main audience"
+          ],
+          [
+            "Functional depth",
+            "Mostly simulated",
+            "Core product behavior works",
+            "Only the tested technical path needs to work"
+          ],
+          [
+            "UX fidelity",
+            "Low → High",
+            "Medium → High",
+            "Low unless the interface itself is the test"
+          ],
+          [
+            "Technical depth",
+            "Low → Medium",
+            "Medium → High",
+            "High in the tested area"
+          ],
+          [
+            "Business validation",
+            "Limited",
+            "High",
+            "Limited"
+          ],
+          [
+            "Technical validation",
+            "Limited",
+            "Partial",
+            "High"
+          ],
+          [
+            "Production-ready",
+            "No",
+            "Not automatically",
+            "No"
+          ],
+          [
+            "Typical output",
+            "Tested experience",
+            "Evidence from real usage",
+            "Technical proof and constraints"
+          ],
+          [
+            "Best next decision",
+            "Change the experience",
+            "Continue, change, or stop the product direction",
+            "Proceed, redesign, change technology, or stop"
+          ]
+        ]
+      },
+      {
+        "type": "image",
+        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/comparison.svg",
+        "alt": "Comparison of Prototype, MVP, and Proof of Concept across purpose, evidence, UX fidelity, technical depth, and readiness",
+        "caption": "Prototype, MVP, and PoC optimize for different evidence. None of them is a universal shortcut to a production-ready product.",
+        "width": 1500,
+        "height": 930
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Feasibility, value, and readiness are three different questions"
+      },
+      {
+        "type": "paragraph",
+        "text": "A product can be technically feasible and still have no meaningful demand. Users can love a workflow that is too expensive or unreliable to operate. A working MVP can demonstrate value while still requiring substantial hardening before it becomes an enterprise-grade system."
+      },
+      {
+        "type": "paragraph",
+        "text": "Keeping these questions separate prevents a common failure mode: treating evidence from one experiment as proof of everything else."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "How to Choose the Right Approach"
+      },
+      {
+        "type": "paragraph",
+        "text": "Start with the uncertainty that could change the project decision. Do not start by asking which deliverable the team feels most comfortable producing."
+      },
+      {
+        "type": "image",
+        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/decision-tree.svg",
+        "alt": "Decision tree for choosing Prototype, MVP, or Proof of Concept based on the biggest uncertainty",
+        "caption": "Start with the risk that could change the project decision. Then select the smallest credible experiment.",
+        "width": 1400,
+        "height": 1000
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "1. Write the uncertainty as a question"
+      },
+      {
+        "type": "paragraph",
+        "text": "Turn “the product is risky” into something testable: Can users find the approval status without training? Will operations teams use the workflow every week? Can the legacy API return the required data within the response time we need?"
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "2. Identify the cost of being wrong"
+      },
+      {
+        "type": "paragraph",
+        "text": "Not every unknown deserves the same investment. Prioritize the one that could create the largest rework, wasted engineering effort, or incorrect product decision."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "3. Choose the smallest credible experiment"
+      },
+      {
+        "type": "paragraph",
+        "text": "Select a Prototype, MVP, PoC, or combination that can generate evidence without solving unrelated problems. The smallest experiment is not the one with the fewest pixels or lines of code. It is the one with the smallest scope that still produces credible evidence."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "4. Define the evidence before you start"
+      },
+      {
+        "type": "paragraph",
+        "text": "Decide what you will observe, what counts as strong enough evidence, and what would make you change direction. A test becomes much more useful when the decision threshold exists before the result arrives."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "5. Attach a decision to the result"
+      },
+      {
+        "type": "paragraph",
+        "text": "Every validation experiment should lead to a next action: continue, change, test again, or stop. Otherwise, the team may collect information without reducing uncertainty."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "A Real Business Scenario: B2B Operations Platform"
+      },
+      {
+        "type": "paragraph",
+        "text": "Imagine a company wants to build a B2B operations platform for approvals, workflow management, operational dashboards, reporting, and notifications. The same product can require all three validation methods, but not for the same reason."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Question A: Will people understand the workflow?"
+      },
+      {
+        "type": "paragraph",
+        "text": "The team is unsure whether operations users can understand the approval sequence, identify the current status, and recover from exceptions. A Prototype is appropriate because the primary uncertainty is experience."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Question B: Will the product create enough value to change behavior?"
+      },
+      {
+        "type": "paragraph",
+        "text": "The flow is understandable, but the team has no evidence that users will return to the system or that the new workflow will replace the current manual process. An MVP is appropriate because the question is about real adoption and value."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Question C: Can the legacy API support the experience?"
+      },
+      {
+        "type": "paragraph",
+        "text": "The planned dashboard depends on an older system that was never designed for the new usage pattern. A PoC can isolate the API integration, response time, data completeness, or concurrency question before the team commits to the full implementation."
+      },
+      {
+        "type": "paragraph",
+        "text": "This is why the methods should not be treated as a mandatory staircase. One project may need a Prototype and PoC in parallel. Another may need only an MVP. The sequence should follow the risk, not the label."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Common Mistakes When Choosing Between MVP, Prototype and PoC"
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "1. Building too much before asking the key question"
+      },
+      {
+        "type": "paragraph",
+        "text": "Teams often add settings, roles, analytics, edge cases, dashboards, and secondary features before defining what must be learned. The result is a larger deliverable with the same uncertainty."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: the team wants visible momentum and a large deliverable. Why it is risky: scope grows before the key assumption is tested. Better approach: write one decision-critical question first and remove work that does not help answer it."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "2. Calling a high-fidelity Prototype an MVP"
+      },
+      {
+        "type": "paragraph",
+        "text": "A prototype can look almost identical to a finished product and still test only the experience. Visual fidelity does not make an artifact an MVP."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: visual fidelity feels like progress and stakeholders can react to something tangible. Why it is risky: a polished screen can create false confidence about adoption or technical feasibility. Better approach: define the user behavior you need to observe and treat fidelity as a means, not the evidence itself."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "3. Using an MVP to answer a technical question"
+      },
+      {
+        "type": "paragraph",
+        "text": "When a critical integration is unproven, discovering the problem after building the rest of the product can make the most expensive part of the project harder to change. Isolate the technical question with a focused PoC first."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: the team wants one project to prove both customer value and difficult technology. Why it is risky: a technical failure discovered late can force expensive rework. Better approach: isolate the technical unknown in a focused PoC before committing the full product scope."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "4. Making a PoC without success criteria"
+      },
+      {
+        "type": "paragraph",
+        "text": "“Try the technology” is not a measurable experiment. Define the condition, threshold, test environment, and decision before you start."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: technical experiments often start with curiosity about a tool. Why it is risky: without a threshold, the experiment can run without producing a decision. Better approach: define the question, test condition, success threshold, and next decision before the first test."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "5. Trying to validate every uncertainty at once"
+      },
+      {
+        "type": "paragraph",
+        "text": "A single experiment becomes difficult to interpret when it contains too many questions. Separate evidence by risk so each result can change a specific decision."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: combining risks feels efficient. Why it is risky: conflicting signals make the result hard to interpret. Better approach: separate experiments when different risks need different evidence."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "6. Measuring after the experiment instead of before it"
+      },
+      {
+        "type": "paragraph",
+        "text": "If the team decides what success means only after seeing the result, confirmation bias becomes easier. Predefine the signal that would support or challenge the hypothesis."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: teams want to avoid changing their success definition after investing effort. Why it is risky: vague criteria make confirmation bias easier. Better approach: define the signal and threshold before the experiment starts."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "7. Optimizing for deliverables instead of learning"
+      },
+      {
+        "type": "paragraph",
+        "text": "A full design system, a long feature list, or a technically impressive demo can feel like progress while leaving the main business question unresolved."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: deliverables are easier to count than learning. Why it is risky: activity can be mistaken for validation. Better approach: review each artifact by the decision it enables and remove work that does not reduce a material uncertainty."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "How Kapitech Thinks About Validation"
+      },
+      {
+        "type": "paragraph",
+        "text": "Kapitech approaches validation as a chain that connects a risk to evidence and then to a decision. The point is not to enforce one fixed methodology. The point is to make every experiment earn its scope."
+      },
+      {
+        "type": "image",
+        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/framework.svg",
+        "alt": "Kapitech validation framework connecting business risk, user risk, technical risk, validation method, evidence, and the next decision",
+        "caption": "A practical chain: risk → validation method → evidence → decision.",
+        "width": 1400,
+        "height": 820
+      },
+      {
+        "type": "list",
+        "ordered": false,
+        "items": [
+          "Start with the business problem and the decision that matters.",
+          "Separate business, user, and technical uncertainties instead of blending them into one “product risk.”",
+          "Choose the smallest credible validation method for the highest-cost uncertainty.",
+          "Define evidence and thresholds before work begins.",
+          "Use the result to guide the next scope decision."
+        ]
+      },
+      {
+        "type": "callout",
+        "title": "Kapitech principle",
+        "text": "The output of validation is not “we built it.” The output is “we know more, and we know what to do next.”",
+        "tone": "success"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Before You Build Anything"
+      },
+      {
+        "type": "paragraph",
+        "text": "Use this checklist before committing significant design or engineering effort. The answers do not need to be perfect. They need to be explicit enough to guide the next experiment."
+      },
+      {
+        "type": "checklist",
+        "title": "Validation checklist",
+        "items": [
+          "**Problem:** What specific problem are we solving, and for whom?",
+          "**User:** Who experiences the problem often enough for the solution to matter?",
+          "**Business:** What value or business assumption could be wrong?",
+          "**UX:** What part of the experience or workflow is still uncertain?",
+          "**Technology:** What technical assumption could invalidate the plan?",
+          "**Evidence:** What observable signal would support or challenge the hypothesis?",
+          "**Scope:** What is the smallest experiment that can produce that evidence?",
+          "**Decision:** What will we do if the evidence is positive, mixed, or negative?"
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Conclusion: Choose the test, not the label"
+      },
+      {
+        "type": "paragraph",
+        "text": "Prototype, MVP, and Proof of Concept are not competing levels of product maturity. They are different tools for reducing different uncertainties."
+      },
+      {
+        "type": "paragraph",
+        "text": "Use a Prototype when the experience is uncertain. Use an MVP when real product value and behavior are uncertain. Use a PoC when technical feasibility is the risk that could derail the plan."
+      },
+      {
+        "type": "paragraph",
+        "text": "The strongest starting point is not the largest deliverable. It is the smallest credible experiment that can answer the question with the highest cost of being wrong."
+      }
+    ],
+    "faq": [
+      [
+        "Is an MVP the same as a prototype?",
+        "No. A prototype primarily tests an experience and usability. An MVP is a working product used to learn from real behavior related to a value hypothesis."
+      ],
+      [
+        "What is the difference between an MVP and a PoC?",
+        "An MVP tests product value and user behavior. A PoC tests whether a specific technical approach, integration, dataset, or architecture can work under defined conditions."
+      ],
+      [
+        "When should a business build a prototype?",
+        "Build one when the main uncertainty is how users will understand, navigate, or complete the experience and changing that experience later would be costly."
+      ],
+      [
+        "Does a prototype need a backend?",
+        "Not necessarily. Use a backend only when real system behavior is part of the question you need to validate."
+      ],
+      [
+        "Does every product need a PoC?",
+        "No. A PoC is useful when a critical technical assumption is unproven and could materially change the product plan."
+      ],
+      [
+        "Does an MVP have to be production-ready?",
+        "Not automatically. It should be reliable enough for the context and experiment, while broader production hardening can remain a separate decision."
+      ],
+      [
+        "Can Prototype, MVP, and PoC be used together?",
+        "Yes. A project can combine methods when it has multiple critical uncertainties. The sequence should follow the risks being reduced."
+      ]
+    ],
+    "seoTitle": "MVP vs Prototype vs PoC: Which Should Your Business Choose? | Kapitech",
+    "seoDescription": "Compare MVP, Prototype, and Proof of Concept, what each validates, and how to choose the smallest test for your biggest product risk."
+  }
+}

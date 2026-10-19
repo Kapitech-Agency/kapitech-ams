@@ -1,0 +1,2 @@
+import {describe,it} from 'node:test'; import assert from 'node:assert/strict'; import fs from 'fs';
+describe('approval reference persistence gate',()=>{it('persists validated reference id',()=>{const s=fs.readFileSync('server/postgres-approval-repository.ts','utf8');for(const e of ['referenceId = String(input.referenceId','reference_id','requester_user_id','referenceId,input.requesterId||null',"VALUES ($1,$2,$3,$4,'Pending'"])assert.ok(s.includes(e),e);});});
