@@ -103,7 +103,7 @@ test('Inbox keeps Careers applicant presentation in the canonical CMS workspace'
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
 
   assert.equal((inbox.match(/\.filter\(\(item\) => item\.type !== 'career'\)/g) || []).length, 1);
-  assert.doesNotMatch(inbox, /(?:item|selectedSubmission)\.type === 'career'|case 'career':|Job Application|resumeUrl|portfolioUrl|linkedinUrl|experienceYears|case 'screening':|case 'shortlisted':|case 'interview':|case 'hired':|case 'rejected':|case 'withdrawn':|value: 'screening'|People & Operations/);
+  assert.doesNotMatch(inbox, /(?:item|selectedSubmission)\.type\s*===\s*'career'|case 'career':|Job Application|resumeUrl|portfolioUrl|linkedinUrl|experienceYears|case 'screening':|case 'shortlisted':|case 'interview':|case 'hired':|case 'rejected':|case 'withdrawn':|value: 'screening'|People & Operations/);
   assert.match(inbox, /to="\/admin\/cms\/careers\?tab=applicants"/);
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
   assert.match(careers, /pagedApplicants\.map\(applicant/);
