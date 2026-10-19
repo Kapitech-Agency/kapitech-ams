@@ -51,20 +51,34 @@ test('Client directory filters and register precede supporting metrics', async (
 });
 
 
-test('Client directory CSV preserves unrecorded billed values and identifies the stored currency', async () => {
+test('Client exports use one scope-aware CSV handler and preserve missing billed values', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
-  const exportStart = clients.indexOf('const rows = filteredClients.map');
-  const exportEnd = clients.indexOf('const url = URL.createObjectURL', exportStart);
-  assert.ok(exportStart >= 0 && exportEnd > exportStart, 'Client directory CSV export block must be identifiable.');
-  const csvExport = clients.slice(exportStart, exportEnd);
+  const handlerStart = clients.indexOf('const handleExport = () => {');
+  const handlerEnd = clients.indexOf('const openInteractionDrawer = () => {', handlerStart);
+  assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, 'The canonical client export handler must be identifiable.');
+  const exportHandler = clients.slice(handlerStart, handlerEnd);
 
-  assert.match(csvExport, /typeof client\.totalSpend === 'number' && Number\.isFinite\(client\.totalSpend\) \? client\.totalSpend : ''/);
-  assert.ok(csvExport.includes('Cumulative billed value (IDR)'));
-  assert.doesNotMatch(csvExport, /client\.totalSpend \|\| 0/);
-  assert.ok(csvExport.includes(String.raw`.join('\n')`), 'CSV rows must be separated by actual newline characters.');
-  assert.ok(csvExport.includes(String.raw`new Blob(['\ufeff' + csv]`), 'CSV export must add an actual UTF-8 BOM.');
-  assert.doesNotMatch(csvExport, /join\('\\\\n'\)/, 'CSV must not contain a double-escaped line separator.');
-  assert.doesNotMatch(csvExport, /'\\\\ufeff'/, 'CSV must not prefix literal backslash-u text instead of the BOM.');
+  assert.match(clients, /onClick=\{handleExport\}[\s\S]{0,120}Export Onboarding Accounts/);
+  assert.match(exportHandler, /const headers = statusScope === 'lead'/);
+  assert.ok(exportHandler.includes("['Client ID', 'Slug', 'Contact', 'Company', 'Email', 'Phone', 'Industry', 'Status', 'Location', 'Website']"));
+  assert.ok(exportHandler.includes("'kapitech-client-onboarding-accounts.csv'"));
+  assert.ok(exportHandler.includes("'kapitech-client-directory.csv'"));
+
+  const valuesStart = exportHandler.indexOf('const values = statusScope ===');
+  const rowsEnd = exportHandler.indexOf('const csv =', valuesStart);
+  assert.ok(valuesStart >= 0 && rowsEnd > valuesStart);
+  const valuesBlock = exportHandler.slice(valuesStart, rowsEnd);
+  const onboardingValuesEnd = valuesBlock.indexOf(': [');
+  assert.ok(onboardingValuesEnd > 0, 'Onboarding and Directory columns should be separate.');
+  const onboardingValues = valuesBlock.slice(0, onboardingValuesEnd);
+  assert.match(onboardingValues, /client\.email, client\.phone, client\.industry, client\.status, client\.location, client\.website/);
+  assert.doesNotMatch(onboardingValues, /totalSpend|slaDailyAdSpendBudget|currentDailyAdSpend/);
+  assert.match(valuesBlock, /typeof client\.totalSpend === 'number' && Number\.isFinite\(client\.totalSpend\) \? client\.totalSpend : ''/);
+  assert.ok(exportHandler.includes('Cumulative billed value (IDR)'));
+  assert.doesNotMatch(exportHandler, /client\.totalSpend \|\| 0/);
+  assert.match(exportHandler, /\.join\('\\n'\)/);
+  assert.match(exportHandler, /new Blob\(\['\\ufeff' \+ csv\]/);
+  assert.match(exportHandler, /showToast\(statusScope === 'lead'/);
 });
 
 test('Dashboard prioritizes operational KPIs and the primary workspace before supporting metrics', async () => {

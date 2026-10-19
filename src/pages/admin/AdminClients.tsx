@@ -682,41 +682,26 @@ export const AdminClients: React.FC = () => {
   };
 
   const handleExport = () => {
-    const rows = [
-      [
-        'Client account',
-        'Client ID',
-        'Slug',
-        'Location',
-        'Industry',
-        'Status',
-        'Contact',
-        'Email',
-        'Projects',
-        'Lifetime billed value',
-        'SLA budget',
-        'Current daily spend'
-      ],
-      ...filteredClients.map((client) => [
-        client.company,
-        client.id,
-        client.slug,
-        client.location,
-        client.industry,
-        client.status,
-        client.name,
-        client.email,
-        client.projectsCount,
-        client.totalSpend,
-        client.slaDailyAdSpendBudget ?? '',
-        client.currentDailyAdSpend ?? ''
-      ])
-    ];
-
-    const csv = rows
-      .map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(','))
-      .join('\n');
-
+    const headers = statusScope === 'lead'
+      ? ['Client ID', 'Slug', 'Contact', 'Company', 'Email', 'Phone', 'Industry', 'Status', 'Location', 'Website']
+      : ['Client ID', 'Slug', 'Contact', 'Company', 'Industry', 'Status', 'Projects', 'Cumulative billed value (IDR)', 'Location'];
+    const exportRows = filteredClients.map((client) => {
+      const values = statusScope === 'lead'
+        ? [client.id, client.slug, client.name, client.company, client.email, client.phone, client.industry, client.status, client.location, client.website || '']
+        : [
+            client.id,
+            client.slug,
+            client.name,
+            client.company,
+            client.industry || '',
+            client.status,
+            client.projectsCount,
+            typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? client.totalSpend : '',
+            client.location || '',
+          ];
+      return values.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(',');
+    });
+    const csv = [headers.map((value) => '"' + value.replace(/"/g, '""') + '"').join(','), ...exportRows].join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const href = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -727,7 +712,9 @@ export const AdminClients: React.FC = () => {
     anchor.remove();
     URL.revokeObjectURL(href);
 
-    showToast(language === 'id' ? 'Direktori berhasil diekspor.' : 'Directory exported.');
+    showToast(statusScope === 'lead'
+      ? (language === 'id' ? 'Akun onboarding berhasil diekspor.' : 'Onboarding accounts exported.')
+      : (language === 'id' ? 'Direktori berhasil diekspor.' : 'Directory exported.'));
   };
 
   const openInteractionDrawer = () => {
@@ -824,17 +811,7 @@ export const AdminClients: React.FC = () => {
             : 'Directory of enterprise clients, relationship health, spend-cap status, and account operations.'}
         actions={(
           <>
-            <Button type="button" variant="secondary" onClick={() => {
-              const rows = filteredClients.map((client) => [client.id, client.slug, client.name, client.company, client.industry || '', client.status, client.projectsCount, typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? client.totalSpend : '', client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
-              const csv = ['Client ID,Slug,Contact,Company,Industry,Status,Projects,Cumulative billed value (IDR),Location', ...rows].join('\n');
-              const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-              const url = URL.createObjectURL(blob);
-              const anchor = document.createElement('a');
-              anchor.href = url;
-              anchor.download = 'kapitech-client-directory.csv';
-              anchor.click();
-              URL.revokeObjectURL(url);
-            }} icon={<ArrowDown size={14} aria-hidden="true" />}>{statusScope === 'lead' ? 'Export Onboarding Accounts' : 'Export Directory'}</Button>
+            <Button type="button" variant="secondary" onClick={handleExport} icon={<ArrowDown size={14} aria-hidden="true" />}>{statusScope === 'lead' ? 'Export Onboarding Accounts' : 'Export Directory'}</Button>
             {canManageClients && (
               <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>{statusScope === 'lead' ? 'New Lead' : 'New Client'}</Button>
             )}
