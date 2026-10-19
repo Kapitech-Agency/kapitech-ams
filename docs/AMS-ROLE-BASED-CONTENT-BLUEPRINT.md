@@ -14,7 +14,7 @@
 
 This document defines what the main content of every AMS module, workspace, worksheet, and record detail should communicate, how information should be organized, and how its default presentation should adapt to the user's work responsibilities and stakeholder needs.
 
-It is the content specification that sits between the approved navigation architecture and visual implementation. It must help a designer or AI understand not only a page name, but also:
+`docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` owns the baseline target composition and required relative region order for each workspace. This blueprint complements it by defining the detailed role-aware content contract, stakeholder priorities, fields/columns, actions, visualization rationale, and presentation states. It must help a designer or AI understand not only a page name, but also:
 
 - The principal question the page answers.
 - The user roles or stakeholder personas who need it.
