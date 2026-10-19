@@ -128,6 +128,18 @@ test('Account create and delete failures stay visible inside their active dialog
   assert.ok(source.includes('if (!canManageAdminAccounts || !confirmDelete || isDeletingAccount) return;'));
 });
 
+test('Notification settings availability stays separate from provider delivery readiness', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  assert.match(source, /useState<'available' \| 'unavailable' \| 'checking'>\('checking'\)/);
+  assert.match(source, /setNotificationStatus\('available'\)/);
+  assert.match(source, /Settings request succeeded; delivery readiness is reported separately below/);
+  assert.match(source, /label=\{notificationLabel\}/);
+  assert.match(source, /productionReadiness\?\.gates\?\.notifications/);
+  assert.match(source, /\['Notification settings', notificationStatus === 'available' \? 'Available'/);
+  assert.doesNotMatch(source, /notificationStatus === 'connected'|Provider credentials remain server-side/,
+    'A successful settings read does not prove provider delivery is connected.');
+});
+
 test('Integration settings distinguish load, save success, and save failure states', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
 

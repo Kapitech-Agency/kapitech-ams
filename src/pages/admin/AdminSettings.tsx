@@ -247,7 +247,7 @@ export const AdminSettings: React.FC = () => {
     reason?: string;
   } | null>(null);
   const [securityStatus, setSecurityStatus] = useState<SecurityStatus | null>(null);
-  const [notificationStatus, setNotificationStatus] = useState<'connected' | 'unavailable' | 'checking'>('checking');
+  const [notificationStatus, setNotificationStatus] = useState<'available' | 'unavailable' | 'checking'>('checking');
   const [productionReadiness, setProductionReadiness] = useState<ProductionReadiness | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [integrityLoading, setIntegrityLoading] = useState(false);
@@ -477,7 +477,7 @@ export const AdminSettings: React.FC = () => {
       }
 
       if (notificationRes?.success) {
-        setNotificationStatus('connected');
+        setNotificationStatus('available');
       } else {
         setNotificationStatus('unavailable');
         failures.push('notification status');
@@ -844,14 +844,14 @@ export const AdminSettings: React.FC = () => {
       ? 'Latest snapshot ' + formatUtc(latestBackup.createdAt)
       : 'No production backup returned by the server';
   const notificationContext =
-    notificationStatus === 'connected'
-      ? 'Server-managed notification settings are reachable'
+    notificationStatus === 'available'
+      ? 'Settings request succeeded; delivery readiness is reported separately below'
       : notificationStatus === 'unavailable'
-        ? 'Notification configuration could not be loaded'
-        : 'Checking notification connectivity';
+        ? 'Notification settings could not be loaded'
+        : 'Checking notification settings';
   const notificationLabel =
-    notificationStatus === 'connected'
-      ? 'Connected'
+    notificationStatus === 'available'
+      ? 'Settings available'
       : notificationStatus === 'unavailable'
         ? 'Unavailable'
         : 'Checking';
@@ -958,10 +958,10 @@ export const AdminSettings: React.FC = () => {
             />
             <SummaryCard
               label="Integrations & Alerts"
-              value={notificationStatus === 'connected' ? 'Notifications & API' : 'Server-managed'}
+              value={notificationStatus === 'available' ? 'Notification settings' : 'Server-managed'}
               context={notificationContext}
               status={notificationLabel}
-              tone={notificationStatus === 'connected' ? 'success' : notificationStatus === 'unavailable' ? 'warning' : 'neutral'}
+              tone={notificationStatus === 'unavailable' ? 'warning' : 'neutral'}
             />
           </div>
 
@@ -1863,7 +1863,7 @@ export const AdminSettings: React.FC = () => {
                 {[
                   ['Database', productionReadiness?.status?.datasource || 'PostgreSQL', 'Production data source'],
                   ['Document vault', productionReadiness?.gates?.documentStorage ? 'Ready' : 'Check required', 'Storage is server-managed'],
-                  ['Notifications', notificationStatus === 'connected' ? 'Connected' : 'Unavailable', 'Provider credentials remain server-side'],
+                  ['Notification settings', notificationStatus === 'available' ? 'Available' : notificationStatus === 'unavailable' ? 'Unavailable' : 'Checking', 'Delivery readiness is reported separately below'],
                   ['Backup / DR', securityStatus?.backupFresh ? 'Fresh' : 'Review', 'Restore policy remains infrastructure-managed']
                 ].map(([label, value, helper]) => (
                   <div key={String(label)} className="rounded-control border border-line bg-bg p-4">

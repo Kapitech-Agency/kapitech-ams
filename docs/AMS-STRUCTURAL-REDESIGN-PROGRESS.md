@@ -1125,3 +1125,25 @@ Quality Gate and CI on `4542f6de4fbd114f5f7696c105709a660cbb4358` failed because
 ### Insights typecheck correction — 19 October 2026
 
 Quality Gate [39229655648](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39229655648) and AMS CI [39229655663](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39229655663) on commit d7c8932 failed at TypeScript before regression tests because the canonical list state is named items, not insights. The publication-state comparison now reads the existing items state and the matching regression assertion is corrected. This does not change the record/API contract or publication flow. Re-run both workflows on the corrective commit.
+
+
+## Stage 4 view design record — Settings · Integrations · notification status semantics
+
+**View ID:** VIEW-SETTINGS-INTEGRATIONS, Integration Overview worksheet.
+**Implementation status:** The visible status now distinguishes a successful settings fetch from provider delivery readiness. Verify this exact SHA through both CI workflows before source/test verification.
+
+1. **Owner/persona.** Settings → Integrations. Authorized administrators review server-managed connection metadata and readiness without seeing secrets.
+2. **Primary task.** Determine whether the notification configuration endpoint is reachable and whether separate server readiness checks report delivery as ready.
+3. **Decision.** Was notification settings data retrieved, and does the server's production-readiness signal indicate notification delivery readiness?
+4. **Primary surface.** Existing Integration Overview status groups and server-readiness gate summary.
+5. **Content order.** Server-managed resource summary; clear notification-settings availability; separate integration-health/readiness indicators. No new duplicate provider dashboard.
+6. **Fields and semantics.** The notification settings API success confirms the settings request returned successfully. It does not prove provider credentials, connectivity or message delivery. The existing production readiness response owns the notifications readiness gate.
+7. **Controls.** No new controls or provider probes. Existing refresh/load and server-managed settings flow remain.
+8. **Canonical ownership/breadcrumb.** Existing settings endpoint and production-readiness gate remain canonical for their respective meanings. No duplicate health source or breadcrumb.
+9. **Role-aware presentation.** Existing canAccessServer restriction and API permission behavior remain unchanged.
+10. **States/recovery.** Request states are Checking, Available and Unavailable. If settings load succeeds while delivery readiness is false/unavailable, the UI no longer labels the provider Connected. The existing global unavailable warning remains.
+11. **Responsive behavior.** Existing status tiles and integration cards remain; confirm stacked/mobile and grid/desktop reflow at design-system breakpoints.
+12. **Accessibility.** Status is expressed as text, not just icon color; same labels remain in SummaryCard and Integration Overview. Keyboard/focus and screen-reader announcement need browser checks.
+13. **Regression tests.** Assert Available/not Connected wording and explicit distinction from the production-readiness notification gate.
+14. **Dependencies.** A truthful configured/connected/last-checked/delivery result requires provider status fields/contract not exposed by the notification-settings GET response. Do not invent a client-side provider check or expose secrets; track for Stage 10 after contract/configuration verification.
+15. **Acceptance.** A successful settings fetch is not shown as Connected. A distinct readiness signal determines delivery readiness, and missing provider contract information remains an explicit limitation. Overall Settings stays partial pending Stage 5 visual/role review and Stage 10 integration verification.

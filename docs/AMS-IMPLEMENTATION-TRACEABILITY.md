@@ -816,3 +816,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 
 
 **Insights validation follow-up:** Exact-SHA runs AMS Quality Gate [39229655648](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39229655648) and AMS CI [39229655663](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39229655663) stopped at typecheck: insights was referenced, but the component's canonical collection state is items. The source and regression matcher now use items; API behavior is unchanged. Confirm typecheck, tests, build and CI on the fix SHA.
+
+
+### SET-INTEGRATION-STATUS-001: Do not equate notification settings availability with provider connection
+
+**Source:** src/pages/admin/AdminSettings.tsx. A successful api.notifications.getSettings request is now represented as Available, with neutral treatment and an explanation that delivery readiness is reported separately below. The existing production-readiness gate remains the delivery readiness signal. No API, provider configuration or secret exposure changed.
+
+**Tests:** tests/admin-settings-module-regression.test.ts asserts the settings request state enum, availability wording, readiness-gate separation and rejection of Connected semantics for the settings request. Exact-SHA CI and Quality Gate plus Stage 5 route/keyboard/responsive review and Stage 10 provider contract verification remain required.
