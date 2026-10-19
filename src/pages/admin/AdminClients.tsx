@@ -113,6 +113,18 @@ const toLocalDateTimeInput = (date: Date) => {
   return local.toISOString().slice(0, 16);
 };
 
+const getClientServiceContext = (client: AgencyClient, language: string) => {
+  if (client.activeRetainer) {
+    return client.retainerRenewal
+      ? (language === 'id' ? 'Retainer aktif · perpanjangan ' : 'Active retainer · renews ') + formatDate(client.retainerRenewal, language)
+      : (language === 'id' ? 'Retainer aktif · tanggal perpanjangan belum tercatat' : 'Active retainer · renewal date not recorded');
+  }
+  if (client.retainerId || client.retainerTier || client.retainerRenewal) {
+    return language === 'id' ? 'Detail retainer tercatat, tidak ditandai aktif' : 'Retainer details recorded, not marked active';
+  }
+  return language === 'id' ? 'Konteks layanan retainer belum tercatat' : 'No retainer service context recorded';
+};
+
 const formatInteractionTimestamp = (value: string, language: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Date not recorded';
@@ -999,6 +1011,7 @@ export const AdminClients: React.FC = () => {
                     <h2 className="break-words text-sm font-semibold text-fg">{client.company}</h2>
                     <p className="mt-1 break-words text-[11px] text-muted">ID: {client.id}{client.location ? ' · ' + client.location : ''}</p>
                     <p className="mt-1 text-[10px] text-muted">{getClientTierLabel(client)}</p>
+                    <p className="mt-1 break-words text-[10px] leading-4 text-muted" data-ams-slug={'client-service-context-' + clientSlug}>{getClientServiceContext(client, language)}</p>
                   </div>
                   <span className={'inline-flex shrink-0 items-center rounded-badge border px-2 py-1 text-[10px] font-semibold ' + getClientStatusTone(client.status)}>
                     {formatClientStatusLabel(client.status)}
@@ -1068,7 +1081,8 @@ export const AdminClients: React.FC = () => {
                 return (
                   <tr key={client.id} data-ams-slug={'client-account-' + clientSlug} className="transition-colors hover:bg-bg/70">
                     <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[270px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-1 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} · {client.location || 'Location not set'}</span>
-                        <span className="mt-1 block text-[10px] text-muted">{getClientTierLabel(client)}</span></button></td>
+                        <span className="mt-1 block text-[10px] text-muted">{getClientTierLabel(client)}</span>
+                        <span className="mt-1 block text-[10px] leading-4 text-muted">{getClientServiceContext(client, language)}</span></button></td>
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company, companyEmail: client.email, phone: client.phone }} /> : <span className="text-xs text-muted">—</span>}</td>
                     <td className="px-4 py-3"><span className={'inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + getClientStatusTone(client.status)}>{formatClientStatusLabel(client.status)}</span></td>
@@ -1094,16 +1108,6 @@ export const AdminClients: React.FC = () => {
       </section>
 
 
-
-            <section data-ams-feature-slug="clients-metrics" data-ams-slug="clients-metrics" aria-label="Client metrics">
-              <AdminMetricStrip slug="clients-kpis"
-                metrics={[
-                  { id: 'active-clients', label: 'Active clients', value: isLoading || errorMessage ? '—' : clientMetrics.active, change: isLoading || errorMessage ? '—' : '+' + clientMetrics.leads, changeToneClassName: 'text-warning', context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'onboarding / lead accounts',  icon: <Users size={15} aria-hidden="true" /> },
-                  { id: 'billed-value', label: language === 'id' ? 'Total nilai tagihan tercatat' : 'Cumulative billed value', value: isLoading || errorMessage || clientMetrics.totalBilled === null ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clientMetrics.totalBilled), context: isLoading ? (language === 'id' ? 'Memuat data live' : 'Loading live data') : errorMessage ? (language === 'id' ? 'Data live tidak tersedia' : 'Live data unavailable') : clientMetrics.total === 0 ? (language === 'id' ? 'Belum ada akun klien' : 'No client records') : clientMetrics.totalBilled === null ? (language === 'id' ? 'Nilai tagihan belum tercatat lengkap di semua akun' : 'Billed value is not recorded for every client') : (language === 'id' ? 'di seluruh akun klien' : 'across client records'), icon: <TrendingUp size={15} aria-hidden="true" />, toneClassName: 'text-success' },
-                  { id: 'sla-compliance', label: language === 'id' ? 'Kepatuhan batas belanja' : 'Spend cap compliance', value: isLoading || errorMessage ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`, context: isLoading ? (language === 'id' ? 'Memuat data terbaru' : 'Loading live data') : errorMessage ? (language === 'id' ? 'Data live tidak tersedia' : 'Live data unavailable') : clientMetrics.configuredSla === 0 ? (language === 'id' ? 'Belum ada batas belanja yang dikonfigurasi' : 'No spend caps configured') : language === 'id' ? `${clientMetrics.recordedSla} dari ${clientMetrics.configuredSla} batas belanja memiliki catatan aktual` : `${clientMetrics.recordedSla} of ${clientMetrics.configuredSla} configured spend caps have recorded spend`, icon: <ShieldCheck size={15} aria-hidden="true" />, toneClassName: clientMetrics.slaCompliance !== null && clientMetrics.slaCompliance >= 90 && clientMetrics.missingSlaSpend === 0 ? 'text-success' : 'text-fg' }
-                ]}
-              />
-            </section>
 
       <Drawer slug="client-directory-detail-drawer"
         open={!!selectedClient}
