@@ -808,3 +808,28 @@ test('Petty Cash delegates statement evidence to the canonical Cash & Bank recon
   assert.match(petty, /A petty-cash opening balance or posted voucher does not prove the physical cash count was reconciled/);
   assert.doesNotMatch(petty, /openRegisterForm\('cash-reconciliation'/);
 });
+
+
+test('Monthly Closing separates checklist completion from authoritative source validation', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("case 'monthly-closing': {");
+  const end = workspace.indexOf("case 'project-allocation':", start);
+  assert.ok(start >= 0 && end > start, 'Monthly Closing worksheet should be present.');
+  const closing = workspace.slice(start, end);
+  const periodPanel = closing.indexOf('title="Closing period"');
+  const preflightPanel = closing.indexOf('title="Final close validation"');
+  const checklist = closing.indexOf('title="Monthly closing checklist"');
+  assert.ok(periodPanel >= 0 && preflightPanel > periodPanel && checklist > preflightPanel,
+    'Period selection, final source gates and checklist should be separate workspace layers.');
+  assert.match(closing, /Checklist completion is necessary, but it is not final close readiness/);
+  assert.match(closing, /The server performs the final checks when you request closure/);
+  assert.match(closing, /no unresolved source-journal exceptions or period drafts/);
+  assert.match(closing, /month-end statement or count evidence that matches the posted General Ledger/);
+  assert.match(closing, /tab: 'journal'/);
+  assert.match(closing, /tab: 'cash-bank'/);
+  assert.match(closing, /navigate\('\/admin\/finance\?tab=' \+ review\.tab\)/);
+  assert.match(closing, /Review Journal/);
+  assert.match(closing, /Review Cash & Bank/);
+  assert.match(closing, /This workspace does not guess a separate readiness score/);
+  assert.match(closing, /disabled=\{locked\|\|completed!==WORKBOOK_CLOSING_ITEMS\.length\|\|registerSaving\}/);
+});

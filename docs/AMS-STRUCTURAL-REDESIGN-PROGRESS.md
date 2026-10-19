@@ -690,3 +690,27 @@ On `b93f08e595831489bd85b15d9107303b9fa06730`, both AMS workflows failed on four
 ### Annual Summary regression assertion correction — 19 October 2026
 
 On restoration checkpoint `2a21a1707fc2d915b13e2ffa93637e6aac7ff863`, Typecheck passed and the new Annual Summary comparison regression passed. One pre-existing test still required the Cash & Bank year filter to compare directly with `selectedYear`; the implementation now correctly factors that same filter into `buildAnnualSnapshot(year)` and calls it for both selected and previous years. The fix updates the assertion to verify the shared year parameter and both invocations. Production build was skipped because the regression job stopped at this test; re-run both workflows on the correction SHA before claiming success.
+
+
+## Stage 4 view design record — Finance · Accounting & Reports · Monthly Closing
+
+**View ID:** VIEW-FIN-ACCOUNTING, Monthly Closing worksheet.
+**Implementation status:** source-first evidence path and server-gate explanation added to `main`; exact-SHA AMS CI and Quality Gate must pass before this slice is source/test verified.
+
+1. **Owner/persona.** Finance → Accounting & Reports → Monthly Closing. Finance operators maintain control checklist records; users with existing approval permission request period closure.
+2. **Primary task.** Complete and review the selected month checklist, inspect authoritative evidence gates, and request closure only when both checklist and server preconditions pass.
+3. **Decision.** Are the required controls recorded as Done, and have source journals and cash/bank evidence satisfied the server's period-close checks?
+4. **Primary surface.** Monthly Closing checklist remains the main register. A separate Final close validation panel clarifies that checklist progress is necessary but not sufficient and links to the canonical source workspaces.
+5. **Content order.** Checklist progress note; month selector/status/request-close action; Final close validation with Journal and Cash & Bank routes; checklist table. This separates control records from backend-validated reconciliation evidence.
+6. **Fields and definitions.** Checklist completion counts records with the existing exact Done status. Validation criteria are derived from current server contract: 11 required controls Done, no unresolved source-journal exceptions, no remaining period draft journals, posted journals balanced, and period-end statement/count evidence with references that matches posted GL for required cash accounts.
+7. **Controls.** Existing selectedClosingMonth, server close API, disabled state, confirmation, permission checks and error handling remain unchanged. Review buttons only navigate to `/admin/finance?tab=journal` and `/admin/finance?tab=cash-bank`.
+8. **Canonical ownership/breadcrumb.** Journal owns source/posted journal records; Cash & Bank owns monthly statement and count reconciliation records; Monthly Closing owns checklist/period lock records. No separate UI readiness ledger or duplicate reconciliation state. No breadcrumb on worksheet root.
+9. **Role-aware display.** No new permission or API path. Existing `canApproveFinanceRecords` controls period close; source register actions retain existing authorization.
+10. **States/recovery.** Closed/open states and checklist counts remain source-backed. The panel explicitly states the UI does not infer authoritative readiness; the server remains the final check and its returned reason stays the recovery path. The panel does not show fake green/amber readiness based on incomplete data.
+11. **Responsive behavior.** Two evidence destinations stack to one column on narrow screens and align horizontally at medium widths. Native buttons wrap as needed; no additional global navigation layer is introduced.
+12. **Accessibility.** Separate semantic panel heading, descriptive text for each review path, native keyboard-operable buttons and visible action labels. Focus and layout need browser verification.
+13. **Regression tests.** Assert layer order, the not-sufficient distinction, exact server gate semantics, both canonical route destinations, no inferred readiness score and unchanged close disabled condition.
+14. **Dependencies.** Server's source preflight remains authoritative for exception mapping and required account reconciliation. The UI intentionally does not duplicate the readiness algorithm.
+15. **Acceptance.** Users can distinguish checklist progress from validated close preconditions and reach source evidence before requesting period closure. Overall Accounting remains partially complete until the other worksheets and Stage 5 browser/accessibility checks pass.
+
+**Next Stage 4 slice:** Journal + Chart of Accounts relationship. Review the Journal posting queue and account mapping context to ensure the canonical account reference is discoverable without implying that custom accounts automatically change posted ledger calculations.

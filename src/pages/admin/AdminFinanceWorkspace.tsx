@@ -2874,10 +2874,26 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           return {id:item.label,cells:[item.label,item.owner,record?<StatusBadge value={state}/>:<AdminStatusBadge tone="warning">Not recorded</AdminStatusBadge>,closingPurposes[item.label]||'Review and document before the period is closed.',record?registerRecordActions('monthly-closing',record):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} disabled={locked||registerSaving} onClick={()=>openRegisterForm('monthly-closing',undefined,{period:selectedClosingMonth,checklistItem:item.label,status:'Open'})}>Create control</Button>:<span className="text-muted">View only</span>]};
         });
         const completed=WORKBOOK_CLOSING_ITEMS.filter((item)=>records.some((record)=>String(record.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase()&&String(record.payload.status||record.status)==='Done')).length;
+        const closeEvidenceReviews = [
+          {
+            id: 'source-journal-gate',
+            title: 'Source journals and posting',
+            description: 'The server checks unresolved source mappings, remaining period drafts, and debit/credit balance on posted journals.',
+            tab: 'journal',
+            action: 'Review Journal'
+          },
+          {
+            id: 'month-end-reconciliation-gate',
+            title: 'Month-end statement / cash-count evidence',
+            description: 'The server checks required account evidence, month-end date and reference, and balance differences against posted General Ledger.',
+            tab: 'cash-bank',
+            action: 'Review Cash & Bank'
+          }
+        ];
         return (
           <div className="space-y-4">
-            <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected closing month is closed':'Monthly closing requires all control items'}>
-              Closing month: {selectedClosingMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period can close only when all 11 controls are Done, source journals reconcile, every required cash/bank account has month-end statement evidence matching the posted GL, and posted journals balance.
+            <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected closing month is closed':'Checklist progress'}>
+              Closing month: {selectedClosingMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are marked Done. Checklist completion is necessary, but it is not final close readiness. Review the authoritative source gates below before requesting closure.
             </WorkbookNote>
             <AdminPanel title="Closing period" bodyClassName="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -2887,6 +2903,24 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <AdminStatusBadge tone={locked?'success':'warning'}>{locked?'Closed':'Open'}</AdminStatusBadge>
                   {canApproveFinanceRecords && <Button type="button" variant="secondary" disabled={locked||completed!==WORKBOOK_CLOSING_ITEMS.length||registerSaving} loading={registerSaving} onClick={()=>setPendingConfirmation({kind:'close-period',period:selectedClosingMonth})}>Close period</Button>}
+                </div>
+              </div>
+            </AdminPanel>
+            <AdminPanel title="Final close validation" bodyClassName="p-4">
+              <div className="space-y-3">
+                <p className="text-xs leading-5 text-muted">
+                  The server performs the final checks when you request closure. It requires all 11 controls to be Done, no unresolved source-journal exceptions or period drafts, balanced posted journals, and month-end statement or count evidence that matches the posted General Ledger for each required cash account. This workspace does not guess a separate readiness score.
+                </p>
+                <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
+                  {closeEvidenceReviews.map((review) => (
+                    <div key={review.id} className="flex min-w-0 flex-col gap-3 rounded-control border border-line p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <h3 className="text-xs font-semibold text-fg">{review.title}</h3>
+                        <p className="mt-1 text-xs leading-5 text-muted">{review.description}</p>
+                      </div>
+                      <Button type="button" variant="secondary" icon={<ArrowUpRight size={14} />} className="shrink-0" onClick={() => navigate('/admin/finance?tab=' + review.tab)}>{review.action}</Button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </AdminPanel>

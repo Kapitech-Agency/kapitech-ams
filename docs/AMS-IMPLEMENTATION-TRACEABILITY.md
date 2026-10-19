@@ -681,3 +681,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 
 
 **Annual test correction:** The first complete Quality Gate run after tree restoration passed Typecheck and the new selected/previous-year test but failed the older “Annual Summary includes years represented only by Cash & Bank records” assertion because it expected `getYearKey(movement.date) === selectedYear`. The same canonical source filter now lives in `buildAnnualSnapshot(year)` and is invoked with both years. The assertion is corrected to reflect this factoring and explicitly checks both selected/previous snapshot calls. Retest the correction SHA.
+
+
+### FIN-CLOSING-PREFLIGHT-001: Separate checklist progress from server-validated closure
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx` Monthly Closing. The checklist remains a canonical `monthly-closing` register; the final close gate is enforced by the existing server and PostgreSQL finance workbook repository. The UI now describes the exact high-level server checks and provides direct Journal and Cash & Bank review routes. It does not calculate or persist a parallel readiness status.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts the workspace layer order, server-gate descriptions, canonical tabs and unchanged close-disabled condition. No backend/API/database/permission/payment/period-close behavior changed. Exact-SHA CI and Quality Gate and Stage 5 browser/responsive checks remain required.
