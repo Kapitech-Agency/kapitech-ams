@@ -1088,10 +1088,7 @@ export const AdminSettings: React.FC = () => {
                         <td className="font-mono text-[11px] tabular-nums text-muted">{formatSize(backup.sizeBytes)}</td>
                         <td className="text-[11px] text-muted tabular-nums">{formatUtc(backup.createdAt)}</td>
                         <td>
-                          <StatusBadge
-                            tone={backupHealthy ? 'success' : 'warning'}
-                            label={backupHealthy ? 'Verified' : 'Needs check'}
-                          />
+                          <StatusBadge {...backupVerificationFor(backup)} />
                         </td>
                         <td className="text-right">
                           <button
