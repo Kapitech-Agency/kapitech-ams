@@ -15,27 +15,26 @@ Latest application/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest source/test commit | `aba169fe8dcc493c1a404cc534ebd630f8e74fbf` |
-| Commit | [test(clients): include bom in csv export assertion](https://github.com/Kapitech-Agency/kapitech-ams/commit/aba169fe8dcc493c1a404cc534ebd630f8e74fbf) |
-| Application source changed | `src/pages/admin/AdminClients.tsx` |
-| Regression tests changed | `tests/ams-nine-module-workspace-regression.test.ts` |
-| AMS CI | **Passed** on this SHA: [run 39248843929](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39248843929) |
-| AMS Quality Gate | **Passed** on this SHA: [run 39248843922](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39248843922) |
-| Validation detail | Typecheck, regression tests, security regression tests, production build, and production HTTP smoke test passed. |
+| Latest source/test commit | `1ae8209b39ff65cc7cbb6c302ddc9815efc5720c` |
+| Commit | [fix(clients): keep onboarding readiness copy evidence-based](https://github.com/Kapitech-Agency/kapitech-ams/commit/1ae8209b39ff65cc7cbb6c302ddc9815efc5720c) |
+| Changed application source | `src/pages/admin/AdminClients.tsx` |
+| Regression tests | `tests/ams-nine-module-workspace-regression.test.ts` |
+| AMS CI | **Passed** on this SHA: [run 39251017014](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39251017014) |
+| AMS Quality Gate | **Passed** on this SHA: [run 39251017167](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39251017167) |
+| Validation detail | Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed. |
 
 ### Recent verified frontend slices
 
-- [Settings backup-history correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba): desktop rows use per-snapshot verification; both CI workflows passed.
-- [Dashboard monetary truthfulness correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/febd4f42a18718230dd2ebccec5b975a0083ef68): non-finite amounts show unavailable, not zero; both CI workflows passed.
-- [Inbox register semantics correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/87b53aa61cd7c973869da73ef4273c8cb5f4cc7e): inquiry labels/empty copy corrected; both CI workflows passed.
-- [Inbox applicant-presentation cleanup](https://github.com/Kapitech-Agency/kapitech-ams/commit/926291d005bbdef2c1e06779d28145d230606ddf): unreachable Careers-only UI removed while preserving the source filter and CMS route; both CI workflows passed.
-- [Tasks local-date correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/af65907022d9973b3859145e0971bf22a6caf343): due-date defaults use local calendar fields; both CI workflows passed.
-- [Planning tab query preservation](https://github.com/Kapitech-Agency/kapitech-ams/commit/444b9891b33e7891567341711dfa9a8d29866bf4): selecting Brief/Milestones/Timeline preserves `planningProject`; both CI workflows passed.
-- [Clients CSV truthfulness and encoding](https://github.com/Kapitech-Agency/kapitech-ams/commit/d7d53b3b0cf7f58319935341424dfc7d75b1bd16), with final regression boundary correction at `aba169fe8dcc493c1a404cc534ebd630f8e74fbf`: missing/non-finite billed values export blank, valid zero stays zero, the header specifies IDR, row separators use real newlines and the Blob contains an actual UTF-8 BOM. The new regression checks these semantics. Both workflows passed on the final test SHA `aba169fe8dcc493c1a404cc534ebd630f8e74fbf`.
+- [Settings backup-history correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba): desktop rows use per-snapshot verification; both workflows passed.
+- [Dashboard monetary truthfulness correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/febd4f42a18718230dd2ebccec5b975a0083ef68): non-finite amounts show unavailable, not zero; both workflows passed.
+- [Inbox applicant-presentation cleanup](https://github.com/Kapitech-Agency/kapitech-ams/commit/926291d005bbdef2c1e06779d28145d230606ddf): removed unreachable Careers-only UI while preserving the source filter and CMS route; both workflows passed.
+- [Tasks local-date correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/af65907022d9973b3859145e0971bf22a6caf343): due-date defaults use local calendar fields; both workflows passed.
+- [Planning tab query preservation](https://github.com/Kapitech-Agency/kapitech-ams/commit/444b9891b33e7891567341711dfa9a8d29866bf4): active Planning tabs preserve `planningProject`; both workflows passed.
+- [Clients CSV and Onboarding source/test corrections](https://github.com/Kapitech-Agency/kapitech-ams/commit/1ae8209b39ff65cc7cbb6c302ddc9815efc5720c): one visible export handler now serves both scopes. Onboarding export includes contact/profile columns without billing or spend-cap fields and uses its own filename/toast. Directory export preserves missing billed values as blank, valid zero, the IDR label, and its existing SLA-budget/current-daily-spend columns. CSV uses a UTF-8 BOM and actual newline separators. The Onboarding header describes recorded profile review rather than claiming readiness can be confirmed without checklist/document/kickoff records. Both workflows passed on this exact SHA.
 
-An initial test attempt on `d7d53b3b0cf7f58319935341424dfc7d75b1bd16` incorrectly limited its search span to stop before the Blob expression, so the BOM assertion did not inspect the expression. The follow-up test commit `aba169fe8dcc493c1a404cc534ebd630f8e74fbf` expands the test boundary through URL creation. The app source was not weakened and the BOM assertion remains active. The Quality Gate and CI both passed on the corrected test SHA.
+An intermediate attempt [`e8d44f3b2730d300a53e0fe33319ad1a75d4a6af`](https://github.com/Kapitech-Agency/kapitech-ams/commit/e8d44f3b2730d300a53e0fe33319ad1a75d4a6af) failed the existing Client detail regression because consolidation omitted the Directory export's SLA budget and current daily spend columns. Those fields were restored in [`dcca9f2c9f0d242968423e37d63b2bb4a86d3ad5`](https://github.com/Kapitech-Agency/kapitech-ams/commit/dcca9f2c9f0d242968423e37d63b2bb4a86d3ad5); both workflows passed on that correction. The current tested SHA `1ae8209b39ff65cc7cbb6c302ddc9815efc5720c` includes the restoration and Onboarding copy change. No regression was deleted or skipped.
 
-This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch `main` and the exact workflow results before acting; a docs-only commit does not change the application/test SHA that was tested.
+This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch `main` and workflow results before acting; docs-only commits do not change the source/test snapshot that was tested.
 
 ## 2. Active delivery stage
 
@@ -57,10 +56,10 @@ Recent repository history includes further work/tests for **Website CMS, Finance
 
 Re-verify live source and CI on every resume; this list is a dated recovery pointer.
 
-1. **Rehydrate:** fetch current `main`, recent history, relevant source and exact current CI/Quality Gate results.
-2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox scope/candidate cleanup, Tasks local date, Planning tab query context and Clients CSV correctness/encoding all have successful exact-SHA evidence.
-3. **Continue Stage 4 in canonical module order:** finish Clients Directory source/test gaps, then Clients Onboarding and Agreements. Keep checklist/document/kickoff-readiness, Contract History and other absent canonical record views unavailable. Do not invent owner/next-action fields or infer history from timestamps.
-4. **Validate one bounded slice:** source diff, existing/new regression coverage and both CI workflows for the source SHA. Update progress and gap evidence after completion.
+1. **Rehydrate:** fetch current `main`, recent history, relevant source and current exact-SHA CI/Quality Gate results.
+2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, and Clients scope-aware exports/evidence-based Onboarding copy have successful exact-SHA evidence.
+3. **Continue Stage 4 in canonical module order:** Clients Directory and Onboarding source/test changes are verified. Continue to Clients → Agreements, beginning with local-calendar consistency in the Retainer renewal-date defaults. Keep Contract History target-only until canonical version/event history exists; do not infer owner/next-action fields from dates.
+4. **Validate one bounded slice:** inspect current source/tests and gap row, make the smallest complete change, retain negative-path regression tests, verify both CI workflows on the source/test SHA, then update checkpoint and gap evidence.
 5. **Release gate remains closed:** authenticated browser/viewport/accessibility review and explicit user sign-off are still required at Stage 5. No authenticated screenshot or browser visual/keyboard/touch test has been performed in this execution. Do not start broad Stage 6 workflow/backend implementation before approval.
 
 ## 4. Checkpoint update template
