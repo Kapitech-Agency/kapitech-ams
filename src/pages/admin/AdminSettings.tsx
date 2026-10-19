@@ -73,6 +73,8 @@ type SecurityStatus = {
     latestName?: string;
     reason?: string;
   };
+  restoreVerified: boolean | null;
+  restoreVerifiedAt: string | null;
 };
 
 // ProductionReadinessCard remains the shared readiness contract for this inline AMS gate.
@@ -827,22 +829,45 @@ export const AdminSettings: React.FC = () => {
   };
 
   const latestBackup = backups[0] ?? null;
-  const backupHealthy = Boolean(backupIntegrity?.valid);
-  const mfaEnrolled = securityStatus
-    ? securityStatus.mfaEnabledCount + ' / ' + securityStatus.activeUserCount + ' Enrolled'
-    : overviewLoading ? 'Checking…' : 'Unavailable';
+  const backupChecksUnavailable = !securityStatus || !backupIntegrity;
+  const backupHealthy = backupIntegrity?.valid === true
+    && securityStatus?.backupFresh === true
+    && securityStatus?.restoreVerified === true;
+  const backupIntegrityLabel = backupIntegrity?.valid === true
+    ? 'verified'
+    : backupIntegrity?.valid === false ? 'needs review' : 'unavailable';
+  const backupFreshnessLabel = securityStatus?.backupFresh === true
+    ? 'fresh'
+    : securityStatus?.backupFresh === false ? 'stale' : 'unavailable';
+  const backupRestoreLabel = securityStatus?.restoreVerified === true
+    ? 'verified' + (securityStatus.restoreVerifiedAt ? ' at ' + formatUtc(securityStatus.restoreVerifiedAt) : '')
+    : securityStatus?.restoreVerified === false ? 'not verified' : 'evidence unavailable';
   const backupValue = backupLoadError
     ? backups.length > 0 ? 'Last known' : 'Unavailable'
     : latestBackup
-      ? backupHealthy ? '100% Verified' : 'Check required'
+      ? backupChecksUnavailable ? 'Checks unavailable' : backupHealthy ? 'Recovery checks verified' : 'Review required'
       : 'No snapshot';
   const backupContext = backupLoadError
     ? backups.length > 0
       ? 'Current backup status could not be refreshed. The last known snapshot is shown below.'
       : 'Backup status could not be verified. Retry to refresh the server data.'
     : latestBackup
-      ? 'Latest snapshot ' + formatUtc(latestBackup.createdAt)
+      ? 'Latest snapshot ' + formatUtc(latestBackup.createdAt) + ' · Integrity ' + backupIntegrityLabel + ' · Backup freshness ' + backupFreshnessLabel + ' · Restore verification ' + backupRestoreLabel
       : 'No production backup returned by the server';
+  const backupVerificationFor = (backup: BackupRecord) => {
+    if (backup.createdAt !== latestBackup?.createdAt) {
+      return { tone: 'neutral' as const, label: 'Per-snapshot verification not provided' };
+    }
+    if (backupLoadError || backupChecksUnavailable) {
+      return { tone: 'warning' as const, label: 'Latest checks unavailable' };
+    }
+    return backupHealthy
+      ? { tone: 'success' as const, label: 'Integrity, freshness & restore verified' }
+      : { tone: 'warning' as const, label: 'Review required' };
+  };
+  const mfaEnrolled = securityStatus
+    ? securityStatus.mfaEnabledCount + ' / ' + securityStatus.activeUserCount + ' Enrolled'
+    : overviewLoading ? 'Checking…' : 'Unavailable';
   const notificationContext =
     notificationStatus === 'available'
       ? 'Settings request succeeded; delivery readiness is reported separately below'
@@ -942,8 +967,8 @@ export const AdminSettings: React.FC = () => {
               label="Backup & Recovery"
               value={overviewLoading ? 'Checking…' : backupValue}
               context={overviewLoading ? 'Loading backup health and retention status' : backupContext}
-              status={overviewLoading ? 'Checking' : backupLoadError ? 'Unavailable' : backupHealthy ? 'Healthy' : 'Needs review'}
-              tone={overviewLoading ? 'neutral' : backupLoadError ? 'warning' : backupHealthy ? 'success' : 'warning'}
+              status={overviewLoading ? 'Checking' : backupLoadError || backupChecksUnavailable ? 'Unavailable' : backupHealthy ? 'Recovery verified' : 'Needs review'}
+              tone={overviewLoading ? 'neutral' : backupLoadError || backupChecksUnavailable ? 'warning' : backupHealthy ? 'success' : 'warning'}
             />
             <SummaryCard
               label="Security & MFA"
@@ -1023,7 +1048,7 @@ export const AdminSettings: React.FC = () => {
                             <p className="break-all font-mono text-xs font-medium text-fg">{archiveIdentifier(backup.createdAt, index)}</p>
                             <p className="mt-1 text-[10px] text-muted">Production snapshot</p>
                           </div>
-                          <StatusBadge tone={backupHealthy ? 'success' : 'warning'} label={backupHealthy ? 'Verified' : 'Needs check'} />
+                          <StatusBadge {...backupVerificationFor(backup)} />
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
                           <div className="min-w-0"><p className="text-[10px] text-muted">Size</p><p className="mt-1 text-xs tabular-nums text-fg">{formatSize(backup.sizeBytes)}</p></div>
@@ -1864,7 +1889,7 @@ export const AdminSettings: React.FC = () => {
                   ['Database', productionReadiness?.status?.datasource || 'PostgreSQL', 'Production data source'],
                   ['Document vault', productionReadiness?.gates?.documentStorage ? 'Ready' : 'Check required', 'Storage is server-managed'],
                   ['Notification settings', notificationStatus === 'available' ? 'Available' : notificationStatus === 'unavailable' ? 'Unavailable' : 'Checking', 'Delivery readiness is reported separately below'],
-                  ['Backup / DR', securityStatus?.backupFresh ? 'Fresh' : 'Review', 'Restore policy remains infrastructure-managed']
+                  ['Backup / DR', securityStatus?.backupFresh === true && securityStatus.backupIntegrity.valid && securityStatus.restoreVerified === true ? 'Recovery verified' : 'Review', 'Requires a fresh backup, valid integrity and restore verification']
                 ].map(([label, value, helper]) => (
                   <div key={String(label)} className="rounded-control border border-line bg-bg p-4">
                     <div className="flex items-center justify-between gap-2">

@@ -1167,3 +1167,25 @@ CI and Quality Gate on `ed739f44032b2881e8c5fdca95cec421a6fa5d5a` passed typeche
 ### Annual Summary translation test cleanup — 19 October 2026
 
 On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a duplicate legacy assertion with single-quoted keys remained after the exact double-quoted dictionary checks were added. The stale assertion is removed; source translation entries remain unchanged. Re-run both workflows on the corrective SHA.
+
+
+## Stage 4 view design record — Settings · System Overview · Backup & Recovery
+
+**View ID:** VIEW-SETTINGS-OVERVIEW, System Overview.
+**Implementation status:** The status card and recent-backup register now use the existing server fields for backup freshness, integrity and restore verification. Verify the exact commit through both workflows before source/test sign-off.
+
+1. **Owner/persona.** Settings → System Overview. Authorized administrators inspect backup evidence and server operational readiness, without changing infrastructure policy.
+2. **Primary task.** Determine whether the latest backup meets freshness and integrity requirements and whether a restore test is recorded as verified.
+3. **Decision.** Is there a current snapshot, is its integrity valid, is it fresh, and does existing server health report restore verification?
+4. **Primary surface.** System status summary paired with canonical recent production backup history.
+5. **Content order.** Summary status/value/context; latest snapshot history; per-snapshot status only where the API can support it; separate production-readiness summary. Restore readiness is not inferred from mere backup existence.
+6. **Fields and semantics.** Existing SecurityStatus includes backupFresh, backupIntegrity.valid, restoreVerified and restoreVerifiedAt. Summary marks recovery verified only if all three conditions are true. History API rows only expose timestamp/size, so the latest check result cannot be copied onto each historical snapshot.
+7. **Controls.** Existing Verify integrity and Retry actions remain unchanged; they continue to call the current integrity/security endpoints. No new route, write path or infrastructure action is added.
+8. **Canonical ownership/breadcrumb.** Current server security status is canonical for freshness/integrity/restore evidence; backup-list records are canonical for snapshot timestamp/size. No duplicate client-side health model.
+9. **Role-aware presentation.** Existing canAccessServer/canView audit checks remain unchanged; no access policy altered.
+10. **States/recovery.** Unavailable when sources fail or checks are missing, Review required when evidence is negative, Recovery verified only on freshness + integrity + restore verification. Historical rows say per-snapshot verification is not provided.
+11. **Responsive behavior.** Existing status card and backup cards/table remain. Repeated cards preserve independent scroll container and 1280px grid/table switch; verify responsive widths in Stage 5.
+12. **Accessibility.** Status values explicitly describe check evidence, not only color. Existing section headings, status badges, native buttons and scroll-region labels remain; keyboard/focus check stays in Stage 5.
+13. **Regression tests.** Assert all three criteria are required, historical rows don't inherit newest status, and the source label makes missing per-snapshot evidence explicit.
+14. **Dependencies.** Per-snapshot integrity/restore evidence is not returned by the backup-list endpoint. Do not synthesize it. Restore readiness remains infrastructure-owned and is reported from the server health status field.
+15. **Acceptance.** A fresh snapshot alone or valid integrity alone cannot produce a healthy/recovery-verified status. Historical entries won't claim verification without a record. Overall Settings stays partially complete pending authenticated browser and responsive review.

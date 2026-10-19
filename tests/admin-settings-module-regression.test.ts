@@ -73,6 +73,23 @@ test('Overview loads each server status independently and reports partial failur
   assert.ok(source.includes('onClick={() => void loadOverview()}'));
 });
 
+test('Backup health requires freshness, integrity and restore verification and keeps historical checks distinct', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  assert.match(source, /restoreVerified: boolean \| null/);
+  assert.match(source, /const backupHealthy = backupIntegrity\?\.valid === true\s*&& securityStatus\?\.backupFresh === true\s*&& securityStatus\?\.restoreVerified === true/);
+  assert.match(source, /Recovery checks verified/);
+  assert.match(source, /Backup freshness ' \+ backupFreshnessLabel \+ ' · Restore verification ' \+ backupRestoreLabel/);
+  assert.match(source, /const backupVerificationFor = \(backup: BackupRecord\)/);
+  assert.match(source, /backup\.createdAt !== latestBackup\?\.createdAt/);
+  assert.match(source, /Per-snapshot verification not provided/);
+  assert.match(source, /Integrity, freshness & restore verified/);
+  assert.match(source, /Restore verification/);
+  assert.doesNotMatch(source, /const backupHealthy = Boolean\(backupIntegrity\?\.valid\)/,
+    'Integrity alone cannot mark recovery healthy.');
+  assert.doesNotMatch(source, /label=\{backupHealthy \? 'Verified' : 'Needs check'\}/,
+    'The newest snapshot check must not be applied to every historical snapshot.');
+});
+
 test('Backup source failures do not masquerade as an empty production backup history', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
 

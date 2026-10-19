@@ -839,3 +839,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 
 
 **Annual Summary assertion cleanup:** Exact-SHA runs [39231747201](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39231747201) and [39231747102](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39231747102) still failed test 330 due one remaining old regex that expected single-quoted dictionary keys. The exact dictionary membership checks already assert the actual double-quoted entries; the stale regex is removed. Source translation dictionary and financial calculations remain unchanged.
+
+
+### SET-BACKUP-RECOVERY-STATUS-001: Separate snapshot presence, integrity, freshness and restore verification
+
+**Source:** src/pages/admin/AdminSettings.tsx consumes the existing server SecurityStatus fields. “Recovery verified” now requires `backupIntegrity.valid`, `backupFresh === true` and `restoreVerified === true`. The card exposes integrity/freshness/restore evidence and no longer uses “Healthy” or “100% Verified” from integrity alone. Recent-backup rows distinguish the latest record's check from older snapshots because the backup-list API exposes timestamp/size, not per-snapshot verification. The Integration Overview Backup/DR row uses the same readiness conditions.
+
+**Tests:** tests/admin-settings-module-regression.test.ts checks the three readiness criteria, evidence wording, historical per-snapshot limitation, and rejects integrity-only or shared-status logic. API/server logic and backup policies remain unchanged. Exact-SHA CI, Quality Gate, and Stage 5 authenticated/responsive verification remain required.
