@@ -131,6 +131,50 @@ const formatInteractionTimestamp = (value: string, language: string) => {
   }).format(date);
 };
 
+type ClientProjectReference = {
+  id: string;
+  slug?: string;
+  name?: string;
+  clientId?: string;
+  status?: string;
+  targetEndDate?: string;
+  progressPercent?: number;
+};
+type ClientInvoiceReference = {
+  id: string;
+  clientId?: string;
+  invoiceNumber?: string;
+  number?: string;
+  status?: string;
+  dueDate?: string;
+  issueDate?: string;
+  createdAt?: string;
+};
+type ClientDocumentReference = {
+  id: string;
+  name?: string;
+  title?: string;
+  fileName?: string;
+  category?: string;
+  relatedEntity?: string;
+  relatedId?: string;
+  status?: string;
+  updatedAt?: string;
+};
+type ClientInboxReference = {
+  id: string;
+  convertedClientId?: string;
+  fullName?: string;
+  company?: string;
+  type?: string;
+  status?: string;
+  createdAt?: string;
+};
+type ClientLinkedRecordsState<T> = {
+  status: 'idle' | 'loading' | 'ready' | 'restricted' | 'error';
+  records: T[];
+};
+
 type ClientContractSummary = {
   id: string;
   contractNumber?: string;
@@ -244,6 +288,8 @@ export const AdminClients: React.FC = () => {
   const canManageClients = hasAdminPermission('canManageClients');
   const canViewClientContracts = canManageClients || hasAdminPermission('canManageCrm') || hasAdminPermission('canManageProjects');
   const canManageClientInteractions = canManageClients || hasAdminPermission('canManageCrm');
+  const canViewClientProjects = hasAdminPermission('canManageProjects');
+  const canViewClientFinance = hasAdminPermission('canViewFinancials');
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
@@ -272,6 +318,11 @@ export const AdminClients: React.FC = () => {
   const [interactionsLoading, setInteractionsLoading] = useState(false);
   const [interactionsError, setInteractionsError] = useState<string | null>(null);
   const [interactionReloadKey, setInteractionReloadKey] = useState(0);
+  const [clientRelatedProjects, setClientRelatedProjects] = useState<ClientLinkedRecordsState<ClientProjectReference>>({ status: 'idle', records: [] });
+  const [clientRelatedInvoices, setClientRelatedInvoices] = useState<ClientLinkedRecordsState<ClientInvoiceReference>>({ status: 'idle', records: [] });
+  const [clientRelatedDocuments, setClientRelatedDocuments] = useState<ClientLinkedRecordsState<ClientDocumentReference>>({ status: 'idle', records: [] });
+  const [clientRelatedInbox, setClientRelatedInbox] = useState<ClientLinkedRecordsState<ClientInboxReference>>({ status: 'idle', records: [] });
+  const [clientRelatedReloadKey, setClientRelatedReloadKey] = useState(0);
   const [interactionDrawerOpen, setInteractionDrawerOpen] = useState(false);
   const [interactionClient, setInteractionClient] = useState<AgencyClient | null>(null);
   const [interactionSaving, setInteractionSaving] = useState(false);
@@ -495,6 +546,122 @@ export const AdminClients: React.FC = () => {
 
     return () => { active = false; };
   }, [selectedClient?.id, canManageClientInteractions, interactionReloadKey]);
+
+  useEffect(() => {
+    if (!selectedClient) {
+      setClientRelatedProjects({ status: 'idle', records: [] });
+      setClientRelatedInvoices({ status: 'idle', records: [] });
+      setClientRelatedDocuments({ status: 'idle', records: [] });
+      setClientRelatedInbox({ status: 'idle', records: [] });
+      return;
+    }
+
+    let active = true;
+    const clientId = selectedClient.id;
+    const begin = <T,>(permitted: boolean, setter: React.Dispatch<React.SetStateAction<ClientLinkedRecordsState<T>>>) => {
+      setter({ status: permitted ? 'loading' : 'restricted', records: [] });
+    };
+    begin(canViewClientProjects, setClientRelatedProjects);
+    begin(canViewClientFinance, setClientRelatedInvoices);
+    begin(true, setClientRelatedDocuments);
+    begin(canManageClientInteractions, setClientRelatedInbox);
+
+    if (canViewClientProjects) {
+      void api.projects.getAll().then((response) => {
+        if (!active) return;
+        if (!response.success || !Array.isArray(response.data?.projects)) {
+          setClientRelatedProjects({ status: 'error', records: [] });
+          return;
+        }
+        const rows = (response.data.projects as ClientProjectReference[])
+          .filter((project) => String(project.clientId || '').trim() === clientId)
+          .sort((left, right) => String(right.targetEndDate || '').localeCompare(String(left.targetEndDate || '')));
+        setClientRelatedProjects({ status: 'ready', records: rows });
+      }).catch(() => {
+        if (active) setClientRelatedProjects({ status: 'error', records: [] });
+      });
+    }
+
+    if (canViewClientFinance) {
+      void api.finance.getInvoices().then((response) => {
+        if (!active) return;
+        if (!response.success || !Array.isArray(response.data?.invoices)) {
+          setClientRelatedInvoices({ status: 'error', records: [] });
+          return;
+        }
+        const rows = (response.data.invoices as ClientInvoiceReference[])
+          .filter((invoice) => String(invoice.clientId || '').trim() === clientId)
+          .sort((left, right) => String(right.issueDate || right.createdAt || '').localeCompare(String(left.issueDate || left.createdAt || '')));
+        setClientRelatedInvoices({ status: 'ready', records: rows });
+      }).catch(() => {
+        if (active) setClientRelatedInvoices({ status: 'error', records: [] });
+      });
+    }
+
+    // Documents use the existing authenticated read endpoint. Only canonical client IDs are linked here.
+    void api.documents.getAll().then((response) => {
+      if (!active) return;
+      if (!response.success || !Array.isArray(response.data?.documents)) {
+        setClientRelatedDocuments({ status: 'error', records: [] });
+        return;
+      }
+      const rows = (response.data.documents as ClientDocumentReference[])
+        .filter((document) =>
+          String(document.relatedEntity || '').toLowerCase() === 'client' &&
+          String(document.relatedId || '').trim() === clientId
+        )
+        .sort((left, right) => String(right.updatedAt || '').localeCompare(String(left.updatedAt || '')));
+      setClientRelatedDocuments({ status: 'ready', records: rows });
+    }).catch(() => {
+      if (active) setClientRelatedDocuments({ status: 'error', records: [] });
+    });
+
+    if (canManageClientInteractions) {
+      void api.leads.getAll().then((response) => {
+        if (!active) return;
+        if (!response.success || !Array.isArray(response.data?.leads)) {
+          setClientRelatedInbox({ status: 'error', records: [] });
+          return;
+        }
+        const rows = (response.data.leads as ClientInboxReference[])
+          .filter((lead) => String(lead.convertedClientId || '').trim() === clientId)
+          .sort((left, right) => String(right.createdAt || '').localeCompare(String(left.createdAt || '')));
+        setClientRelatedInbox({ status: 'ready', records: rows });
+      }).catch(() => {
+        if (active) setClientRelatedInbox({ status: 'error', records: [] });
+      });
+    }
+
+    return () => { active = false; };
+  }, [selectedClient?.id, canViewClientProjects, canViewClientFinance, canManageClientInteractions, clientRelatedReloadKey]);
+
+
+
+  const renderClientLinkedRecords = <T,>(
+    state: ClientLinkedRecordsState<T>,
+    emptyMessage: string,
+    renderRecords: (records: T[]) => React.ReactNode
+  ) => {
+    if (state.status === 'loading') {
+      return <div className="p-3 text-xs text-muted" role="status">{language === 'id' ? 'Memuat referensi...' : 'Loading linked records...'}</div>;
+    }
+    if (state.status === 'restricted') {
+      return <div className="p-3 text-xs leading-5 text-muted" role="status">{language === 'id' ? 'Dibatasi untuk peran Anda saat ini.' : 'Restricted for your current role.'}</div>;
+    }
+    if (state.status === 'error') {
+      return (
+        <div className="flex flex-wrap items-center justify-between gap-2 p-3" role="alert">
+          <span className="text-xs leading-5 text-muted">{language === 'id' ? 'Referensi tidak tersedia dari sumber saat ini.' : 'Linked records are unavailable from the current source.'}</span>
+          <Button type="button" variant="secondary" onClick={() => setClientRelatedReloadKey((value) => value + 1)}>{language === 'id' ? 'Coba lagi' : 'Retry'}</Button>
+        </div>
+      );
+    }
+    if (state.status === 'ready' && state.records.length === 0) {
+      return <div className="p-3 text-xs leading-5 text-muted" role="status">{emptyMessage}</div>;
+    }
+    if (state.status !== 'ready') return null;
+    return renderRecords(state.records);
+  };
 
 
 
@@ -1277,6 +1444,96 @@ export const AdminClients: React.FC = () => {
                 )}
               </section>
             )}
+
+            <section aria-label="Client 360 linked records" data-ams-feature-slug="client-360-linked-records" data-ams-slug="client-360-linked-records" className="overflow-hidden rounded-card border border-line bg-panel">
+              <div className="border-b border-line px-4 py-3">
+                <h3 className="text-sm font-semibold text-fg">Linked work and records</h3>
+                <p className="mt-1 text-xs leading-5 text-muted">Only explicit client ID relationships are shown. Missing links are not inferred from company names.</p>
+              </div>
+              <div className="grid min-w-0 grid-cols-1 gap-0 min-[900px]:grid-cols-2">
+                <section aria-label="Client projects" data-ams-slug="client-360-projects" className="min-w-0 border-b border-line min-[900px]:border-r">
+                  <div className="flex items-start justify-between gap-2 border-b border-line px-3 py-3">
+                    <div><h4 className="text-xs font-semibold text-fg">Projects &amp; delivery</h4><p className="mt-1 text-[10px] text-muted">Projects linked by client ID.</p></div>
+                    <Link to="/admin/projects" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Register</Link>
+                  </div>
+                  {renderClientLinkedRecords(clientRelatedProjects, 'No projects are explicitly linked to this client.', (records) => (
+                    <div className="divide-y divide-line">
+                      {records.slice(0, 5).map((project) => (
+                        <article key={project.id} className="flex min-w-0 items-start justify-between gap-2 px-3 py-3">
+                          <div className="min-w-0">
+                            <Link to={'/admin/projects?project=' + encodeURIComponent(project.slug || project.id)} className="break-words text-xs font-medium text-fg hover:text-accent-text">{project.name || 'Untitled project'}</Link>
+                            <p className="mt-1 text-[10px] text-muted">{formatClientStatusLabel(project.status)} · {project.targetEndDate ? formatDate(project.targetEndDate, language) : 'Deadline not recorded'}</p>
+                          </div>
+                          {typeof project.progressPercent === 'number' && Number.isFinite(project.progressPercent) && <span className="shrink-0 text-[10px] tabular-nums text-muted">{project.progressPercent}%</span>}
+                        </article>
+                      ))}
+                      {records.length > 5 && <p className="px-3 py-2 text-[10px] text-muted">Showing 5 of {records.length} linked projects.</p>}
+                    </div>
+                  ))}
+                </section>
+
+                <section aria-label="Client inbox history" data-ams-slug="client-360-inbox" className="min-w-0 border-b border-line">
+                  <div className="flex items-start justify-between gap-2 border-b border-line px-3 py-3">
+                    <div><h4 className="text-xs font-semibold text-fg">Inbox history</h4><p className="mt-1 text-[10px] text-muted">Inbox inquiries explicitly converted to this client.</p></div>
+                    <Link to="/admin/inbox?view=client" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Inbox</Link>
+                  </div>
+                  {renderClientLinkedRecords(clientRelatedInbox, 'No Inbox inquiry is explicitly linked to this client.', (records) => (
+                    <div className="divide-y divide-line">
+                      {records.slice(0, 5).map((lead) => (
+                        <article key={lead.id} className="flex min-w-0 items-start justify-between gap-2 px-3 py-3">
+                          <div className="min-w-0">
+                            <p className="break-words text-xs font-medium text-fg">{lead.fullName || lead.company || 'Unlabelled inquiry'}</p>
+                            <p className="mt-1 text-[10px] leading-4 text-muted">{formatClientStatusLabel(lead.status)} · {lead.createdAt ? formatDate(lead.createdAt, language) : 'Received date not recorded'}</p>
+                          </div>
+                          <span className="shrink-0 text-[10px] text-muted">{formatClientStatusLabel(lead.type)}</span>
+                        </article>
+                      ))}
+                      {records.length > 5 && <p className="px-3 py-2 text-[10px] text-muted">Showing 5 of {records.length} linked inquiries.</p>}
+                    </div>
+                  ))}
+                </section>
+
+                <section aria-label="Client finance references" data-ams-slug="client-360-finance" className="min-w-0 border-b border-line min-[900px]:border-r">
+                  <div className="flex items-start justify-between gap-2 border-b border-line px-3 py-3">
+                    <div><h4 className="text-xs font-semibold text-fg">Finance references</h4><p className="mt-1 text-[10px] text-muted">Invoice records linked by client ID.</p></div>
+                    <Link to="/admin/finance?tab=accounts-receivable" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Finance</Link>
+                  </div>
+                  {renderClientLinkedRecords(clientRelatedInvoices, 'No invoice is explicitly linked to this client.', (records) => (
+                    <div className="divide-y divide-line">
+                      {records.slice(0, 5).map((invoice) => (
+                        <article key={invoice.id} className="flex min-w-0 items-start justify-between gap-2 px-3 py-3">
+                          <div className="min-w-0">
+                            <p className="break-all text-xs font-medium text-fg">{invoice.invoiceNumber || invoice.number || invoice.id}</p>
+                            <p className="mt-1 text-[10px] leading-4 text-muted">{formatClientStatusLabel(invoice.status)} · {invoice.dueDate ? formatDate(invoice.dueDate, language) : 'Due date not recorded'}</p>
+                          </div>
+                        </article>
+                      ))}
+                      {records.length > 5 && <p className="px-3 py-2 text-[10px] text-muted">Showing 5 of {records.length} linked invoices.</p>}
+                    </div>
+                  ))}
+                </section>
+
+                <section aria-label="Client documents" data-ams-slug="client-360-documents" className="min-w-0">
+                  <div className="flex items-start justify-between gap-2 border-b border-line px-3 py-3">
+                    <div><h4 className="text-xs font-semibold text-fg">Documents</h4><p className="mt-1 text-[10px] text-muted">Files linked by client ID.</p></div>
+                    <Link to="/admin/documents?documents=project-client" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Documents</Link>
+                  </div>
+                  {renderClientLinkedRecords(clientRelatedDocuments, 'No document is explicitly linked to this client.', (records) => (
+                    <div className="divide-y divide-line">
+                      {records.slice(0, 5).map((document) => (
+                        <article key={document.id} className="flex min-w-0 items-start justify-between gap-2 px-3 py-3">
+                          <div className="min-w-0">
+                            <p className="break-words text-xs font-medium text-fg">{document.name || document.title || document.fileName || document.id}</p>
+                            <p className="mt-1 text-[10px] leading-4 text-muted">{document.category || 'Category not recorded'} · {formatClientStatusLabel(document.status)}</p>
+                          </div>
+                        </article>
+                      ))}
+                      {records.length > 5 && <p className="px-3 py-2 text-[10px] text-muted">Showing 5 of {records.length} linked documents.</p>}
+                    </div>
+                  ))}
+                </section>
+              </div>
+            </section>
 
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
               <div>

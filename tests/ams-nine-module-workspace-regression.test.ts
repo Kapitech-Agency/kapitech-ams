@@ -765,3 +765,33 @@ test('Clients Service & Health keeps unsupported telemetry metrics and worksheet
   assert.doesNotMatch(serviceHealth, /\b(?:99\.9|99\.|MTTR:\s*\d|\d+% uptime)\b/,
     'telemetry-dependent SLA performance must not be fabricated');
 });
+
+test('Client 360 exposes only canonically linked records behind existing permissions', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const linked = clients.indexOf('data-ams-slug="client-360-linked-records"');
+  const details = clients.indexOf('<p className="text-xs text-muted">Email</p>', linked);
+  assert.ok(linked >= 0 && details > linked, 'Client 360 linked records should sit before contact details.');
+  const section = clients.slice(linked, details);
+  assert.match(section, /data-ams-slug="client-360-projects"/);
+  assert.match(section, /data-ams-slug="client-360-inbox"/);
+  assert.match(section, /data-ams-slug="client-360-finance"/);
+  assert.match(section, /data-ams-slug="client-360-documents"/);
+  assert.match(section, /Only explicit client ID relationships are shown/);
+  assert.match(section, /\/admin\/projects\?project=/);
+  assert.match(section, /\/admin\/inbox\?view=client/);
+  assert.match(section, /\/admin\/finance\?tab=accounts-receivable/);
+  assert.match(section, /\/admin\/documents\?documents=project-client/);
+  assert.match(clients, /String\(project\.clientId \|\| ''\)\.trim\(\) === clientId/);
+  assert.match(clients, /String\(invoice\.clientId \|\| ''\)\.trim\(\) === clientId/);
+  assert.match(clients, /String\(document\.relatedEntity \|\| ''\)\.toLowerCase\(\) === 'client'/);
+  assert.match(clients, /String\(document\.relatedId \|\| ''\)\.trim\(\) === clientId/);
+  assert.match(clients, /String\(lead\.convertedClientId \|\| ''\)\.trim\(\) === clientId/);
+  assert.match(clients, /if \(canViewClientProjects\)/);
+  assert.match(clients, /if \(canViewClientFinance\)/);
+  assert.match(clients, /if \(canManageClientInteractions\)/);
+  assert.match(clients, /state\.status === 'restricted'/);
+  assert.match(clients, /state\.status === 'error'/);
+  assert.match(clients, /No invoice is explicitly linked to this client\./);
+  assert.doesNotMatch(section, /internalNotes|userAgent|password|sessionToken/,
+    'Client 360 must not disclose Inbox internal notes or browser/session data.');
+});
