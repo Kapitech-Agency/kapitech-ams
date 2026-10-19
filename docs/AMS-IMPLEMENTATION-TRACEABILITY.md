@@ -271,7 +271,7 @@ Dashboard exposes Overview, Performance, and Analytics. A missing or unsupported
 
 Renewal Schedule is available from either Agreements worksheet at `/admin/contracts?view=renewals`. It derives rows from active contract records and active retainer terms stored on canonical client records. It is a view over those records, not a separate renewal dataset. The content-first register now places searchable title/client/source discovery and a timing filter before the primary list, distinguishes a filtered-empty result from a truly empty register, supports retry when either source is unavailable, and labels partial source coverage instead of claiming a full total. Missing dates remain explicit. Contract and retainer source records do not expose accountable owner or next-action fields, so the page states this limitation and links to the canonical source registers. It does not recalculate retainer billing or automatically expire agreements. Contract History remains target-only.
 
-**Verification:** AMS Quality Gate and AMS CI passed on code SHA `f29e6ba2da1e0a7deb40f86dac75096ef127bdd4`. Quality Gate passed typecheck, 711 regression tests (691 passed, 0 failed, 20 skipped), and production build. AMS CI passed PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build, packaged-migration verification, and production HTTP smoke test. Browser-level and role-specific checks remain unverified.
+**Verification:** The searchable deadline-register source and test-scope correction passed AMS Quality Gate [39207367066](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207367066) and AMS CI [39207367178](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207367178) on code SHA `939cd800a4321c8049e27cb383c1176cf9c8866b`. Browser-level search/filter, keyboard, role and viewport behavior remains unverified.
 
 ### NAV-016: Inbox Unread is a saved view over canonical New-status records
 
@@ -637,3 +637,13 @@ Acceptance still pending: Browser verification of direct routes, query/back-forw
 
 
 **Stage 4 source slice — Finance Dashboard (19 October 2026):** `src/pages/admin/AdminFinanceWorkspace.tsx` compares issued invoice value, recorded cash in, recorded cash out and net movement proxy for the selected month/quarter/year against the previous comparable period using shared reporting-period helpers. The Dashboard uses an exact-value comparison table followed by selected-period transaction activity; Executive Summary remains company totals and the recent invoice register. The changes are presentation-only. Both CI workflows must pass on the resulting SHA before the slice is marked source/test verified.
+
+
+### NAV-016: Clients Service & Health telemetry guard
+
+Status: IMPLEMENTED_UNVERIFIED as a source/test slice; live SLA functionality remains unavailable.
+
+Source: `src/pages/admin/AdminClientSlaMonitoring.tsx`.
+Regression: `tests/ams-nine-module-workspace-regression.test.ts` asserts that the workspace explicitly declares telemetry not configured; states uptime, MTTR, compliance, incident history and snapshots as unavailable; shows prerequisites only; links to the canonical Contracts & SOW workspace; keeps Service Issues & Feedback, Client Health and Service History target-only; and prevents sample SLA performance values from being introduced.
+
+Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207941880) and AMS Quality Gate [39207941811](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207941811) passed on source/test SHA `98a8662f4228622dabb8afe4500a05db94eb4201`. Telemetry provider setup, configured targets/calendars/pause rules, timestamped incidents and Inbox-owned Service Issues remain canonical dependencies. Authenticated browser, role, keyboard and responsive checks remain Stage 5.
