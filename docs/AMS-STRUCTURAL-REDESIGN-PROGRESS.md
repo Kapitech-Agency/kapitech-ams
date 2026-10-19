@@ -608,3 +608,8 @@ The follow-up `4af1ec687dd39deeca5933d54023f357b57d14f9` restored the existing `
 15. **Acceptance.** An authorized reader sees the actionable register first, then a source-backed aging breakdown where every outstanding amount belongs to an explicit age bucket or the missing-date bucket. Source unavailability cannot appear as zero debt. AR/AP remains partially complete until Accounts Payable and related workflow traces are reviewed and Stage 5 verifies presentation.
 
 **Next Stage 4 slice:** Finance → Receivables & Payables → Accounts Payable. Review bill register hierarchy, open balance, installment schedule, vendor canonical links and source/recovery states without changing payables calculations or payment behavior.
+
+
+### Finance breakpoint assertion follow-up — 19 October 2026
+
+On `b93f08e595831489bd85b15d9107303b9fa06730`, both AMS workflows failed on four stale Finance toolbar assertions inherited from the 1100px breakpoint change in `fabd0cdeb2eb7e8df7eef7f5471b4f79cb5536a5`. The page implementation is intentionally aligned to the 1100px Design System breakpoint. The corrective commit updates the three test suites to match `min-[1100px]` and fixes over-escaped regular expressions. Confirm both workflows on that exact follow-up SHA; do not count AR aging as verified before then.

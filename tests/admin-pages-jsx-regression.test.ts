@@ -90,7 +90,7 @@ test('Finance views stay inside the Finance workspace and retired routes stay hi
   }
   assert.ok(workspace.includes('FINANCE_WORKBOOK_GROUPS'));
   assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance worksheets"'));
-  assert.match(workspace, /ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1" variant="primary"/);
+  assert.match(workspace, /ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 min-\[1100px\]:flex-1" variant="primary"/);
   assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
 });
 test('Retainer workspace uses neutral counts and sentence-case table hierarchy', () => {

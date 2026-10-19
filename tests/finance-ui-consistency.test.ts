@@ -28,7 +28,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(subnavigation, /finance-workspace-receivables-payables/);
   assert.match(subnavigation, /finance-workspace-project-finance/);
   assert.match(subnavigation, /finance-workspace-accounting-reports/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1" variant="primary"/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 min-\[1100px\]:flex-1" variant="primary"/);
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   assert.ok(primitives.includes("'border-accent/20 bg-accent/10 font-semibold text-fg'"),
     'The primary worksheet active state must use the shared crimson accent tint and border.');
@@ -75,10 +75,10 @@ test('Finance visible copy describes user workflows, not spreadsheet implementat
 test('Finance workspace groups navigation, search, and alerts using the shared AMS layout patterns', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
-  assert.match(workspace, /className="flex min-w-0 flex-col gap-3 min-\\[1100px\\]:flex-row min-\\[1100px\\]:items-center min-\\[1100px\\]:justify-between"[\s\S]{0,280}data-ams-slug="finance-workspace-navigation"/);
+  assert.match(workspace, /className="flex min-w-0 flex-col gap-3 min-\[1100px\]:flex-row min-\[1100px\]:items-center min-\[1100px\]:justify-between"[\s\S]{0,280}data-ams-slug="finance-workspace-navigation"/);
   assert.doesNotMatch(workspace, /SEARCHABLE_FINANCE_TABS\.has\(activeTab\.key\) && activeGroup\.items\.length <= 4/);
-  assert.match(workspace, /<div className="flex min-w-0 w-full justify-start min-\\[1100px\\]:w-72 min-\\[1100px\\]:shrink-0 min-\\[1100px\\]:justify-end" data-ams-slug="finance-worksheet-search">/);
-  assert.doesNotMatch(workspace, /finance-workspace-navigation[\\s\\S]{0,100}lg:flex-row/,
+  assert.match(workspace, /<div className="flex min-w-0 w-full justify-start min-\[1100px\]:w-72 min-\[1100px\]:shrink-0 min-\[1100px\]:justify-end" data-ams-slug="finance-worksheet-search">/);
+  assert.doesNotMatch(workspace, /finance-workspace-navigation[\s\S]{0,100}lg:flex-row/,
     'Finance worksheet navigation stays stacked until the canonical 1100px breakpoint.');
   assert.match(workspace, /\(Boolean\(registerActionError && !editor\) \|\| registerErrors\.length > 0 \|\| sourceErrors\.length > 0\)/);
   assert.match(workspace, /<AdminModuleNotice[\s\S]{0,320}Finance action needs attention/);
