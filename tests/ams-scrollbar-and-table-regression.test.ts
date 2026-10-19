@@ -221,7 +221,7 @@ test('primary data scroll regions are named and keyboard-accessible across all n
     ['src/pages/admin/AdminInbox.tsx', /aria-label="Scrollable inbox inquiry register"/, 'Inbox'],
     ['src/pages/admin/AdminProjects.tsx', /aria-label="Scrollable project register table"/, 'Projects'],
     ['src/components/admin/TasksWorkspace.tsx', /aria-label="Scrollable task register"/, 'Tasks'],
-    ['src/pages/admin/AdminClients.tsx', /aria-label="Scrollable client directory"/, 'Clients'],
+    ['src/pages/admin/AdminClients.tsx', /aria-label="Scrollable client directory"|aria-label=\{statusScope === 'lead' \? 'Scrollable onboarding account register' : 'Scrollable client directory'\}/, 'Clients'],
     ['src/pages/admin/AdminFinanceWorkspace.tsx', /aria-label=\{'Scrollable ' \+ title \+ ' table'\}/, 'Finance'],
     ['src/pages/admin/AdminTeams.tsx', /aria-label="Scrollable team directory table"/, 'Team & Resources'],
     ['src/pages/admin/AdminDocuments.tsx', /aria-label="Scrollable private document register"/, 'Documents'],
