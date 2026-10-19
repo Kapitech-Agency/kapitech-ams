@@ -94,7 +94,7 @@ For every module/workspace/worksheet and workflow:
 
 ### Stage 4 — Finish main-content hierarchy across all nine modules
 
-**Objective:** Finish the in-progress structural UX/UI redesign and make every active view understandable.
+**Objective:** Fully re-architect the main-content hierarchy across all nine modules using the mandatory [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). This is a structural overhaul, not a cosmetic revision or preservation of the current page layout.
 
 Proceed one bounded view/module slice at a time:
 1. Dashboard — Overview, Performance, Analytics.
@@ -109,7 +109,9 @@ Proceed one bounded view/module slice at a time:
 
 For each slice, follow the content blueprint and worksheet matrix. Keep the primary work area dominant; use task-specific composition rather than applying Dashboard cards to every screen. Show one representative example per distinct function when that is sufficient to assess layout; do not create fake production data or extra records simply to fill space. Preserve real data sources and existing supported actions. Track the explicit breadcrumb requirement in the gap register and the detailed execution checklist. Implement ancestor trails on eligible deep record/detail pages, preserve valid permission-aware parent routes, do not repeat the current title in the trail, and use the approved compact-screen fallback. Intentionally omit breadcrumbs where the current location is already clear.
 
-**Deliverables:** Updated module views and gap-register evidence for each view; code/test checkpoints with direct-to-main commits.
+**Deliverables:** Per-view design records; restructured module views; updated requirement/gap evidence; breadcrumb consumer verification; targeted tests; direct-to-main checkpoints. Follow [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md).
+
+**Structural-overhaul rule:** Do not merely move KPI strips, alter card styling or apply a shared template. Rebuild the hierarchy from task, primary work surface, canonical records, action priority and role context. Retain content only when justified. Preserve real data, routes, permissions and business semantics.
 
 **Exit gate:** Every active view is either reviewed and accepted against its content contract or explicitly marked blocked/unverified with its reason. No module is declared complete because a shared component changed or a build passed.
 

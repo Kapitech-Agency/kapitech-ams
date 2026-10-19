@@ -9,7 +9,7 @@
 
 Act as the senior engineer responsible for completing Kapitech AMS end-to-end. The requested goal is not only to make navigation or UI look finished: carry current work through verified main content, complete supported business workflows, cross-module data integrity, security and regression tests, operational recovery, production readiness and live release verification.
 
-Read AGENTS.md, docs/README.md, this roadmap, the gap register, the Master Structure, navigation IA, design system, current progress and implementation map, relevant domain specifications, E2E matrix, and current production runbooks. Inspect current main and current source/CI before deciding what remains. Read docs/AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md as the detailed acceptance checklist; it supplements the roadmap and must not be treated as a competing schedule.
+Read AGENTS.md, docs/README.md, this roadmap, the gap register, the Master Structure, navigation IA, design system, current progress and implementation map, relevant domain specifications, E2E matrix, and current production runbooks. Inspect current main and current source/CI before deciding what remains. Read docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md and docs/AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md. Stage 4 must structurally re-architect each unfinished workspace from Kapitech's real tasks and canonical records, not merely polish or revise the current layout. Read docs/AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md as the detailed acceptance checklist; it supplements the roadmap and must not be treated as a competing schedule.
 
 ## Mandatory rules
 

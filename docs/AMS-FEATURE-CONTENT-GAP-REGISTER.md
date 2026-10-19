@@ -59,6 +59,22 @@ Keep one canonical requirement ID per capability. Link consuming modules to it r
 | Related documents | [Master Structure §3.1](AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md), [Content Architecture](AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md), [Navigation IA](architecture/ams-navigation-information-architecture.md), [Stage-by-Stage Checklist](AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md) |
 
 
+## 2.2 Mandatory cross-cutting requirement — structural main-content overhaul
+
+| Field | Requirement record |
+|---|---|
+| Requirement ID | AMS-MAIN-CONTENT-STRUCTURE-001 |
+| Owner | All nine modules and their workspaces/worksheets |
+| Roadmap stage | Stage 4, with baseline in Stage 0, shared prerequisites in Stages 2–3, visual approval in Stage 5 and functional checks in later stages |
+| Status | **In progress; verify every view against current source** |
+| Specification | [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md) |
+| Required result | Structurally rebuild main content for Dashboard, Inbox, Projects, Clients, Finance, Team & Resources, Documents, Website CMS and Settings. Each active view needs a clear task, primary surface, ordered hierarchy, source-owned fields, controls, states, related-record ownership, role-safe presentation and responsive/accessibility criteria. |
+| Non-goals | Do not recreate approved navigation; do not make every page a KPI dashboard; do not invent data/workflows; do not change canonical ownership, permissions, Finance formulas or established business behavior as incidental UI work. |
+| Acceptance | Per-view design record; task-appropriate primary surface; no duplicated content; truthful states/semantics; correctly placed filters/actions; permission-safe links; breadcrumb requirement UX-NAV-BREADCRUMB-001; targeted tests for affected consumers; honest runtime reporting. |
+| Next action | Continue Stage 4 from current main. Implement the next unfinished view using the specification, then update granular gap rows and this roll-up with exact commit/test evidence. |
+| Completion rule | The document, one shared component, one screenshot or green CI does not complete this requirement. Each in-scope view must pass its own criteria or remain explicitly blocked/unverified with the reason and next action. |
+
+
 ## 3. Initial module coverage inventory
 
 The rows below identify the **minimum audit scope**, not a claim about the current implementation status. During Stage 0–3 of the roadmap, split them into granular requirement IDs and attach source/test evidence for each workspace.

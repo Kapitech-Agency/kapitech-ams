@@ -132,9 +132,9 @@ Checklist:
 
 ### Stage 4 — Main-content structure and UI implementation across all nine modules
 
-**Purpose:** Make each active page understandable, task-focused and consistent with the product contract.
+**Purpose:** Perform a full structural re-architecture of main content using docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md as the mandatory detailed contract. This is not a cosmetic revision of existing layouts.
 
-Work through the module order in the canonical roadmap, one bounded worksheet at a time.
+Work through the module order in the canonical roadmap, one bounded worksheet at a time. Define the new ordered hierarchy and primary work surface before coding. Rebuild where the current structure fails the task; retain only elements justified by user task and source evidence.
 
 Checklist for every view:
 - [ ] State the page's primary user task and select the dominant working surface (register, board, editor, report, timeline, detail or operational control).
