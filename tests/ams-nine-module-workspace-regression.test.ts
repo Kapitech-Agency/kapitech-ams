@@ -212,6 +212,9 @@ test('Documents puts the private register before upload and has a distinct failu
   assert.ok(documents.indexOf('data-ams-slug="documents-directory"') < documents.indexOf('slug="documents-upload-dropzone"'));
   assert.match(documents, /Documents unavailable/);
   assert.match(documents, /No documents match the current filters/);
+  assert.doesNotMatch(documents, /useReportingPeriod\(\)/, 'The canonical library must not inherit an invisible global date filter.');
+  assert.doesNotMatch(documents, /matchesDate\(doc\.updatedAt/, 'Document dates are shown as metadata, not an unlabelled filter.');
+  assert.match(documents, /matchesTab\(doc, activeTab\)\s*&&\s*\(!q \|\| searchTextOf\(doc\)\.includes\(q\)\)/);
 });
 
 test('Careers jobs/applicants tabs follow compact AMS geometry and retain tab semantics', async () => {

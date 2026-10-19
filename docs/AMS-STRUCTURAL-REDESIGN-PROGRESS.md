@@ -974,3 +974,25 @@ Implementation: remove silent fallback from an explicit resourcesProject URL. Ve
 13. **Regression tests.** Assert per-source failure detection, successful-empty distinction, stale copy, real retry, conditional empty messaging and due-date/creation-date period semantics.
 14. **Dependencies.** A separate due date per installment is not currently stored; current member fee filter semantics are explicitly stated. No payment logic or API behavior changes.
 15. **Acceptance.** Team Fee never claims an empty register solely because its request failed, keeps member entitlement separate from classified expense cost, and states how period filtering works. View remains partially complete pending Stage 5 browser/source validation.
+
+
+## Stage 4 view design record — Documents · Document Library · filter ownership
+
+**View ID:** VIEW-DOCS-LIBRARY, canonical Document Library.
+**Status:** Removed an invisible global-period dependency from the register; verify the resulting SHA through both workflows before source/test sign-off.
+
+1. **Owner/persona.** Documents → Document Library. Staff search for an authorized canonical file, verify its owner/relationship and use permitted preview/download/upload actions.
+2. **Primary task.** Find a document across the canonical vault, independent of the currently selected Finance/reporting period.
+3. **Decision.** Which canonical file matches the search/category and sorting criteria, and what safe action can be taken on that same record?
+4. **Primary surface.** Existing searchable, sortable and paginated Document Library register/list, with the secure detail drawer and upload drawer.
+5. **Content order.** Module header/header upload action; search/category/sort controls; canonical document register with explicit loading/unavailable/no-match states; upload flow and document-detail surface as needed. Existing mobile list and wide table remain.
+6. **Fields and semantics.** Title/filename, category/type, owner, related client/project, size, update/upload date, status and available download action come from the canonical document records. Update/upload date is metadata, not an implicit filter.
+7. **Controls.** Category is query-addressable through the existing `documents` parameter; search and sort/pagination stay local to this library. The global reporting-period selector no longer filters records without a corresponding date control in the Documents workspace.
+8. **Canonical ownership/breadcrumb.** Document record remains canonical and linked to existing client/project IDs. Current details open in a drawer/modal within the library, not an eligible full-page route; do not add a breadcrumb. Any future full-page detail route must be re-audited against `UX-NAV-BREADCRUMB-001`.
+9. **Role-aware presentation.** Current `canManageDocuments` and server-protected file access remain authoritative. No permissions are added.
+10. **States/recovery.** Existing retry/access-denied behavior stays unchanged; on access failure, private rows and selected record are cleared. Transient non-auth errors preserve last known records with a visible stale-list warning. Upload create/storage ambiguous outcomes retain the current refresh-and-inspect recovery rather than blind duplicate retries.
+11. **Responsive behavior.** Existing mobile document cards below 1280px and contained wide table stay unchanged; verify 1100/900/600/390/320px during Stage 5.
+12. **Accessibility.** Explicit search/category/sort labels, document-specific preview/download/delete names, role alert for unavailable source and role status for stale refresh remain. Keyboard/focus/200% zoom still require browser verification.
+13. **Regression tests.** Assert that the register stays primary and distinct unavailable/empty states remain, while the component no longer imports or invokes `useReportingPeriod`/unlabelled `matchesDate` for documents. Search and category matching remain connected to the canonical collection.
+14. **Dependencies.** Current document source/interface does not expose a version-history chronology view. Do not fabricate version history or create a second repository. Verify backend/vault object integrity only through the existing protected contract.
+15. **Acceptance.** Older documents remain discoverable through visible search/category/sort regardless of global reporting period; security, source failure, actual stored-object integrity and browser/device acceptance remain open until verified in Stage 5.

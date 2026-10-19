@@ -765,3 +765,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`, Team Fee. The supplementary member-fee register and core expense source now each distinguish source-unavailable from a valid empty response; failed refresh labels last-known data stale, and the existing Finance loader provides retry. Copy explains that member milestones filter by due date (or creation date without one), while the displayed paid date is informational and expense source rows use expense date. No settlement, payment or accounting logic changed.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts per-source failure/empty/stale states, retry, dynamic empty messaging and date semantics. Any per-installment due-date/history model remains a later canonical data dependency. Exact-SHA CI and Quality Gate plus Stage 5 browser validation remain required.
+
+
+### DOC-LIBRARY-PERIOD-001: Remove the invisible global reporting-period filter
+
+**Source:** `src/pages/admin/AdminDocuments.tsx`. The list previously intersected category/search with `matchesDate(updatedAt/uploadedAt/createdAt)` from the global reporting-period context despite no visible document-date control. That could hide older canonical files without explaining why. The register now scopes to its visible category and search, then applies its existing sorting/pagination. File metadata dates remain displayed; the global period still works in worksheets that explicitly use it. No API, storage, authorization or document ownership behavior changed.
+
+**Tests:** `tests/ams-nine-module-workspace-regression.test.ts` asserts that Documents no longer imports/invokes the reporting-period hook or an invisible date filter while preserving the canonical category/search pipeline. Exact-SHA CI and Quality Gate plus authenticated browser file/version/accessibility checks remain required.
