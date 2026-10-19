@@ -21,16 +21,13 @@ test('Client detail distinguishes absent financial values from recorded zero', a
   assert.match(clients, /if \(typeof spend !== 'number' \|\| !Number\.isFinite\(spend\)\) return 'spend-not-recorded';/);
   assert.match(clients, /value={slaFilter}/);
   assert.match(clients, /value: 'spend-not-recorded', label: language === 'id' \? 'Belanja belum tercatat' : 'Spend not recorded'/);
-  assert.match(clients, /const recorded = configured\.filter\(\(\{ state \}\) => state !== 'spend-not-recorded'\);/);
-  assert.match(clients, /slaCompliance: recorded\.length \? Math\.round\(\(healthy \/ recorded\.length\) \* 1000\) \/ 10 : null/);
-  assert.match(clients, /clientMetrics\.recordedSla/);
-  assert.match(clients, /const hasCompleteBilledData = clients\.length > 0 && clients\.every/);
-  assert.match(clients, /totalBilled: hasCompleteBilledData \? clients\.reduce\(\(sum, client\) => sum \+ client\.totalSpend, 0\) : null/);
+  assert.doesNotMatch(clients, /clientMetrics|AdminMetricStrip/,
+    'The primary Clients Directory must not require a duplicate summary KPI computation.');
+  assert.match(clients, /const slaState = getClientSlaState\(client\)/,
+    'Each account row must retain source-backed spend-cap status.');
   assert.match(clients, /if \(billedA === null && billedB !== null\) return 1;/);
   assert.match(clients, /if \(billedA !== null && billedB === null\) return -1;/);
-  assert.match(clients, /clientMetrics\.totalBilled === null \? '—'/);
-  assert.match(clients, /clientMetrics\.missingSlaSpend === 0 \? 'text-success' : 'text-fg'/);
-  assert.match(clients, /clientMetrics\.total === 0 \? \(language === 'id' \? 'Belum ada akun klien' : 'No client records'\)/);
+  assert.match(clients, /typeof client\.totalSpend === 'number' && Number\.isFinite\(client\.totalSpend\)/);
   assert.match(clients, /client\.slaDailyAdSpendBudget \?\? ''/);
   assert.match(clients, /client\.currentDailyAdSpend \?\? ''/);
 });
