@@ -97,6 +97,20 @@ test('Inbox table labels and empty state reflect the inquiry-only workspace', as
   assert.match(inbox, /\.filter\(\(item\) => item\.type !== 'career'\)/);
 });
 
+test('Inbox keeps Careers applicant presentation in the canonical CMS workspace', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const app = await read('src/App.tsx');
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+
+  assert.equal((inbox.match(/\.filter\(\(item\) => item\.type !== 'career'\)/g) || []).length, 1);
+  assert.doesNotMatch(inbox, /(?:item|selectedSubmission)\.type === 'career'|case 'career':|Job Application|resumeUrl|portfolioUrl|linkedinUrl|experienceYears|case 'screening':|case 'shortlisted':|case 'interview':|case 'hired':|case 'rejected':|case 'withdrawn':|value: 'screening'|People & Operations/);
+  assert.match(inbox, /to="\/admin\/cms\/careers\?tab=applicants"/);
+  assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
+  assert.match(careers, /pagedApplicants\.map\(applicant/);
+  assert.ok(inbox.includes("{ value: 'in-review', label: 'In Review' }"));
+  assert.ok(inbox.includes("{ value: 'contacted', label: 'Contacted' }"));
+});
+
 test('Inbox remains an inquiry workspace and star state remains accessible', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   const app = await read('src/App.tsx');

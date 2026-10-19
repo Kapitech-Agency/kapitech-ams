@@ -13,7 +13,6 @@ import {
   Trash2, 
   ExternalLink,
   MessageSquare, 
-  Briefcase, 
   Globe, 
   Download, 
   Copy, 
@@ -31,7 +30,6 @@ import {
   Send,
   User,
   Users,
-  Clock,
   Building2,
   FileText,
   HelpCircle,
@@ -90,7 +88,7 @@ export const AdminInbox: React.FC = () => {
 
   // Selection & Panels
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
-  const [detailTab, setDetailTab] = useState<'brief' | 'notes' | 'specs'>('brief');
+  const [detailTab, setDetailTab] = useState<'brief' | 'notes'>('brief');
   const [internalNoteDraft, setInternalNoteDraft] = useState<string>('');
   const [isSavingNote, setIsSavingNote] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
@@ -476,11 +474,7 @@ export const AdminInbox: React.FC = () => {
         (item.positionTitle || '').toLowerCase().includes(queryLower) ||
         (item.services || []).some(s => s.toLowerCase().includes(queryLower)) ||
         (item.source || '').toLowerCase().includes(queryLower) ||
-        (item.positionTitle || '').toLowerCase().includes(queryLower) ||
-        (item.specialty || '').toLowerCase().includes(queryLower) ||
-        (item.tools || '').toLowerCase().includes(queryLower) ||
-        (item.resumeUrl || '').toLowerCase().includes(queryLower) ||
-        (item.linkedinUrl || '').toLowerCase().includes(queryLower)
+        (item.specialty || '').toLowerCase().includes(queryLower)
       );
 
       return matchesStatus && matchesPriority && matchesStarred && matchesSearch && matchesDate(item.createdAt);
@@ -548,13 +542,6 @@ export const AdminInbox: React.FC = () => {
   // Helper for channel badges
   const renderChannelBadge = (type?: string) => {
     switch (type) {
-      case 'career':
-        return (
-          <span className="px-2 py-0.5 rounded-chip bg-info/10 border border-info/30 text-info text-[10px] font-sans flex items-center gap-1">
-            <Briefcase size={10} />
-            <span>Job Application</span>
-          </span>
-        );
       case 'vendor':
         return (
           <span className="px-2 py-0.5 rounded-chip bg-panel border border-line text-muted text-[10px] font-sans flex items-center gap-1">
@@ -608,18 +595,6 @@ export const AdminInbox: React.FC = () => {
             Closed Deal
           </span>
         );
-      case 'screening':
-        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-warning/10 text-warning border border-warning/30">Screening</span>;
-      case 'shortlisted':
-        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-info/10 text-info border border-info/30">Shortlisted</span>;
-      case 'interview':
-        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-info/10 text-info border border-info/30">Interview</span>;
-      case 'hired':
-        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-success/10 text-success border border-success/30 font-semibold">Hired</span>;
-      case 'rejected':
-        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-danger/10 text-danger border border-danger/30">Rejected</span>;
-      case 'withdrawn':
-        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-panel text-muted border border-line">Withdrawn</span>;
       default:
         return (
           <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-panel text-muted border border-line">
@@ -975,7 +950,6 @@ export const AdminInbox: React.FC = () => {
                 </div>
               ) : (
                 visibleTriageItems.map((item) => {
-                  const isCareer = item.type === 'career';
                   return (
                     <button
                       type="button"
@@ -996,7 +970,7 @@ export const AdminInbox: React.FC = () => {
                               </div>
                               <div className="mt-1.5 flex items-center gap-2">
                                 <p className="truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous'}</p>
-                                <span className="hidden truncate text-[10px] text-muted sm:inline">{isCareer ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}</span>
+                                <span className="hidden truncate text-[10px] text-muted sm:inline">{item.company || item.email}</span>
                               </div>
                             </div>
                             <span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
@@ -1050,7 +1024,7 @@ export const AdminInbox: React.FC = () => {
                         {renderPriorityBadge(selectedSubmission.priority)}
                       </div>
                       <h4 className="mt-2 truncate text-sm font-semibold text-fg">{selectedSubmission.fullName || 'Anonymous'}</h4>
-                      <p className="mt-0.5 truncate text-[11px] text-muted">{selectedSubmission.type === 'career' ? (selectedSubmission.positionTitle || selectedSubmission.specialty || selectedSubmission.email) : (selectedSubmission.company || selectedSubmission.email)}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-muted">{selectedSubmission.company || selectedSubmission.email}</p>
                       <p className="mt-1 font-mono text-[10px] text-muted/70">/{getSubmissionSlug(selectedSubmission)}</p>
                     </div>
                     <button type="button" onClick={() => setSelectedSubmission(null)} className="inline-flex h-9 w-9 min-h-9 min-w-9 shrink-0 aspect-square items-center justify-center rounded-control border border-line bg-bg p-0 text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Clear selected record" title="Clear selected record"><X size={14} /></button>
@@ -1093,8 +1067,8 @@ export const AdminInbox: React.FC = () => {
                       )
                     )}
                     {selectedSubmission.status === 'new' && (
-                      <button type="button" onClick={() => void handleStatusChange(selectedSubmission.id, selectedSubmission.type === 'career' ? 'screening' : 'in-review')} disabled={!canManageCrm || isUpdating} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-[10px] font-medium text-white hover:bg-accent/90 disabled:opacity-50">
-                        <Check size={12} />{selectedSubmission.type === 'career' ? 'Start screening' : 'Start review'}
+                      <button type="button" onClick={() => void handleStatusChange(selectedSubmission.id, 'in-review')} disabled={!canManageCrm || isUpdating} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-[10px] font-medium text-white hover:bg-accent/90 disabled:opacity-50">
+                        <Check size={12} />Start review
                       </button>
                     )}
                     <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[10px] font-medium text-fg hover:bg-bg"><ExternalLink size={12} />Open full review</button>
@@ -1117,7 +1091,7 @@ export const AdminInbox: React.FC = () => {
         <section data-ams-feature-slug="inbox-starred-queue" data-ams-slug="inbox-starred-queue" className="space-y-3">
           <div className="grid grid-cols-1 gap-3">
             {[
-              {key:'client',title:'Starred client work',description:'Saved sales opportunities and follow-up threads.',items:filteredItems.filter((item)=>item.type!=='career')}
+              {key:'client',title:'Starred client work',description:'Saved sales opportunities and follow-up threads.',items:filteredItems}
             ].map((group)=><div key={group.key} className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line px-4 py-3.5"><div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">{group.title}</h3><p className="mt-0.5 text-[11px] text-muted">{group.description}</p></div><span className="text-[11px] tabular-nums text-muted">{group.items.length}</span></div></div><div className="divide-y divide-line">{group.items.map((item)=><div key={item.id} className="px-4 py-3 hover:bg-panel-hover transition-colors"><div className="flex items-start gap-3"><div className="min-w-0 flex-1"><div className="flex items-center gap-1.5 flex-wrap">{renderChannelBadge(item.type)}{renderStatusBadge(item.status)}{renderPriorityBadge(item.priority)}</div><div className="mt-1.5 flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-xs font-semibold text-fg">{item.fullName}</p><p className="truncate text-[11px] text-muted">{item.type==='career'?(item.positionTitle||item.specialty||item.email):(item.company||item.email)}</p></div><span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span></div><p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted">{item.message||'No message content.'}</p><div className="mt-2 flex flex-wrap items-center justify-between gap-2"><span className="font-mono text-[10px] text-muted/75">/{getSubmissionSlug(item)}</span><div className="flex items-center gap-1.5"><button type="button" onClick={(e)=>handleToggleStar(e,item.id,item.starred)} disabled={!canManageCrm} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-warning/30 bg-warning/10 px-2.5 text-[10px] font-medium text-warning hover:bg-warning/15"><Star size={11} className="fill-warning"/>Remove</button><button type="button" onClick={()=>{handleSelectSubmission(item);setViewMode('split');}} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg">Review<ChevronRight size={11}/></button></div></div></div></div></div>) }{group.items.length===0&&<div className="p-12 text-center"><Star size={20} className="mx-auto mb-2 text-line"/><p className="text-xs text-muted">No starred records in this queue.</p></div>}</div></div>)}
           </div>
 
@@ -1312,13 +1286,13 @@ export const AdminInbox: React.FC = () => {
                     </div>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <ProfileIdentity profile={{ name: item.fullName || 'Anonymous', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), contextLabel: item.type === 'career' ? item.positionTitle : item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
-                        <p className="mt-1 truncate text-[11px] text-muted">{item.type === 'career' ? [item.positionTitle, item.specialty, item.location].filter(Boolean).join(' · ') : (item.company || item.email)}</p>
+                        <ProfileIdentity profile={{ name: item.fullName || 'Anonymous', role: item.positionTitle || 'Contact', contextLabel: item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
+                        <p className="mt-1 truncate text-[11px] text-muted">{item.company || item.email}</p>
                       </div>
-                      <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{item.type === 'career' ? (item.experienceYears ? item.experienceYears + ' yrs' : '-') : (item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided'))}</span>
+                      <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided')}</span>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {(item.type === 'career' ? [item.positionTitle, item.specialty, item.experienceYears ? item.experienceYears + ' yrs' : undefined] : (item.services || [])).filter(Boolean).slice(0, 3).map((value, index) => (
+                      {(item.services || []).filter(Boolean).slice(0, 3).map((value, index) => (
                         <span key={index} className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">{value}</span>
                       ))}
                     </div>
@@ -1360,7 +1334,7 @@ export const AdminInbox: React.FC = () => {
                 <div className="flex items-start justify-between gap-4 pb-5 border-b border-line mb-5">
                   <div className="flex items-start gap-3">
                     {/* Client Avatar Initials */}
-                    <ProfileIdentity profile={{ name: selectedSubmission.fullName, role: selectedSubmission.positionTitle || (selectedSubmission.type === 'career' ? 'Candidate' : 'Contact'), companyEmail: selectedSubmission.email, phone: selectedSubmission.phone, division: selectedSubmission.company }} />
+                    <ProfileIdentity profile={{ name: selectedSubmission.fullName, role: selectedSubmission.positionTitle || 'Contact', companyEmail: selectedSubmission.email, phone: selectedSubmission.phone, division: selectedSubmission.company }} />
 
                     <div>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -1378,9 +1352,7 @@ export const AdminInbox: React.FC = () => {
                       <p className="text-xs text-success font-sans mt-0.5 font-semibold flex items-center gap-1.5">
                         <Building2 size={12} />
                         <span>
-                          {selectedSubmission.type === 'career'
-                            ? ('Position: ' + (selectedSubmission.positionTitle || selectedSubmission.specialty || 'Role not specified'))
-                            : (selectedSubmission.company || 'Individual Client')}
+                          {selectedSubmission.company || 'Individual Client'}
                         </span>
                       </p>
                     </div>
@@ -1412,30 +1384,7 @@ export const AdminInbox: React.FC = () => {
                 {/* Primary Action Ribbon (Quick Responses and Direct Contact) */}
                 <div className="mb-5 flex flex-wrap items-center justify-between gap-2.5 rounded-card border border-line bg-bg p-3.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {selectedSubmission.type === 'career' && (
-                      <div className="flex items-center gap-1.5">
-                        {selectedSubmission.resumeUrl && (
-                          <a href={selectedSubmission.resumeUrl} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-control bg-info/10 text-info border border-info/30 hover:bg-info/15 text-xs font-sans font-semibold transition-colors flex items-center gap-1.5">
-                            <FileText size={13} />
-                            <span>Resume</span>
-                            <ExternalLink size={11} />
-                          </a>
-                        )}
-                        {selectedSubmission.portfolioUrl && (
-                          <a href={selectedSubmission.portfolioUrl} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-control bg-panel text-fg border border-line hover:bg-panel-hover text-xs font-sans font-semibold transition-colors flex items-center gap-1.5">
-                            <Globe size={13} />
-                            <span>Portfolio</span>
-                            <ExternalLink size={11} />
-                          </a>
-                        )}
-                        {selectedSubmission.linkedinUrl && (
-                          <a href={selectedSubmission.linkedinUrl} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-control bg-panel text-fg border border-line hover:bg-panel-hover text-xs font-sans font-semibold transition-colors flex items-center gap-1.5">
-                            <span>LinkedIn</span>
-                            <ExternalLink size={11} />
-                          </a>
-                        )}
-                      </div>
-                    )}
+                    {/* Applicant files are managed in Website CMS → Careers → Applicants. */}
 
                     {/* Quick Canned Response Template Picker */}
                     <button
@@ -1500,9 +1449,7 @@ export const AdminInbox: React.FC = () => {
                         : 'border-transparent text-muted hover:bg-panel hover:text-fg')
                     }
                   >
-                    {selectedSubmission.type === 'career'
-                      ? (language === 'id' ? 'Detail lamaran' : 'Application details')
-                      : (language === 'id' ? 'Brief & kontak' : 'Brief & contact')}
+                    {language === 'id' ? 'Brief & kontak' : 'Brief & contact'}
                   </button>
 
                   <button
@@ -1591,9 +1538,7 @@ export const AdminInbox: React.FC = () => {
                       <div className="p-4 rounded-card bg-panel border border-line">
                         <div className="flex items-center gap-2 text-xs font-sans text-muted mb-1.5">
                           <Tag size={13} className="text-danger" />
-                          <span>{selectedSubmission.type === 'career'
-                            ? (language === 'id' ? 'Posisi / Spesialisasi' : 'Position / Specialty')
-                            : (language === 'id' ? 'Layanan / Spesialisasi' : 'Requested Services')}</span>
+                          <span>{language === 'id' ? 'Layanan / Spesialisasi' : 'Requested Services'}</span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {selectedSubmission.services && selectedSubmission.services.length > 0 ? (
@@ -1604,35 +1549,27 @@ export const AdminInbox: React.FC = () => {
                             ))
                           ) : (
                             <span className="text-xs text-fg font-sans">
-                              {selectedSubmission.type === 'career'
-                                ? (selectedSubmission.specialty || selectedSubmission.positionTitle || 'Specialty not provided')
-                                : (selectedSubmission.specialty || selectedSubmission.positionTitle || 'General Consultation')}
+                              {selectedSubmission.specialty || selectedSubmission.positionTitle || 'General Consultation'}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Budget / Experience */}
+                      {/* Budget */}
                       <div className="p-4 rounded-card bg-panel border border-line">
                         <div className="flex items-center justify-between text-xs font-sans text-muted mb-1">
                           <div className="flex items-center gap-1.5">
-                            {selectedSubmission.type === 'career' ? <Clock size={13} className="text-danger" /> : <DollarSign size={13} className="text-danger" />}
-                            <span>{selectedSubmission.type === 'career'
-                              ? (language === 'id' ? 'Pengalaman' : 'Experience')
-                              : (language === 'id' ? 'Estimasi Anggaran' : 'Budget Bracket')}</span>
+                            <DollarSign size={13} className="text-danger" />
+                            <span>{language === 'id' ? 'Estimasi Anggaran' : 'Budget Bracket'}</span>
                           </div>
                           <span className="text-success font-semibold">
-                            {selectedSubmission.type === 'career'
-                              ? (selectedSubmission.experienceYears ? selectedSubmission.experienceYears + ' yrs' : '-')
-                              : (selectedSubmission.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided'))}
+                            {selectedSubmission.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided')}
                           </span>
                         </div>
                         <p className="text-xs font-sans font-semibold text-fg">
-                          {selectedSubmission.type === 'career'
-                            ? (selectedSubmission.availability || selectedSubmission.location || (language === 'id' ? 'Ketersediaan belum ditentukan' : 'Availability not provided'))
-                            : (selectedSubmission.rateCard || (selectedSubmission.budget
-                               ? (language === 'id' ? 'Anggaran disampaikan oleh klien' : 'Client-provided budget')
-                               : (language === 'id' ? 'Tidak ditentukan' : 'Unspecified')))}
+                          {selectedSubmission.rateCard || (selectedSubmission.budget
+                            ? (language === 'id' ? 'Anggaran disampaikan oleh klien' : 'Client-provided budget')
+                            : (language === 'id' ? 'Tidak ditentukan' : 'Unspecified'))}
                         </p>
                       </div>
                     </div>
@@ -1641,9 +1578,7 @@ export const AdminInbox: React.FC = () => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-xs font-sans text-muted normal-case tracking-normal block font-semibold">
-                          {selectedSubmission.type === 'career'
-                            ? (language === 'id' ? 'Cover Letter / Pesan Kandidat' : 'Candidate Message / Cover Letter')
-                            : (language === 'id' ? 'Detail Pesan / Brief Klien' : 'Client Brief Statement')}
+                          {language === 'id' ? 'Detail Pesan / Brief Klien' : 'Client Brief Statement'}
                         </label>
                         <button
                           onClick={() => handleCopyText(selectedSubmission.message, 'msg')}
@@ -1661,12 +1596,6 @@ export const AdminInbox: React.FC = () => {
                     {/* Metadata Specs */}
                     <div className="p-4 rounded-card bg-panel/50 border border-line text-[11px] font-sans text-muted grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>{language === 'id' ? 'Kanal Sumber:' : 'Intake Source:'} <span className="text-fg">{selectedSubmission.source || 'Website Form'}</span></div>
-                      {selectedSubmission.type === 'career' && selectedSubmission.tools && (
-                        <div>{language === 'id' ? 'Tools:' : 'Tools:'} <span className="text-fg">{selectedSubmission.tools}</span></div>
-                      )}
-                      {selectedSubmission.type === 'career' && selectedSubmission.linkedinUrl && (
-                        <div className="truncate">{language === 'id' ? 'LinkedIn:' : 'LinkedIn:'} <a href={selectedSubmission.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-fg hover:text-accent-text">{selectedSubmission.linkedinUrl}</a></div>
-                      )}
                       <div>{language === 'id' ? 'Waktu Diterima:' : 'Timestamp:'} <span className="text-fg">{new Date(selectedSubmission.createdAt).toLocaleString()}</span></div>
                       {selectedSubmission.userAgent && (
                         <div className="sm:col-span-2 truncate">{language === 'id' ? 'Klien Browser:' : 'User Agent:'} <span className="text-fg">{selectedSubmission.userAgent}</span></div>
@@ -1720,21 +1649,14 @@ export const AdminInbox: React.FC = () => {
                       </label>
                       <CustomSelect
                         disabled={!canManageCrm}
-                        value={selectedSubmission.assignedTo || (selectedSubmission.type === 'career' ? 'People & Operations' : 'Lead Full-Stack Tech')}
+                        value={selectedSubmission.assignedTo || 'Lead Full-Stack Tech'}
                         onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)}
-                        options={selectedSubmission.type === 'career'
-                          ? [
-                              { value: 'People & Operations', label: 'People & Operations' },
-                              { value: 'Engineering Lead', label: 'Engineering Lead' },
-                              { value: 'Design Lead', label: 'Design Lead' },
-                              { value: 'Executive Management', label: 'Executive Management' }
-                            ]
-                          : [
-                              { value: 'Lead Full-Stack Tech', label: 'Lead Full-Stack Tech (Engineering)' },
-                              { value: 'Senior UI/UX Designer', label: 'Senior UI/UX Designer (Design)' },
-                              { value: 'Technical Project Manager', label: 'Technical Project Manager (Scoping)' },
-                              { value: 'Business Director', label: 'Business Director (Accounts)' }
-                            ]}
+                        options={[
+                          { value: 'Lead Full-Stack Tech', label: 'Lead Full-Stack Tech (Engineering)' },
+                          { value: 'Senior UI/UX Designer', label: 'Senior UI/UX Designer (Design)' },
+                          { value: 'Technical Project Manager', label: 'Technical Project Manager (Scoping)' },
+                          { value: 'Business Director', label: 'Business Director (Accounts)' }
+                        ]}
                       />
                     </div>
                   </div>
@@ -1752,22 +1674,12 @@ export const AdminInbox: React.FC = () => {
                       disabled={isUpdating || !canManageCrm}
                       value={selectedSubmission.status}
                       onChange={(value) => handleStatusChange(selectedSubmission.id, value as ContactSubmission['status'])}
-                      options={selectedSubmission.type === 'career'
-                        ? [
-                            { value: 'new', label: 'New' },
-                            { value: 'screening', label: 'Screening' },
-                            { value: 'shortlisted', label: 'Shortlisted' },
-                            { value: 'interview', label: 'Interview' },
-                            { value: 'hired', label: 'Hired' },
-                            { value: 'rejected', label: 'Rejected' },
-                            { value: 'withdrawn', label: 'Withdrawn' }
-                          ]
-                        : [
-                            { value: 'new', label: 'New' },
-                            { value: 'in-review', label: 'In Review' },
-                            { value: 'contacted', label: 'Contacted' },
-                            { value: 'closed', label: 'Closed Deal' }
-                          ]}
+                      options={[
+                        { value: 'new', label: 'New' },
+                        { value: 'in-review', label: 'In Review' },
+                        { value: 'contacted', label: 'Contacted' },
+                        { value: 'closed', label: 'Closed Deal' }
+                      ]}
                     />
                   </div>
 
