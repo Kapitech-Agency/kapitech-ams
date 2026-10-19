@@ -34,12 +34,13 @@ Use `docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md` as the companion specificat
 
 Follow the precedence and task boundaries in root AGENTS.md. Use the related specifications together. The Main-Content Restructuring Specification defines the baseline composition and required content order of each workspace. This blueprint defines role-aware emphasis and presentation inside that composition, subject to existing permissions and canonical source contracts.
 
-1. **docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md** — target modules, worksheets, workflow responsibilities, cross-module ownership, Finance boundaries, and business rules.
-2. **docs/architecture/ams-navigation-information-architecture.md** — approved primary modules, workspaces, navigation depth, routes, and destination ownership.
-3. **docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md** — page anatomy, shared content hierarchy, and UX expectations.
-4. **AMS-DESIGN-SYSTEM.md** — visual tokens, layout, components, typography, interactions, accessibility, and responsive presentation.
-5. **docs/AMS-UX-INTERACTION-STANDARDS.md** — navigation, states, tables, forms, accessibility, and consistency checks.
-6. The specialist Finance, frontend engineering, business workflow, data dictionary, document vault, drawer/modal, Kanban, and regression documents whenever relevant.
+1. **docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md** — baseline per-workspace main-content composition, relative region order, and structural acceptance.
+2. **docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md** — target modules, worksheets, workflow responsibilities, cross-module ownership, Finance boundaries, and business rules.
+3. **docs/architecture/ams-navigation-information-architecture.md** — approved primary modules, workspaces, navigation depth, routes, and destination ownership.
+4. **docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md** — shared page anatomy, high-level module priorities, and UX expectations.
+5. **AMS-DESIGN-SYSTEM.md** — visual tokens, layout, components, typography, interactions, accessibility, and responsive presentation.
+6. **docs/AMS-UX-INTERACTION-STANDARDS.md** — navigation, states, tables, forms, accessibility, and consistency checks.
+7. The specialist Finance, frontend engineering, business workflow, data dictionary, document vault, drawer/modal, Kanban, and regression documents whenever relevant.
 
 If documents conflict, do not silently blend the alternatives. Follow AGENTS.md, identify the conflict, check actual source contracts when implementation is in scope, and report unresolved decisions.
 
