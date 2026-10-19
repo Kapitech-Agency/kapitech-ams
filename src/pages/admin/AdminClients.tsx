@@ -305,8 +305,13 @@ export const AdminClients: React.FC = () => {
 
   useEffect(() => {
     const requestedScope = getStatusScopeFromSearchParams(searchParams);
-    setStatusScope((current) => current === requestedScope ? current : requestedScope);
-  }, [searchParams]);
+    if (requestedScope !== statusScope) {
+      setStatusScope(requestedScope);
+      setStatusFilter('all');
+      setSlaFilter('all');
+      setPage(1);
+    }
+  }, [searchParams, statusScope]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -539,6 +544,8 @@ export const AdminClients: React.FC = () => {
 
   const changeStatusScope = (scope: StatusScope) => {
     setStatusScope(scope);
+    setStatusFilter('all');
+    setSlaFilter('all');
     setPage(1);
     const nextParams = new URLSearchParams(searchParams);
     const queryValue = getStatusScopeQueryValue(scope);
@@ -860,6 +867,16 @@ export const AdminClients: React.FC = () => {
         />
       )}
 
+      {statusScope === 'lead' && (
+        <section data-ams-feature-slug="clients-onboarding-source-boundary" data-ams-slug="clients-onboarding-source-boundary" aria-labelledby="clients-onboarding-source-title" className="flex min-w-0 items-start gap-3 rounded-card border border-line bg-panel p-3.5">
+          <CircleDashed size={16} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
+          <div className="min-w-0">
+            <h2 id="clients-onboarding-source-title" className="text-xs font-semibold text-fg">{language === 'id' ? 'Ruang lingkup onboarding' : 'Onboarding scope'}</h2>
+            <p className="mt-1 text-xs leading-5 text-muted">{language === 'id' ? 'Daftar ini menampilkan record klien berstatus Lead. Checklist onboarding, bukti dokumen wajib, dan kickoff readiness belum tersedia sebagai record terpisah. Kelengkapan profil tidak berarti onboarding sudah disetujui.' : 'This view lists existing client records with Lead status. Onboarding checklists, required-document evidence, and kickoff readiness are not available as separate records. Profile completeness does not mean onboarding has been approved.'}</p>
+          </div>
+        </section>
+      )}
+
       {errorMessage && (
         <div role="alert" aria-live="assertive" className="flex flex-col gap-3 rounded-card border border-danger/25 bg-danger/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start gap-2.5">
@@ -884,32 +901,41 @@ export const AdminClients: React.FC = () => {
         searchLabel="Search clients"
         actions={(
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <div className="w-full shrink-0 sm:w-56">
-              <CustomSelect
-                aria-label={language === 'id' ? 'Filter kesehatan batas belanja' : 'Filter spend cap health'}
-                value={slaFilter}
-                onChange={(value) => setSlaFilter(value as SlaFilter)}
-                options={[
-                  { value: 'all', label: language === 'id' ? 'Semua status batas belanja' : 'All spend cap states' },
-                  { value: 'healthy', label: language === 'id' ? 'Dalam batas aman' : 'Healthy' },
-                  { value: 'near', label: language === 'id' ? 'Mendekati batas' : 'Near cap' },
-                  { value: 'over', label: language === 'id' ? 'Melewati batas' : 'Over cap' },
-                  { value: 'not-configured', label: language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured' },
-                  { value: 'spend-not-recorded', label: language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded' }
-                ]}
-              />
-            </div>
+            {statusScope !== 'lead' && (
+              <div className="w-full shrink-0 sm:w-56">
+                <CustomSelect
+                  aria-label={language === 'id' ? 'Filter kesehatan batas belanja' : 'Filter spend cap health'}
+                  value={slaFilter}
+                  onChange={(value) => setSlaFilter(value as SlaFilter)}
+                  options={[
+                    { value: 'all', label: language === 'id' ? 'Semua status batas belanja' : 'All spend cap states' },
+                    { value: 'healthy', label: language === 'id' ? 'Dalam batas aman' : 'Healthy' },
+                    { value: 'near', label: language === 'id' ? 'Mendekati batas' : 'Near cap' },
+                    { value: 'over', label: language === 'id' ? 'Melewati batas' : 'Over cap' },
+                    { value: 'not-configured', label: language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured' },
+                    { value: 'spend-not-recorded', label: language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded' }
+                  ]}
+                />
+              </div>
+            )}
             <Button type="button" variant="secondary" icon={<X size={13} />} onClick={resetFilters}>{language === 'id' ? 'Reset filter' : 'Reset filters'}</Button>
           </div>
         )}
         footer={(
-          <div className="flex min-w-0 gap-1 overflow-x-auto custom-scrollbar" aria-label="Client scopes">
-          {[
-            { id: 'all', label: 'All accounts' },
-            { id: 'active', label: 'Active' },
-            { id: 'at-risk', label: 'At-risk' }
-          ].map((item) => (
-            <button key={item.id} type="button" onClick={() => changeStatusScope(item.id as StatusScope)} className={`inline-flex min-h-9 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${statusScope === item.id ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}>
+          <div className="flex min-w-0 gap-1 overflow-x-auto custom-scrollbar" aria-label={statusScope === 'lead' ? 'Client onboarding scopes' : 'Client scopes'}>
+          {(statusScope === 'lead'
+            ? [
+                { id: 'lead', label: 'Onboarding accounts' },
+                { id: 'all', label: 'All accounts' }
+              ]
+            : [
+                { id: 'all', label: 'All accounts' },
+                { id: 'active', label: 'Active' },
+                { id: 'at-risk', label: 'At-risk' },
+                { id: 'lead', label: 'Onboarding' }
+              ]
+          ).map((item) => (
+            <button key={item.id} type="button" aria-pressed={statusScope === item.id} onClick={() => changeStatusScope(item.id as StatusScope)} className={`inline-flex min-h-9 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${statusScope === item.id ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}>
               {item.label}
             </button>
           ))}

@@ -121,6 +121,12 @@ test('Clients surface account health after the directory and keep data gaps expl
   assert.match(clients, /Cumulative billed value/);
   assert.match(clients, /visible to users with client-management access/);
   assert.doesNotMatch(clients, /Client or CRM access/);
+  assert.match(clients, /clients-onboarding-source-boundary/);
+  assert.match(clients, /Profile completeness does not mean onboarding has been approved/);
+  assert.match(clients, /statusScope !== 'lead' && \(/);
+  assert.match(clients, /aria-pressed=\{statusScope === item\.id\}/);
+  assert.match(clients, /label: 'Onboarding'/);
+  assert.match(clients, /label: 'Onboarding accounts'/);
 });
 
 test('Client Retainers prioritizes the agreement register before supporting summaries', async () => {
@@ -526,4 +532,20 @@ test('Inbox triage reports the full matching count and avoids an inferred follow
   assert.doesNotMatch(inbox, /Showing the next 8 records/);
   assert.doesNotMatch(inbox, /Next follow-up/);
   assert.match(inbox, /triageItems\.length > visibleTriageItems\.length/);
+});
+
+
+test('Client Onboarding keeps account scope controls separate from spend-cap filters', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const onboardingNote = clients.indexOf('data-ams-feature-slug="clients-onboarding-source-boundary"');
+  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
+  assert.ok(onboardingNote >= 0 && filters > onboardingNote, 'Onboarding source limits must be clear before record filters.');
+  const filterBarEnd = clients.indexOf('data-ams-feature-slug="clients-directory-table"', filters);
+  assert.ok(filterBarEnd > filters);
+  const filterBar = clients.slice(filters, filterBarEnd);
+  assert.match(filterBar, /statusScope !== 'lead' && \(/);
+  assert.match(filterBar, /aria-label=\{statusScope === 'lead' \? 'Client onboarding scopes' : 'Client scopes'\}/);
+  assert.match(filterBar, /id: 'lead', label: 'Onboarding accounts'/);
+  assert.match(clients, /setStatusFilter\('all'\);\s*setSlaFilter\('all'\);\s*setPage\(1\);/);
+  assert.match(clients, /if \(requestedScope !== statusScope\) \{[\s\S]{0,160}setSlaFilter\('all'\)/);
 });
