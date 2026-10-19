@@ -657,3 +657,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 
 
 **Finance breakpoint test correction:** CI and Quality Gate on `b93f08e595831489bd85b15d9107303b9fa06730` failed four source assertions expecting `lg:flex-1` or using over-escaped `min-[1100px]` regexes after the 1100px breakpoint adjustment. Three suites now assert the current implementation instead of the outdated class. This test-only correction is separate from Accounts Receivable aging; verify both suites on the corrective commit before declaring the combined slice green.
+
+
+### FIN-AP-ORDER-001: Accounts Payable register and payment schedule precede summary
+
+**Source:** src/pages/admin/AdminFinanceWorkspace.tsx, Accounts Payable worksheet. The canonical bill register remains the primary work surface, and the installment schedule uses saved bill terms and linked vendor-bill-payment records. The two-metric strip for total bills and IDR-only outstanding is moved below both tables so it does not interrupt the register-to-payment-schedule flow. Foreign-currency bills remain disclosed separately. No source formula, payment behavior or authorization changes.
+
+**Tests:** tests/finance-ui-consistency.test.ts asserts bill register → payment schedule → summary order while preserving compact card ownership and contract-linked payment distinction. Confirm both AMS workflows on this exact commit; responsive/keyboard browser evidence remains Stage 5.

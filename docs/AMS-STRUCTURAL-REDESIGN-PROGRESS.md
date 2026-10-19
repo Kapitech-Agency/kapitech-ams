@@ -613,3 +613,27 @@ The follow-up `4af1ec687dd39deeca5933d54023f357b57d14f9` restored the existing `
 ### Finance breakpoint assertion follow-up — 19 October 2026
 
 On `b93f08e595831489bd85b15d9107303b9fa06730`, both AMS workflows failed on four stale Finance toolbar assertions inherited from the 1100px breakpoint change in `fabd0cdeb2eb7e8df7eef7f5471b4f79cb5536a5`. The page implementation is intentionally aligned to the 1100px Design System breakpoint. The corrective commit updates the three test suites to match `min-[1100px]` and fixes over-escaped regular expressions. Confirm both workflows on that exact follow-up SHA; do not count AR aging as verified before then.
+
+
+## Stage 4 view design record — Finance · Receivables & Payables · Accounts Payable
+
+**View ID:** VIEW-FIN-ARAP, Accounts Payable worksheet.
+**Implementation:** Source-backed canonical bill register, linked installment schedule and context summary. Verify the exact commit through both workflows before calling this slice source/test verified.
+
+1. **Owner/persona.** Finance → Receivables & Payables → Accounts Payable. Finance operators manage bill records and review linked payment schedule using current permissions.
+2. **Primary task.** Find a vendor bill, confirm its saved amount and balance, and see its supported installment/payment state.
+3. **Decision.** Which bill is open, how much is owed, how much has been paid, and what installment remains next?
+4. **Primary surface.** Canonical Accounts Payable register followed by the installment schedule derived from saved bill/payment records.
+5. **Content order.** Global Finance header/source notice; bill register and existing actions; linked installment schedule; compact IDR-only summary and foreign-currency count context; explanation/register for contract-linked vendor payments. Summary no longer interrupts the two work surfaces.
+6. **Fields and source semantics.** Bill number, vendor/project, bill and due dates, total, paid/outstanding values, saved payment state; schedule rows reference bill ID and linked payment records. Total IDR outstanding is limited to IDR bills; foreign currency bill count remains disclosed separately rather than summing unlike currencies.
+7. **Controls.** Existing register search/period filters and authorized bill actions remain unchanged. Schedule follows the same filtered bill set, preserving current source behavior. No new payment or reconciliation action is added.
+8. **Canonical ownership/breadcrumb.** Bill records remain vendor-bill, payments vendor-bill-payment, vendor master stays owned by Team & Resources, and contract-linked payment records remain a separate explicitly labeled workflow. No duplicate vendor records or new breadcrumb.
+9. **Role-aware presentation.** Existing canManageFinanceRecords, source route access and payment authorization remain unchanged.
+10. **States/recovery.** Existing source warning and empty-state behavior remain authoritative. The schedule renders only when filtered bills exist. Do not treat a missing register as an empty balance when the shared Finance source warning indicates unavailable records.
+11. **Responsive behavior.** Both register and schedule retain their existing compact-card layouts; the IDR summary stays below both working surfaces. Stage 5 must verify 1100px and mobile reflow/overflow.
+12. **Accessibility.** Existing semantic table headings, status labels, row actions and compact-card grouping remain. Keyboard focus and narrow viewport behavior need browser verification.
+13. **Regression tests.** Assert bill register before installment schedule before summary metrics; retain vendor-contract clarification order, card-layout column ownership, saved installment schedule helper and existing bill actions.
+14. **Dependencies.** This slice only reorders existing content. It does not change payables calculation, invoice/vendor payment state, API, persistence, posting, bank reconciliation, or permission semantics.
+15. **Acceptance.** The main bill queue and linked payment schedule are available in sequence without KPI interruption; only then does the page show the narrow IDR summary. Keep AR/AP partially complete until remaining payment lifecycle/source recovery checks and Stage 5 review pass.
+
+**Next Stage 4 slice:** Finance → Transactions & Cash. Audit Cash & Bank, Revenue, Expenses and Petty Cash individually against source ownership, reconciliation state and primary working surface.

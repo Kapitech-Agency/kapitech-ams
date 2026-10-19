@@ -703,8 +703,11 @@ test('Cash, petty cash, and payables put their working registers before supporti
   const payableEnd = workspace.indexOf("case 'vendors':", payableStart);
   const payables = workspace.slice(payableStart, payableEnd);
   assert.ok(payableStart >= 0 && payableEnd > payableStart);
-  assert.ok(payables.indexOf('title="Accounts Payable register"') >= 0);
-  assert.ok(payables.indexOf('<AdminMetricStrip metrics={[') > payables.indexOf('title="Accounts Payable register"'));
+  const payableRegister = payables.indexOf('title="Accounts Payable register"');
+  const payableSchedule = payables.indexOf('title="Vendor payment schedule"');
+  const payableMetrics = payables.indexOf('<AdminMetricStrip metrics={[');
+  assert.ok(payableRegister >= 0 && payableSchedule > payableRegister && payableMetrics > payableSchedule,
+    'The payable register and linked installment schedule must precede summary metrics.');
 
   const pettyStart = workspace.indexOf("case 'petty-cash':");
   const pettyEnd = workspace.indexOf("case 'monthly-pnl':", pettyStart);
@@ -726,7 +729,8 @@ test('Accounts Payable and vendor payment schedule use compact cards for dense r
   const schedule = ap.indexOf('title="Vendor payment schedule"');
   const contractLinkedNote = ap.indexOf('title="Contract-linked vendor payments"');
 
-  assert.ok(billRegister >= 0 && billMetrics > billRegister && schedule > billMetrics, 'The primary payable register should precede supporting metrics and the installment schedule.');
+  assert.ok(billRegister >= 0 && schedule > billRegister && billMetrics > schedule,
+    'The primary payable register and installment schedule should precede supporting metrics.');
   assert.ok(contractLinkedNote > schedule, 'The contract-payment clarification must remain after the bill schedule.');
   assert.match(ap, /actions=\{registerAddButton\('vendor-bill','Add vendor bill'\)\}[\s\S]*?compactCardLayout=\{\{titleIndex:0,subtitleIndexes:\[1,2\],statusIndexes:\[8\]/);
   assert.match(ap, /label:'Bill details',indexes:\[3,4,5,6,7\]/);

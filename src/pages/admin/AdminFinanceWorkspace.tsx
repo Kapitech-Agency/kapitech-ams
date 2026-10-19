@@ -2360,10 +2360,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[8],groups:[{label:'Bill details',indexes:[3,4,5,6,7]}],actionIndex:9}}
             />
             
-            <AdminMetricStrip metrics={[
-              {id:'ap-bills',label:'Vendor bills',value:String(bills.length),context:'Saved finance register',icon:<FileText size={15}/>},
-              {id:'ap-total',label:'IDR outstanding',value:formatMoney(payableTotalIDR),context:foreignCurrencyBillCount+' non-IDR bills listed separately',icon:<WalletCards size={15} />}
-            ]}/>
             {bills.length > 0 && (
               <FinanceDataTable
                 title="Vendor payment schedule"
@@ -2378,6 +2374,10 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[10],groups:[{label:'Bill amount',indexes:[3]},{label:'Installments',indexes:[4,5,6]},{label:'Settlement',indexes:[7,8,9]}]}}
               />
             )}
+            <AdminMetricStrip metrics={[
+              {id:'ap-bills',label:'Vendor bills',value:String(bills.length),context:'Saved finance register',icon:<FileText size={15}/>},
+              {id:'ap-total',label:'IDR outstanding',value:formatMoney(payableTotalIDR),context:foreignCurrencyBillCount+' non-IDR bills listed separately',icon:<WalletCards size={15} />}
+            ]}/>
             <WorkbookNote title="Contract-linked vendor payments">
               Use this register for payments planned against vendor contracts. These records remain linked to their contract and expense evidence; they do not settle a vendor bill in the Accounts Payable register above. Record bill settlements against the bill itself so the bill balance and installment schedule stay accurate.
             </WorkbookNote>
