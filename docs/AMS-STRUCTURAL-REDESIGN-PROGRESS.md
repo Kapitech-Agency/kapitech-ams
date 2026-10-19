@@ -1311,3 +1311,18 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Remaining: browser validation of create/edit defaults and Renewal Schedule timing remains in Stage 5. No authenticated browser session was used.
 - Next action: source-audit Renewal Schedule's `renewalDays` date-only comparison for local calendar boundaries and add a deterministic regression before changing any behavior.
 
+
+
+## Stage 4 source/test checkpoint · Renewal Schedule calendar-day semantics · 19 October 2026
+
+- Final passing source/test SHA: [`4e57c8b4b8d7b3aabf3393b48499627db2015b40`](https://github.com/Kapitech-Agency/kapitech-ams/commit/4e57c8b4b8d7b3aabf3393b48499627db2015b40).
+- Application source changes are in [`88d7804dfc2d9f73fd2afeb16bd33d08b54519a1`](https://github.com/Kapitech-Agency/kapitech-ams/commit/88d7804dfc2d9f73fd2afeb16bd33d08b54519a1); the final test correction is `4e57c8b4b8d7b3aabf3393b48499627db2015b40`.
+- Changed files: `src/pages/admin/AdminClientRetainers.tsx`, `src/lib/retainerDateDefaults.ts`, `tests/client-retainer-date-defaults.test.ts`, and `tests/admin-pages-jsx-regression.test.ts`.
+- Confirmed defect: `renewalDays` subtracted `Date.now()` from parsed date-only UTC midnight, which could classify today as one day away near Jakarta midnight. Date-only rendering through `new Date(value)` also shifted the displayed date in negative UTC offsets. Invalid date values could be treated as warning values due JavaScript `null <= 30` coercion.
+- Correction: shared helpers validate exact `YYYY-MM-DD` values, compare the target and current local calendar day using date ordinals, and render the date at local noon. Renewal summary includes valid dates on day 0 through day 30 inclusive. Invalid dates are excluded and don't get the warning style. Existing one-month-forward `Date.setMonth` defaults were preserved in the earlier retainer date commit.
+- Tests: `tests/client-retainer-date-defaults.test.ts` covers dates -1, 0, 1, 30 and 31 days in Asia/Jakarta, invalid inputs and Honolulu formatting. The responsive-retainer regression now verifies the shared helper, invalid-date guard, both card/table styles and 0–30 day summary filtering.
+- The first CI attempt on `88d7804dfc2d9f73fd2afeb16bd33d08b54519a1` failed because an existing test insisted on the old expression. It was updated to assert the new equivalent behavior without dropping the check. Both workflows passed on exact SHA `4e57c8b4b8d7b3aabf3393b48499627db2015b40`: AMS CI [39253706334](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39253706334); Quality Gate [39253706326](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39253706326).
+- Scope: date-only client-retainer frontend presentation and regression coverage only; no API, database, state transition, retainer pricing or permission changes.
+- Remaining: authenticated browser checks for due-today/day-30 filter and display are pending Stage 5. No browser download/screenshot or viewport interaction was performed.
+- Next action: continue Clients → Agreements audit for any remaining source-backed Contracts & SOWs presentation issues, then Client Service & Health. Keep Contract History unavailable until a canonical event/version record exists.
+

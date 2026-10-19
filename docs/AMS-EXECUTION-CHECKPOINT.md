@@ -15,12 +15,12 @@ Latest application/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest source/test commit | `7a76c4120dbb0ecce35e3964e9d8b91a9146de43` |
-| Commit | [fix(clients): format retainer defaults in local calendar](https://github.com/Kapitech-Agency/kapitech-ams/commit/7a76c4120dbb0ecce35e3964e9d8b91a9146de43) |
+| Latest source/test commit | `4e57c8b4b8d7b3aabf3393b48499627db2015b40` |
+| Commit | [test(clients): assert local renewal date semantics](https://github.com/Kapitech-Agency/kapitech-ams/commit/4e57c8b4b8d7b3aabf3393b48499627db2015b40) |
 | Changed application source | `src/pages/admin/AdminClientRetainers.tsx`; `src/lib/retainerDateDefaults.ts` |
-| Regression tests | `tests/client-retainer-date-defaults.test.ts` |
-| AMS CI | **Passed**: [run 39251981965](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39251981965) |
-| AMS Quality Gate | **Passed**: [run 39251982047](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39251982047) |
+| Regression tests | `tests/client-retainer-date-defaults.test.ts`; `tests/admin-pages-jsx-regression.test.ts` |
+| AMS CI | **Passed**: [run 39253706334](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39253706334) |
+| AMS Quality Gate | **Passed**: [run 39253706326](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39253706326) |
 | Validation detail | Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed. |
 
 ### Recent verified frontend slices
@@ -30,10 +30,12 @@ Latest application/test snapshot verified on **19 October 2026**:
 - [Inbox applicant-presentation cleanup](https://github.com/Kapitech-Agency/kapitech-ams/commit/926291d005bbdef2c1e06779d28145d230606ddf): removed unreachable Careers-only UI while preserving the source filter and CMS route; both workflows passed.
 - [Tasks local-date correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/af65907022d9973b3859145e0971bf22a6caf343): due-date defaults use local calendar fields; both workflows passed.
 - [Planning tab query preservation](https://github.com/Kapitech-Agency/kapitech-ams/commit/444b9891b33e7891567341711dfa9a8d29866bf4): active Planning tabs preserve `planningProject`; both workflows passed.
-- [Clients scope-aware export and Onboarding copy](https://github.com/Kapitech-Agency/kapitech-ams/commit/1ae8209b39ff65cc7cbb6c302ddc9815efc5720c): one visible export handler, separate profile-only Onboarding columns, truthful copy, and preserved Directory financial fields; both workflows passed.
-- [Retainer renewal local-date default](https://github.com/Kapitech-Agency/kapitech-ams/commit/7a76c4120dbb0ecce35e3964e9d8b91a9146de43): created `getDefaultRetainerRenewalDate` to format the one-month-forward default from local calendar components. Both form initialization and editor reset use it; a regression tests a Jakarta midnight boundary where UTC is still the previous date. Existing `Date.setMonth` month-forward behavior was preserved. Both workflows passed on this exact SHA.
+- [Clients exports and Onboarding copy](https://github.com/Kapitech-Agency/kapitech-ams/commit/1ae8209b39ff65cc7cbb6c302ddc9815efc5720c): one visible scope-aware export handler, profile-only Onboarding columns, preserved Directory financial fields, truthful readiness copy; both workflows passed.
+- [Retainer default dates and renewal date-only handling](https://github.com/Kapitech-Agency/kapitech-ams/commit/88d7804dfc2d9f73fd2afeb16bd33d08b54519a1) with corrected regression coverage at [`4e57c8b4b8d7b3aabf3393b48499627db2015b40`](https://github.com/Kapitech-Agency/kapitech-ams/commit/4e57c8b4b8d7b3aabf3393b48499627db2015b40): create/reset defaults use the local calendar; Renewal Schedule uses validated date-only calendar arithmetic and date rendering. Due today counts as day 0, day 30 is included, invalid dates are excluded from the summary and no longer gain a warning by null coercion, and the entered date remains stable at negative UTC offsets. The new tests exercise Jakarta day boundaries, the 0/1/30/31-day cases and Honolulu date display.
 
-This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch `main` and the exact workflow results before acting; docs-only commits do not change the source/test snapshot that was tested.
+The first validation attempt on source commit [`88d7804dfc2d9f73fd2afeb16bd33d08b54519a1`](https://github.com/Kapitech-Agency/kapitech-ams/commit/88d7804dfc2d9f73fd2afeb16bd33d08b54519a1) failed because an older responsive-retainer test asserted the prior `renewalDays(item.renewal) <= 30` implementation expression. The fix commit `4e57c8b4b8d7b3aabf3393b48499627db2015b40` updated that assertion to verify the shared highlight helper, invalid-date guard, both responsive styles and inclusive 0–30-day summary filter. It did not remove the test or loosen its behavior checks. Both workflows passed on the follow-up SHA.
+
+This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch `main` and exact workflow results before acting; docs-only commits do not change the source/test snapshot that was tested.
 
 ## 2. Active delivery stage
 
@@ -55,9 +57,9 @@ Recent repository history includes further work/tests for **Website CMS, Finance
 
 Re-verify live source and CI on every resume; this list is a dated recovery pointer.
 
-1. **Rehydrate:** fetch current `main`, recent history, relevant source and current exact-SHA CI/Quality Gate results.
-2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, Clients scope-aware exports/evidence-based Onboarding copy and Retainer local-date defaults have successful exact-SHA evidence.
-3. **Continue Stage 4 in canonical module order:** continue Clients → Agreements. Retainer create/edit defaults now use the local calendar. Inspect whether the Renewal Schedule's date-only “due in N days” classification still mixes UTC midnight and local current time; only adjust it after confirming current code, row semantics and a boundary regression. Keep Contract History target-only until canonical version/event history exists.
+1. **Rehydrate:** fetch current `main`, recent history, relevant source and exact current CI/Quality Gate results.
+2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, Clients scope-aware exports/evidence-based Onboarding copy, Retainer local-date defaults and Renewal Schedule calendar-day handling have successful exact-SHA evidence.
+3. **Continue Stage 4 in canonical module order:** continue Clients → Agreements. Renewal date-only defaults, presentation and day-window classification are now source/test-verified. Inspect remaining Contracts & SOWs, retainer source-gap/renewal behavior, then proceed to Client Service & Health. Keep Contract History target-only until canonical version/event history exists; don't invent owner/next-action fields.
 4. **Validate one bounded slice:** inspect current source/tests and gap row, make the smallest complete change, retain negative-path regression tests, verify both CI workflows on the source/test SHA, then update checkpoint and gap evidence.
 5. **Release gate remains closed:** authenticated browser/viewport/accessibility review and explicit user sign-off are still required at Stage 5. No authenticated screenshot or browser visual/keyboard/touch test has been performed in this execution. Do not start broad Stage 6 workflow/backend implementation before approval.
 
