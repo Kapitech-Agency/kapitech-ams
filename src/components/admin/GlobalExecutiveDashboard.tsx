@@ -586,7 +586,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         aria-label="Executive overview metrics"
       >
         <AdminMetricStrip
-          className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
+          className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"
           metrics={[
             {
               id: 'active-projects', label: 'Active projects',
@@ -629,7 +629,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <h2 className="text-sm font-semibold text-fg">Quick actions</h2>
           <p className="text-[11px] text-muted">Common workspaces</p>
         </div>
-        <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 min-[760px]:grid-cols-3 min-[900px]:grid-cols-4 min-[1100px]:grid-cols-5">
+        <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5">
           {[
             { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
             { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },

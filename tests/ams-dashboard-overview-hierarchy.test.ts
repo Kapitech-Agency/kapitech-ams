@@ -28,14 +28,15 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   assert.ok(supportMetricsStart > capacityStart, 'Secondary indicators should remain below primary work areas');
 
   const overviewMetrics = overview.slice(metricStart, actionsStart);
-  assert.ok(overviewMetrics.includes('className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"'));
+  assert.ok(overviewMetrics.includes('className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"'), 'Dashboard KPI columns must change only at canonical design-system breakpoints.');
+  assert.doesNotMatch(overviewMetrics, /min-\\[(?:390|760)px\\]/, 'Dashboard KPIs must not introduce off-contract breakpoints.');
   assert.doesNotMatch(overviewMetrics, /min-\[1100px\]:col-span-9/, 'KPI cards should not be squeezed by an adjacent action panel');
 
   const quickActions = overview.slice(actionsStart, chartStart);
-  assert.ok(quickActions.includes('min-[390px]:grid-cols-2'));
-  assert.ok(quickActions.includes('min-[760px]:grid-cols-3'));
-  assert.ok(quickActions.includes('min-[900px]:grid-cols-4'));
+  assert.ok(quickActions.includes('min-[600px]:grid-cols-2'));
+  assert.ok(quickActions.includes('min-[900px]:grid-cols-3'));
   assert.ok(quickActions.includes('min-[1100px]:grid-cols-5'));
+  assert.doesNotMatch(quickActions, /min-\\[(?:390|760)px\\]/, 'Quick actions must use canonical responsive breakpoints.');
   assert.doesNotMatch(quickActions, /label:\s*'New project'/, 'New project already belongs in the page header, so it must not be duplicated');
   for (const label of ['Review tasks', 'Log time', 'View invoices', 'View clients', 'View documents']) {
     assert.ok(quickActions.includes("label: '" + label + "'"), 'Missing quick action: ' + label);
