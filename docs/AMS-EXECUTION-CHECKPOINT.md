@@ -15,13 +15,13 @@ Latest application/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest source/test commit | 952203b70ead573edf994d7a53e51ab46eab12fe |
-| Commit | [test(clients): accept onboarding mobile card label](https://github.com/Kapitech-Agency/kapitech-ams/commit/952203b70ead573edf994d7a53e51ab46eab12fe) |
-| Changed application source | src/pages/admin/AdminProjects.tsx; src/pages/admin/AdminClients.tsx (Projects Planning, Directory/Client 360, Onboarding Lead register) |
+| Latest source/test commit | d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c |
+| Commit | [test(clients): guard current agreement detail workspace](https://github.com/Kapitech-Agency/kapitech-ams/commit/d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c) |
+| Changed application source | src/pages/admin/AdminProjects.tsx; src/pages/admin/AdminClients.tsx; src/pages/admin/AdminContracts.tsx (Projects Planning, Directory/Client 360, Onboarding, Contracts & SOWs detail) |
 | Regression tests | tests/projects-module-regression.test.ts; tests/ams-nine-module-workspace-regression.test.ts; tests/admin-pages-jsx-regression.test.ts; tests/ams-client-detail-data-state-regression.test.ts; tests/ams-scrollbar-and-table-regression.test.ts |
-| AMS CI | **Passed on exact SHA**: [run 39273628957](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39273628957) |
-| AMS Quality Gate | **Passed on exact SHA**: [run 39273628833](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39273628833) |
-| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on 952203b70ead573edf994d7a53e51ab46eab12fe. |
+| AMS CI | **Passed on exact SHA**: [run 39275162214](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39275162214) |
+| AMS Quality Gate | **Passed on exact SHA**: [run 39275162228](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39275162228) |
+| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c. |
 
 ### Recent verified frontend slices
 
@@ -59,7 +59,7 @@ Re-verify live source and CI on every resume; this list is a dated recovery poin
 
 1. **Rehydrate:** fetch current `main`, recent history, relevant source and exact current CI/Quality Gate results.
 2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, Clients scope-aware exports/evidence-based Onboarding copy, Retainer local-date defaults and Renewal Schedule calendar-day handling have successful exact-SHA evidence.
-3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Projects Planning/Resources and Clients Directory/Client 360/Onboarding Lead register now have source/test evidence. Latest exact-SHA validation passed on 952203b70ead573edf994d7a53e51ab46eab12fe. Next in canonical Clients order: Agreements. Review Contracts & SOWs, Retainers & Service Commitments, Renewal Schedule and Contract History; preserve unsupported canonical version history as unavailable.
+3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Projects Planning/Resources, Clients Directory/Client 360, Onboarding Lead register, and Contracts & SOWs selected-detail slice now have source/test evidence. Latest exact-SHA validation passed on d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c. Next in canonical Clients → Agreements order: Retainers & Service Commitments, then Renewal Schedule. Contract History remains unavailable until a versioned canonical history source is verified.
 4. **Validate one bounded slice:** inspect current source/tests and gap row, make the smallest complete change, retain negative-path regression tests, verify both CI workflows on the source/test SHA, then update checkpoint and gap evidence.
 5. **Release gate remains closed:** authenticated browser/viewport/accessibility review and explicit user sign-off are still required at Stage 5. No authenticated screenshot or browser visual/keyboard/touch test has been performed in this execution. Do not start broad Stage 6 workflow/backend implementation before approval.
 
@@ -126,4 +126,12 @@ When the user says “lanjutkan” or similar, do not ask them to restate the ta
 - Structural result: onboarding scope uses a named Lead register/mobile card pattern with primary contact, recorded email/phone, industry/location, Lead status and created/updated dates instead of normal Directory billing/spend-cap context. Directory scope remains unchanged. URL scope, existing actions and data semantics are preserved.
 - Boundary: checklist, required-document evidence, owner/due-date requirements and kickoff readiness are absent from the canonical model. Those worksheets remain unavailable. No browser evidence has been captured; Stage 5 user sign-off is still required.
 - Next single action: continue to Clients → Agreements and assess the four documented agreement areas against current sources.
+
+### Current Stage 4 structural checkpoint · Clients Agreements / Contracts & SOWs · 19 October 2026
+
+- Verified source/test commit: d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c. Exact-SHA AMS Quality Gate [39275162228](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39275162228) and AMS CI [39275162214](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39275162214) both passed.
+- Structural result: Contracts & SOWs retains its search/filter/lifecycle register; new View details actions on mobile/desktop open a read-only Drawer for the current saved agreement, canonical terms/deliverables, value/date/client/project context and saved document link.
+- Boundary: Contract History is not simulated. A versioned canonical history/event source remains unverified. Existing permission, draft, transition and deletion paths remain unchanged.
+- Browser status: NOT VERIFIED. Actual drawer reflow/keyboard/role behavior requires Stage 5 browser review and user sign-off.
+- Next single action: assess and structurally continue Clients → Agreements → Retainers & Service Commitments. Keep Renewal Schedule's source boundaries and Contract History unavailable where their models do not support more.
 
