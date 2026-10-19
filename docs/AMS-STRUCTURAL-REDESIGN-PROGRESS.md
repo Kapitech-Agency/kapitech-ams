@@ -1152,3 +1152,8 @@ Quality Gate [39229655648](https://github.com/Kapitech-Agency/kapitech-ams/actio
 ### Settings notification regression assertion correction — 19 October 2026
 
 The Quality Gate and AMS CI runs on `74755c5b5005a09b59bdd1bc950d76ec24a71fe0` passed typecheck but failed the new notification semantics test because it looked for `label={notificationLabel}`; the actual `SummaryCard` contract uses `status={notificationLabel}`. The test now asserts the real prop. The Settings source change remains unchanged: API success means settings are available, while delivery readiness comes from the separate production-readiness gate. Re-run both workflows on this corrective commit.
+
+
+### Annual Summary label clarification — 19 October 2026
+
+The operational Annual Summary measure uses `reportInvoices` filtered through `isIssuedInvoice`, with amount calculated as invoice total less recorded tax. The prior label `Annual Revenue / Invoice Value` could blur issued billing with recognized accounting revenue. The label is now `Issued invoice value (excluding tax)`; the basis says it uses the IDR issued-invoice date and is billed value, not recognized accounting revenue. English/Indonesian labels and basis text are mapped in the existing Finance copy dictionary. No calculation, accounting posting or ledger behavior changed. Verify this SHA through CI and Quality Gate.

@@ -826,3 +826,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 
 
 **Settings regression follow-up:** Runs [39230395340](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39230395340) and [39230395335](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39230395335) failed only the new source assertion expecting `label={notificationLabel}`; `SummaryCard` exposes it as `status={notificationLabel}`. The assertion is corrected to match the actual component contract. Verify the new SHA through typecheck, regression tests, build and AMS CI.
+
+
+### FIN-ANNUAL-BILLING-LABEL-001: Distinguish invoice value from recognized revenue
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. Annual Summary's operational row now reads “Issued invoice value (excluding tax)” with localized English/Indonesian label and basis. It states that the value uses the IDR issued-invoice date and invoice total less recorded tax, not recognized accounting revenue. Posted GL revenue remains a separate posted-journal measure. No calculations or ledger/posting behavior changed.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts the accurate metric/basis, rejects the ambiguous “Annual Revenue / Invoice Value” within the worksheet, and checks both existing dictionary translations. Exact-SHA CI and Quality Gate must pass; Stage 5 must verify the year-comparison table and localized labels visually.
