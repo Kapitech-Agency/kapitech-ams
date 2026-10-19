@@ -607,3 +607,21 @@ The first correction commit `b6abb278d95587bc46326facb6294ee6be7271da` updated t
 - Inbox Overview/Messages: commits `76916e1fc3c01cfa179f4dce96f2ae7131fe95f4`, `20be67dfd7907ce0f6c1f95a46f03224312e92e7`, `2b092f63f874b24908338d38c976f16a6a2069ca`, `f20927ff8a5dc24db3ca3335d82f8d9a9f282c6e` and `9398b0f884faa3b4055f7d7d0feaa8c2f3a6ff6b` remove duplicate monitor counts/CTA, align the split at 1100px, add source-backed status/priority and unassigned scopes, truthfully distinguish loading/refreshing/stale/unavailable/live, and show total matching triage count against the eight-row visible cap. CI and Quality Gate passed on the latest Inbox source/test SHA `9398b0f884faa3b4055f7d7d0feaa8c2f3a6ff6b`: CI [39204078559](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39204078559), Quality Gate [39204078557](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39204078557).
 - Projects Overview: source commit `7e9aacfa9a5f4be9b34db6494f4aeeaae94a9372` made exception/status analysis primary and removed the duplicate summary metric. The first Quality Gate exposed a stale four-column test assertion; `eac230c51703535dc4bcfe7e051b0d3d57839b61` corrected the assertion for three metrics. CI [39204437062](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39204437062) and Quality Gate [39204436950](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39204436950) then passed.
 - All source work in these slices remains partial until Stage 5 authenticated browser, viewport, keyboard and explicit visual sign-off checks. No production post-login appearance is claimed. No backend, API, database, auth/RBAC or Finance formula/business logic was changed.
+
+
+## Stage 4 Clients Directory and Onboarding — 19 October 2026
+
+Status: IMPLEMENTED_UNVERIFIED by source slice; Stage 4/5 acceptance remains in progress.
+
+Directory source: src/pages/admin/AdminClients.tsx; regression coverage in tests/ams-nine-module-workspace-regression.test.ts.
+- Status, industry and location filters are now rendered using their existing state and source options. The status control and spend-cap filter remain hidden in the Lead-scoped Onboarding view because status is already constrained there and spend cap is not an onboarding control.
+- The directory filter controls and ordering passed AMS CI [39206483169](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39206483169) and AMS Quality Gate [39206483182](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39206483182) on 3e1897df6c60aa3ae6e2fbe348b13534efa93cc1.
+
+Onboarding source: src/pages/admin/AdminClients.tsx, src/lib/amsModuleSubnavigation.ts; regressions in tests/ams-nine-module-workspace-regression.test.ts and tests/ams-sidebar-subnavigation.test.ts.
+- URL-selected Lead scope clears incompatible status/spend-cap filters and pagination. Onboarding is a distinct module workspace, not a duplicate Directory footer filter.
+- The workspace plainly states that the underlying onboarding checklists, required-document evidence and kickoff-readiness records are not available as separate source records. Profile readiness explicitly covers client profile completeness only.
+- Contextual create/export actions now reflect the Lead scope: new records default to Lead; action labels and the CSV filename identify Onboarding accounts. This changes frontend defaults and labels only.
+- The client detail relationship timeline no longer repeats the persistent footer Log interaction action.
+- AMS CI [39206734168](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39206734168) and AMS Quality Gate [39206734181](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39206734181) passed on 6c42b94fb3db56304015772025fa234564bea716.
+
+Acceptance still pending: Browser verification of direct routes, query/back-forward handling, filter behavior, keyboard/focus and viewport sizes with authenticated authorized roles. Do not mark the separate onboarding checklist/document/kickoff worksheets complete until their canonical records, ownership and evidence are implemented. No backend/API/database/authorization or financial calculations changed.
