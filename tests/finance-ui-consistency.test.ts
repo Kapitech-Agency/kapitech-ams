@@ -472,6 +472,26 @@ test('Annual Summary includes years represented only by Cash & Bank records', as
   assert.match(annual, /buildAnnualSnapshot\(previousYear\)/);
 });
 
+test('Operational Budget distinguishes expense-source failure from a valid zero actual', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  assert.match(workspace, /const \[hasSuccessfulExpenseSource, setHasSuccessfulExpenseSource\] = useState\(false\)/);
+  assert.match(workspace, /setExpenses\(nextExpenses\);\s*setHasSuccessfulExpenseSource\(true\)/);
+  const start = workspace.indexOf("case 'operational-budget': {");
+  const end = workspace.indexOf("case 'petty-cash': {", start);
+  assert.ok(start >= 0 && end > start, 'Operational Budget worksheet should be available.');
+  const budget = workspace.slice(start, end);
+  assert.match(budget, /sourceErrors\.some\(\(error\) => error\.startsWith\('Expenses:'\)\)/);
+  assert.match(budget, /Stale actual · refresh required/);
+  assert.match(budget, /Actuals unavailable/);
+  assert.match(budget, /Budget variance unavailable/);
+  assert.match(budget, /Variance unavailable · stale source/);
+  assert.match(budget, /No successful expense source has loaded/);
+  assert.match(budget, /Expense source refresh failed/);
+  assert.match(budget, /onClick=\{\(\) => void loadData\(true\)\} disabled=\{refreshing\}/);
+  assert.match(budget, /formatMoney\(item\.budget-item\.actual\)/);
+  assert.match(budget, /expenseSourceBlocked\s*\?\s*hasSuccessfulExpenseSource\s*\?/);
+});
+
 test('Project Allocation explains defaults and displays the saved percentage per record', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const start = workspace.indexOf("case 'project-allocation': {");

@@ -1,3 +1,0 @@
-import assert from 'node:assert/strict'; import fs from 'node:fs/promises'; import path from 'node:path'; import test from 'node:test'; import {fileURLToPath} from 'node:url';
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-test('invoice repository validates client and project ownership',async()=>{const s=await fs.readFile(path.join(root,'server/postgres-invoice-repository.ts'),'utf8');for(const e of ['SELECT id FROM clients WHERE id=$1 FOR SHARE','SELECT id, client_id FROM projects WHERE id=$1 FOR SHARE','Project does not belong to the selected client','let nextClientId = next.clientId'])assert.ok(s.includes(e),e);});

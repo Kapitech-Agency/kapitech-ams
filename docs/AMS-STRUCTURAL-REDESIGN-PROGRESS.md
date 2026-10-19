@@ -882,3 +882,27 @@ Implementation: remove silent fallback from an explicit resourcesProject URL. Ve
 13. Regression tests. Explicit identity matching, no silent substitution, selector query update and query clearing are asserted. Existing resource allocation and task record behavior remains unchanged.
 14. Dependencies. No API, persistence, RBAC or business logic change. Cross-project capacity and current availability remain unavailable in this project workspace.
 15. Acceptance. A stale resource-project URL cannot silently display another project's team and allocation data. View stays partially complete until Stage 5 route/visual verification and cross-module source parity checks.
+
+
+## Stage 4 view design record — Finance · Project Finance · Operational Budget
+
+**View ID:** VIEW-FIN-PROJECT, Operational Budget worksheet.
+**Implementation status:** Source update and regression coverage have been added to this checkpoint; verify the exact SHA in both CI workflows before marking this slice source/test verified.
+
+1. **Owner/persona.** Finance → Project Finance → Operational Budget. Finance operators compare approved budget lines against recorded AMS expenses.
+2. **Primary task.** Review month/category/project budget versus actuals and identify variance without treating a failed source read as no spending.
+3. **Decision.** Is actual spending truly zero, based on a successful empty source response, or unavailable/stale because the expense source failed?
+4. **Primary surface.** Canonical month/category/project budget-versus-actual register. The existing saved budget source and expense actual source remain the only records.
+5. **Content order.** Monthly budget-versus-actual context; source-specific unavailable/stale notice with retry where needed; budget lines, actual, variance, expense-row count and authorized actions. No new KPI strip or duplicate data source.
+6. **Fields and semantics.** Month, category, project/company-wide bucket, PIC/notes, saved budget amount, dated expense actual and record count. Variance remains budget minus recorded actual when the expense source is current. Unassigned expenses stay company-wide.
+7. **Controls.** Existing report-period, search, Set budget and edit actions remain. Retry invokes the existing `loadData(true)`; no API or mutation changes.
+8. **Canonical ownership/breadcrumb.** Uses saved operational-budget records and core AMS expense records. No duplicate expense rows, budget record or breadcrumb.
+9. **Role-aware presentation.** Existing finance record permissions still gate budget writes. Retry is read-only.
+10. **States/recovery.** Successful empty source yields a truthful zero actual. First-load expense failure suppresses actual/count/variance as unavailable. Failure after prior success preserves the last values but marks actual stale and suppresses variance until a refresh succeeds. The notice does not infer new values or pretend the source recovered.
+11. **Responsive behavior.** Notice stacks at narrow widths and keeps retry visible. Existing FinanceDataTable owns its horizontal containment; Stage 5 still checks 1100, 900, 600, 390 and 320px.
+12. **Accessibility.** Notice uses role=status, visible explanation and labeled retry button; status text accompanies warning badges, so color is not the only signal. Keyboard and focus still require browser verification.
+13. **Regression tests.** Source tests cover loaded-state tracking, error detection, unavailable/stale copy, withheld variance, real retry, and unchanged current-source formula.
+14. **Dependencies.** No backend, data model, finance formula, payment/posting behavior or permission policy changed. Source freshness is local presentation metadata only.
+15. **Acceptance.** A successful empty expense result can show zero, but a failed initial load cannot. Stale values are labeled and variance is withheld until source recovery. Finance Project remains partially complete until Allocation/Team Fee are audited and Stage 5 browser evidence is collected.
+
+**Next Stage 4 slice:** Finance → Project Allocation and Team Fee source/period semantics, then continue the remaining active worksheets before Stage 5 review.

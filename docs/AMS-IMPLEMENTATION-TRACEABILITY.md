@@ -737,3 +737,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit-ID resolution,
 Source: src/pages/admin/AdminProjects.tsx. When the URL provides resourcesProject, selection resolves only that project ID/slug. Missing selection shows Selected project unavailable and does not fall back to a different project. Available canonical project choices provide recovery; the default action removes only resourcesProject and preserves other query parameters. No API, persistence, authorization or allocation semantics changed.
 
 Tests: tests/projects-module-regression.test.ts verifies explicit selection, unavailable recovery, selector query update and stale-query clearing. Stage 5 must verify direct URL, refresh/back-forward, keyboard and responsive states.
+
+
+### FIN-OP-BUDGET-SOURCE-001: Do not infer zero expense actuals after source failure
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. Operational Budget tracks whether the expense source has ever loaded successfully. A successful empty response remains a valid zero; a first-load error presents Actual, Variance and row count as unavailable. If a later refresh fails, last-known actuals remain visible with a stale label and variance is withheld until recovery. A real retry reuses the current Finance loader. No API, formula, persistence, payment, posting or permission behavior changed.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts source-loaded tracking, unavailable/stale states, variance suppression, retry wiring and the existing fresh-source budget-minus-actual formula. Verify both AMS CI and Quality Gate on this exact commit; authenticated browser/viewport evidence remains Stage 5.
