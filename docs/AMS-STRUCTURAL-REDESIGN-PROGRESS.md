@@ -1253,3 +1253,17 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Remaining acceptance: Tasks & Execution is still partially complete pending authorized browser review of board/list filters, task detail, keyboard actions, responsive viewports and actual local date input behavior. No authenticated screenshot or viewport session was performed here.
 - Next action: continue Stage 4 in Projects → Planning & Delivery, keeping unavailable canonical scope/QA/review/revision features disabled.
 
+
+
+## Stage 4 source/test checkpoint · Planning worksheet selection context · 19 October 2026
+
+- Application/source commit: [`fd1ea4fb51d0497d2c19e2cbd7cb0a8344f66b83`](https://github.com/Kapitech-Agency/kapitech-ams/commit/fd1ea4fb51d0497d2c19e2cbd7cb0a8344f66b83).
+- Final passing test/check commit: [`444b9891b33e7891567341711dfa9a8d29866bf4`](https://github.com/Kapitech-Agency/kapitech-ams/commit/444b9891b33e7891567341711dfa9a8d29866bf4).
+- Changed application source: `src/pages/admin/AdminProjects.tsx`. Tests updated in `tests/projects-module-regression.test.ts` and `tests/ams-sidebar-subnavigation.test.ts`.
+- Confirmed defect: active Project Brief, Milestones and Timeline tab links were hard-coded URLs omitting `planningProject`. Switching worksheet after choosing a project could fall back to the default project and display another record.
+- Correction: `planningWorksheetHref` clones the current URL query, preserves the selected project and other query state, then sets `projects=planning-delivery` and the desired `planningView`. Only the three active worksheets use this helper; unsupported worksheets remain disabled.
+- Regression coverage: `Planning & Delivery preserves the selected project across active worksheet tabs` checks helper behavior and three targets. The existing sidebar test now asserts this helper instead of literal query strings while preserving default-view normalization and unavailable-worksheet assertions.
+- Validation: Quality Gate [39247714368 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39247714368); AMS CI [39247714349 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39247714349) on exact commit `444b9891b33e7891567341711dfa9a8d29866bf4`. Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed.
+- Failed prior validation: Quality Gate [39247451029](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39247451029) and AMS CI [39247450983](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39247450983) failed on the earlier source commit because of the obsolete static-URL assertion. The assertion was repaired and both workflows passed on the follow-up test commit. No failing test was suppressed.
+- Remaining acceptance: browser verification of project selection retained across back/forward and direct tab links is still pending Stage 5. No authenticated browser screenshot was captured here.
+- Next action: proceed to Clients → Directory as the next Stage 4 active workspace in canonical order; keep onboarding checklist and other absent records truthful and disabled until canonical models exist.

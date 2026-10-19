@@ -11,26 +11,30 @@
 
 ## 1. Last verified code snapshot
 
-Latest application source snapshot verified on **19 October 2026**:
+Latest application source/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest application source commit | `af65907022d9973b3859145e0971bf22a6caf343` |
-| Commit | [fix(tasks): default due dates to local calendar day](https://github.com/Kapitech-Agency/kapitech-ams/commit/af65907022d9973b3859145e0971bf22a6caf343) |
-| Changed source/test | `src/components/admin/TasksWorkspace.tsx`; `tests/task-workspace-data-parity-regression.test.ts` |
-| AMS CI | **Passed** on this SHA: [run 39246972955](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246972955) |
-| AMS Quality Gate | **Passed** on this SHA: [run 39246972981](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39246972981) |
+| Latest source/test commit | `444b9891b33e7891567341711dfa9a8d29866bf4` |
+| Commit | [test(projects): assert planning worksheet query preservation](https://github.com/Kapitech-Agency/kapitech-ams/commit/444b9891b33e7891567341711dfa9a8d29866bf4) |
+| Changed application source in this slice | `src/pages/admin/AdminProjects.tsx` |
+| Related tests | `tests/projects-module-regression.test.ts`; `tests/ams-sidebar-subnavigation.test.ts` |
+| AMS CI | **Passed** on this SHA: [run 39247714349](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39247714349) |
+| AMS Quality Gate | **Passed** on this SHA: [run 39247714368](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39247714368) |
 | Validation detail | Typecheck, regression tests, security regression tests, production build, and production HTTP smoke test passed. |
 
 ### Recent verified source slices
 
-- [Settings backup-history correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba): desktop backup rows use per-snapshot `backupVerificationFor(backup)`; both CI workflows passed on that source SHA.
-- [Dashboard money truthfulness correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/febd4f42a18718230dd2ebccec5b975a0083ef68): non-finite monetary values display unavailable rather than numeric zero; both CI workflows passed.
-- [Inbox register semantics correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/87b53aa61cd7c973869da73ef4273c8cb5f4cc7e): generic table labels reflect requested services and budget, and the empty state refers only to inquiries; both CI workflows passed.
-- [Inbox applicant-presentation cleanup](https://github.com/Kapitech-Agency/kapitech-ams/commit/926291d005bbdef2c1e06779d28145d230606ddf): all unreachable applicant-only display branches were removed from Inbox while preserving the ingress filter, legacy redirect and CMS Careers → Applicants route; both CI workflows passed.
-- [Tasks local-date correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/af65907022d9973b3859145e0971bf22a6caf343): initial task-form state and the New Task reopen action now format the current local calendar date instead of truncating a UTC ISO string. The new regression test verifies both call sites and rejects the prior UTC default; both CI workflows passed.
+- [Settings backup-history correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba): desktop backup rows use per-snapshot verification; CI and Quality Gate passed.
+- [Dashboard money truthfulness correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/febd4f42a18718230dd2ebccec5b975a0083ef68): non-finite amounts display unavailable rather than zero; CI and Quality Gate passed.
+- [Inbox register semantics correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/87b53aa61cd7c973869da73ef4273c8cb5f4cc7e): generic register labels and empty copy reflect inquiry-only scope; CI and Quality Gate passed.
+- [Inbox applicant-presentation cleanup](https://github.com/Kapitech-Agency/kapitech-ams/commit/926291d005bbdef2c1e06779d28145d230606ddf): unreachable applicant-only branches removed from Inbox while preserving the source filter and CMS Careers route; CI and Quality Gate passed.
+- [Tasks local-date correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/af65907022d9973b3859145e0971bf22a6caf343): task form defaults now use local calendar date components for both initialization and opening New Task; CI and Quality Gate passed.
+- [Planning worksheet context preservation](https://github.com/Kapitech-Agency/kapitech-ams/commit/fd1ea4fb51d0497d2c19e2cbd7cb0a8344f66b83): active Project Brief, Milestones and Timeline tabs now retain existing query parameters so `planningProject` is preserved between worksheets.
 
-The older CI failures on `2afe419030b861064258531167c98398e89b5661` are resolved by the verified Settings correction and are not current failures. This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch `main` and workflow results before acting; a documentation-only commit does not change the application source snapshot that was tested.
+The first validation attempt on `fd1ea4fb51d0497d2c19e2cbd7cb0a8344f66b83` failed because `tests/ams-sidebar-subnavigation.test.ts` asserted the old literal URL text (`planningView=brief/milestones/timeline`). The follow-up commit `444b9891b33e7891567341711dfa9a8d29866bf4` updates that assertion to check the context-preserving URL helper and all three active worksheet targets. It does not remove the route-state requirement or weaken unrelated checks. Both workflows passed on the follow-up SHA.
+
+This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch `main` and workflow results before acting; a documentation-only commit does not change the tested source/test tree.
 
 ## 2. Active delivery stage
 
@@ -50,12 +54,12 @@ Recent repository history includes further work/tests for **Website CMS, Finance
 
 ## 3. Immediate resume sequence
 
-Re-verify live source and CI on every resume; this list records the tested source state and the next authorized task.
+Re-verify live source and CI on every resume; this list records the tested source state and next authorized task.
 
-1. **Rehydrate live state:** fetch current `main`, recent commits, relevant source and latest AMS CI/Quality Gate results.
-2. **Preserve verified fixes:** Settings backup-history, Dashboard money availability, Inbox content/ownership, and Tasks local-date corrections all have successful exact-SHA CI evidence. Do not repeat them without a demonstrated regression.
-3. **Continue Stage 4 in canonical order:** continue the Projects module at Planning & Delivery after preserving the reviewed Overview/Registry and Tasks slices. Re-audit current source, module-specific acceptance requirements and regression tests. Keep unsupported scope/deliverable, QA, client review and revision history surfaces unavailable until canonical records exist.
-4. **Validate one bounded slice:** retain regression strength, inspect the exact diff, verify CI on the code SHA, then update the checkpoint and affected gap rows.
+1. **Rehydrate live state:** fetch current `main`, recent commits, relevant source and the latest AMS CI/Quality Gate results.
+2. **Preserve verified slices:** Settings backup history, Dashboard monetary availability, Inbox inquiry/applicant presentation, Tasks local-date defaults and Planning worksheet query preservation have exact-SHA CI evidence. Do not repeat them without a demonstrated regression.
+3. **Continue Stage 4 in module order:** Projects' available Overview/Registry, Tasks and Planning slices have been source/test verified; Campaigns and Project Controls remain unavailable until canonical contracts exist. Continue at Clients → Directory, then Onboarding and Agreements, and inspect source/test/gap evidence before selecting any patch.
+4. **Validate one bounded slice:** retain regression strength, inspect the exact diff and current gap row, verify both workflows on the source/test SHA, then update the checkpoint and progress log.
 5. **Keep the release gate:** authenticated browser/viewport review and explicit user sign-off remain outstanding at Stage 5. No authenticated production/browser session has been established, so screenshots, computed-layout, keyboard/touch and visual acceptance are not claimed. Do not begin broad Stage 6 workflow/backend implementation before user sign-off.
 
 ## 4. Checkpoint update template
