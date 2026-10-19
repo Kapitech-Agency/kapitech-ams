@@ -780,19 +780,24 @@ test('Time tracking leads with the time-entry workflow and register before perio
 });
 
 
-test('Contracts and SOW leads with its searchable register before the shared summary metrics', () => {
+test('Contracts and SOW keeps the searchable register primary and exposes saved details without duplicate status metrics', () => {
   const contracts = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminContracts.tsx'), 'utf8');
   const search = contracts.indexOf('aria-label="Search contracts"');
   const table = contracts.indexOf('<table', search);
   const pagination = contracts.indexOf('slug="contracts-pagination"');
   const metrics = contracts.indexOf('data-ams-feature-slug="contracts-overview-kpis"');
+  const detailDrawer = contracts.indexOf('slug="client-contract-detail-drawer"');
   assert.ok(search >= 0 && table > search);
-  assert.ok(pagination > table && metrics > pagination);
-  assert.ok(contracts.includes('<AdminMetricStrip'));
-  for (const label of ['Drafts', 'In workflow', 'Active agreements', 'Renewal / expiry watch']) {
-    assert.ok(contracts.includes("label: '" + label + "'"), 'Missing contract metric: ' + label);
+  assert.ok(pagination > table, 'The canonical agreement register keeps pagination directly after its records.');
+  assert.equal(metrics, -1, 'The register must not be followed by duplicate status-summary KPIs.');
+  assert.equal(contracts.includes('<AdminMetricStrip'), false);
+  assert.ok(detailDrawer > pagination, 'Selected-record details should follow the canonical register.');
+  assert.ok(contracts.includes('onClick={() => setSelectedContract(contract)}>View details</Button>'));
+  assert.ok(contracts.includes('data-ams-slug="contract-current-detail"'));
+  for (const field of ['selectedContract.clientName', 'selectedContract.projectName', 'selectedContract.startDate', 'selectedContract.endDate', 'selectedContract.renewalDate', 'selectedContract.scope', 'selectedContract.deliverables', 'selectedContract.paymentTerms']) {
+    assert.ok(contracts.includes(field), 'Missing source-backed agreement detail field: ' + field);
   }
-  assert.ok(contracts.includes("value: loading ? '—' : expiringSoon"));
+  assert.ok(contracts.includes('Contract History worksheet remains unavailable') || contracts.includes('Contract History worksheet remains unavailable'));
   assert.ok(contracts.includes('data-ams-slug={\'contract-\' + contract.id}'));
 });
 
