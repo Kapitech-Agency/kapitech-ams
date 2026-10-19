@@ -292,3 +292,36 @@ test('Planning & Delivery preserves the selected project across active worksheet
   assert.match(tabs, /key: 'timeline', label: 'Timeline', to: planningWorksheetHref\('timeline'\)/);
   assert.doesNotMatch(tabs, /key: '(?:brief|milestones|timeline)'[^\n]*to: '\/admin\/projects\?projects=planning-delivery/);
 });
+
+test('Planning & Delivery puts project scope before worksheet tabs and makes the brief the primary workspace', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const workspaceStart = source.indexOf("      {view === 'planning-delivery' && (");
+  const workspaceEnd = source.indexOf("      {view === 'resources' && (", workspaceStart);
+  assert.ok(workspaceStart >= 0 && workspaceEnd > workspaceStart, 'Planning & Delivery should remain a bounded workspace.');
+  const workspace = source.slice(workspaceStart, workspaceEnd);
+
+  const scopeIndex = workspace.indexOf('data-ams-slug="planning-delivery-scope"');
+  const tabsIndex = workspace.indexOf('ariaLabel="Planning & Delivery worksheets"');
+  const briefIndex = workspace.indexOf('data-ams-slug="planning-project-brief"');
+  const notesIndex = workspace.indexOf('aria-label="Project brief notes"', briefIndex);
+  const contextIndex = workspace.indexOf('aria-label="Project context"', briefIndex);
+  assert.ok(scopeIndex >= 0 && tabsIndex > scopeIndex, 'The selected project scope must be visible before worksheet navigation.');
+  assert.ok(briefIndex > tabsIndex && notesIndex > briefIndex && contextIndex > notesIndex,
+    'The Project Brief must follow worksheet navigation and place recorded notes before supporting context.');
+  assert.match(workspace, /This selection scopes the Project Brief, Milestones and Timeline worksheets\./);
+
+  const briefEnd = workspace.indexOf("{planningView === 'milestones' && (", briefIndex);
+  assert.ok(briefEnd > briefIndex, 'The Project Brief should have an explicit boundary before Milestones.');
+  const brief = workspace.slice(briefIndex, briefEnd);
+  assert.match(brief, /Project brief notes/);
+  assert.match(brief, /Target deadline/);
+  assert.match(brief, /Recorded progress/);
+  assert.match(brief, /Recorded milestones/);
+  assert.match(brief, /Team members/);
+  assert.match(brief, /Not tracked as separate project records/);
+  assert.match(brief, /Open task execution/);
+  assert.doesNotMatch(brief, /title="Planning data coverage"/, 'Duplicate coverage panel should not compete with the brief.');
+  assert.doesNotMatch(workspace, /data-ams-slug="planning-delivery-context"/, 'The duplicate context row should be removed.');
+  assert.match(workspace, /next\.set\('planningProject', value\)/, 'Changing scope must keep the canonical project query state.');
+});
+
