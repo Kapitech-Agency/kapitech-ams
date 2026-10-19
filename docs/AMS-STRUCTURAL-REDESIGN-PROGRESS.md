@@ -1267,3 +1267,17 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Failed prior validation: Quality Gate [39247451029](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39247451029) and AMS CI [39247450983](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39247450983) failed on the earlier source commit because of the obsolete static-URL assertion. The assertion was repaired and both workflows passed on the follow-up test commit. No failing test was suppressed.
 - Remaining acceptance: browser verification of project selection retained across back/forward and direct tab links is still pending Stage 5. No authenticated browser screenshot was captured here.
 - Next action: proceed to Clients → Directory as the next Stage 4 active workspace in canonical order; keep onboarding checklist and other absent records truthful and disabled until canonical models exist.
+
+
+## Stage 4 source/test checkpoint · Clients Directory CSV correctness · 19 October 2026
+
+- Final source/test commit: [`aba169fe8dcc493c1a404cc534ebd630f8e74fbf`](https://github.com/Kapitech-Agency/kapitech-ams/commit/aba169fe8dcc493c1a404cc534ebd630f8e74fbf).
+- Changed paths: `src/pages/admin/AdminClients.tsx`; `tests/ams-nine-module-workspace-regression.test.ts`.
+- Confirmed export defects: client billed value was previously coerced with `totalSpend || 0` even though the visible cards/table distinguish unrecorded values. The CSV column was generically labeled `Total Spend`, did not identify the canonical currency, and its row/BOM literals were double-escaped in source.
+- Corrections: missing or non-finite `totalSpend` exports as an empty cell; valid numeric zero remains zero; header now reads `Cumulative billed value (IDR)`; row strings use actual `\n` line separators; Blob prefix uses the actual `\ufeff` BOM. No billing values, Finance formulas, canonical source data or persistence semantics changed.
+- Regression coverage: `Client directory CSV preserves unrecorded billed values and identifies the stored currency` checks finite/missing semantics, no zero fallback, IDR label, actual newline and BOM source expressions.
+- Exact-SHA evidence: AMS Quality Gate [39248843922 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39248843922), AMS CI [39248843929 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39248843929). Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed.
+- Earlier validation attempt: Quality Gate [39248547110](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39248547110) failed only because the test slice ended before the BOM expression. The boundary was corrected in `aba169fe8dcc493c1a404cc534ebd630f8e74fbf`, the assertion remains active, and both workflows now pass. No regression assertion was removed.
+- Remaining acceptance: Clients Directory stays partially complete pending authenticated data/role checks, search/filter/clear/sort/export behavior, responsive and keyboard/viewport review. No authenticated browser screenshot or actual downloaded CSV was tested interactively here.
+- Next action: continue Stage 4 through Clients Directory and Onboarding using supported canonical fields, then Agreements. Keep unavailable checklist/history capabilities explicitly blocked by missing canonical records.
+
