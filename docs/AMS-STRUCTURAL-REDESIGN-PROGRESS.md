@@ -1189,3 +1189,15 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 13. **Regression tests.** Assert all three criteria are required, historical rows don't inherit newest status, and the source label makes missing per-snapshot evidence explicit.
 14. **Dependencies.** Per-snapshot integrity/restore evidence is not returned by the backup-list endpoint. Do not synthesize it. Restore readiness remains infrastructure-owned and is reported from the server health status field.
 15. **Acceptance.** A fresh snapshot alone or valid integrity alone cannot produce a healthy/recovery-verified status. Historical entries won't claim verification without a record. Overall Settings stays partially complete pending authenticated browser and responsive review.
+
+
+## Recovery checkpoint · Settings backup-history status · 19 October 2026
+
+- Current source commit: [`bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba`](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba).
+- Changed file: `src/pages/admin/AdminSettings.tsx`.
+- Root cause: the desktop backup-history table used `backupHealthy` from the newest server-wide checks for every row, while the mobile cards already used per-snapshot `backupVerificationFor(backup)`. Historical snapshots could therefore be presented as verified without evidence.
+- Correction: the desktop row now uses `<StatusBadge {...backupVerificationFor(backup)} />`. The latest snapshot shows positive verification only when freshness, integrity and restore verification are all true. Historical rows remain explicitly unverified when the API returns only timestamps and sizes.
+- Validation on this exact source SHA: [AMS CI 39239473226 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39239473226); [AMS Quality Gate 39239473547 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39239473547). The existing regression test remains enabled; it was not weakened.
+- Scope review: frontend presentation only. No API, database, backend, backup infrastructure, auth, permission or business-rule changes.
+- Remaining acceptance: Stage 5 still requires authenticated permission, error/retry, responsive viewport, keyboard/focus and visual review. No authenticated browser evidence was captured in this source-only environment.
+- Next action: continue Stage 4 in the documented module order from the earliest unfinished Dashboard view; first reconcile the current Dashboard source/test slice against its gap-register acceptance criteria. Keep the Stage 5 user sign-off gate intact.
