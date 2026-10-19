@@ -293,7 +293,7 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   assert.match(apView, /bills\.length > 0 &&/);
   assert.match(workspace, /const financeWorksheetDestination = \(key: string\) => '\/admin\/finance\?tab=' \+ key/);
   assert.match(workspace, /const canShowFinanceWorksheet = \(key: string\) =>/);
-  assert.match(workspace, /!sidebarDestinations\.has\(destination\)/);
+  assert.doesNotMatch(workspace, /sidebarDestinations/);
   assert.doesNotMatch(apView, /title="Vendor contract references"/);
   assert.match(vendorsView, /<AdminVendors embedded searchTerm=\{searchText\} \/>/);
   assert.match(vendorsView, /Vendor contract register/);

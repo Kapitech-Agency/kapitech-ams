@@ -66,9 +66,10 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
   assert.ok(workspace.includes('const sheetItems = ['));
   assert.ok(workspace.includes('...activeGroup.items'));
   assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
-  assert.ok(workspace.includes('getAmsSidebarDestinationSignatures(navigationRole)'));
+  assert.ok(workspace.includes("canAccessAmsRoute(navigationRole, '/admin/finance', '?tab=' + key)"));
+  assert.equal(workspace.includes('getAmsSidebarDestinationSignatures(navigationRole)'), false);
   assert.ok(subnavigation.includes('Finance areas') || subnavigation.includes("label: 'Overview & Control'"));
-  assert.ok(workspace.includes('ariaLabel="Finance views"'));
+  assert.ok(workspace.includes('ariaLabel="Finance worksheets"'));
   assert.ok(workspace.includes('data-ams-slug="finance-workspace-navigation"'));
 });
 

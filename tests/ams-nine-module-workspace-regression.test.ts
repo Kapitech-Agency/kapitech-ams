@@ -252,7 +252,7 @@ test('Finance worksheet header explains the active view and its owning workspace
   assert.match(finance, /eyebrow=\{activeGroup\.label\}/);
   assert.match(finance, /description=\{activeTab\.description \|\| "Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place\."\}/);
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
-  assert.match(finance, /ariaLabel="Finance views"/);
+  assert.match(finance, /ariaLabel="Finance worksheets"/);
 });
 
 
