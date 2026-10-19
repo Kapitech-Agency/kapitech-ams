@@ -772,7 +772,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
             }
           ]}
-        />>
+        />
       </section>
 
       <section
@@ -1099,7 +1099,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 : 'text-fg',
               slug: 'dashboard-net-operating-profit'
             }
-          ]} />/>
+          ]} />
         </div>
 
 
