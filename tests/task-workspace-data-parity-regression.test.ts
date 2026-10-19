@@ -98,3 +98,15 @@ test('Task workspace distinguishes an unavailable canonical source from empty an
   assert.match(workspace, /w-\[280px\] shrink-0/);
   assert.doesNotMatch(workspace, /w-\[252px\]|sm:w-\[268px\]/);
 });
+
+test('Tasks & Execution task-date defaults use the local calendar rather than UTC date slicing', () => {
+  const workspace = read('src/components/admin/TasksWorkspace.tsx');
+
+  assert.match(
+    workspace,
+    /const formatLocalDateInputValue = \(date: Date = new Date\(\)\): string => \{\s*const year = date\.getFullYear\(\);\s*const month = String\(date\.getMonth\(\) \+ 1\)\.padStart\(2, '0'\);\s*const day = String\(date\.getDate\(\)\)\.padStart\(2, '0'\);\s*return year \+ '-' \+ month \+ '-' \+ day;\s*\};/
+  );
+  assert.equal((workspace.match(/dueDate: formatLocalDateInputValue\(\)/g) || []).length, 2,
+    'Initial task creation and reopening the New Task form must use the same local-date helper.');
+  assert.doesNotMatch(workspace, /dueDate:\s*new Date\(\)\.toISOString\(\)\.slice\(0,\s*10\)/);
+});

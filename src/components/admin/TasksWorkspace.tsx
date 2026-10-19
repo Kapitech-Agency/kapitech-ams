@@ -74,6 +74,13 @@ const TASK_WORKSPACE_VIEWS = [
 
 const DEFAULT_PAGE_SIZE = 10;
 
+const formatLocalDateInputValue = (date: Date = new Date()): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+};
+
 const taskStatusLabel: Record<TaskStatus, string> = {
   todo: 'To Do',
   in_progress: 'In Progress',
@@ -232,7 +239,7 @@ export const TasksWorkspace: React.FC = () => {
     projectId: '',
     assignee: '',
     priority: 'medium' as TaskPriority,
-    dueDate: new Date().toISOString().slice(0, 10),
+    dueDate: formatLocalDateInputValue(),
     tags: '',
     subtasks: '',
   });
@@ -785,7 +792,7 @@ export const TasksWorkspace: React.FC = () => {
       projectId: projectOptions[0]?.[0] || '',
       assignee: '',
       priority: 'medium',
-      dueDate: new Date().toISOString().slice(0, 10),
+      dueDate: formatLocalDateInputValue(),
       tags: '',
       subtasks: '',
     });
