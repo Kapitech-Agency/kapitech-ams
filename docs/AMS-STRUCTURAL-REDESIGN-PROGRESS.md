@@ -1482,3 +1482,23 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Browser evidence: NOT CAPTURED. No authorized authenticated browser session was available to validate actual Drawer appearance, keyboard operation, roles or viewport/reflow.
 - Requirement status: PARTIALLY COMPLETE pending Stage 5 review and remaining Agreement worksheets. Contract History stays unavailable until canonical version/event history is established.
 - Next action: continue to Clients → Agreements → Retainers & Service Commitments; inspect existing source and history/capacity caveats before deciding whether the register structure needs a material change. Renewal Schedule follows afterward.
+
+## Stage 4 structural slice · Clients Agreements / Retainers & Service Commitments · 19 October 2026
+
+### View structure contract
+
+- Requirement: `VIEW-CLIENTS-AGREEMENTS`; worksheet: Clients → Agreements → Retainers & Service Commitments.
+- Primary task: inspect each active retainer's recorded terms, hours and renewal date while understanding which values can be calculated safely.
+- Key question: which terms and hour values are actually stored, when is renewal due, and is there a valid basis for utilization/remaining hours?
+- Source contract: records come from the existing `AgencyClient` model via `api.clients.getAll()`; saves still use `api.clients.update()`. No verified service-scope model, retainer-period entity, carryover rule or canonical Time Logs reconciliation was introduced. An existing warning identifies used hours as a saved Client Directory field.
+- Before: warning → filters → register whose mapper defaulted missing monthly value, commitment/used hours, overage rate, tier and cycle to zero or a plausible default → progress calculated with `Math.max(1, committedHours)` → aggregate KPI strip → four extra burn/near-cap/average-overage/source cards.
+- Mismatch: missing values could read as explicit zero/defaults, and absent usage denominator could show a green status/progress. Burn and health summaries were duplicated below the register.
+- After: source/reconciliation boundary → search/cycle/tier/health filters (including Usage unavailable) → responsive register with field-presence states and utilization only when commitment is recorded and positive and used hours are recorded → remaining hours or hours above commitment when calculable → one compact KPI strip with missing-source coverage context. The duplicate lower summary grid is removed.
+- Data constraints: preserve canonical client fields and existing update path. Missing numbers display as Not recorded; an explicit saved zero remains zero. Incomplete monthly value totals/usage totals are not presented as complete aggregates. Renewal summary explains how many valid renewal dates were found when dates are missing.
+- Unsupported fields remain blockers: service scope, billing period, carryover rules and contract version history are not fabricated. No Finance formula, business transition, API or database change was made.
+- Regression: “Client Retainers keeps the source-backed register primary and distinguishes missing usage data from zero.” It asserts register hierarchy, missing field flags, null usage, remaining-hour state, reconciliation notice and preserved update path.
+- Changed paths: `src/pages/admin/AdminClientRetainers.tsx` and `tests/ams-nine-module-workspace-regression.test.ts` in [72f6702777aefa5264f9de15dbcb72f8c674b9c1](https://github.com/Kapitech-Agency/kapitech-ams/commit/72f6702777aefa5264f9de15dbcb72f8c674b9c1).
+- Verification: exact-SHA AMS CI/Quality Gate is **not yet available**. Queries for commit check-runs/statuses and workflow runs returned no check for `72f6702777aefa5264f9de15dbcb72f8c674b9c1`. The prior SHA `4f12689991735c8707059f17eba3d644996b4f22` passed AMS CI [39276355380](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39276355380) and Quality Gate [39276355335](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39276355335), but those checks predate this Retainers change.
+- Browser evidence: NOT CAPTURED. Stage 5 role, keyboard, reflow and actual downloaded-report checks remain pending.
+- Requirement status: PARTIALLY COMPLETE pending exact-SHA CI and Stage 5 evidence.
+- Next action: obtain verifiable typecheck, regression, build and CI evidence for `72f6702777aefa5264f9de15dbcb72f8c674b9c1` before moving to Renewal Schedule.

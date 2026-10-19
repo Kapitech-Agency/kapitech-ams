@@ -15,13 +15,13 @@ Latest application/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest source/test commit | d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c |
-| Commit | [test(clients): guard current agreement detail workspace](https://github.com/Kapitech-Agency/kapitech-ams/commit/d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c) |
-| Changed application source | src/pages/admin/AdminProjects.tsx; src/pages/admin/AdminClients.tsx; src/pages/admin/AdminContracts.tsx (Projects Planning, Directory/Client 360, Onboarding, Contracts & SOWs detail) |
+| Current main source/test commit | 72f6702777aefa5264f9de15dbcb72f8c674b9c1 |
+| Current source commit | [refactor(clients): make retainer usage source-aware](https://github.com/Kapitech-Agency/kapitech-ams/commit/72f6702777aefa5264f9de15dbcb72f8c674b9c1) |
+| Changed application source | src/pages/admin/AdminProjects.tsx; src/pages/admin/AdminClients.tsx; src/pages/admin/AdminContracts.tsx; src/pages/admin/AdminClientRetainers.tsx (Projects Planning, Directory/Client 360, Onboarding, Contracts & SOWs and Retainer usage states) |
 | Regression tests | tests/projects-module-regression.test.ts; tests/ams-nine-module-workspace-regression.test.ts; tests/admin-pages-jsx-regression.test.ts; tests/ams-client-detail-data-state-regression.test.ts; tests/ams-scrollbar-and-table-regression.test.ts |
-| AMS CI | **Passed on exact SHA**: [run 39275162214](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39275162214) |
-| AMS Quality Gate | **Passed on exact SHA**: [run 39275162228](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39275162228) |
-| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c. |
+| AMS CI on prior verified SHA | **Passed before Retainers changes**: [run 39276355380 on 4f126899](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39276355380) |
+| AMS Quality Gate on prior verified SHA | **Passed before Retainers changes**: [run 39276355335 on 4f126899](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39276355335) |
+| Current SHA validation | **NOT VERIFIED**: Actions/check-runs/status queries returned no run/status for 72f6702777aefa5264f9de15dbcb72f8c674b9c1 at checkpoint time. Do not claim typecheck, regression, build or integration checks passed for this SHA. |
 
 ### Recent verified frontend slices
 
@@ -59,7 +59,7 @@ Re-verify live source and CI on every resume; this list is a dated recovery poin
 
 1. **Rehydrate:** fetch current `main`, recent history, relevant source and exact current CI/Quality Gate results.
 2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, Clients scope-aware exports/evidence-based Onboarding copy, Retainer local-date defaults and Renewal Schedule calendar-day handling have successful exact-SHA evidence.
-3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Projects Planning/Resources, Clients Directory/Client 360, Onboarding Lead register, and Contracts & SOWs selected-detail slice now have source/test evidence. Latest exact-SHA validation passed on d0109ce94a1a9d6d2cd854771c9be4c9c8545e0c. Next in canonical Clients → Agreements order: Retainers & Service Commitments, then Renewal Schedule. Contract History remains unavailable until a versioned canonical history source is verified.
+3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Projects Planning/Resources, Clients Directory/Client 360, Lead-register Onboarding and Contracts & SOWs have source/test evidence. Retainers source/test slice is committed at 72f6702777aefa5264f9de15dbcb72f8c674b9c1, but its exact-SHA CI has not surfaced. Next action: obtain verifiable CI on 72f6702777aefa5264f9de15dbcb72f8c674b9c1 before progressing to Renewal Schedule. Contract History remains unavailable until a versioned canonical history source is verified.
 4. **Validate one bounded slice:** inspect current source/tests and gap row, make the smallest complete change, retain negative-path regression tests, verify both CI workflows on the source/test SHA, then update checkpoint and gap evidence.
 5. **Release gate remains closed:** authenticated browser/viewport/accessibility review and explicit user sign-off are still required at Stage 5. No authenticated screenshot or browser visual/keyboard/touch test has been performed in this execution. Do not start broad Stage 6 workflow/backend implementation before approval.
 
@@ -134,4 +134,13 @@ When the user says “lanjutkan” or similar, do not ask them to restate the ta
 - Boundary: Contract History is not simulated. A versioned canonical history/event source remains unverified. Existing permission, draft, transition and deletion paths remain unchanged.
 - Browser status: NOT VERIFIED. Actual drawer reflow/keyboard/role behavior requires Stage 5 browser review and user sign-off.
 - Next single action: assess and structurally continue Clients → Agreements → Retainers & Service Commitments. Keep Renewal Schedule's source boundaries and Contract History unavailable where their models do not support more.
+
+### Current Stage 4 structural checkpoint · Clients Retainers & Service Commitments · 19 October 2026
+
+- Current main SHA: 72f6702777aefa5264f9de15dbcb72f8c674b9c1.
+- Structural change: retainer field presence is preserved; missing terms are no longer shown as zero/default tier/cycle. Usage and remaining hours need recorded used hours and a positive commitment. A distinct Usage unavailable state is filterable. The duplicate lower burn/near-cap/average-overage grid is removed; the compact KPI strip explains incomplete coverage.
+- Protected behavior: Client Directory remains the canonical source; existing api.clients.update path remains unchanged. No Time Logs reconciliation, Finance formulas, billing rules, period model, service-scope or carryover records were added.
+- Verification blocker: no check-runs, commit statuses or workflow run surfaced for this exact SHA. Prior SHA 4f12689991735c8707059f17eba3d644996b4f22 passed AMS CI/Quality Gate before the Retainers change. Do not mark the current slice CI-verified yet.
+- Browser status: NOT VERIFIED. Stage 5 role/reflow/keyboard and actual downloaded-report checks remain.
+- Next single action: establish typecheck, regression, build and CI evidence for 72f6702777aefa5264f9de15dbcb72f8c674b9c1 before Renewal Schedule.
 
