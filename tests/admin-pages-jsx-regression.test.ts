@@ -704,7 +704,8 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   const clientDirectory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
   const clientDirectoryEnd = clients.indexOf('</section>', clientDirectory);
   const clientMetrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
-  assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory && clientMetrics > clientDirectoryEnd);
+  assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory);
+  assert.equal(clientMetrics, -1, 'Clients Directory must not render a default KPI strip.');
   assert.ok(clients.indexOf('slug="client-directory-filters"') > 0 && clients.indexOf('slug="client-directory-filters"') < clientDirectory);
 
   const teamHeader = teams.indexOf('<AdminModuleHeader');
@@ -969,8 +970,9 @@ test('Clients header avoids repeating the Active clients metric before the prima
   assert.doesNotMatch(header, /clientMetrics\\.active|active accounts|AdminStatusBadge/);
   const directoryEnd = clients.indexOf('</section>', directory);
   assert.ok(directory > headerEnd);
-  assert.ok(directoryEnd > directory && metrics > directoryEnd);
-  assert.ok(clients.includes("id: 'active-clients', label: 'Active clients'"));
+  assert.ok(directoryEnd > directory);
+  assert.equal(metrics, -1, 'The account register is the primary Directory workspace; a duplicate KPI strip is not rendered.');
+  assert.equal(clients.includes("id: 'active-clients', label: 'Active clients'"), false);
 });
 
 
