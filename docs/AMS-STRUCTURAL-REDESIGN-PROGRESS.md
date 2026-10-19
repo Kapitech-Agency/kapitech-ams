@@ -1297,3 +1297,17 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Remaining: Clients Directory and Onboarding remain partially complete pending Stage 5 authenticated browser/keyboard/responsive review and actual download verification. Checklist, Required Documents and Kickoff Readiness remain unavailable because canonical records/evidence/ownership are not implemented. No authenticated browser or downloaded CSV was tested interactively.
 - Next action: continue Stage 4 at Clients → Agreements. Start with the Retainers form's date default, which still uses UTC ISO slicing for a local date input; preserve existing renewal state/business rules.
 
+
+
+## Stage 4 source/test checkpoint · Retainer local renewal-date default · 19 October 2026
+
+- Application/test SHA: [`7a76c4120dbb0ecce35e3964e9d8b91a9146de43`](https://github.com/Kapitech-Agency/kapitech-ams/commit/7a76c4120dbb0ecce35e3964e9d8b91a9146de43).
+- Changed files: `src/pages/admin/AdminClientRetainers.tsx`, new `src/lib/retainerDateDefaults.ts`, and new `tests/client-retainer-date-defaults.test.ts`.
+- Confirmed defect: initial retainer form state and the editor reset both used `toISOString().slice(0, 10)` to create a date-only input default, so the UTC date string could differ from the user's current local calendar date near midnight.
+- Correction: `getDefaultRetainerRenewalDate` adds one month using the existing local `Date.setMonth` rule, then composes `YYYY-MM-DD` from local year/month/day components. It is used at both original call sites. No persisted retainer values or renewal rules were changed.
+- Regression: the new test sets the timezone to `Asia/Jakarta` and checks the boundary at 00:30 local when UTC is still on the previous day. A second test confirms both create and reset paths use the helper and rejects the previous UTC-slicing expression.
+- Exact-SHA validation: AMS CI [39251981965 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39251981965); Quality Gate [39251982047 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39251982047). Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed.
+- Scope: Retainer frontend date input defaults and tests only. No API, persistence, permission, retainer state, Finance calculation or renewal terms were changed.
+- Remaining: browser validation of create/edit defaults and Renewal Schedule timing remains in Stage 5. No authenticated browser session was used.
+- Next action: source-audit Renewal Schedule's `renewalDays` date-only comparison for local calendar boundaries and add a deterministic regression before changing any behavior.
+
