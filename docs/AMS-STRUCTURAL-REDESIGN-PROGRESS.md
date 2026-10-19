@@ -1023,3 +1023,25 @@ The first Quality Gate for `8e6f6dda44c70049f45237aad229b3a620fdf842` failed bec
 13. **Regression tests.** Assert saved-CMS-state wording for publish/unpublish and reject prior messages claiming live-site visibility.
 14. **Dependencies.** Independent public rendering/cache verification is currently manual/supported-runtime evidence. No backend, API, integration, or publication workflow changes are in this slice.
 15. **Acceptance.** A successful CMS mutation is reported as saved publication state; public visibility remains explicitly unverified until the public Services response/page is checked. The view stays partially complete until Stage 5/browser review.
+
+
+## Stage 4 view design record — Website CMS · Case Studies · publication feedback
+
+**View ID:** VIEW-CMS-CASES, Case Studies workspace.
+**Status:** Saved-CMS-state feedback is implemented in source; verify the resulting exact commit through both CI workflows before source/test sign-off.
+
+1. **Owner/persona.** Website CMS → Case Studies. Authorized content editor authors and manages case-study records for the public /work collection.
+2. **Primary task.** Save a draft or change the case-study publication flag, then confirm what has actually been verified about the public output.
+3. **Decision.** Did the CMS record update succeed, and has the public response/page actually been checked?
+4. **Primary surface.** Existing case-study register, editor, preview/details and publication toggle remain the working areas.
+5. **Content order.** Existing search/register/editor flows remain unchanged; status feedback explains the confirmed CMS state and the next public-output verification step.
+6. **Fields and semantics.** isPublished is a persisted CMS field. It is used by the public /work response filter, but a successful write response does not prove that a deployed public page or cache has refreshed.
+7. **Controls.** Existing update/save actions and CMS record IDs remain. No new publish API, public probe or secondary state is added.
+8. **Canonical ownership/breadcrumb.** Case-study records remain canonical CMS content and related public client/project attribution remains governed by existing rules. No new repository or breadcrumb.
+9. **Role-aware display.** Existing CMS route permissions and API authorization remain unchanged.
+10. **States/recovery.** Mutation error messages are unchanged. Successful changes now say the CMS publication state was saved and ask the editor to verify /work; no unsupported claim of live-site confirmation is displayed.
+11. **Responsive behavior.** No structural layout changes; Stage 5 must still inspect register/editor reflow at the documented breakpoints.
+12. **Accessibility.** Existing status feedback remains visible and localized, with copy that distinguishes saved state from external verification. Keyboard/focus and screen-reader behavior need browser validation.
+13. **Regression tests.** Assert the new saved-state wording and reject prior “published successfully to live site” claims.
+14. **Dependencies.** Actual public rendering remains a supported-environment/browser verification task; no API or public site changes are part of this slice.
+15. **Acceptance.** A CMS mutation is reported as a saved CMS state, and public visibility remains unverified until the public /work output is checked. The view remains partially complete pending Stage 5 review.

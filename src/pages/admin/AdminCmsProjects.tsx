@@ -207,7 +207,9 @@ export const AdminCmsProjects: React.FC = () => {
       const res = await api.cms.updateProject(project.id, { isPublished: nextPublished });
       if (res.success) {
         await loadProjects();
-        setStatusMessage(nextPublished ? 'Case study published successfully.' : 'Case study unpublished from the public site.');
+        setStatusMessage(nextPublished
+          ? (language === 'id' ? 'Status CMS tersimpan sebagai Published. Periksa halaman publik /work untuk memastikan visibilitas.' : 'CMS status saved as Published. Verify the public /work page to confirm visibility.')
+          : (language === 'id' ? 'Status CMS tersimpan sebagai Draft. Periksa halaman publik /work untuk memastikan perubahan visibilitas.' : 'CMS status saved as Draft. Verify the public /work page to confirm visibility changes.'));
       } else {
         setStatusMessage(res.error || 'Update failed.');
       }
@@ -358,8 +360,8 @@ export const AdminCmsProjects: React.FC = () => {
       setEditingProject(null);
       await loadProjects();
       setStatusMessage(payload.isPublished
-        ? (language === 'id' ? 'Case study berhasil dipublikasikan ke website.' : 'Case study published successfully to live site!')
-        : (language === 'id' ? 'Case study disimpan sebagai draft. Publikasikan dari daftar saat siap ditampilkan.' : 'Case study saved as a draft. Publish it from the directory when it is ready for the public site.'));
+        ? (language === 'id' ? 'Status CMS tersimpan sebagai Published. Periksa halaman publik /work untuk memastikan visibilitas.' : 'CMS status saved as Published. Verify the public /work page to confirm visibility.')
+        : (language === 'id' ? 'Case study tersimpan sebagai Draft di CMS. Publikasikan dari daftar saat siap ditampilkan.' : 'Case study saved as a draft in CMS. Publish it from the directory when it is ready for the public site.'));
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to save case study.');
     }

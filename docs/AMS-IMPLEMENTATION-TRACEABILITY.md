@@ -782,3 +782,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** `src/pages/admin/AdminCmsServices.tsx`. Save and toggle actions already check the CMS API response and update the canonical record's `isPublished` field. User-facing success messages now confirm that the CMS status was saved and direct the editor to verify the public Services page; they no longer claim that the service was independently confirmed visible or hidden on the public website. Mutation APIs, stored fields and public response filtering remain unchanged.
 
 **Tests:** `tests/cms-services-workflow-regression.test.ts` asserts accurate CMS-state feedback and rejects old messages asserting public visibility. Actual public rendering and responsive/browser behavior remain Stage 5 verification.
+
+
+### CMS-CASES-PUBLISH-STATE-001: Distinguish saved case-study flag from live public output
+
+**Source:** src/pages/admin/AdminCmsProjects.tsx. Successful save/toggle mutations now confirm that the CMS isPublished flag was saved and direct the editor to verify the public /work page. Messages no longer claim that a public page was independently confirmed visible or hidden. The underlying CMS API, stored field and public filter are unchanged.
+
+**Tests:** tests/ams-nine-module-workspace-regression.test.ts asserts saved-CMS-state wording and rejects the prior live-publication claim. Exact-SHA CI and Quality Gate plus public-render/browser checks remain required.

@@ -226,6 +226,16 @@ test('Careers jobs/applicants tabs follow compact AMS geometry and retain tab se
   assert.match(careers, /aria-controls=/);
 });
 
+test('Case Study publish feedback confirms saved CMS state, not unverified live visibility', async () => {
+  const projects = await read('src/pages/admin/AdminCmsProjects.tsx');
+  assert.match(projects, /CMS status saved as Published\. Verify the public \/work page to confirm visibility\./);
+  assert.match(projects, /CMS status saved as Draft\. Verify the public \/work page to confirm visibility changes\./);
+  assert.doesNotMatch(projects, /Case study published successfully to live site!|Case study published successfully\.|Case study unpublished from the public site\./,
+    'A successful CMS write is not an independent check that public output is visible or hidden.');
+  assert.match(projects, /api\.cms\.updateProject\(project\.id, \{ isPublished: nextPublished \}\)/);
+  assert.match(projects, /payload\.isPublished/);
+});
+
 test('Website CMS editorial controls use accessible actions and the canonical Careers applicant workspace', async () => {
   const cmsProjects = await read('src/pages/admin/AdminCmsProjects.tsx');
   const insights = await read('src/pages/admin/AdminCmsInsights.tsx');
