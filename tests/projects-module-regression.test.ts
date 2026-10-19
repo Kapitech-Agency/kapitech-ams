@@ -235,3 +235,21 @@ test('Project Registry deadline filtering uses explicit local-date ranges and re
   assert.match(source, /projectDeadlineFilter, projectSort, reportPeriodValue, reportPeriodEnabled/);
   assert.match(source, /if \(view !== 'all' && projectDeadlineFilter !== 'all'\) setProjectDeadlineFilter\('all'\)/);
 });
+
+
+test('Planning & Delivery never substitutes a different project for an invalid URL selection', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const selectionStart = source.indexOf("const planningProject = planningProjectId");
+  const selectionEnd = source.indexOf("const planningMilestones", selectionStart);
+  assert.ok(selectionStart >= 0 && selectionEnd > selectionStart, 'Planning project selection should be explicit.');
+  const selection = source.slice(selectionStart, selectionEnd);
+
+  assert.match(selection, /planningProjectId\s*\?\s*projects\.find[\s\S]*?\|\| null\s*:\s*projects\.find/);
+  assert.match(source, /title=\{planningProjectId \? 'Selected project unavailable' : 'No project records'\}/);
+  assert.match(source, /The selected project is not available in the current source\. AMS will not substitute another project automatically\./);
+  assert.match(source, /Choose an available project for planning/);
+  assert.match(source, /next\.set\('planningProject', value\)/);
+  assert.match(source, /data-ams-slug="planning-project-clear-selection"/);
+  assert.match(source, /next\.delete\('planningProject'\)/);
+  assert.match(source, /options=\{\[\{ value: '', label: 'Choose a project\.\.\.' \}, \.\.\.projects\.map/);
+});

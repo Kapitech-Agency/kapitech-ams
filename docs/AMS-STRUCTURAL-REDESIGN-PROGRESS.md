@@ -838,3 +838,25 @@ Implementation: source-state and Board empty-state hierarchy correction. Check t
 15. Acceptance. Users can distinguish true zero records, filter-empty results and initial source failure without losing useful lane drop targets for successful empty states. The view remains partially complete pending Stage 5 runtime/accessibility and Stage 6/8 workflow traces.
 
 Next Stage 4 slice: Projects · Planning & Delivery. Review Project Brief, Milestones and Timeline individually. Keep Scope & Deliverables, Internal Quality Review, Client Review and Revision History unavailable until canonical workflows support them.
+
+
+## Stage 4 view design record — Projects · Planning & Delivery · Selected-project recovery
+
+View ID: VIEW-PROJECTS-PLANNING, Project Brief / Milestones / Timeline.
+Implementation: a stale planningProject URL no longer silently selects the first active project. Verify the resulting SHA through both CI and Quality Gate before calling source/test verified.
+
+1. Owner/persona. Projects → Planning & Delivery. Project managers inspect the selected project's brief, milestones and recorded schedule.
+2. Primary task. Navigate among a project's brief, milestones and timeline while preserving the project identity in the URL.
+3. Decision. Is the requested project available in the canonical project source, or should the user select another project/clear the stale URL?
+4. Primary surface. Existing query-addressable Project Brief, Milestones and Timeline views over canonical project/milestone records.
+5. Content order. Existing worksheet tabs; when selected record exists, project context selector and worksheet. When URL points to a missing record, show a specific unavailable state, a selector for returned canonical projects and a clear-selection recovery action.
+6. Fields and semantics. Project identity comes from selected ID or slug only. Missing URL references do not fall back to a different record. Default project selection remains available only when no explicit project is requested.
+7. Controls. Selector sets planningProject while preserving planningView and other existing query parameters. Clear-selection removes only planningProject, allowing the existing default selection policy to apply.
+8. Canonical ownership/breadcrumb. Uses the existing project collection. No new records, route or breadcrumb.
+9. Role-aware presentation. Existing route permission and project source remain authoritative. Only returned project options are shown.
+10. States/recovery. If a specific selected ID/slug is not returned while project records are available, show Selected project unavailable rather than choosing another project. User can select a current project or clear the stale query. Existing source/loading states remain.
+11. Responsive behavior. The existing CustomSelect recovery control is full width on narrow screens and constrained on wide screens. Stage 5 verifies 1100, 900, 600, 390 and 320px.
+12. Accessibility. Semantic panel title/description, role=status explanation, labelled selector and visible recovery button. Keyboard/focus evidence remains Stage 5.
+13. Regression tests. Added source regression assertions for explicit identity matching, no fallback for missing selection, source-aware unavailable copy, selector query updates and clearing only planningProject.
+14. Dependencies. No backend, database, authorization or delivery workflow changes. Scope/acceptance criteria, deliverable tracking, internal QA, client review and revision history remain unavailable.
+15. Acceptance. A stale or inaccessible project URL cannot silently show another project's planning data. The view remains partially complete pending browser route/history/accessibility verification and missing canonical planning workflows.

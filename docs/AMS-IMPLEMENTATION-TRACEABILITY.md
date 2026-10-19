@@ -723,3 +723,10 @@ Tests: tests/project-deadline-filters.test.ts covers boundary dates, leap days, 
 Source: src/components/admin/TasksWorkspace.tsx. The workspace records whether a valid canonical task array has ever loaded. Before the first successful response, it presents an unavailable state and the existing API retry rather than implying the queue has zero tasks. Known records remain visible after a later failed refresh with the existing warning. Board gets a separate true-empty/filtered-empty notice, lane empty copy accounts for active filters, and lane geometry follows the Kanban guideline minimum 280px. Board/List still operate on the same record set; no backend, persistence, permission or status-transition behavior changed.
 
 Tests: tests/task-workspace-data-parity-regression.test.ts asserts unavailable/source recovery, Board filtered-empty semantics, lane copy and geometry. Existing task parity tests continue to cover canonical data, permissions and ambiguous update outcomes. Exact-SHA CI and Quality Gate plus Stage 5 responsive/keyboard and Stage 6/8 status lifecycle evidence remain required.
+
+
+### PROJ-PLANNING-SELECTED-RECORD-001: Preserve explicit project identity in Planning & Delivery
+
+Source: src/pages/admin/AdminProjects.tsx. When the URL provides planningProject, selection now resolves only that ID/slug. A missing selection shows Selected project unavailable and avoids falling back to another project. If canonical project options exist, the user can select one; the default recovery removes only planningProject, preserving the selected worksheet and other query parameters. No API, persistence, RBAC or workflow logic changed.
+
+Tests: tests/projects-module-regression.test.ts verifies explicit-ID resolution, no silent substitution, selector query update and stale-query recovery. Stage 5 must verify direct URL, refresh/back-forward, keyboard and responsive states.

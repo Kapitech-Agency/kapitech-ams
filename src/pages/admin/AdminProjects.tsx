@@ -504,10 +504,11 @@ export const AdminProjects: React.FC = () => {
     ? requestedPlanningView
     : 'brief';
   const planningProjectId = searchParams.get('planningProject') || '';
-  const planningProject = projects.find((project) => project.id === planningProjectId || project.slug === planningProjectId)
-    || projects.find((project) => project.status !== 'completed')
-    || projects[0]
-    || null;
+  const planningProject = planningProjectId
+    ? projects.find((project) => project.id === planningProjectId || project.slug === planningProjectId) || null
+    : projects.find((project) => project.status !== 'completed')
+      || projects[0]
+      || null;
   const planningMilestones = planningProject
     ? [...planningProject.milestones].sort((left, right) =>
         (left.dueDate || '9999-12-31').localeCompare(right.dueDate || '9999-12-31')
@@ -2181,8 +2182,47 @@ export const AdminProjects: React.FC = () => {
               <div className="p-4 text-xs leading-5 text-muted" role="status">The project service did not return verified records. No local or sample records are shown.</div>
             </AdminPanel>
           ) : !planningProject ? (
-            <AdminPanel title="No project records" description="Planning & Delivery displays project details from canonical records.">
-              <div className="p-5 text-xs leading-5 text-muted" role="status">No projects are available in the current source.</div>
+            <AdminPanel
+              title={planningProjectId ? 'Selected project unavailable' : 'No project records'}
+              description={planningProjectId ? 'The project ID in this URL was not returned by the current project source.' : 'Planning & Delivery displays project details from canonical records.'}
+            >
+              <div className="space-y-3 p-5">
+                <p className="text-xs leading-5 text-muted" role="status">
+                  {planningProjectId
+                    ? 'The selected project is not available in the current source. AMS will not substitute another project automatically.'
+                    : 'No projects are available in the current source.'}
+                </p>
+                {projects.length > 0 && (
+                  <div className="w-full min-w-0 sm:max-w-80">
+                    <CustomSelect
+                      value=""
+                      onChange={(value) => {
+                        if (!value) return;
+                        const next = new URLSearchParams(searchParams);
+                        next.set('planningProject', value);
+                        setSearchParams(next);
+                      }}
+                      options={[{ value: '', label: 'Choose a project...' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
+                      className="w-full"
+                      aria-label="Choose an available project for planning"
+                    />
+                  </div>
+                )}
+                {planningProjectId && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      const next = new URLSearchParams(searchParams);
+                      next.delete('planningProject');
+                      setSearchParams(next);
+                    }}
+                    data-ams-slug="planning-project-clear-selection"
+                  >
+                    Use default project
+                  </Button>
+                )}
+              </div>
             </AdminPanel>
           ) : (
             <>
