@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';

@@ -540,3 +540,8 @@ The Finance worksheet row had `variant="secondary"`, which intentionally rendere
 15. **Acceptance.** Users can search/filter canonical records before the primary register, clear filters, retry partial-source loading, distinguish true empty from filtered-empty/unavailable, and reach source registers. Keep the workspace partially complete until CI/Stage 5 and canonical dependency gaps are addressed.
 
 **Next Stage 4 slice:** Clients → Service & Health. Keep SLA telemetry explicitly unavailable and Service Issues, Client Health, and Service History disabled until their canonical sources and rules are verified.
+
+
+### Renewal Schedule validation correction — 19 October 2026
+
+The first CI attempt for commit `9d0db39395d7ed26685b77e66efe86789a1d1688` failed during TypeScript checking because `ShieldAlert` was still used by the existing Contracts overview metric strip after being removed from the icon import while removing the Renewal Schedule metric strip. No test/build ran in that attempt. The follow-up restores the existing icon import without changing contract metrics or financial/business behavior. Verify the correction commit's TypeScript, regression tests, production build and both workflows before marking this view source/test verified.
