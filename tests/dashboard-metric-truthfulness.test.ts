@@ -5,10 +5,14 @@ import test from 'node:test';
 
 const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
 
-test('project risk KPI distinguishes a positive count, a genuine zero, and unavailable data', () => {
-  assert.ok(dashboard.includes("change: projectsAtRiskMetric == null ? undefined : projectsAtRiskMetric > 0 ? 'Requires attention' : 'No projects flagged'"));
-  assert.ok(dashboard.includes("changeToneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success'"));
-  assert.ok(dashboard.includes("toneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success'"));
+test('Dashboard priority exceptions distinguish positive counts, genuine zero, and unavailable data', () => {
+  assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
+  assert.ok(dashboard.includes('Number(overdueTasksMetric) > 0'));
+  assert.ok(dashboard.includes('Number(projectsAtRiskMetric) > 0'));
+  assert.ok(dashboard.includes('No overdue tasks or project risk flags reported'));
+  assert.ok(dashboard.includes('Priority exception data unavailable'));
+  assert.ok(dashboard.includes('Overdue task count unavailable'));
+  assert.ok(dashboard.includes('Project risk count unavailable'));
 });
 
 test('Dashboard distinguishes an empty portfolio from an unavailable project source', () => {

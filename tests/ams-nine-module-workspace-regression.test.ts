@@ -12,7 +12,7 @@ test('Dashboard preserves finance context and canonical responsive KPI breakpoin
   assert.match(dashboard, /featureSlug="dashboard-module"/);
   const canonicalKpiGrid = 'className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"';
   assert.ok(dashboard.includes(canonicalKpiGrid), 'Dashboard KPI strips should use canonical breakpoints');
-  assert.equal(dashboard.split(canonicalKpiGrid).length - 1, 2, 'primary and supporting KPI strips should share the canonical grid contract');
+  assert.equal(dashboard.split(canonicalKpiGrid).length - 1, 1, 'the four-metric Overview strip uses canonical grid thresholds; the two-metric support strip adapts through the shared primitive');
   assert.match(dashboard, /<DashboardTrendRangePicker range=\{range\} onChange=\{setRange\} \/>/);
   assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false);
   assert.doesNotMatch(dashboard, /className="hidden items-center gap-3 text-\[11px\] text-muted sm:flex"/);
@@ -52,7 +52,9 @@ test('Dashboard prioritizes operational KPIs and the primary workspace before su
   const teamCapacity = dashboard.indexOf('title="Team capacity"', projects);
   assert.ok(overview < primaryKpis && primaryKpis < fourthPrimaryKpi && fourthPrimaryKpi < chart);
   assert.ok(chart < projects && projects < teamCapacity && teamCapacity < supportingMetrics);
-  for (const id of ["outstanding", "utilization", "avg-project-value", "net-operating-profit"]) {
+  assert.ok(dashboard.indexOf("id: 'outstanding'", primaryKpis) > primaryKpis && dashboard.indexOf("id: 'outstanding'", primaryKpis) < chart);
+  assert.ok(dashboard.indexOf("id: 'utilization'", primaryKpis) > primaryKpis && dashboard.indexOf("id: 'utilization'", primaryKpis) < chart);
+  for (const id of ["avg-project-value", "net-operating-profit"]) {
     assert.ok(dashboard.indexOf("id: '" + id + "'", supportingMetrics) > supportingMetrics, 'missing supporting KPI ' + id);
   }
 });

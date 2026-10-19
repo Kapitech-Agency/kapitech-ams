@@ -20,7 +20,9 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   const projectsStart = overview.indexOf('title="Active projects"');
   const capacityStart = overview.indexOf('title="Team capacity"');
   const supportMetricsStart = overview.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"');
+  const priorityExceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
 
+  assert.ok(priorityExceptionsStart >= 0 && priorityExceptionsStart < metricStart, 'Priority exceptions should appear before decision KPIs');
   assert.ok(metricStart >= 0 && actionsStart > metricStart, 'Executive metrics should appear before the quick-action row');
   assert.ok(chartStart > actionsStart, 'The primary analysis should follow KPIs and quick actions');
   assert.ok(projectsStart > chartStart, 'The active project register should follow the analysis row');
@@ -145,4 +147,25 @@ test('Dashboard Analytics leads with period-scoped reports before summary metric
   assert.ok(analytics.indexOf('slug="dashboard-analytics-kpis"') > supportingMetrics);
   assert.match(analytics, /not a posted profit figure/);
   assert.match(analytics, /Financial trend unavailable/);
+});
+
+
+test('Dashboard Overview prioritizes source-backed exceptions before KPIs without duplicating exception metrics', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const branchStart = dashboard.indexOf("{view === 'overview' ? (");
+  const branchEnd = dashboard.indexOf(") : view === 'performance' ? (", branchStart);
+  assert.ok(branchStart >= 0 && branchEnd > branchStart);
+  const overview = dashboard.slice(branchStart, branchEnd);
+  const priority = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
+  const kpis = overview.indexOf('data-ams-feature-slug="dashboard-overview"');
+  const actions = overview.indexOf('data-ams-feature-slug="dashboard-quick-actions"');
+  assert.ok(priority >= 0 && kpis > priority && actions > kpis);
+  assert.ok(overview.includes('No overdue tasks or project risk flags reported'));
+  assert.ok(overview.includes('Priority exception data unavailable'));
+  assert.ok(overview.includes('/admin/tasks?taskscope=due'));
+  assert.ok(overview.includes('/admin/projects?projects=active'));
+  const metricArea = overview.slice(kpis, actions);
+  assert.match(metricArea, /id: 'outstanding'/);
+  assert.match(metricArea, /id: 'utilization'/);
+  assert.doesNotMatch(metricArea, /id: 'tasks-due'|id: 'overdue'/);
 });

@@ -686,6 +686,57 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
+      <section data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
+        <AdminPanel title="Priority exceptions" description="Overdue work and project risk signals reported by current AMS sources." bodyClassName="p-0">
+          {overdueTasksMetric !== null && Number(overdueTasksMetric) === 0 && projectsAtRiskMetric !== null && Number(projectsAtRiskMetric) === 0 ? (
+            <div className="px-4 py-5" role="status">
+              <p className="text-xs font-medium text-fg">No overdue tasks or project risk flags reported</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">The current sources report no priority delivery exceptions.</p>
+            </div>
+          ) : overdueTasksMetric === null && projectsAtRiskMetric === null ? (
+            <div className="px-4 py-5" role="status">
+              <p className="text-xs font-medium text-fg">{dashboardOverview.loading || operationalSnapshot.loading ? 'Loading priority exception data' : 'Priority exception data unavailable'}</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">Live task and project summary counts were not returned. The dashboard does not assume zero exceptions.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-line">
+              {overdueTasksMetric === null ? (
+                <div className="px-4 py-3" role="status">
+                  <p className="text-xs font-medium text-fg">Overdue task count unavailable</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">The task source did not return a usable count.</p>
+                </div>
+              ) : Number(overdueTasksMetric) > 0 ? (
+                <div className="flex min-w-0 flex-col gap-2 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-danger/25 bg-danger/10 text-danger"><CalendarDays size={15} aria-hidden="true" /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-fg">Overdue tasks</p>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">Open tasks past their recorded due date. The destination includes the wider due-work queue.</p>
+                  </div>
+                  <span className="text-lg font-semibold tabular-nums text-danger">{overdueTasksMetric}</span>
+                  <Link to="/admin/tasks?taskscope=due" className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open due-work queue <ArrowUpRight size={13} aria-hidden="true" /></Link>
+                </div>
+              ) : null}
+              {projectsAtRiskMetric === null ? (
+                <div className="px-4 py-3" role="status">
+                  <p className="text-xs font-medium text-fg">Project risk count unavailable</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">The project source did not return a usable risk count.</p>
+                </div>
+              ) : Number(projectsAtRiskMetric) > 0 ? (
+                <div className="flex min-w-0 flex-col gap-2 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-warning/25 bg-warning/10 text-warning"><AlertTriangle size={15} aria-hidden="true" /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-fg">Projects at risk</p>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">Projects with overdue delivery or a recorded risk state.</p>
+                  </div>
+                  <span className="text-lg font-semibold tabular-nums text-warning">{projectsAtRiskMetric}</span>
+                  <Link to="/admin/projects?projects=active" className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Review active projects <ArrowUpRight size={13} aria-hidden="true" /></Link>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </AdminPanel>
+      </section>
+
       <section
         data-ams-feature-slug="dashboard-overview"
         data-ams-slug="dashboard-overview"
@@ -693,6 +744,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         aria-label="Executive overview metrics"
       >
         <AdminMetricStrip
+          slug="dashboard-overview-kpis"
           className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"
           metrics={[
             {
@@ -702,28 +754,25 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
             },
             {
-              id: 'tasks-due', label: 'Overdue tasks',
-              value: overdueTasksMetric != null ? String(overdueTasksMetric) : '—',
-              context: dashboardOverview.metrics?.overdueTasks != null || operationalSnapshot.tasks !== null ? 'Open tasks past due date' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-              icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue'
-            },
-            {
-              id: 'overdue', label: 'Projects at risk',
-              value: projectsAtRiskMetric != null ? String(projectsAtRiskMetric) : '—',
-              change: projectsAtRiskMetric == null ? undefined : projectsAtRiskMetric > 0 ? 'Requires attention' : 'No projects flagged',
-              changeToneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success',
-              icon: <AlertTriangle size={15} />,
-              toneClassName: projectsAtRiskMetric == null ? 'text-muted' : projectsAtRiskMetric > 0 ? 'text-danger' : 'text-success',
-              slug: 'dashboard-projects-risk'
-            },
-            {
               id: 'revenue', label: 'Cash collected this month',
               value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
               context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Recorded invoice payments' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
               icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
+            },
+            {
+              id: 'outstanding', label: 'Outstanding invoices',
+              value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
+              context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
+            },
+            {
+              id: 'utilization', label: 'Team utilization',
+              value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : '—',
+              context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
+              icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
             }
           ]}
-        />
+        />>
       </section>
 
       <section
@@ -1033,39 +1082,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </div>
 
         <div className="mt-3 min-w-0" data-ams-feature-slug="dashboard-supporting-metrics">
-          <AdminMetricStrip
-            className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"
-            metrics={[
-              {
-                id: 'outstanding', label: 'Outstanding invoices',
-                value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
-                context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-                                icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
-              },
-              {
-                id: 'utilization', label: 'Team utilization',
-                value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : '—',
-                context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                                icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
-              },
-              {
-                id: 'avg-project-value', label: 'Avg. active project budget',
-                value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : '—',
-                context: averageActiveBudget != null ? 'Average of active project budgets' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
-                                icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
-              },
-              {
-                id: 'net-operating-profit', label: 'Cash surplus / deficit',
-                value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : '—',
-                context: dashboardOverview.financials?.netOperatingProfit != null || liveCashDifference !== null ? 'Cash collected less recorded expenses; not posted profit' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
-                                icon: <CircleDollarSign size={15} />,
-                toneClassName: dashboardOverview.financials?.netOperatingProfit != null
-                  ? Number(dashboardOverview.financials.netOperatingProfit) >= 0 ? 'text-success' : 'text-danger'
-                  : 'text-fg',
-                slug: 'dashboard-net-operating-profit'
-              }
-            ]}
-          />
+          <AdminMetricStrip slug="dashboard-supporting-kpis" metrics={[
+            {
+              id: 'avg-project-value', label: 'Avg. active project budget',
+              value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : '—',
+              context: averageActiveBudget != null ? 'Average of active project budgets' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
+              icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
+            },
+            {
+              id: 'net-operating-profit', label: 'Cash surplus / deficit',
+              value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : '—',
+              context: dashboardOverview.financials?.netOperatingProfit != null || liveCashDifference !== null ? 'Cash collected less recorded expenses; not posted profit' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
+              icon: <CircleDollarSign size={15} />,
+              toneClassName: dashboardOverview.financials?.netOperatingProfit != null
+                ? Number(dashboardOverview.financials.netOperatingProfit) >= 0 ? 'text-success' : 'text-danger'
+                : 'text-fg',
+              slug: 'dashboard-net-operating-profit'
+            }
+          ]} />/>
         </div>
 
 
