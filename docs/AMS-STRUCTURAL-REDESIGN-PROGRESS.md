@@ -1120,3 +1120,8 @@ Quality Gate and CI on `4542f6de4fbd114f5f7696c105709a660cbb4358` failed because
 15. **Acceptance.** Editors know what CMS state was saved and where to verify output. The view stays partially complete until Stage 5/9 verifies public output, route/query/language state and browser interaction.
 
 **Next Stage 4 slice:** Continue the remaining module-specific source audits, then consolidate Stage 4 gaps that are blocked by canonical source/model dependencies before Stage 5 review.
+
+
+### Insights typecheck correction — 19 October 2026
+
+Quality Gate [39229655648](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39229655648) and AMS CI [39229655663](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39229655663) on commit d7c8932 failed at TypeScript before regression tests because the canonical list state is named items, not insights. The publication-state comparison now reads the existing items state and the matching regression assertion is corrected. This does not change the record/API contract or publication flow. Re-run both workflows on the corrective commit.

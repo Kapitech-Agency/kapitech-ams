@@ -260,7 +260,7 @@ test('Careers publish feedback confirms saved CMS state, not unverified public v
 
 test('Insights save feedback confirms CMS publication state and keeps public visibility unverified', async () => {
   const insights = await read('src/pages/admin/AdminCmsInsights.tsx');
-  assert.match(insights, /const wasPreviouslyPublished = Boolean\(editing\.id && insights\.some\(item => item\.id === editing\.id && item\.status === 'published'\)\)/);
+  assert.match(insights, /const wasPreviouslyPublished = Boolean\(editing\.id && items\.some\(item => item\.id === editing\.id && item\.status === 'published'\)\)/);
   assert.match(insights, /CMS status saved as Published\. Verify the public Insights page to confirm visibility\./);
   assert.match(insights, /CMS status saved as Draft\. Verify the public Insights page to confirm visibility changes\./);
   assert.match(insights, /Insight updated in the CMS as a draft\./);

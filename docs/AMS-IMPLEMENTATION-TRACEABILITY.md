@@ -813,3 +813,6 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** src/pages/admin/AdminCmsInsights.tsx. Successful saves now distinguish Published, published→Draft, existing Draft update and new Draft creation. Published state copy points the editor to the public Insights page to verify actual output. Content APIs, statuses and stored fields are unchanged.
 
 **Tests:** tests/ams-nine-module-workspace-regression.test.ts verifies prior state detection, explicit saved-state wording, current update API, list refresh and the existing public article link. Exact-SHA CI and Quality Gate plus actual public rendering and responsive/browser review remain required.
+
+
+**Insights validation follow-up:** Exact-SHA runs AMS Quality Gate [39229655648](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39229655648) and AMS CI [39229655663](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39229655663) stopped at typecheck: insights was referenced, but the component's canonical collection state is items. The source and regression matcher now use items; API behavior is unchanged. Confirm typecheck, tests, build and CI on the fix SHA.

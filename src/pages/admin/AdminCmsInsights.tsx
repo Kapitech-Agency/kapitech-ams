@@ -706,7 +706,7 @@ export const AdminCmsInsights: React.FC = () => {
       return;
     }
 
-    const wasPreviouslyPublished = Boolean(editing.id && insights.some(item => item.id === editing.id && item.status === 'published'));
+    const wasPreviouslyPublished = Boolean(editing.id && items.some(item => item.id === editing.id && item.status === 'published'));
     setSaving(true);
     try {
       const body = {
