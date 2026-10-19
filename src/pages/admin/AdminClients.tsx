@@ -288,9 +288,10 @@ export const AdminClients: React.FC = () => {
   const canManageClients = hasAdminPermission('canManageClients');
   const canViewClientContracts = canManageClients || hasAdminPermission('canManageCrm') || hasAdminPermission('canManageProjects');
   const canManageClientInteractions = canManageClients || hasAdminPermission('canManageCrm');
-  const canViewClientProjects = hasAdminPermission('canManageProjects');
+  const canViewClientProjects = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
   const canViewClientFinance = hasAdminPermission('canViewFinancials');
   const canViewClientInbox = hasAdminPermission('canManageCrm');
+  const canViewClientDocuments = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageCrm') || hasAdminPermission('canAccessServerAndApi');
   const { t, language } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
@@ -564,7 +565,7 @@ export const AdminClients: React.FC = () => {
     };
     begin(canViewClientProjects, setClientRelatedProjects);
     begin(canViewClientFinance, setClientRelatedInvoices);
-    begin(true, setClientRelatedDocuments);
+    begin(canViewClientDocuments, setClientRelatedDocuments);
     begin(canViewClientInbox, setClientRelatedInbox);
 
     if (canViewClientProjects) {
@@ -600,7 +601,8 @@ export const AdminClients: React.FC = () => {
     }
 
     // Documents use the existing authenticated read endpoint. Only canonical client IDs are linked here.
-    void api.documents.getAll().then((response) => {
+    if (canViewClientDocuments) {
+      void api.documents.getAll().then((response) => {
       if (!active) return;
       if (!response.success || !Array.isArray(response.data?.documents)) {
         setClientRelatedDocuments({ status: 'error', records: [] });
@@ -613,9 +615,10 @@ export const AdminClients: React.FC = () => {
         )
         .sort((left, right) => String(right.updatedAt || '').localeCompare(String(left.updatedAt || '')));
       setClientRelatedDocuments({ status: 'ready', records: rows });
-    }).catch(() => {
-      if (active) setClientRelatedDocuments({ status: 'error', records: [] });
-    });
+      }).catch(() => {
+        if (active) setClientRelatedDocuments({ status: 'error', records: [] });
+      });
+    }
 
     if (canViewClientInbox) {
       void api.leads.getAll().then((response) => {
@@ -634,7 +637,7 @@ export const AdminClients: React.FC = () => {
     }
 
     return () => { active = false; };
-  }, [selectedClient?.id, canViewClientProjects, canViewClientFinance, canViewClientInbox, clientRelatedReloadKey]);
+  }, [selectedClient?.id, canViewClientProjects, canViewClientFinance, canViewClientInbox, canViewClientDocuments, clientRelatedReloadKey]);
 
 
 
