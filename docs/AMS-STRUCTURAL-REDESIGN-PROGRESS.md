@@ -1438,3 +1438,26 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Missing canonical data: repository search found no `onboardingChecklist`, `requiredDocumentStatus`, `ClientOnboardingRequirement`, `kickoffReadiness` or onboarding owner/due-date record model. Checklist, Required Documents and Kickoff Readiness remain unavailable. Profile-readiness stays profile completeness only.
 - Browser evidence: not captured; authenticated role, direct URL/history, actual CSV download, keyboard/touch and responsive viewport checks remain Stage 5.
 - Status: PARTIALLY COMPLETE. Next canonical workspace is Clients → Agreements. Review Contracts & SOWs, Retainers & Service Commitments, Renewal Schedule and Contract History against current canonical sources.
+
+## Stage 4 structural slice · Clients Onboarding / Lead register · 19 October 2026
+
+### View structure contract
+
+- Requirement: `VIEW-CLIENTS-ONBOARDING`; module/workspace: Clients → Onboarding, implemented through the existing Lead scope in `AdminClients`.
+- Primary task: review prospective client accounts and see which contact/profile fields are present before continuing onboarding conversations.
+- Key question: which lead is this, how can we reach its primary contact, and which basic account details are recorded or missing?
+- Current source contract: `AgencyClient` provides company/name/email/phone/industry/location/status/createdAt/updatedAt/notes plus mature-client financial/service fields. There are no verified checklist entities, required-document verification records, readiness owner or kickoff approval records.
+- Before composition: shared search with generic Client labels → Lead/status scope in filter footer → one responsive register rendered with Directory columns/cards, including billed value and spend-cap indicators on Lead records.
+- Structural mismatch: the Lead scope looked like a filtered Directory. It surfaced mature-client billing/spend-cap data while contactability and onboarding-specific dates were less prominent; search/table labels did not identify the Lead queue clearly.
+- After composition: contextual onboarding scope → Lead-specific search → Lead register/cards with company/added date, primary contact, email/phone, industry/location, lifecycle status and last-updated context. Mature-client billing/spend-cap columns remain in Directory scope. Existing Lead creation, CSV export, query scope, Lead-applicable filters, profile drawer and permissions remain.
+- Primary surface: a record register. An evidence checklist or readiness score is unsupported by the current model.
+- Data/permission constraints: reuse current `AgencyClient` records and roles. No contact entity, checklist simulation, approval state, API or workflow transition was added.
+- States: existing loading and source-unavailable behavior remains. Lead-specific empty/matching copy now explains when no Lead exists. The separate source-boundary disclosure still says profile completeness is not onboarding approval.
+- Before/after sketch: BEFORE generic search/filter → shared Directory columns/cards for Leads and mature accounts → financial/spend-cap values on Lead rows. AFTER Lead-specific search/scope → contact-first profile register → existing record actions; financial indicators stay in Directory.
+- Changed source: [5918ab4833b7f6c1bba939618bb0ce618f172f61](https://github.com/Kapitech-Agency/kapitech-ams/commit/5918ab4833b7f6c1bba939618bb0ce618f172f61).
+- Test corrections: initial CI exposed stale JSX expectations; follow-up commits [dd7121e95ab4489b79a4f93b6a5838049a034b51](https://github.com/Kapitech-Agency/kapitech-ams/commit/dd7121e95ab4489b79a4f93b6a5838049a034b51) and [952203b70ead573edf994d7a53e51ab46eab12fe](https://github.com/Kapitech-Agency/kapitech-ams/commit/952203b70ead573edf994d7a53e51ab46eab12fe) aligned the contract assertions to the actual named register and Lead mobile card. No test was deleted or bypassed.
+- Exact-SHA validation: [AMS Quality Gate 39273628833 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39273628833) and [AMS CI 39273628957 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39273628957) on `952203b70ead573edf994d7a53e51ab46eab12fe`. Typecheck, regression tests, production build, security regression, PostgreSQL integration/migrations, dependency audit, packaged migrations and production HTTP smoke test passed.
+- Browser evidence: NOT CAPTURED. No authenticated visual/keyboard/reflow/role session or actual downloaded CSV inspection was performed; Stage 5 remains outstanding.
+- Requirement status: PARTIALLY COMPLETE. The Lead register structure is implemented; Checklist, Required Documents and Kickoff Readiness remain unavailable until their records, evidence links, ownership and approval transitions exist.
+- Next authorized action: proceed to Clients → Agreements → Contracts & SOWs; compare the current primary register with §4.10 and the worksheet role matrix. Preserve the separate blocker for contract version/event history.
+
