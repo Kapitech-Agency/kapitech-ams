@@ -75,6 +75,9 @@ test('Client exports use one scope-aware CSV handler and preserve missing billed
   assert.doesNotMatch(onboardingValues, /totalSpend|slaDailyAdSpendBudget|currentDailyAdSpend/);
   assert.match(valuesBlock, /typeof client\.totalSpend === 'number' && Number\.isFinite\(client\.totalSpend\) \? client\.totalSpend : ''/);
   assert.ok(exportHandler.includes('Cumulative billed value (IDR)'));
+  assert.ok(exportHandler.includes("'SLA budget', 'Current daily spend'"));
+  assert.ok(exportHandler.includes("client.slaDailyAdSpendBudget ?? ''"));
+  assert.ok(exportHandler.includes("client.currentDailyAdSpend ?? ''"));
   assert.doesNotMatch(exportHandler, /client\.totalSpend \|\| 0/);
   assert.match(exportHandler, /\.join\('\\n'\)/);
   assert.match(exportHandler, /new Blob\(\['\\ufeff' \+ csv\]/);

@@ -684,7 +684,7 @@ export const AdminClients: React.FC = () => {
   const handleExport = () => {
     const headers = statusScope === 'lead'
       ? ['Client ID', 'Slug', 'Contact', 'Company', 'Email', 'Phone', 'Industry', 'Status', 'Location', 'Website']
-      : ['Client ID', 'Slug', 'Contact', 'Company', 'Industry', 'Status', 'Projects', 'Cumulative billed value (IDR)', 'Location'];
+      : ['Client ID', 'Slug', 'Contact', 'Company', 'Industry', 'Status', 'Projects', 'Cumulative billed value (IDR)', 'Location', 'SLA budget', 'Current daily spend'];
     const exportRows = filteredClients.map((client) => {
       const values = statusScope === 'lead'
         ? [client.id, client.slug, client.name, client.company, client.email, client.phone, client.industry, client.status, client.location, client.website || '']
@@ -698,6 +698,8 @@ export const AdminClients: React.FC = () => {
             client.projectsCount,
             typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? client.totalSpend : '',
             client.location || '',
+            client.slaDailyAdSpendBudget ?? '',
+            client.currentDailyAdSpend ?? '',
           ];
       return values.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(',');
     });
