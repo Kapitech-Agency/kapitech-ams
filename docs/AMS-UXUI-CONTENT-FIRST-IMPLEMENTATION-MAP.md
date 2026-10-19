@@ -692,3 +692,10 @@ Continue reviewing every active subtab and its contextual content hierarchy, inc
 - [AMS Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39107062176) and [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39107062181) passed on `a58709063b654b896d9e92c74185ffcabdd97151`.
 
 This closes a source/test discrepancy in the earlier checkpoint: the implementation and regression contract now both place the retainer register before supporting summaries. The complete nine-module/subtab redesign and authenticated browser/device visual acceptance remain outstanding.
+
+## Structural checkpoint · Projects Planning & Delivery / Project Brief · 19 October 2026
+
+- Structural source change: [6bfc86133d6b76488f9013e1e88a5825e2c3c051](https://github.com/Kapitech-Agency/kapitech-ams/commit/6bfc86133d6b76488f9013e1e88a5825e2c3c051). The active project's scope control now appears before the worksheet tabs. Project Brief is one task-oriented surface with recorded notes first, a compact canonical context list beside it, and explicit disclosure that unsupported scope/deliverable/QA/client-review/revision records are not stored.
+- Focused regression: [5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5](https://github.com/Kapitech-Agency/kapitech-ams/commit/5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5) adds an ordering/state-boundary assertion rather than only checking styling.
+- Exact-SHA evidence: [AMS CI 39261177958 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39261177958) and [AMS Quality Gate 39261178055 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39261178055). Both ran on source/test SHA 5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5.
+- Status remains partial pending Stage 5 browser/responsive/accessibility evidence and the remaining planning worksheets. The next structural slice in module order is Projects → Project Resources. Unsupported Project Campaigns and Project Controls stay unavailable until canonical models and permissions exist.

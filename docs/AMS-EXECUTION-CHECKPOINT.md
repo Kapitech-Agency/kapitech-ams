@@ -15,13 +15,13 @@ Latest application/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest source/test commit | `4e57c8b4b8d7b3aabf3393b48499627db2015b40` |
-| Commit | [test(clients): assert local renewal date semantics](https://github.com/Kapitech-Agency/kapitech-ams/commit/4e57c8b4b8d7b3aabf3393b48499627db2015b40) |
-| Changed application source | `src/pages/admin/AdminClientRetainers.tsx`; `src/lib/retainerDateDefaults.ts` |
-| Regression tests | `tests/client-retainer-date-defaults.test.ts`; `tests/admin-pages-jsx-regression.test.ts` |
-| AMS CI | **Passed**: [run 39253706334](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39253706334) |
-| AMS Quality Gate | **Passed**: [run 39253706326](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39253706326) |
-| Validation detail | Typecheck, regression tests, security regression tests, production build and production HTTP smoke test passed. |
+| Latest source/test commit | 5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5 |
+| Commit | [test(projects): guard planning brief structure](https://github.com/Kapitech-Agency/kapitech-ams/commit/5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5) |
+| Changed application source | src/pages/admin/AdminProjects.tsx (structural Project Brief composition) |
+| Regression tests | tests/projects-module-regression.test.ts (scope → tabs → brief ordering, fields and no duplicate context panel) |
+| AMS CI | **Passed on exact SHA**: [run 39261177958](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39261177958) |
+| AMS Quality Gate | **Passed on exact SHA**: [run 39261178055](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39261178055) |
+| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on 5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5. |
 
 ### Recent verified frontend slices
 
@@ -59,7 +59,7 @@ Re-verify live source and CI on every resume; this list is a dated recovery poin
 
 1. **Rehydrate:** fetch current `main`, recent history, relevant source and exact current CI/Quality Gate results.
 2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, Clients scope-aware exports/evidence-based Onboarding copy, Retainer local-date defaults and Renewal Schedule calendar-day handling have successful exact-SHA evidence.
-3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Use the canonical module/workspace order and the View Structure Contract. The Renewal Schedule date-only fix is already source/test-verified; do not select another isolated Clients defect unless it blocks the current structural slice or is a new regression. For each selected view, document current-vs-target composition and implement its material structural changes before moving to the next view.
+3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). The Project Brief structural slice is source/test-verified on 5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5. The next authorized slice is Projects → Project Resources (VIEW-PROJECTS-RESOURCES). Keep Content & Campaigns and Project Controls unavailable while their canonical records/models and permissions are absent. Do not return to isolated Clients bug fixes unless a regression or blocker affects the current structural slice.
 4. **Validate one bounded slice:** inspect current source/tests and gap row, make the smallest complete change, retain negative-path regression tests, verify both CI workflows on the source/test SHA, then update checkpoint and gap evidence.
 5. **Release gate remains closed:** authenticated browser/viewport/accessibility review and explicit user sign-off are still required at Stage 5. No authenticated screenshot or browser visual/keyboard/touch test has been performed in this execution. Do not start broad Stage 6 workflow/backend implementation before approval.
 
@@ -89,3 +89,10 @@ For the structural main-content objective, also follow [AMS Frontend Structural 
 
 
 When the user says “lanjutkan” or similar, do not ask them to restate the task and do not give only another prompt or plan. Follow [the resume protocol](AMS-RESUME-AFTER-INTERRUPTION.md), inspect the current source and CI, carry forward completed work, execute the next authorized action, and report the precise verified checkpoint. Stop only for a genuine decision, mandatory sign-off gate, or blocker that cannot be resolved safely within the existing authorization.
+
+### Current Stage 4 structural checkpoint · 19 October 2026
+
+- Verified source/test commit: 5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5 (exact-SHA AMS CI and Quality Gate passed in the table above).
+- Structural change: Projects → Planning & Delivery → Project Brief now places the selected project scope before worksheet tabs and consolidates the brief into one notes-first structured detail surface plus source-backed context; duplicate context and coverage panels were removed.
+- Visual status: NOT VERIFIED. No authenticated browser screenshots or viewport/keyboard session were captured; Stage 5 sign-off remains required.
+- Next single action: implement the next source-backed structural slice in canonical Projects order, Project Resources (VIEW-PROJECTS-RESOURCES). Keep unsupported Content & Campaigns and Project Controls unavailable.

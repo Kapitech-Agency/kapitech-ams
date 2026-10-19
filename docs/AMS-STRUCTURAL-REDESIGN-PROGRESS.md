@@ -1326,3 +1326,27 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Remaining: authenticated browser checks for due-today/day-30 filter and display are pending Stage 5. No browser download/screenshot or viewport interaction was performed.
 - Next action: continue Clients → Agreements audit for any remaining source-backed Contracts & SOWs presentation issues, then Client Service & Health. Keep Contract History unavailable until a canonical event/version record exists.
 
+## Stage 4 structural slice · Projects Planning & Delivery / Project Brief · 19 October 2026
+
+### View structure contract
+
+- Module/workspace/worksheet: Projects → Planning & Delivery → Project Brief.
+- Requirement IDs: VIEW-PROJECTS-PLANNING; cross-module roll-up AMS-MAIN-CONTENT-STRUCTURE-001.
+- User task: review the selected project's recorded brief and context, then open supported task execution without confusing project identity across worksheets.
+- Key question: which project is being planned, what source-backed delivery information is recorded, and what action can the user take next?
+- Before composition: module header → Planning worksheet tabs → selected-project selector/context row → eight summary tiles → brief notes/team/action → separate “Planning data coverage” card repeating available and unavailable record information.
+- Structural mismatch: project scope selector appeared after the worksheet tabs; the primary brief was fragmented into equal-weight tiles and notes, and a second coverage card competed with the actual brief.
+- After composition: module header → selected-project scope control → Planning worksheet tabs → one dominant Project Brief surface. Recorded notes and supported task-execution action lead on the primary side; client/owner/service/status/dates/progress/milestone count/team are grouped in a context definition list; unsupported scope/deliverable/QA/client review/revision record ownership is stated inline.
+- Primary surface: structured detail, appropriate because the current Project Brief is source-backed project context and recorded notes, not a supported editorial persistence workflow or chart.
+- Source-owned fields/actions preserved: client, owner, service, status, start date, target deadline, recorded progress, recorded milestone count, team members, notes, worksheet query state, selected-project query state and Open task execution.
+- Protected semantics: existing project source, routes/query keys, selection validation, permissions, API contract, backend, database and task/project workflows remain unchanged. No sample records or fabricated workflow actions added.
+- Data states: existing loading, source-unavailable, no-project and invalid-selected-project paths remain in place; empty notes stays explicit. Unsupported worksheets remain unavailable.
+- Before/after sketch: BEFORE Header → Tabs → Selector → 8 tiles → Notes/Team → Duplicate Coverage Panel. AFTER Header → Selected Project Scope → Tabs → Notes-first Project Brief + Source-backed Context → Inline unsupported-record boundary + task execution.
+- Supporting bug fixes: none claimed in this slice. This is structural work.
+- Changed paths: src/pages/admin/AdminProjects.tsx in [6bfc86133d6b76488f9013e1e88a5825e2c3c051](https://github.com/Kapitech-Agency/kapitech-ams/commit/6bfc86133d6b76488f9013e1e88a5825e2c3c051); tests/projects-module-regression.test.ts in [5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5](https://github.com/Kapitech-Agency/kapitech-ams/commit/5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5).
+- Regression evidence: “Planning & Delivery puts project scope before worksheet tabs and makes the brief the primary workspace.” It asserts scope-before-tabs, tabs-before-brief, notes before supporting context, essential source-backed fields, inline unsupported-record boundary, project query retention, and absence of duplicate coverage/context panels.
+- Exact-SHA CI: [AMS CI 39261177958 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39261177958) and [AMS Quality Gate 39261178055 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39261178055) on 5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5. Typecheck, regression/security tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed.
+- Browser evidence: not captured. No authorized authenticated browser session was available in this execution; rendered visual, role, keyboard/touch and viewport acceptance remain unverified for Stage 5.
+- Requirement status: PARTIALLY COMPLETE, not complete. Milestones and Timeline still need worksheet-by-worksheet structural acceptance; scope/deliverables, deliverable tracking, quality review, client review and revision history remain unavailable because their canonical records/workflows are absent. Campaigns and Project Controls remain unavailable while canonical models/permissions are absent.
+- Next authorized action: inspect and structurally redesign Projects → Project Resources (VIEW-PROJECTS-RESOURCES) against its allocation/task assignment surfaces. Keep unsupported campaign/control workspaces explicitly unavailable and do not switch to unrelated Clients defects.
+- Stage 5 user sign-off: PENDING and required before broad Stage 6+ work.
