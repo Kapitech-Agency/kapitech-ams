@@ -431,10 +431,12 @@ test('Projects Overview summary follows canonical responsive breakpoints', async
   const overviewEnd = projects.indexOf("{view === 'planning-delivery' && (", overviewStart);
   assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, 'The Project Overview workspace should be identifiable');
   const overview = projects.slice(overviewStart, overviewEnd);
-  assert.ok(overview.includes('className="grid gap-3 min-[600px]:grid-cols-2 min-[1100px]:grid-cols-4" aria-label="Project delivery summary"'),
-    'Project summary KPIs should remain stacked on narrow screens, use two columns from 600px and four from 1100px.');
+  assert.ok(overview.includes('className="grid gap-3 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3" data-ams-feature-slug="projects-overview-supporting-metrics" aria-label="Project delivery summary"'),
+    'Three supporting project KPIs should use two columns from 600px and three from 900px.');
   assert.equal(overview.includes('sm:grid-cols-2 xl:grid-cols-4'), false,
     'Project overview KPI geometry must not depend on generic 640px and 1280px breakpoints.');
+  assert.equal(overview.includes('min-[1100px]:grid-cols-4'), false,
+    'The duplicate Delivery exceptions KPI is removed, so the supporting summary must not keep a four-column contract.');
 });
 
 
