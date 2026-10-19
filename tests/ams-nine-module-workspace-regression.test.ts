@@ -406,3 +406,14 @@ test('Vendor Skills & Service Matrix link reuses the existing Admin-only route p
   assert.match(teams, /canAccessAmsRoute\(navigationRole, '\/admin\/vendors', '\?view=skill-matrix'\)/);
   assert.match(access, /if \(path === '\/admin\/vendors' && params\.get\('view'\) === 'skill-matrix'\) return role === 'Admin'/);
 });
+
+
+test('Inbox inquiry status cards follow canonical responsive breakpoints', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const pipeline = inbox.indexOf('data-ams-feature-slug="inbox-client-pipeline"');
+  const statusGrid = inbox.indexOf('className="grid grid-cols-2 gap-2 min-[1100px]:grid-cols-4"', pipeline);
+  assert.ok(pipeline >= 0 && statusGrid > pipeline,
+    'The inquiry status summary should remain two columns until the canonical 1100px breakpoint.');
+  assert.equal(inbox.includes('className="grid grid-cols-2 gap-2 sm:grid-cols-4"'), false,
+    'The status summary must not switch to four columns at the generic 640px breakpoint.');
+});

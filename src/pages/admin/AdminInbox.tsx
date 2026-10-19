@@ -856,7 +856,7 @@ export const AdminInbox: React.FC = () => {
       {activeInboxTab === 'client' && viewMode === 'split' && (
         <section data-ams-feature-slug="inbox-client-pipeline" data-ams-slug="inbox-client-pipeline" className="rounded-card border border-line bg-panel p-3.5">
           <div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Inquiry status</h3><p className="mt-0.5 text-[11px] text-muted">Track client inquiries by status and follow-up stage.</p></div><span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inquiries</span></div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 min-[1100px]:grid-cols-4">
             {[
               {key:'new',label:'New'},{key:'in-review',label:'In review'},{key:'contacted',label:'Contacted'},{key:'closed',label:'Closed'}
             ].map((stage)=>{
