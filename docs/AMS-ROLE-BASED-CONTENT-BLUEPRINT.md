@@ -6,7 +6,7 @@
 - **Scope:** Main content across all nine primary AMS modules, workspaces, worksheets, record details, stakeholder perspectives, visualizations, and presentation states
 - **Audience:** Product owner, agency leadership, employees, UX/UI designers, frontend implementers, QA, and AI coding agents
 - **Language:** English
-- **Last updated:** 18 October 2026
+- **Last updated:** 19 October 2026
 
 ---
 
