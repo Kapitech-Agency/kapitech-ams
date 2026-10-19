@@ -376,7 +376,7 @@ test('Client Renewal Schedule prioritizes a searchable deadline register and rep
   assert.doesNotMatch(renewal, /client-renewal-schedule-kpis/, 'remove KPI cards that duplicate queue timing filters');
   assert.match(renewal, /No matching renewal records/);
   assert.match(renewal, /Refresh sources/);
-  assert.match(renewal, /The current contract and retainer sources do not expose an accountable owner or next-action field/);
+  assert.match(contracts, /The current contract and retainer sources do not expose an accountable owner or next-action field/);
   assert.match(contracts, /getRenewalTimingKey/);
 });
 

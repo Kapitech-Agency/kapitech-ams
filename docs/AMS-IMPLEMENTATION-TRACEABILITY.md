@@ -631,3 +631,6 @@ Acceptance still pending: Browser verification of direct routes, query/back-forw
 
 
 **Validation correction:** AMS CI run [39207144110](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207144110) and Quality Gate [39207144113](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207144113) on `9d0db39395d7ed26685b77e66efe86789a1d1688` both stopped at TypeScript checking because the icon `ShieldAlert` remained used by the pre-existing Contracts overview strip after its import was removed during the renewal-only cleanup. The next commit restores that import; no behavior or source records are altered by the correction. Recheck both workflows on the fix SHA.
+
+
+**Regression assertion follow-up:** On `4af1ec687dd39deeca5933d54023f357b57d14f9`, Typecheck passed but the Quality Gate's new Renewal Schedule regression failed because its JSX slice ended at the filtered-empty conditional before the source-boundary note. The source text itself exists after that branch. The test is corrected to assert the note against the full component while keeping control/register ordering scoped to the schedule region. Re-run CI and Quality Gate on the new commit.

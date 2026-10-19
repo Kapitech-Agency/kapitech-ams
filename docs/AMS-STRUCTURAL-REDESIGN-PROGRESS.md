@@ -545,3 +545,8 @@ The Finance worksheet row had `variant="secondary"`, which intentionally rendere
 ### Renewal Schedule validation correction — 19 October 2026
 
 The first CI attempt for commit `9d0db39395d7ed26685b77e66efe86789a1d1688` failed during TypeScript checking because `ShieldAlert` was still used by the existing Contracts overview metric strip after being removed from the icon import while removing the Renewal Schedule metric strip. No test/build ran in that attempt. The follow-up restores the existing icon import without changing contract metrics or financial/business behavior. Verify the correction commit's TypeScript, regression tests, production build and both workflows before marking this view source/test verified.
+
+
+### Renewal Schedule regression assertion correction — 19 October 2026
+
+The follow-up `4af1ec687dd39deeca5933d54023f357b57d14f9` restored the existing `ShieldAlert` import and passed TypeScript, but its regression run failed because the test sliced the Renewal Schedule ternary through the filtered-empty branch and then expected a source-boundary note located immediately after that branch. The source note is present in the rendered view; the assertion was incorrectly scoped. The next commit checks this wording in the full component source while retaining separate assertions for register/control ordering. Recheck the exact fix SHA before verification is updated.
