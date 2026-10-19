@@ -393,7 +393,7 @@ test('Planning & Delivery Timeline leads with chronological recorded task and mi
   const scopeIndex = workspace.indexOf('data-ams-slug="planning-delivery-scope"');
   const tabsIndex = workspace.indexOf('ariaLabel="Planning & Delivery worksheets"');
   const timelineIndex = workspace.indexOf("planningView === 'timeline'");
-  const timelineEnd = workspace.indexOf("              </>", timelineIndex);
+  const timelineEnd = workspace.indexOf("            </>", timelineIndex);
   assert.ok(scopeIndex >= 0 && tabsIndex > scopeIndex && timelineIndex > tabsIndex && timelineEnd > timelineIndex,
     'Timeline should remain project-scoped under the common worksheet navigation.');
   const timeline = workspace.slice(timelineIndex, timelineEnd);
