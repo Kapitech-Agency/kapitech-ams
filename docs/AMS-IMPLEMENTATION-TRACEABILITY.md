@@ -709,3 +709,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. The operating preview comparison and source detail remain primary for operational review. The separate posted General Ledger result now uses a three-row `FinanceDataTable` for Revenue, Expense-account activity, and Posted GL result, with measurement basis, selected-period posted journal count and an export action. The source values come from the existing `getPostedLedgerIncomeStatement` helper; no accounting calculation or posting behavior changes. Empty periods show a dash plus explicit no-posted-entry text, not implied zero.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts the report table follows operating preview, row definitions/bases, export, and honest no-posted-entry handling. Both AMS workflows must pass on the exact commit; Stage 5 browser/role/responsive/accessibility checks remain required.
+
+
+### PROJ-REGISTRY-DEADLINE-001: Canonical Project Registry deadline filters
+
+Source: src/pages/admin/AdminProjects.tsx and src/lib/projectDeadlineFilters.ts. Project Registry filters canonical targetEndDate by local date-only boundaries: overdue non-completed projects, deadlines today through day 7, days 8–30, and missing/invalid dates. Completed projects do not appear in urgency windows. Reset and pagination behavior are wired to the existing registry filter state. The filter is cleared when leaving Registry to avoid an invisible filter affecting other project worksheets.
+
+Tests: tests/project-deadline-filters.test.ts covers boundary dates, leap days, inclusive/exclusive windows, completed items, and invalid/missing dates. tests/projects-module-regression.test.ts verifies selector and reset pipeline. Exact-SHA CI/Quality Gate and Stage 5 viewport/keyboard/role checks remain required.

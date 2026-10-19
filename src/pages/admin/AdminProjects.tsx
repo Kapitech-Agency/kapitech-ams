@@ -33,6 +33,7 @@ import {
   TaskStatus,
 } from '../../lib/projectStore';
 import { useLanguage } from '../../lib/LanguageContext';
+import { matchesProjectDeadlineFilter, type ProjectDeadlineFilter } from '../../lib/projectDeadlineFilters';
 import { AgencyClient } from '../../lib/clientStore';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
@@ -443,6 +444,7 @@ export const AdminProjects: React.FC = () => {
   const [projectHealthFilter, setProjectHealthFilter] = useState('');
   const [projectClientFilter, setProjectClientFilter] = useState('');
   const [projectOwnerFilter, setProjectOwnerFilter] = useState('');
+  const [projectDeadlineFilter, setProjectDeadlineFilter] = useState<ProjectDeadlineFilter>('all');
   const [projectSort, setProjectSort] = useState('updated');
   const [projectTablePage, setProjectTablePage] = useState(1);
   const [projectTablePageSize, setProjectTablePageSize] = useState(10);
@@ -753,8 +755,10 @@ export const AdminProjects: React.FC = () => {
     projectHealthFilter,
     projectClientFilter,
     projectOwnerFilter,
+    projectDeadlineFilter === 'all' ? '' : projectDeadlineFilter,
   ].filter(Boolean).length;
 
+  const projectFilterToday = todayIso();
   const filteredProjects = useMemo(() => {
     const query = projectSearch.trim().toLowerCase();
     const result = projects.filter(project => {
@@ -781,8 +785,9 @@ export const AdminProjects: React.FC = () => {
       const matchesHealth = !projectHealthFilter || project.health === projectHealthFilter;
       const matchesClient = !projectClientFilter || project.clientCompany === projectClientFilter;
       const matchesOwner = !projectOwnerFilter || project.teamLead === projectOwnerFilter;
+      const matchesDeadline = view !== 'all' || matchesProjectDeadlineFilter(project, projectDeadlineFilter, projectFilterToday);
       const matchesPeriod = matchesInterval(project.startDate, project.targetEndDate, project.createdAt);
-      return matchesQuery && matchesStatus && matchesRegistryStatus && matchesHealth && matchesClient && matchesOwner && matchesPeriod;
+      return matchesQuery && matchesStatus && matchesRegistryStatus && matchesHealth && matchesClient && matchesOwner && matchesDeadline && matchesPeriod;
     });
 
     return [...result].sort((a, b) => {
@@ -800,6 +805,9 @@ export const AdminProjects: React.FC = () => {
     projectHealthFilter,
     projectClientFilter,
     projectOwnerFilter,
+    projectDeadlineFilter,
+    projectFilterToday,
+    view,
     projectSort,
     matchesInterval,
   ]);
@@ -807,7 +815,10 @@ export const AdminProjects: React.FC = () => {
   const projectTablePageCount = Math.max(1, Math.ceil(filteredProjects.length / projectTablePageSize));
   const pagedProjectTableRows = filteredProjects.slice((projectTablePage - 1) * projectTablePageSize, projectTablePage * projectTablePageSize);
   React.useEffect(() => { setProjectTablePage((page) => Math.min(page, projectTablePageCount)); }, [projectTablePageCount]);
-  React.useEffect(() => { setProjectTablePage(1); }, [projectSearch, projectStatusFilter, projectHealthFilter, projectClientFilter, projectOwnerFilter, projectSort, reportPeriodValue, reportPeriodEnabled]);
+  React.useEffect(() => { setProjectTablePage(1); }, [projectSearch, projectStatusFilter, projectHealthFilter, projectClientFilter, projectOwnerFilter, projectDeadlineFilter, projectSort, reportPeriodValue, reportPeriodEnabled]);
+  React.useEffect(() => {
+    if (view !== 'all' && projectDeadlineFilter !== 'all') setProjectDeadlineFilter('all');
+  }, [view, projectDeadlineFilter]);
 
   const clearProjectFilters = () => {
     setProjectSearch('');
@@ -815,6 +826,7 @@ export const AdminProjects: React.FC = () => {
     setProjectHealthFilter('');
     setProjectClientFilter('');
     setProjectOwnerFilter('');
+    setProjectDeadlineFilter('all');
     setProjectSort('updated');
   };
 
@@ -2560,6 +2572,20 @@ export const AdminProjects: React.FC = () => {
                 style={{ flexWrap: 'nowrap' }}
                 aria-label="Project filters"
               >
+                <CustomSelect
+                  value={projectDeadlineFilter}
+                  onChange={(value) => setProjectDeadlineFilter(value as ProjectDeadlineFilter)}
+                  options={[
+                    { value: 'all', label: 'All deadlines' },
+                    { value: 'overdue', label: 'Overdue' },
+                    { value: 'next-7-days', label: 'Due in next 7 days' },
+                    { value: 'days-8-30', label: 'Due in 8–30 days' },
+                    { value: 'no-deadline', label: 'No / invalid deadline' },
+                  ]}
+                  className="w-[168px] shrink-0"
+                  aria-label="Filter projects by deadline"
+                  data-ams-slug="projects-filter-deadline"
+                />
                 <CustomSelect
                   value={projectHealthFilter}
                   onChange={setProjectHealthFilter}

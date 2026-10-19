@@ -790,3 +790,27 @@ Chart of Accounts was reviewed against the specification. The canonical register
 15. **Acceptance.** Posted General Ledger results read as a formal statement rather than a duplicated KPI strip, and remain separate from operational-source preview/profit proxy. Accounting remains partially complete pending Stage 5 visual checks and independent live-role/source validation.
 
 **Next Stage 4 slice:** Confirm Finance source/period and role states in the remaining worksheets, then move to another module with a proven structural gap. Keep Finance partially complete until Stage 5 browser sign-off.
+
+
+## Stage 4 view design record — Projects · Project Registry · Deadline filtering
+
+View ID: VIEW-PROJECTS-OVERVIEW, Project Registry.
+Source status: the canonical register already supports search, lifecycle/status quick filters, health/client/owner filters, sorting, and board/table/timeline modes. This slice adds the missing deadline filter required by the restructuring specification. Verify the exact commit through both CI workflows before calling source/test verified.
+
+1. Owner/persona. Projects → Project Registry. Project managers and delivery team members narrow the canonical portfolio to projects whose deadlines need attention.
+2. Primary task. Find overdue and soon-due projects without conflating them with completed work or projects whose deadline is not recorded.
+3. Decision. Which non-completed projects are overdue, due between today and day 7, due on days 8–30, or have no valid deadline?
+4. Primary surface. Existing canonical Project Registry with a deadline filter in the existing filter bar; board, table and timeline continue to use the same filtered project data.
+5. Content order. Search, status quick filters, deadline, health, client, owner and sort controls; filtered portfolio; result counts; view-specific presentation. No new KPI strip or alternate project store.
+6. Fields and semantics. targetEndDate from the canonical project. Calendar dates use local date-only parsing, not UTC timestamps. Today counts as due within 7 days. Overdue means deadline strictly before today and project is not Completed. Days 8–30 are disjoint from the next-seven-day range. Missing and invalid dates share an explicit filter and never become upcoming/overdue.
+7. Controls. The filter composes with existing search/status/health/client/owner/report-period filters. Reset clears it; table pagination resets when it changes. It resets when leaving Project Registry so a hidden local filter cannot silently affect Budget or another worksheet.
+8. Canonical ownership/breadcrumb. Uses project records only. Does not change status, edit permissions or route ownership. Registry remains a workspace, not a full-page detail route; no breadcrumb is added.
+9. Role-aware presentation. Existing canManageProjects, route policy, create/edit/archive permissions and record actions remain unchanged.
+10. States/recovery. If the source is unavailable, existing unavailable state and source notice remain authoritative. Invalid due dates are grouped with missing dates; they do not become urgent exceptions or implied dates.
+11. Responsive behavior. Filter is part of the existing horizontally-contained filter control row and uses existing compact control sizing. Stage 5 must verify 1100, 900, 600, 390 and 320px and keyboard reachability of horizontal controls.
+12. Accessibility. Explicit accessible label, visible selected option, existing CustomSelect behavior and explicit text categories. No state relies on color. Keyboard/focus/browser evidence remains Stage 5.
+13. Regression tests. New pure tests cover local calendar boundaries, leap day/month/year changes, overdue strictness, next-seven-day inclusivity, 8–30-day disjoint window, completed exclusion, and missing/invalid dates. Page test covers control wiring, reset and hidden-filter cleanup.
+14. Dependencies. No API/database/source model change. Uses existing target deadline and status only. Does not change deadline validation or workflow.
+15. Acceptance. Registry users can filter meaningful deadline windows over canonical project data. The view remains partially complete until Stage 5 confirms viewport, keyboard and role behavior; other Project worksheets still require independent review.
+
+Next Stage 4 slice: Projects · Tasks & Execution. Audit the existing canonical task Board/List and detail work surfaces against stage/priority/owner/deadline, unassigned state, keyboard alternatives and task-level source parity. Do not create separate tasks or simulate Dependencies unless a real canonical model exists.

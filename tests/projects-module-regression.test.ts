@@ -219,3 +219,19 @@ test('Ambiguous project and task mutation responses refresh canonical records in
   assert.ok(source.includes('if (!refreshed) rollback();'));
   assert.ok(source.includes('if (!refreshed) applySubtasks(previousSubtasks);'));
 });
+
+
+test('Project Registry deadline filtering uses explicit local-date ranges and resets with the register controls', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.match(source, /projectDeadlineFilter, setProjectDeadlineFilter.*useState<ProjectDeadlineFilter>\('all'\)/);
+  assert.match(source, /aria-label="Filter projects by deadline"/);
+  assert.match(source, /label: 'Due in next 7 days'/);
+  assert.match(source, /label: 'Due in 8–30 days'/);
+  assert.match(source, /label: 'No \/ invalid deadline'/);
+  assert.match(source, /matchesProjectDeadlineFilter\(project, projectDeadlineFilter, projectFilterToday\)/);
+  assert.match(source, /projectDeadlineFilter === 'all' \? '' : projectDeadlineFilter/);
+  assert.match(source, /setProjectDeadlineFilter\('all'\)/);
+  assert.match(source, /projectDeadlineFilter, projectSort, reportPeriodValue, reportPeriodEnabled/);
+  assert.match(source, /if \(view !== 'all' && projectDeadlineFilter !== 'all'\) setProjectDeadlineFilter\('all'\)/);
+});
