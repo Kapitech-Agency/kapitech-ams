@@ -628,7 +628,7 @@ test('Clients Service & Health keeps unsupported telemetry metrics and worksheet
   assert.match(serviceHealth, /title="SLA Monitoring"/);
   assert.match(serviceHealth, /Telemetry not configured/);
   assert.match(serviceHealth, /No verified SLA telemetry source/);
-  assert.match(serviceHealth, /uptime, MTTR, compliance, incident history, and snapshots are unavailable/);
+  assert.match(serviceHealth, /uptime, MTTR, compliance, incident history, and snapshots are unavailable/i);
   assert.match(serviceHealth, /No sample accounts or simulated performance values are shown/);
   assert.match(serviceHealth, /data-ams-slug="sla-telemetry-not-configured"/);
   assert.match(serviceHealth, /data-ams-slug="sla-monitoring-setup"/);
