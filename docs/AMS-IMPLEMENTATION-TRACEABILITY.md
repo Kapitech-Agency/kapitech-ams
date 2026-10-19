@@ -647,3 +647,10 @@ Source: `src/pages/admin/AdminClientSlaMonitoring.tsx`.
 Regression: `tests/ams-nine-module-workspace-regression.test.ts` asserts that the workspace explicitly declares telemetry not configured; states uptime, MTTR, compliance, incident history and snapshots as unavailable; shows prerequisites only; links to the canonical Contracts & SOW workspace; keeps Service Issues & Feedback, Client Health and Service History target-only; and prevents sample SLA performance values from being introduced.
 
 Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207941880) and AMS Quality Gate [39207941811](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207941811) passed on source/test SHA `98a8662f4228622dabb8afe4500a05db94eb4201`. Telemetry provider setup, configured targets/calendars/pause rules, timestamped incidents and Inbox-owned Service Issues remain canonical dependencies. Authenticated browser, role, keyboard and responsive checks remain Stage 5.
+
+
+### FIN-AR-AGING-001: Accounts Receivable aging is source-backed and secondary to the register
+
+**Source:** src/pages/admin/AdminInvoicing.tsx, current invoice records scoped to selected currency. The register and pagination remain first. A secondary aging report splits issued, non-cancelled positive invoice balances into current/not-yet-due, 1–30, 31–60, 61–90, 90+ overdue, and missing/invalid due-date buckets. It shows counts, amounts and balance share, and replaces the duplicated AR KPI strip. While the invoice source is blocked, the panel suppresses aging totals, explains the source state and exposes the existing refresh action rather than implying zero debt. No API, account, invoice/payment formula, posting, workflow state or permission policy changed.
+
+**Tests:** tests/finance-ui-consistency.test.ts verifies source/status/positive-balance rules, invalid-date handling, bucket share calculation, register-first ordering, blocked-source recovery and empty state. Both AMS CI and AMS Quality Gate must pass on the resulting SHA. Browser, screen-reader, responsive viewport and production visual verification remain Stage 5.

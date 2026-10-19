@@ -738,11 +738,36 @@ test('Accounts Payable and vendor payment schedule use compact cards for dense r
   assert.match(ap, /registerRecordActions\('vendor-bill',record/);
 });
 
-test('Embedded invoice and receivable registers lead their supporting KPI summaries', async () => {
+test('Embedded invoice registers lead supporting summaries and receivables aging stays source-backed', async () => {
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const pagination = invoicing.indexOf('slug="finance-invoices-pagination"');
   const embeddedSummary = invoicing.indexOf('{embedded && invoiceSummary}', pagination);
-  assert.ok(invoicing.includes('const invoiceSummary = embeddedReceivablesOnly ? ('));
+  const agingView = invoicing.indexOf('data-ams-slug="finance-receivables-aging"', pagination);
+  assert.ok(invoicing.includes('const invoiceSummary = embeddedReceivablesOnly ? null : ('));
   assert.ok(invoicing.includes('{!embedded && invoiceSummary}'));
-  assert.ok(pagination >= 0 && embeddedSummary > pagination);
+  assert.ok(pagination >= 0 && embeddedSummary > pagination && agingView > embeddedSummary,
+    'The actionable invoice register must precede supporting summary and aging views.');
+  assert.match(invoicing, /currencyInvoices\s+\.filter\(\(invoice\) => !\['draft', 'cancelled'\]\.includes\(invoice\.status\)\)/);
+  assert.match(invoicing, /label: 'Due date missing or invalid'/);
+  assert.match(invoicing, /balance <= 0\.009/);
+  assert.match(invoicing, /data-ams-feature-slug="finance-receivables-aging"/);
+  assert.match(invoicing, /Current includes items due today or later/);
+  assert.match(invoicing, /Values follow the selected \{currency\} currency and are independent of the register search and due-date filters/);
+  assert.match(invoicing, /invoiceSourceBlocked \? \([\s\S]*?Receivables aging unavailable[\s\S]*?Refreshing receivables aging/);
+  assert.match(invoicing, /Retry invoice source/);
+  assert.match(invoicing, /bucket\.percent\.toFixed\(1\)/);
+  assert.match(invoicing, /No open receivable balances/);
+});
+
+test('Accounts Receivable aging does not classify invalid due dates as current', async () => {
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const start = invoicing.indexOf('const agingBuckets = useMemo');
+  const end = invoicing.indexOf('const receivableAgingTotals', start);
+  assert.ok(start >= 0 && end > start, 'Aging bucket derivation should be isolated.');
+  const derivation = invoicing.slice(start, end);
+  assert.match(derivation, /const dueParts = \/\^/);
+  assert.match(derivation, /due\.getFullYear\(\) === Number\(dueParts\[1\]\)/);
+  assert.match(derivation, /bucket = buckets\[5\]/);
+  assert.match(derivation, /const total = buckets\.reduce/);
+  assert.match(derivation, /percent: total > 0 \? Math\.round\(\(bucket\.amount \/ total\) \* 1000\) \/ 10 : 0/);
 });

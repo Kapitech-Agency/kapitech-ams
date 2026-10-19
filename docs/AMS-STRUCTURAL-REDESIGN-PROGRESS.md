@@ -584,3 +584,27 @@ The follow-up `4af1ec687dd39deeca5933d54023f357b57d14f9` restored the existing `
 - The Service & Health regression guard passed AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207941880) and AMS Quality Gate [39207941811](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207941811) on `98a8662f4228622dabb8afe4500a05db94eb4201`.
 - Stage 5 remains open for authorized browser/direct-route, keyboard/focus and responsive viewport checks. These are source/test results, not a production-deployment claim.
 - Next Stage 4 work: continue into Finance, starting with the next prioritized worksheet from `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`, while retaining Finance formulas and posting behavior unchanged.
+
+
+## Stage 4 view design record — Finance · Receivables & Payables · Accounts Receivable
+
+**View ID:** VIEW-FIN-ARAP, Accounts Receivable worksheet.
+**Implementation:** Register-first source restructuring with a canonical-source aging report. Verify the exact commit via both CI workflows before calling this slice source/test verified.
+
+1. **Owner/persona.** Finance → Receivables & Payables → Accounts Receivable. Finance operators prioritize collection review; authorized users keep existing invoice/payment actions.
+2. **Primary task.** Find open invoice balances, determine collection timing and open the canonical invoice/payment workflow.
+3. **Decision.** Which open issued invoices are not yet overdue, 1–30, 31–60, 61–90, 90+ days past due, or have no valid due date?
+4. **Primary surface.** The invoice register remains first and keeps live search, status/payment/due filters, sorting, pagination, CSV export and existing authorized actions. Aging is supporting analysis after the register, not a replacement queue.
+5. **Content order.** Primary invoice register and pagination, then the Accounts Receivable aging report with totals and six explicit buckets. The four duplicated AR KPI cards are removed in favor of one connected report surface.
+6. **Fields and semantics.** Existing invoice records and selected currency; finite positive outstanding balance; status excludes draft/cancelled; due today/future is Current/not yet overdue; overdue ranges use date boundaries; blank/invalid due dates remain in a separate bucket. Percentage is each bucket balance divided by total included open balance.
+7. **Controls.** Reuses the existing currency selector for the aging distribution. Existing register search and due/status filters do not silently change the aging summary, which is an all-open-current-balance view for that selected currency.
+8. **Canonical relation/breadcrumb.** No second invoice records, aging store or payment state. Rows still open existing invoice preview/edit/payment controls. No breadcrumb at worksheet level.
+9. **Role-aware display.** No change to canManageInvoices, delete permission, status workflow or server authorization. Aging view is read-only.
+10. **States/recovery.** Register retains loading, source-unavailable, no-record and filtered-empty handling. Age report includes only finite positive balances, separates missing/invalid dates, suppresses aged totals while the invoice source is blocked, offers the existing refresh action, and shows a true empty state only after a successful source load with no balances.
+11. **Responsive behavior.** Summary values use two columns on mobile and four columns on wide screens. The aging table owns horizontal overflow so it cannot widen the page shell; viewport-specific proof remains a Stage 5 check.
+12. **Accessibility.** Semantic section heading and table column headers. Text percentages and amounts carry the meaning; progress bars are decorative and hidden from assistive technology. Bucket names/numbers do not rely on color.
+13. **Regression tests.** Assert register/pagination before the aging section, status exclusions, positive-balance threshold, invalid-date bucket, percentage definition, selected-currency semantics, blocked-source recovery and empty state.
+14. **Dependencies.** Existing invoice records only. Do not change invoice formula, payment persistence, posting, API, authorization or canonical data ownership. Browser/reflow and source-state behavior still need verification.
+15. **Acceptance.** An authorized reader sees the actionable register first, then a source-backed aging breakdown where every outstanding amount belongs to an explicit age bucket or the missing-date bucket. Source unavailability cannot appear as zero debt. AR/AP remains partially complete until Accounts Payable and related workflow traces are reviewed and Stage 5 verifies presentation.
+
+**Next Stage 4 slice:** Finance → Receivables & Payables → Accounts Payable. Review bill register hierarchy, open balance, installment schedule, vendor canonical links and source/recovery states without changing payables calculations or payment behavior.

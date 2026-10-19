@@ -2119,34 +2119,50 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     today.setHours(0, 0, 0, 0);
 
     const buckets = [
-      { label: 'Current', tone: 'success' as const, amount: 0, count: 0 },
-      { label: '1–30 Days overdue', tone: 'warning' as const, amount: 0, count: 0 },
-      { label: '31–60 Days overdue', tone: 'warning' as const, amount: 0, count: 0 },
-      { label: '61–90 Days overdue', tone: 'danger' as const, amount: 0, count: 0 },
-      { label: '90+ Days overdue', tone: 'danger' as const, amount: 0, count: 0 }
+      { key: 'current', label: 'Current / not yet overdue', tone: 'success' as const, amount: 0, count: 0 },
+      { key: 'days-1-30', label: '1–30 days overdue', tone: 'warning' as const, amount: 0, count: 0 },
+      { key: 'days-31-60', label: '31–60 days overdue', tone: 'warning' as const, amount: 0, count: 0 },
+      { key: 'days-61-90', label: '61–90 days overdue', tone: 'danger' as const, amount: 0, count: 0 },
+      { key: 'days-90-plus', label: '90+ days overdue', tone: 'danger' as const, amount: 0, count: 0 },
+      { key: 'date-missing', label: 'Due date missing or invalid', tone: 'neutral' as const, amount: 0, count: 0 }
     ];
 
-    currencyInvoices.forEach((invoice) => {
-      const balance = Math.max(0, Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0))));
-      if (balance <= 0) return;
+    currencyInvoices
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
+      .forEach((invoice) => {
+        const rawBalance = Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)));
+        const balance = Number.isFinite(rawBalance) ? Math.max(0, rawBalance) : 0;
+        if (balance <= 0.009) return;
 
-      const due = new Date(String(invoice.dueDate) + 'T00:00:00');
-      const daysSinceDue = Number.isNaN(due.getTime())
-        ? 0
-        : Math.floor((today.getTime() - due.getTime()) / 86400000);
+        const dueDateValue = String(invoice.dueDate || '').slice(0, 10);
+        const dueParts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dueDateValue);
+        const due = dueParts
+          ? new Date(Number(dueParts[1]), Number(dueParts[2]) - 1, Number(dueParts[3]))
+          : null;
+        const hasValidDueDate = Boolean(
+          dueParts
+          && due
+          && due.getFullYear() === Number(dueParts[1])
+          && due.getMonth() + 1 === Number(dueParts[2])
+          && due.getDate() === Number(dueParts[3])
+        );
 
-      const bucket = daysSinceDue <= 0
-        ? buckets[0]
-        : daysSinceDue <= 30
-          ? buckets[1]
-          : daysSinceDue <= 60
-            ? buckets[2]
-            : daysSinceDue <= 90
-              ? buckets[3]
-              : buckets[4];
-      bucket.amount += balance;
-      bucket.count += 1;
-    });
+        let bucket = buckets[5];
+        if (hasValidDueDate && due) {
+          const daysSinceDue = Math.floor((today.getTime() - due.getTime()) / 86400000);
+          bucket = daysSinceDue <= 0
+            ? buckets[0]
+            : daysSinceDue <= 30
+              ? buckets[1]
+              : daysSinceDue <= 60
+                ? buckets[2]
+                : daysSinceDue <= 90
+                  ? buckets[3]
+                  : buckets[4];
+        }
+        bucket.amount += balance;
+        bucket.count += 1;
+      });
 
     const total = buckets.reduce((sum, bucket) => sum + bucket.amount, 0);
     return buckets.map((bucket) => ({
@@ -2154,6 +2170,13 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       percent: total > 0 ? Math.round((bucket.amount / total) * 1000) / 10 : 0
     }));
   }, [currencyInvoices]);
+
+  const receivableAgingTotals = agingBuckets.reduce((totals, bucket) => ({
+    balance: totals.balance + bucket.amount,
+    count: totals.count + bucket.count,
+    overdueBalance: totals.overdueBalance + (bucket.tone === 'warning' || bucket.tone === 'danger' ? bucket.amount : 0),
+    overdueCount: totals.overdueCount + (bucket.tone === 'warning' || bucket.tone === 'danger' ? bucket.count : 0)
+  }), { balance: 0, count: 0, overdueBalance: 0, overdueCount: 0 });
 
   const overdueBalance = useMemo(
     () => currencyInvoices
@@ -2788,14 +2811,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     );
   }
 
-  const invoiceSummary = embeddedReceivablesOnly ? (
-            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-              <FinanceMetricCard label="Outstanding receivables" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context="Open invoice balances" icon={<WalletCards size={15}/>} toneClassName="text-warning"/>
-              <FinanceMetricCard label="Overdue balance" value={formatFinanceCardAmount(overdueBalance,currency)} context="Past-due invoice balances" icon={<Hourglass size={15}/>} toneClassName="text-danger"/>
-              <FinanceMetricCard label="Open invoices" value={pendingInvoiceCount} context="Issued and not fully paid" icon={<Receipt size={15}/>} />
-              <FinanceMetricCard label="Overdue invoices" value={criticalOverdueCount} context="Require collection follow-up" icon={<AlertCircle size={15}/>} toneClassName="text-danger"/>
-            </section>
-          ) : (
+  const invoiceSummary = embeddedReceivablesOnly ? null : (
             <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} sparkline={financeChartData.map((point) => point.outflow)} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
           );
 
@@ -3401,6 +3417,95 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 })}
 </tbody></table>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></section>
 {embedded && invoiceSummary}
+
+{embeddedReceivablesOnly && (
+  <section
+    className="overflow-hidden rounded-card border border-line bg-panel"
+    data-ams-feature-slug="finance-receivables-aging"
+    data-ams-slug="finance-receivables-aging"
+    aria-labelledby="finance-receivables-aging-title"
+  >
+    <header className="space-y-4 border-b border-line p-4 sm:px-5">
+      <div>
+        <h2 id="finance-receivables-aging-title" className="text-sm font-semibold text-fg">Receivables aging</h2>
+        <p className="mt-1 text-xs leading-5 text-muted">
+          Current outstanding issued invoices grouped by due date. Current includes items due today or later. Draft and cancelled invoices are excluded. Values follow the selected {currency} currency and are independent of the register search and due-date filters.
+        </p>
+      </div>
+      <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="min-w-0 border-l-2 border-warning pl-3">
+          <dt className="text-[10px] text-muted">Open balance</dt>
+          <dd className="mt-1 break-words text-sm font-semibold tabular-nums text-fg">{formatFinanceCardAmount(receivableAgingTotals.balance, currency)}</dd>
+        </div>
+        <div className="min-w-0 border-l-2 border-danger pl-3">
+          <dt className="text-[10px] text-muted">Past due balance</dt>
+          <dd className="mt-1 break-words text-sm font-semibold tabular-nums text-fg">{formatFinanceCardAmount(receivableAgingTotals.overdueBalance, currency)}</dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-[10px] text-muted">Open invoices</dt>
+          <dd className="mt-1 text-sm font-semibold tabular-nums text-fg">{receivableAgingTotals.count}</dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-[10px] text-muted">Past-due invoices</dt>
+          <dd className="mt-1 text-sm font-semibold tabular-nums text-fg">{receivableAgingTotals.overdueCount}</dd>
+        </div>
+      </dl>
+    </header>
+    {invoiceSourceBlocked ? (
+      <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between" role="status">
+        <div>
+          <p className="text-sm font-medium text-fg">{invoiceSourceUnavailable ? 'Receivables aging unavailable' : 'Refreshing receivables aging'}</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{invoiceSourceUnavailable ? 'The invoice source could not be loaded. Retry before relying on a zero balance.' : 'The aging summary will update after invoice source refresh finishes.'}</p>
+        </div>
+        <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-9 min-h-9'}><RefreshCw size={14}/>Retry invoice source</button>
+      </div>
+    ) : receivableAgingTotals.count > 0 ? (
+      <div className="overflow-x-auto">
+        <table className="ams-finance-table w-full border-separate border-spacing-0 text-xs">
+          <thead>
+            <tr>
+              <th>Age range</th>
+              <th className="text-right">Open invoices</th>
+              <th className="text-right">Outstanding balance</th>
+              <th className="text-right">Share of open balance</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {agingBuckets.map((bucket) => {
+              const barTone = bucket.tone === 'danger'
+                ? 'bg-danger'
+                : bucket.tone === 'warning'
+                  ? 'bg-warning'
+                  : bucket.tone === 'success'
+                    ? 'bg-success'
+                    : 'bg-muted';
+              return (
+                <tr key={bucket.key}>
+                  <td className="px-4 py-3 font-medium text-fg">{bucket.label}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted">{bucket.count}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-fg">{formatFinanceCardAmount(bucket.amount, currency)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted">
+                    <div className="flex min-w-[112px] flex-col items-end gap-1">
+                      <span>{bucket.percent.toFixed(1)}%</span>
+                      <span className="h-1.5 w-20 overflow-hidden rounded-full bg-line" aria-hidden="true">
+                        <span className={'block h-full rounded-full ' + barTone} style={{ width: Math.min(100, Math.max(0, bucket.percent)) + '%' }} />
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div className="p-5" role="status">
+        <p className="text-sm font-medium text-fg">No open receivable balances</p>
+        <p className="mt-1 text-xs leading-5 text-muted">No issued invoice with an outstanding balance was returned for {currency}.</p>
+      </div>
+    )}
+  </section>
+)}
 
 {embedded && !embeddedReceivablesOnly && (
   <section className="space-y-4 rounded-card border border-line bg-panel p-4 sm:p-5" data-ams-feature-slug="finance-revenue-tax-retainer" data-ams-slug="finance-revenue-tax-retainer">
