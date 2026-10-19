@@ -480,3 +480,8 @@ The first correction commit `b6abb278d95587bc46326facb6294ee6be7271da` updated t
 ## Finance navigation follow-up — worksheet visibility collision (19 October 2026)
 
 The prior Quotations-only adjustment was not a complete navigation fix. The worksheet filter suppressed **Executive Summary** because its destination intentionally duplicates the primary Finance navigation destination (/admin/finance?tab=executive-summary). Removed the unrelated sidebar-destination exclusion from worksheet visibility; role-based route checks remain. Renamed the in-page row to **Finance worksheets** to distinguish it from the five Finance group tabs. Added route-order/active-state and visibility regression assertions. This is a frontend navigation-only change; validate the new commit through both CI workflows before calling the source fix complete. Browser authentication, visual review, and deployed-site verification remain outstanding.
+
+
+## Finance worksheet active-state color correction (19 October 2026)
+
+The Finance worksheet row had `variant="secondary"`, which intentionally rendered the selected worksheet with neutral panel styling. This did not follow the AMS design system's primary contextual-tab active state. Switched the Finance worksheet tabs to the shared `AdminSectionTabs` `primary` variant. The selected worksheet now uses the standard crimson accent tint (`bg-accent/10`) and crimson-accent border (`border-accent/20`), while keeping readable foreground text, keyboard focus treatment, URL-driven active state, and shared component geometry. Regression checks now require the primary variant and verify that its selected style is tied to the shared accent token. No backend, API, authorization, database, or financial logic changed.

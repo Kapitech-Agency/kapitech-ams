@@ -28,7 +28,10 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(subnavigation, /finance-workspace-receivables-payables/);
   assert.match(subnavigation, /finance-workspace-project-finance/);
   assert.match(subnavigation, /finance-workspace-accounting-reports/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1"/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 lg:flex-1" variant="primary"/);
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  assert.ok(primitives.includes("'border-accent/20 bg-accent/10 font-semibold text-fg'"),
+    'The primary worksheet active state must use the shared crimson accent tint and border.');
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
   assert.match(workspace, /const sheetItems = \[[\s\S]{0,260}key: 'quotations'[\s\S]{0,260}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);

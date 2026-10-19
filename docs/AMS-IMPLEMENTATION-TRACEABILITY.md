@@ -585,3 +585,11 @@ The first correction commit `b6abb278d95587bc46326facb6294ee6be7271da` updated t
 **Root cause:** The worksheet visibility helper compared each worksheet destination against primary sidebar destinations and hid a worksheet whenever the URLs matched. Finance's primary destination intentionally opens Executive Summary, so that same rule removed Executive Summary from Overview & Control's worksheet row. The previous Quotations ordering fix did not address this collision, which explains why the navigation still appeared incomplete.  
 **Correction:** Worksheet visibility now checks route permission only. A URL shared with the parent module is not grounds to hide a worksheet. The worksheet navigation is explicitly labelled **Finance worksheets**, while the persistent five-area navigation remains the group-level navigation. Quotation remains first under Receivables & Payables. Regression tests now cover all five group destinations, active state, the worksheet visibility rule, permissions and Quotation ordering.  
 **Boundaries:** No server/API/database/auth/RBAC/finance calculation or posting logic changed. Verify the resulting commit with both AMS CI and AMS Quality Gate; authenticated browser checks and production deployment verification remain separate gates.
+
+
+### FINANCE-NAV-ACTIVE-STATE-001: Worksheet active-state color
+
+**Status:** SOURCE_FIX_COMMITTED; CI validation pending.  
+**Finding:** Finance worksheet tabs explicitly used `variant="secondary"`, so the active worksheet looked neutral instead of using the approved crimson active-navigation treatment.  
+**Correction:** Use the existing shared `AdminSectionTabs` `primary` variant for the worksheet row. Its active state uses `border-accent/20 bg-accent/10`, following the color-token rules in `AMS-DESIGN-SYSTEM.md`. This avoids page-specific CSS or a new color token. Automated tests assert the worksheet variant and the shared accent styling.  
+**Boundaries:** No backend/API/database/auth/RBAC/finance calculation or posting logic changed. Check AMS Quality Gate and AMS CI before calling it validated; authenticated browser review is still needed for visual confirmation.
