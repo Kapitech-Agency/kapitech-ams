@@ -76,6 +76,10 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   const app = await read('src/App.tsx');
   assert.match(inbox, /featureSlug="inbox-module"/);
   assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
+  assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
+  assert.match(inbox, /loading \? 'border-info\/20 bg-info\/10 text-info' : loadError \? 'border-warning\/20 bg-warning\/10 text-warning' : 'border-success\/20 bg-success\/10 text-success'/);
+  assert.match(inbox, /language === 'id' \? 'Memperbarui' : 'Refreshing'/);
+  assert.match(inbox, /language === 'id' \? 'Memuat' : 'Loading'/);
   assert.match(inbox, /const \[loadError, setLoadError\] = useState<string \| null>\(null\)/);
   assert.match(inbox, /Inbox data unavailable/);
   assert.match(inbox, /The last successfully loaded records remain visible/);

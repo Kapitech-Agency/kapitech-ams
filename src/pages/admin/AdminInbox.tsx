@@ -807,9 +807,9 @@ export const AdminInbox: React.FC = () => {
           footer={(
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-[10px] text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Jumlah record belum tersedia.' : 'Inbound record count unavailable.') : filteredItems.length + ' matching inbound records · updates automatically every 30 seconds.'}</p>
-              <span className={'inline-flex min-h-7 items-center gap-1.5 rounded-badge border px-2 text-[10px] font-medium ' + (loadError ? 'border-warning/20 bg-warning/10 text-warning' : 'border-success/20 bg-success/10 text-success')}>
-                <span className={'h-1.5 w-1.5 rounded-full ' + (loadError ? 'bg-warning' : 'bg-success')} />
-                {loadError ? (submissions.length > 0 ? (language === 'id' ? 'Data lama' : 'Stale') : (language === 'id' ? 'Tidak tersedia' : 'Unavailable')) : 'Live'}
+              <span className={'inline-flex min-h-7 items-center gap-1.5 rounded-badge border px-2 text-[10px] font-medium ' + (loading ? 'border-info/20 bg-info/10 text-info' : loadError ? 'border-warning/20 bg-warning/10 text-warning' : 'border-success/20 bg-success/10 text-success')}>
+                <span className={'h-1.5 w-1.5 rounded-full ' + (loading ? 'bg-info' : loadError ? 'bg-warning' : 'bg-success')} />
+                {loading ? (submissions.length > 0 ? (language === 'id' ? 'Memperbarui' : 'Refreshing') : (language === 'id' ? 'Memuat' : 'Loading')) : loadError ? (submissions.length > 0 ? (language === 'id' ? 'Data lama' : 'Stale') : (language === 'id' ? 'Tidak tersedia' : 'Unavailable')) : 'Live'}
               </span>
             </div>
           )}
@@ -911,6 +911,7 @@ export const AdminInbox: React.FC = () => {
                   <button
                     key={scope.key}
                     type="button"
+                    aria-pressed={triageScope === scope.key}
                     onClick={() => {
                       setTriageScope(scope.key);
                       setSelectedSubmission(null);
