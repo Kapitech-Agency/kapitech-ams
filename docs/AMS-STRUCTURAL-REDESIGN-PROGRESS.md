@@ -505,7 +505,7 @@ The Finance worksheet row had `variant="secondary"`, which intentionally rendere
 - Projects Overview is source/test verified on descendant `eac230c51703535dc4bcfe7e051b0d3d57839b61`; CI [39204437062](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39204437062), Quality Gate [39204436950](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39204436950) passed. One stale regression assertion was corrected to match the three-metric support strip after removing the duplicated Delivery exceptions KPI.
 - Breadcrumb audit: current `src/App.tsx` routes are static workspace routes/redirects; project and client records open as context-preserving modal/drawer details. No global breadcrumb was added because there is no current eligible full-page detail route. Re-audit when such a route is introduced.
 - No local command test/build is claimed; changes were delivered via repository API and validated by GitHub Actions. No authenticated post-login production screenshot/keyboard/viewport audit has been performed. Stage 5 user sign-off remains a mandatory gate.
-- Clients Directory/Onboarding source slices are now verified through 6c42b94fb3db56304015772025fa234564bea716; next Stage 4 work is Clients Agreements and Service & Health, then the remaining module worksheets. Preserve the canonical client identity and permissions, and do not activate unsupported onboarding/SLA subrecords.
+- Clients Directory/Onboarding source slices are verified through `6c42b94fb3db56304015772025fa234564bea716`. Current slice: Clients Agreements → Renewal Schedule, followed by Service & Health. Preserve canonical client identity and permissions; do not activate unsupported onboarding/SLA subrecords.
 
 
 ## Stage 4 Clients Directory and Onboarding checkpoint — 19 October 2026
@@ -516,3 +516,27 @@ The Finance worksheet row had `variant="secondary"`, which intentionally rendere
 - Contextual record creation from Onboarding defaults the status to Lead and updates labels to Add/Create Lead. Export receives an Onboarding-specific label and filename. The detail drawer persistent footer remains the single Log interaction action.
 - Client filter controls and responsive/source regression checks passed CI [39206483169](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39206483169) and Quality Gate [39206483182](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39206483182) on 3e1897df6c60aa3ae6e2fbe348b13534efa93cc1. Contextual Onboarding actions and duplicate-action cleanup passed CI [39206734168](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39206734168) and Quality Gate [39206734181](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39206734181) on 6c42b94fb3db56304015772025fa234564bea716.
 - These are still partial Stage 4 slices. Agreements and Service & Health need their own source-by-source content review. Authenticated browser, role, keyboard and viewport acceptance remains Stage 5. No deployment or production visual result is claimed.
+
+
+## Stage 4 view design record — Clients · Agreements · Renewal Schedule
+
+**View ID:** `VIEW-CLIENTS-AGREEMENTS`, Renewal Schedule subsection.  
+**Status at commit creation:** Source and regression changes included in this checkpoint; verify the resulting exact SHA through AMS CI and AMS Quality Gate before calling this slice source/test verified.
+
+1. **Owner module and persona.** Clients → Agreements. Client-service/account owner is primary. Executives need an exception summary; PMs need renewal context when it affects delivery planning. Presentation does not change access.
+2. **Primary task.** Find the active agreement or retainer whose recorded renewal/end date needs review and open its canonical source.
+3. **Decision.** What is past date, due within 30 days, scheduled later, or missing a recorded date, and which source needs review?
+4. **Primary work surface.** Searchable, timing-filtered agreement list. A calendar is deferred until the source supports the accountable owner/action needed for planning.
+5. **Content order.** Page title and approved worksheet tabs; truthful partial-source notice with refresh; search and timing filter; canonical renewal register; ownership/data limitation note. Remove the pre-register KPI strip because its counts duplicate timing scopes and push the list down.
+6. **Fields and semantics.** Agreement/retainer title, source type, client identity, stored renewal date or end date, lifecycle state, existing amount string and source-register link. Contract renewal date takes precedence over end date. Missing date stays distinct from unavailable source. Partial source coverage is never presented as a full total.
+7. **Controls.** Search agreement title, client, source type and lifecycle label. Timing filter: all, past date, due in 30 days, scheduled, date not recorded. Clear filters resets only local schedule filters. Refresh uses the existing `load()` function.
+8. **Canonical ownership and breadcrumb.** Contracts link to `/admin/contracts`; retainers link to `/admin/clients/retainers`. These are source registers, not record-detail routes. Do not add breadcrumbs to this worksheet.
+9. **Role-aware presentation.** Preserve current route and server policy. The schedule is informational and does not add/imply edit or lifecycle-transition permission. Do not introduce new Finance/contract actions.
+10. **States and recovery.** Loading skeleton; partial-source notice with retry; verified no-record state; filtered-empty state with Clear filters; honest source-coverage count; no inferred success or automatic expiration.
+11. **Responsive behavior.** Search expands on wide layouts and stacks/wraps with timing control on narrow layouts. Record identity/date/status stay together. Validate against the Design System viewport matrix in Stage 5.
+12. **Accessibility.** Labeled search and select, keyboard-operable controls, explicit filter group label, live result/source count, visible clear/retry actions, and non-color timing labels.
+13. **Regression and runtime evidence.** Source regression asserts search/filter order before the primary register, no duplicate KPI strip, filtered-empty messaging, partial-source retry and the owner/action limitation. Run typecheck, configured tests/build and CI on the exact commit. Authenticated browser and visual screenshots remain Stage 5 evidence.
+14. **Dependencies.** Current contract/retainer source shapes do not expose accountable owner or next-action fields. Contract History is currently unavailable; canonical historical-event semantics are unverified. Track under `SUB-CLIENTS-CONTRACT-HISTORY`; never infer history from `updatedAt`.
+15. **Acceptance.** Users can search/filter canonical records before the primary register, clear filters, retry partial-source loading, distinguish true empty from filtered-empty/unavailable, and reach source registers. Keep the workspace partially complete until CI/Stage 5 and canonical dependency gaps are addressed.
+
+**Next Stage 4 slice:** Clients → Service & Health. Keep SLA telemetry explicitly unavailable and Service Issues, Client Health, and Service History disabled until their canonical sources and rules are verified.

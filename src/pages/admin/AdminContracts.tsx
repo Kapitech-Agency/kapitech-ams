@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -61,6 +61,8 @@ type RenewalScheduleRow = {
   amount: string;
   href: string;
 };
+
+type RenewalTimingFilter = 'all' | 'past-date' | 'due-soon' | 'scheduled' | 'date-not-recorded';
 
 type ContractForm = {
   title: string;
@@ -123,6 +125,12 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 const isDatePast = (value?: string) => Boolean(value && value < todayIso());
 const isIsoDateValue = (value?: string): value is string =>
   Boolean(value && /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value) && !Number.isNaN(new Date(value + 'T00:00:00').getTime()));
+const getRenewalTimingKey = (date: string, today: string, nextThirtyDays: string): Exclude<RenewalTimingFilter, 'all'> => {
+  if (!date) return 'date-not-recorded';
+  if (date < today) return 'past-date';
+  if (date <= nextThirtyDays) return 'due-soon';
+  return 'scheduled';
+};
 const formatDate = (value?: string) => {
   if (!value) return 'Not set';
   const date = new Date(value + 'T00:00:00');
@@ -168,6 +176,8 @@ export const AdminContracts: React.FC = () => {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [query, setQuery] = useState('');
+  const [renewalQuery, setRenewalQuery] = useState('');
+  const [renewalTimingFilter, setRenewalTimingFilter] = useState<RenewalTimingFilter>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | ContractStatus>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -265,10 +275,17 @@ export const AdminContracts: React.FC = () => {
       || left.clientName.localeCompare(right.clientName, undefined, { sensitivity: 'base' })
     );
   }, [contracts, clients]);
+  const filteredRenewalScheduleRows = useMemo(() => {
+    const normalizedQuery = renewalQuery.trim().toLocaleLowerCase();
+    return renewalScheduleRows.filter((row) => {
+      const matchesQuery = !normalizedQuery || [row.title, row.clientName, row.source, row.status]
+        .some((value) => value.toLocaleLowerCase().includes(normalizedQuery));
+      const matchesTiming = renewalTimingFilter === 'all'
+        || getRenewalTimingKey(row.date, today, nextThirtyDays) === renewalTimingFilter;
+      return matchesQuery && matchesTiming;
+    });
+  }, [renewalScheduleRows, renewalQuery, renewalTimingFilter, today, nextThirtyDays]);
   const renewalScheduleSourcesComplete = contractsSourceAvailable && clientsSourceAvailable;
-  const renewalsDueSoon = renewalScheduleRows.filter((row) => row.date && row.date >= today && row.date <= nextThirtyDays).length;
-  const renewalsPastDate = renewalScheduleRows.filter((row) => row.date && row.date < today).length;
-  const renewalsWithoutDate = renewalScheduleRows.filter((row) => !row.date).length;
 
   const openCreate = () => {
     setEditing(null);
@@ -438,42 +455,62 @@ export const AdminContracts: React.FC = () => {
 
       {isRenewalSchedule ? (
         <div className="space-y-4" data-ams-feature-slug="client-renewal-schedule" data-ams-slug="client-renewal-schedule">
-          <AdminMetricStrip
-            slug="client-renewal-schedule-kpis"
-            metrics={[
-              { id: 'agreements', label: 'Active agreements', value: loading || !renewalScheduleSourcesComplete ? '—' : renewalScheduleRows.length, context: 'Contracts and active retainers with stored terms', icon: <FileText size={15} /> },
-              { id: 'due-soon', label: 'Due in 30 days', value: loading || !renewalScheduleSourcesComplete ? '—' : renewalsDueSoon, context: 'Recorded renewal or end dates', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' },
-              { id: 'past-date', label: 'Past dates', value: loading || !renewalScheduleSourcesComplete ? '—' : renewalsPastDate, context: 'Records needing lifecycle review', icon: <ShieldAlert size={15} />, toneClassName: 'text-danger' },
-              { id: 'missing-date', label: 'Dates not recorded', value: loading || !renewalScheduleSourcesComplete ? '—' : renewalsWithoutDate, context: 'Active records without a usable date', icon: <CalendarDays size={15} /> },
-            ]}
-          />
           {!loading && !renewalScheduleSourcesComplete && (
-            <div className="rounded-control border border-warning/25 bg-warning/5 px-3 py-3 text-xs leading-5 text-muted" role="status">
-              Renewal data is incomplete. {!contractsSourceAvailable ? 'The contract source is unavailable. ' : ''}{!clientsSourceAvailable ? 'The client retainer source is unavailable. ' : ''}Rows from available sources may still appear, but totals are withheld until both sources load.
+            <div className="flex flex-col gap-3 rounded-control border border-warning/25 bg-warning/5 px-3 py-3 text-xs leading-5 text-muted sm:flex-row sm:items-center sm:justify-between">
+              <p role="status">Renewal data is incomplete. {!contractsSourceAvailable ? 'The contract source is unavailable. ' : ''}{!clientsSourceAvailable ? 'The client retainer source is unavailable. ' : ''}Rows from available sources may still appear, but summary totals remain withheld until both sources load.</p>
+              <Button type="button" variant="secondary" onClick={() => void load()} disabled={loading} icon={<RefreshCw size={13} />} className="shrink-0">Refresh sources</Button>
             </div>
           )}
+          <div data-ams-feature-slug="renewal-schedule-filters" data-ams-slug="renewal-schedule-filters" className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <label className="relative block min-w-0 flex-1">
+              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
+              <input type="search" aria-label="Search renewal agreements" value={renewalQuery} onChange={(event) => setRenewalQuery(event.target.value)} placeholder="Search agreement, client, or source…" className="ams-control w-full pl-9" />
+            </label>
+            <div role="group" aria-label="Renewal schedule filters" className="flex min-w-0 flex-wrap items-center gap-2">
+              <CustomSelect
+                value={renewalTimingFilter}
+                onChange={(value) => setRenewalTimingFilter(value as RenewalTimingFilter)}
+                options={[
+                  { value: 'all', label: 'All timing' },
+                  { value: 'past-date', label: 'Past date' },
+                  { value: 'due-soon', label: 'Due in 30 days' },
+                  { value: 'scheduled', label: 'Scheduled' },
+                  { value: 'date-not-recorded', label: 'Date not recorded' }
+                ]}
+                aria-label="Filter renewals by timing"
+                className="min-w-[170px]"
+                triggerClassName="w-full min-w-[170px]"
+                slug="renewal-timing-filter"
+              />
+              {(renewalQuery.trim() || renewalTimingFilter !== 'all') && (
+                <Button type="button" variant="secondary" onClick={() => { setRenewalQuery(''); setRenewalTimingFilter('all'); }}>Clear filters</Button>
+              )}
+            </div>
+          </div>
           <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="Renewal schedule records">
             <div className="flex flex-col gap-2 border-b border-line p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
               <div>
                 <h2 className="text-sm font-semibold text-fg">Renewal and end-date schedule</h2>
                 <p className="mt-1 text-[11px] leading-5 text-muted">The schedule reads active contracts and saved active retainer terms. It does not create or transition agreement records.</p>
               </div>
-              <span className="text-[10px] text-muted">{loading ? 'Loading sources' : renewalScheduleSourcesComplete ? renewalScheduleRows.length + ' records' : 'Partial source coverage'}</span>
+              <span aria-live="polite" className="text-[10px] text-muted">{loading ? 'Loading sources' : renewalScheduleSourcesComplete ? (filteredRenewalScheduleRows.length === renewalScheduleRows.length ? renewalScheduleRows.length + ' records' : filteredRenewalScheduleRows.length + ' of ' + renewalScheduleRows.length + ' records') : 'Partial source coverage · ' + filteredRenewalScheduleRows.length + ' available'}</span>
             </div>
             {loading ? (
               <div className="space-y-2 p-4" role="status" aria-label="Loading renewal schedule">
                 {[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
               </div>
-            ) : renewalScheduleRows.length === 0 ? (
+            ) : filteredRenewalScheduleRows.length === 0 ? (
               <div className="p-6 text-center" role="status">
                 <CalendarDays size={19} className="mx-auto text-muted" aria-hidden="true" />
-                <p className="mt-3 text-sm font-medium text-fg">{renewalScheduleSourcesComplete ? 'No active agreements have renewal or end-date records.' : 'Renewal schedule cannot be fully verified.'}</p>
-                <p className="mt-1 text-xs leading-5 text-muted">{renewalScheduleSourcesComplete ? 'Add dates to the canonical contract or retainer records to include them in this schedule.' : 'Refresh after both contract and client record sources are available. The page will not treat unavailable data as zero renewals.'}</p>
+                <p className="mt-3 text-sm font-medium text-fg">{renewalScheduleRows.length > 0 ? 'No matching renewal records.' : renewalScheduleSourcesComplete ? 'No active agreements have renewal or end-date records.' : 'Renewal schedule cannot be fully verified.'}</p>
+                <p className="mt-1 text-xs leading-5 text-muted">{renewalScheduleRows.length > 0 ? 'Clear the search or choose another timing filter.' : renewalScheduleSourcesComplete ? 'Add dates to the canonical contract or retainer records to include them in this schedule.' : 'Refresh after both contract and client record sources are available. The page will not treat unavailable data as zero renewals.'}</p>
+                {renewalScheduleRows.length > 0 && <Button type="button" variant="secondary" className="mt-4" onClick={() => { setRenewalQuery(''); setRenewalTimingFilter('all'); }}>Clear filters</Button>}
               </div>
             ) : (
               <div className="divide-y divide-line">
-                {renewalScheduleRows.map((row) => {
-                  const timing = !row.date ? 'Date not set' : row.date < today ? 'Past date' : row.date <= nextThirtyDays ? 'Due in 30 days' : 'Scheduled';
+                {filteredRenewalScheduleRows.map((row) => {
+                  const timingKey = getRenewalTimingKey(row.date, today, nextThirtyDays);
+                  const timing = timingKey === 'past-date' ? 'Past date' : timingKey === 'due-soon' ? 'Due in 30 days' : timingKey === 'scheduled' ? 'Scheduled' : 'Date not recorded';
                   const tone = timing === 'Past date' ? 'border-danger/25 bg-danger/10 text-danger' : timing === 'Due in 30 days' ? 'border-warning/25 bg-warning/10 text-warning' : 'border-line bg-bg text-muted';
                   return (
                     <article key={row.id} data-ams-slug={'renewal-schedule-' + row.id.replace(/[^a-zA-Z0-9-]+/g, '-')} className="grid min-w-0 gap-3 p-3 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(110px,0.55fr)_minmax(110px,0.45fr)] sm:items-center sm:gap-4 sm:p-4">
@@ -501,7 +538,7 @@ export const AdminContracts: React.FC = () => {
             )}
           </section>
           <div className="rounded-card border border-line bg-panel px-4 py-3 text-[11px] leading-5 text-muted">
-            Dates are taken from active agreement records only. Retainer hours and billing eligibility are not recalculated here. Past-dated active records need a human lifecycle review; the schedule does not mark contracts as expired automatically.
+            The current contract and retainer sources do not expose an accountable owner or next-action field. Open the source register to verify ownership before follow-up. Dates come from active agreement records only. Retainer hours and billing eligibility are not recalculated here. Past-dated active records need a human lifecycle review; the schedule does not mark contracts as expired automatically.
           </div>
         </div>
       ) : (

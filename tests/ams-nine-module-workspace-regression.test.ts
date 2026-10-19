@@ -363,6 +363,23 @@ test('Client Agreements Renewal Schedule uses canonical active contract and reta
   assert.doesNotMatch(retainers, /label: 'Renewal Schedule'.*available: false/);
 });
 
+test('Client Renewal Schedule prioritizes a searchable deadline register and reports source gaps', async () => {
+  const contracts = await read('src/pages/admin/AdminContracts.tsx');
+  const start = contracts.indexOf('data-ams-feature-slug="client-renewal-schedule"');
+  const end = contracts.indexOf(') : (', start);
+  assert.ok(start >= 0 && end > start, 'renewal schedule branch must be identifiable');
+  const renewal = contracts.slice(start, end);
+  const search = renewal.indexOf('aria-label="Search renewal agreements"');
+  const timingFilter = renewal.indexOf('slug="renewal-timing-filter"');
+  const register = renewal.indexOf('aria-label="Renewal schedule records"');
+  assert.ok(search >= 0 && timingFilter > search && register > timingFilter, 'search and timing filters must precede the primary register');
+  assert.doesNotMatch(renewal, /client-renewal-schedule-kpis/, 'remove KPI cards that duplicate queue timing filters');
+  assert.match(renewal, /No matching renewal records/);
+  assert.match(renewal, /Refresh sources/);
+  assert.match(renewal, /The current contract and retainer sources do not expose an accountable owner or next-action field/);
+  assert.match(contracts, /getRenewalTimingKey/);
+});
+
 test('Client Onboarding has a distinct header when the onboarding scope is selected', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   assert.match(clients, /eyebrow=\{statusScope === 'lead' \? 'Onboarding workspace' : 'Client directory'\}/);
