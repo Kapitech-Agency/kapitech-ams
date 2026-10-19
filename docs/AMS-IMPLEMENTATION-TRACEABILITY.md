@@ -664,3 +664,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 **Source:** src/pages/admin/AdminFinanceWorkspace.tsx, Accounts Payable worksheet. The canonical bill register remains the primary work surface, and the installment schedule uses saved bill terms and linked vendor-bill-payment records. The two-metric strip for total bills and IDR-only outstanding is moved below both tables so it does not interrupt the register-to-payment-schedule flow. Foreign-currency bills remain disclosed separately. No source formula, payment behavior or authorization changes.
 
 **Tests:** tests/finance-ui-consistency.test.ts asserts bill register → payment schedule → summary order while preserving compact card ownership and contract-linked payment distinction. Confirm both AMS workflows on this exact commit; responsive/keyboard browser evidence remains Stage 5.
+
+
+### FIN-CASH-PETTY-RECON-001: Petty Cash hands off to canonical reconciliation
+
+**Source:** src/pages/admin/AdminFinanceWorkspace.tsx, Petty Cash worksheet. Ledger remains primary; a clear handoff points to /admin/finance?tab=cash-bank, where Cash & Bank owns statement/cash-count reconciliation evidence for account 1100. No duplicate reconciliation record, formula, permission or payment behavior was added.
+
+**Tests:** tests/finance-ui-consistency.test.ts asserts handoff placement after the ledger, intended destination and absence of a second cash-reconciliation writer inside Petty Cash. Exact-SHA CI and Quality Gate plus Stage 5 browser/period verification remain required.

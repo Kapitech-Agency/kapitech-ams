@@ -2607,6 +2607,12 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             </WorkbookNote>
             
             <FinanceDataTable title="Petty Cash Ledger" description="Voucher movements and internal cash transfers, sorted by date." columns={[{label:'Date'},{label:'Voucher / reference'},{label:'Description'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'},{label:'Status'},{label:'Actions'}]} rows={rows} emptyMessage="No petty-cash vouchers or transfers are recorded." actions={<div className="flex flex-wrap gap-2">{registerAddButton('petty-cash-voucher','Add voucher')}{canManageFinanceRecords && <><Button variant="secondary" type="button" onClick={()=>openRegisterForm('cash-bank-transaction',undefined,{transactionKind:'bank-to-petty-cash',accountCode:'1000',counterpartAccountCode:'1100',direction:'out',description:'Petty cash top-up'})}>Top up from bank</Button><Button variant="secondary" type="button" onClick={()=>openCashOpeningForm('1100')}>{opening===null?'Set opening balance':'Edit opening balance'}</Button></>}</div>}/>
+            <WorkbookNote tone="info" title="Reconciliation evidence is managed in Cash & Bank">
+              A petty-cash opening balance or posted voucher does not prove the physical cash count was reconciled. Review the canonical account 1100 reconciliation record and record its count date and evidence in the Statement reconciliation workspace.
+              <div className="mt-3">
+                <Button type="button" variant="secondary" onClick={() => navigate('/admin/finance?tab=cash-bank')}>Open Cash &amp; Bank reconciliation</Button>
+              </div>
+            </WorkbookNote>
             <AdminMetricStrip metrics={[
               {id:'petty-opening',label:'Opening balance',value:opening===null?'Not set':formatMoney(opening),context:'Account 1100 · Petty Cash Reserve',icon:<WalletCards size={15}/>},
               {id:'petty-in',label:'Posted cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Posted movements in selected period' : 'Posted voucher receipts',icon:<ArrowDown size={15}/>},

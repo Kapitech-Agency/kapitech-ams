@@ -637,3 +637,27 @@ On `b93f08e595831489bd85b15d9107303b9fa06730`, both AMS workflows failed on four
 15. **Acceptance.** The main bill queue and linked payment schedule are available in sequence without KPI interruption; only then does the page show the narrow IDR summary. Keep AR/AP partially complete until remaining payment lifecycle/source recovery checks and Stage 5 review pass.
 
 **Next Stage 4 slice:** Finance → Transactions & Cash. Audit Cash & Bank, Revenue, Expenses and Petty Cash individually against source ownership, reconciliation state and primary working surface.
+
+
+## Stage 4 view design record — Finance · Transactions & Cash · Petty Cash
+
+**View ID:** VIEW-FIN-CASH, Petty Cash worksheet.
+**Implementation status:** Ledger and posted-voucher logic existed. This slice adds a clear route to authoritative reconciliation evidence. Verify the resulting exact SHA through both workflows before calling source/test verification complete.
+
+1. **Owner/persona.** Finance → Transactions & Cash → Petty Cash. Finance operators issue/track vouchers and review balance; authorized users retain existing voucher/top-up actions.
+2. **Primary task.** Review petty-cash movements and voucher state, then reconcile physical cash against recorded evidence.
+3. **Decision.** What is posted and affects roll-forward, what remains pending, and where is physical-count evidence recorded?
+4. **Primary surface.** Petty Cash Ledger. Canonical statement/cash-count reconciliation remains in Cash & Bank, which owns statement evidence for account 1100.
+5. **Content order.** Opening-balance/status note; ledger; reconciliation handoff with a real route into Cash & Bank; period-aware posted-movement KPI strip. The handoff appears before supporting metrics because it is the missing control action for this worksheet.
+6. **Fields and semantics.** Ledger reads posted voucher records and internal cash transfers. Pending/approved vouchers remain visible but do not affect the running balance. Existing opening date determines roll-forward inclusion. No new balance formula is introduced.
+7. **Controls.** Voucher/top-up/opening controls remain unchanged. The button navigates to /admin/finance?tab=cash-bank; users manage evidence within existing Cash & Bank controls and authorization.
+8. **Canonical ownership/breadcrumb.** Voucher records stay under Petty Cash; internal transfers stay shared with Cash & Bank; cash-reconciliation records exist only in Cash & Bank. No duplicate reconciliation table, no new record, no breadcrumb.
+9. **Role-aware display.** Existing canManageFinanceRecords and route visibility control writes. Handoff adds navigation only.
+10. **States/recovery.** Existing missing-opening-balance warning remains. Pending vouchers do not inflate balances. Handoff explicitly says opening balance or posted voucher does not prove physical cash was reconciled. Destination owns saved evidence and exception states.
+11. **Responsive behavior.** Handoff stacks below the ledger on narrow screens; secondary button follows existing control sizing. Verify 1100/900/600/390/320px in Stage 5.
+12. **Accessibility.** Semantic note title, native button and clear label. Keyboard/focus and route history require browser verification.
+13. **Regression tests.** Assert ledger → canonical reconciliation handoff → summary order, route, account 1100 note and no duplicate cash-reconciliation writer inside Petty Cash.
+14. **Dependencies.** Authoritative reconciliation/month context remains in Cash & Bank. Handoff does not duplicate status calculations; browser must verify intended tab and period.
+15. **Acceptance.** Petty Cash users can discover the official reconciliation workspace without misreading a local balance as reconciled. View remains partially complete until route, period and evidence states are browser-verified in Stage 5.
+
+**Next Stage 4 slice:** Finance → Accounting & Reports. Review Journal and Chart of Accounts first, then Monthly P&L, Cash Flow, Balance Sheet, Monthly Closing and Annual Summary against posted-only source rules.

@@ -713,8 +713,15 @@ test('Cash, petty cash, and payables put their working registers before supporti
   const pettyEnd = workspace.indexOf("case 'monthly-pnl':", pettyStart);
   const petty = workspace.slice(pettyStart, pettyEnd);
   assert.ok(pettyStart >= 0 && pettyEnd > pettyStart);
-  assert.ok(petty.indexOf('title="Petty Cash Ledger"') >= 0);
-  assert.ok(petty.indexOf('<AdminMetricStrip metrics={[') > petty.indexOf('title="Petty Cash Ledger"'));
+  const pettyRegister = petty.indexOf('title="Petty Cash Ledger"');
+  const pettyReconciliationHandoff = petty.indexOf('title="Reconciliation evidence is managed in Cash & Bank"');
+  const pettyMetrics = petty.indexOf('<AdminMetricStrip metrics={[');
+  assert.ok(pettyRegister >= 0 && pettyReconciliationHandoff > pettyRegister && pettyMetrics > pettyReconciliationHandoff,
+    'Petty Cash should present its canonical reconciliation handoff after the ledger and before supporting metrics.');
+  assert.match(petty, /navigate\('\/admin\/finance\?tab=cash-bank'\)/);
+  assert.match(petty, /account 1100 reconciliation record/);
+  assert.doesNotMatch(petty, /openRegisterForm\('cash-reconciliation'/,
+    'Petty Cash must not create a duplicate reconciliation workflow.');
 });
 
 
@@ -774,4 +781,19 @@ test('Accounts Receivable aging does not classify invalid due dates as current',
   assert.match(derivation, /bucket = buckets\[5\]/);
   assert.match(derivation, /const total = buckets\.reduce/);
   assert.match(derivation, /percent: total > 0 \? Math\.round\(\(bucket\.amount \/ total\) \* 1000\) \/ 10 : 0/);
+});
+
+
+test('Petty Cash delegates statement evidence to the canonical Cash & Bank reconciliation workspace', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("case 'petty-cash':");
+  const end = workspace.indexOf("case 'monthly-pnl':", start);
+  assert.ok(start >= 0 && end > start, 'Petty Cash worksheet should be available.');
+  const petty = workspace.slice(start, end);
+  const register = petty.indexOf('title="Petty Cash Ledger"');
+  const handoff = petty.indexOf('title="Reconciliation evidence is managed in Cash & Bank"');
+  assert.ok(register >= 0 && handoff > register);
+  assert.match(petty, /Open Cash &amp; Bank reconciliation/);
+  assert.match(petty, /A petty-cash opening balance or posted voucher does not prove the physical cash count was reconciled/);
+  assert.doesNotMatch(petty, /openRegisterForm\('cash-reconciliation'/);
 });
