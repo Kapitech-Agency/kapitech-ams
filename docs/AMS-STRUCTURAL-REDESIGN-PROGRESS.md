@@ -1045,3 +1045,8 @@ The first Quality Gate for `8e6f6dda44c70049f45237aad229b3a620fdf842` failed bec
 13. **Regression tests.** Assert the new saved-state wording and reject prior “published successfully to live site” claims.
 14. **Dependencies.** Actual public rendering remains a supported-environment/browser verification task; no API or public site changes are part of this slice.
 15. **Acceptance.** A CMS mutation is reported as a saved CMS state, and public visibility remains unverified until the public /work output is checked. The view remains partially complete pending Stage 5 review.
+
+
+### Case Studies publication-copy test correction — 19 October 2026
+
+Quality Gate and CI on `4542f6de4fbd114f5f7696c105709a660cbb4358` failed because `tests/frontend-functional-regression.test.ts` still required the former message "Case study published successfully to live site!". The source change deliberately avoids that unsupported claim and confirms only the saved CMS flag. The regression assertion now checks the revised message and rejects the old live-site claim while preserving assertions for legacy published records, draft defaults and the server-side public filter. Re-run both workflows on the corrective SHA.

@@ -789,3 +789,6 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** src/pages/admin/AdminCmsProjects.tsx. Successful save/toggle mutations now confirm that the CMS isPublished flag was saved and direct the editor to verify the public /work page. Messages no longer claim that a public page was independently confirmed visible or hidden. The underlying CMS API, stored field and public filter are unchanged.
 
 **Tests:** tests/ams-nine-module-workspace-regression.test.ts asserts saved-CMS-state wording and rejects the prior live-publication claim. Exact-SHA CI and Quality Gate plus public-render/browser checks remain required.
+
+
+**Case Studies publication-copy regression correction:** Quality Gate [39225942437](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39225942437) failed on an outdated assertion in `tests/frontend-functional-regression.test.ts` that required the old public-live success string. The assertion now expects CMS-state wording and explicitly rejects the old claim. Publication flags, draft defaults and public route filtering remain untouched; verify both workflows on the corrective SHA.

@@ -537,7 +537,8 @@ test('CMS case studies preserve legacy publication and new records default to dr
   assert.match(cmsProjects, /isPublished: project\.isPublished !== false/);
   assert.match(cmsProjects, /isPublished: false/);
   assert.match(cmsProjects, /Case study saved as a draft/);
-  assert.match(cmsProjects, /Case study published successfully to live site!/);
+  assert.match(cmsProjects, /CMS status saved as Published\. Verify the public \/work page to confirm visibility\./);
+  assert.doesNotMatch(cmsProjects, /Case study published successfully to live site!|Case study unpublished from the public site\./);
   assert.match(routes, /isPublished: item\.isPublished === true,[\s\S]{0,100}createdAt: now/);
   assert.equal((routes.match(/source\.filter\(\(item: any\) => item\.isPublished !== false\)/g) || []).length, 2);
 });
