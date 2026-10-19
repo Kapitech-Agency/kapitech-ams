@@ -751,3 +751,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. Project Finance tracks whether the core Projects source has succeeded. A valid successful empty response continues to mean no projects returned; a first-load error uses an unavailable empty state and a retry action; a later failure keeps last-known project rows visible but marks the source stale. No API or Finance calculations change.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts successful-source tracking, the real retry callback, stale vs initial-unavailable copy and the conditional empty-state message. `SUB-FIN-PROJECT-ALLOCATION-PERIOD` remains blocked because the canonical allocation editor does not define a period field.
+
+
+### FIN-PROJECT-ALLOCATION-PERIOD-001: Do not imply historical periods without a canonical allocation period
+
+**Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`, Project Allocation. Existing record definitions include project, contract value, vendor commitment, obligations, Team Fee total, allocation percentages and status, but no effective month/quarter. The existing policy note now states that this is the saved allocation per project, not a historical period snapshot. The selected reporting period does not create history.
+
+**Tests:** `tests/finance-ui-consistency.test.ts` asserts the user-facing limitation and rejects a fabricated effective-period filter. A canonical effective-date/history field remains a Stage 6 data-model dependency.

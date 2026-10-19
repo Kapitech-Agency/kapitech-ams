@@ -930,3 +930,25 @@ Implementation: remove silent fallback from an explicit resourcesProject URL. Ve
 15. **Acceptance.** Project Finance cannot represent a failed first-load as a genuinely empty project set. The view remains partially complete until Stage 5 source/recovery/role/browser checks pass and the Project Allocation period dependency is addressed at the appropriate data-model stage.
 
 **Next Stage 4 slice:** Complete the remaining active Finance Project Allocation and Team Fee review without inventing period history, then audit Team & Resources, Documents, Website CMS and Settings worksheets using the same source-state acceptance standard.
+
+
+## Stage 4 view design record — Finance · Project Finance · Project Allocation period semantics
+
+**View ID:** VIEW-FIN-PROJECT, Project Allocation subsection.
+**Status:** Period limitation is now visible in the existing policy note; canonical history remains blocked by the source model.
+
+1. **Owner/persona.** Finance → Project Finance → Project Allocation. Authorized finance operators review a project's saved allocation percentages and amounts.
+2. **Primary task.** Understand the saved current allocation and its policy basis without mistaking it for a period-based history report.
+3. **Decision.** What allocation record is currently saved for this project, how do its percentages relate to the default policy, and is a selected-period breakdown actually supported?
+4. **Primary surface.** Existing canonical Project Allocation register and saved percentages per record. No second register or fabricated history is added.
+5. **Content order.** Existing allocation policy note; explicit limitation about no effective period; saved allocations with per-record percentages; standard Team Reward distribution breakdown.
+6. **Fields and semantics.** Contract value, vendor commitment, other obligations, saved Team Fee total, saved petty-cash/emergency/reward percentages and status. Missing percentages remain “Share not recorded”; default splits apply to new records only.
+7. **Controls.** Existing finance reporting-period selector remains global for worksheets that support it. It does not filter Project Allocation because the canonical allocation record has no effective month/quarter. No new date picker is added.
+8. **Canonical ownership/breadcrumb.** Uses saved project-allocation records and Project Finance source inputs. No client-side period field or breadcrumb.
+9. **Role-aware presentation.** Existing finance permissions and record actions unchanged.
+10. **States/recovery.** Missing saved split percentages remain explicitly unavailable. The note explains that historical per-period allocation is unsupported. No status is inferred from record creation time.
+11. **Responsive behavior.** Existing FinanceDataTable card/table presentation remains unchanged; visual viewport verification belongs to Stage 5.
+12. **Accessibility.** Limitation is stated as text in the existing semantic policy note and does not rely on warning color.
+13. **Regression tests.** Assert the limitation copy and guard against filtering allocations by a fabricated effective-period property.
+14. **Dependencies.** A canonical period/effective-date/history field must be defined in Stage 6/data ownership before period-wise allocation is possible. Do not infer it from `createdAt`.
+15. **Acceptance.** Users understand that they are seeing saved allocations, not a historical reporting-period series. This subview remains partially complete and dependency-blocked for historical periods.

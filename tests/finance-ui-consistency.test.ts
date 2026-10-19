@@ -521,6 +521,9 @@ test('Project Allocation explains defaults and displays the saved percentage per
   assert.match(allocation, /record\.payload\.teamRewardPercent == null \? null : Number\(record\.payload\.teamRewardPercent\)/);
   assert.match(allocation, /percent === null \? 'Share not recorded' : percent \+ '% of net profit'/);
   assert.match(allocation, /The default split above applies only to new records/);
+  assert.match(allocation, /Current saved allocation records do not include an effective month or quarter/);
+  assert.match(allocation, /not historical per-period snapshots/);
+  assert.doesNotMatch(allocation, /matchesDate\(record\.payload\.effectivePeriod/);
 });
 
 test('Embedded invoice, expense, and receivable workflows do not leak UI state across worksheets', async () => {
