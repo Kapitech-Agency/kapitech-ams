@@ -414,7 +414,7 @@
 @media(max-width:1099px) and (min-width:900px){.ams-shell .ams-page-shell{padding:24px 20px 32px}}
 @media(max-width:899px){
  .ams-shell>aside{width:min(280px,86vw);min-width:min(280px,86vw)}.ams-shell .ams-page-shell{padding:16px 16px 24px}
- .ams-shell .ams-mobile-topbar{padding-left:14px;padding-right:14px}.ams-shell .ams-page-header{gap:12px}
+ .ams-shell .ams-mobile-topbar{height:calc(52px + env(safe-area-inset-top));min-height:calc(52px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);padding-left:14px;padding-right:14px}.ams-shell .ams-page-header{gap:12px}
  .ams-shell .ams-page-header>div:last-child{flex-wrap:wrap}
  }
 @media(max-width:599px){
@@ -429,7 +429,7 @@
  .ams-shell .ams-dashboard-card .text-2xl{font-size:20px;line-height:28px}
  .ams-shell .ams-dashboard-card .text-xs{font-size:12px;line-height:16px}
  .ams-shell .ams-panel>div:last-child{min-width:0}
- .ams-shell .ams-mobile-topbar{height:calc(52px + env(safe-area-inset-top));min-height:calc(52px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top)}
+
  .ams-shell .ams-mobile-topbar .ams-notification-surface{max-width:calc(100vw - 24px)}
 }
 @media(prefers-reduced-motion:reduce){.ams-shell *,.ams-shell *::before,.ams-shell *::after{animation-duration:.01ms;animation-iteration-count:1;transition-duration:.01ms}}

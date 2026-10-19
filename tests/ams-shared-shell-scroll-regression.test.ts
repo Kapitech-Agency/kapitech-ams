@@ -53,6 +53,23 @@ test('authenticated shell defines viewport geometry and one primary workspace sc
   assert.match(layout, /flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar/, 'the mobile navigation drawer should retain its own scroll region');
 });
 
+test('mobile shell topbar reserves the safe-area inset across every drawer viewport width', async () => {
+  const css = await read('src/index.css');
+  const tabletAndMobile = css.slice(
+    css.indexOf('@media(max-width:899px){'),
+    css.indexOf('@media(max-width:599px){'),
+  );
+
+  assert.ok(tabletAndMobile.includes(
+    '.ams-shell .ams-mobile-topbar{height:calc(52px + env(safe-area-inset-top));min-height:calc(52px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);padding-left:14px;padding-right:14px}',
+  ), 'all drawer-width layouts must reserve the top safe area without shrinking the 52px content row');
+  assert.equal(
+    (css.match(/\\.ams-shell \\.ams-mobile-topbar\\{height:calc\\(52px \\+ env\\(safe-area-inset-top\\)\\)/g) || []).length,
+    1,
+    'the safe-area height contract must have one responsive owner',
+  );
+});
+
 test('responsive page and dashboard geometry follows canonical design-system tokens', async () => {
   const css = await read('src/index.css');
 
