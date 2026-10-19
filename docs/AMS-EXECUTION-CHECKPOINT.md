@@ -15,13 +15,13 @@ Latest application/test snapshot verified on **19 October 2026**:
 
 | Item | Evidence |
 |---|---|
-| Latest source/test commit | 17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1 |
-| Commit | [test(projects): guard resource allocation hierarchy](https://github.com/Kapitech-Agency/kapitech-ams/commit/17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1) |
-| Changed application source | src/pages/admin/AdminProjects.tsx (Project Brief + Project Resources structural compositions) |
-| Regression tests | tests/projects-module-regression.test.ts (Project Brief ordering + allocation-first Resource hierarchy and state-boundary assertions) |
-| AMS CI | **Passed on exact SHA**: [run 39262004358](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262004358) |
-| AMS Quality Gate | **Passed on exact SHA**: [run 39262004291](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262004291) |
-| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on 17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1. |
+| Latest source/test commit | cc9c46c82f7a5e514371683142b2c4725e28e8c2 |
+| Commit | [test(projects): fix timeline workspace boundary](https://github.com/Kapitech-Agency/kapitech-ams/commit/cc9c46c82f7a5e514371683142b2c4725e28e8c2) |
+| Changed application source | src/pages/admin/AdminProjects.tsx (Project Brief, Project Resources, Milestones field boundary, Timeline structure) |
+| Regression tests | tests/projects-module-regression.test.ts (Project Brief, allocation-first Resources, Milestones field limits, chronological Timeline) |
+| AMS CI | **Passed on exact SHA**: [run 39263459463](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459463) |
+| AMS Quality Gate | **Passed on exact SHA**: [run 39263459363](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459363) |
+| Validation detail | Typecheck, regression tests, security regression tests, PostgreSQL integration/migration checks, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed on cc9c46c82f7a5e514371683142b2c4725e28e8c2. |
 
 ### Recent verified frontend slices
 
@@ -59,7 +59,7 @@ Re-verify live source and CI on every resume; this list is a dated recovery poin
 
 1. **Rehydrate:** fetch current `main`, recent history, relevant source and exact current CI/Quality Gate results.
 2. **Preserve verified slices:** Settings backup history, Dashboard money fallback, Inbox applicant ownership, Tasks local dates, Planning query context, Clients scope-aware exports/evidence-based Onboarding copy, Retainer local-date defaults and Renewal Schedule calendar-day handling have successful exact-SHA evidence.
-3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Project Brief and Project Resources have source/test evidence on 5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5 and 17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1 respectively. The next action is Planning & Delivery → Milestones structural acceptance, followed by Timeline, in the canonical worksheet order. Campaigns and Project Controls remain unavailable while their canonical records/models and permissions are absent.
+3. **Continue structural main-content redesign, not ad hoc gap chasing:** follow [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). Project Brief, Project Resources, Milestones field-boundary messaging and Timeline chronology now have source/test evidence; the latest tested SHA is cc9c46c82f7a5e514371683142b2c4725e28e8c2. Verify Content & Campaigns and Project Controls blockers against model/navigation source, keep them unavailable, then proceed to Clients → Directory.
 4. **Validate one bounded slice:** inspect current source/tests and gap row, make the smallest complete change, retain negative-path regression tests, verify both CI workflows on the source/test SHA, then update checkpoint and gap evidence.
 5. **Release gate remains closed:** authenticated browser/viewport/accessibility review and explicit user sign-off are still required at Stage 5. No authenticated screenshot or browser visual/keyboard/touch test has been performed in this execution. Do not start broad Stage 6 workflow/backend implementation before approval.
 
@@ -104,3 +104,10 @@ When the user says “lanjutkan” or similar, do not ask them to restate the ta
 - Browser status: NOT VERIFIED. No authenticated browser screenshots or viewport/keyboard session were captured; Stage 5 sign-off remains required.
 - Next single action: explicitly verify Planning & Delivery → Milestones structure against its worksheet contract, preserve it if it already fits, then assess Timeline before proceeding to the next Projects workspace.
 
+### Current Stage 4 structural checkpoint · 19 October 2026
+
+- Verified source/test commit: cc9c46c82f7a5e514371683142b2c4725e28e8c2. Exact-SHA AMS CI [39263459463](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459463) and Quality Gate [39263459363](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459363) both passed.
+- Structural slices: Project Brief, Project Resources, Milestones field-boundary messaging, and Timeline using actual recorded task/milestone due dates. No backend, API, schema, auth/permissions, or domain transitions changed.
+- Unsupported features remain unavailable: Content & Campaigns has no verified canonical project/campaign relation; Project Controls has no verified canonical risk/change/control records.
+- Browser status: NOT VERIFIED. No authenticated browser screenshots or responsive/keyboard session was captured; Stage 5 sign-off remains required.
+- Next single action: complete source evidence for Content & Campaigns and Project Controls blockers, then begin Clients → Directory structural review/implementation.
