@@ -61,6 +61,10 @@ test('Client directory CSV preserves unrecorded billed values and identifies the
   assert.match(csvExport, /typeof client\.totalSpend === 'number' && Number\.isFinite\(client\.totalSpend\) \? client\.totalSpend : ''/);
   assert.ok(csvExport.includes('Cumulative billed value (IDR)'));
   assert.doesNotMatch(csvExport, /client\.totalSpend \|\| 0/);
+  assert.ok(csvExport.includes(String.raw`.join('\n')`), 'CSV rows must be separated by actual newline characters.');
+  assert.ok(csvExport.includes(String.raw`new Blob(['\ufeff' + csv]`), 'CSV export must add an actual UTF-8 BOM.');
+  assert.doesNotMatch(csvExport, /join\('\\\\n'\)/, 'CSV must not contain a double-escaped line separator.');
+  assert.doesNotMatch(csvExport, /'\\\\ufeff'/, 'CSV must not prefix literal backslash-u text instead of the BOM.');
 });
 
 test('Dashboard prioritizes operational KPIs and the primary workspace before supporting metrics', async () => {
