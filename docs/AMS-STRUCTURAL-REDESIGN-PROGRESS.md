@@ -1376,3 +1376,33 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Requirement status: PARTIALLY COMPLETE pending browser review and cross-module source parity; do not imply people availability/capacity from the project records.
 - Next action: complete Planning & Delivery → Milestones structural acceptance in the canonical worksheet sequence, then Timeline; move to other Projects workspaces only after these source-backed planning worksheets have an explicit status.
 - Stage 5 user sign-off: PENDING.
+
+## Stage 4 worksheet checkpoint · Projects Planning & Delivery / Milestones and Timeline · 19 October 2026
+
+### Milestones worksheet contract
+
+- Requirement: VIEW-PROJECTS-PLANNING within AMS-MAIN-CONTENT-STRUCTURE-001.
+- Source contract: ProjectMilestone in src/lib/projectStore.ts stores id, optional slug, title, dueDate, completed and optional paymentTrigger. It has no milestone-specific owner or dependency fields.
+- Composition assessed: selected-project scope → worksheet tabs → Milestones panel with completion count → one title/date/status register and explicit empty state.
+- Structural finding: the existing register already matches the supported list/timeline target, so no unnecessary layout rewrite was made. The description identifies the missing owner/dependency fields in [aa13bccaf19a37bf76418cbb76f32f7a75fcf1e4](https://github.com/Kapitech-Agency/kapitech-ams/commit/aa13bccaf19a37bf76418cbb76f32f7a75fcf1e4).
+- Regression: [14f2c96db2ca3ddf40bc46a0b6fe157b36031768](https://github.com/Kapitech-Agency/kapitech-ams/commit/14f2c96db2ca3ddf40bc46a0b6fe157b36031768) checks source-backed fields, empty state and missing-field boundary. AMS CI [39262877900](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262877900) and Quality Gate [39262877908](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262877908) passed.
+
+### Timeline worksheet contract
+
+- Requirement: VIEW-PROJECTS-PLANNING.
+- Primary question: what is the chronological sequence of the selected project's recorded task and milestone due dates, and what date context is available?
+- Before: Timeline header → three KPI-style cards for project start/deadline/progress → milestone-only vertical list.
+- Mismatch: the metric strip competed with the main work surface and task due dates from canonical task records were missing from the timeline.
+- After: project scope and tabs → one chronological list of recorded milestone and task due dates → supporting project-date context (start, target deadline, progress, dated-record counts) → explicit dependency-tracking limitation.
+- Source-owned content: milestone title/dueDate/completed; task title/dueDate/status; project startDate/targetEndDate/progressPercent. Items without recorded due dates are not placed on a dated timeline.
+- Implementation: [aacc1f60e63144ef616eba0fe446129c71d7db13](https://github.com/Kapitech-Agency/kapitech-ams/commit/aacc1f60e63144ef616eba0fe446129c71d7db13) makes the chronological register the main surface. It does not add sample data, dependencies or duration estimates.
+- Regression: [cc9c46c82f7a5e514371683142b2c4725e28e8c2](https://github.com/Kapitech-Agency/kapitech-ams/commit/cc9c46c82f7a5e514371683142b2c4725e28e8c2) checks scope/tabs, chronological source fields, list/context order, empty state and dependency boundary. The initial test attempt at 9d37056 had an incorrect JSX fragment boundary selector; it was corrected in cc9c46c. Exact-SHA AMS CI [39263459463](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459463) and Quality Gate [39263459363](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39263459363) both passed.
+- Status: PARTIALLY COMPLETE. Stage 5 browser/reflow/keyboard review remains outstanding; scope/deliverables, QA, client review, revision history and dependency links require canonical records/workflows.
+
+### Projects blocker verification
+
+- Content & Campaigns remains disabled in src/lib/amsModuleSubnavigation.ts. No canonical project-campaign model or project-to-CMS content relationship was verified.
+- Project Resources is source/test-verified for project-scoped allocation, roster and task presentation. Cross-project capacity, actual time and overload remain owned by Team & Resources / Time Tracking.
+- Project Controls remains disabled. The legacy budget view does not establish canonical risk/change/control records or transitions.
+- Next action: begin Clients → Directory from its actual source and requirement contract. Do not replace structural work with unrelated date/export fixes.
+
