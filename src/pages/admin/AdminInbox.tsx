@@ -663,8 +663,8 @@ export const AdminInbox: React.FC = () => {
         description={
           activeInboxTab === 'overview'
             ? (language === 'id'
-              ? 'Pusat kendali inbound untuk triage, monitoring, dan tindak lanjut.'
-              : 'Operational overview for inbound triage, monitoring, and follow-up.')
+              ? 'Triage inbound, tinjau record yang perlu keputusan, dan buka konteks record sebelum mengambil tindakan.'
+              : 'Triage inbound records, review items needing a decision, and inspect record context before acting.')
             : activeInboxTab === 'messages'
               ? (language === 'id' ? 'Semua pesan masuk dari sumber yang tersedia, tidak termasuk pelamar Careers.' : 'All inbound messages from available sources, excluding Careers applicants.')
               : activeInboxTab === 'client'
@@ -887,7 +887,7 @@ export const AdminInbox: React.FC = () => {
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 min-[1100px]:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
           <div className="overflow-hidden rounded-card border border-line bg-panel">
             <div className="border-b border-line px-4 py-3.5">
               <div className="flex items-start justify-between gap-3">
@@ -974,7 +974,7 @@ export const AdminInbox: React.FC = () => {
                             <span className="min-w-0 truncate font-mono text-[10px] text-muted/70">/{getSubmissionSlug(item)}</span>
                             <div className="flex shrink-0 items-center gap-1.5">
                               {item.assignedTo && <span className="hidden max-w-[120px] truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted md:inline">{item.assignedTo}</span>}
-                              <span className="text-[10px] text-muted">Open monitor</span>
+                              <span className="text-[10px] text-muted">Review record</span>
                               <ChevronRight size={12} className="text-muted" />
                             </div>
                           </div>
@@ -1000,44 +1000,10 @@ export const AdminInbox: React.FC = () => {
             <div className="border-b border-line px-4 py-3.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-fg">Live intake monitor</h3>
-                    <span className="inline-flex items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-1.5 py-1 text-[10px] font-medium text-success">
-                      <span className="h-1.5 w-1.5 rounded-full bg-success" />Live
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[11px] leading-4 text-muted">Monitor the next actions without leaving the Overview workspace.</p>
+                  <h3 className="text-sm font-semibold text-fg">Record review</h3>
+                  <p className="mt-1 text-[11px] leading-4 text-muted">Select a record in the triage queue to inspect its identity, status, ownership, brief, and available actions.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void refreshInbox()}
-                  disabled={loading}
-                  className="inline-flex h-9 min-h-9 w-9 min-w-9 shrink-0 aspect-square items-center justify-center rounded-control border border-line bg-bg p-0 text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
-                  aria-label="Refresh intake"
-                  title="Refresh intake"
-                >
-                  <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-                </button>
-              </div>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {[
-                  { key: 'action' as TriageScope, label: 'New', value: filteredItems.filter((item) => item.status === 'new').length },
-                  { key: 'priority' as TriageScope, label: 'Priority', value: filteredItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length },
-                  { key: 'saved' as TriageScope, label: 'Saved', value: filteredItems.filter((item) => !!item.starred).length }
-                ].map((metric) => (
-                  <button
-                    key={metric.key}
-                    type="button"
-                    onClick={() => {
-                      setTriageScope(metric.key);
-                      setSelectedSubmission(null);
-                    }}
-                    className="rounded-control border border-line bg-bg px-2.5 py-2 text-left transition-colors hover:bg-panel"
-                  >
-                    <span className="block text-[10px] text-muted">{metric.label}</span>
-                    <span className="mt-0.5 block text-sm font-medium tabular-nums text-fg">{metric.value}</span>
-                  </button>
-                ))}
+                <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{selectedSubmission ? 'Selected' : 'No selection'}</span>
               </div>
             </div>
 

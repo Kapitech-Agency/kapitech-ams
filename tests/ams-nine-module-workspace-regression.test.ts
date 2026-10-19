@@ -463,3 +463,23 @@ test('Shared metric strips use canonical breakpoints and match their metric coun
   assert.ok(vendorMetricStart >= 0 && vendorMetricEnd > vendorMetricStart);
   assert.equal(vendors.slice(vendorMetricStart, vendorMetricEnd).includes('className="lg:grid-cols-4"'), false);
 });
+
+
+test('Inbox Overview prioritizes triage and selected-record review without duplicate monitor KPIs', async () => {
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const overviewStart = inbox.indexOf('data-ams-feature-slug="inbox-overview-workspace"');
+  const overviewEnd = inbox.indexOf(") : viewMode === 'queue' ?", overviewStart);
+  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, 'Inbox Overview should have a bounded workspace');
+  const overview = inbox.slice(overviewStart, overviewEnd);
+  const triage = overview.indexOf('Triage queue');
+  const review = overview.indexOf('Record review');
+  assert.ok(triage >= 0 && review > triage, 'Triage queue should lead the selected-record review panel');
+  assert.doesNotMatch(overview, /Live intake monitor/);
+  assert.doesNotMatch(overview, /label: 'New', value: filteredItems\.filter/);
+  assert.doesNotMatch(overview, /label: 'Priority', value: filteredItems\.filter/);
+  assert.doesNotMatch(overview, /label: 'Saved', value: filteredItems\.filter/);
+  assert.match(overview, /No selection/);
+  assert.match(overview, /Select an inbound record/);
+  assert.match(inbox, /min-\[1100px\]:grid-cols-\[minmax\(0,1\.15fr\)_minmax\(360px,0\.85fr\)\]/);
+  assert.doesNotMatch(overview, /lg:grid-cols-\[minmax\(0,1\.15fr\)_minmax\(360px,0\.85fr\)\]/);
+});
