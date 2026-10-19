@@ -946,7 +946,8 @@ test('Team member and vendor profile details use shared drawers with fixed actio
 
 test('Client directory adapts its primary register for narrow screens without losing core account actions', () => {
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
-  assert.ok(clients.includes('data-ams-slug="clients-directory-cards"'));
+  assert.ok(clients.includes('data-ams-slug="clients-directory-cards"') || clients.includes("statusScope === 'lead' ? 'clients-onboarding-cards' : 'clients-directory-cards'"),
+    'The shared register keeps a mobile card surface with a distinct scope label for onboarding.');
   assert.ok(clients.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
   assert.ok(clients.includes('min-w-[980px]'));
   assert.ok(!clients.includes('min-w-[1240px]'));
