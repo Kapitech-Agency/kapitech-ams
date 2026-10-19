@@ -124,4 +124,25 @@ test('Dashboard Performance prioritizes task/project analysis before supporting 
   assert.match(performance, /Recorded time from \$\{mondayKey\} through \$\{today\}/);
   assert.match(performance, /Open Tasks/);
   assert.match(performance, /Open tasks with a blocked status/);
+  assert.match(performance, /const attentionProjects = activeProjects\.filter/);
+  assert.match(performance, /attentionProjects\.slice\(0, 8\)/);
+  assert.match(performance, /Showing 8 of \{attentionProjects\.length\} projects with attention signals/);
+});
+
+test('Dashboard Analytics leads with period-scoped reports before summary metrics', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('const AnalyticsView: React.FC');
+  const end = dashboard.indexOf('export const GlobalExecutiveDashboard', start);
+  assert.ok(start >= 0 && end > start, 'Analytics workspace should have a bounded source section');
+  const analytics = dashboard.slice(start, end);
+  const primary = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-primary"');
+  const trend = analytics.indexOf('title="Invoice and expense trend"', primary);
+  const periodControl = analytics.indexOf('<DashboardTrendRangePicker range={range} onChange={onRangeChange} />', trend);
+  const projectStatus = analytics.indexOf('title="Project status"', trend);
+  const supportingMetrics = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-supporting-metrics"', projectStatus);
+  assert.ok(primary >= 0 && trend > primary && periodControl > trend && projectStatus > trend && supportingMetrics > projectStatus,
+    'Analytics report surfaces and period control should precede supporting summary metrics.');
+  assert.ok(analytics.indexOf('slug="dashboard-analytics-kpis"') > supportingMetrics);
+  assert.match(analytics, /Difference is not a posted profit figure/);
+  assert.match(analytics, /Financial trend unavailable/);
 });

@@ -240,11 +240,12 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
     return map;
   }, new Map<string, number>());
   const workload = Array.from(memberTime.entries()).map(([name, minutes]) => ({ name, minutes })).sort((a, b) => b.minutes - a.minutes).slice(0, 8);
-  const needsAttention = activeProjects.filter((project) => {
+  const attentionProjects = activeProjects.filter((project) => {
     const state = String(project.health || project.status || '').toLowerCase();
     const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
     return /risk|delay|blocked|hold|issue/.test(state) || (due && due < today);
-  }).slice(0, 8);
+  });
+  const needsAttention = attentionProjects.slice(0, 8);
   const otherOpenTasks = Math.max(0, tasks.length - completedTasks - blockedTasks);
   const taskStatusBreakdown = [
     { id: 'completed', label: 'Completed', count: completedTasks, tone: 'bg-success' },
@@ -323,7 +324,7 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
                   </div>
                 );
               })}
-              {activeProjects.length > needsAttention.length && <div className="px-4 py-3 text-[10px] text-muted">Showing up to 8 projects with attention signals.</div>}
+              {attentionProjects.length > needsAttention.length && <div className="px-4 py-3 text-[10px] text-muted">Showing 8 of {attentionProjects.length} projects with attention signals.</div>}
             </div>
           )}
         </AdminPanel>
@@ -388,14 +389,9 @@ const AnalyticsView: React.FC<{
   const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
   return (
     <div className="space-y-4">
-      <AdminMetricStrip metrics={[
-        { id: 'analytics-invoiced', label: 'Invoices issued', value: financialDataAvailable ? formatLiveMoney(totalInvoiced, currency) : '—', icon: <FileText size={15} />, context: financialDataAvailable ? 'Issued invoices · IDR' : 'Live source unavailable' },
-        { id: 'analytics-expenses', label: 'Recorded expenses', value: financialDataAvailable ? formatLiveMoney(recordedExpenses, currency) : '—', icon: <CircleDollarSign size={15} />, context: financialDataAvailable ? 'Expense records · IDR' : 'Live source unavailable' },
-        { id: 'analytics-receivables', label: 'Outstanding receivables', value: snapshot.invoices !== null ? formatLiveMoney(receivables, currency) : '—', icon: <ReceiptText size={15} />, context: snapshot.invoices !== null ? 'Open, non-draft invoices · IDR' : 'Live source unavailable' },
-        { id: 'analytics-projects', label: 'Active projects', value: snapshot.projects !== null ? String(activeProjects || 0) : '—', icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : 'Live source unavailable' }
-      ]} />
 
-      <div className="grid gap-3 min-[1100px]:grid-cols-12">
+
+      <section className="grid gap-3 min-[1100px]:grid-cols-12" data-ams-feature-slug="dashboard-analytics-primary">
       <AdminPanel className="min-[1100px]:col-span-8" title="Invoice and expense trend" description="Invoice totals are grouped by issue date; expenses are grouped by recorded date. Their difference is not a posted profit figure." actions={<DashboardTrendRangePicker range={range} onChange={onRangeChange} />} bodyClassName="p-4 sm:p-5">
         {trend.length >= 2 ? (
           <TrendChart data={trend} primaryLabel="Invoices issued" secondaryLabel="Recorded expenses" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, currency)} ariaLabel="Issued invoices and recorded expenses by period." />
@@ -416,7 +412,16 @@ const AnalyticsView: React.FC<{
           </div>
         )}
       </AdminPanel>
-      </div>
+      </section>
+
+      <section data-ams-feature-slug="dashboard-analytics-supporting-metrics" aria-label="Analytics summary metrics">
+        <AdminMetricStrip slug="dashboard-analytics-kpis" metrics={[
+        { id: 'analytics-invoiced', label: 'Invoices issued', value: financialDataAvailable ? formatLiveMoney(totalInvoiced, currency) : '—', icon: <FileText size={15} />, context: financialDataAvailable ? 'Issued invoices · IDR' : 'Live source unavailable' },
+        { id: 'analytics-expenses', label: 'Recorded expenses', value: financialDataAvailable ? formatLiveMoney(recordedExpenses, currency) : '—', icon: <CircleDollarSign size={15} />, context: financialDataAvailable ? 'Expense records · IDR' : 'Live source unavailable' },
+        { id: 'analytics-receivables', label: 'Outstanding receivables', value: snapshot.invoices !== null ? formatLiveMoney(receivables, currency) : '—', icon: <ReceiptText size={15} />, context: snapshot.invoices !== null ? 'Open, non-draft invoices · IDR' : 'Live source unavailable' },
+        { id: 'analytics-projects', label: 'Active projects', value: snapshot.projects !== null ? String(activeProjects || 0) : '—', icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : 'Live source unavailable' }
+        ]} />
+      </section>
     </div>
   );
 };
