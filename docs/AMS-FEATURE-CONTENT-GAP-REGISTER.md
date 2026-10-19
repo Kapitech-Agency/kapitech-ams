@@ -44,6 +44,21 @@ For every module, worksheet, feature and cross-module workflow, capture:
 
 Keep one canonical requirement ID per capability. Link consuming modules to it rather than creating duplicate feature records.
 
+## 2.1 Mandatory cross-cutting requirement — contextual breadcrumbs
+
+| Field | Requirement record |
+|---|---|
+| Requirement ID | UX-NAV-BREADCRUMB-001 |
+| Canonical owner | Shared navigation/page-context behavior, governed by navigation IA and content architecture |
+| Roadmap stages | Stage 0 audit; Stage 2 shared shell; Stage 3 gap tracking; Stage 4 eligible detail-page implementation; Stage 5 visual, responsive, accessibility review and user sign-off; regression follow-through in Stages 12 and 15 |
+| Status | **Not verified** |
+| Evidence currently available | The Master Structure §3.1 and Content Architecture § navigation hierarchy define conditional breadcrumb behavior. A repository search and spot-check of shared layout primitives has not established consumer-by-consumer implementation or end-to-end behavior. This is not sufficient evidence to label the requirement Missing or Complete. |
+| Acceptance criteria | Eligible deep record/detail routes show meaningful ancestor links; obvious roots, Dashboard, primary Inbox workspaces and established Finance tabs do not get a redundant breadcrumb; parents resolve to valid permission-safe routes; current page title is not duplicated; direct load/refresh/back/forward and selected-record changes keep ancestry current; compact behavior is accessible; geometry follows the Design System; automated checks and available browser evidence are recorded. |
+| Existing behavior to preserve | Approved nine-module navigation, five Finance areas, current route ownership, server-side authorization and record scope, source-backed record identity, single header and single page-gutter ownership. |
+| Next action | Audit actual source across routes, page-detail views and shared components. Enumerate eligible/excluded routes and record exact source/test evidence. Implement only the missing pieces, then validate consumers and update this row with the commit SHA and test/browser results. |
+| Related documents | [Master Structure §3.1](AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md), [Content Architecture](AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md), [Navigation IA](architecture/ams-navigation-information-architecture.md), [Stage-by-Stage Checklist](AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md) |
+
+
 ## 3. Initial module coverage inventory
 
 The rows below identify the **minimum audit scope**, not a claim about the current implementation status. During Stage 0–3 of the roadmap, split them into granular requirement IDs and attach source/test evidence for each workspace.

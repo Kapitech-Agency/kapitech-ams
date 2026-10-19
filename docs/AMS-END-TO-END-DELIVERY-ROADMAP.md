@@ -23,6 +23,8 @@ Use the documents according to their distinct roles; do not let several document
 
 When a lower-level document contains an older stage sequence, use it for its domain-specific requirements but follow this roadmap for delivery order. Correct cross-references when discovered. If a genuine product/business/security conflict remains, record it and ask the user; do not silently choose a behavior.
 
+Use [AMS Stage-by-Stage Execution Checklist](AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md) as the detailed operator checklist for all entry criteria, implementation checks, evidence and exit gates. It supplements this roadmap and does not replace its canonical order. Breadcrumb implementation is a required cross-cutting item: baseline/audit at Stage 0, shared behavior at Stage 2, tracking at Stage 3, eligible detail-page implementation at Stage 4, and visual/accessibility/sign-off verification at Stage 5.
+
 ## 2. Non-negotiable execution rules
 
 - Inspect current `main`, current source, recent commits and CI before every new stage or resume after interruption. Preserve correct work already present; do not redo it without evidence.
@@ -69,7 +71,7 @@ Actions:
 
 **Objective:** Establish stable page geometry before detailed module work.
 
-Verify and resolve remaining shared-root problems in the authenticated shell, single-header ownership, contextual navigation rows, page gutter, tab-switch stability, width constraints, scroll ownership and responsive shell fallback. Carry forward already completed shell work rather than replacing it.
+Verify and resolve remaining shared-root problems in the authenticated shell, single-header ownership, contextual navigation rows, page gutter, tab-switch stability, width constraints, scroll ownership and responsive shell fallback. Carry forward already completed shell work rather than replacing it. Also establish or reuse a shared, accessible breadcrumb primitive only if the existing implementation requires one. Breadcrumbs remain conditional; they must not create a second global navigation layer or force themselves onto obvious roots and established primary tabs.
 
 **Deliverables:** Shared-shell changes with affected-consumer list and tests.
 
@@ -105,7 +107,7 @@ Proceed one bounded view/module slice at a time:
 8. Website CMS — each actual content type/editor, publication state, Careers jobs and Applicants.
 9. Settings — actual settings groups and supported account/application/security/integration controls.
 
-For each slice, follow the content blueprint and worksheet matrix. Keep the primary work area dominant; use task-specific composition rather than applying Dashboard cards to every screen. Show one representative example per distinct function when that is sufficient to assess layout; do not create fake production data or extra records simply to fill space. Preserve real data sources and existing supported actions.
+For each slice, follow the content blueprint and worksheet matrix. Keep the primary work area dominant; use task-specific composition rather than applying Dashboard cards to every screen. Show one representative example per distinct function when that is sufficient to assess layout; do not create fake production data or extra records simply to fill space. Preserve real data sources and existing supported actions. Track the explicit breadcrumb requirement in the gap register and the detailed execution checklist. Implement ancestor trails on eligible deep record/detail pages, preserve valid permission-aware parent routes, do not repeat the current title in the trail, and use the approved compact-screen fallback. Intentionally omit breadcrumbs where the current location is already clear.
 
 **Deliverables:** Updated module views and gap-register evidence for each view; code/test checkpoints with direct-to-main commits.
 
@@ -117,7 +119,7 @@ For each slice, follow the content blueprint and worksheet matrix. Keep the prim
 
 Check the applicable 1440, 1024, 768, 390 and 320 px viewports; shell and local scrolling; table/board usability; action placement; text density; loading, populated, empty, no-match, unavailable/stale, restricted, validation/error, pending and success states; keyboard/focus; reduced motion; drawers and modals. Recheck all tabs and neighboring views changed by shared components.
 
-Separate source-level checks from browser-level evidence. Do not claim live visual verification when browser/authenticated access was not available.
+Separate source-level checks from browser-level evidence. Do not claim live visual verification when browser/authenticated access was not available. The visual matrix must include eligible breadcrumb routes: link destinations, title non-duplication, keyboard/focus, permission behavior, refresh/history and compact-width presentation. Do not treat source assertions as proof of authenticated visual acceptance.
 
 **Deliverables:** Consolidated visual audit and acceptance report with pass/fail/unverified items and supporting commit/test evidence.
 

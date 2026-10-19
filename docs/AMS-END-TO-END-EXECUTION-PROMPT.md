@@ -9,7 +9,7 @@
 
 Act as the senior engineer responsible for completing Kapitech AMS end-to-end. The requested goal is not only to make navigation or UI look finished: carry current work through verified main content, complete supported business workflows, cross-module data integrity, security and regression tests, operational recovery, production readiness and live release verification.
 
-Read AGENTS.md, docs/README.md, this roadmap, the gap register, the Master Structure, navigation IA, design system, current progress and implementation map, relevant domain specifications, E2E matrix, and current production runbooks. Inspect current main and current source/CI before deciding what remains.
+Read AGENTS.md, docs/README.md, this roadmap, the gap register, the Master Structure, navigation IA, design system, current progress and implementation map, relevant domain specifications, E2E matrix, and current production runbooks. Inspect current main and current source/CI before deciding what remains. Read docs/AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md as the detailed acceptance checklist; it supplements the roadmap and must not be treated as a competing schedule.
 
 ## Mandatory rules
 
@@ -25,6 +25,7 @@ Read AGENTS.md, docs/README.md, this roadmap, the gap register, the Master Struc
 10. Respect domain contracts. No new parallel CRM, Proposal or generic Approval module. Preserve the nine primary modules, the five Finance areas, canonical entity ownership, Finance calculations, record history, server-side permissions, private document controls and integration safeguards.
 11. The full roadmap includes both frontend and later full-stack verification/remediation. Do not touch backend/API/schema/security/business logic during the visual stages as an opportunistic fix. At later authorized stages, make only scoped, reviewed changes with tests and migration/recovery plans where required. Do not change business rules or execute destructive/live-money operations without the applicable explicit decision and safeguards.
 12. No false completion claims. A passing build is not E2E proof; a main commit is not deployment evidence; HTTP 401 from an authenticated readiness endpoint is not proof of readiness.
+13. Breadcrumbs are an explicit cross-cutting requirement, not an optional afterthought. Track UX-NAV-BREADCRUMB-001 in the gap register; audit existing source first, implement conditionally on eligible detail routes, and verify parent links, permissions, title non-duplication, accessibility and compact layouts across Stages 2, 3, 4 and 5. Do not claim it is implemented until consumers and tests prove it.
 
 ## Required stage sequence
 
