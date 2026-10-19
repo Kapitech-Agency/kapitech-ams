@@ -1,0 +1,4 @@
+import assert from 'node:assert/strict'; import fs from 'node:fs'; import test from 'node:test';
+test('invoice update locks client and project references',()=>{const s=fs.readFileSync('server/postgres-invoice-repository.ts','utf8');const i=s.indexOf('async update');const x=s.slice(i,i+4500);assert.match(x,/SELECT id FROM clients WHERE id=\$1 FOR SHARE/);assert.match(x,/SELECT id, client_id FROM projects WHERE id=\$1 FOR SHARE/);});
+test('project mutation locks linked client',()=>{const s=fs.readFileSync('server/postgres-project-repository.ts','utf8');assert.match(s,/SELECT id FROM clients WHERE id = \$1 FOR SHARE/);});
+test('invoice number uniqueness is database enforced',()=>{const s=fs.readFileSync('db/postgres/018_invoice_reference_integrity.sql','utf8');assert.match(s,/invoices_invoice_number_unique_v1/);});
