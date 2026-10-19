@@ -1,6 +1,6 @@
 # Kapitech AMS — GitHub Copilot Instructions
 
-Read root AGENTS.md before coding. It defines task boundaries, conflict resolution, verification and reporting. Read `docs/README.md` for the documentation index and authority rules; historical migration notes are not current production instructions.
+Read root AGENTS.md before coding. It defines task boundaries, conflict resolution, verification and reporting. Read `docs/README.md` for the documentation index and authority rules; historical migration notes are not current production instructions. On any timeout, interruption, context reset, or short continuation request like “lanjutkan”, automatically follow `docs/AMS-RESUME-AFTER-INTERRUPTION.md` and restore from `docs/AMS-EXECUTION-CHECKPOINT.md`. Re-fetch live `main` and current checks before editing; do not repeat completed work or ask the user to repaste a task already established by the repository and conversation.
 
 For the current end-to-end delivery initiative, the canonical stage sequence is `docs/AMS-END-TO-END-DELIVERY-ROADMAP.md`; requirement-level status belongs in `docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md`; use `docs/AMS-END-TO-END-EXECUTION-PROMPT.md` for execution. Do not use older prompts or section-local stage numbering to create a competing delivery sequence.
 
@@ -36,3 +36,10 @@ For the current end-to-end delivery initiative, the canonical stage sequence is 
 - Kopra remains provider-dependent until official contract/access/testing are available. Never invent endpoints/cryptography or call production payments in ordinary tests.
 - Run and report actual tests, lint, build and relevant E2E checks. A build alone is not workflow proof.
 - Prefer small, reversible, evidence-backed changes; report uncertainty rather than guessing.
+
+## Resume behavior (mandatory)
+
+- Follow `docs/AMS-RESUME-AFTER-INTERRUPTION.md` for every resume, including a one-word “lanjutkan” request.
+- Treat `docs/AMS-EXECUTION-CHECKPOINT.md` as a dated pointer; always refresh live `main`, recent commits, and current CI before editing.
+- Investigate failed CI at its actual failed job/test before moving to unrelated feature work. Do not weaken security/regression tests to conceal a failure.
+- Update the checkpoint and relevant gap/evidence documents after each meaningful slice. Continue within existing authorization without requiring a new master prompt, except for a genuine decision, required sign-off gate, or unsafe blocker.
