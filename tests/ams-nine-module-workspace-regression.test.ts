@@ -799,3 +799,30 @@ test('Client 360 exposes only canonically linked records behind existing permiss
   assert.doesNotMatch(section, /internalNotes|userAgent|password|sessionToken/,
     'Client 360 must not disclose Inbox internal notes or browser/session data.');
 });
+
+
+test('Client Onboarding uses an onboarding-specific primary register', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
+  const register = clients.indexOf("statusScope === 'lead' ? 'clients-onboarding-register' : 'clients-directory-table'");
+  assert.ok(filters >= 0 && register > filters, 'The onboarding queue should follow its scope-aware filters.');
+  assert.match(clients, /Search lead company, contact, email, phone or client ID/);
+  assert.match(clients, /Search onboarding accounts/);
+  assert.match(clients, /Onboarding Checklist'.*available: false/);
+  assert.match(clients, /Required Documents'.*available: false/);
+  assert.match(clients, /Kickoff Readiness'.*available: false/);
+  assert.match(clients, /Profile completeness does not mean onboarding has been approved/);
+  assert.match(clients, /data-ams-slug="client-onboarding-contact-context"/);
+  assert.match(clients, /client\.email \|\| 'Not recorded'/);
+  assert.match(clients, /client\.phone \|\| 'Not recorded'/);
+  assert.match(clients, /Added \{formatDate\(client\.createdAt, language\)\}/);
+  assert.match(clients, /Last updated/);
+  assert.match(clients, /statusScope === 'lead' \? 'Lead account' : 'Client account'/);
+  assert.match(clients, /Contact channels/);
+  assert.match(clients, /Industry \/ location/);
+  const rowStart = clients.indexOf("{statusScope === 'lead' ? (", clients.indexOf('<tbody'));
+  const directoryRowBranch = clients.slice(rowStart, clients.indexOf("                ) : (", rowStart));
+  assert.doesNotMatch(directoryRowBranch, /Billed value|Spend cap health|client\.totalSpend/,
+    'The onboarding register must focus on lead contactability, not established-client financial indicators.');
+  assert.match(clients, /No lead accounts yet\. Create a lead to begin onboarding review\./);
+});

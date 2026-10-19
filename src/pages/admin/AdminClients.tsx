@@ -1034,8 +1034,8 @@ export const AdminClients: React.FC = () => {
       <AdminFilterBar slug="client-directory-filters"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Search by company, contact, industry, or client ID..."
-        searchLabel="Search clients"
+        searchPlaceholder={statusScope === 'lead' ? 'Search lead company, contact, email, phone or client ID...' : 'Search by company, contact, industry, or client ID...'}
+        searchLabel={statusScope === 'lead' ? 'Search onboarding accounts' : 'Search clients'}
         actions={(
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             {statusScope !== 'lead' && (
@@ -1118,10 +1118,10 @@ export const AdminClients: React.FC = () => {
         )}
       />
 
-      <section data-ams-feature-slug="clients-directory-table" data-ams-slug="clients-directory-table" aria-label="Clients directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel">
-        <div className="grid gap-2.5 p-3 min-[1280px]:hidden sm:p-4" data-ams-slug="clients-directory-cards" role="list" aria-label="Client directory cards">
+      <section data-ams-feature-slug="clients-directory-table" data-ams-slug={statusScope === 'lead' ? 'clients-onboarding-register' : 'clients-directory-table'} aria-label={statusScope === 'lead' ? 'Onboarding accounts' : 'Clients directory'} className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel">
+        <div className="grid gap-2.5 p-3 min-[1280px]:hidden sm:p-4" data-ams-slug={statusScope === 'lead' ? 'clients-onboarding-cards' : 'clients-directory-cards'} role="list" aria-label={statusScope === 'lead' ? 'Onboarding account cards' : 'Client directory cards'}>
           {isLoading ? Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="rounded-control border border-line bg-bg p-4" role="status" aria-label="Loading client">
+            <div key={index} className="rounded-control border border-line bg-bg p-4" role="status" aria-label={statusScope === 'lead' ? 'Loading onboarding account' : 'Loading client'}>
               <div className="h-3.5 w-40 max-w-full animate-pulse rounded-badge bg-line" />
               <div className="mt-3 h-3 w-28 animate-pulse rounded-badge bg-line" />
               <div className="mt-4 grid grid-cols-2 gap-3">
@@ -1132,8 +1132,8 @@ export const AdminClients: React.FC = () => {
           )) : paginatedClients.length === 0 ? (
             <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center" data-ams-slug="clients-mobile-empty-state">
               <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div>
-              <p className="mt-3 text-sm font-medium text-fg">{errorMessage ? 'Client directory unavailable.' : clients.length ? 'No matching clients.' : 'No clients yet.'}</p>
-              <p className="mt-1 max-w-sm text-xs leading-5 text-muted">{errorMessage ? 'The client data could not be loaded. Use the retry action above.' : 'Adjust the search or active filters.'}</p>
+              <p className="mt-3 text-sm font-medium text-fg">{errorMessage ? (statusScope === 'lead' ? 'Onboarding account source unavailable.' : 'Client directory unavailable.') : clients.length ? (statusScope === 'lead' ? 'No matching lead accounts.' : 'No matching clients.') : statusScope === 'lead' ? 'No lead accounts yet. Create a lead to begin onboarding review.' : 'No clients yet.'}</p>
+              <p className="mt-1 max-w-sm text-xs leading-5 text-muted">{errorMessage ? (statusScope === 'lead' ? 'Lead account data could not be loaded. Use the retry action above.' : 'The client data could not be loaded. Use the retry action above.') : (statusScope === 'lead' ? 'Adjust the search or active filters to find a lead account.' : 'Adjust the search or active filters.')}</p>
               {clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Reset filters</button>}
             </div>
           ) : paginatedClients.map((client) => {
@@ -1156,32 +1156,68 @@ export const AdminClients: React.FC = () => {
                   <div className="min-w-0">
                     <h2 className="break-words text-sm font-semibold text-fg">{client.company}</h2>
                     <p className="mt-1 break-words text-[11px] text-muted">ID: {client.id}{client.location ? ' · ' + client.location : ''}</p>
-                    <p className="mt-1 text-[10px] text-muted">{getClientTierLabel(client)}</p>
-                    <p className="mt-1 break-words text-[10px] leading-4 text-muted" data-ams-slug={'client-service-context-' + clientSlug}>{getClientServiceContext(client, language)}</p>
+                    {statusScope === 'lead' ? (
+                      <p className="mt-1 break-words text-[10px] leading-4 text-muted" data-ams-slug={'client-onboarding-added-' + clientSlug}>Lead record · Added {formatDate(client.createdAt, language)}</p>
+                    ) : (
+                      <>
+                        <p className="mt-1 text-[10px] text-muted">{getClientTierLabel(client)}</p>
+                        <p className="mt-1 break-words text-[10px] leading-4 text-muted" data-ams-slug={'client-service-context-' + clientSlug}>{getClientServiceContext(client, language)}</p>
+                      </>
+                    )}
                   </div>
                   <span className={'inline-flex shrink-0 items-center rounded-badge border px-2 py-1 text-[10px] font-semibold ' + getClientStatusTone(client.status)}>
                     {formatClientStatusLabel(client.status)}
                   </span>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-y border-line py-3">
-                  <div className="min-w-0">
-                    <p className="text-[10px] text-muted">Industry</p>
-                    <p className="mt-1 break-words text-xs text-fg">{client.industry || '—'}</p>
+                {statusScope === 'lead' ? (
+                  <div className="mt-3 grid grid-cols-1 gap-x-3 gap-y-3 border-y border-line py-3 sm:grid-cols-2" data-ams-slug="client-onboarding-contact-context">
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Primary contact</p>
+                      <p className="mt-1 break-words text-xs text-fg">{client.name || 'Not recorded'}</p>
+                      {client.contactPersonRole && <p className="mt-0.5 break-words text-[10px] text-muted">{client.contactPersonRole}</p>}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Business email</p>
+                      <p className="mt-1 break-all text-xs text-fg">{client.email || 'Not recorded'}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Phone / WhatsApp</p>
+                      <p className="mt-1 break-words text-xs text-fg">{client.phone || 'Not recorded'}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Industry</p>
+                      <p className="mt-1 break-words text-xs text-fg">{client.industry || 'Not recorded'}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Record last updated</p>
+                      <p className="mt-1 break-words text-xs text-fg">{formatDate(client.updatedAt, language)}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Location</p>
+                      <p className="mt-1 break-words text-xs text-fg">{client.location || 'Not recorded'}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] text-muted">Primary contact</p>
-                    <p className="mt-1 break-words text-xs text-fg">{client.name || '—'}</p>
-                    {client.contactPersonRole && <p className="mt-0.5 break-words text-[10px] text-muted">{client.contactPersonRole}</p>}
+                ) : (
+                  <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-y border-line py-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Industry</p>
+                      <p className="mt-1 break-words text-xs text-fg">{client.industry || '—'}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Primary contact</p>
+                      <p className="mt-1 break-words text-xs text-fg">{client.name || '—'}</p>
+                      {client.contactPersonRole && <p className="mt-0.5 break-words text-[10px] text-muted">{client.contactPersonRole}</p>}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Billed value</p>
+                      <p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(client.totalSpend) : (language === 'id' ? 'Belum tercatat' : 'Not recorded')}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted">Spend cap health</p>
+                      <p className={'mt-1 break-words text-xs tabular-nums ' + (spendState === 'danger' ? 'font-medium text-danger' : 'text-fg')}>{capLabel}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] text-muted">Billed value</p>
-                    <p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(client.totalSpend) : (language === 'id' ? 'Belum tercatat' : 'Not recorded')}</p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] text-muted">Spend cap health</p>
-                    <p className={'mt-1 break-words text-xs tabular-nums ' + (spendState === 'danger' ? 'font-medium text-danger' : 'text-fg')}>{capLabel}</p>
-                  </div>
-                </div>
+                )}
                 <div className="flex items-center justify-end gap-1 pt-2">
                   <button type="button" onClick={() => setSelectedClient(client)} aria-label={'View profile for ' + client.company} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                     <Eye size={13} aria-hidden="true" /> View profile
@@ -1197,16 +1233,28 @@ export const AdminClients: React.FC = () => {
           })}
         </div>
 
-        <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable client directory">
+        <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label={statusScope === 'lead' ? 'Scrollable onboarding account register' : 'Scrollable client directory'}>
           <table className="ams-client-table w-full min-w-[980px] border-collapse text-left">
             <thead className="bg-bg">
               <tr className="border-b border-line text-[11px] font-medium text-muted">
-                <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('company')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Client account {sortKey === 'company' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('industry')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Industry {sortKey === 'industry' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                <th className="px-4 py-2.5">Primary contact</th>
-                <th className="px-4 py-2.5">Status</th>
-                <th className="px-4 py-2.5 text-right"><button type="button" onClick={() => toggleSort('totalSpend')} className="ml-auto inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Billed value {sortKey === 'totalSpend' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                <th className="px-4 py-2.5">Spend cap health</th>
+                <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('company')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">{statusScope === 'lead' ? 'Lead account' : 'Client account'} {sortKey === 'company' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
+                {statusScope === 'lead' ? (
+                  <>
+                    <th className="px-4 py-2.5">Primary contact</th>
+                    <th className="px-4 py-2.5">Contact channels</th>
+                    <th className="px-4 py-2.5">Industry / location</th>
+                    <th className="px-4 py-2.5">Status</th>
+                    <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('updatedAt')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Last updated {sortKey === 'updatedAt' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('industry')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Industry {sortKey === 'industry' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
+                    <th className="px-4 py-2.5">Primary contact</th>
+                    <th className="px-4 py-2.5">Status</th>
+                    <th className="px-4 py-2.5 text-right"><button type="button" onClick={() => toggleSort('totalSpend')} className="ml-auto inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Billed value {sortKey === 'totalSpend' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
+                    <th className="px-4 py-2.5">Spend cap health</th>
+                  </>
+                )}
                 <th className="px-4 py-2.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -1226,14 +1274,30 @@ export const AdminClients: React.FC = () => {
                 const clientSlug = getAgencyClientSlug(client as AgencyClient & Record<string, unknown>) || createClientSlug(client.company || client.name || 'client account', client.id);
                 return (
                   <tr key={client.id} data-ams-slug={'client-account-' + clientSlug} className="transition-colors hover:bg-bg/70">
-                    <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[270px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-1 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} · {client.location || 'Location not set'}</span>
-                        <span className="mt-1 block text-[10px] text-muted">{getClientTierLabel(client)}</span>
-                        <span className="mt-1 block text-[10px] leading-4 text-muted">{getClientServiceContext(client, language)}</span></button></td>
+                    {statusScope === 'lead' ? (
+                  <>
+                    <td className="px-4 py-3">
+                      <button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[240px] text-left">
+                        <span className="block truncate font-medium text-fg">{client.company}</span>
+                        <span className="mt-1 block truncate text-[11px] text-muted tabular-nums">ID: {client.id}</span>
+                        <span className="mt-1 block text-[10px] text-muted">Added {formatDate(client.createdAt, language)}</span>
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company }} /> : <span className="text-xs text-muted">Not recorded</span>}</td>
+                    <td className="px-4 py-3"><div className="max-w-[240px] space-y-1 text-xs text-fg"><p className="break-all">{client.email || 'Email not recorded'}</p><p className="break-words text-muted">{client.phone || 'Phone not recorded'}</p></div></td>
+                    <td className="px-4 py-3"><div className="max-w-[180px] space-y-1 text-xs text-fg"><p className="break-words">{client.industry || 'Industry not recorded'}</p><p className="break-words text-muted">{client.location || 'Location not recorded'}</p></div></td>
+                    <td className="px-4 py-3"><span className={'inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + getClientStatusTone(client.status)}>{formatClientStatusLabel(client.status)}</span></td>
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-muted">{formatDate(client.updatedAt, language)}</td>
+                  </>
+                ) : (
+                  <>
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company, companyEmail: client.email, phone: client.phone }} /> : <span className="text-xs text-muted">—</span>}</td>
                     <td className="px-4 py-3"><span className={'inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + getClientStatusTone(client.status)}>{formatClientStatusLabel(client.status)}</span></td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(client.totalSpend) : (language === 'id' ? 'Belum tercatat' : 'Not recorded')}</td>
                     <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={'h-2 w-2 rounded-full ' + (spendState === 'success' ? 'bg-success' : spendState === 'warning' ? 'bg-warning' : spendState === 'danger' ? 'bg-danger' : 'bg-line')} aria-hidden="true" /><span className={spendState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{headroom === null ? (slaState === 'not-configured' ? (language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured') : (language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded')) : headroom.toFixed(1) + (language === 'id' ? '% ruang tersisa' : '% headroom')}</span></div></td>
+                  </>
+                )}
                     <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
                         <button type="button" onClick={() => setSelectedClient(client)} aria-label={`View profile for ${client.company}`} title="View profile" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                           <Eye size={16} aria-hidden="true" />
