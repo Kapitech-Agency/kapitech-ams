@@ -375,26 +375,32 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.match(invoicing, /onClick=\{exportVendorPaymentsCsv\}[\s\S]*?Export CSV/);
 });
 
-test('Finance Executive Summary and Dashboard have distinct scopes and period-aware activity', async () => {
+test('Finance Executive Summary and Dashboard separate company summary from comparable period analysis', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const start = workspace.indexOf('const renderSummary = (dashboard: boolean) =>');
   const end = workspace.indexOf('const openVendorContractEditor', start);
   assert.ok(start >= 0 && end > start, 'Summary renderer should remain available.');
   const summary = workspace.slice(start, end);
 
-  assert.match(summary, /const dashboardMetrics = \[/);
   assert.match(summary, /const dashboardRange = getReportingPeriodRange\(reportPeriodValue, reportPeriodMode, locale\)/);
-  assert.match(summary, /label: 'Invoice value issued'[\s\S]*?billedInPeriod/);
-  assert.match(summary, /label: 'Recorded cash in'[\s\S]*?cashInThisPeriod/);
-  assert.match(summary, /label: 'Recorded cash out'[\s\S]*?cashOutThisPeriod/);
-  assert.match(summary, /label: 'Net cash movement \(proxy\)'[\s\S]*?cashInThisPeriod - cashOutThisPeriod/);
+  assert.match(summary, /const previousDashboardPeriodValue = getPreviousReportingPeriodValue\(reportPeriodValue, reportPeriodMode\)/);
+  assert.match(summary, /const previousDashboardRange = getReportingPeriodRange\(previousDashboardPeriodValue, reportPeriodMode, locale\)/);
+  assert.match(summary, /invoicesInPreviousPeriod/);
+  assert.match(summary, /movementsInPreviousPeriod/);
+  assert.match(summary, /id: 'invoice-value-issued', cells: \['Invoice value issued', formatMoney\(billedInPeriod\), formatMoney\(billedInPreviousPeriod\), formatMoney\(billedInPeriod - billedInPreviousPeriod\)\]/);
+  assert.match(summary, /id: 'recorded-cash-in', cells: \['Recorded cash in', formatMoney\(cashInThisPeriod\), formatMoney\(cashInPreviousPeriod\), formatMoney\(cashInThisPeriod - cashInPreviousPeriod\)\]/);
+  assert.match(summary, /id: 'recorded-cash-out', cells: \['Recorded cash out', formatMoney\(cashOutThisPeriod\), formatMoney\(cashOutPreviousPeriod\), formatMoney\(cashOutThisPeriod - cashOutPreviousPeriod\)\]/);
+  assert.match(summary, /id: 'net-cash-movement-proxy', cells: \['Net cash movement \(proxy\)'/);
   assert.match(summary, /data-ams-slug="finance-dashboard-period"/);
+  assert.match(summary, /title="Selected vs previous period"/);
+  assert.match(summary, /columns=\{\[\{ label: 'Measure' \}, \{ label: dashboardPeriodLabel, align: 'right' \}, \{ label: previousDashboardPeriodLabel, align: 'right' \}, \{ label: 'Difference', align: 'right' \}\]\}/);
   assert.match(summary, /renderRecentActivity\(dashboardRange \?/);
   assert.doesNotMatch(summary, /finance-dashboard-month-picker|setSelectedMonth/);
   assert.match(summary, /title="Recent invoice register"/);
-  assert.match(summary, /\{dashboard \? \([\s\S]*?AdminMetricStrip metrics=\{dashboardMetrics\}[\s\S]*?\) : \(/);
+  assert.match(summary, /\{dashboard \? \([\s\S]*?title="Selected vs previous period"[\s\S]*?\) : \(/);
+  assert.doesNotMatch(summary, /dashboardMetrics|AdminMetricStrip metrics=\{dashboardMetrics\}/);
   assert.match(summary, /AdminMetricStrip metrics=\{metrics\}/);
-  assert.doesNotMatch(summary, /Selected-month activity/);
+  assert.match(summary, /Net movement is a proxy and is not a reconciled closing cash balance/);
 });
 
 test('Finance refresh keeps last successful source records available when a request fails', async () => {

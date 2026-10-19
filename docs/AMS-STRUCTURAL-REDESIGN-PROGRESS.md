@@ -521,7 +521,7 @@ The Finance worksheet row had `variant="secondary"`, which intentionally rendere
 ## Stage 4 view design record — Clients · Agreements · Renewal Schedule
 
 **View ID:** `VIEW-CLIENTS-AGREEMENTS`, Renewal Schedule subsection.  
-**Status at commit creation:** Source and regression changes included in this checkpoint; verify the resulting exact SHA through AMS CI and AMS Quality Gate before calling this slice source/test verified.
+**Source/test verification:** The resulting source commit `939cd800a4321c8049e27cb383c1176cf9c8866b` passed AMS Quality Gate [39207367066](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207367066) and AMS CI [39207367178](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39207367178). Canonical owner/action fields remain missing and authenticated browser/visual review stays open for Stage 5.
 
 1. **Owner module and persona.** Clients → Agreements. Client-service/account owner is primary. Executives need an exception summary; PMs need renewal context when it affects delivery planning. Presentation does not change access.
 2. **Primary task.** Find the active agreement or retainer whose recorded renewal/end date needs review and open its canonical source.
@@ -550,3 +550,27 @@ The first CI attempt for commit `9d0db39395d7ed26685b77e66efe86789a1d1688` faile
 ### Renewal Schedule regression assertion correction — 19 October 2026
 
 The follow-up `4af1ec687dd39deeca5933d54023f357b57d14f9` restored the existing `ShieldAlert` import and passed TypeScript, but its regression run failed because the test sliced the Renewal Schedule ternary through the filtered-empty branch and then expected a source-boundary note located immediately after that branch. The source note is present in the rendered view; the assertion was incorrectly scoped. The next commit checks this wording in the full component source while retaining separate assertions for register/control ordering. Recheck the exact fix SHA before verification is updated.
+
+
+## Stage 4 view design record — Finance · Overview & Control · Dashboard
+
+**View ID:** `VIEW-FIN-OVERVIEW`, Dashboard worksheet.  
+**Status:** Source change committed in this checkpoint; the new SHA must pass both workflows before source/test verification is claimed.
+
+1. **Owner and persona.** Finance → Overview & Control → Dashboard. Finance lead and authorized executive readers use it for selected-period comparison; this presentation does not change financial permissions.
+2. **Primary task.** Compare billing and recorded cash movements for the selected period with the immediately previous comparable period, then inspect transactions that explain the selected period.
+3. **Decision.** Did invoice value issued, recorded cash-in, cash-out or net movement change relative to the preceding month, quarter or year?
+4. **Primary surface.** Exact-value comparison table followed by selected-period transaction activity. This avoids a decorative chart or trend line based on unreconciled balances.
+5. **Content order.** Existing workspace header/period control; four-row current-versus-previous period table; selected-period transaction activity. Executive Summary remains distinct: company-wide totals and a recent invoice register.
+6. **Fields and sources.** Invoice value uses canonical issued IDR invoices grouped by invoice date. Cash in/out use recorded IDR movements grouped by movement date. Net cash movement is cash-in minus cash-out and remains a proxy, not reconciled closing cash. Period labels and previous-period selection use existing shared reporting helpers.
+7. **Search/filter/sort/actions.** The global reporting-period control remains the only period selection source. This slice adds no separate month picker and no financial mutation.
+8. **Canonical relationships and breadcrumb.** Uses the current invoice and cash-movement projections rather than a second ledger. It stays at worksheet level; no breadcrumb.
+9. **Role-aware presentation.** Existing Finance module and server authorization remain unchanged. The table exposes the same summary-level source values.
+10. **States and recovery.** Reuses global source-availability notices and the selected-period activity empty state. No value is labeled as posted accounting balance. Partial-source semantics remain a Stage 5 check.
+11. **Responsive transformation.** The comparison table is primary evidence. Stage 5 must validate table layout, horizontal overflow, toolbar wrapping and narrow-screen readability.
+12. **Accessibility.** Semantic column headers, labeled measure/value cells and explicit definitions in the table description. Keyboard and screen-reader behavior need browser validation.
+13. **Regression tests.** Assert shared current/previous ranges, source-backed value differences, the net movement proxy definition, activity scope and separation from the Executive Summary metric/register layout.
+14. **Dependencies.** Historical cash movement completeness and bank reconciliation remain data limitations. No backend, financial formula, posting, payment, ledger or period-close behavior changes.
+15. **Acceptance.** Dashboard differs meaningfully from Executive Summary, compares the selected month/quarter/year to the comparable prior period with existing helpers, states source semantics, and links comparison to the actual selected-period activity. Finance remains partially complete until remaining worksheets and Stage 5 visual/role checks are complete.
+
+**Next Stage 4 slice:** Finance → Receivables & Payables → Accounts Receivable. Inspect invoice-list hierarchy, aging, outstanding/partial/overdue states and source recovery while preserving invoice/payment semantics.

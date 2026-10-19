@@ -1850,16 +1850,31 @@ const FinanceWorkbookWorkspace: React.FC = () => {
   const renderSummary = (dashboard: boolean) => {
     const dashboardRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale);
     const dashboardPeriodLabel = formatReportingPeriodLabel(reportPeriodValue, reportPeriodMode, locale);
+    const previousDashboardPeriodValue = getPreviousReportingPeriodValue(reportPeriodValue, reportPeriodMode);
+    const previousDashboardRange = getReportingPeriodRange(previousDashboardPeriodValue, reportPeriodMode, locale);
+    const previousDashboardPeriodLabel = formatReportingPeriodLabel(previousDashboardPeriodValue, reportPeriodMode, locale);
     const invoicesInPeriod = dashboardRange
       ? idrInvoices.filter((invoice) => {
           const date = String(getInvoiceDate(invoice) || '').slice(0, 10);
           return date >= dashboardRange.startDate && date <= dashboardRange.endDate;
         })
       : [];
+    const invoicesInPreviousPeriod = previousDashboardRange
+      ? idrInvoices.filter((invoice) => {
+          const date = String(getInvoiceDate(invoice) || '').slice(0, 10);
+          return date >= previousDashboardRange.startDate && date <= previousDashboardRange.endDate;
+        })
+      : [];
     const movementsInPeriod = dashboardRange
       ? cashMovements.filter((movement) => {
           const date = String(movement.date || '').slice(0, 10);
           return movement.currency === 'IDR' && date >= dashboardRange.startDate && date <= dashboardRange.endDate;
+        })
+      : [];
+    const movementsInPreviousPeriod = previousDashboardRange
+      ? cashMovements.filter((movement) => {
+          const date = String(movement.date || '').slice(0, 10);
+          return movement.currency === 'IDR' && date >= previousDashboardRange.startDate && date <= previousDashboardRange.endDate;
         })
       : [];
     const billedInPeriod = sumAmounts<AgencyInvoice>(invoicesInPeriod, (invoice) => Number(invoice.total) || 0);
@@ -1871,11 +1886,14 @@ const FinanceWorkbookWorkspace: React.FC = () => {
       { id: 'receivable', label: 'Outstanding receivables', value: formatMoney(totalOutstanding), context: 'Derived from IDR invoice balances', icon: <WalletCards size={15} />, toneClassName: 'text-warning' },
       { id: 'expenses', label: 'Recorded expenses', value: formatMoney(totalExpenses), context: 'IDR expense records returned by AMS', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' }
     ];
-    const dashboardMetrics = [
-      { id: 'period-billed', label: 'Invoice value issued', value: formatMoney(billedInPeriod), context: language === 'id' ? dashboardPeriodLabel + ' · invoice IDR diterbitkan' : dashboardPeriodLabel + ' · issued IDR invoices', icon: <FileText size={15} /> },
-      { id: 'period-in', label: 'Recorded cash in', value: formatMoney(cashInThisPeriod), context: language === 'id' ? dashboardPeriodLabel + ' · pergerakan IDR bertanggal pada Kas & Bank' : dashboardPeriodLabel + ' · dated IDR movements touching Cash & Bank', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
-      { id: 'period-out', label: 'Recorded cash out', value: formatMoney(cashOutThisPeriod), context: language === 'id' ? dashboardPeriodLabel + ' · pergerakan IDR bertanggal pada Kas & Bank' : dashboardPeriodLabel + ' · dated IDR movements touching Cash & Bank', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' },
-      { id: 'period-net', label: 'Net cash movement (proxy)', value: formatMoney(cashInThisPeriod - cashOutThisPeriod), context: 'Recorded movement only; not reconciled closing cash', icon: <CircleDollarSign size={15} /> }
+    const billedInPreviousPeriod = sumAmounts<AgencyInvoice>(invoicesInPreviousPeriod, (invoice) => Number(invoice.total) || 0);
+    const cashInPreviousPeriod = sumAmounts<CashMovement>(movementsInPreviousPeriod, (movement) => movement.cashIn);
+    const cashOutPreviousPeriod = sumAmounts<CashMovement>(movementsInPreviousPeriod, (movement) => movement.cashOut);
+    const dashboardComparisonRows: TableRow[] = [
+      { id: 'invoice-value-issued', cells: ['Invoice value issued', formatMoney(billedInPeriod), formatMoney(billedInPreviousPeriod), formatMoney(billedInPeriod - billedInPreviousPeriod)] },
+      { id: 'recorded-cash-in', cells: ['Recorded cash in', formatMoney(cashInThisPeriod), formatMoney(cashInPreviousPeriod), formatMoney(cashInThisPeriod - cashInPreviousPeriod)] },
+      { id: 'recorded-cash-out', cells: ['Recorded cash out', formatMoney(cashOutThisPeriod), formatMoney(cashOutPreviousPeriod), formatMoney(cashOutThisPeriod - cashOutPreviousPeriod)] },
+      { id: 'net-cash-movement-proxy', cells: ['Net cash movement (proxy)', formatMoney(cashInThisPeriod - cashOutThisPeriod), formatMoney(cashInPreviousPeriod - cashOutPreviousPeriod), formatMoney((cashInThisPeriod - cashOutThisPeriod) - (cashInPreviousPeriod - cashOutPreviousPeriod))] }
     ];
     const recentInvoices: TableRow[] = [...reportInvoices]
       .filter((invoice) => matchesDate(getInvoiceDate(invoice)))
@@ -1900,7 +1918,13 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               <h2 className="text-sm font-semibold text-fg">Selected-period dashboard</h2>
               <p className="text-xs text-muted">Recorded cash movement and invoice activity for {dashboardPeriodLabel}.</p>
             </div>
-            <AdminMetricStrip metrics={dashboardMetrics} />
+            <FinanceDataTable
+              title="Selected vs previous period"
+              description="Invoice values use invoice dates. Cash values use recorded IDR movement dates. Net movement is a proxy and is not a reconciled closing cash balance."
+              columns={[{ label: 'Measure' }, { label: dashboardPeriodLabel, align: 'right' }, { label: previousDashboardPeriodLabel, align: 'right' }, { label: 'Difference', align: 'right' }]}
+              rows={dashboardComparisonRows}
+              emptyMessage="No period comparison rows are available for the selected reporting ranges."
+            />
             {renderRecentActivity(dashboardRange ? { startDate: dashboardRange.startDate, endDate: dashboardRange.endDate, label: dashboardPeriodLabel } : undefined)}
           </>
         ) : (
