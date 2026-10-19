@@ -201,6 +201,7 @@ export const TasksWorkspace: React.FC = () => {
   const [projects, setProjects] = useState<TaskProject[]>([]);
   const [assignees, setAssignees] = useState<Array<{ id: string; name: string; username: string }>>([]);
   const [loading, setLoading] = useState(true);
+  const [taskSourceEverLoaded, setTaskSourceEverLoaded] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [projectFilter, setProjectFilter] = useState('all');
@@ -333,6 +334,7 @@ export const TasksWorkspace: React.FC = () => {
           };
         }).filter((task: TaskRecord) => task.id);
 
+        setTaskSourceEverLoaded(true);
         setRecords(normalized);
         setSelectedTask(current => current ? normalized.find(task => task.id === current.id) || null : null);
         setSelectedIds(current => current.filter(id => normalized.some(task => task.id === id)));
@@ -1197,9 +1199,29 @@ export const TasksWorkspace: React.FC = () => {
           </div>
         )}
 
+        {!loading && taskSourceEverLoaded && layout === 'board' && filteredRecords.length === 0 && (
+          <div className="flex flex-col gap-3 border-b border-line px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5" data-ams-slug="tasks-board-empty-state" role="status">
+            <div>
+              <p className="text-sm font-semibold text-fg">{activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'}</p>
+              <p className="mt-1 text-xs leading-5 text-muted">{activeFilterCount ? 'Reset filters or change the search to widen the queue.' : taskScope === 'all' ? 'No tasks are available from the live project data yet.' : 'Nothing needs attention in this task view right now.'}</p>
+            </div>
+            {activeFilterCount > 0 && (
+              <Button type="button" variant="secondary" onClick={clearFilters} data-ams-slug="tasks-board-empty-reset">Reset filters</Button>
+            )}
+          </div>
+        )}
+
         {loading ? (
           <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4" data-ams-slug="tasks-loading">
             {[1, 2, 3, 4].map(item => <div key={item} className="h-24 animate-pulse rounded-control border border-line bg-bg" data-ams-slug={'tasks-loading-' + item} />)}
+          </div>
+        ) : !taskSourceEverLoaded ? (
+          <div className="flex flex-col gap-3 border-t border-line px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-5" data-ams-slug="tasks-source-unavailable" role="status">
+            <div>
+              <p className="text-sm font-semibold text-fg">Tasks unavailable</p>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">The task service has not returned a verified task record set. Queue counts are not authoritative until the source loads successfully.</p>
+            </div>
+            <Button type="button" variant="secondary" onClick={() => void loadTasks(true)} data-ams-slug="tasks-source-retry">Retry tasks</Button>
           </div>
         ) : filteredRecords.length === 0 && layout !== 'board' ? (
           <div className="px-5 py-16 text-center" data-ams-slug="tasks-empty-state">
@@ -1225,7 +1247,7 @@ export const TasksWorkspace: React.FC = () => {
                   <section
                     key={column.status}
                     aria-label={column.label + ' task column'}
-                    className={'flex w-[252px] shrink-0 flex-col rounded-card border bg-bg p-3 transition-colors sm:w-[268px] ' + (isDropTarget ? 'border-accent/45 bg-accent/5' : 'border-line')}
+                    className={'flex w-[280px] shrink-0 flex-col rounded-card border bg-bg p-3 transition-colors ' + (isDropTarget ? 'border-accent/45 bg-accent/5' : 'border-line')}
                     data-ams-slug={'tasks-column-' + column.status}
                     data-drop-target={isDropTarget ? 'true' : 'false'}
                     onDragEnter={event => {
@@ -1339,7 +1361,7 @@ export const TasksWorkspace: React.FC = () => {
                       })}
                       {!columnTasks.length && (
                         <div className={'flex min-h-[104px] flex-1 items-center justify-center rounded-control border border-dashed px-3 py-8 text-center text-[10px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
-                          {isDropTarget && canManageTasks ? 'Drop task here' : canManageTasks ? 'No tasks. Add one from the task form or move a card here.' : 'No tasks in this stage.'}
+                          {isDropTarget && canManageTasks ? 'Drop task here' : activeFilterCount > 0 ? 'No matching tasks in this stage.' : canManageTasks ? 'No tasks in this stage. Create a task or move a card here.' : 'No tasks in this stage.'}
                         </div>
                       )}
                     </div>

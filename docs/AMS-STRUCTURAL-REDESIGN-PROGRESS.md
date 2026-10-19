@@ -814,3 +814,27 @@ Source status: the canonical register already supports search, lifecycle/status 
 15. Acceptance. Registry users can filter meaningful deadline windows over canonical project data. The view remains partially complete until Stage 5 confirms viewport, keyboard and role behavior; other Project worksheets still require independent review.
 
 Next Stage 4 slice: Projects · Tasks & Execution. Audit the existing canonical task Board/List and detail work surfaces against stage/priority/owner/deadline, unassigned state, keyboard alternatives and task-level source parity. Do not create separate tasks or simulate Dependencies unless a real canonical model exists.
+
+
+## Stage 4 view design record — Projects · Tasks & Execution · Board/List empty and source states
+
+View ID: VIEW-PROJECTS-TASKS, Tasks & Execution.
+Implementation: source-state and Board empty-state hierarchy correction. Check the resulting SHA's CI and Quality Gate before calling this slice source/test verified.
+
+1. Owner/persona. Projects → Tasks & Execution. Project managers and team members prioritize and move canonical delivery tasks through To Do, In Progress, Review, and Done.
+2. Primary task. Find matching work, identify ownership, priority and deadline, open details, and move a task using permitted interactions.
+3. Decision. Are there no matching tasks, is the queue genuinely empty, or has the task source not yet returned verified records?
+4. Primary surface. Existing Board or List over canonical task records. Board remains a status-lane view; List stays the keyboard-friendly register and supports sorting and pagination.
+5. Content order. Existing workspace/scope tabs, search/filter controls, active-filter/result summary, source/action notice, contextual board-empty or list-empty feedback, primary work surface, pagination, then supporting KPI strip. No KPI/source-store duplication.
+6. Fields and semantics. Existing task ID/title, project, assignee, status, priority, due date, blocked state and subtasks remain source-derived. Task Lists and Dependencies remain unavailable because their canonical persisted models are not verified.
+7. Controls. Existing filters, reset, row selection and bulk status controls remain. Unavailable state retries via the real task loader. Board empty reset reuses the existing clearFilters callback; no new API mutation is added.
+8. Canonical ownership/breadcrumb. Both layouts continue to use the same task collection and existing status transition API. No duplicate task record, no dependency simulation and no breadcrumb at workspace level.
+9. Role-aware presentation. Existing canManageKanbanTasks guards remain authoritative; no additional permissions are created. Read-only users see read-only board instructions without active drag handles.
+10. States/recovery. Initial fetch failure shows Tasks unavailable with retry rather than an empty count. Source is considered loaded only after a successful canonical task array response, including a valid empty array. If a later refresh fails after successful load, known records remain visible with the existing warning. Board distinguishes filtered-empty from no tasks in the current queue, and lane copy reflects active filters.
+11. Responsive behavior. Kanban lane minimum width is 280px per Kanban guidelines; the board retains a contained horizontal scroll region. List retains the contained table and keyboard-focusable region. Stage 5 must verify 1100, 900, 600, 390 and 320px.
+12. Accessibility. Empty/unavailable states use role=status, retry/reset controls have visible labels, and no message depends on color. Stage 5 browser keyboard/focus and 200% zoom checks remain unverified.
+13. Regression tests. Source parity suite now checks initial unavailable distinction, successful source evidence, actual retry, Board filtered-empty banner and lane copy, and 280px geometry; existing source-to-record and permission regressions remain.
+14. Dependencies. No backend/API/persistence/auth/RBAC/business workflow changed. Retry uses loadTasks(true). Status transitions and unknown-outcome recovery remain on the existing canonical task API.
+15. Acceptance. Users can distinguish true zero records, filter-empty results and initial source failure without losing useful lane drop targets for successful empty states. The view remains partially complete pending Stage 5 runtime/accessibility and Stage 6/8 workflow traces.
+
+Next Stage 4 slice: Projects · Planning & Delivery. Review Project Brief, Milestones and Timeline individually. Keep Scope & Deliverables, Internal Quality Review, Client Review and Revision History unavailable until canonical workflows support them.

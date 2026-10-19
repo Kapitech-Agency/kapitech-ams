@@ -80,3 +80,21 @@ test('Task workspace reconciles ambiguous task mutations against canonical serve
   assert.ok(workspace.includes('if (!refreshed) setRecords(previousRecords);'));
   assert.ok(workspace.includes("response.success && confirmedTask && String(confirmedTask.id || '') === task.id"));
 });
+
+
+test('Task workspace distinguishes an unavailable canonical source from empty and filtered-empty queues', () => {
+  const workspace = read('src/components/admin/TasksWorkspace.tsx');
+
+  assert.match(workspace, /const \[taskSourceEverLoaded, setTaskSourceEverLoaded\] = useState\(false\)/);
+  assert.match(workspace, /setTaskSourceEverLoaded\(true\);\s*setRecords\(normalized\)/);
+  assert.match(workspace, /data-ams-slug="tasks-source-unavailable"/);
+  assert.match(workspace, /data-ams-slug="tasks-source-retry"/);
+  assert.match(workspace, /onClick=\{\(\) => void loadTasks\(true\)\}/);
+  assert.match(workspace, /!taskSourceEverLoaded \? \([\s\S]*?data-ams-slug="tasks-source-unavailable"/);
+  assert.match(workspace, /data-ams-slug="tasks-board-empty-state"/);
+  assert.match(workspace, /layout === 'board' && filteredRecords\.length === 0/);
+  assert.match(workspace, /No tasks match these filters/);
+  assert.match(workspace, /No matching tasks in this stage\./);
+  assert.match(workspace, /w-\[280px\] shrink-0/);
+  assert.doesNotMatch(workspace, /w-\[252px\]|sm:w-\[268px\]/);
+});

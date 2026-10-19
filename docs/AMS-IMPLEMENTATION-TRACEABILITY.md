@@ -716,3 +716,10 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 Source: src/pages/admin/AdminProjects.tsx and src/lib/projectDeadlineFilters.ts. Project Registry filters canonical targetEndDate by local date-only boundaries: overdue non-completed projects, deadlines today through day 7, days 8–30, and missing/invalid dates. Completed projects do not appear in urgency windows. Reset and pagination behavior are wired to the existing registry filter state. The filter is cleared when leaving Registry to avoid an invisible filter affecting other project worksheets.
 
 Tests: tests/project-deadline-filters.test.ts covers boundary dates, leap days, inclusive/exclusive windows, completed items, and invalid/missing dates. tests/projects-module-regression.test.ts verifies selector and reset pipeline. Exact-SHA CI/Quality Gate and Stage 5 viewport/keyboard/role checks remain required.
+
+
+### PROJ-TASKS-EMPTY-STATE-001: Canonical Tasks source and Board empty-state hierarchy
+
+Source: src/components/admin/TasksWorkspace.tsx. The workspace records whether a valid canonical task array has ever loaded. Before the first successful response, it presents an unavailable state and the existing API retry rather than implying the queue has zero tasks. Known records remain visible after a later failed refresh with the existing warning. Board gets a separate true-empty/filtered-empty notice, lane empty copy accounts for active filters, and lane geometry follows the Kanban guideline minimum 280px. Board/List still operate on the same record set; no backend, persistence, permission or status-transition behavior changed.
+
+Tests: tests/task-workspace-data-parity-regression.test.ts asserts unavailable/source recovery, Board filtered-empty semantics, lane copy and geometry. Existing task parity tests continue to cover canonical data, permissions and ambiguous update outcomes. Exact-SHA CI and Quality Gate plus Stage 5 responsive/keyboard and Stage 6/8 status lifecycle evidence remain required.
