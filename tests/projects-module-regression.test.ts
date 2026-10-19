@@ -253,3 +253,20 @@ test('Planning & Delivery never substitutes a different project for an invalid U
   assert.match(source, /next\.delete\('planningProject'\)/);
   assert.match(source, /options=\{\[\{ value: '', label: 'Choose a project\.\.\.' \}, \.\.\.projects\.map/);
 });
+
+
+test('Project Resources never substitutes a different project for an invalid URL selection', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const selectionStart = source.indexOf('const resourcesProject = resourcesProjectId');
+  const selectionEnd = source.indexOf('const resourcesAllocations', selectionStart);
+  assert.ok(selectionStart >= 0 && selectionEnd > selectionStart, 'Resource project selection should be explicit.');
+  const selection = source.slice(selectionStart, selectionEnd);
+
+  assert.match(selection, /resourcesProjectId\s*\?\s*projects\.find[\s\S]*?\|\| null\s*:\s*projects\.find/);
+  assert.match(source, /title=\{resourcesProjectId \? 'Selected project unavailable' : 'No project records'\}/);
+  assert.match(source, /The selected project is not available in the current source\. AMS will not substitute another project automatically\./);
+  assert.match(source, /Choose an available project for resources/);
+  assert.match(source, /next\.set\('resourcesProject', value\)/);
+  assert.match(source, /data-ams-slug="resources-project-clear-selection"/);
+  assert.match(source, /next\.delete\('resourcesProject'\)/);
+});

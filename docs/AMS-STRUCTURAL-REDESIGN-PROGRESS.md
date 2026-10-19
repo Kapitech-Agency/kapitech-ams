@@ -860,3 +860,25 @@ Implementation: a stale planningProject URL no longer silently selects the first
 13. Regression tests. Added source regression assertions for explicit identity matching, no fallback for missing selection, source-aware unavailable copy, selector query updates and clearing only planningProject.
 14. Dependencies. No backend, database, authorization or delivery workflow changes. Scope/acceptance criteria, deliverable tracking, internal QA, client review and revision history remain unavailable.
 15. Acceptance. A stale or inaccessible project URL cannot silently show another project's planning data. The view remains partially complete pending browser route/history/accessibility verification and missing canonical planning workflows.
+
+
+## Stage 4 view design record — Projects · Project Resources · Selected-project recovery
+
+View ID: VIEW-PROJECTS-RESOURCES, Project Resources.
+Implementation: remove silent fallback from an explicit resourcesProject URL. Verify the resulting SHA through both CI and Quality Gate before calling source/test verified.
+
+1. Owner/persona. Projects → Project Resources. Project managers review team membership, explicit allocation records and project-scoped task assignments.
+2. Primary task. Select a project and inspect recorded team/task assignments without suggesting that assignment count equals availability or capacity.
+3. Decision. Is the URL-selected project present in the canonical project source, or must the user select another project/clear the stale query?
+4. Primary surface. Existing project-scoped team/allocation summary and canonical task register.
+5. Content order. Project selector, team/allocation values, project-scoped task assignments and capacity boundary statement. If the selected project is missing, show a specific unavailable state instead of a different project.
+6. Fields and semantics. Project team names, explicit allocation percentages/dates and existing task assignment/status/priority/due date. Cross-project availability and time remain in Team & Resources/Time Tracking.
+7. Controls. Selection updates resourcesProject while preserving other query parameters. Clearing removes only resourcesProject so the existing default project policy applies.
+8. Canonical ownership/breadcrumb. Uses project, resource-allocation and task records already loaded; no new assignment store or breadcrumb.
+9. Role-aware presentation. Existing project route and canManageProjects policy remain unchanged.
+10. States/recovery. If a selected ID/slug is not returned, show Selected project unavailable and explain no alternate project will be substituted. User can choose a returned project or clear the query. If the source itself is unavailable, the existing source-unavailable state remains authoritative.
+11. Responsive behavior. Recovery selector is full width on narrow screens and constrained on wide screens. Stage 5 verifies 1100, 900, 600, 390 and 320px.
+12. Accessibility. Semantic panel, role=status explanation, accessible selector label and visible recovery button; keyboard/focus and screen-reader behavior remain Stage 5.
+13. Regression tests. Explicit identity matching, no silent substitution, selector query update and query clearing are asserted. Existing resource allocation and task record behavior remains unchanged.
+14. Dependencies. No API, persistence, RBAC or business logic change. Cross-project capacity and current availability remain unavailable in this project workspace.
+15. Acceptance. A stale resource-project URL cannot silently display another project's team and allocation data. View stays partially complete until Stage 5 route/visual verification and cross-module source parity checks.

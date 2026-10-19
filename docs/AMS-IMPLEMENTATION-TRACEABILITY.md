@@ -730,3 +730,10 @@ Tests: tests/task-workspace-data-parity-regression.test.ts asserts unavailable/s
 Source: src/pages/admin/AdminProjects.tsx. When the URL provides planningProject, selection now resolves only that ID/slug. A missing selection shows Selected project unavailable and avoids falling back to another project. If canonical project options exist, the user can select one; the default recovery removes only planningProject, preserving the selected worksheet and other query parameters. No API, persistence, RBAC or workflow logic changed.
 
 Tests: tests/projects-module-regression.test.ts verifies explicit-ID resolution, no silent substitution, selector query update and stale-query recovery. Stage 5 must verify direct URL, refresh/back-forward, keyboard and responsive states.
+
+
+### PROJ-RESOURCES-SELECTED-RECORD-001: Preserve explicit project identity in Project Resources
+
+Source: src/pages/admin/AdminProjects.tsx. When the URL provides resourcesProject, selection resolves only that project ID/slug. Missing selection shows Selected project unavailable and does not fall back to a different project. Available canonical project choices provide recovery; the default action removes only resourcesProject and preserves other query parameters. No API, persistence, authorization or allocation semantics changed.
+
+Tests: tests/projects-module-regression.test.ts verifies explicit selection, unavailable recovery, selector query update and stale-query clearing. Stage 5 must verify direct URL, refresh/back-forward, keyboard and responsive states.

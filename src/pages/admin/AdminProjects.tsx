@@ -515,10 +515,11 @@ export const AdminProjects: React.FC = () => {
       )
     : [];
   const resourcesProjectId = searchParams.get('resourcesProject') || '';
-  const resourcesProject = projects.find((project) => project.id === resourcesProjectId || project.slug === resourcesProjectId)
-    || projects.find((project) => project.status !== 'completed')
-    || projects[0]
-    || null;
+  const resourcesProject = resourcesProjectId
+    ? projects.find((project) => project.id === resourcesProjectId || project.slug === resourcesProjectId) || null
+    : projects.find((project) => project.status !== 'completed')
+      || projects[0]
+      || null;
   const resourcesAllocations = resourcesProject?.resourceAllocations || [];
   const resourcesTeamNames = resourcesProject
     ? Array.from(new Set([
@@ -2413,8 +2414,47 @@ export const AdminProjects: React.FC = () => {
               <div className="p-4 text-xs leading-5 text-muted" role="status">The project service did not return verified records. No local or sample assignments are shown.</div>
             </AdminPanel>
           ) : !resourcesProject ? (
-            <AdminPanel title="No project records" description="Project Resources displays team assignments for a canonical project.">
-              <div className="p-5 text-xs leading-5 text-muted" role="status">No projects are available in the current source.</div>
+            <AdminPanel
+              title={resourcesProjectId ? 'Selected project unavailable' : 'No project records'}
+              description={resourcesProjectId ? 'The project ID in this URL was not returned by the current project source.' : 'Project Resources displays team assignments for a canonical project.'}
+            >
+              <div className="space-y-3 p-5">
+                <p className="text-xs leading-5 text-muted" role="status">
+                  {resourcesProjectId
+                    ? 'The selected project is not available in the current source. AMS will not substitute another project automatically.'
+                    : 'No projects are available in the current source.'}
+                </p>
+                {projects.length > 0 && (
+                  <div className="w-full min-w-0 sm:max-w-80">
+                    <CustomSelect
+                      value=""
+                      onChange={(value) => {
+                        if (!value) return;
+                        const next = new URLSearchParams(searchParams);
+                        next.set('resourcesProject', value);
+                        setSearchParams(next);
+                      }}
+                      options={[{ value: '', label: 'Choose a project...' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
+                      className="w-full"
+                      aria-label="Choose an available project for resources"
+                    />
+                  </div>
+                )}
+                {resourcesProjectId && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      const next = new URLSearchParams(searchParams);
+                      next.delete('resourcesProject');
+                      setSearchParams(next);
+                    }}
+                    data-ams-slug="resources-project-clear-selection"
+                  >
+                    Use default project
+                  </Button>
+                )}
+              </div>
             </AdminPanel>
           ) : (
             <>
