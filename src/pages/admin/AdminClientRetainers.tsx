@@ -5,17 +5,14 @@ import {
   ArrowUp,
   ArrowUpDown,
   CalendarDays,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock3,
   Download,
   Plus,
   Pencil,
-  ReceiptText,
   RotateCcw,
   Search,
-  TimerReset,
   TriangleAlert,
   X
 } from 'lucide-react';
@@ -28,7 +25,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
-type Health = 'healthy' | 'near-cap' | 'overage-risk';
+type Health = 'healthy' | 'near-cap' | 'overage-risk' | 'not-configured';
 type Cycle = 'monthly' | 'quarterly' | 'annual';
 type Tier = 'tier-1' | 'tier-2' | 'tier-3';
 type SortKey = 'client' | 'monthlyValue' | 'committedHours' | 'usedHours' | 'renewal' | 'health';
@@ -46,6 +43,13 @@ type Retainer = {
   cycle: Cycle;
   renewal: string;
   health: Health;
+  tierRecorded: boolean;
+  cycleRecorded: boolean;
+  monthlyValueRecorded: boolean;
+  committedHoursRecorded: boolean;
+  usedHoursRecorded: boolean;
+  overageRateRecorded: boolean;
+  renewalRecorded: boolean;
 };
 
 const tierLabel: Record<Tier, string> = { 'tier-1': 'Tier 1 Strategic', 'tier-2': 'Tier 2 Enterprise', 'tier-3': 'Tier 3 Growth' };
@@ -53,7 +57,8 @@ const cycleLabel: Record<Cycle, string> = { monthly: 'Monthly', quarterly: 'Quar
 const healthMeta: Record<Health, { label: string; dot: string; className: string }> = {
   healthy: { label: 'Healthy', dot: 'bg-success', className: 'border-success/20 bg-success/10 text-success' },
   'near-cap': { label: 'Near Cap', dot: 'bg-warning', className: 'border-warning/20 bg-warning/10 text-warning' },
-  'overage-risk': { label: 'Overage Risk', dot: 'bg-danger', className: 'border-danger/20 bg-danger/10 text-danger' }
+  'overage-risk': { label: 'Overage Risk', dot: 'bg-danger', className: 'border-danger/20 bg-danger/10 text-danger' },
+  'not-configured': { label: 'Usage unavailable', dot: 'bg-line', className: 'border-line bg-bg text-muted' }
 };
 const money = (value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value);
 const formatDate = (value: string) => formatRetainerRenewalDate(value);
@@ -62,12 +67,24 @@ const isRenewalHighlighted = (value: string) => {
   const days = renewalDays(value);
   return days !== null && days <= 30;
 };
+const isRecordedFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
 const mapClientRetainer = (client: AgencyClient): Retainer => {
-  const committedHours = Math.max(0, Number(client.retainerCommittedHours) || 0);
-  const usedHours = Math.max(0, Number(client.retainerUsedHours) || 0);
-  const burnRatio = usedHours / Math.max(1, committedHours);
+  const committedHoursRecorded = isRecordedFiniteNumber(client.retainerCommittedHours) && client.retainerCommittedHours >= 0;
+  const usedHoursRecorded = isRecordedFiniteNumber(client.retainerUsedHours) && client.retainerUsedHours >= 0;
+  const monthlyValueRecorded = isRecordedFiniteNumber(client.retainerMonthlyValue) && client.retainerMonthlyValue >= 0;
+  const overageRateRecorded = isRecordedFiniteNumber(client.retainerOverageRate) && client.retainerOverageRate >= 0;
+  const tierRecorded = client.retainerTier === 'tier-1' || client.retainerTier === 'tier-2' || client.retainerTier === 'tier-3';
+  const cycleRecorded = client.retainerCycle === 'monthly' || client.retainerCycle === 'quarterly' || client.retainerCycle === 'annual';
+  const renewal = String(client.retainerRenewal || '');
+  const renewalRecorded = Boolean(renewal.trim());
+  const committedHours = committedHoursRecorded ? client.retainerCommittedHours as number : 0;
+  const usedHours = usedHoursRecorded ? client.retainerUsedHours as number : 0;
   const tier: Tier = client.retainerTier === 'tier-1' || client.retainerTier === 'tier-3' ? client.retainerTier : 'tier-2';
   const cycle: Cycle = client.retainerCycle === 'quarterly' || client.retainerCycle === 'annual' ? client.retainerCycle : 'monthly';
+  const usageIsConfigured = committedHoursRecorded && committedHours > 0 && usedHoursRecorded;
+  const burnRatio = usageIsConfigured ? usedHours / committedHours : null;
   const clientName = String(client.company || client.name || 'Unnamed client');
   return {
     id: String(client.retainerId || ('RET-' + client.id)),
@@ -75,15 +92,30 @@ const mapClientRetainer = (client: AgencyClient): Retainer => {
     initials: clientName.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
     client: clientName,
     tier,
-    monthlyValue: Math.max(0, Number(client.retainerMonthlyValue) || 0),
+    monthlyValue: monthlyValueRecorded ? client.retainerMonthlyValue as number : 0,
     committedHours,
     usedHours,
-    overageRate: Math.max(0, Number(client.retainerOverageRate) || 0),
+    overageRate: overageRateRecorded ? client.retainerOverageRate as number : 0,
     cycle,
-    renewal: String(client.retainerRenewal || ''),
-    health: burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy'
+    renewal,
+    health: burnRatio === null ? 'not-configured' : burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy',
+    tierRecorded,
+    cycleRecorded,
+    monthlyValueRecorded,
+    committedHoursRecorded,
+    usedHoursRecorded,
+    overageRateRecorded,
+    renewalRecorded
   };
 };
+
+const getRetainerUsage = (item: Retainer): number | null =>
+  item.committedHoursRecorded && item.committedHours > 0 && item.usedHoursRecorded
+    ? Math.round(item.usedHours / item.committedHours * 100)
+    : null;
+
+const getRetainerRemainingHours = (item: Retainer): number | null =>
+  getRetainerUsage(item) === null ? null : item.committedHours - item.usedHours;
 
 const sortValue = (item: Retainer, key: SortKey): string | number => {
   if (key === 'client') return item.client;
@@ -178,17 +210,20 @@ export const AdminClientRetainers: React.FC = () => {
   useEffect(() => { setPage(1); }, [query, cycle, tier, health, sortKey, sortDirection, reportPeriodValue, reportPeriodEnabled]);
   useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
 
-  const mrr = records.reduce((sum, item) => sum + item.monthlyValue, 0);
-  const allocated = records.reduce((sum, item) => sum + item.committedHours, 0);
-  const used = records.reduce((sum, item) => sum + item.usedHours, 0);
-  const burn = allocated ? (used / allocated) * 100 : 0;
+  const mrrRecorded = records.every((item) => item.monthlyValueRecorded);
+  const mrr = mrrRecorded ? records.reduce((sum, item) => sum + item.monthlyValue, 0) : null;
+  const usageTotalsRecorded = records.every((item) => item.committedHoursRecorded && item.committedHours > 0 && item.usedHoursRecorded);
+  const allocated = usageTotalsRecorded ? records.reduce((sum, item) => sum + item.committedHours, 0) : null;
+  const used = usageTotalsRecorded ? records.reduce((sum, item) => sum + item.usedHours, 0) : null;
+  const burn = allocated !== null && used !== null && allocated > 0 ? (used / allocated) * 100 : null;
+  const renewalDateCount = records.filter((item) => item.renewalRecorded && renewalDays(item.renewal) !== null).length;
+  const renewalDatesComplete = renewalDateCount === records.length;
   const renewals = records.filter((item) => {
-    const days = renewalDays(item.renewal);
+    const days = item.renewalRecorded ? renewalDays(item.renewal) : null;
     return days !== null && days >= 0 && days <= 30;
   });
-  const renewalsValue = renewals.reduce((sum, item) => sum + item.monthlyValue, 0);
-  const nearCap = records.filter((item) => item.health === 'near-cap').length;
-  const avgRate = records.length ? records.reduce((sum, item) => sum + item.overageRate, 0) / records.length : 0;
+  const renewalsValueRecorded = renewals.every((item) => item.monthlyValueRecorded);
+  const renewalsValue = renewalsValueRecorded ? renewals.reduce((sum, item) => sum + item.monthlyValue, 0) : null;
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
@@ -334,7 +369,7 @@ export const AdminClientRetainers: React.FC = () => {
           <>
             <CustomSelect value={cycle} onChange={(value) => setCycle(value as 'all' | Cycle)} options={[{ value: 'all', label: 'All cycles' }, { value: 'monthly', label: 'Monthly' }, { value: 'quarterly', label: 'Quarterly' }, { value: 'annual', label: 'Annual' }]} aria-label="Billing cycle" className="min-w-[136px]" triggerClassName="w-full" />
             <CustomSelect value={tier} onChange={(value) => setTier(value as 'all' | Tier)} options={[{ value: 'all', label: 'All tiers' }, { value: 'tier-1', label: 'Tier 1 Strategic' }, { value: 'tier-2', label: 'Tier 2 Enterprise' }, { value: 'tier-3', label: 'Tier 3 Growth' }]} aria-label="Retainer tier" className="min-w-[146px]" triggerClassName="w-full" />
-            <CustomSelect value={health} onChange={(value) => setHealth(value as 'all' | Health)} options={[{ value: 'all', label: 'All health' }, { value: 'healthy', label: 'Healthy' }, { value: 'near-cap', label: 'Near cap' }, { value: 'overage-risk', label: 'Overage risk' }]} aria-label="Retainer health" className="min-w-[138px]" triggerClassName="w-full" />
+            <CustomSelect value={health} onChange={(value) => setHealth(value as 'all' | Health)} options={[{ value: 'all', label: 'All health' }, { value: 'healthy', label: 'Healthy' }, { value: 'near-cap', label: 'Near cap' }, { value: 'overage-risk', label: 'Overage risk' }, { value: 'not-configured', label: 'Usage unavailable' }]} aria-label="Retainer health" className="min-w-[138px]" triggerClassName="w-full" />
             <Button type="button" variant="secondary" icon={<RotateCcw size={13} />} onClick={reset}>Reset filters</Button>
           </>
         )}
@@ -350,7 +385,7 @@ export const AdminClientRetainers: React.FC = () => {
                 <div className="mt-4 h-8 animate-pulse rounded-control bg-line/60" />
               </div>
             )) : visible.length ? visible.map((item) => {
-              const usage = Math.round(item.usedHours / Math.max(1, item.committedHours) * 100);
+              const usage = getRetainerUsage(item);
               const meta = healthMeta[item.health];
               return (
                 <article key={item.id} data-ams-slug={'client-retainer-card-' + item.id.toLowerCase()} role="listitem" className="min-w-0 rounded-card border border-line bg-bg p-3.5">
@@ -359,7 +394,7 @@ export const AdminClientRetainers: React.FC = () => {
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-[11px] font-semibold text-fg">{item.initials}</div>
                       <div className="min-w-0">
                         <h3 className="break-words text-sm font-semibold text-fg">{item.client}</h3>
-                        <p className="mt-1 break-words text-[10px] text-muted">{item.id} · {tierLabel[item.tier]}</p>
+                        <p className="mt-1 break-words text-[10px] text-muted">{item.id} · {item.tierRecorded ? tierLabel[item.tier] : 'Tier not recorded'}</p>
                       </div>
                     </div>
                     <span className={'inline-flex shrink-0 items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-medium ' + meta.className}>
@@ -367,17 +402,24 @@ export const AdminClientRetainers: React.FC = () => {
                     </span>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
-                    <div className="min-w-0"><p className="text-[10px] text-muted">Monthly value</p><p className="mt-1 break-words text-xs font-semibold tabular-nums text-fg">{money(item.monthlyValue)}<span className="ml-0.5 text-[10px] font-normal text-muted">/mo</span></p></div>
-                    <div className="min-w-0"><p className="text-[10px] text-muted">Overage rate</p><p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{money(item.overageRate)}<span className="ml-0.5 text-[10px] font-normal text-muted">/hr</span></p></div>
-                    <div className="min-w-0"><p className="text-[10px] text-muted">Committed hours</p><p className="mt-1 text-xs tabular-nums text-fg">{item.committedHours} hrs</p></div>
-                    <div className="min-w-0"><p className="text-[10px] text-muted">Cycle / renewal</p><p className="mt-1 text-xs text-fg">{cycleLabel[item.cycle]}</p><p className={'mt-1 break-words text-[10px] font-medium ' + (isRenewalHighlighted(item.renewal) ? 'text-warning' : 'text-muted')}>Renews {formatDate(item.renewal)}</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Monthly value</p><p className="mt-1 break-words text-xs font-semibold tabular-nums text-fg">{item.monthlyValueRecorded ? money(item.monthlyValue) : 'Not recorded'}{item.monthlyValueRecorded && <span className="ml-0.5 text-[10px] font-normal text-muted">/mo</span>}</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Overage rate</p><p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{item.overageRateRecorded ? money(item.overageRate) : 'Not recorded'}{item.overageRateRecorded && <span className="ml-0.5 text-[10px] font-normal text-muted">/hr</span>}</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Committed hours</p><p className="mt-1 text-xs tabular-nums text-fg">{item.committedHoursRecorded ? item.committedHours + ' hrs' : 'Not recorded'}</p></div>
+                    <div className="min-w-0"><p className="text-[10px] text-muted">Cycle / renewal</p><p className="mt-1 text-xs text-fg">{item.cycleRecorded ? cycleLabel[item.cycle] : 'Cycle not recorded'}</p><p className={'mt-1 break-words text-[10px] font-medium ' + (isRenewalHighlighted(item.renewal) ? 'text-warning' : 'text-muted')}>{item.renewalRecorded ? 'Renews ' + formatDate(item.renewal) : 'Renewal date not recorded'}</p></div>
                   </div>
-                  <div className="mt-3">
-                    <div className="mb-1.5 flex items-center justify-between gap-2 text-[10px] tabular-nums">
-                      <span className="text-muted">Hours used</span>
-                      <span className={usage >= 95 ? 'font-semibold text-danger' : usage >= 80 ? 'font-semibold text-warning' : 'font-medium text-fg'}>{item.usedHours} / {item.committedHours} hrs · {usage}%</span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-line/70"><div className={'h-1.5 rounded-full ' + (usage >= 95 ? 'bg-danger' : usage >= 80 ? 'bg-warning' : 'bg-success')} style={{ width: Math.min(100, usage) + '%' }} /></div>
+                  <div className="mt-3" data-ams-slug="retainer-usage-context">
+                    {usage === null ? (
+                      <p className="text-xs leading-5 text-muted" role="status">Usage unavailable. Record committed hours above zero and used hours to show utilization or remaining hours.</p>
+                    ) : (
+                      <>
+                        <div className="mb-1.5 flex items-center justify-between gap-2 text-[10px] tabular-nums">
+                          <span className="text-muted">Hours used</span>
+                          <span className={usage >= 95 ? 'font-semibold text-danger' : usage >= 80 ? 'font-semibold text-warning' : 'font-medium text-fg'}>{item.usedHours} / {item.committedHours} hrs · {usage}%</span>
+                        </div>
+                        <p className="mb-2 text-[10px] text-muted">{getRetainerRemainingHours(item)! >= 0 ? 'Remaining ' + getRetainerRemainingHours(item) + ' hrs' : 'Over commitment by ' + Math.abs(getRetainerRemainingHours(item)!) + ' hrs'}</p>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-line/70"><div className={'h-1.5 rounded-full ' + (usage >= 95 ? 'bg-danger' : usage >= 80 ? 'bg-warning' : 'bg-success')} style={{ width: Math.min(100, usage) + '%' }} /></div>
+                      </>
+                    )}
                   </div>
                   <div className="mt-3 flex justify-end border-t border-line pt-3">
                     {canManageRetainers && <button type="button" onClick={() => openRetainerForm(item)} aria-label={'Edit terms for ' + item.client} title="Edit terms" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={13} aria-hidden="true" />Edit terms</button>}
@@ -406,16 +448,16 @@ export const AdminClientRetainers: React.FC = () => {
             <tbody>
               {isLoading ? Array.from({ length: pageSize }).map((_, index) => <tr key={index} className="border-b border-line last:border-0">{Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="px-4 py-4"><div className="h-3 w-full max-w-28 animate-pulse rounded-badge bg-line" /></td>)}</tr>) :
                visible.length ? visible.map((item) => {
-                 const usage = Math.round(item.usedHours / Math.max(1, item.committedHours) * 100); const meta = healthMeta[item.health];
+                 const usage = getRetainerUsage(item); const meta = healthMeta[item.health];
                  return <tr key={item.id} data-ams-slug={'client-retainer-' + item.id.toLowerCase()} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
-                   <td className="px-4 py-3"><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[11px] font-semibold text-fg">{item.initials}</div><div className="min-w-0"><div className="truncate text-xs font-semibold text-fg">{item.client}</div><div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted"><span className="tabular-nums">{item.id}</span><span>•</span><span>{tierLabel[item.tier]}</span></div></div></div></td>
-                   <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{money(item.monthlyValue)}<span className="ml-0.5 text-[10px] text-muted">/mo</span></td>
-                   <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{item.committedHours} hrs</td>
-                   <td className="px-4 py-3"><div className="w-44 max-w-full"><div className="mb-1 flex items-center justify-between text-[10px] tabular-nums"><span className="font-medium text-fg">{item.usedHours} / {item.committedHours} hrs</span><span className={usage >= 95 ? 'font-semibold text-danger' : usage >= 80 ? 'font-semibold text-warning' : 'text-muted'}>{usage}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-line/70"><div className={`h-1.5 rounded-full ${usage >= 95 ? 'bg-danger' : usage >= 80 ? 'bg-warning' : 'bg-success'}`} style={{ width: Math.min(100, usage) + '%' }} /></div></div></td>
-                   <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{money(item.overageRate)}<span className="ml-0.5 text-[10px] text-muted">/hr</span></td>
-                   <td className="px-4 py-3 text-[11px] text-muted"><div>{cycleLabel[item.cycle]}</div><div className={(isRenewalHighlighted(item.renewal) ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>Renews {formatDate(item.renewal)}</div></td>
-                   <td className="px-4 py-3 text-center"><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${meta.className}`}><span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />{meta.label}{usage >= 80 ? ` · ${usage}%` : ''}</span></td>
-                   <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
+                                      <td className="px-4 py-3"><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[11px] font-semibold text-fg">{item.initials}</div><div className="min-w-0"><div className="truncate text-xs font-semibold text-fg">{item.client}</div><div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted"><span className="tabular-nums">{item.id}</span><span>•</span><span>{item.tierRecorded ? tierLabel[item.tier] : 'Tier not recorded'}</span></div></div></div></td>
+                   <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{item.monthlyValueRecorded ? money(item.monthlyValue) + '/mo' : 'Not recorded'}</td>
+                   <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{item.committedHoursRecorded ? item.committedHours + ' hrs' : 'Not recorded'}</td>
+                   <td className="px-4 py-3"><div className="w-44 max-w-full">{usage === null ? <span className="text-xs text-muted" role="status">Usage unavailable</span> : <><div className="mb-1 flex items-center justify-between text-[10px] tabular-nums"><span className="font-medium text-fg">{item.usedHours} / {item.committedHours} hrs</span><span className={usage >= 95 ? 'font-semibold text-danger' : usage >= 80 ? 'font-semibold text-warning' : 'text-muted'}>{usage}%</span></div><p className="mb-1 text-[10px] text-muted">{getRetainerRemainingHours(item)! >= 0 ? 'Remaining ' + getRetainerRemainingHours(item) + ' hrs' : 'Over commitment by ' + Math.abs(getRetainerRemainingHours(item)!) + ' hrs'}</p><div className="h-1.5 overflow-hidden rounded-full bg-line/70"><div className={'h-1.5 rounded-full ' + (usage >= 95 ? 'bg-danger' : usage >= 80 ? 'bg-warning' : 'bg-success')} style={{ width: Math.min(100, usage) + '%' }} /></div></>}</div></td>
+                   <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{item.overageRateRecorded ? money(item.overageRate) + '/hr' : 'Not recorded'}</td>
+                   <td className="px-4 py-3 text-[11px] text-muted"><div>{item.cycleRecorded ? cycleLabel[item.cycle] : 'Cycle not recorded'}</div><div className={(isRenewalHighlighted(item.renewal) ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>{item.renewalRecorded ? 'Renews ' + formatDate(item.renewal) : 'Renewal date not recorded'}</div></td>
+                   <td className="px-4 py-3 text-center"><span className={'inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + meta.className}><span className={'h-1.5 w-1.5 rounded-full ' + meta.dot} />{meta.label}{usage !== null && usage >= 80 ? ' · ' + usage + '%' : ''}</span></td>
+<td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
                      {canManageRetainers && <>
                        <button type="button" onClick={() => openRetainerForm(item)} aria-label={`Edit terms for ${item.client}`} title="Edit terms" className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={15} aria-hidden="true" /></button>
                      </>}
@@ -433,18 +475,11 @@ export const AdminClientRetainers: React.FC = () => {
         <AdminMetricStrip
           slug="retainers-kpis"
           metrics={[
-            { id: 'monthly-value', label: 'Monthly retainer value', value: money(mrr), context: 'Current committed recurring value', icon: <ArrowUp size={15} />, toneClassName: 'text-success' },
-            { id: 'committed-hours', label: 'Committed retainer hours', value: allocated.toLocaleString() + ' hrs/mo', context: 'Burned ' + used.toLocaleString() + ' hrs · ' + burn.toFixed(1) + '%', icon: <Clock3 size={15} />, toneClassName: 'text-info' },
-            { id: 'renewals-due', label: 'Renewals due in 30 days', value: renewals.length, context: money(renewalsValue) + ' monthly value', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
+            { id: 'monthly-value', label: 'Monthly retainer value', value: mrr === null ? 'Not fully recorded' : money(mrr), context: mrr === null ? 'At least one active retainer has no recorded monthly value' : 'Current committed recurring value', icon: <ArrowUp size={15} />, toneClassName: 'text-success' },
+            { id: 'committed-hours', label: 'Committed retainer hours', value: allocated === null ? 'Not fully recorded' : allocated.toLocaleString() + ' hrs', context: burn === null || used === null ? 'Usage summary needs a recorded positive commitment and used-hour value on every active retainer' : 'Used ' + used.toLocaleString() + ' hrs · ' + burn.toFixed(1) + '% burn', icon: <Clock3 size={15} />, toneClassName: 'text-info' },
+            { id: 'renewals-due', label: 'Renewals due in 30 days', value: renewals.length, context: !renewalDatesComplete ? renewalDateCount + ' of ' + records.length + ' active retainers have valid renewal dates; missing dates excluded' : renewalsValue === null ? 'Monthly value is not recorded for every renewal in range' : money(renewalsValue) + ' monthly value', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
           ]}
         />
-      </section>
-
-      <section data-ams-feature-slug="retainers-summary" data-ams-slug="retainers-summary" className="grid grid-cols-1 gap-3 text-[11px] text-muted min-[600px]:grid-cols-2 min-[1100px]:grid-cols-4" aria-label="Retainer summary">
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Agency burn: <strong className="text-fg">{burn.toFixed(1)}%</strong></span></div>
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TriangleAlert size={14} className="text-warning" /><span>Near cap: <strong className="text-fg">{nearCap}</strong></span></div>
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><ReceiptText size={14} className="text-info" /><span>Average overage: <strong className="text-fg">{money(avgRate)}/hr</strong></span></div>
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">Client Directory</strong></span></div>
       </section>
 
       <Drawer slug="retainer-create-drawer"

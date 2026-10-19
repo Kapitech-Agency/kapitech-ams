@@ -208,15 +208,29 @@ test('Clients surface account health after the directory and keep data gaps expl
   assert.match(clients, /label: 'Onboarding accounts'/);
 });
 
-test('Client Retainers prioritizes the agreement register before supporting summaries', async () => {
+test('Client Retainers keeps the source-backed register primary and distinguishes missing usage data from zero', async () => {
   const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
   const header = retainers.indexOf('<AdminModuleHeader');
+  const sourceBoundary = retainers.indexOf('data-ams-slug="retainer-time-log-reconciliation-state"');
   const filters = retainers.indexOf('slug="client-retainers-filters"');
   const directory = retainers.indexOf('data-ams-feature-slug="retainers-directory"');
   const directoryEnd = retainers.indexOf('</section>', directory);
   const metrics = retainers.indexOf('data-ams-feature-slug="retainers-kpis"');
-  const summary = retainers.indexOf('data-ams-feature-slug="retainers-summary"');
-  assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd && summary > metrics);
+  const secondarySummary = retainers.indexOf('data-ams-feature-slug="retainers-summary"');
+  assert.ok(header >= 0 && sourceBoundary > header && filters > sourceBoundary && directory > filters && directoryEnd > directory && metrics > directoryEnd);
+  assert.equal(secondarySummary, -1, 'Do not duplicate burn/health summary cards below the source-backed register.');
+  assert.match(retainers, /monthlyValueRecorded: boolean/);
+  assert.match(retainers, /committedHoursRecorded: boolean/);
+  assert.match(retainers, /usedHoursRecorded: boolean/);
+  assert.match(retainers, /const getRetainerUsage = \(item: Retainer\): number \| null =>/);
+  assert.match(retainers, /usage === null/);
+  assert.match(retainers, /Usage unavailable/);
+  assert.match(retainers, /Remaining .* hrs/);
+  assert.match(retainers, /Not recorded/);
+  assert.match(retainers, /At least one active retainer has no recorded monthly value/);
+  assert.match(retainers, /of .*active retainers have valid renewal dates/);
+  assert.match(retainers, /Hours used currently reflect the saved Client Directory field/);
+  assert.match(retainers, /api\.clients\.update\(targetClient\.id/);
 });
 
 test('Finance exposes one current worksheet and explicit unavailable source context', async () => {
