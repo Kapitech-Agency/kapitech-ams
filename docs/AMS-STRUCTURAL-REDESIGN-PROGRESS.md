@@ -1350,3 +1350,29 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Requirement status: PARTIALLY COMPLETE, not complete. Milestones and Timeline still need worksheet-by-worksheet structural acceptance; scope/deliverables, deliverable tracking, quality review, client review and revision history remain unavailable because their canonical records/workflows are absent. Campaigns and Project Controls remain unavailable while canonical models/permissions are absent.
 - Next authorized action: inspect and structurally redesign Projects → Project Resources (VIEW-PROJECTS-RESOURCES) against its allocation/task assignment surfaces. Keep unsupported campaign/control workspaces explicitly unavailable and do not switch to unrelated Clients defects.
 - Stage 5 user sign-off: PENDING and required before broad Stage 6+ work.
+
+## Stage 4 structural slice · Projects Project Resources · 19 October 2026
+
+### View structure contract
+
+- Module/workspace: Projects → Project Resources.
+- Requirement IDs: VIEW-PROJECTS-RESOURCES; cross-module roll-up AMS-MAIN-CONTENT-STRUCTURE-001.
+- Primary task: inspect the selected project's explicit allocation records, who belongs to the project team, and which canonical tasks have assignees.
+- Key question: what resource allocation is recorded for this project, and how are roster membership and task assignment represented without implying cross-project availability?
+- Before composition: panel header with project selector → four KPI tiles → two-column team roster and allocation list → task assignment table → separate capacity/availability panel.
+- Structural mismatch: KPI tiles repeated counts for records shown below and displaced the allocation register. The team list also joined allocation/task context to the roster by display-name matching, which could suggest a canonical identity relationship not established by this project view.
+- After composition: selected-project scope row → primary full-width Recorded Resource Allocation register → subordinate Project Team and Project Task Assignments surfaces → compact Capacity and Availability boundary note linking authoritative data to Team & Resources/Time Tracking.
+- Primary surface: allocation register, because the view is for project-scoped allocation dates/effort and the records are explicit, source-backed entries.
+- Essential data preserved: project selector, allocation person, recorded allocation percentage, start/end period, team member/owner names, task title/assignee/status/priority/due date.
+- Actions: changing selected project updates the existing resourcesProject query. Existing invalid selection path does not silently choose a different record; recovery selector and clear-query action remain.
+- Data semantics: allocation records, roster membership and tasks render as separate canonical lists. No name-only cross-source join; no inferred availability, hours or overload percentages. Financial/HR fields remain untouched.
+- States: existing loading/unavailable/no-project/invalid-project states remain. Empty allocation and task states remain distinct. Responsive table horizontal scrolling stays local to each register.
+- Before/after sketch: BEFORE Scope buried in header action → KPI strip → roster + allocation in split card → task table → capacity card. AFTER Selected project scope → Allocation register → Team roster + Task assignments → Inline capacity/source boundary.
+- Supporting fixes: removal of display-name-matched counts/percentages from the roster is a source-ownership presentation correction within the structural refactor, not a new business rule.
+- Changed paths: src/pages/admin/AdminProjects.tsx in [108523df2c52e2d109280befc9791b23163a3c60](https://github.com/Kapitech-Agency/kapitech-ams/commit/108523df2c52e2d109280befc9791b23163a3c60); tests/projects-module-regression.test.ts in [17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1](https://github.com/Kapitech-Agency/kapitech-ams/commit/17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1).
+- Regression evidence: “Project Resources leads with allocations and keeps capacity semantics separate.” Tests assert project scope precedes allocation, allocation precedes roster/task registers, duplicate KPIs are absent, capacity limitation is explicit, invalid selection recovery remains, and empty/unavailable states remain.
+- Exact-SHA CI: [AMS CI 39262004358 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262004358) and [AMS Quality Gate 39262004291 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262004291) on 17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1. Typecheck, regression tests, PostgreSQL integration/migration checks, security regression tests, dependency audit, production build, packaged migration verification and production HTTP smoke test passed.
+- Browser evidence: not captured; actual rendered responsive, keyboard/touch and role review remains in Stage 5.
+- Requirement status: PARTIALLY COMPLETE pending browser review and cross-module source parity; do not imply people availability/capacity from the project records.
+- Next action: complete Planning & Delivery → Milestones structural acceptance in the canonical worksheet sequence, then Timeline; move to other Projects workspaces only after these source-backed planning worksheets have an explicit status.
+- Stage 5 user sign-off: PENDING.

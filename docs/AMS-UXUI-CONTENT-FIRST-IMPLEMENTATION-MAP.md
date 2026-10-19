@@ -699,3 +699,10 @@ This closes a source/test discrepancy in the earlier checkpoint: the implementat
 - Focused regression: [5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5](https://github.com/Kapitech-Agency/kapitech-ams/commit/5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5) adds an ordering/state-boundary assertion rather than only checking styling.
 - Exact-SHA evidence: [AMS CI 39261177958 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39261177958) and [AMS Quality Gate 39261178055 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39261178055). Both ran on source/test SHA 5bc5d601ae95090b14ef7a43cfd3ea52e7a08aa5.
 - Status remains partial pending Stage 5 browser/responsive/accessibility evidence and the remaining planning worksheets. The next structural slice in module order is Projects → Project Resources. Unsupported Project Campaigns and Project Controls stay unavailable until canonical models and permissions exist.
+
+## Structural checkpoint · Projects Project Resources · 19 October 2026
+
+- Source: [108523df2c52e2d109280befc9791b23163a3c60](https://github.com/Kapitech-Agency/kapitech-ams/commit/108523df2c52e2d109280befc9791b23163a3c60). The selected-project scope control now leads the workspace; the explicit allocation register is the first data surface; four duplicate KPI tiles are removed; roster and task records stay separate, with a compact boundary explaining where capacity/availability truth lives.
+- Regression: [17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1](https://github.com/Kapitech-Agency/kapitech-ams/commit/17e9b6a7f5a77548c5d27327c1cbd71f3b1eeac1).
+- Exact-SHA validation passed: [AMS CI 39262004358](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262004358), [AMS Quality Gate 39262004291](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39262004291).
+- Status is partial pending Stage 5 visual/accessibility evidence and validation against the canonical Team & Resources/Time Tracking sources. Next canonical worksheet review is Planning & Delivery → Milestones, then Timeline.
