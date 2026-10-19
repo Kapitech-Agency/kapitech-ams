@@ -482,6 +482,8 @@ Do not make screenshots of sensitive data available in public artifacts. Sanitiz
 - Do not claim deployment unless Hostinger/runtime evidence confirms it.
 
 ### Timeout recovery
+- Canonical procedure: follow [AMS Resume After Timeout or Interruption Protocol](AMS-RESUME-AFTER-INTERRUPTION.md) and restore the current pointer from [AMS Execution Checkpoint](AMS-EXECUTION-CHECKPOINT.md). Re-fetch live `main` before using any recorded SHA.
+- A short “lanjutkan/continue” request resumes the same authorized task automatically; do not request another prompt when the task and scope are already documented.
 - Record last known main SHA, completed files, commit SHA if any, exact tests started/completed, CI run IDs and next unfinished checklist item.
 - On resume, refetch main and the relevant files/CI.
 - If a commit or workflow status is unknown, verify it before acting.
