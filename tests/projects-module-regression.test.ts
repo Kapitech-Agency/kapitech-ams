@@ -357,3 +357,30 @@ test('Project Resources leads with allocations and keeps capacity semantics sepa
   assert.match(workspace, /No tasks are recorded for this project\./);
 });
 
+test('Planning & Delivery Milestones keeps the canonical register primary and discloses missing owner/dependency fields', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const workspaceStart = source.indexOf("      {view === 'planning-delivery' && (");
+  const workspaceEnd = source.indexOf("      {view === 'resources' && (", workspaceStart);
+  assert.ok(workspaceStart >= 0 && workspaceEnd > workspaceStart, 'Planning & Delivery should remain a bounded workspace.');
+  const workspace = source.slice(workspaceStart, workspaceEnd);
+  const scopeIndex = workspace.indexOf('data-ams-slug="planning-delivery-scope"');
+  const tabsIndex = workspace.indexOf('ariaLabel="Planning & Delivery worksheets"');
+  const milestoneIndex = workspace.indexOf("planningView === 'milestones'");
+  const timelineIndex = workspace.indexOf("planningView === 'timeline'", milestoneIndex);
+  assert.ok(scopeIndex >= 0 && tabsIndex > scopeIndex && milestoneIndex > tabsIndex && timelineIndex > milestoneIndex,
+    'Milestones should be a project-scoped worksheet following the common scope and worksheet controls.');
+
+  const milestones = workspace.slice(milestoneIndex, timelineIndex);
+  assert.match(milestones, /title="Milestones"/);
+  assert.match(milestones, /Milestone title, due date and completion come from the selected project records\./);
+  assert.match(milestones, /Milestone-specific owners and dependencies are not stored in the current model\./);
+  assert.match(milestones, /planningMilestones\.filter\(\(milestone\) => milestone\.completed\)\.length/);
+  assert.match(milestones, /planningMilestones\.map\(\(milestone, index\) =>/);
+  assert.match(milestones, /milestone\.title \|\| 'Untitled milestone'/);
+  assert.match(milestones, /formatDate\(milestone\.dueDate\)/);
+  assert.match(milestones, /milestone\.completed \? 'Completed' : overdue \? 'Overdue'/);
+  assert.match(milestones, /No milestones are recorded for this project\./);
+  assert.doesNotMatch(milestones, /ownerId|dependencyId|fakeMilestone|demoMilestone/,
+    'The worksheet must not fabricate milestone owners, dependency records, or sample milestones.');
+});
+
