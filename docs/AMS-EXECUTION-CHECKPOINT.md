@@ -11,22 +11,23 @@
 
 ## 1. Last verified code snapshot
 
-Snapshot refreshed on **19 October 2026** after resolving the Settings backup-history regression on the current source.
+Latest application source snapshot verified on **19 October 2026**:
 
-| Item | Evidence at snapshot |
+| Item | Evidence |
 |---|---|
-| Code HEAD | `bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba` |
-| Commit | [fix(settings): distinguish historical backup verification](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba) |
-| Changed source | `src/pages/admin/AdminSettings.tsx` only |
-| AMS CI | **Passed** on this SHA: [run 39239473226](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39239473226) |
-| AMS Quality Gate | **Passed** on this SHA: [run 39239473547](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39239473547) |
-| Corrected regression | `tests/admin-settings-module-regression.test.ts`: historical snapshots no longer inherit the newest backup's freshness/integrity/restore status |
+| Latest application source commit | `febd4f42a18718230dd2ebccec5b975a0083ef68` |
+| Commit | [fix(dashboard): preserve unavailable money values](https://github.com/Kapitech-Agency/kapitech-ams/commit/febd4f42a18718230dd2ebccec5b975a0083ef68) |
+| Changed source/test | `src/components/admin/GlobalExecutiveDashboard.tsx`; `tests/dashboard-metric-truthfulness.test.ts` |
+| AMS CI | **Passed** on this SHA: [run 39240238235](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39240238235) |
+| AMS Quality Gate | **Passed** on this SHA: [run 39240238176](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39240238176) |
+| Validation detail | Typecheck, regression tests and production build passed; CI's verification job and production build also passed. |
 
-### Failure diagnosis and resolution
+### Recent verified source slices
 
-The previous code HEAD `2afe419030b861064258531167c98398e89b5661` failed AMS CI [39237266847](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39237266847) and AMS Quality Gate [39237266842](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39237266842). Both stopped at the same backup-health regression assertion. The mobile snapshot cards already used `backupVerificationFor(backup)`, but the desktop table still rendered a generic `Verified / Needs check` badge based on the latest backup. The fix now uses the same per-snapshot helper in the desktop table. Both workflows passed on `bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba`.
+- [Settings backup-history correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba): the desktop backup register now uses the per-snapshot `backupVerificationFor(backup)` helper. AMS CI [39239473226](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39239473226) and Quality Gate [39239473547](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39239473547) passed on that exact source SHA.
+- [Dashboard money truthfulness correction](https://github.com/Kapitech-Agency/kapitech-ams/commit/febd4f42a18718230dd2ebccec5b975a0083ef68): non-finite amounts now display an em dash instead of formatted zero; genuine numeric zero remains a zero amount. A regression assertion covers the fallback.
 
-The correction is presentation-only. It does not change the backup endpoint, security/readiness logic, permissions or backup infrastructure. Per-snapshot verification remains explicitly unavailable when the server does not provide that evidence.
+The preceding CI failures on `2afe419030b861064258531167c98398e89b5661` are resolved on the verified Settings source commit above. This checkpoint is a dated evidence pointer, not a live branch status feed. Re-fetch current `main` and the exact workflow results before acting; a following documentation-only checkpoint commit does not change the tested application source snapshot.
 
 ## 2. Active delivery stage
 
@@ -46,15 +47,13 @@ Recent repository history includes further work/tests for **Website CMS, Finance
 
 ## 3. Immediate resume sequence
 
-Re-verify current source and CI on every resume; this list records completed evidence and the next authorized action.
+Re-verify live source and CI on every resume; this list records the tested source state and the next authorized task.
 
-1. **Rehydrate live state:** fetch current `main`, recent commits, relevant source and current CI/Quality Gate results before editing.
-2. **Preserve the verified Settings fix:** the historical backup status regression is fixed on `bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba`; both CI workflows passed. Do not reapply the change unless new source evidence shows a regression.
-3. **Reconcile frontend documentation:** keep the gap register, progress notes and this checkpoint aligned with current `main` and exact workflow evidence. Old SHAs/run results remain historical.
-4. **Continue the earliest unfinished Stage 4 content slice:** use `docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md`, `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` and the content-first implementation map. Preserve approved navigation and verified work. Do not choose an easy gap out of sequence.
-5. **Validate and checkpoint:** make one coherent frontend-only change, retain regression strength, verify the exact source SHA and relevant CI, and update source/test/runtime status separately.
-
-The authenticated browser/viewport review and explicit user sign-off remain unverified and mandatory at Stage 5. The current tools have not established an authenticated production/browser session; do not claim screenshots, computed-layout, keyboard/touch or visual acceptance were completed. Do not start broad Stage 6 workflow/backend work before the user's explicit sign-off.
+1. **Rehydrate live state:** fetch current `main`, recent commits, relevant source, and latest AMS CI/Quality Gate results.
+2. **Preserve verified fixes:** the Settings backup-history correction on `bc5c19ca7187c7bdfd7918bb97dcd3f7bbd34fba` and Dashboard non-finite money correction on `febd4f42a18718230dd2ebccec5b975a0083ef68` both passed both workflows. Do not reapply these slices without evidence of a regression.
+3. **Continue Stage 4 in canonical module order:** Dashboard's source-backed money formatting gap is addressed; proceed to the earliest remaining Inbox/Projects view with a concrete source-supported defect. Follow the content specification, worksheet matrix and gap register. Keep unsupported workspaces truthful and do not create fake functionality for missing canonical models.
+4. **Validate one bounded slice:** preserve regression strength, inspect exact commit diff and CI for the new source SHA, then update the progress record and affected gap rows with the evidence.
+5. **Keep the release gate:** authenticated browser/viewport review and explicit user sign-off remain outstanding at Stage 5. No authenticated production/browser session was established, so screenshots, computed-layout, keyboard/touch and visual acceptance are not claimed. Do not begin broad Stage 6 workflow/backend implementation before user sign-off.
 
 ## 4. Checkpoint update template
 

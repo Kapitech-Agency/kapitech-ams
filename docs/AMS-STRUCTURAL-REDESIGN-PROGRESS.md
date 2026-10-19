@@ -1201,3 +1201,15 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Scope review: frontend presentation only. No API, database, backend, backup infrastructure, auth, permission or business-rule changes.
 - Remaining acceptance: Stage 5 still requires authenticated permission, error/retry, responsive viewport, keyboard/focus and visual review. No authenticated browser evidence was captured in this source-only environment.
 - Next action: continue Stage 4 in the documented module order from the earliest unfinished Dashboard view; first reconcile the current Dashboard source/test slice against its gap-register acceptance criteria. Keep the Stage 5 user sign-off gate intact.
+
+
+## Stage 4 source/test checkpoint · Dashboard money availability · 19 October 2026
+
+- Application commit: [`febd4f42a18718230dd2ebccec5b975a0083ef68`](https://github.com/Kapitech-Agency/kapitech-ams/commit/febd4f42a18718230dd2ebccec5b975a0083ef68).
+- Changed files: `src/components/admin/GlobalExecutiveDashboard.tsx`; `tests/dashboard-metric-truthfulness.test.ts`.
+- Confirmed defect: the shared Dashboard money formatter converted non-finite input into numeric zero. An invalid source-derived amount could therefore look like a valid zero in Overview and Analytics.
+- Correction: `formatLiveMoney` returns an em dash for non-finite numeric input and formats valid numbers without coercion. A genuine `0` remains a currency-formatted zero. The regression test asserts the unavailable fallback and rejects the unsafe zero coercion.
+- Exact-SHA validation: [AMS CI 39240238235 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39240238235); [AMS Quality Gate 39240238176 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39240238176). Typecheck, regression tests and production build passed; CI verification and production build passed.
+- Scope review: source-backed frontend display behavior and regression coverage only. No data source, calculation formula, API, database, Finance workflow, permission, backend or business rule was changed.
+- Remaining acceptance: Dashboard Overview, Performance and Analytics remain partially complete until authenticated role/direct-route, chart/data, keyboard, responsive and visual review. No browser screenshot or live viewport test was captured here.
+- Next action: continue Stage 4 in the documented order with the earliest concrete Inbox/Projects source-level gap. Follow-up and routing surfaces without canonical contracts remain unavailable rather than simulated.
