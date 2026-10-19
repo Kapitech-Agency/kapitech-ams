@@ -31,14 +31,18 @@ test('Time tracking ledger precedes the supporting summary', async () => {
   assert.ok(header >= 0 && ledger > header && ledgerEnd > ledger && metrics > ledgerEnd);
 });
 
-test('Client directory filters and register precede supporting metrics', async () => {
+test('Client Directory makes the register primary and includes recorded service context instead of a KPI strip', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   const header = clients.indexOf('<AdminModuleHeader slug="clients-header"');
   const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
   const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
   const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
   const directoryEnd = clients.indexOf('</section>', directory);
-  assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd);
+  assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory);
+  assert.equal(metrics, -1, 'Directory should not render a default KPI strip.');
+  assert.match(clients, /const getClientServiceContext = \(client: AgencyClient, language: string\) =>/);
+  assert.match(clients, /getClientServiceContext\(client, language\)/);
+  assert.match(clients, /No retainer service context recorded/);
   const filterBar = clients.slice(filters, directory);
   assert.match(filterBar, /slug="clients-status-filter"/);
   assert.match(filterBar, /value=\{statusFilter\}/);
@@ -190,7 +194,8 @@ test('Clients surface account health after the directory and keep data gaps expl
   const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
   const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
   const directoryEnd = clients.indexOf('</section>', directory);
-  assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory && metrics > directoryEnd);
+  assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory);
+  assert.equal(metrics, -1, 'Directory health context should come from canonical account rows, not a default KPI strip.');
   assert.match(clients, /Client directory unavailable/);
   assert.match(clients, /Cumulative billed value/);
   assert.match(clients, /visible to users with client-management access/);
@@ -600,10 +605,9 @@ test('Shared metric strips use canonical breakpoints and match their metric coun
   assert.ok(primitives.includes("getAdminMetricStripGridClassName(metrics.length)"));
   assert.doesNotMatch(primitives, /sm:grid-cols-2 lg:grid-cols-4/);
 
-  const clientMetricStart = clients.indexOf('<AdminMetricStrip slug="clients-kpis"');
-  const clientMetricEnd = clients.indexOf('metrics={[', clientMetricStart);
-  assert.ok(clientMetricStart >= 0 && clientMetricEnd > clientMetricStart);
-  assert.equal(clients.slice(clientMetricStart, clientMetricEnd).includes('className="lg:grid-cols-3"'), false);
+  assert.equal(clients.indexOf('<AdminMetricStrip slug="clients-kpis"'), -1,
+    'Clients Directory must remain a register-first workspace rather than a default metric dashboard.');
+  assert.match(clients, /getClientServiceContext\(client, language\)/);
 
   const retainerMetricStart = retainers.indexOf('<AdminMetricStrip');
   const retainerMetricEnd = retainers.indexOf('metrics={[', retainerMetricStart);
