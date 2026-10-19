@@ -133,7 +133,8 @@ test('Annual Summary compares selected and previous years while preserving opera
   assert.match(annualView, /metric: 'Issued invoice value \(excluding tax\)'/);
   assert.match(annualView, /This is billed value, not recognized accounting revenue/);
   assert.doesNotMatch(annualView, /Annual Revenue \/ Invoice Value/);
-  assert.match(workspace, /'Issued invoice value \(excluding tax\)':'Nilai invoice yang diterbitkan \(di luar pajak\)'/);
+  assert.ok(workspace.includes('"Issued invoice value (excluding tax)":"Nilai invoice yang diterbitkan (di luar pajak)"'));
+  assert.ok(workspace.includes('"Nilai invoice yang diterbitkan (di luar pajak)":"Issued invoice value (excluding tax)"'));
   assert.match(workspace, /'Nilai invoice yang diterbitkan \(di luar pajak\)':'Issued invoice value \(excluding tax\)'/);
   assert.match(annualView, /Only posted journal lines contribute/);
   assert.match(annualView, /difference is selected year minus previous year/i);

@@ -1157,3 +1157,8 @@ The Quality Gate and AMS CI runs on `74755c5b5005a09b59bdd1bc950d76ec24a71fe0` p
 ### Annual Summary label clarification — 19 October 2026
 
 The operational Annual Summary measure uses `reportInvoices` filtered through `isIssuedInvoice`, with amount calculated as invoice total less recorded tax. The prior label `Annual Revenue / Invoice Value` could blur issued billing with recognized accounting revenue. The label is now `Issued invoice value (excluding tax)`; the basis says it uses the IDR issued-invoice date and is billed value, not recognized accounting revenue. English/Indonesian labels and basis text are mapped in the existing Finance copy dictionary. No calculation, accounting posting or ledger behavior changed. Verify this SHA through CI and Quality Gate.
+
+
+### Annual Summary localization assertion correction — 19 October 2026
+
+CI and Quality Gate on `ed739f44032b2881e8c5fdca95cec421a6fa5d5a` passed typecheck but failed one Annual Summary regression assertion because the test expected single-quoted object keys while `FINANCE_UI_COPY` is represented with double-quoted keys/values. The source label and dictionary updates were present. The assertion now checks the exact double-quoted dictionary entries; no UI or calculation behavior changed. Re-run both workflows on this follow-up SHA.

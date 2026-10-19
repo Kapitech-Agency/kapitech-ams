@@ -833,3 +833,6 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** `src/pages/admin/AdminFinanceWorkspace.tsx`. Annual Summary's operational row now reads “Issued invoice value (excluding tax)” with localized English/Indonesian label and basis. It states that the value uses the IDR issued-invoice date and invoice total less recorded tax, not recognized accounting revenue. Posted GL revenue remains a separate posted-journal measure. No calculations or ledger/posting behavior changed.
 
 **Tests:** `tests/finance-ui-consistency.test.ts` asserts the accurate metric/basis, rejects the ambiguous “Annual Revenue / Invoice Value” within the worksheet, and checks both existing dictionary translations. Exact-SHA CI and Quality Gate must pass; Stage 5 must verify the year-comparison table and localized labels visually.
+
+
+**Annual Summary test follow-up:** Runs [39231399160](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39231399160) and [39231399029](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39231399029) failed test 330 because the test expected single-quoted dictionary entries but `FINANCE_UI_COPY` uses double-quoted keys and values. The assertion now checks the exact double-quoted map values for English and Indonesian. Source calculation and published content changes remain unchanged.
