@@ -20,6 +20,7 @@ Before implementation, read:
    - The navigation-first prompt filename is retained only as a compatibility pointer to the canonical end-to-end prompt; do not treat it as a separate rollout schedule.
    - Detailed role-aware main content and worksheet defaults: **docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md** and **docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md**
    - Mandatory main-content structural overhaul: **docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md**. Stage 4 is a task-based re-architecture, not cosmetic revision.
+    - Mandatory frontend audit/structure contract: **docs/AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md**. Read it for findings, per-view contracts, module targets, frontend stage sequence, anti-patterns, proof of structural change, and the explicit user sign-off gate. It refines frontend Stages 0–5 without replacing the canonical Stage 0–15 roadmap.
    - PostgreSQL/schema/cutover/recovery: use the current production runbooks indexed in docs/README.md first. docs/AMS-POSTGRES-*.md and docs/AMS-RELATIONAL-MIGRATION.md include historical/staging references and must not be treated as current production instructions.
    - Private documents: **docs/private-document-vault.md**
 

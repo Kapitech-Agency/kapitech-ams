@@ -84,4 +84,8 @@ Do not replace evidence with generic phrases such as “continued”, “fixed�
 
 ## 5. Current next-action rule
 
+For the structural main-content objective, also follow [AMS Frontend Structural Redesign Audit and Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md). Do not treat date/CSV/copy/query bug fixes as structural redesign completion. Implement the selected view's structure contract, validate the actual composition, and preserve the Stage 5 user sign-off gate.
+
+
+
 When the user says “lanjutkan” or similar, do not ask them to restate the task and do not give only another prompt or plan. Follow [the resume protocol](AMS-RESUME-AFTER-INTERRUPTION.md), inspect the current source and CI, carry forward completed work, execute the next authorized action, and report the precise verified checkpoint. Stop only for a genuine decision, mandatory sign-off gate, or blocker that cannot be resolved safely within the existing authorization.

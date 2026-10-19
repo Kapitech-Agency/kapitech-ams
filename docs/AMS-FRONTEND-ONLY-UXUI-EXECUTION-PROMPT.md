@@ -9,6 +9,10 @@ Production branch: main
 Objective: make every page clear, task-oriented, readable, and visually consistent.  
 Scope: frontend UX/UI only. This is an execution task, not a request to stop after an audit.
 
+## Mandatory structural-redesign specification
+
+Before auditing or editing page main content, read [AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) in full. Its per-view contract, source audit findings, structural-vs-local-fix definition, module targets, frontend-stage order, and completion evidence are mandatory. Do not chase minor component gaps while the selected workspace's structural acceptance criteria remain unmet.
+
 ## 1. Read these documents first
 
 Read in full:
