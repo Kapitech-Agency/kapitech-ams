@@ -1115,7 +1115,11 @@ test('Client Retainers uses responsive cards while keeping usage and renewal sem
   assert.ok(retainers.includes('data-ams-feature-slug="retainers-compact-cards"'));
   assert.ok(retainers.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
   assert.ok(retainers.includes('item.usedHours / Math.max(1, item.committedHours) * 100'));
-  assert.ok(retainers.includes('renewalDays(item.renewal) <= 30'));
+  assert.ok(retainers.includes('const isRenewalHighlighted = (value: string) => {'));
+  assert.ok(retainers.includes('return days !== null && days <= 30;'), 'Only valid renewal dates within the warning window should be highlighted.');
+  assert.ok(retainers.includes("(isRenewalHighlighted(item.renewal) ? 'text-warning' : 'text-muted')"));
+  assert.ok(retainers.includes("(isRenewalHighlighted(item.renewal) ? 'text-warning ' : 'text-fg ')"));
+  assert.ok(retainers.includes('return days !== null && days >= 0 && days <= 30;'), 'The renewal summary should use inclusive calendar days and exclude invalid dates.');
   assert.ok(retainers.includes('canManageRetainers && <button type="button" onClick={() => openRetainerForm(item)}'));
   assert.ok(retainers.includes('slug="retainers-pagination"'));
 });
