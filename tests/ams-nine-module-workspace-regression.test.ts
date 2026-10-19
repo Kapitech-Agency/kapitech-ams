@@ -580,3 +580,26 @@ test('Client Directory exposes canonical status, industry and location filters',
   assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,1200}slug="clients-spend-cap-filter"/);
   assert.match(clients, /\[searchQuery, statusFilter, industryFilter, locationFilter, slaFilter, statusScope, sortKey, sortDirection\]/);
 });
+
+
+test('Client Onboarding actions and new-record defaults follow the Lead scope', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  assert.match(clients, /setClientStatus\(statusScope === 'lead' \? 'lead' : 'active'\)/);
+  assert.match(clients, /anchor\.download = statusScope === 'lead' \? 'kapitech-client-onboarding-accounts\.csv' : 'kapitech-client-directory\.csv'/);
+  assert.match(clients, /statusScope === 'lead' \? 'Export Onboarding Accounts' : 'Export Directory'/);
+  assert.match(clients, /statusScope === 'lead' \? 'New Lead' : 'New Client'/);
+  assert.match(clients, /title=\{editingClient \? 'Edit client' : statusScope === 'lead' \? 'Add lead' : 'Add client'\}/);
+  assert.match(clients, /statusScope === 'lead'[\s\S]{0,120}'Add a prospective client to the Lead queue for onboarding review\.'/);
+  assert.match(clients, /\{editingClient \? 'Save changes' : statusScope === 'lead' \? 'Create lead' : 'Create client'\}/);
+});
+
+test('Client profile relationship action is not duplicated inside the timeline header', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const timelineStart = clients.indexOf('data-ams-feature-slug="client-interaction-timeline"');
+  const timelineEnd = clients.indexOf("{selectedClient.status === 'lead' && (", timelineStart);
+  assert.ok(timelineStart >= 0 && timelineEnd > timelineStart);
+  const timeline = clients.slice(timelineStart, timelineEnd);
+  assert.doesNotMatch(timeline, /Log interaction<\/Button>/);
+  assert.ok(clients.includes('onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log interaction</Button>'),
+    'The persistent drawer footer remains the single main relationship action.');
+});

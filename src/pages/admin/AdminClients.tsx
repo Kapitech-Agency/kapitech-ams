@@ -563,7 +563,7 @@ export const AdminClients: React.FC = () => {
     setWebsite('');
     setLocation('');
     setIndustry('');
-    setClientStatus('active');
+    setClientStatus(statusScope === 'lead' ? 'lead' : 'active');
     setTotalSpend(0);
     setProjectsCount(0);
     setRole('');
@@ -721,7 +721,7 @@ export const AdminClients: React.FC = () => {
     const href = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = href;
-    anchor.download = 'kapitech-client-directory.csv';
+    anchor.download = statusScope === 'lead' ? 'kapitech-client-onboarding-accounts.csv' : 'kapitech-client-directory.csv';
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
@@ -834,9 +834,9 @@ export const AdminClients: React.FC = () => {
               anchor.download = 'kapitech-client-directory.csv';
               anchor.click();
               URL.revokeObjectURL(url);
-            }} icon={<ArrowDown size={14} aria-hidden="true" />}>Export Directory</Button>
+            }} icon={<ArrowDown size={14} aria-hidden="true" />}>{statusScope === 'lead' ? 'Export Onboarding Accounts' : 'Export Directory'}</Button>
             {canManageClients && (
-              <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>
+              <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>{statusScope === 'lead' ? 'New Lead' : 'New Client'}</Button>
             )}
           </>
           )}
@@ -1153,12 +1153,9 @@ export const AdminClients: React.FC = () => {
                 data-ams-slug="client-interaction-timeline"
                 className="overflow-hidden rounded-card border border-line bg-panel"
               >
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-4 py-3">
-                  <div>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-fg"><Activity size={15} className="text-muted" aria-hidden="true" /> Relationship timeline</h3>
-                    <p className="mt-1 text-xs leading-5 text-muted">Saved client calls, meetings, emails, messages, and internal notes.</p>
-                  </div>
-                  <Button type="button" variant="secondary" onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log interaction</Button>
+                <div className="border-b border-line px-4 py-3">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-fg"><Activity size={15} className="text-muted" aria-hidden="true" /> Relationship timeline</h3>
+                  <p className="mt-1 text-xs leading-5 text-muted">Saved client calls, meetings, emails, messages, and internal notes.</p>
                 </div>
 
                 {interactionsLoading ? (
@@ -1406,17 +1403,19 @@ export const AdminClients: React.FC = () => {
         open={isClientModalOpen}
         onClose={() => !isSaving && setIsClientModalOpen(false)}
         size="xl"
-        title={editingClient ? 'Edit client' : 'Add client'}
+        title={editingClient ? 'Edit client' : statusScope === 'lead' ? 'Add lead' : 'Add client'}
         description={editingClient
           ? 'Update the client record and operational settings.'
-          : 'Create a client record with the information your team needs to operate the account.'}
+          : statusScope === 'lead'
+            ? 'Add a prospective client to the Lead queue for onboarding review.'
+            : 'Create a client record with the information your team needs to operate the account.'}
         footer={
           <>
             <Button type="button" variant="secondary" onClick={() => setIsClientModalOpen(false)} disabled={isSaving} className="w-full sm:w-auto">
               Cancel
             </Button>
             <Button type="submit" form="client-form" variant="primary" loading={isSaving} className="w-full sm:w-auto">
-              {editingClient ? 'Save changes' : 'Create client'}
+              {editingClient ? 'Save changes' : statusScope === 'lead' ? 'Create lead' : 'Create client'}
             </Button>
           </>
         }
