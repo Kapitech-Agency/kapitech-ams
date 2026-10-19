@@ -258,6 +258,20 @@ test('Careers publish feedback confirms saved CMS state, not unverified public v
   assert.match(careers, /Existing applications will be retained/);
 });
 
+test('Insights save feedback confirms CMS publication state and keeps public visibility unverified', async () => {
+  const insights = await read('src/pages/admin/AdminCmsInsights.tsx');
+  assert.match(insights, /const wasPreviouslyPublished = Boolean\(editing\.id && insights\.some\(item => item\.id === editing\.id && item\.status === 'published'\)\)/);
+  assert.match(insights, /CMS status saved as Published\. Verify the public Insights page to confirm visibility\./);
+  assert.match(insights, /CMS status saved as Draft\. Verify the public Insights page to confirm visibility changes\./);
+  assert.match(insights, /Insight updated in the CMS as a draft\./);
+  assert.match(insights, /Insight created as a draft in the CMS\./);
+  assert.doesNotMatch(insights, /Insight published successfully to the public site|Insight is now live on the public site/,
+    'A saved status is not independent verification that a public page/cache has updated.');
+  assert.match(insights, /api\.cms\.updateInsight\(editing\.id, body\)/);
+  assert.match(insights, /await load\(\)/);
+  assert.match(insights, /https:\/\/kapitech\.id\/insights\//);
+});
+
 test('Website CMS editorial controls use accessible actions and the canonical Careers applicant workspace', async () => {
   const cmsProjects = await read('src/pages/admin/AdminCmsProjects.tsx');
   const insights = await read('src/pages/admin/AdminCmsInsights.tsx');

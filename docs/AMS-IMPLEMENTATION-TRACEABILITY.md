@@ -806,3 +806,10 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** src/pages/admin/AdminCmsCareers.tsx. Job toggle feedback now confirms CMS Published/Draft state and prompts verification of the public Careers page. Delete confirmation describes deleting the CMS job record, retaining existing applications, and checking public visibility afterwards. API mutations, stored fields, route policy and applicant records remain unchanged.
 
 **Tests:** tests/ams-nine-module-workspace-regression.test.ts asserts accurate publication/deletion feedback, retained application wording, existing API calls and rejection of live-site assertions. Exact-SHA CI and Quality Gate plus public Careers rendering/submission and responsive browser checks remain required.
+
+
+### CMS-INSIGHTS-PUBLISH-STATE-001: Report the saved editorial state accurately
+
+**Source:** src/pages/admin/AdminCmsInsights.tsx. Successful saves now distinguish Published, published→Draft, existing Draft update and new Draft creation. Published state copy points the editor to the public Insights page to verify actual output. Content APIs, statuses and stored fields are unchanged.
+
+**Tests:** tests/ams-nine-module-workspace-regression.test.ts verifies prior state detection, explicit saved-state wording, current update API, list refresh and the existing public article link. Exact-SHA CI and Quality Gate plus actual public rendering and responsive/browser review remain required.

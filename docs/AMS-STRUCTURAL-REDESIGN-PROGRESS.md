@@ -1096,3 +1096,27 @@ Quality Gate and CI on `4542f6de4fbd114f5f7696c105709a660cbb4358` failed because
 13. **Regression tests.** Assert the new published/draft wording, CMS-record deletion semantics, retained applications and rejection of prior unsupported public-live claims.
 14. **Dependencies.** Runtime Careers page and public application persistence require authorized browser/output verification. No backend, public route, API contract or applicant workflow changed.
 15. **Acceptance.** Operators get an accurate report of the CMS mutation and a specific next step to verify actual public output. The view stays partially complete pending Stage 5/9 role, browser, public submission and responsive verification.
+
+
+## Stage 4 view design record — Website CMS · Insights · saved publication state
+
+**View ID:** VIEW-CMS-INSIGHTS, editorial register and editor.
+**Implementation status:** Save feedback now reflects the selected and prior CMS publication state. Verify the exact commit through both workflows before source/test sign-off.
+
+1. **Owner/persona.** Website CMS → Insights. Authorized editors create and maintain editorial articles and language variants with status, taxonomy, SEO and article content.
+2. **Primary task.** Save a draft/update or publish an article, then verify public output when publication is intended.
+3. **Decision.** Did the record save as Published, remain/update as Draft, or create a new draft? Does the public page reflect the CMS state?
+4. **Primary surface.** Existing article register with search/status/language filters and full content editor; direct public link remains available for published entries.
+5. **Content order.** Existing header and editorial list/editor remain unchanged. Save feedback now confirms the saved CMS state rather than reporting a generic success for all outcomes.
+6. **Fields and semantics.** Title, slug, status, publishedAt, language, category, author/tags, rich blocks, takeaways, FAQ and related articles continue to use existing Insight records and API. Status is stored CMS state, not independent evidence that deployment/cache has refreshed.
+7. **Controls.** Existing create/update/delete and content-block controls remain. No new publication endpoint or secondary local publication state is introduced.
+8. **Canonical ownership/breadcrumb.** Article remains canonical CMS Insight record. Language variants retain contentGroupId and related Insight IDs. No duplicate article source or new breadcrumb.
+9. **Role-aware presentation.** Existing CMS route and API authorization remain unchanged.
+10. **States/recovery.** Validation/save errors remain visible. Published success asks the editor to verify the public Insights page; a published→draft save prompts verification of visibility change; draft update/new draft messages state their CMS status. Existing source loading error/retry behavior remains.
+11. **Responsive behavior.** Current register/editor and block editor geometry remain. Verify rich-block reflow, preview/public links, filters and error notices at Design System widths.
+12. **Accessibility.** Existing labeled fields, block reorder actions, validation, and visible status notice remain. Keyboard/focus and screen-reader review remain Stage 5 tasks.
+13. **Regression tests.** Assert previous publication state detection, explicit Published/Draft/new-draft feedback, canonical update API, load refresh, and existing public article link.
+14. **Dependencies.** Independent public rendering, media hydration, translation and cache behavior require public/browser evidence. No API or public site code changed.
+15. **Acceptance.** Editors know what CMS state was saved and where to verify output. The view stays partially complete until Stage 5/9 verifies public output, route/query/language state and browser interaction.
+
+**Next Stage 4 slice:** Continue the remaining module-specific source audits, then consolidate Stage 4 gaps that are blocked by canonical source/model dependencies before Stage 5 review.

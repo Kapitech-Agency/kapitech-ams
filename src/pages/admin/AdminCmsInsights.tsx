@@ -706,6 +706,7 @@ export const AdminCmsInsights: React.FC = () => {
       return;
     }
 
+    const wasPreviouslyPublished = Boolean(editing.id && insights.some(item => item.id === editing.id && item.status === 'published'));
     setSaving(true);
     try {
       const body = {
@@ -727,7 +728,13 @@ export const AdminCmsInsights: React.FC = () => {
 
       setEditorOpen(false);
       setEditing(null);
-      setStatusMessage(editing.id ? 'Insight updated successfully.' : 'Insight created as a draft.');
+      setStatusMessage(editing.status === 'published'
+        ? 'CMS status saved as Published. Verify the public Insights page to confirm visibility.'
+        : wasPreviouslyPublished
+          ? 'CMS status saved as Draft. Verify the public Insights page to confirm visibility changes.'
+          : editing.id
+            ? 'Insight updated in the CMS as a draft.'
+            : 'Insight created as a draft in the CMS.');
       await load();
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Insight could not be saved.');
