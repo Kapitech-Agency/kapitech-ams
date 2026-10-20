@@ -53,6 +53,20 @@ Recent repository history includes further work/tests for **Website CMS, Finance
 - Do not opportunistically change backend/API/database/schema/auth/session/CSRF/MFA/RBAC, Finance calculations/postings, permissions, provider contracts, or established business logic during the structural/UI stage.
 - Stage 5 visual/responsive/accessibility review and **explicit user sign-off** remain a mandatory gate before broad Stage 6 work.
 
+## 2.1 Latest known CI blocker snapshot
+
+At the last verified query, current `main` was [`6a545c85cd222c511adbbed96f09cc3322e2b2a5`](https://github.com/Kapitech-Agency/kapitech-ams/commit/6a545c85cd222c511adbbed96f09cc3322e2b2a5), and the newest applicable workflows were:
+
+- [AMS Quality Gate run 39278883412](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39278883412): failed at **Regression tests**.
+- [AMS CI run 39278883293](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39278883293): cancelled, but its **Security regression tests** step had failed before cancellation.
+
+The downloaded logs identify two failing assertions in the shared regression suite:
+
+1. `tests/ams-nine-module-workspace-regression.test.ts:631`, test **“Shared metric strips use canonical breakpoints and match their metric count”** — still expects the old lower Retainers strip class `grid grid-cols-1 gap-3 text-[11px] text-muted min-[600px]:grid-cols-2 min-[1100px]:grid-cols-4`, although the current Retainers refactor removed the duplicate lower burn/near-cap/average-overage grid.
+2. `tests/client-retainer-date-defaults.test.ts`, test **“Retainer Renewal Schedule derives date-only presentation from shared calendar helpers”** — still expects inline `renewalDays(item.renewal)` logic; the source now imports and uses `getRetainerRenewalDays` from `retainerDateDefaults`.
+
+These logs indicate stale source-shape assertions after a refactor; they do not by themselves prove a runtime/business-logic defect. **Next action:** inspect the current source, intended structure contract and test diff; update assertions to protect the new structure and shared calendar helper semantics without deleting the tests or weakening their behavioral coverage. Run the focused tests, the relevant suite, and both workflows on the new exact SHA. Until then, do not call the latest main CI-green. After these checks pass, resume the structural redesign sequence described in `docs/AMS-FRONTEND-STRUCTURAL-REDESIGN-EXECUTION-PROMPT.md` and `docs/AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md`; do not revert to arbitrary small-gap chasing.
+
 ## 3. Immediate resume sequence
 
 Re-verify live source and CI on every resume; this list is a dated recovery pointer.
