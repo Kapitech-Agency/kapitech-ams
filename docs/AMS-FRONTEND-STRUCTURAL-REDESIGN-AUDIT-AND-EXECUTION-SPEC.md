@@ -4,6 +4,7 @@
 **Scope:** Frontend-only navigation, routing, shared shell, main-content structure, interactions, responsive behavior, accessibility, and user visual review  
 **Roadmap coverage:** Refines the official end-to-end roadmap's Stages 0–5. Does not replace or renumber the canonical Stages 0–15.  
 **Status:** Mandatory execution specification. This document records a dated source audit and defines how the remaining frontend redesign must be completed.
+**Guideline alignment updated:** 22 October 2026. Source-audit observations remain dated snapshots.
 
 > **Primary objective:** The user must be able to review the real AMS screens and decide whether the frontend is ready before the team begins broad backend, API, data-model, workflow, integration, or production-readiness work. Deliver a task-appropriate main-content redesign, not a sequence of isolated component fixes.
 
@@ -179,6 +180,7 @@ Before implementing a selected view, record this contract in the structural prog
 | Current structure | Actual component/route, content order, primary work surface and visible controls. |
 | Structural mismatch | Specific gap between current composition and the target; cite source evidence. |
 | Target content order | Ordered regions from first to last, with the primary area clearly named. |
+| External reference decision | If a reference is considered, identify the specific pattern, task fit and adopt/adapt/reject rationale under Main-Content Restructuring Specification §2.1. |
 | Primary work surface | Register, queue, board, report, editor, timeline, detail, or configuration group—and why. |
 | Essential data/context | Identity, status, owner, dates/period, source, units, linked records and next action as applicable. |
 | Filters and views | Controls supported by current fields and the role matrix. |
@@ -300,6 +302,10 @@ Never expose secrets or bypass server-owned security controls.
 ## 8. Design-system and interaction requirements
 
 Apply AMS-DESIGN-SYSTEM.md and the interaction standards without inventing a second system.
+
+### External reference evaluation
+
+Apply the adoption gate in [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md) §2.1 whenever an external admin template or design example is considered. The reviewed Shadcn Admin archive may inform pattern evaluation, but it must not replace AMS hierarchy, visual tokens, navigation, data ownership, supported workflow, permissions or frontend stack. A copied layout or visual resemblance alone cannot satisfy a structural-redesign criterion.
 
 1. One page title/header owner, one outer gutter owner, and one primary content scroll owner.
 2. Separate primary navigation, contextual workspace tabs, worksheet navigation, in-page filters and view toggles.

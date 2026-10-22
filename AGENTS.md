@@ -108,6 +108,7 @@ Production deployments are sourced from **main** as configured for Kapitech. Com
 - Every interactive control must perform its labeled operation, show pending/disabled behavior, handle errors, and synchronize with the source of truth.
 - Optimistic updates must roll back on failure; prevent conflicting duplicate submits.
 - Keep the existing dark-first premium AMS design. No ad-hoc redesign, arbitrary colors, !important, fake dashboard cards, inert buttons, or placeholder routes.
+- Treat third-party admin templates and starter kits, including the reviewed Shadcn Admin archive, as comparative references only. Follow the adoption gate in `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1; do not copy its navigation, tokens, generic KPI patterns, demo data or dependency stack.
 
 ## 8. APIs, security, and data integrity
 

@@ -20,6 +20,7 @@
 2. Shared source components/styles own actual rendering and must be inspected before local changes.
 3. This guide owns cross-page application and consistency checks.
 4. A page may add domain-specific hierarchy, not new tokens or parallel primitives.
+5. External admin templates may inform a specific interaction pattern, but cannot replace the AMS Design System or the reference-adoption gate in `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1.
 
 Resolve code/document conflicts deliberately; do not silently invent alternatives. External accessibility baseline: WCAG 2.2 Level AA ([W3C Recommendation](https://www.w3.org/TR/WCAG22/)); use WAI-ARIA APG patterns for composite widgets. The Design System owns AMS-specific dimensions because global accessibility standards do not prescribe one universal page spacing scale.
 

@@ -177,6 +177,8 @@ Where required by the target specification:
 
 Do not count minor corrections as structural completion. Record supporting bug fixes separately. Keep data truthful: no fake production examples to fill the layout, no zeros standing in for missing values, and no unsupported capability shown as functional.
 
+When consulting an external admin template or starter (including the user-provided Shadcn Admin archive), apply the adoption gate in `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1. Extract only a task-appropriate pattern after mapping it to Kapitech's canonical records and supported actions and checking the AMS Design System, routes, permissions and domain contracts. Do not clone the template's generic page layout, data, navigation, theme or dependency stack.
+
 ## 8. Design system and accessibility
 
 - `AMS-DESIGN-SYSTEM.md` and the existing token source are the visual authority.

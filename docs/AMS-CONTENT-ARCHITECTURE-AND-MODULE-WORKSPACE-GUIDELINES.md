@@ -10,7 +10,7 @@ Follow the user's latest explicit instruction and repository rules in AGENTS.md.
 
 Inspect current source code and tests before implementing anything. Requirements describe the target, not proof that a feature exists. Report conflicts rather than silently inventing a new rule.
 
-The provided Dashboard screenshot is a structural reference for hierarchy, information density, clear working areas, and useful supporting panels. It is not permission to copy example values, names, fake data, exact KPI counts, or identical page composition across unrelated modules.
+The provided Dashboard screenshot is a structural reference for hierarchy, information density, clear working areas, and useful supporting panels. It is not permission to copy example values, names, fake data, exact KPI counts, or identical page composition across unrelated modules. External admin templates are also comparative references only; use the adoption gate in `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1 rather than duplicating a separate rule here.
 
 ## 2. Primary UX objective
 

@@ -28,6 +28,7 @@ For the current end-to-end delivery initiative, the canonical stage sequence is 
 - Preserve Finance formulas, mappings, transaction meaning, reports, journal controls and closing behavior unless a business-rule change is explicitly approved and reconciled.
 - Reuse current components, tokens, API client, stores and permission patterns; do not build parallel systems for convenience.
 - For UI work, treat `AMS-DESIGN-SYSTEM.md` section 2.7 as the single geometry/interaction contract and target WCAG 2.2 Level AA with WAI-ARIA APG widget patterns. Do not invent ad hoc dimensions or breakpoints; report gaps/conflicts explicitly.
+- Treat external admin templates (including the reviewed Shadcn Admin archive) as pattern references only; use `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1 for adoption criteria and preserve the AMS stack, navigation, record ownership, workflows and permissions.
 - The frontend is not the source of business logic or permission authority.
 - Never use fixtures as production truth or hardcode success.
 - Preserve session, CSRF, MFA, RBAC, encryption, private document vault and audit controls.

@@ -74,6 +74,7 @@ Use the existing AMS design system; do not create a second design system.
 - Crimson is the brand accent; do not use the danger color for every button or active element.
 - Use Inter/system typography and the sizes, scale, gaps, padding, control heights, table rows, sidebar, topbar, breakpoints, and components defined by the active guidelines.
 - Avoid generic UI patterns that conflict with the AMS concept, such as excessive bento dashboards, glassmorphism, blur, decorative lines, or purposeless animation.
+- External admin starters, including the reviewed Shadcn Admin archive, are comparative input rather than replacement templates. Apply `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1 before adopting a pattern.
 - Switching tabs/subtabs must not cause page padding, header, workspace height, or content position to jump.
 - Each page needs clear context: title, a short description when the module pattern uses one, clear content hierarchy, helpful empty state, loading/error states, and a visible primary action.
 - Do not create duplicate headers. Follow the current pattern: one page context header, then navigation/tabs, then content. Do not add another header below a subtab.

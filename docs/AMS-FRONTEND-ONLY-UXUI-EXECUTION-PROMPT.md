@@ -59,7 +59,7 @@ Use the user-provided Dashboard screenshot as a structural reference for:
 - useful information density and clear action hierarchy;
 - restrained dark AMS styling.
 
-Do not copy example names/values or force every module to use the same KPI count or card layout. Keep each primary working area dominant.
+Do not copy example names/values or force every module to use the same KPI count or card layout. Keep each primary working area dominant. External admin starters are pattern references only; apply the adoption gate in `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1 and do not transplant their app structure or dependencies.
 
 Follow AMS-DESIGN-SYSTEM.md for exact tokens, type scale, spacing, components, themes and motion. Reuse existing AdminPageShell, AdminModuleHeader, contextual navigation primitives, panels, tables, status badges, buttons, Skeleton, charts, Drawer, Modal and ConfirmDialog.
 

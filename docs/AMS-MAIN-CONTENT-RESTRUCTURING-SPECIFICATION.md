@@ -3,7 +3,7 @@
 **Product:** Kapitech Agency Management System (AMS)  
 **Primary stage:** Stage 4 — Main-content hierarchy across all nine modules  
 **Status:** Mandatory target specification; implementation must be proven with source, test and runtime evidence  
-**Last updated:** 19 October 2026  
+**Last updated:** 22 October 2026  
 **Authority:** Master Structure and Navigation IA define product ownership and approved navigation; this document defines the target main-content composition and relative region order for each workspace; the Role-Based Content Blueprint and Worksheet Role Presentation Matrix refine role-aware content; AMS-DESIGN-SYSTEM.md defines visual tokens/geometry; the End-to-End Delivery Roadmap defines stage order. The Feature & Content Gap Register records verified implementation status, not a competing target.
 
 > **This is a structural overhaul, not a cosmetic revision.** Re-derive each page from Kapitech's real agency tasks, canonical records, user decisions and role needs. Rebuild the content hierarchy and main working area if the current structure is wrong. Do not preserve an unsuitable layout simply because it already exists. Preserve correct data sources, routes, supported business behavior, permissions, accounting logic and security boundaries.
@@ -60,6 +60,31 @@ External evaluation baselines:
 - [Nielsen Norman Group — Data Tables: Four Major User Tasks](https://www.nngroup.com/articles/data-tables/): finding records, comparing data, inspecting/editing a record and performing row actions.
 
 These references are acceptance baselines, not proof of compliance. The AMS Design System remains the authority for local geometry. Record the exact views, widths, interactions and accessibility checks actually tested.
+
+### 2.1 External UI references are comparative input, not design authority
+
+The user-provided `shadcn-admin-main` archive was reviewed as a comparative admin-interface example. It is not a replacement template for AMS. The same rule applies to third-party admin starters, screenshots, component galleries and other visual references.
+
+**Patterns worth evaluating only when they solve the selected Kapitech task**
+- A clear page identity and purpose, with a visible hierarchy between the main work surface and secondary context.
+- Filters, period scope and primary actions placed directly with the register, queue, report or editor they control.
+- Readable register/table density, recognizable record identity, relevant status/owner/deadline context and understandable row actions.
+- Predictable workspace navigation and active state, coherent forms/validation, honest loading/empty/error feedback, responsive behavior and keyboard interaction.
+- Reusable patterns where the user task and behavior are genuinely the same, without forcing identical page layouts across modules.
+
+**Do not transfer from the reference**
+- Demo records, placeholder names/content, generated metrics, sample numbers, decorative charts or generic SaaS KPI/bento layouts that do not support the selected task.
+- Brand styling, theme/tokens, navigation taxonomy, route structure, page/workspace ownership, data model, workflow assumptions or permission model.
+- Starter architecture or dependency choices wholesale. Do not add shadcn, Radix or another component/chart system merely to reproduce visual parity; the existing AMS stack and shared primitives remain the baseline.
+
+**Required adoption gate before implementation**
+1. State the selected workspace's primary user task and decision.
+2. Identify the specific reference pattern and the usability problem it appears to solve.
+3. Map that pattern to canonical AMS records, source-backed fields and currently supported actions.
+4. Check it against the Master Structure, Navigation IA, this specification's per-workspace content contract, AMS Design System, role-based presentation rules and relevant domain/security contracts.
+5. Record whether the pattern is adopted, adapted or rejected and why. Reject it if it only adds visual resemblance, complexity or decoration, or changes route/record ownership, data meaning, access or an established workflow.
+
+The before/after content-order sketch must still be derived from the actual AMS view and this specification. Visual similarity to a reference is not evidence of structural redesign, implementation completeness, design-system compliance or accessibility conformance. This policy supplements the existing contracts; it does not create a second design system or authorize new dependencies.
 
 ## 3. Shared anatomy and surface selection
 

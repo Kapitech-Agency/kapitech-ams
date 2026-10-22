@@ -138,6 +138,7 @@ Work through the module order in the canonical roadmap, one bounded worksheet at
 
 Checklist for every view:
 - [ ] State the page's primary user task and select the dominant working surface (register, board, editor, report, timeline, detail or operational control).
+- [ ] If an external template/reference is considered, record task fit and the adopt/adapt/reject decision using `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1; do not copy generic layout, data, routes, theme or dependencies for visual parity.
 - [ ] Place filters, search, period scope and primary actions where they support that task; avoid duplicated headers, redundant summary strips and decorative cards.
 - [ ] Verify fields, labels, units, timestamps, currency, statuses and row actions come from supported source contracts.
 - [ ] Preserve existing record actions, routes, sorting, pagination, selected filters, URL state and permission checks.

@@ -1,6 +1,6 @@
 # Kapitech AMS Documentation Index
 
-**Updated:** 19 October 2026  
+**Updated:** 22 October 2026  
 **Repository:** `Kapitech-Agency/kapitech-ams`  
 **Purpose:** Identify the authoritative product, design, engineering, evidence, and operational documents without confusing target specifications with verified implementation.
 
@@ -33,9 +33,9 @@ For execution sequencing, `AMS-END-TO-END-DELIVERY-ROADMAP.md` is canonical. The
 | [AMS Stage-by-Stage Execution Checklist](AMS-STAGE-BY-STAGE-EXECUTION-CHECKLIST.md) | Detailed mandatory checklist for Stage 0–15 entry/exit criteria, breadcrumb implementation/verification, cross-module acceptance, evidence, bulk commits and timeout recovery. Supplements the canonical roadmap; does not replace its stage order. |
 | [AMS Navigation Information Architecture](architecture/ams-navigation-information-architecture.md) | Approved primary modules, workspace ownership, route/deep-link behavior, breadcrumbs, and legacy-route policy. |
 | [AMS Role-Based Content Blueprint](AMS-ROLE-BASED-CONTENT-BLUEPRINT.md) | Role-aware content/field priorities, chart/metric contracts and cross-module presentation rules within the baseline composition defined by the Main-Content Restructuring Specification. |
-| [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) | Mandatory audit findings, module-level target composition, view contract, anti-patterns, frontend stages, evidence requirements, and user sign-off gate. |
+| [AMS Frontend Structural Redesign Audit & Execution Specification](AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md) | Mandatory audit findings, module-level target composition, view contract, anti-patterns, external-reference evaluation gate, frontend stages, evidence requirements, and user sign-off gate. |
 | [AMS Frontend Structural Redesign Execution Prompt](AMS-FRONTEND-STRUCTURAL-REDESIGN-EXECUTION-PROMPT.md) | Copy/paste execution instructions for implementing the structural-redesign specification in bounded frontend-only slices, with tests, evidence, checkpoint recovery and the Stage 5 user sign-off gate. |
-| [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md) | **Canonical per-workspace content target:** defines main-content purpose, required relative region order, fields, task surfaces, linked data, states and structural acceptance across all nine modules. Section 4.10 is the mandatory screen-composition matrix. Not a cosmetic-revision guide. |
+| [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md) | **Canonical per-workspace content target:** defines main-content purpose, required relative region order, fields, task surfaces, linked data, states and structural acceptance across all nine modules. Section 2.1 governs external UI-reference adoption; Section 4.10 is the mandatory screen-composition matrix. Not a cosmetic-revision guide. |
 | [AMS Worksheet Role Presentation Matrix](AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md) | Concrete persona emphasis, expected fields/columns, filters/actions, and visualization choice by worksheet. Personas do not grant permissions. |
 | [AMS Data Model and Data Dictionary](AMS-DATA-MODEL-AND-DATA-DICTIONARY.md) | Logical entity ownership, relationships, field definitions, integrity rules, and current-contract cautions. |
 | [AMS Feature & Content Gap Register](AMS-FEATURE-CONTENT-GAP-REGISTER.md) | Requirement-level inventory across modules, content, workflows, data, access, tests and production readiness; statuses must be revalidated against current evidence. |
@@ -64,7 +64,7 @@ Finance has five approved areas: **Overview & Control, Transactions & Cash, Rece
 | [Modal Guidelines](AMS-MODAL-GUIDELINES.md) | Shared modal/confirmation behavior, focus management, safety and visual contract. |
 | [Kanban Guidelines](AMS-KANBAN-GUIDELINES.md) | Board stages, drag/drop, pending/rejected writes, read-only behavior, and responsive interaction. |
 
-Do not restart an independent architecture redesign from the older general prompt. Implement the already approved structure unless the user explicitly approves a product change.
+Do not restart an independent architecture redesign from the older general prompt. Implement the already approved structure unless the user explicitly approves a product change. External admin templates are pattern-level references only; use the adoption gate in the Main-Content Restructuring Specification §2.1.
 
 ## 4. Engineering, security, workflow, and verification
 
