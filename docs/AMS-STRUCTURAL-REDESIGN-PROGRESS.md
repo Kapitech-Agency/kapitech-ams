@@ -1796,3 +1796,18 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Requirement status:** PARTIALLY COMPLETE. Recent activity now appears in the mandated position with truthful source and safe fields. Event-to-owning-record links remain unavailable under the present API shape.
 - **Next:** Dashboard → Performance. Review source-backed trend windows/definitions and task/project analysis; preserve the current verified Overview hierarchy.
 
+
+
+## Stage 4 structural slice — Dashboard · Performance · Prioritized project attention register · 23 October 2026
+
+- **Requirement:** VIEW-DASH-PERFORMANCE, current composition keeps task analysis and project attention first, followed by tracked time and supporting metrics.
+- **Before:** project attention flags were derived from only health OR status (health took precedence if both existed) and the list was sliced to eight in source order, so a populated health field could mask a risk-bearing status and earlier API ordering could hide more urgent projects.
+- **After:** one source-backed signal helper combines both health and status text. Attention projects are sorted before truncation: overdue projects first; within a due-date group, earlier dates first; entries with dates before entries lacking dates; then project name/title for deterministic fallback.
+- **Scope:** this changes only which canonical projects are prioritized in the existing “Projects needing attention” list. It does not create new project risk states, records or metrics. Existing explicit risk keywords, target/due date fields, labels, count/“Showing 8 of N” copy and source ownership remain.
+- **Regression:** tests/ams-dashboard-overview-hierarchy.test.ts checks both health/status signals, overdue-first sorting, date comparison and the eight-record limit.
+- **Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts. Source behavior change [c6289365](https://github.com/Kapitech-Agency/kapitech-ams/commit/c62893650223bb9f80477e6d1fdfa737bfe1df55); final source/test SHA [03872a67](https://github.com/Kapitech-Agency/kapitech-ams/commit/03872a6725fb9338e46a89f2d5a4c38ff3b433fe), after correcting the old source-shape assertion.
+- **Exact-SHA validation:** AMS Quality Gate [39836485893 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39836485893); AMS CI [39836486043 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39836486043), including typecheck, regression suite, production build, migrations, security tests, PostgreSQL integration, dependency audit and HTTP smoke.
+- **Browser evidence:** NOT CAPTURED. Stage 5 still needs sample projects with mixed status/health, overdue dates, no target date and more than eight exceptions; confirm ordered output under authorized roles and responsive sizes.
+- **Requirement status:** PARTIALLY COMPLETE. Source/test/CI evidence confirms risk signal coverage and ordering; live-data and browser/accessibility acceptance remain open.
+- **Next:** Dashboard → Analytics. Audit the source of each report/metric and period, unit and drill-down contract before altering any chart.
+

@@ -975,3 +975,14 @@ The Overview now includes a Recent Activity panel after supporting metrics. It u
 The panel intentionally omits IP/user-agent, free-form details and chain/hash/arbitrary metadata. The existing response lacks a structured owning-record target or URL, so a direct record link is not available and was not invented. No API, backend, auth or permission rule was changed.
 
 Regression tests/ams-dashboard-overview-hierarchy.test.ts asserts hierarchy, permission-gating, source-backed state, safe fields and canonical log destination. AMS Quality Gate [39834166472 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39834166472) and AMS CI [39834166397 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39834166397). Browser/accessibility evidence remains open.
+
+
+### VIEW-DASH-PERFORMANCE: Combine project risk signals and prioritize exceptions before truncation
+
+**Final source/test SHA:** [03872a67](https://github.com/Kapitech-Agency/kapitech-ams/commit/03872a6725fb9338e46a89f2d5a4c38ff3b433fe); code change [c6289365](https://github.com/Kapitech-Agency/kapitech-ams/commit/c62893650223bb9f80477e6d1fdfa737bfe1df55), followed by a regression correction for the existing source-order assertion.
+
+The “Projects needing attention” list used health OR status, meaning a populated health value could mask a risk-bearing status. It also took the first eight records before sorting. The view now combines both source fields, prioritizes explicit overdue projects, orders due dates ascending, and uses name/title as deterministic fallback before the existing eight-item limit.
+
+No new risk signal, metric, source or mutation was added. Task distribution, tracked-time window, project set and the existing at-risk/overdue labels remain unchanged. Regression tests/ams-dashboard-overview-hierarchy.test.ts validates the combined signals and order.
+
+Exact-SHA AMS Quality Gate [39836485893 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39836485893), AMS CI [39836486043 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39836486043). Browser-based validation remains open.
