@@ -986,3 +986,16 @@ The “Projects needing attention” list used health OR status, meaning a popul
 No new risk signal, metric, source or mutation was added. Task distribution, tracked-time window, project set and the existing at-risk/overdue labels remain unchanged. Regression tests/ams-dashboard-overview-hierarchy.test.ts validates the combined signals and order.
 
 Exact-SHA AMS Quality Gate [39836485893 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39836485893), AMS CI [39836486043 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39836486043). Browser-based validation remains open.
+
+
+### VIEW-DASH-ANALYTICS: Select a single business report and expose exact financial values
+
+**Source/test SHA:** [d812fe60252cec1385b74d6ac88b04ef8306fe1d](https://github.com/Kapitech-Agency/kapitech-ams/commit/d812fe60252cec1385b74d6ac88b04ef8306fe1d).
+
+**Structural change:** Dashboard Analytics no longer places a financial trend next to a project-status panel and then appends a mixed-scope KPI strip. It now places report selection and scope context first and displays one focused report at a time: Financial movement, Receivables, or Project status. Financial movement includes an exact-value table with date boundaries, period totals, invoice/expense date definitions, source and currency context. Receivables and project status are identified as current snapshots, not filtered trends. Each report drills into its canonical owner via existing routes.
+
+**Data/behavior boundary:** Retains current invoice, expense and project snapshot sources, established statuses and existing financial amount/balance fields. Trend values are unchanged; only bucket date boundaries are added as presentation metadata. The arithmetic invoice/expense difference is not renamed or treated as posted profit. No API, backend, database, route, auth/RBAC, persistence, or Finance calculation/posting change.
+
+**Regression coverage:** `tests/ams-dashboard-analytics-structure.test.ts`, `tests/ams-dashboard-overview-hierarchy.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`, and `tests/frontend-functional-regression.test.ts` assert report selection/order, exact period values, source date definitions, empty/unavailable behavior, snapshot semantics and canonical drill-down destinations.
+
+Exact-SHA AMS Quality Gate [39840053958 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39840053958) and AMS CI [39840053891 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39840053891). **Browser/visual/accessibility status: NOT VERIFIED.** Authenticated role, viewport/reflow, keyboard/focus and touch/chart checks remain in Stage 5, followed by the mandatory explicit user sign-off.
