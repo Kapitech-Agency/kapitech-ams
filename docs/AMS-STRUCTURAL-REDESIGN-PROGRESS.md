@@ -1608,3 +1608,43 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Browser evidence:** NOT CAPTURED. Authenticated document/version access, actual storage/preview failures, direct category query behavior, responsive reflow, keyboard/focus and permission-role rendering remain Stage 5 checks.
 - **Requirement status:** PARTIALLY COMPLETE. Explicit metadata filters, reset and hierarchy are source/test verified. Full version chronology and operational storage/recovery evidence remain unsupported/unverified.
 - **Next action:** continue to Website CMS using the per-workspace structural contract and actual saved CMS state. Start with the next supported content register/workspace in canonical order; preserve public-route, save/publication-state semantics and applicant data boundaries.
+
+
+## Stage 4 structural slice — Website CMS · Services · Publication state filter · 22 October 2026
+
+### View structure contract
+
+- **Requirement:** `VIEW-CMS-SERVICES`; workspace: Website CMS → Services.
+- **Primary task:** find and edit the canonical service record, narrow the list by its saved publication state and category, and understand whether the CMS flag is saved or public output has been independently verified.
+- **Current source:** `src/pages/admin/AdminCmsServices.tsx`; records still come from `api.cms.getServices()` and saves/publication toggles use the existing CMS mutation endpoints. No endpoint, record identity, or publication lifecycle was added.
+- **Before:** page header with copy describing offerings as “live” → search and category chips → count and service register with Published/Draft labels → existing detail/editor drawer. There was no dedicated status filter although publication state was visible per row/card. Reset cleared only search and category.
+- **Structural mismatch:** editors had to inspect or paginate the list to isolate draft or published records. Header copy could also read as if every managed CMS record were already live.
+- **After:** status-accurate header → search/category/publication-state controls → one canonical service register, visible filtered count and existing mobile/table surfaces → selected service detail/editor. Published/Drafts filter and Reset sit within the existing shared filter bar before the register.
+- **Data semantics:** “Published” uses `service.isPublished === true`, matching the existing service public-response contract. Other values remain in the Draft filter, consistent with the current CMS list presentation and explicit publication field. A successful mutation still confirms only the saved CMS flag; it does not prove the live page/cache refreshed.
+- **Behavior preserved:** existing editor, rich service fields, record-ID update/delete behavior, publication toggle, validation, access policy, and save/error feedback remain. No service taxonomy change was made; no Mobile App service was added.
+- **Regression:** `tests/cms-services-workflow-regression.test.ts` now asserts search/category/publication filter hierarchy, saved-flag semantics, reset completeness, and truthful CMS/public-output wording.
+- **Changed paths:** `src/pages/admin/AdminCmsServices.tsx` and `tests/cms-services-workflow-regression.test.ts` in [b682f09e](https://github.com/Kapitech-Agency/kapitech-ams/commit/b682f09eb5a41b89d12215c0488e4c1228b0888a).
+- **Exact-SHA verification:** AMS Quality Gate [39810591135 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810591135) and AMS CI [39810590666 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810590666) on `b682f09eb5a41b89d12215c0488e4c1228b0888a`. Typecheck, regression tests, production build, migrations, security tests, PostgreSQL integration, dependency audit and production HTTP smoke test passed.
+- **Browser evidence:** NOT CAPTURED. Stage 5 must verify state filtering, edit/save, actual public `/services` output, permission role, keyboard/focus and responsive layout.
+- **Requirement status:** PARTIALLY COMPLETE pending Stage 5 and public output verification.
+- **Next action:** continue to Case Studies, then proceed in CMS order to Insights after checking its actual content/state contract.
+
+
+## Stage 4 structural slice — Website CMS · Case Studies · Publication state filter · 22 October 2026
+
+### View structure contract
+
+- **Requirement:** `VIEW-CMS-CASES`; workspace: Website CMS → Case Studies.
+- **Primary task:** locate the correct case study by content search and pillar, distinguish the saved CMS visibility state, and edit/preview the same canonical record.
+- **Current source:** `src/pages/admin/AdminCmsProjects.tsx`; record loading, save/toggle/delete, existing detail/preview tabs and public `/work` filtering remain unchanged.
+- **Before:** header/Add Case Study → search and pillar filter → filtered count and case-study register → preview/editor. Publication state appeared on records and could be toggled, but there was no Published/Drafts filter and Reset left the list scoping incomplete.
+- **Structural mismatch:** editors could not quickly isolate drafts for editorial review or published records for content audit while retaining the existing pillar/search context.
+- **After:** header and supported Add action → search, pillar and Published/Drafts filters → filtered count → canonical case-study card/table register → existing preview/editor. Reset now clears all three filter dimensions, and the empty state mentions publication scope.
+- **Legacy-state semantics:** the current normalizer treats a missing `isPublished` flag as published for legacy case studies. The filter preserves that contract: Published is `isPublished !== false` and Drafts is `isPublished === false`. New templates continue to default to draft. No records are migrated or modified by filtering.
+- **Behavior preserved:** public `/work` filtering, save/edit/toggle/delete APIs, CMS record IDs, media/editor fields, preview tabs and truthful status feedback remain. Mutation feedback confirms saved CMS state and still asks the editor to verify actual public output.
+- **Regression:** `tests/ams-nine-module-workspace-regression.test.ts` verifies filters-before-register, saved flag semantics including legacy published records, reset and updated empty-state guidance.
+- **Changed paths:** `src/pages/admin/AdminCmsProjects.tsx` and `tests/ams-nine-module-workspace-regression.test.ts` in [4d975a0a](https://github.com/Kapitech-Agency/kapitech-ams/commit/4d975a0a1da92df5e2871fdc38a71eeb0ac2775d).
+- **Exact-SHA verification:** AMS Quality Gate [39810998385 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810998385) and AMS CI [39810997918 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810997918) on `4d975a0a1da92df5e2871fdc38a71eeb0ac2775d`. Typecheck, regression tests, production build, migrations, security tests, PostgreSQL integration, dependency audit and production HTTP smoke test passed.
+- **Browser evidence:** NOT CAPTURED. Stage 5 must verify filter/pillar interactions, save/preview, media, actual public `/work` output, permission role, keyboard/focus and responsive layout.
+- **Requirement status:** PARTIALLY COMPLETE pending Stage 5 and actual public visibility verification.
+- **Next action:** proceed to Website CMS → Insights, checking the current register/filters/editor against the content-state specification before choosing another source-backed structural change.

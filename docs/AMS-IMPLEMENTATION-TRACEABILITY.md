@@ -875,3 +875,19 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Tests:** `tests/ams-nine-module-workspace-regression.test.ts` asserts filter-before-register and upload-after-register order, readiness and relationship filter logic, all-dimension reset and URL category removal, plus no invisible global reporting-period filter. The first Quality Gate run exposed an overly specific selector that assumed `AdminFilterBar` and its slug were on one line; the test selector was corrected without weakening the structural assertion.
 
 **Exact-SHA verification:** AMS Quality Gate [39809646327](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39809646327) and AMS CI [39809646405](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39809646405) passed on `11f1402dc1df439fdf89c14bf0f292bb8bcfb7df`. Stage 5 actual browser/role/responsive/keyboard acceptance is **NOT VERIFIED**. The UI model has no established version chronology, and storage durability/recovery remains an operational dependency.
+
+
+### VIEW-CMS-SERVICES: Filter the canonical service register by saved publication state
+
+**Source:** `src/pages/admin/AdminCmsServices.tsx`. Added an explicit Published/Drafts filter inside the existing shared filter bar before the service register. Search/category/publication scopes now work together, pagination resets when those scopes change, and Reset clears all of them. The header no longer characterizes the whole managed collection as live; it describes service content and saved publication state for the public `/services` page.
+
+**Semantics preserved:** Published means `isPublished === true`, matching the current service public-response contract. The Drafts view uses the existing non-true state the UI already displays as Draft. No API, source, rich editor fields, CMS identity, role, route or public publishing behavior changed. Status feedback continues to confirm only the saved CMS flag and asks the editor to verify public visibility separately.
+
+**Tests and evidence:** `tests/cms-services-workflow-regression.test.ts` covers the filter ordering/state/reset and publication wording. Exact-SHA AMS Quality Gate [39810591135](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810591135) and AMS CI [39810590666](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810590666) passed for `b682f09eb5a41b89d12215c0488e4c1228b0888a`. Stage 5 authenticated browser/public-output review remains **NOT VERIFIED**.
+
+
+### VIEW-CMS-CASES: Filter the canonical case-study register by saved publication state
+
+**Source:** `src/pages/admin/AdminCmsProjects.tsx`. Added Published/Drafts scope alongside the existing search and pillar controls, and included it in pagination resets and Reset action behavior. The empty-state copy names publication scope. The existing normalizer's legacy rule is preserved: `isPublished !== false` means Published, while only explicit false means Draft. New records still begin as drafts. No backend/public route or mutation behavior changed.
+
+**Tests and evidence:** `tests/ams-nine-module-workspace-regression.test.ts` verifies filter/register order, legacy semantics, all-filter reset and empty-state guidance. Exact-SHA AMS Quality Gate [39810998385](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810998385) and AMS CI [39810997918](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810997918) passed for `4d975a0a1da92df5e2871fdc38a71eeb0ac2775d`. Stage 5 authenticated browser and actual public `/work` visibility checks remain **NOT VERIFIED**.
