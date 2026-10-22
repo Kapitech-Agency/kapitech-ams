@@ -955,3 +955,12 @@ The Integration Overview previously substituted a PostgreSQL label when no datas
 No API, server, permission, session or write workflow changed. Kopra H2H remains unavailable. Tests cover state sources, evidence-boundary text, nested route behavior and the disabled Kopra item.
 
 **Exact-SHA evidence:** AMS Quality Gate [39832811773 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39832811773); AMS CI [39832811706 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39832811706). Browser/provider evidence has not been captured; the requirement remains partially complete.
+
+
+### VIEW-SETTINGS-PREFERENCES: Requirement gap identified, implementation deliberately blocked
+
+Reviewed `src/pages/admin/AdminSettings.tsx`, `src/lib/amsModuleSubnavigation.ts`, `src/lib/apiClient.ts`, and the mandatory Settings composition contract. The active Settings tab union and workspace navigation expose only System Overview, Users & Access, Audit Log and Integrations. The client includes application-level CMS metadata and notification-settings APIs but no canonical per-user preference model or endpoint.
+
+No frontend was added. Repurposing shared CMS/notification settings or adding localStorage-only presentation controls would not satisfy the requirement that personal preferences have reliable save/reset semantics and not affect other users. Record `VIEW-SETTINGS-PREFERENCES` as **MISSING / BLOCKED BY CANONICAL SOURCE CONTRACT** until an approved per-user source, fields and persistence behavior exist.
+
+Next Stage 4 slice returns to the roadmap's prescribed start: Dashboard → Overview. No source/test changes were made for this review.

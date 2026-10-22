@@ -1765,3 +1765,15 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Requirement status:** PARTIALLY COMPLETE. The current surface describes its available evidence truthfully; provider connection/sync status remains absent from the current contract and intentionally unreported.
 - **Next:** Settings → Preferences. Verify current supported values and persistence before changing the main content; avoid introducing shared or authorization-affecting preferences.
 
+
+
+## Stage 4 source-contract review — Settings · Preferences · No canonical preference store available · 23 October 2026
+
+- **Requirement:** `VIEW-SETTINGS-PREFERENCES`, as described in the main-content composition matrix.
+- **Source reviewed:** `src/pages/admin/AdminSettings.tsx`, `src/lib/amsModuleSubnavigation.ts`, `src/lib/apiClient.ts`, and Sections 4.9/4.10 of `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`.
+- **Current state:** active `SettingsTab` union contains only `overview`, `audit`, `security`, and `integrations`; the Settings workspace navigation exposes the same four areas. No per-user preference worksheet or dedicated persisted preference model/API was found.
+- **Related but different settings:** existing CMS metadata settings and notification settings are shared/application-level settings. They are not evidence of personal display preferences and must not be repurposed as per-user preferences.
+- **Decision:** no UI change was made. Do not add non-persisted preference controls, localStorage-only settings, arbitrary values or a new route to satisfy the visual specification. Implement only when the canonical per-user preference contract and permitted fields/save/reset behavior are approved and available.
+- **Requirement status:** **MISSING / BLOCKED BY CANONICAL SOURCE CONTRACT**. This is a real requirement gap, not a completed view.
+- **Next:** continue Stage 4 in the canonical roadmap order with Dashboard → Overview and verify the existing hierarchy against current data/source contracts before selecting one bounded structural slice.
+
