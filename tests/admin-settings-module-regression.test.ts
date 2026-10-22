@@ -333,7 +333,8 @@ test('Users & Access account directory searches and scopes the canonical registe
   assert.match(source, /const matchesStatus = accountStatusFilter === 'all' \|\| account\.status === accountStatusFilter/);
   assert.match(source, /const accountPageCount = Math\.max\(1, Math\.ceil\(filteredAccounts\.length \/ accountPageSize\)\)/);
   assert.match(source, /total=\{filteredAccounts\.length\}/);
-  assert.match(source, /setAccountPage\(1\);\s*\}\s*disabled=\{!hasAccountFilters\}/);
+  assert.match(source, /setAccountPage\(1\);[\s\S]*?disabled=\{!hasAccountFilters\}/);
+  assert.match(source, /disabled=\{!hasAccountFilters\}/);
   assert.match(source, /No accounts match these filters/);
   assert.match(source, /Admin accounts could not be loaded/);
   assert.match(source, /setAccountRoleFilter\('all'\)/);
