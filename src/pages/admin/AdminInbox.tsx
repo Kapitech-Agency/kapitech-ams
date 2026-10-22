@@ -84,6 +84,8 @@ export const AdminInbox: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [filterOwner, setFilterOwner] = useState<string>('all');
+  const [filterChannel, setFilterChannel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewMode, setViewMode] = useState<'split' | 'table' | 'overview' | 'board' | 'queue'>('split');
 
@@ -150,6 +152,22 @@ export const AdminInbox: React.FC = () => {
     }
   }, [activeInboxTab, submissions]);
 
+  const inboxChannelOptions = [
+    { value: 'all', label: language === 'id' ? 'Semua kanal' : 'All channels' },
+    { value: 'inquiry', label: language === 'id' ? 'Inquiry klien' : 'Client inquiry' },
+    { value: 'vendor', label: language === 'id' ? 'Vendor freelance' : 'Freelance vendor' },
+    { value: 'newsletter', label: 'Newsletter' },
+  ];
+  const inboxOwnerOptions = useMemo(() => {
+    const owners = Array.from(new Set(submissions.map((item) => String(item.assignedTo || '').trim()).filter(Boolean)))
+      .sort((a, b) => a.localeCompare(b));
+    return [
+      { value: 'all', label: language === 'id' ? 'Semua PIC' : 'All owners' },
+      { value: '__no_owner__', label: language === 'id' ? 'Belum ditugaskan' : 'Unassigned' },
+      ...owners.map((owner) => ({ value: owner, label: owner })),
+    ];
+  }, [submissions, language]);
+
   type TriageScope = 'action' | 'unassigned' | 'priority' | 'saved';
   const [triageScope, setTriageScope] = useState<TriageScope>('action');
 
@@ -167,6 +185,8 @@ export const AdminInbox: React.FC = () => {
     setPage(1);
     setFilterStatus('all');
     setFilterPriority('all');
+    setFilterOwner('all');
+    setFilterChannel('all');
     setSearchQuery('');
     setViewMode(activeInboxTab === 'overview' ? 'overview' : activeInboxTab === 'starred' ? 'queue' : 'split');
   }, [activeInboxTab]);
@@ -463,6 +483,9 @@ export const AdminInbox: React.FC = () => {
     return activeTabItems.filter(item => {
       const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
       const matchesPriority = filterPriority === 'all' || (item.priority || 'normal') === filterPriority;
+      const assignedOwner = String(item.assignedTo || '').trim();
+      const matchesOwner = filterOwner === 'all' || (filterOwner === '__no_owner__' ? !assignedOwner : assignedOwner === filterOwner);
+      const matchesChannel = filterChannel === 'all' || (item.type || 'inquiry') === filterChannel;
       const matchesStarred = activeInboxTab === 'starred' ? !!item.starred : true;
 
       const queryLower = searchQuery.toLowerCase().trim();
@@ -478,9 +501,9 @@ export const AdminInbox: React.FC = () => {
         (item.specialty || '').toLowerCase().includes(queryLower)
       );
 
-      return matchesStatus && matchesPriority && matchesStarred && matchesSearch && matchesDate(item.createdAt);
+      return matchesStatus && matchesPriority && matchesOwner && matchesChannel && matchesStarred && matchesSearch && matchesDate(item.createdAt);
     });
-  }, [activeTabItems, filterStatus, filterPriority, searchQuery, matchesDate]);
+  }, [activeTabItems, filterStatus, filterPriority, filterOwner, filterChannel, searchQuery, matchesDate]);
 
   const triageItems = useMemo(() => {
     return filteredItems
@@ -507,7 +530,7 @@ export const AdminInbox: React.FC = () => {
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
   useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
-  useEffect(() => { setPage(1); }, [activeInboxTab, filterStatus, filterPriority, searchQuery, reportPeriodValue, reportPeriodEnabled]);
+  useEffect(() => { setPage(1); }, [activeInboxTab, filterStatus, filterPriority, filterOwner, filterChannel, searchQuery, reportPeriodValue, reportPeriodEnabled]);
 
   // Export CSV
   const handleExportCSV = () => {
@@ -750,19 +773,16 @@ export const AdminInbox: React.FC = () => {
                     />
                   </div>
                   <div className="w-[150px] shrink-0">
-                    <CustomSelect
-                      value={filterPriority}
-                      onChange={setFilterPriority}
-                      options={[
-                        { value: 'all', label: 'All priorities' },
-                        { value: 'urgent', label: 'Urgent' },
-                        { value: 'high', label: 'High' },
-                        { value: 'normal', label: 'Normal' },
-                        { value: 'low', label: 'Low' },
-                      ]}
-                      aria-label="Filter messages by priority"
-                      slug="inbox-message-priority-filter"
-                    />
+                    <CustomSelect value={filterPriority} onChange={setFilterPriority} options={[
+                      { value: 'all', label: 'All priorities' }, { value: 'urgent', label: 'Urgent' },
+                      { value: 'high', label: 'High' }, { value: 'normal', label: 'Normal' }, { value: 'low', label: 'Low' },
+                    ]} aria-label="Filter messages by priority" slug="inbox-message-priority-filter" />
+                  </div>
+                  <div className="w-[150px] shrink-0">
+                    <CustomSelect value={filterOwner} onChange={setFilterOwner} options={inboxOwnerOptions} aria-label="Filter messages by owner" slug="inbox-message-owner-filter" />
+                  </div>
+                  <div className="w-[150px] shrink-0">
+                    <CustomSelect value={filterChannel} onChange={setFilterChannel} options={inboxChannelOptions} aria-label="Filter messages by channel" slug="inbox-message-channel-filter" />
                   </div>
                 </>
               )}
@@ -802,12 +822,15 @@ export const AdminInbox: React.FC = () => {
               <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
                 <Download size={13} />Export
               </button>
-              <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open review workspace">
-                <User size={13} />Review
-              </button>
-              <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all'} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
-                Reset
-              </button>
+              {activeInboxTab === 'messages' || activeInboxTab === 'unread' ? (
+                <div role="group" aria-label="Message register view" className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
+                  <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><User size={13} />Review</button>
+                  <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><TableIcon size={13} />Table</button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open review workspace"><User size={13} />Review</button>
+              )}
+              <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all' && filterOwner === 'all' && filterChannel === 'all'} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">Reset</button>
             </div>
           )}
           footer={(
@@ -1106,14 +1129,23 @@ export const AdminInbox: React.FC = () => {
             <div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="min-w-0"><table className="ams-table w-full text-left border-collapse text-xs font-sans">
               <thead>
                 <tr className="bg-panel border-b border-line text-muted">
-                  <th className="p-3 w-10 text-center">★</th>
-                  <th className="p-3">{activeInboxTab === 'client' ? (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company') : (language === 'id' ? 'Inbound & Konteks' : 'Inbound & Context')}</th>
-                  <th className="p-3">{language === 'id' ? 'Kanal' : 'Channel'}</th>
-                  <th className="p-3">{language === 'id' ? 'Layanan Diminta' : 'Requested Services'}</th>
-                  <th className="p-3">{language === 'id' ? 'Anggaran' : 'Budget'}</th>
-                  <th className="p-3">{language === 'id' ? 'Status' : 'Status'}</th>
-                  <th className="p-3">{language === 'id' ? 'Waktu' : 'Date'}</th>
-                  <th className="p-3 text-right">{language === 'id' ? 'Aksi' : 'Actions'}</th>
+                  <th scope="col" className="p-3 w-10 text-center">★</th>
+                  <th scope="col" className="p-3">{activeInboxTab === 'client' ? (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company') : (language === 'id' ? 'Pengirim & Konteks' : 'Sender & Context')}</th>
+                  <th scope="col" className="p-3">{language === 'id' ? 'Kanal' : 'Channel'}</th>
+                  {activeInboxTab === 'client' ? (
+                    <>
+                      <th scope="col" className="p-3">{language === 'id' ? 'Layanan Diminta' : 'Requested Services'}</th>
+                      <th scope="col" className="p-3">{language === 'id' ? 'Anggaran' : 'Budget'}</th>
+                    </>
+                  ) : (
+                    <>
+                      <th scope="col" className="p-3">{language === 'id' ? 'Sumber' : 'Source'}</th>
+                      <th scope="col" className="p-3">{language === 'id' ? 'PIC' : 'Owner / PIC'}</th>
+                    </>
+                  )}
+                  <th scope="col" className="p-3">{language === 'id' ? 'Status & Prioritas' : 'Status & Priority'}</th>
+                  <th scope="col" className="p-3">{language === 'id' ? 'Waktu Diterima' : 'Received'}</th>
+                  <th scope="col" className="p-3 text-right">{language === 'id' ? 'Aksi' : 'Actions'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -1174,28 +1206,28 @@ export const AdminInbox: React.FC = () => {
                           {renderChannelBadge(item.type)}
                         </td>
 
-                        {/* Services */}
-                        <td className="p-3 max-w-[200px]">
-                          <div className="flex flex-wrap gap-1">
-                            <>
-                              {item.services && item.services.length > 0 ? (
-                                item.services.slice(0, 2).map((svc, i) => (
+                        {activeInboxTab === 'client' ? (
+                          <>
+                            <td className="p-3 max-w-[200px]">
+                              <div className="flex flex-wrap gap-1">
+                                {item.services && item.services.length > 0 ? item.services.slice(0, 2).map((svc, i) => (
                                   <span key={i} className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">{svc}</span>
-                                ))
-                              ) : (
-                                <span className="text-muted text-[10px]">{item.specialty || '-'}</span>
-                              )}
-                              {item.services && item.services.length > 2 && (
-                                <span className="text-[10px] text-muted">+{item.services.length - 2}</span>
-                              )}
-                            </>
-                          </div>
-                        </td>
-
-                        {/* Budget */}
-                        <td className="p-3 font-semibold text-fg">
-{item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided')}
-                        </td>
+                                )) : <span className="text-muted text-[10px]">{item.specialty || '-'}</span>}
+                                {item.services && item.services.length > 2 && <span className="text-[10px] text-muted">+{item.services.length - 2}</span>}
+                              </div>
+                            </td>
+                            <td className="p-3 font-semibold text-fg">{item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided')}</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="p-3 max-w-[180px]"><span className="text-[11px] text-muted">{item.source || (language === 'id' ? 'Tidak tercatat' : 'Not recorded')}</span></td>
+                            <td className="p-3">
+                              {String(item.assignedTo || '').trim()
+                                ? <span className="inline-flex max-w-[150px] truncate rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-fg">{item.assignedTo}</span>
+                                : <span className="text-[10px] text-muted">{language === 'id' ? 'Belum ditugaskan' : 'Unassigned'}</span>}
+                            </td>
+                          </>
+                        )}
 
                         {/* Status & Priority */}
                         <td className="p-3">

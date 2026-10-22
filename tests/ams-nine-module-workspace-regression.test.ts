@@ -739,13 +739,17 @@ test('Inbox All Messages exposes source-backed status and priority filters befor
   const messageFilterGate = inbox.indexOf("{activeInboxTab === 'messages' && (", controls);
   const statusFilter = inbox.indexOf('slug="inbox-message-status-filter"', controls);
   const priorityFilter = inbox.indexOf('slug="inbox-message-priority-filter"', controls);
+  const ownerFilter = inbox.indexOf('slug="inbox-message-owner-filter"', controls);
+  const channelFilter = inbox.indexOf('slug="inbox-message-channel-filter"', controls);
   const register = inbox.indexOf('data-ams-feature-slug="inbox-leads-directory"', controls);
-  assert.ok(controls >= 0 && messageFilterGate > controls && statusFilter > messageFilterGate && priorityFilter > statusFilter && register > priorityFilter,
+  assert.ok(controls >= 0 && messageFilterGate > controls && statusFilter > messageFilterGate && priorityFilter > statusFilter && ownerFilter > priorityFilter && channelFilter > ownerFilter && register > channelFilter,
     'Status and priority filters belong to All Messages controls before the register.');
   assert.match(inbox, /value=\{filterStatus\}[\s\S]{0,180}options=\{inboxStatusOptions\}/);
   assert.match(inbox, /value=\{filterPriority\}[\s\S]{0,450}value: 'urgent'[\s\S]{0,120}value: 'high'/);
-  assert.match(inbox, /\[activeTabItems, filterStatus, filterPriority, searchQuery, matchesDate\]/);
+  assert.ok(inbox.includes('[activeTabItems, filterStatus, filterPriority, filterOwner, filterChannel, searchQuery, matchesDate]'));
   assert.doesNotMatch(inbox, /activeInboxTab === 'overview' && \([\s\S]{0,180}inbox-message-status-filter/);
+  assert.match(inbox, /value=\{filterOwner\}[\s\S]{0,160}options=\{inboxOwnerOptions\}/);
+  assert.match(inbox, /value=\{filterChannel\}[\s\S]{0,160}options=\{inboxChannelOptions\}/);
 });
 
 
