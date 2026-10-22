@@ -63,6 +63,8 @@ test('Retainer Renewal Schedule derives date-only presentation from shared calen
   const source = await fs.readFile(path.join(root, 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
   assert.match(source, /const formatDate = \(value: string\) => formatRetainerRenewalDate\(value\)/);
   assert.match(source, /const renewalDays = \(value: string\) => getRetainerRenewalDays\(value\)/);
-  assert.match(source, /const days = renewalDays\(item\.renewal\);\s*return days !== null && days >= 0 && days <= 30;/);
+  assert.match(source, /const days = item\.renewalRecorded \? renewalDays\(item\.renewal\) : null;\s*return days !== null && days >= 0 && days <= 30;/);
+  assert.match(source, /const renewalDateCount = records\.filter\(\(item\) => item\.renewalRecorded && renewalDays\(item\.renewal\) !== null\)\.length;/,
+    'The renewal summary must exclude missing and invalid date-only values rather than treating them as upcoming.');
   assert.doesNotMatch(source, /Math\.ceil\(\(new Date\(value\)\.getTime\(\) - Date\.now\(\)\) \/ 86400000\)/);
 });

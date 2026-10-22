@@ -628,7 +628,13 @@ test('Shared metric strips use canonical breakpoints and match their metric coun
   const retainerMetricEnd = retainers.indexOf('metrics={[', retainerMetricStart);
   assert.ok(retainerMetricStart >= 0 && retainerMetricEnd > retainerMetricStart);
   assert.equal(retainers.slice(retainerMetricStart, retainerMetricEnd).includes('md:grid-cols-3 lg:grid-cols-3'), false);
-  assert.ok(retainers.includes('className="grid grid-cols-1 gap-3 text-[11px] text-muted min-[600px]:grid-cols-2 min-[1100px]:grid-cols-4"'));
+  const retainerMetricPropsEnd = retainers.indexOf('\n        />', retainerMetricStart);
+  assert.ok(retainerMetricPropsEnd > retainerMetricEnd);
+  const retainerMetrics = retainers.slice(retainerMetricStart, retainerMetricPropsEnd);
+  assert.equal((retainerMetrics.match(/\{ id: '/g) || []).length, 3,
+    'Retainers should expose its three meaningful metrics through the shared metric strip.');
+  assert.doesNotMatch(retainers, /className="grid grid-cols-1 gap-3 text-\[11px\] text-muted min-\[600px\]:grid-cols-2 min-\[1100px\]:grid-cols-4"/,
+    'Retainers must not reintroduce the removed duplicate lower summary grid.');
 
   const vendorMetricStart = vendors.indexOf('<AdminMetricStrip slug="vendor-kpis"');
   const vendorMetricEnd = vendors.indexOf('metrics={[', vendorMetricStart);
