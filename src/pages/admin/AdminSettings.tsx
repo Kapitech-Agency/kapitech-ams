@@ -50,6 +50,7 @@ import { createQrCode, qrCodeToPath } from '../../lib/qrcodegen';
 type SettingsTab = 'overview' | 'audit' | 'security' | 'integrations';
 type IntegrationView = 'overview' | 'website-cms';
 type AuditOutcome = 'all' | 'success' | 'attention';
+type AuditLogDetail = SecurityAuditLog & { actorRole?: string; userAgent?: string };
 
 type BackupRecord = {
   createdAt: string;
@@ -261,7 +262,10 @@ export const AdminSettings: React.FC = () => {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [auditQuery, setAuditQuery] = useState('');
+  const [auditActorFilter, setAuditActorFilter] = useState('all');
+  const [auditEventFilter, setAuditEventFilter] = useState('all');
   const [auditOutcome, setAuditOutcome] = useState<AuditOutcome>('all');
+  const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLogDetail | null>(null);
   const [auditPage, setAuditPage] = useState(1);
   const [auditPageSize, setAuditPageSize] = useState(10);
 
@@ -647,22 +651,33 @@ export const AdminSettings: React.FC = () => {
 
   const periodBackups = useMemo(() => backups.filter((backup) => matchesDate(backup.createdAt)), [backups, matchesDate]);
 
+  const auditActorOptions = useMemo(
+    () => Array.from(new Set(logs.map((log) => log.actor || 'System'))).sort((left, right) => left.localeCompare(right)),
+    [logs]
+  );
+  const auditEventOptions = useMemo(
+    () => Array.from(new Set(logs.map((log) => log.action).filter(Boolean))).sort((left, right) => left.localeCompare(right)),
+    [logs]
+  );
+
   const filteredLogs = useMemo(() => {
     const query = auditQuery.trim().toLowerCase();
     return logs.filter((log) => {
       if (!matchesDate(log.timestamp)) return false;
+      const matchesActor = auditActorFilter === 'all' || (log.actor || 'System') === auditActorFilter;
+      const matchesEvent = auditEventFilter === 'all' || log.action === auditEventFilter;
       const matchesQuery = !query || [log.actor, log.action, log.details, log.ip].some((value) => String(value || '').toLowerCase().includes(query));
       const matchesOutcome =
         auditOutcome === 'all' ||
         (auditOutcome === 'success' && log.severity === 'info') ||
         (auditOutcome === 'attention' && (log.severity === 'warning' || log.severity === 'critical'));
-      return matchesQuery && matchesOutcome;
+      return matchesActor && matchesEvent && matchesQuery && matchesOutcome;
     });
-  }, [auditOutcome, auditQuery, logs, matchesDate]);
+  }, [auditActorFilter, auditEventFilter, auditOutcome, auditQuery, logs, matchesDate]);
 
   useEffect(() => {
     setAuditPage(1);
-  }, [auditOutcome, auditQuery, reportPeriodValue, reportPeriodEnabled]);
+  }, [auditActorFilter, auditEventFilter, auditOutcome, auditQuery, reportPeriodValue, reportPeriodEnabled]);
 
   useEffect(() => {
     setAccountPage(1);
@@ -1152,8 +1167,8 @@ export const AdminSettings: React.FC = () => {
       )}
 
       {activeTab === 'audit' && canViewAuditLogs && (
-        <section className="rounded-card border border-line bg-panel">
-          <div className="flex flex-col gap-3 border-b border-line px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
+        <section data-ams-feature-slug="settings-audit-register" data-ams-slug="settings-audit-register" className="rounded-card border border-line bg-panel">
+          <div className="border-b border-line px-5 py-4">
             <div className="flex items-center gap-2">
               <Clock3 size={18} className="text-muted" />
               <div>
@@ -1164,39 +1179,77 @@ export const AdminSettings: React.FC = () => {
                 <p className="mt-1 text-[10px] leading-4 text-muted">Authentication, RBAC, and security operations reported by the server.</p>
               </div>
             </div>
+          </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <label className="relative sm:w-56">
-                <span className="sr-only">Filter by event or actor</span>
-                <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                <input
-                  value={auditQuery}
-                  onChange={(event) => setAuditQuery(event.target.value)}
-                  placeholder="Filter by event or actor..."
-                  className="h-8 w-full bg-bg pl-9 pr-3 text-[11px]"
-                />
-              </label>
-              <CustomSelect
-                value={auditOutcome}
-                onChange={(value) => setAuditOutcome(value as AuditOutcome)}
-                options={[
-                  { value: 'all', label: 'All outcomes' },
-                  { value: 'success', label: 'Success only' },
-                  { value: 'attention', label: 'Warnings & critical' }
-                ]}
-                triggerClassName="h-8 min-h-8 w-[160px]"
-                aria-label="Filter audit outcomes"
+          <div data-ams-feature-slug="settings-audit-filter-bar" data-ams-slug="settings-audit-filter-bar" className="grid grid-cols-1 gap-2 border-b border-line bg-bg/30 px-5 py-4 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_160px_minmax(180px,0.9fr)_160px_auto_auto]">
+            <label className="relative min-w-0">
+              <span className="sr-only">Search audit actor, event, details or origin/IP</span>
+              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+              <input
+                value={auditQuery}
+                onChange={(event) => setAuditQuery(event.target.value)}
+                placeholder="Search actor, event, details, or IP..."
+                className="h-8 w-full bg-bg pl-9 pr-3 text-[11px]"
               />
-              <button
-                type="button"
-                onClick={handleExportLogs}
-                disabled={filteredLogs.length === 0}
-                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"
-              >
-                <Download size={13} />
-                Export CSV
-              </button>
-            </div>
+            </label>
+            <CustomSelect
+              value={auditActorFilter}
+              onChange={setAuditActorFilter}
+              options={[
+                { value: 'all', label: 'All actors' },
+                ...auditActorOptions.map((actor) => ({ value: actor, label: actor }))
+              ]}
+              triggerClassName="h-8 min-h-8 w-full"
+              aria-label="Filter audit actor"
+              slug="settings-audit-actor-filter"
+            />
+            <CustomSelect
+              value={auditEventFilter}
+              onChange={setAuditEventFilter}
+              options={[
+                { value: 'all', label: 'All events' },
+                ...auditEventOptions.map((event) => ({ value: event, label: event }))
+              ]}
+              triggerClassName="h-8 min-h-8 w-full"
+              aria-label="Filter audit event"
+              slug="settings-audit-event-filter"
+            />
+            <CustomSelect
+              value={auditOutcome}
+              onChange={(value) => setAuditOutcome(value as AuditOutcome)}
+              options={[
+                { value: 'all', label: 'All outcomes' },
+                { value: 'success', label: 'Success only' },
+                { value: 'attention', label: 'Warnings & critical' }
+              ]}
+              triggerClassName="h-8 min-h-8 w-full"
+              aria-label="Filter audit outcomes"
+              slug="settings-audit-outcome-filter"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setAuditQuery('');
+                setAuditActorFilter('all');
+                setAuditEventFilter('all');
+                setAuditOutcome('all');
+                setAuditPage(1);
+              }}
+              disabled={!auditQuery && auditActorFilter === 'all' && auditEventFilter === 'all' && auditOutcome === 'all'}
+              className="inline-flex h-8 items-center justify-center rounded-control border border-line bg-bg px-3 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Reset filters
+            </button>
+            <button
+              type="button"
+              onClick={handleExportLogs}
+              disabled={filteredLogs.length === 0}
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"
+            >
+              <Download size={13} />
+              Export CSV
+            </button>
+            <p className="col-span-full text-[10px] leading-4 text-muted">Time scope follows the shared reporting-period selection. Search covers recorded actor, event, details and origin/IP fields.</p>
           </div>
 
           {auditError && filteredLogs.length > 0 && (
@@ -1245,12 +1298,17 @@ export const AdminSettings: React.FC = () => {
                         <span className="text-[10px] text-muted">Origin / IP</span>
                         <span className="break-all font-mono text-[10px] text-fg">{log.ip || 'Internal cluster'}</span>
                       </div>
+                      <div className="mt-3 flex justify-end border-t border-line pt-3">
+                        <button type="button" onClick={() => setSelectedAuditLog(log)} className="inline-flex min-h-8 items-center rounded-control border border-line bg-panel px-3 text-[10px] font-medium text-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'View details for ' + log.action}>
+                          View details
+                        </button>
+                      </div>
                     </article>
                   );
                 })}
               </div>
               <div className="hidden min-[1280px]:block">
-              <table className="settings-system-table min-w-[1080px]">
+              <table className="settings-system-table min-w-[1180px]">
                 <thead>
                   <tr>
                     <th>Timestamp (UTC)</th>
@@ -1259,6 +1317,7 @@ export const AdminSettings: React.FC = () => {
                     <th>Details</th>
                     <th>Origin / IP</th>
                     <th className="text-right">Status</th>
+                    <th className="text-right">Details</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1288,6 +1347,11 @@ export const AdminSettings: React.FC = () => {
                             tone={isCritical ? 'danger' : isWarning ? 'warning' : 'success'}
                             label={isCritical ? 'Critical' : isWarning ? 'Warning' : 'Success'}
                           />
+                        </td>
+                        <td className="text-right">
+                          <button type="button" onClick={() => setSelectedAuditLog(log)} className="inline-flex min-h-8 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'View details for ' + log.action}>
+                            View
+                          </button>
                         </td>
                       </tr>
                     );
@@ -2123,6 +2187,62 @@ export const AdminSettings: React.FC = () => {
           This action removes the account. Confirm the account name before continuing.
         </div>
       </Modal>
+
+      <Drawer
+        open={Boolean(selectedAuditLog)}
+        onClose={() => setSelectedAuditLog(null)}
+        size="lg"
+        title={selectedAuditLog?.action || 'Audit event details'}
+        description={selectedAuditLog ? formatUtc(selectedAuditLog.timestamp) : undefined}
+        slug="settings-audit-event-details"
+        footer={<Button type="button" variant="secondary" onClick={() => setSelectedAuditLog(null)}>Close</Button>}
+      >
+        {selectedAuditLog && (
+          <div data-ams-feature-slug="settings-audit-event-details" className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+              <div>
+                <p className="text-[10px] text-muted">Recorded outcome</p>
+                <div className="mt-1">
+                  <StatusBadge
+                    tone={selectedAuditLog.severity === 'critical' ? 'danger' : selectedAuditLog.severity === 'warning' ? 'warning' : 'success'}
+                    label={selectedAuditLog.severity === 'critical' ? 'Critical' : selectedAuditLog.severity === 'warning' ? 'Warning' : 'Success'}
+                  />
+                </div>
+              </div>
+              <span className="font-mono text-[10px] text-muted">{selectedAuditLog.id}</span>
+            </div>
+
+            <dl className="grid gap-3 sm:grid-cols-2">
+              <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                <dt className="text-[10px] text-muted">Actor</dt>
+                <dd className="mt-1 break-words text-xs font-medium text-fg">{selectedAuditLog.actor || 'System'}</dd>
+              </div>
+              <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                <dt className="text-[10px] text-muted">Actor role</dt>
+                <dd className="mt-1 break-words text-xs font-medium text-fg">{selectedAuditLog.actorRole || 'Not recorded'}</dd>
+              </div>
+              <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                <dt className="text-[10px] text-muted">Timestamp (UTC)</dt>
+                <dd className="mt-1 break-words text-xs font-medium text-fg">{formatUtc(selectedAuditLog.timestamp)}</dd>
+              </div>
+              <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                <dt className="text-[10px] text-muted">Origin / IP</dt>
+                <dd className="mt-1 break-all font-mono text-xs text-fg">{selectedAuditLog.ip || 'Internal cluster'}</dd>
+              </div>
+              <div className="min-w-0 rounded-control border border-line bg-bg p-3 sm:col-span-2">
+                <dt className="text-[10px] text-muted">User agent</dt>
+                <dd className="mt-1 break-all text-xs leading-5 text-fg">{selectedAuditLog.userAgent || 'Not recorded'}</dd>
+              </div>
+            </dl>
+
+            <section className="rounded-control border border-line bg-bg p-4">
+              <h3 className="text-[11px] font-semibold text-fg">Recorded details</h3>
+              <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-muted">{selectedAuditLog.details || 'No additional details recorded.'}</p>
+            </section>
+            <p className="text-[10px] leading-5 text-muted">Read-only audit metadata. This view does not change the recorded event.</p>
+          </div>
+        )}
+      </Drawer>
 
       <span className="sr-only" aria-live="polite">
         {overviewMessage?.text || overviewLoadError || accountMessage?.text || accountFormMessage?.text || deleteAccountMessage || metaMessage?.text || securityStatusMessage?.text || auditError || accountsError || ''}

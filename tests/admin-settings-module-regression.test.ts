@@ -289,3 +289,30 @@ test('Settings overview orders source-backed status before the backup evidence r
   assert.match(overviewBody, /backupVerificationFor/);
   assert.match(overviewBody, /productionReadiness\?\.status\?\.reason/);
 });
+
+test('Audit register separates actor and event scopes and opens read-only event details', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  const auditStart = source.indexOf("{activeTab === 'audit' && canViewAuditLogs && (");
+  const filterBar = source.indexOf('data-ams-feature-slug="settings-audit-filter-bar"', auditStart);
+  const register = source.indexOf('data-ams-feature-slug="settings-audit-register"', auditStart);
+  const mobileRecords = source.indexOf('data-ams-feature-slug="settings-audit-cards"', auditStart);
+  const table = source.indexOf('settings-system-table min-w-[1180px]', auditStart);
+  const detailDrawer = source.indexOf('data-ams-feature-slug="settings-audit-event-details"');
+
+  assert.ok(auditStart >= 0 && filterBar > auditStart && register > filterBar && mobileRecords > register && table > mobileRecords);
+  assert.match(source, /auditActorOptions = useMemo/);
+  assert.match(source, /auditEventOptions = useMemo/);
+  assert.match(source, /const matchesActor = auditActorFilter === 'all'/);
+  assert.match(source, /const matchesEvent = auditEventFilter === 'all'/);
+  assert.match(source, /if \(!matchesDate\(log\.timestamp\)\) return false;/);
+  assert.match(source, /setAuditActorFilter\('all'\)/);
+  assert.match(source, /setAuditEventFilter\('all'\)/);
+  assert.match(source, /setSelectedAuditLog\(log\)/);
+  assert.ok(source.includes("aria-label=\"Filter audit actor\""));
+  assert.ok(source.includes("aria-label=\"Filter audit event\""));
+  assert.ok(detailDrawer > table);
+  assert.match(source, /selectedAuditLog\?\.actorRole/);
+  assert.match(source, /selectedAuditLog\?\.userAgent/);
+  assert.doesNotMatch(source.slice(detailDrawer, source.indexOf('</Drawer>', detailDrawer)), /selectedAuditLog\.(?:hash|prevHash|metadata)/,
+    'The detail view must not expose chain hashes or arbitrary metadata payloads.');
+});
