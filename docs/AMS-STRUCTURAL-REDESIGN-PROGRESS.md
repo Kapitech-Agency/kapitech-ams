@@ -1920,3 +1920,17 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Exact-SHA Quality Gate [39849098853 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849098853) and AMS CI [39849099042 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849099042).
 - Authenticated visual, role, responsive and accessibility review is **NOT VERIFIED**.
 - Next Stage 4 slice: Documents → Library. Recheck the previously implemented Library against current source, preserve secure file ownership and do not create a parallel attachment store.
+
+
+## Documents Library canonical relationship search · Stage 4 · 23 October 2026
+
+**Source/test SHA:** [6da546a61792c6f01ef9609fa1feff9f894bf41f](https://github.com/Kapitech-Agency/kapitech-ams/commit/6da546a61792c6f01ef9609fa1feff9f894bf41f).
+
+- Before: the search placeholder referred to entities, but the query matched only metadata and the entity type field. It did not include the display name of the canonical Client or Project linked to a document.
+- After: search includes the linked Client/Project display name and ID, in addition to existing document metadata. Memo dependencies include the current authorized Client/Project reference lists so the search refreshes when they load.
+- The Linked record filter uses only valid canonical relationship pairs: entity Client or Project plus a non-empty record ID. A non-empty ID attached to General/unknown entity metadata no longer implies a real linked record.
+- Changed files: src/pages/admin/AdminDocuments.tsx, src/lib/documentLibrarySearch.ts, tests/ams-document-library-linked-record-search.test.ts, tests/ams-nine-module-workspace-regression.test.ts.
+- Existing document sources, API, access guards, upload, preview, download, delete and storage workflow are unchanged. No second document store or relationship model was introduced.
+- Exact-SHA Quality Gate [39849779600 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849779600); AMS CI [39849779585 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849779585). Regression checks, typecheck, production build, security tests, PostgreSQL integration and HTTP smoke passed.
+- Authenticated visual, role and accessibility evidence remains **NOT VERIFIED**. Stage 5 must validate search outcomes and security/keyboard/responsive behavior using authorized sessions.
+- Next Stage 4 slice: Website CMS → Careers & Applicants. Continue to preserve dedicated CMS ownership; never duplicate restricted applicant records into Inbox or CRM.

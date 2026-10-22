@@ -1065,3 +1065,14 @@ Roles & Departments no longer places duplicate counts for department, role, team
 Internal capability focus and vendor skill coverage now use source-specific availability. A failed member source does not mask loaded vendor skill records; a failed vendor source does not hide the internal role matrix. If stale rows remain, the view preserves them with source-failure context; it does not reinterpret unavailable as confirmed empty or zero. Loading and confirmed-empty are distinct. The role matrix remains a role/division-derived focus description, not proficiency or qualifications. Vendor skills remain those recorded in the current vendor register. No new model, API, permission, route or HR feature was introduced.
 
 Changed files: src/pages/admin/AdminTeams.tsx, tests/team-resource-data-availability.test.ts, tests/ams-team-skill-matrix-source-independence.test.ts. Exact-SHA Quality Gate [39849098853 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849098853) and AMS CI [39849099042 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849099042). Browser/visual/role/accessibility state: **NOT VERIFIED**. Continue Stage 4 at Documents → Library.
+
+
+### VIEW-DOCS-LIBRARY: Search by linked client/project name and enforce canonical link semantics
+
+**Source/test SHA:** [6da546a61792c6f01ef9609fa1feff9f894bf41f](https://github.com/Kapitech-Agency/kapitech-ams/commit/6da546a61792c6f01ef9609fa1feff9f894bf41f). Previous structural baseline [11f1402d](https://github.com/Kapitech-Agency/kapitech-ams/commit/11f1402dc1df439fdf89c14bf0f292bb8bcfb7df) introduced the metadata filters and reset behavior.
+
+The Document Library search text now includes canonical linked Client/Project names and IDs in addition to the existing document title, description, category, department, tags, access metadata and file type. The linked name is resolved only against the existing authorized client/project reference list; the record ID remains searchable if its display name is unavailable. The linked/unlinked filter is true only for a non-empty ID whose entity is exactly Client or Project. General/unknown entity IDs do not imply a canonical link.
+
+**Changed files:** src/pages/admin/AdminDocuments.tsx, src/lib/documentLibrarySearch.ts, tests/ams-document-library-linked-record-search.test.ts, tests/ams-nine-module-workspace-regression.test.ts.
+
+Exact-SHA Quality Gate [39849779600 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849779600) and AMS CI [39849779585 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849779585). Typecheck, regression tests, production build, security tests, PostgreSQL integration, migration package check and production HTTP smoke passed. No API, storage, file permission, route or business workflow changed. **Browser/visual/role/accessibility: NOT VERIFIED.** Continue Stage 4 with Website CMS → Careers & Applicants.
