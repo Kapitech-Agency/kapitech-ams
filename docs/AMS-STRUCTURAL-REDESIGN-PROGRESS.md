@@ -1,7 +1,7 @@
 # Kapitech AMS Structural UX/UI Redesign Progress
 
-Progress evidence last recorded: 19 October 2026  
-Documentation cross-reference updated: 19 October 2026 (no new UI or browser verification implied)
+Progress evidence last recorded: 23 October 2026  
+Documentation cross-reference updated: 23 October 2026 (source/test evidence updated; no browser verification implied)
 Repository: `Kapitech-Agency/kapitech-ams`
 Required delivery branch: `main`
 
@@ -1667,3 +1667,24 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Browser evidence:** NOT CAPTURED. Stage 5 still needs authorized direct-route/translation checks, actual public `/insights` rendering/media, publishing failure/recovery, responsive layout and keyboard/focus review.
 - **Requirement status:** PARTIALLY COMPLETE. The reset control and filter/register hierarchy are source/test verified. Actual public output and Stage 5 review remain open.
 - **Next action:** continue to Website CMS → Testimonials and inspect the current search/publication-state control composition against the same canonical register requirements.
+
+
+## Stage 4 structural slice — Website CMS · Testimonials · Publication-state register filter · 23 October 2026
+
+### View structure contract
+
+- **Requirement:** `VIEW-CMS-TESTIMONIALS`; workspace: Website CMS → Testimonials.
+- **Primary task:** locate testimonials by attribution or quote, isolate records by saved CMS publication state, edit the canonical record, and distinguish saved state from independently verified public visibility.
+- **Current source:** `src/pages/admin/AdminCmsTestimonials.tsx`; the canonical list still loads through `api.cms.getTestimonials()`. The same record IDs, create/update/delete and publication-toggle calls remain in use.
+- **Before:** page header/Add testimonial → text search and Reset → status notice → filtered count → responsive canonical register (cards below 1280 CSS px and table at 1280 CSS px and above) → existing editor drawer.
+- **Structural mismatch:** the register showed Published/Draft per record but did not let editors scope the queue to publication state. Editors had to scan or paginate records to isolate drafts or published testimonials.
+- **After:** page header/Add testimonial → text search plus publication-state selector and complete Reset → status notice → filtered count → the same responsive canonical register → existing editor drawer. Selecting a state resets pagination to page one; Reset clears both search and publication scope.
+- **State semantics:** the existing normalizer uses `item?.isPublished !== false`, so legacy records without the newer flag remain Published while explicit `false` remains Draft. The filter preserves this normalizer and uses the already-normalized record state. No data migration or record update is performed by filtering.
+- **Preserved behavior:** searchable author/role/company/location/quote fields; canonical IDs; rating and attribution fields; existing CRUD, drawer, pagination, confirmation and CMS publication mutation; responsive card/table register; loading/error/empty states; API, permission, public route and saved-status feedback.
+- **Reference decision:** adapted the existing AMS `CustomSelect` publication-filter pattern from CMS Services. No external template, token, dependency, data store or new workflow was introduced.
+- **Regression:** `tests/ams-nine-module-workspace-regression.test.ts` asserts control/register order, state predicate, legacy-state normalization, reset completeness, pagination reset and bilingual state options.
+- **Changed source/test paths:** `src/pages/admin/AdminCmsTestimonials.tsx`; `tests/ams-nine-module-workspace-regression.test.ts`. Source patch [62a36021](https://github.com/Kapitech-Agency/kapitech-ams/commit/62a36021267e243cb11b8811b505d8da885b3c93); final source/test validation SHA [7186f3e7](https://github.com/Kapitech-Agency/kapitech-ams/commit/7186f3e7fe4e36f8b7954702a1e23998320082bc).
+- **Exact-SHA verification:** AMS Quality Gate [39824956954 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39824956954); AMS CI [39824955735 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39824955735). Typecheck, regression tests, production build, PostgreSQL migrations/integration, security regression tests, dependency audit, packaged-migration verification and production HTTP smoke test passed.
+- **Browser evidence:** NOT CAPTURED. Stage 5 still needs authorized editor-role review, publication filter/reset interaction, actual public `/cms/testimonials` output, cache/deployment visibility, rating/quote rendering, keyboard/focus and responsive viewport checks.
+- **Requirement status:** PARTIALLY COMPLETE. Filter and register hierarchy are source/test verified. Authenticated visual review and actual public-output visibility remain not verified.
+- **Next action:** inspect Website CMS → Careers and verify the Jobs/Applicants/Recruitment History composition against the canonical sources and privacy boundary before selecting the next structural change.
