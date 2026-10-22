@@ -1102,12 +1102,17 @@ test('Settings backup, audit, and account registers provide compact cards and ke
 });
 
 
-test('Time Logs provides compact cards and preserves owner-based delete permissions', () => {
+test('Time Logs uses responsive cards, scope filters, honest billing classification, and owner-based delete permissions', () => {
   const time = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTimeLogs.tsx'), 'utf8');
+  assert.ok(time.includes('data-ams-feature-slug="time-tracking-filters"'));
+  assert.ok(time.includes('slug="time-tracking-person-filter"'));
+  assert.ok(time.includes('slug="time-tracking-project-filter"'));
+  assert.ok(time.indexOf('data-ams-feature-slug="time-tracking-filters"') < time.indexOf('data-ams-feature-slug="time-tracking-ledger"'));
+  assert.ok(time.indexOf('data-ams-feature-slug="time-tracking-ledger"') < time.indexOf('data-ams-feature-slug="time-by-project-summary"'));
   assert.ok(time.includes('data-ams-feature-slug="time-log-mobile-cards"'));
   assert.ok(time.includes('hidden min-[1280px]:block overflow-x-auto'));
   assert.ok(time.includes('formatMinutes(Number(log.durationMinutes || 0))'));
-  assert.ok(time.includes("log.billable ? 'Billable' : 'Non-billable'"));
+  assert.ok(time.includes("billable === true ? 'Billable' : billable === false ? 'Non-billable' : 'Unclassified'"));
   assert.ok(time.includes('(canDeleteAll || log.userId === getAdminSession()?.user?.id)'));
   assert.ok(time.includes('slug="time-tracking-pagination"'));
 });

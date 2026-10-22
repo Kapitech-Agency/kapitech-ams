@@ -22,13 +22,22 @@ test('Dashboard preserves finance context and canonical responsive KPI breakpoin
   assert.match(dashboard, /width: \(projectDetails\.progress \?\? 0\) \+ '%'/);
 });
 
-test('Time tracking ledger precedes the supporting summary', async () => {
+test('Time Tracking scopes precede the canonical register and supporting summaries follow it', async () => {
   const timeLogs = await read('src/pages/admin/AdminTimeLogs.tsx');
   const header = timeLogs.indexOf('<AdminModuleHeader slug="time-tracking-header"');
-  const metrics = timeLogs.indexOf('<AdminMetricStrip slug="time-tracking-kpis"');
+  const tabs = timeLogs.indexOf('<AdminSectionTabs', header);
+  const filters = timeLogs.indexOf('data-ams-feature-slug="time-tracking-filters"');
   const ledger = timeLogs.indexOf('data-ams-feature-slug="time-tracking-ledger"');
   const ledgerEnd = timeLogs.indexOf('</section>', ledger);
-  assert.ok(header >= 0 && ledger > header && ledgerEnd > ledger && metrics > ledgerEnd);
+  const billingSummary = timeLogs.indexOf('data-ams-feature-slug="time-billing-classification-summary"');
+  const projectSummary = timeLogs.indexOf('data-ams-feature-slug="time-by-project-summary"');
+  const metrics = timeLogs.indexOf('<AdminMetricStrip slug="time-tracking-kpis"');
+  assert.ok(header >= 0 && tabs > header && filters > tabs && ledger > filters && ledgerEnd > ledger);
+  assert.ok(billingSummary > ledgerEnd && projectSummary > ledgerEnd && metrics > ledgerEnd,
+    'The canonical register must precede the billable/project breakdowns and the default overview summary.');
+  assert.match(timeLogs, /slug="time-tracking-person-filter"/);
+  assert.match(timeLogs, /slug="time-tracking-project-filter"/);
+  assert.doesNotMatch(timeLogs, /timeView === 'my-timesheet'|timeView === 'timesheet-control'/);
 });
 
 test('Client Directory makes the register primary and includes recorded service context instead of a KPI strip', async () => {
@@ -571,17 +580,19 @@ test('Documents header explains the active document category', async () => {
   assert.match(documents, /Security, infrastructure, and access-control documentation/);
 });
 
-test('Time Tracking billing and project views keep summaries tied to the selected reporting period', async () => {
+test('Time Tracking billing and project views keep summaries tied to reporting and person/project scope', async () => {
   const source = await read('src/pages/admin/AdminTimeLogs.tsx');
-
   assert.match(source, /periodLogs = useMemo/);
+  assert.match(source, /personScopedLogs = useMemo/);
   assert.match(source, /projectTimeSummary = useMemo\(\(\) => \{/);
-  assert.match(source, /filteredLogs = useMemo\(\(\) => periodLogs\.filter/);
+  assert.match(source, /scopedLogs = useMemo\(\(\) => personScopedLogs\.filter/);
+  assert.match(source, /filteredLogs = useMemo\(\(\) => scopedLogs\.filter/);
   assert.match(source, /const totalPages = Math\.max\(1, Math\.ceil\(filteredLogs\.length \/ pageSize\)\)/);
   assert.match(source, /total=\{filteredLogs\.length\}/);
-  assert.match(source, /value: String\(periodLogs\.length\)/);
+  assert.match(source, /value: String\(scopedLogs\.length\)/);
   assert.match(source, /No entries match this billing filter in the selected period/);
   assert.match(source, /No entries match the selected project in this period/);
+  assert.match(source, /billable === true \? 'Billable' : billable === false \? 'Non-billable' : 'Unclassified'/);
 });
 
 test('Vendor Skills & Service Matrix link reuses the existing Admin-only route policy', async () => {

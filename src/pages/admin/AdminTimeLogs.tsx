@@ -46,6 +46,12 @@ type ProjectTimeSummary = {
   unclassifiedMinutes: number;
 };
 
+const getTimeLogPersonKey = (log: TimeLog) =>
+  log.userId ? 'id:' + log.userId : log.user?.trim() ? 'name:' + log.user.trim() : 'unassigned';
+
+const getTimeLogBillingLabel = (billable?: boolean) =>
+  billable === true ? 'Billable' : billable === false ? 'Non-billable' : 'Unclassified';
+
 export const AdminTimeLogs: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTimeView = searchParams.get('timeView');
@@ -91,6 +97,7 @@ export const AdminTimeLogs: React.FC = () => {
   const [date, setDate] = useState(() => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10));
   const [billable, setBillable] = useState(true);
   const [billingFilter, setBillingFilter] = useState<BillingFilter>('all');
+  const [personFilter, setPersonFilter] = useState('all');
   const [projectFilter, setProjectFilter] = useState('all');
   const [notes, setNotes] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<TimeLog | null>(null);
@@ -134,17 +141,33 @@ export const AdminTimeLogs: React.FC = () => {
   useEffect(() => { void load(); }, []);
 
   const periodLogs = useMemo(() => logs.filter((log) => matchesDate(log.date)), [logs, matchesDate]);
-  const totalMinutes = useMemo(() => periodLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [periodLogs]);
-  const billableLogs = useMemo(() => periodLogs.filter((log) => log.billable === true), [periodLogs]);
-  const nonBillableLogs = useMemo(() => periodLogs.filter((log) => log.billable === false), [periodLogs]);
-  const unclassifiedLogs = useMemo(() => periodLogs.filter((log) => typeof log.billable !== 'boolean'), [periodLogs]);
-  const billableMinutes = useMemo(() => billableLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [billableLogs]);
-  const nonBillableMinutes = useMemo(() => nonBillableLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [nonBillableLogs]);
-  const unclassifiedMinutes = useMemo(() => unclassifiedLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [unclassifiedLogs]);
+
+  const personOptions = useMemo(() => {
+    const options = new Map<string, string>();
+    periodLogs.forEach((log) => {
+      const key = getTimeLogPersonKey(log);
+      const label = log.user?.trim() || 'Unassigned / unknown';
+      if (!options.has(key)) options.set(key, label);
+    });
+    return Array.from(options.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [periodLogs]);
+
+  useEffect(() => {
+    if (personFilter !== 'all' && !personOptions.some((option) => option.value === personFilter)) {
+      setPersonFilter('all');
+    }
+  }, [personFilter, personOptions]);
+
+  const personScopedLogs = useMemo(
+    () => periodLogs.filter((log) => personFilter === 'all' || getTimeLogPersonKey(log) === personFilter),
+    [periodLogs, personFilter]
+  );
 
   const projectTimeSummary = useMemo(() => {
     const groups = new Map<string, ProjectTimeSummary>();
-    periodLogs.forEach((log) => {
+    personScopedLogs.forEach((log) => {
       const key = log.projectId ? 'id:' + log.projectId : log.projectName ? 'name:' + log.projectName : 'unassigned';
       const current = groups.get(key) || {
         key,
@@ -163,24 +186,40 @@ export const AdminTimeLogs: React.FC = () => {
       groups.set(key, current);
     });
     return Array.from(groups.values()).sort((a, b) => b.totalMinutes - a.totalMinutes || a.projectName.localeCompare(b.projectName));
-  }, [periodLogs]);
+  }, [personScopedLogs]);
 
-  const filteredLogs = useMemo(() => periodLogs.filter((log) => {
+  useEffect(() => {
+    if (projectFilter !== 'all' && !projectTimeSummary.some((item) => item.key === projectFilter)) {
+      setProjectFilter('all');
+    }
+  }, [projectFilter, projectTimeSummary]);
+
+  const scopedLogs = useMemo(() => personScopedLogs.filter((log) => {
+    if (projectFilter === 'all') return true;
+    const key = log.projectId ? 'id:' + log.projectId : log.projectName ? 'name:' + log.projectName : 'unassigned';
+    return key === projectFilter;
+  }), [personScopedLogs, projectFilter]);
+
+  const totalMinutes = useMemo(() => scopedLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [scopedLogs]);
+  const billableLogs = useMemo(() => scopedLogs.filter((log) => log.billable === true), [scopedLogs]);
+  const nonBillableLogs = useMemo(() => scopedLogs.filter((log) => log.billable === false), [scopedLogs]);
+  const unclassifiedLogs = useMemo(() => scopedLogs.filter((log) => typeof log.billable !== 'boolean'), [scopedLogs]);
+  const billableMinutes = useMemo(() => billableLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [billableLogs]);
+  const nonBillableMinutes = useMemo(() => nonBillableLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [nonBillableLogs]);
+  const unclassifiedMinutes = useMemo(() => unclassifiedLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [unclassifiedLogs]);
+
+  const filteredLogs = useMemo(() => scopedLogs.filter((log) => {
     if (timeView === 'billable-time' && billingFilter !== 'all') {
       if (billingFilter === 'billable') return log.billable === true;
       if (billingFilter === 'non-billable') return log.billable === false;
       return typeof log.billable !== 'boolean';
     }
-    if (timeView === 'time-by-project' && projectFilter !== 'all') {
-      const key = log.projectId ? 'id:' + log.projectId : log.projectName ? 'name:' + log.projectName : 'unassigned';
-      return key === projectFilter;
-    }
     return true;
-  }), [periodLogs, timeView, billingFilter, projectFilter]);
+  }), [scopedLogs, timeView, billingFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize));
   const pagedLogs = filteredLogs.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => { setPage(1); }, [reportPeriodValue, reportPeriodEnabled, timeView, billingFilter, projectFilter]);
+  useEffect(() => { setPage(1); }, [reportPeriodValue, reportPeriodEnabled, timeView, billingFilter, personFilter, projectFilter]);
   useEffect(() => {
     setPage((current) => Math.min(current, totalPages));
   }, [totalPages]);
@@ -355,85 +394,40 @@ export const AdminTimeLogs: React.FC = () => {
         ]}
       />
 
-      {timeView === 'billable-time' && (
-        <section className="space-y-3 rounded-card border border-line bg-panel p-3 sm:p-4" data-ams-feature-slug="time-billing-classification-summary" aria-label="Billing classification summary">
-          <div>
-            <h2 className="text-sm font-semibold text-fg">Billing classification</h2>
-            <p className="mt-1 text-xs leading-5 text-muted">Totals use the time entries in the selected reporting period. Entries without a recorded billing flag remain unclassified.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              { key: 'billable', label: 'Billable', entries: billableLogs.length, minutes: billableMinutes },
-              { key: 'non-billable', label: 'Non-billable', entries: nonBillableLogs.length, minutes: nonBillableMinutes },
-              { key: 'unclassified', label: 'Unclassified', entries: unclassifiedLogs.length, minutes: unclassifiedMinutes },
-            ].map((item) => (
-              <div key={item.key} className="min-w-0 rounded-control border border-line bg-bg p-3">
-                <div className="text-[11px] font-medium text-muted">{item.label}</div>
-                <div className="mt-1.5 text-lg font-semibold tabular-nums text-fg">{formatMinutes(item.minutes)}</div>
-                <div className="mt-1 text-[11px] text-muted">{item.entries} entries</div>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col gap-2 sm:max-w-xs">
-            <label className="text-xs font-medium text-muted" htmlFor="time-billing-filter">Filter entries</label>
-            <CustomSelect
-              value={billingFilter}
-              onChange={(value) => setBillingFilter(value as BillingFilter)}
-              options={[
-                { value: 'all', label: 'All billing types' },
-                { value: 'billable', label: 'Billable only' },
-                { value: 'non-billable', label: 'Non-billable only' },
-                { value: 'unclassified', label: 'Unclassified only' },
-              ]}
-              aria-label="Filter entries by billing classification"
-              className="w-full"
-            />
-          </div>
-        </section>
-      )}
-
-      {timeView === 'time-by-project' && (
-        <section className="space-y-3 rounded-card border border-line bg-panel p-3 sm:p-4" data-ams-feature-slug="time-by-project-summary" aria-label="Recorded time by project">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-fg">Recorded time by project</h2>
-              <p className="mt-1 text-xs leading-5 text-muted">Grouped from canonical time entries in the selected reporting period. Select a project to inspect its entries below.</p>
-            </div>
-            <Button type="button" variant="secondary" disabled={projectFilter === 'all'} onClick={() => setProjectFilter('all')}>Show all projects</Button>
-          </div>
-          {projectTimeSummary.length === 0 ? (
-            <div className="rounded-control border border-line bg-bg p-4 text-xs leading-5 text-muted" role="status">No time entries exist in the selected reporting period.</div>
-          ) : (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {projectTimeSummary.map((item) => {
-                const selected = projectFilter === item.key;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => setProjectFilter((current) => current === item.key ? 'all' : item.key)}
-                    className={'min-w-0 rounded-control border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (selected ? 'border-accent/40 bg-accent/5' : 'border-line bg-bg hover:border-accent/25')}
-                  >
-                    <div className="flex min-w-0 items-start justify-between gap-2">
-                      <span className="min-w-0 break-words text-xs font-semibold text-fg">{item.projectName}</span>
-                      <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-0.5 text-[10px] tabular-nums text-muted">{item.entryCount} entries</span>
-                    </div>
-                    <div className="mt-3 text-lg font-semibold tabular-nums text-fg">{formatMinutes(item.totalMinutes)}</div>
-                    <div className="mt-2 grid grid-cols-2 gap-2 border-t border-line pt-2 text-[10px]">
-                      <div><span className="block text-muted">Billable</span><span className="mt-1 block font-medium tabular-nums text-fg">{formatMinutes(item.billableMinutes)}</span></div>
-                      <div><span className="block text-muted">Non-billable</span><span className="mt-1 block font-medium tabular-nums text-fg">{formatMinutes(item.nonBillableMinutes)}</span></div>
-                    </div>
-                    {item.unclassifiedMinutes > 0 && (
-                      <p className="mt-2 text-[10px] leading-4 text-muted">Unclassified billing flag: {formatMinutes(item.unclassifiedMinutes)}</p>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+      <section data-ams-feature-slug="time-tracking-filters" data-ams-slug="time-tracking-filters" className="rounded-card border border-line bg-panel p-3 sm:p-4" aria-label="Time entry scope">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <label className="min-w-0 space-y-1.5 text-xs font-medium text-muted">
+            <span>Team member</span>
+            <CustomSelect value={personFilter} onChange={setPersonFilter} options={[{ value: 'all', label: 'All team members' }, ...personOptions]} aria-label="Filter time entries by team member" slug="time-tracking-person-filter" className="w-full" triggerClassName="w-full justify-between" />
+          </label>
+          <label className="min-w-0 space-y-1.5 text-xs font-medium text-muted">
+            <span>Project</span>
+            <CustomSelect value={projectFilter} onChange={setProjectFilter} options={[{ value: 'all', label: 'All projects' }, ...projectTimeSummary.map((item) => ({ value: item.key, label: item.projectName }))]} aria-label="Filter time entries by project" slug="time-tracking-project-filter" className="w-full" triggerClassName="w-full justify-between" />
+          </label>
+          {timeView === 'billable-time' && (
+            <label className="min-w-0 space-y-1.5 text-xs font-medium text-muted">
+              <span>Billing classification</span>
+              <CustomSelect
+                value={billingFilter}
+                onChange={(value) => setBillingFilter(value as BillingFilter)}
+                options={[
+                  { value: 'all', label: 'All billing types' },
+                  { value: 'billable', label: 'Billable only' },
+                  { value: 'non-billable', label: 'Non-billable only' },
+                  { value: 'unclassified', label: 'Unclassified only' },
+                ]}
+                aria-label="Filter entries by billing classification"
+                slug="time-tracking-billing-filter"
+                className="w-full"
+                triggerClassName="w-full justify-between"
+              />
+            </label>
           )}
-        </section>
-      )}
+        </div>
+        <p className="mt-3 text-[11px] text-muted">
+          {scopedLogs.length} entries match the current scope. Reporting-period totals use recorded dates; changing these filters does not modify source records.
+        </p>
+      </section>
 
         <Drawer
           slug="time-entry-drawer"
@@ -500,7 +494,7 @@ export const AdminTimeLogs: React.FC = () => {
           <div className="px-4 sm:px-5 py-4 border-b border-line flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
             <div>
               <h2 className="text-sm font-semibold">{timeView === 'time-logs' ? 'Time log register' : timeView === 'billable-time' ? 'Time entries by billing type' : projectFilter === 'all' ? 'Project time entries' : 'Selected project entries'}</h2>
-              <p className="text-xs text-muted mt-1">{loading ? 'Loading…' : `${filteredLogs.length} entries in selected period`}</p>
+              <p className="text-xs text-muted mt-1">{loading ? 'Loading…' : `${filteredLogs.length} entries match the current scope`}</p>
             </div>
           </div>
           {loading ? (
@@ -522,7 +516,7 @@ export const AdminTimeLogs: React.FC = () => {
           ) : filteredLogs.length === 0 ? (
             <div className="min-h-[160px] px-4 py-8 text-center">
               <Timer size={22} className="mx-auto text-muted" />
-              <p className="mt-3 text-sm text-fg">{timeView === 'time-logs' && logs.length === 0 ? 'No time entries yet' : timeView === 'billable-time' ? 'No entries match this billing filter in the selected period' : timeView === 'time-by-project' && projectFilter !== 'all' ? 'No entries match the selected project in this period' : 'No time entries in the selected reporting period'}</p>
+              <p className="mt-3 text-sm text-fg">{timeView === 'time-logs' && logs.length === 0 ? 'No time entries yet' : timeView === 'billable-time' ? 'No entries match this billing filter in the selected period' : projectFilter !== 'all' ? 'No entries match the selected project in this period' : 'No time entries in the selected reporting period'}</p>
               <p className="mt-1 text-xs text-muted">{timeView === 'time-logs' && logs.length === 0 ? 'Add the first delivery time entry above.' : 'Try another filter or reporting period. The source records have not been changed.'}</p>
             </div>
           ) : (
@@ -545,7 +539,7 @@ export const AdminTimeLogs: React.FC = () => {
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] text-muted">Billing type</p>
-                        <span className="mt-1 inline-flex rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-fg">{log.billable ? 'Billable' : 'Non-billable'}</span>
+                        <span className="mt-1 inline-flex rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-fg">{getTimeLogBillingLabel(log.billable)}</span>
                       </div>
                     </div>
                     {(canDeleteAll || log.userId === getAdminSession()?.user?.id) && (
@@ -580,7 +574,7 @@ export const AdminTimeLogs: React.FC = () => {
                       </td>
                       <td className="px-4 py-3">{log.user ? <ProfileIdentity profile={{ name: log.user, contextLabel: 'Time entry', id: log.userId }} showRole={false} /> : <span className="text-xs text-muted">—</span>}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-fg">{formatMinutes(Number(log.durationMinutes || 0))}</td>
-                      <td className="px-4 py-3"><span className="inline-flex px-2 py-1 rounded-badge border border-line text-[10px] text-fg">{log.billable ? 'Billable' : 'Non-billable'}</span></td>
+                      <td className="px-4 py-3"><span className="inline-flex px-2 py-1 rounded-badge border border-line text-[10px] text-fg">{getTimeLogBillingLabel(log.billable)}</span></td>
                       <td className="px-4 py-3 text-right">
                         {(canDeleteAll || log.userId === getAdminSession()?.user?.id) && (
                           <button onClick={() => void remove(log)} className="min-h-10 min-w-10 inline-flex items-center justify-center rounded-control text-muted hover:text-danger hover:bg-accent/10" title="Delete time entry">
@@ -598,6 +592,63 @@ export const AdminTimeLogs: React.FC = () => {
           )}
         </section>
 
+      {timeView === 'billable-time' && (
+        <section className="space-y-3 rounded-card border border-line bg-panel p-3 sm:p-4" data-ams-feature-slug="time-billing-classification-summary" aria-label="Billing classification summary">
+          <div>
+            <h2 className="text-sm font-semibold text-fg">Billing classification</h2>
+            <p className="mt-1 text-xs leading-5 text-muted">Totals use the selected reporting period, team member, and project scope. Entries without a recorded billing flag remain unclassified.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { key: 'billable', label: 'Billable', entries: billableLogs.length, minutes: billableMinutes },
+              { key: 'non-billable', label: 'Non-billable', entries: nonBillableLogs.length, minutes: nonBillableMinutes },
+              { key: 'unclassified', label: 'Unclassified', entries: unclassifiedLogs.length, minutes: unclassifiedMinutes },
+            ].map((item) => (
+              <div key={item.key} className="min-w-0 rounded-control border border-line bg-bg p-3">
+                <div className="text-[11px] font-medium text-muted">{item.label}</div>
+                <div className="mt-1.5 text-lg font-semibold tabular-nums text-fg">{formatMinutes(item.minutes)}</div>
+                <div className="mt-1 text-[11px] text-muted">{item.entries} entries</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {timeView === 'time-by-project' && (
+        <section className="space-y-3 rounded-card border border-line bg-panel p-3 sm:p-4" data-ams-feature-slug="time-by-project-summary" aria-label="Recorded time by project">
+          <div>
+            <h2 className="text-sm font-semibold text-fg">Recorded time by project</h2>
+            <p className="mt-1 text-xs leading-5 text-muted">Grouping uses canonical entries in the selected reporting period and team-member scope. Select a project card to update the register scope above.</p>
+          </div>
+          {projectTimeSummary.length === 0 ? (
+            <div className="rounded-control border border-line bg-bg p-4 text-xs leading-5 text-muted" role="status">No time entries exist in the selected reporting period and team-member scope.</div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {projectTimeSummary.map((item) => {
+                const selected = projectFilter === item.key;
+                return (
+                  <button key={item.key} type="button" aria-pressed={selected}
+                    onClick={() => setProjectFilter((current) => current === item.key ? 'all' : item.key)}
+                    className={'min-w-0 rounded-control border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (selected ? 'border-accent/40 bg-accent/5' : 'border-line bg-bg hover:border-accent/25')}>
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <span className="min-w-0 break-words text-xs font-semibold text-fg">{item.projectName}</span>
+                      <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-0.5 text-[10px] tabular-nums text-muted">{item.entryCount} entries</span>
+                    </div>
+                    <div className="mt-3 text-lg font-semibold tabular-nums text-fg">{formatMinutes(item.totalMinutes)}</div>
+                    <div className="mt-2 grid grid-cols-2 gap-2 border-t border-line pt-2 text-[10px]">
+                      <div><span className="block text-muted">Billable</span><span className="mt-1 block font-medium tabular-nums text-fg">{formatMinutes(item.billableMinutes)}</span></div>
+                      <div><span className="block text-muted">Non-billable</span><span className="mt-1 block font-medium tabular-nums text-fg">{formatMinutes(item.nonBillableMinutes)}</span></div>
+                    </div>
+                    {item.unclassifiedMinutes > 0 && <p className="mt-2 text-[10px] leading-4 text-muted">Unclassified billing flag: {formatMinutes(item.unclassifiedMinutes)}</p>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {timeView === 'time-logs' && (
         <AdminMetricStrip slug="time-tracking-kpis"
         metrics={[
           {
@@ -617,7 +668,7 @@ export const AdminTimeLogs: React.FC = () => {
           {
             id: 'entries',
             label: 'Entries',
-            value: String(periodLogs.length),
+            value: String(scopedLogs.length),
             icon: <CalendarDays size={15} />,
             toneClassName: 'text-muted'
           }
@@ -625,6 +676,8 @@ export const AdminTimeLogs: React.FC = () => {
       />
 
 
+
+      )}
 
       <ConfirmDialog
         open={!!deleteTarget}
