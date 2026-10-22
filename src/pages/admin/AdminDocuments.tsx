@@ -32,6 +32,7 @@ import {
   AdminTablePagination,
 } from '../../components/admin/AdminModulePrimitives';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { documentLibrarySearchText, hasCanonicalDocumentLink } from '../../lib/documentLibrarySearch';
 
 interface DocumentItem {
   id: string;
@@ -327,9 +328,10 @@ export const AdminDocuments: React.FC = () => {
   const filteredDocuments = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const items = documents.filter((doc) => {
-      const hasLinkedRecord = Boolean(doc.relatedEntity && doc.relatedId);
+      const hasLinkedRecord = hasCanonicalDocumentLink(doc);
+      const searchableText = documentLibrarySearchText(doc, relatedClients, relatedProjects);
       return matchesTab(doc, activeTab) &&
-        (!q || searchTextOf(doc).includes(q)) &&
+        (!q || searchableText.includes(q)) &&
         (statusFilter === 'all' || (statusFilter === 'ready' ? readyOf(doc) : !readyOf(doc))) &&
         (relatedRecordFilter === 'all' || (relatedRecordFilter === 'linked' ? hasLinkedRecord : !hasLinkedRecord));
     });
@@ -346,7 +348,7 @@ export const AdminDocuments: React.FC = () => {
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [documents, activeTab, searchQuery, statusFilter, relatedRecordFilter, sortKey, sortDirection]);
+  }, [documents, activeTab, searchQuery, statusFilter, relatedRecordFilter, sortKey, sortDirection, relatedClients, relatedProjects]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / pageSize));
   const safePage = Math.min(page, totalPages);
