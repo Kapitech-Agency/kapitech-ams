@@ -1502,3 +1502,24 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Browser evidence: NOT CAPTURED. Stage 5 role, keyboard, reflow and actual downloaded-report checks remain pending.
 - Requirement status: PARTIALLY COMPLETE pending exact-SHA CI and Stage 5 evidence.
 - Next action: obtain verifiable typecheck, regression, build and CI evidence for `72f6702777aefa5264f9de15dbcb72f8c674b9c1` before moving to Renewal Schedule.
+
+
+## Stage 4 structural slice — Team & Resources · Team & Capacity · Team Directory
+
+### View structure contract
+
+- **Requirement:** \`VIEW-TEAM-CAPACITY\`; workspace: Team & Resources → Team & Capacity → Team Directory.
+- **Primary task:** find the right internal team member, understand their recorded department/role and linked project assignments, inspect recorded time context, and open the profile or allocation action.
+- **Key question:** who is this person, what department/role is actually recorded, which projects link to them, and what time was recorded this week?
+- **Current source:** \`src/pages/admin/AdminTeams.tsx\`; current data remains the existing canonical team-member, project and time-log sources. No new source, API, model, or permission policy was added.
+- **Before:** the roster field labeled “Pod / Focus” showed the first linked project name or the person's division in the same field; “Allocation status” described current-week time logging relative to a 40-hour reference; “Core skills” combined a role-derived focus category with technology strings from assigned project records; responsive cards repeated those meanings. A four-item KPI strip appended heuristic headcount/engineering/design/operations counts after the directory register.
+- **Structural mismatch:** organizational identity was mixed with project names; recorded activity could be mistaken for planned allocation or availability; project technologies could be read as verified individual skills; and heuristic role-category KPIs distracted from the roster without representing canonical department groups.
+- **Target composition:** page header and actions → workspace tabs → search plus explicit department/project/time filters → dominant canonical team roster with separate person identity, department/role, linked-project count, current-week recorded-time context, and clearly described role-focus/project-technology context → profile/allocation actions. Responsive cards mirror the same grouping. The heuristic KPI strip is removed.
+- **Data semantics:** department and role labels come from the existing team-member record; linked project count remains derived from existing project assignments; “time logged this week” uses existing time records and is compared with the existing 40-hour reference. The UI does not describe this as approved capacity, leave availability, forecast, or actual billable hours.
+- **Unsupported scope preserved:** no People Operations records, approved leave calendar, staffing availability, manager hierarchy, or additional individual skill-profile model is invented. Availability & Workload remains unavailable pending its source/policy requirements.
+- **Before/after sketch:** BEFORE: search/filter → roster fields mix “Pod / Focus” and “Allocation status” → role-derived tags read like individual skills → heuristic KPI strip. AFTER: filters use their real semantics → register separates department/role, project count and time logged → role-focus/project-technology context is labelled carefully → profile/allocation actions; no heuristic KPI strip.
+- **Regression coverage:** “Team Directory prioritizes the roster and separates department, project, and tracked-time context” verifies roster hierarchy, field labels, the explicit 40-hour comparison basis, filter/register order, and removal of heuristic KPI categories/ambiguous labels.
+- **Scope:** frontend composition/labels and frontend regression coverage only. No backend/API/database, authorization policy, or canonical business workflow changed.
+- **Verification:** targeted regression checks and both CI workflows are required on the exact source/test SHA. Authenticated browser screenshots, keyboard and responsive validation remain Stage 5.
+- **Status:** partially complete until exact-SHA checks pass and remaining module/role/browser acceptance is reviewed.
+- **Next action:** after CI is verified, continue the next unfinished frontend structural view in canonical module order; do not select an unrelated minor fix.

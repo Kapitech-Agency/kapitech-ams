@@ -441,11 +441,27 @@ test('CMS feedback notices follow the stable register filter controls', async ()
 });
 
 
-test('Team Directory keeps the page title free of a duplicate inline member-count badge', async () => {
+test('Team Directory prioritizes the roster and separates department, project, and tracked-time context', async () => {
   const team = await read('src/pages/admin/AdminTeams.tsx');
   assert.match(team, /title=\{currentView === 'team-directory' \? 'Team Directory' : pageCopy\[currentView\]\.title\}/);
   assert.doesNotMatch(team, /Team Directory <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0\.5 text-\[10px\] font-medium text-muted">\{members\.length\} Internal Members<\/span>/);
-  assert.match(team, /slug: 'team-directory-kpi-headcount'/);
+
+  const directoryStart = team.indexOf('data-ams-feature-slug="team-directory"');
+  const directoryEnd = team.indexOf(") : currentView === 'roles-departments' ?", directoryStart);
+  assert.ok(directoryStart >= 0 && directoryEnd > directoryStart, 'Team Directory should have a bounded primary workspace');
+  const directory = team.slice(directoryStart, directoryEnd);
+  const filters = directory.indexOf('data-ams-feature-slug="team-directory-filters"');
+  const register = directory.indexOf('Scrollable team directory table');
+  assert.ok(filters >= 0 && register > filters, 'Directory filters should precede the primary roster');
+  assert.match(directory, /Department \/ role/);
+  assert.match(directory, /Time logged this week/);
+  assert.match(directory, /Role focus \/ project technologies/);
+  assert.match(directory, /Project: All/);
+  assert.match(directory, /of 40h baseline/);
+  assert.doesNotMatch(directory, /team-directory-kpi-headcount|Engineering & tech|Product & design|Operations & delivery/,
+    'Team Directory should not append heuristic category KPIs below its primary roster.');
+  assert.doesNotMatch(directory, /Allocation status|Pod \/ Focus|Time tracking status/,
+    'Recorded time, actual project links, and department/role must not share ambiguous labels.');
 });
 
 

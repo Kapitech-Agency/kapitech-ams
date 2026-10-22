@@ -709,13 +709,6 @@ export const AdminTeams: React.FC = () => {
     return map;
   }, [members, logs]);
 
-  const teamMetrics = useMemo(() => ({
-    headcount: members.length,
-    active: members.filter((member) => String(member.status || 'active') === 'active').length,
-    divisions: new Set(members.map((member) => member.division).filter(Boolean)).size,
-    contributors: new Set(logs.map((log) => log.userId || log.user || '').filter(Boolean)).size
-  }), [members, logs]);
-
   const vendorTierOf = (vendor: AgencyVendor) => {
     if (vendor.type === 'agency_partner') return 'strategic';
     if (vendor.type === 'contractor') return 'specialized';
@@ -1280,16 +1273,16 @@ export const AdminTeams: React.FC = () => {
                   options={teamDivisions.map((value) => ({ value, label: value === 'all' ? 'Department: All' : value }))}
                   triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
                 />
-                <CustomSelect value={teamPod} onChange={setTeamPod} options={[{ value: 'all', label: 'All Pods' }, ...teamPods.slice(1).map((value) => ({ value, label: 'Pod: ' + value }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[205px]" />
+                <CustomSelect value={teamPod} onChange={setTeamPod} options={[{ value: 'all', label: 'Project: All' }, ...teamPods.slice(1).map((value) => ({ value, label: 'Project: ' + value }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[205px]" />
                 <CustomSelect
                   value={teamStatus}
                   onChange={setTeamStatus}
                   options={[
-                    { value: 'all', label: 'Status: All' },
-                    { value: 'allocated', label: 'Has time entries' },
+                    { value: 'all', label: 'Time: All' },
+                    { value: 'allocated', label: 'Time logged' },
                     { value: 'bench', label: 'No time logged' },
-                    { value: 'leave', label: 'On Leave' },
-                    { value: 'unavailable', label: 'Time data unavailable' }
+                    { value: 'leave', label: 'Record status: On leave' },
+                    { value: 'unavailable', label: 'Time source unavailable' }
                   ]}
                   triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
                 />
@@ -1319,17 +1312,17 @@ export const AdminTeams: React.FC = () => {
                   <div className="min-h-[180px] px-5 py-10 text-center">
                     <UsersRound size={22} className="mx-auto text-muted" />
                     <p className="mt-3 text-sm font-medium text-fg">{currentViewDataUnavailable ? 'Team data unavailable' : 'No team members found'}</p>
-                    <p className="mt-1 text-xs text-muted">{currentViewDataUnavailable ? 'The live data source did not return all records needed for this view. Use Refresh to retry.' : 'Adjust your search, pod, or allocation filters.'}</p>
+                    <p className="mt-1 text-xs text-muted">{currentViewDataUnavailable ? 'The live data source did not return all records needed for this view. Use Refresh to retry.' : 'Adjust your search, project, or recorded-time filters.'}</p>
                   </div>
                 ) : (
                   <table className="ams-teams-table min-w-[1240px] table-fixed">
                     <thead><tr>
-                      <th className="w-[25%]">Team Member</th>
-                      <th className="w-[18%]">Pod / Focus</th>
-                      <th className="w-[11%]">Active projects</th>
-                      <th className="w-[14%]">Allocation status</th>
-                      <th className="w-[17%]">Core skills</th>
-                      <th className="w-[15%] text-right">Actions</th>
+                      <th className="w-[22%]">Team member</th>
+                      <th className="w-[18%]">Department / role</th>
+                      <th className="w-[10%]">Active projects</th>
+                      <th className="w-[16%]">Time logged this week</th>
+                      <th className="w-[22%]">Role focus / project technologies</th>
+                      <th className="w-[12%] text-right">Actions</th>
                     </tr></thead>
                     <tbody>
                       {pagedTeamRows.map((member) => {
@@ -1345,12 +1338,12 @@ export const AdminTeams: React.FC = () => {
                               </button>
                             </td>
                             <td>
-                              <p className="font-medium text-fg">{sourceAvailability.projects === true ? (projectsForMember[0]?.name || member.division || 'Unassigned') : (member.division || '—')}</p>
-                              <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === true ? roleFocus(member) : sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>
+                              <p className="font-medium text-fg">{member.division || 'Department not recorded'}</p>
+                              <p className="mt-1 text-[10px] text-muted">{member.role || 'Role not recorded'}</p>
                             </td>
                             <td>
                               <p className="font-semibold tabular-nums text-fg">{sourceAvailability.projects === true ? projectsForMember.length : '—'}</p>
-                              <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === true ? (projectsForMember.length === 1 ? 'Pod assigned' : 'Pods assigned') : sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>
+                              <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === true ? (projectsForMember.length === 1 ? 'Linked project' : 'Linked projects') : sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>
                             </td>
                             <td>
                               <div className="w-36 space-y-1.5">
@@ -1359,7 +1352,7 @@ export const AdminTeams: React.FC = () => {
                                     <span className={'h-1.5 w-1.5 rounded-full ' + (allocation.tone === 'success' ? 'bg-success' : allocation.tone === 'warning' ? 'bg-warning' : 'bg-muted')} />
                                     {allocation.label}
                                   </span>
-                                  <span className={'text-[10px] font-semibold tabular-nums ' + (allocation.tone === 'success' ? 'text-success' : allocation.tone === 'warning' ? 'text-warning' : 'text-muted')}>{allocation.percent === null ? '—' : allocation.percent + '%'}</span>
+                                  <span className={'text-[10px] font-semibold tabular-nums ' + (allocation.tone === 'success' ? 'text-success' : allocation.tone === 'warning' ? 'text-warning' : 'text-muted')}>{allocation.percent === null ? '—' : allocation.percent + '% of 40h baseline'}</span>
                                 </div>
                                 <div className="h-1.5 overflow-hidden rounded-full bg-bg">
                                   <div className={'h-full rounded-full ' + (allocation.tone === 'success' ? 'bg-success' : allocation.tone === 'warning' ? 'bg-warning' : 'bg-muted')} style={{ width: allocation.percent === null ? '0%' : Math.min(100, allocation.percent) + '%' }} />
@@ -1393,18 +1386,21 @@ export const AdminTeams: React.FC = () => {
                 return (
                   <article key={member.id} data-ams-slug={member.slug} className="rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover">
                     <div className="flex items-start justify-between gap-3">
-                      <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={true} />
+                      <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                      <div><p className="text-muted">Pod / Focus</p><p className="mt-1 font-medium text-fg">{sourceAvailability.projects === true ? (projectsForMember[0]?.name || member.division || 'Unassigned') : (member.division || '—')}</p>{sourceAvailability.projects !== true && <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>}</div>
-                      <div><p className="text-muted">Active projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{sourceAvailability.projects === true ? projectsForMember.length : '—'}</p>{sourceAvailability.projects !== true && <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>}</div>
+                      <div><p className="text-muted">Department / role</p><p className="mt-1 font-medium text-fg">{member.division || 'Department not recorded'}</p><p className="mt-1 text-[10px] text-muted">{member.role || 'Role not recorded'}</p></div>
+                      <div><p className="text-muted">Active projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{sourceAvailability.projects === true ? projectsForMember.length : '—'}</p><p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === true ? (projectsForMember.length === 1 ? 'Linked project' : 'Linked projects') : sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p></div>
                     </div>
                     <div className="mt-4 rounded-control border border-line bg-bg p-3">
-                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Time tracking status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent === null ? '—' : allocation.percent + '%'}</span></div>
+                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Time logged this week</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent === null ? '—' : allocation.percent + '% of 40h baseline'}</span></div>
                       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (allocation.percent === null ? 'bg-muted' : 'bg-accent')} style={{ width: allocation.percent === null ? '0%' : Math.min(100, allocation.percent) + '%' }} /></div>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-1.5">
-                      {skills.map((skill) => <span key={skill} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-fg">{skill}</span>)}
+                    <div className="mt-4">
+                      <p className="mb-1.5 text-[10px] text-muted">Role focus / project technologies</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {skills.map((skill) => <span key={skill} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-fg">{skill}</span>)}
+                      </div>
                     </div>
                     <div className="mt-4 flex justify-end gap-2">
                       <Button type="button" variant="secondary" className="h-8 w-8 px-0" icon={<Eye size={14} />} title="View Profile" aria-label={'View profile for ' + member.name} onClick={() => setMemberDetail(member)} />
@@ -1419,48 +1415,7 @@ export const AdminTeams: React.FC = () => {
           <AdminTablePagination total={teamRows.length} page={teamPage} pageSize={teamPageSize} onPageChange={setTeamPage} onPageSizeChange={setTeamPageSize} itemLabel="members" slug="team-directory-pagination" />
           </AdminPanel>
 
-          <AdminMetricStrip
-                      metrics={[
-                        {
-                          id: 'headcount',
-                          slug: 'team-directory-kpi-headcount',
-                          label: 'Total headcount',
-                          value: currentViewDataUnavailable ? '—' : teamMetrics.headcount,
-                          context: currentViewDataUnavailable ? 'Live source unavailable' : sourceAvailability.timeLogs === true ? (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries' : sourceAvailability.timeLogs === false ? 'Time log data unavailable' : 'Loading time log data',
-                          
-                          icon: <UsersRound size={15} />
-                        },
-                        {
-                          id: 'engineering',
-                          slug: 'team-directory-kpi-engineering',
-                          label: 'Engineering & tech',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
-                          context: 'Backend, Frontend, DevOps & QA',
-                          
-                          icon: <BarChart3 size={15} />,
-                          toneClassName: 'text-info'
-                        },
-                        {
-                          id: 'design',
-                          slug: 'team-directory-kpi-product-design',
-                          label: 'Product & design',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
-                          context: 'UI/UX, Product Strategy & Systems',
-                          
-                          icon: <LayoutGrid size={15} />,
-                          toneClassName: 'text-info'
-                        },
-                        {
-                          id: 'operations',
-                          slug: 'team-directory-kpi-operations',
-                          label: 'Operations & delivery',
-                          value: currentViewDataUnavailable ? '—' : members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
-                          context: 'Delivery, PMs, Operations & Client Work',
-                          
-                          icon: <UsersRound size={15} />
-                        }
-                      ]}
-                    />
+
 
 
                     
