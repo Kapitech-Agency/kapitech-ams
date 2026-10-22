@@ -810,6 +810,23 @@ export const AdminCmsInsights: React.FC = () => {
                 { value: 'false', label: 'Not featured' }
               ]}
             />
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setLanguageFilter('');
+                setStatusFilter('');
+                setCategoryFilter('');
+                setAuthorFilter('');
+                setFeaturedFilter('');
+                setPage(1);
+              }}
+              disabled={!search && !languageFilter && !statusFilter && !categoryFilter && !authorFilter && !featuredFilter}
+              aria-label={language === 'id' ? 'Reset semua filter Insights' : 'Reset all Insights filters'}
+              className="inline-flex h-9 min-h-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {language === 'id' ? 'Reset filter' : 'Reset filters'}
+            </button>
           </div>
         )}
       />

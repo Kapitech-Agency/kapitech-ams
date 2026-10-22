@@ -951,3 +951,19 @@ test('Case Studies filters saved publication state without hiding legacy publish
   assert.match(projects, /disabled=\{!searchQuery && filterPillar === 'All' && publicationFilter === 'all'\}/);
   assert.match(projects, /Adjust the search, pillar, or publication filter/);
 });
+
+test('Insights exposes a full editorial-filter reset before the canonical register', async () => {
+  const insights = await read('src/pages/admin/AdminCmsInsights.tsx');
+  const header = insights.indexOf('<AdminModuleHeader');
+  const filters = insights.indexOf('slug="cms-insights-filters"');
+  const notice = insights.indexOf('{statusMessage && (', header);
+  const register = insights.indexOf('slug="cms-insights-directory"');
+  const reset = insights.indexOf('Reset all Insights filters');
+
+  assert.ok(header >= 0 && filters > header && reset > filters && notice > filters && register > notice,
+    'Editorial filters and reset must remain above transient notices and the primary register.');
+  assert.match(insights, /setSearch\(''\);\s*setLanguageFilter\(''\);\s*setStatusFilter\(''\);\s*setCategoryFilter\(''\);\s*setAuthorFilter\(''\);\s*setFeaturedFilter\(''\);\s*setPage\(1\);/);
+  assert.match(insights, /disabled=\{!search && !languageFilter && !statusFilter && !categoryFilter && !authorFilter && !featuredFilter\}/);
+  assert.match(insights, /statusOptions = useMemo\(\(\) => \[\s*\{ value: '', label: 'All statuses' \}/);
+  assert.match(insights, /api\.cms\.getInsights\(\{/);
+});
