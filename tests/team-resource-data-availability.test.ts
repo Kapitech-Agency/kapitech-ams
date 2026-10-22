@@ -19,8 +19,8 @@ test('unavailable live sources cannot be presented as zero-valued Team & Resourc
   assert.ok(source.includes('const currentViewDataUnavailable = TEAM_VIEW_DATA_SOURCES[currentView]'));
   assert.ok(source.includes('sourceAvailability[source] !== true'));
   assert.ok(source.includes("value: currentViewDataUnavailable ? '—'"));
-  assert.ok(source.includes("label: 'Vetted coverage', value: currentViewDataUnavailable ? '—'"));
-  assert.ok(source.includes("label: 'Active skill coverage', value: currentViewDataUnavailable ? '—'"));
+  assert.ok(source.includes("label: 'Vetted coverage', value: skillMatrixVendorsUnavailable ? '—'"));
+  assert.ok(source.includes("label: 'Active skill coverage', value: skillMatrixVendorsUnavailable ? '—'"));
 });
 
 test('missing source arrays and failed requests show unavailable states instead of empty-data claims', () => {

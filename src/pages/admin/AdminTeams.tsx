@@ -292,6 +292,10 @@ export const AdminTeams: React.FC = () => {
   const currentViewDataUnavailable = TEAM_VIEW_DATA_SOURCES[currentView]
     .some((source) => sourceAvailability[source] !== true);
 
+  // Skill Matrix combines two independent sources; failure of one should not hide the other.
+  const skillMatrixMembersUnavailable = sourceAvailability.members !== true;
+  const skillMatrixVendorsUnavailable = sourceAvailability.vendors !== true;
+
   const [teamSearch, setTeamSearch] = useState('');
   const [teamDepartment, setTeamDepartment] = useState('all');
   const [teamPod, setTeamPod] = useState('all');
@@ -1867,13 +1871,13 @@ export const AdminTeams: React.FC = () => {
           <AdminMetricStrip
             metrics={[
               { id: 'internal',
-                slug: 'skill-matrix-kpi-internal-members', label: 'Internal members', value: currentViewDataUnavailable ? '—' : members.length, context: 'Role-aligned capability focus',  icon: <UsersRound size={15} /> },
+                slug: 'skill-matrix-kpi-internal-members', label: 'Internal members', value: skillMatrixMembersUnavailable ? '—' : members.length, context: sourceAvailability.members === false ? 'Team directory source unavailable' : sourceAvailability.members === null ? 'Loading team directory' : 'Role-aligned capability focus',  icon: <UsersRound size={15} /> },
               { id: 'vendorSkills',
-                slug: 'skill-matrix-kpi-vendor-skills', label: 'Vendor skills', value: currentViewDataUnavailable ? '—' : skillRows.length, context: 'Distinct external skills',  icon: <BarChart3 size={15} /> },
+                slug: 'skill-matrix-kpi-vendor-skills', label: 'Vendor skills', value: skillMatrixVendorsUnavailable ? '—' : skillRows.length, context: sourceAvailability.vendors === false ? 'Vendor directory source unavailable' : sourceAvailability.vendors === null ? 'Loading vendor directory' : 'Distinct external skills',  icon: <BarChart3 size={15} /> },
               { id: 'vettedCoverage',
-                slug: 'skill-matrix-kpi-vetted-coverage', label: 'Vetted coverage', value: currentViewDataUnavailable ? '—' : skillRows.length ? Math.round((skillRows.filter((row) => row.vetted > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with vetted coverage',  icon: <ShieldCheck size={15} className="text-success" />, toneClassName: 'text-success' },
+                slug: 'skill-matrix-kpi-vetted-coverage', label: 'Vetted coverage', value: skillMatrixVendorsUnavailable ? '—' : skillRows.length ? Math.round((skillRows.filter((row) => row.vetted > 0).length / skillRows.length) * 100) + '%' : '0%', context: sourceAvailability.vendors === false ? 'Vendor directory source unavailable' : sourceAvailability.vendors === null ? 'Loading vendor directory' : 'Skills with vetted coverage',  icon: <ShieldCheck size={15} className="text-success" />, toneClassName: 'text-success' },
               { id: 'activeCoverage',
-                slug: 'skill-matrix-kpi-active-coverage', label: 'Active skill coverage', value: currentViewDataUnavailable ? '—' : skillRows.length ? Math.round((skillRows.filter((row) => row.active > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with active vendors',  icon: <CheckCircle2 size={15} className="text-success" />, toneClassName: 'text-success' }
+                slug: 'skill-matrix-kpi-active-coverage', label: 'Active skill coverage', value: skillMatrixVendorsUnavailable ? '—' : skillRows.length ? Math.round((skillRows.filter((row) => row.active > 0).length / skillRows.length) * 100) + '%' : '0%', context: sourceAvailability.vendors === false ? 'Vendor directory source unavailable' : sourceAvailability.vendors === null ? 'Loading vendor directory' : 'Skills with active vendors',  icon: <CheckCircle2 size={15} className="text-success" />, toneClassName: 'text-success' }
             ]}
           />
 
@@ -1887,12 +1891,15 @@ export const AdminTeams: React.FC = () => {
                   <th className="w-[33%]">Primary capability focus</th>
                 </tr></thead>
                 <tbody>
-                  {pagedRoleMatrixMembers.length === 0 && (
+                  {skillMatrixMembersUnavailable && (
                     <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-muted">
-                      {currentViewDataUnavailable ? 'Internal team records unavailable. Refresh to retry.' : 'No internal team members found.'}
+                      {sourceAvailability.members === false ? 'Internal team records unavailable. Refresh to retry.' : 'Loading internal team records...'}
                     </td></tr>
                   )}
-                  {pagedRoleMatrixMembers.map((member) => (
+                  {!skillMatrixMembersUnavailable && pagedRoleMatrixMembers.length === 0 && (
+                    <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-muted">No internal team members found.</td></tr>
+                  )}
+                  {!skillMatrixMembersUnavailable && pagedRoleMatrixMembers.map((member) => (
                     <tr key={member.id} data-ams-slug={member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
@@ -1907,12 +1914,14 @@ export const AdminTeams: React.FC = () => {
                 </tbody>
               </table>
             </div>
-            <AdminTablePagination total={members.length} page={roleMatrixPage} pageSize={roleMatrixPageSize} onPageChange={setRoleMatrixPage} onPageSizeChange={setRoleMatrixPageSize} itemLabel="members" slug="skill-matrix-role-matrix-pagination" />
+            {!skillMatrixMembersUnavailable && <AdminTablePagination total={members.length} page={roleMatrixPage} pageSize={roleMatrixPageSize} onPageChange={setRoleMatrixPage} onPageSizeChange={setRoleMatrixPageSize} itemLabel="members" slug="skill-matrix-role-matrix-pagination" />}
           </AdminPanel>
 
-          <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={currentViewDataUnavailable
+          <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={sourceAvailability.vendors === false
             ? (skillRows.length > 0 ? 'Vendor source unavailable. Previously loaded skill coverage remains visible.' : 'Vendor skill data unavailable. Refresh to retry; skill count is not available.')
-            : skillRows.length + ' distinct skills reported by the vendor directory.'} className="overflow-hidden">
+            : sourceAvailability.vendors === null
+              ? (skillRows.length > 0 ? 'Loading vendor source. Existing loaded skill coverage remains visible.' : 'Loading vendor skill data...')
+              : skillRows.length + ' distinct skills reported by the vendor directory.'} className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable vendor skill coverage table">
               <table className="ams-teams-table min-w-[800px] table-fixed">
                 <thead><tr>
@@ -1922,12 +1931,17 @@ export const AdminTeams: React.FC = () => {
                   <th className="w-[20%] text-right">Active</th>
                 </tr></thead>
                 <tbody>
-                  {pagedSkillRows.length === 0 && (
+                  {pagedSkillRows.length === 0 && sourceAvailability.vendors !== true && (
                     <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-muted">
-                      {currentViewDataUnavailable ? 'Vendor skill data unavailable. Refresh to retry.' : 'No vendor skills have been recorded.'}
+                      {sourceAvailability.vendors === false
+                        ? (skillRows.length > 0 ? 'Vendor source unavailable. Previously loaded skill coverage remains visible.' : 'Vendor skill data unavailable. Refresh to retry.')
+                        : 'Loading vendor skill data...'}
                     </td></tr>
                   )}
-                  {pagedSkillRows.map((row) => (
+                  {pagedSkillRows.length === 0 && sourceAvailability.vendors === true && (
+                    <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-muted">No vendor skills have been recorded.</td></tr>
+                  )}
+                  {sourceAvailability.vendors === true && pagedSkillRows.map((row) => (
                     <tr key={row.slug} data-ams-slug={row.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <p className="font-medium text-fg">{row.skill}</p>
@@ -1940,7 +1954,7 @@ export const AdminTeams: React.FC = () => {
                 </tbody>
               </table>
             </div>
-            <AdminTablePagination total={skillRows.length} page={skillPage} pageSize={skillPageSize} onPageChange={setSkillPage} onPageSizeChange={setSkillPageSize} itemLabel="skills" slug="skill-matrix-pagination" />
+            {(sourceAvailability.vendors === true || skillRows.length > 0) && <AdminTablePagination total={skillRows.length} page={skillPage} pageSize={skillPageSize} onPageChange={setSkillPage} onPageSizeChange={setSkillPageSize} itemLabel="skills" slug="skill-matrix-pagination" />}
           </AdminPanel>
         </div>
       ) : (
