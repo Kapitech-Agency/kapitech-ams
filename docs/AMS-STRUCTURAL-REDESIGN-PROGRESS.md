@@ -1688,3 +1688,24 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Browser evidence:** NOT CAPTURED. Stage 5 still needs authorized editor-role review, publication filter/reset interaction, actual public `/cms/testimonials` output, cache/deployment visibility, rating/quote rendering, keyboard/focus and responsive viewport checks.
 - **Requirement status:** PARTIALLY COMPLETE. Filter and register hierarchy are source/test verified. Authenticated visual review and actual public-output visibility remain not verified.
 - **Next action:** inspect Website CMS → Careers and verify the Jobs/Applicants/Recruitment History composition against the canonical sources and privacy boundary before selecting the next structural change.
+
+
+## Stage 4 structural slice — Settings · System Overview · Status/readiness before backup evidence · 23 October 2026
+
+### View structure contract
+
+- **Requirement:** `VIEW-SETTINGS-OVERVIEW`; workspace: Settings → System Overview.
+- **Primary task:** assess source-confirmed current system/readiness states, inspect backup history and distinguish snapshot creation from integrity, freshness and restore verification before taking an authorized action.
+- **Current source:** `src/pages/admin/AdminSettings.tsx`; status comes from existing server-backed security, backup, notification and production-readiness requests. Role-gated actions remain guarded by `canAccessServer`.
+- **Before:** page header and global errors/messages → three source-backed SummaryCards → Recent Production Backups register/cards → System Integrity and readiness gates/reason.
+- **Structural mismatch:** the production-readiness gate list and explanatory reason appeared after the main backup evidence register. This placed status/exception context downstream from the records users need to interpret.
+- **After:** page header and global errors/messages → source-backed SummaryCards → System Integrity/readiness gates and reason → Recent Production Backups register/cards. The evidence register is now preceded by both current summary state and server readiness context.
+- **Primary work surface:** canonical backup evidence register, using the existing desktop table and compact responsive cards at the established breakpoint. Per-snapshot states still distinguish latest verified checks from history where the API supplies no per-snapshot evidence.
+- **Preserved contracts:** no API, query/routes, auth/session, permission guards, record source, snapshot creation, integrity action, freshness/restore calculation or security behavior changed. `backupHealthy` still requires integrity valid + freshness true + restore verification true; historical records do not inherit the latest snapshot's verification.
+- **Reference decision:** no external UI template was adopted. The change reorders existing AMS sections and adds semantic `data-ams-feature-slug`/slug markers to make the structure testable.
+- **Regression:** `tests/admin-settings-module-regression.test.ts` asserts status-summary → System Integrity → backup register order, and preserves evidence-readiness context checks.
+- **Changed source/test paths:** `src/pages/admin/AdminSettings.tsx`; `tests/admin-settings-module-regression.test.ts` in [c964f1a7](https://github.com/Kapitech-Agency/kapitech-ams/commit/c964f1a7bc7cc64a35561db0b22dded2a84ec1d7).
+- **Exact-SHA validation:** AMS CI [39825954237 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39825954237), including typecheck, migrations, security regression tests, PostgreSQL integration, dependency audit, production build, packaged migrations and production HTTP smoke. Quality Gate job [39825954065](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39825954065) completed typecheck, regression tests and production build successfully; the run-level status still reported `in_progress` at snapshot time.
+- **Browser evidence:** NOT CAPTURED. Stage 5 still requires authorized Settings role, source freshness/error/retry behavior, backup actions, responsive card/table layout, focus/keyboard and contrast review.
+- **Requirement status:** PARTIALLY COMPLETE. The source/test-verified order is updated; authenticated visual/accessibility acceptance remains open.
+- **Next action:** inspect Settings → Audit Log, starting with the available canonical fields and current search/outcome filters. Add only source-backed filters that materially improve the audit register.

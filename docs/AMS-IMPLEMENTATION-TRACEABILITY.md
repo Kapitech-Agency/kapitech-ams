@@ -909,3 +909,18 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Preserved contracts:** the existing `api.cms.getTestimonials()`, create/update/delete calls, record IDs, publication toggle, editor drawer, rating/quote/attribution fields, permission boundaries, public route and saved-status feedback remain unchanged. Filtering is frontend list state only; it does not edit records or assert that public cache/deployment output changed.
 
 **Regression and exact-SHA evidence:** `tests/ams-nine-module-workspace-regression.test.ts` checks publication filter order, state predicate, legacy semantics, reset, page-one behavior and localized options. Source patch [62a36021](https://github.com/Kapitech-Agency/kapitech-ams/commit/62a36021267e243cb11b8811b505d8da885b3c93); corrected and validated source/test SHA [7186f3e7](https://github.com/Kapitech-Agency/kapitech-ams/commit/7186f3e7fe4e36f8b7954702a1e23998320082bc). AMS Quality Gate [39824956954 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39824956954) and AMS CI [39824955735 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39824955735). Authenticated browser, role, keyboard and public-output evidence remains **NOT VERIFIED**.
+
+
+### VIEW-CMS-CAREERS: Contract review, no structural change required in this slice
+
+**Source reviewed:** `src/pages/admin/AdminCmsCareers.tsx`, with existing tests in `tests/ams-nine-module-workspace-regression.test.ts` and `tests/frontend-functional-regression.test.ts`.
+
+The current composition matches the approved separation: role-aware Jobs and Applicants tabs; independent job/application filters and registers; canonical career applications filtered from the existing `api.leads.getAll()` response by `type === 'career'`; URL query state for the Applicants view; separate pagination; restricted applicant detail drawer. Recruitment History remains visibly disabled as target-only because no persisted canonical event history is available. No structural change was made to Careers, and the view remains **PARTIALLY COMPLETE** pending authorized role, applicant privacy, public-output, responsive and keyboard review.
+
+### VIEW-SETTINGS-OVERVIEW: Put readiness context before the backup evidence register
+
+**Source:** `src/pages/admin/AdminSettings.tsx`. Reordered existing sections from SummaryCards → Recent Production Backups → System Integrity to SummaryCards → System Integrity/readiness/reason → Recent Production Backups. Added semantic section markers for regression identification. This fixes the content-order mismatch with the required system status/readiness → evidence register hierarchy.
+
+**Preserved contracts:** no backend/API, source, data, role guard, direct route/query, snapshot action, integrity action or backup status formula changed. Backup health still requires valid integrity, fresh backup and verified restore; older snapshots do not inherit the latest snapshot's checks.
+
+**Tests and exact-SHA evidence:** `tests/admin-settings-module-regression.test.ts` enforces the content order and keeps the evidence semantics in view. [Source/test commit c964f1a7](https://github.com/Kapitech-Agency/kapitech-ams/commit/c964f1a7bc7cc64a35561db0b22dded2a84ec1d7). AMS CI [39825954237 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39825954237); the AMS Quality Gate test/build job [39825954065 succeeded](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39825954065), but its run-level metadata was still marked `in_progress` when inspected. No authenticated browser screenshots were captured.
