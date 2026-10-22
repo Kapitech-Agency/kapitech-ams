@@ -361,14 +361,14 @@ test('Testimonials directory filters publication state before the canonical regi
 
   assert.ok(header >= 0 && filters > header && publicationFilter > filters && notice > filters && register > notice,
     'Publication-state scope must sit with search filters before the canonical testimonial register.');
-  assert.match(testimonials, /publicationFilter === 'all'\\s*\\|\\|\\s*\\(publicationFilter === 'published' \\? item\\.isPublished === true : item\\.isPublished !== true\\)/);
-  assert.match(testimonials, /isPublished: item\\?\\.isPublished !== false/);
-  assert.match(testimonials, /setPublicationFilter\\('all'\\)/);
-  assert.match(testimonials, /disabled=\\{!searchQuery && publicationFilter === 'all'\\}/);
-  assert.match(testimonials, /onChange=\\{\\(value\\) => \\{\\s*setPublicationFilter\\(value as 'all' \\| 'published' \\| 'draft'\\);\\s*setPage\\(1\\);/);
-  assert.match(testimonials, /\\}, \\[searchQuery, publicationFilter, pageSize\\]\\);/);
-  assert.match(testimonials, /value: 'published', label: language === 'id' \\? 'Dipublikasikan' : 'Published'/);
-  assert.match(testimonials, /value: 'draft', label: language === 'id' \\? 'Draf' : 'Drafts'/);
+  assert.match(testimonials, /publicationFilter === 'all'\s*\|\|\s*\(publicationFilter === 'published' \? item\.isPublished === true : item\.isPublished !== true\)/);
+  assert.match(testimonials, /isPublished: item\?\.isPublished !== false/);
+  assert.match(testimonials, /setPublicationFilter\('all'\)/);
+  assert.match(testimonials, /disabled=\{!searchQuery && publicationFilter === 'all'\}/);
+  assert.match(testimonials, /onChange=\{\(value\) => \{\s*setPublicationFilter\(value as 'all' \| 'published' \| 'draft'\);\s*setPage\(1\);/);
+  assert.match(testimonials, /\}, \[searchQuery, publicationFilter, pageSize\]\);/);
+  assert.match(testimonials, /value: 'published', label: language === 'id' \? 'Dipublikasikan' : 'Published'/);
+  assert.match(testimonials, /value: 'draft', label: language === 'id' \? 'Draf' : 'Drafts'/);
 });
 
 test('Careers publish feedback confirms saved CMS state, not unverified public visibility', async () => {
