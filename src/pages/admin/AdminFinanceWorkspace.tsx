@@ -2001,18 +2001,11 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 <Button type="button" variant="secondary" onClick={() => navigate('/admin/finance?tab=dashboard')}>Open Dashboard comparison</Button>
               </div>
             </section>
-            <AdminMetricStrip metrics={metrics} />
-            <AdminPanel title="How to read these figures" description="The period metrics and current balance snapshot use different date and accounting bases.">
-              <div className="space-y-2 p-4 text-xs leading-5 text-muted" data-ams-feature-slug="finance-executive-summary-definitions">
-                <p>Invoice value issued uses invoice issue date. Client payments recorded use recorded invoice payment dates. Expenses recorded use the expense date. Current outstanding receivables reflect the current invoice balance, not only invoices issued in the selected period.</p>
-                <p>Recorded cash movement is shown in Dashboard comparison. It can include supported bank adjustments and internal transfers, so it is not the same as client payments. These figures are not a substitute for posted General Ledger profit or bank reconciliation.</p>
-              </div>
-            </AdminPanel>
             <FinanceDataTable
               title="Items needing attention · overdue invoices"
               description={invoiceSourceError
                 ? (invoiceSourceStale ? 'Invoice source refresh failed. Overdue rows use the last loaded invoice records and may be stale.' : 'Invoice source is unavailable. Overdue status and the absence of exceptions cannot be confirmed.')
-                : 'Open invoice balances past their due date, based on the existing Finance invoice status rules.'}
+                : 'Current open invoice balances past their due date, based on the existing Finance invoice status rules. This exception queue is independent of the selected invoice issue-date period.'}
               columns={[{ label: 'Invoice no.' }, { label: 'Client' }, { label: 'Due date' }, { label: 'Outstanding', align: 'right' }, { label: 'Status' }]}
               rows={overdueInvoiceRows}
               emptyMessage={invoiceSourceError
@@ -2020,6 +2013,14 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 : 'No overdue invoice balances in the current invoice source.'}
               actions={<Button type="button" variant="secondary" onClick={() => navigate('/admin/finance?tab=accounts-receivable')}>Review receivables</Button>}
             />
+            <AdminMetricStrip metrics={metrics} />
+            <AdminPanel title="How to read these figures" description="The period metrics and current balance snapshot use different date and accounting bases.">
+              <div className="space-y-2 p-4 text-xs leading-5 text-muted" data-ams-feature-slug="finance-executive-summary-definitions">
+                <p>Invoice value issued uses invoice issue date. Client payments recorded use recorded invoice payment dates. Expenses recorded use the expense date. Current outstanding receivables reflect the current invoice balance, not only invoices issued in the selected period.</p>
+                <p>Recorded cash movement is shown in Dashboard comparison. It can include supported bank adjustments and internal transfers, so it is not the same as client payments. These figures are not a substitute for posted General Ledger profit or bank reconciliation.</p>
+              </div>
+            </AdminPanel>
+
             <FinanceDataTable
               title="Recent invoice register"
               description="Issued invoice records in the selected reporting period, with current outstanding balances. Values retain each invoice currency."
