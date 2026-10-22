@@ -87,6 +87,7 @@ export const AdminCmsServices: React.FC = () => {
   const [servicesList, setServicesList] = useState<CmsServiceRecord[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [publicationFilter, setPublicationFilter] = useState<'all' | 'published' | 'draft'>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -140,14 +141,16 @@ export const AdminCmsServices: React.FC = () => {
 
   const filtered = servicesList.filter((service) => {
     const matchesCat = selectedCategory === 'All' || service.category === selectedCategory;
+    const matchesPublication = publicationFilter === 'all' ||
+      (publicationFilter === 'published' ? service.isPublished === true : service.isPublished !== true);
     const q = searchQuery.trim().toLowerCase();
     const searchable = [service.title, service.heroHeadline, service.heroSubtitle, service.slug]
       .map((value) => String(value || '').toLowerCase());
-    return matchesCat && (!q || searchable.some((value) => value.includes(q)));
+    return matchesCat && matchesPublication && (!q || searchable.some((value) => value.includes(q)));
   });
   const totalServicePages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pagedServices = filtered.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => { setPage(1); }, [searchQuery, selectedCategory, pageSize]);
+  useEffect(() => { setPage(1); }, [searchQuery, selectedCategory, publicationFilter, pageSize]);
   useEffect(() => { setPage((current) => Math.min(current, totalServicePages)); }, [totalServicePages]);
 
   const getCategoryIcon = (category: string) => {
@@ -365,7 +368,7 @@ export const AdminCmsServices: React.FC = () => {
         className="mb-0"
         title="Services"
         description={
-          <>Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-fg">/services</code>.</>
+          <>Manage service content, categories, capabilities, and saved publication state for the public <code className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-fg">/services</code> page.</>
         }
         actions={
           <Button
@@ -390,9 +393,10 @@ export const AdminCmsServices: React.FC = () => {
             onClick={() => {
               setSearchQuery('');
               setSelectedCategory('All');
+              setPublicationFilter('all');
               setPage(1);
             }}
-            disabled={!searchQuery && selectedCategory === 'All'}
+            disabled={!searchQuery && selectedCategory === 'All' && publicationFilter === 'all'}
             className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
           >
             <X size={13} />
@@ -420,6 +424,21 @@ export const AdminCmsServices: React.FC = () => {
               </button>
             );
           })}
+        </div>
+        <div className="w-full shrink-0 sm:w-[180px]">
+          <CustomSelect
+            value={publicationFilter}
+            onChange={(value) => setPublicationFilter(value as 'all' | 'published' | 'draft')}
+            size="sm"
+            aria-label="Filter service publication status"
+            slug="cms-services-publication-filter"
+            options={[
+              { value: 'all', label: 'All publication states' },
+              { value: 'published', label: 'Published' },
+              { value: 'draft', label: 'Drafts' },
+            ]}
+            triggerClassName="h-9 min-h-9 w-full"
+          />
         </div>
       </AdminFilterBar>
 

@@ -62,3 +62,21 @@ test('Service routes validate titles/categories and resolve unique canonical slu
   assert.ok(update.includes('patch.isPublished = patch.isPublished === true'));
   assert.ok(update.includes('patch.slug = slug'));
 });
+
+test('Services directory filters the saved publication state and resets every filter scope', () => {
+  const page = read('src/pages/admin/AdminCmsServices.tsx');
+  const header = page.indexOf('<AdminModuleHeader slug="cms-services-header"');
+  const filters = page.indexOf('slug="cms-services-filters"');
+  const publicationFilter = page.indexOf('slug="cms-services-publication-filter"');
+  const notice = page.indexOf('{statusMessage && (', header);
+  const register = page.indexOf('slug="cms-services-directory"');
+
+  assert.ok(header >= 0 && filters > header && publicationFilter > filters && notice > filters && register > notice,
+    'Publication state filtering must stay with the search/category filters before the service register.');
+  assert.match(page, /publicationFilter === 'all' \|\|\s*\(publicationFilter === 'published' \? service\.isPublished === true : service\.isPublished !== true\)/);
+  assert.match(page, /setPublicationFilter\('all'\)/);
+  assert.match(page, /disabled=\{!searchQuery && selectedCategory === 'All' && publicationFilter === 'all'\}/);
+  assert.match(page, /Manage service content, categories, capabilities, and saved publication state for the public/);
+  assert.match(page, /CMS status saved as Published\. Verify the public Services page to confirm visibility\./);
+  assert.match(page, /CMS status saved as Draft\. Verify the public Services page to confirm the service is no longer visible\./);
+});
