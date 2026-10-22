@@ -294,9 +294,7 @@ export const AdminTeams: React.FC = () => {
 
   // Skill Matrix combines two independent sources; failure of one should not hide the other.
   const skillMatrixMembersUnavailable = sourceAvailability.members !== true && members.length === 0;
-  const skillMatrixVendorsUnavailable = sourceAvailability.vendors !== true && skillRows.length === 0;
   const skillMatrixMembersAvailable = !skillMatrixMembersUnavailable;
-  const skillMatrixVendorsAvailable = !skillMatrixVendorsUnavailable;
 
   const [teamSearch, setTeamSearch] = useState('');
   const [teamDepartment, setTeamDepartment] = useState('all');
@@ -966,6 +964,9 @@ export const AdminTeams: React.FC = () => {
     });
     return Array.from(map.values()).sort((a, b) => b.active - a.active || b.vetted - a.vetted || a.skill.localeCompare(b.skill));
   }, [vendors]);
+
+  const skillMatrixVendorsUnavailable = sourceAvailability.vendors !== true && skillRows.length === 0;
+  const skillMatrixVendorsAvailable = !skillMatrixVendorsUnavailable;
 
   const roleMatrixPageCount = Math.max(1, Math.ceil(members.length / roleMatrixPageSize));
   const pagedRoleMatrixMembers = members.slice((roleMatrixPage - 1) * roleMatrixPageSize, roleMatrixPage * roleMatrixPageSize);
