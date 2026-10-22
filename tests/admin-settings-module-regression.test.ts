@@ -151,7 +151,8 @@ test('Notification settings availability stays separate from provider delivery r
   assert.match(source, /setNotificationStatus\('available'\)/);
   assert.match(source, /Settings request succeeded; delivery readiness is reported separately below/);
   assert.match(source, /status=\{notificationLabel\}/);
-  assert.match(source, /productionReadiness\?\.gates\?\.notifications/);
+  assert.match(source, /\{ label: 'Notifications', key: 'notifications' \}/);
+  assert.match(source, /const gate = productionReadiness\?\.gates\?\.\[key\]/);
   assert.match(source, /\['Notification settings', notificationStatus === 'available' \? 'Settings available'/);
   assert.doesNotMatch(source, /notificationStatus === 'connected'|Provider credentials remain server-side/,
     'A successful settings read does not prove provider delivery is connected.');
@@ -349,7 +350,7 @@ test('Integration overview keeps unknown gates and provider connectivity distinc
   const evidenceBoundary = source.indexOf('data-ams-feature-slug="settings-integration-evidence-boundary"', healthStart);
   const websiteSettings = source.indexOf('data-ams-feature-slug="settings-website-cms-settings"');
 
-  assert.ok(overviewStart >= 0 && healthStart > overviewStart && evidenceBoundary > healthStart && websiteSettings > healthStart);
+  assert.ok(overviewStart >= 0 && healthStart > overviewStart && evidenceBoundary > healthStart && websiteSettings > overviewStart);
   assert.match(source, /const integrationDatasourceLabel = reportedDatasource \|\| \(overviewLoading && !productionReadiness \? 'Checking…' : 'Not reported'\)/);
   assert.match(source, /documentStorageGate === true[\s\S]*documentStorageGate === false[\s\S]*'Not reported'/);
   assert.match(source, /backupRecoveryState: 'verified' \| 'review' \| 'unknown'/);
