@@ -14,13 +14,13 @@ Snapshot reconciled on **22 October 2026**.
 
 | Item | Evidence |
 |---|---|
-| Application/test SHA | [b082e2854f15696d393ac9d15c0c7b8e49ee1a3a](https://github.com/Kapitech-Agency/kapitech-ams/commit/b082e2854f15696d393ac9d15c0c7b8e49ee1a3a) |
-| Structural implementation | [Capacity Allocation redesign, 07148c26](https://github.com/Kapitech-Agency/kapitech-ams/commit/07148c261bca145dde962f2a93519378f52c6074) |
-| Regression updates | [Source-state assertions, 6a5b503d](https://github.com/Kapitech-Agency/kapitech-ams/commit/6a5b503dd9c4e852a2cad8ed54b30efcdb33bb5b); [workspace hierarchy regression, b082e285](https://github.com/Kapitech-Agency/kapitech-ams/commit/b082e2854f15696d393ac9d15c0c7b8e49ee1a3a) |
-| Changed source/test paths | `src/pages/admin/AdminTeams.tsx`; `tests/team-resource-data-availability.test.ts`; `tests/frontend-functional-regression.test.ts` |
-| AMS Quality Gate | **Passed** on the application/test SHA: [run 39797152426](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39797152426). |
-| AMS CI | [run 39797152441](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39797152441). At the latest query, the workflow aggregate still reported `in_progress` (last API update 22 Oct 2026 14:38:50 UTC). The job logs show 762 passed, 0 failed, 20 skipped across 782 tests, plus PostgreSQL integration 8/8 passed. Lint/type-check, migrations, security tests, dependency audit, production build, packaged-migration check and production HTTP smoke test all logged success. Do not represent the workflow as concluded until the Actions status says completed. |
-| Visual/runtime evidence | **Not captured:** no authenticated browser session for the target role, viewport screenshots, or keyboard/touch review. Stage 5 remains pending. |
+| Application/test SHA | [0494f5ee77284d60abf1de0cc574590e15bd656e](https://github.com/Kapitech-Agency/kapitech-ams/commit/0494f5ee77284d60abf1de0cc574590e15bd656e), Vendor Directory structural slice and regression follow-up. |
+| Structural implementation | Vendor register-first composition, visible result count and removal of implicit reporting-period scoping: [e7a63774](https://github.com/Kapitech-Agency/kapitech-ams/commit/e7a63774395a8f6ef95e19f17a08e0d74ac2ac5b); embedded-action/test correction: [9a596d0d](https://github.com/Kapitech-Agency/kapitech-ams/commit/9a596d0deeafe98c59fe3432879d9092ec9d7c47). |
+| Regression updates | [Final TypeScript assertion-scope correction, 0494f5ee](https://github.com/Kapitech-Agency/kapitech-ams/commit/0494f5ee77284d60abf1de0cc574590e15bd656e). |
+| Changed source/test paths | `src/pages/admin/AdminVendors.tsx`; `tests/ams-nine-module-workspace-regression.test.ts`; `tests/admin-pages-jsx-regression.test.ts`; `tests/finance-ui-consistency.test.ts`. |
+| AMS Quality Gate | **Passed** on the exact application/test SHA: [run 39801867733](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39801867733). Typecheck, regression tests and production build passed. |
+| AMS CI | **Passed** on the exact application/test SHA: [run 39801867597](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39801867597). Type check, migrations, security regression tests, PostgreSQL integration, dependency audit, production build, packaged-migration verification and production HTTP smoke test passed. |
+| Visual/runtime evidence | **Not captured:** no authenticated browser session for the target role, viewport screenshots, keyboard/focus or touch review. Stage 5 remains pending. |
 
 ## 2. Active stage and scope
 
@@ -31,21 +31,16 @@ Navigation is treated as completed and must not be rebuilt. Use the main-content
 Scope for this frontend stage: content hierarchy, existing shared components, frontend regression coverage and documentation. Preserve current routes, source ownership, supported actions, API/data contracts, permission boundaries, authentication/security, and Finance calculations/posting behavior. Do not invent availability, leave, HR lifecycle, skills, utilization, or allocation records where canonical sources are absent.
 
 ## 2.1 Latest validation findings
+Vendor Directory validation initially exposed stale expectations in `tests/admin-pages-jsx-regression.test.ts` and `tests/finance-ui-consistency.test.ts` that still required the removed KPI snapshot or its embedded action. Those assertions were rewritten to enforce the new register order and preserve Add Vendor in embedded Finance contexts. A following TypeScript run then identified a duplicate local variable in the updated JSX regression; commit `0494f5ee` corrected the variable name without weakening test coverage.
 
-The first validation run on the new Capacity Allocation layout surfaced two obsolete source-shape expectations:
-
-1. `tests/team-resource-data-availability.test.ts` expected the former generic `Capacity data unavailable` text. Commit `6a5b503d` now asserts the specific project-allocation and time-log unavailable messages.
-2. `tests/frontend-functional-regression.test.ts` expected the removed `Historical tracked utilization` KPI. Commit `b082e285` now verifies the saved allocation register and its position ahead of historical time, while retaining assertions for persisted allocation updates and route/source contracts.
-
-These test updates preserve behavior coverage. Exact-SHA Quality Gate is green. AMS CI has green step-level log output and zero test failures, but its aggregate completion still needs refresh and confirmation.
+Both exact-SHA workflows now completed successfully on `0494f5ee77284d60abf1de0cc574590e15bd656e`: AMS Quality Gate [39801867733](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39801867733) and AMS CI [39801867597](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39801867597).
 
 ## 3. Immediate resume sequence
-
-1. Refresh the live `main` HEAD and recent commits, then confirm the aggregate result for [AMS CI run 39797152441](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39797152441). Do not trust this timestamp without re-querying.
-2. Preserve the Team Directory work at [06a07096](https://github.com/Kapitech-Agency/kapitech-ams/commit/06a0709642ca18e226676484bb78e9cbf1d16d3f) and Capacity Allocation at [07148c26](https://github.com/Kapitech-Agency/kapitech-ams/commit/07148c261bca145dde962f2a93519378f52c6074). The planning register lists saved project-member plans with role/context, percentage, reference hours/week and date range; historical tracked time is separate.
-3. Keep `VIEW-TEAM-CAPACITY` partially complete until Stage 5 role-aware visual, responsive and keyboard checks are recorded. `Availability & Workload` lacks a verified calendar/approved-leave source. `People Operations` remains missing; do not create HR or leave workflows from browser-only state.
-4. After reconciling workflow status and checkpoint/gap evidence, move to the next supported structural view in canonical order. Treat unavailable People Operations/Availability dependencies as explicit blockers; proceed to supported Vendors & Freelancers scope only after confirming its current source, route and permission contracts.
-5. Stage 5 visual/responsive/accessibility review and **explicit user sign-off** remain a hard gate before broad Stage 6 workflow/data/API work. No authenticated visual or keyboard evidence has been captured in this run.
+1. Refresh live `main` on every resume. The latest verified application/test snapshot is [0494f5ee](https://github.com/Kapitech-Agency/kapitech-ams/commit/0494f5ee77284d60abf1de0cc574590e15bd656e); exact-SHA AMS CI [39801867597](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39801867597) and Quality Gate [39801867733](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39801867733) passed.
+2. Preserve Team Directory [06a07096](https://github.com/Kapitech-Agency/kapitech-ams/commit/06a0709642ca18e226676484bb78e9cbf1d16d3f), Capacity Allocation [07148c26](https://github.com/Kapitech-Agency/kapitech-ams/commit/07148c261bca145dde962f2a93519378f52c6074), and Vendor Directory [0494f5ee](https://github.com/Kapitech-Agency/kapitech-ams/commit/0494f5ee77284d60abf1de0cc574590e15bd656e). The vendor master now leads with visible filters and a named register, without global report-period scoping.
+3. Keep `VIEW-TEAM-CAPACITY` partially complete until Stage 5 visual/role/responsive/keyboard checks are recorded. `Availability & Workload` lacks a verified calendar/approved-leave source. `People Operations` remains missing; do not create HR or leave workflows from browser-only state.
+4. Next action: inspect Team & Resources → Time Tracking → Time Logs against its workspace contract. Retain supported source-backed views if already aligned; do not implement My Timesheet or Timesheet Control without secure personal scope and a canonical review lifecycle. Keep `VIEW-TEAM-VENDORS` partially complete because Stage 5 review and the disabled worksheets remain open.
+5. Stage 5 visual/responsive/accessibility review and **explicit user sign-off** are mandatory before broad Stage 6 workflow/data/API work. Authenticated browser screenshots, viewport and keyboard evidence remain unavailable.
 
 ## 4. Required update fields for the next slice
 
