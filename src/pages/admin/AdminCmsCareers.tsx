@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { useSearchParams } from 'react-router-dom';
 import {
   Briefcase, CheckCircle2, ExternalLink, FileText,
@@ -163,7 +162,6 @@ const applicantCoverLetter = (message?: string): string => {
 };
 
 export const AdminCmsCareers: React.FC = () => {
-  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const isId = language === 'id';
   const role = getAmsRole(getAdminSession()?.user);
@@ -281,18 +279,18 @@ export const AdminCmsCareers: React.FC = () => {
       const matchesStatus = jobStatusFilter === 'all'
         || (jobStatusFilter === 'published' ? position.isPublished : !position.isPublished);
       const fields = [position.title, position.titleId, position.department, position.departmentId, position.slug, position.location];
-      return matchesDate(position.updatedAt || position.createdAt) && matchesStatus && (!q || fields.some(value => String(value || '').toLowerCase().includes(q)));
+      return matchesStatus && (!q || fields.some(value => String(value || '').toLowerCase().includes(q)));
     });
-  }, [positions, jobSearch, jobStatusFilter, matchesDate]);
+  }, [positions, jobSearch, jobStatusFilter]);
 
   const filteredApplicants = useMemo(() => {
     const q = applicantSearch.trim().toLowerCase();
     return applicants.filter(applicant => {
       const matchesStatus = applicantStatusFilter === 'all' || applicant.status === applicantStatusFilter;
       const fields = [applicant.fullName, applicant.email, applicant.positionTitle, applicant.phone];
-      return matchesDate(applicant.createdAt) && matchesStatus && (!q || fields.some(value => String(value || '').toLowerCase().includes(q)));
+      return matchesStatus && (!q || fields.some(value => String(value || '').toLowerCase().includes(q)));
     });
-  }, [applicants, applicantSearch, applicantStatusFilter, matchesDate]);
+  }, [applicants, applicantSearch, applicantStatusFilter]);
 
   const totalJobsPages = Math.max(1, Math.ceil(filteredPositions.length / jobsPageSize));
   const safeJobsPage = Math.min(jobsPage, totalJobsPages);
@@ -301,9 +299,9 @@ export const AdminCmsCareers: React.FC = () => {
   const safeApplicantsPage = Math.min(applicantsPage, totalApplicantPages);
   const pagedApplicants = filteredApplicants.slice((safeApplicantsPage - 1) * applicantsPageSize, safeApplicantsPage * applicantsPageSize);
 
-  useEffect(() => { setJobsPage(1); }, [jobSearch, jobStatusFilter, jobsPageSize, reportPeriodValue, reportPeriodEnabled]);
+  useEffect(() => { setJobsPage(1); }, [jobSearch, jobStatusFilter, jobsPageSize]);
   useEffect(() => { setJobsPage(current => Math.min(current, totalJobsPages)); }, [totalJobsPages]);
-  useEffect(() => { setApplicantsPage(1); }, [applicantSearch, applicantStatusFilter, applicantsPageSize, reportPeriodValue, reportPeriodEnabled]);
+  useEffect(() => { setApplicantsPage(1); }, [applicantSearch, applicantStatusFilter, applicantsPageSize]);
   useEffect(() => { setApplicantsPage(current => Math.min(current, totalApplicantPages)); }, [totalApplicantPages]);
 
   const statusOptions = [
