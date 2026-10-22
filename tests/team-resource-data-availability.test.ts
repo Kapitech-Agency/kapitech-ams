@@ -42,7 +42,7 @@ test('team allocation distinguishes unavailable time logs from a recorded zero',
   assert.match(source, /'Loading time data'/);
   assert.match(source, /percent: null/);
   assert.match(source, /teamStatus === 'unavailable'/);
-  assert.match(source, /value: 'unavailable', label: 'Time data unavailable'/);
+  assert.match(source, /value: 'unavailable', label: 'Time source unavailable'/);
   assert.match(source, /allocation\.percent === null \? '—'/);
   assert.match(source, /sourceAvailability\.timeLogs === true \? formatHours\(teamTrackedMinutes\.get\(member\.id\) \?\? 0\) : 'Unavailable'/);
 });
@@ -53,7 +53,12 @@ test('Team project and capacity views do not show zero or no-plan states when so
   assert.match(source, /sourceAvailability\.timeLogs === true \? week\.utilization \+ '%' : 'Unavailable'/);
   assert.match(source, /sourceAvailability\.projects === true \? \(week\.projectCount \? week\.allocationPercent \+ '%' : 'No plan'\) : 'Unavailable'/);
   assert.match(source, /sourceAvailability\.projects === true && !futureCapacityRows\.some/);
-  assert.match(source, /sourceAvailability\.timeLogs === true \? \(teamRows\.filter/);
+  const directoryStart = source.indexOf('data-ams-feature-slug="team-directory"');
+  const directoryEnd = source.indexOf(") : currentView === 'roles-departments' ?", directoryStart);
+  assert.ok(directoryStart >= 0 && directoryEnd > directoryStart);
+  const directory = source.slice(directoryStart, directoryEnd);
+  assert.match(directory, /allocation\.percent === null \? '—' : allocation\.percent \+ '% of 40h baseline'/);
+  assert.doesNotMatch(directory, /team-directory-kpi-headcount/);
   assert.match(source, /sourceAvailability\.timeLogs === false \? 'Time log data unavailable'/);
 });
 

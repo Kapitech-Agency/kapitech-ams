@@ -710,12 +710,16 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
 
   const teamHeader = teams.indexOf('<AdminModuleHeader');
   const teamView = teams.indexOf('data-ams-feature-slug="team-directory"');
-  const teamMetrics = teams.indexOf("slug: 'team-directory-kpi-headcount'");
   const teamFilters = teams.indexOf('data-ams-feature-slug="team-directory-filters"');
   const teamPagination = teams.indexOf('slug="team-directory-pagination"');
   const vendorViewStart = teams.indexOf(") : currentView === 'vendor-directory' ?");
   assert.ok(teamHeader >= 0 && teamView > teamHeader && teamFilters > teamView);
-  assert.ok(teamPagination > teamFilters && teamMetrics > teamPagination && teamMetrics < vendorViewStart);
+  assert.ok(teamPagination > teamFilters && teamPagination < vendorViewStart);
+  const teamDirectory = teams.slice(teamView, vendorViewStart);
+  assert.match(teamDirectory, /Department \/ role/);
+  assert.match(teamDirectory, /Time logged this week/);
+  assert.doesNotMatch(teamDirectory, /team-directory-kpi-headcount|Engineering & tech|Product & design|Operations & delivery/,
+    'Team Directory no longer places heuristic category KPIs after the primary register.');
 
   const vendorView = teams.indexOf('data-ams-feature-slug="vendor-directory"');
   const vendorMetrics = teams.indexOf("slug: 'vendor-directory-kpi-active-contractors'");
