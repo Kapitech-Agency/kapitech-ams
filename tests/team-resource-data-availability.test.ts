@@ -99,7 +99,11 @@ test('Roles & Departments is an active member-backed worksheet separate from acc
   assert.ok(source.includes("to: '/admin/team?view=roles-departments'"));
   assert.ok(source.includes("currentView === 'roles-departments' ? 'roles-departments'"));
   assert.ok(source.includes('data-ams-feature-slug="team-roles-departments"'));
-  assert.ok(source.includes('Role groups'));
+  assert.ok(source.includes('slug="team-roles-departments-matrix"'));
+  assert.ok(source.includes('Department and role matrix'));
+  assert.doesNotMatch(source, /team-roles-departments-count|team-roles-count|team-role-members-count|team-role-active-count/,
+    'The matrix is the primary worksheet and should not be preceded by duplicate KPI counts.');
+  assert.ok(source.includes('Role and division labels describe the roster, not system access.'));
+  assert.ok(source.includes('Settings → Users & Access.'));
   assert.ok(source.includes("downloadCsv('kapitech-roles-departments.csv'"));
-  assert.ok(source.includes('They do not grant, remove, or modify system permissions'));
 });
