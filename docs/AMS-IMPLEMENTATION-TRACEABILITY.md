@@ -944,3 +944,14 @@ The current composition matches the approved separation: role-aware Jobs and App
 The existing server-managed account register now has text search by name/username/email, role and status filters, Reset and a visible-vs-total count. Role options come from current canonical account records; filtered records drive responsive cards/table and pagination. Query changes return to page 1. Filtered-no-match is separate from a genuinely empty canonical list and an unavailable source.
 
 The account workspace remains guarded by `canManageAdminAccounts`; no auth/RBAC policy, root/master deletion protection, account mutation, MFA or password workflow changed. Regression checks cover filter predicates, hierarchy, pagination and states. AMS Quality Gate [39828405506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39828405506) and AMS CI [39828405520 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39828405520). Authorized browser/accessibility evidence remains unverified.
+
+
+### VIEW-SETTINGS-INTEGRATIONS: Distinguish unknown server evidence from explicit review states
+
+**Final source/test SHA:** [e80b9c11](https://github.com/Kapitech-Agency/kapitech-ams/commit/e80b9c119f528714ae69314160beafcf97798fd7), following UI changes in [709f5c59](https://github.com/Kapitech-Agency/kapitech-ams/commit/709f5c5921725c2215743ffe5ea3319e464fe060), declaration-order correction [0f5408ac](https://github.com/Kapitech-Agency/kapitech-ams/commit/0f5408ac66ea1848dadb2b1833b2ef4ff533274a), and regression assertion corrections.
+
+The Integration Overview previously substituted a PostgreSQL label when no datasource was returned, represented missing document/backup signals as review, and treated undefined gates like false. It now distinguishes positive, explicit negative and unknown states for datasource, document vault, backup recovery and runtime/encryption/MFA/notifications. A separate evidence boundary explains that notification-settings availability and production readiness do not confirm provider connectivity, delivery or sync. Website & CMS copy says the existing form manages CMS metadata and does not report provider/sync health.
+
+No API, server, permission, session or write workflow changed. Kopra H2H remains unavailable. Tests cover state sources, evidence-boundary text, nested route behavior and the disabled Kopra item.
+
+**Exact-SHA evidence:** AMS Quality Gate [39832811773 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39832811773); AMS CI [39832811706 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39832811706). Browser/provider evidence has not been captured; the requirement remains partially complete.

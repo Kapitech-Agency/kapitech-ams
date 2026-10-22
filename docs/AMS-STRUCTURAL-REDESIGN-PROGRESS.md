@@ -1748,3 +1748,20 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Requirement status:** PARTIALLY COMPLETE.
 - **Next:** Settings → Integrations. Preserve unavailable/unverified Kopra H2H and distinguish configured, available, connected and sync success.
 
+
+
+## Stage 4 structural slice — Settings · Integrations · Explicit readiness and provider evidence boundaries · 23 October 2026
+
+- **Requirement:** `VIEW-SETTINGS-INTEGRATIONS`; preserve the existing Overview / Website & CMS Integrations nesting and keep Kopra H2H unavailable.
+- **Source contract:** `src/pages/admin/AdminSettings.tsx` calls existing backup, security-status, notification-settings and production-readiness endpoints. A successful notification-settings request establishes settings availability only; the current contracts do not expose provider connectivity, delivery confirmation or content/data sync state.
+- **Before:** Database defaulted to a PostgreSQL label when datasource was missing; missing document-storage and backup verification signals rendered as review states; undefined readiness gates rendered warning icons. This conflated unavailable evidence with a failed check.
+- **After:** datasource is reported only when supplied by server, otherwise Checking/Not reported; document storage distinguishes Ready, Review required and Checking/Not reported; Backup/DR distinguishes Recovery verified, Review required and Checking/Not verified; health gates use Ready, Review required, Checking or Not reported.
+- **Evidence boundary:** a dedicated section says the current integration contract does not report provider connectivity, delivery confirmation or content/data sync status. Website & CMS Settings copy clarifies that its current form manages public metadata, not provider/sync health.
+- **Preserved contracts:** no API/backend, permissions, notification settings write, CMS mutation, route, auth or integration was added/enabled. Kopra H2H remains `available: false`. No production datasource or provider state is inferred.
+- **Regression:** `tests/admin-settings-module-regression.test.ts` checks source-backed tri-state semantics, evidence-boundary text and existing nested navigation/Kopra disabled status.
+- **Implementation:** primary UI [709f5c59](https://github.com/Kapitech-Agency/kapitech-ams/commit/709f5c5921725c2215743ffe5ea3319e464fe060); derived-state ordering fix [0f5408ac](https://github.com/Kapitech-Agency/kapitech-ams/commit/0f5408ac66ea1848dadb2b1833b2ef4ff533274a); regression assertion corrections and final green source/test SHA [e80b9c11](https://github.com/Kapitech-Agency/kapitech-ams/commit/e80b9c119f528714ae69314160beafcf97798fd7).
+- **Exact-SHA validation:** AMS Quality Gate [39832811773 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39832811773); AMS CI [39832811706 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39832811706), including typecheck, regression tests, production build, security checks, PostgreSQL integration, dependency audit, migrations and HTTP smoke.
+- **Browser evidence:** NOT CAPTURED. Stage 5 still needs authorized-role, actual environment/source, responsive, keyboard/focus and provider-verification review.
+- **Requirement status:** PARTIALLY COMPLETE. The current surface describes its available evidence truthfully; provider connection/sync status remains absent from the current contract and intentionally unreported.
+- **Next:** Settings → Preferences. Verify current supported values and persistence before changing the main content; avoid introducing shared or authorization-affecting preferences.
+
