@@ -181,7 +181,7 @@ test('Dashboard Overview displays canonical recent audit activity only for permi
 
   assert.ok(activity >= 0, 'Overview needs a source-backed recent activity surface.');
   assert.match(dashboard, /hasAdminPermission\('canViewSecurityAuditLogs'\)/);
-  assert.match(dashboard, /recentActivityDataAvailable: Array\.isArray\(response\.data\?\.recentActivity\)/);
+  assert.match(dashboard, /const recentActivityDataAvailable = Array\.isArray\(response\.data\?\.recentActivity\)/);
   assert.match(dashboard, /recentActivity: recentActivityDataAvailable \? response\.data\.recentActivity as DashboardRecentActivity\[\] : \[\]/);
   assert.ok(overview.includes('{canViewAuditLogs && ('), 'Audit events must remain hidden from roles without audit-log permission.');
   assert.ok(overview.includes('No recent activity available'));
