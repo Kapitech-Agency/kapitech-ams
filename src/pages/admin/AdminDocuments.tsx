@@ -62,6 +62,8 @@ interface DocumentItem {
 }
 
 type SortKey = 'name' | 'category' | 'size' | 'updated' | 'status';
+type DocumentStatusFilter = 'all' | 'ready' | 'pending';
+type RelatedRecordFilter = 'all' | 'linked' | 'unlinked';
 type TabKey = 'all' | 'project-client' | 'sops' | 'legal' | 'finance' | 'hr' | 'infra';
 
 const DOCUMENT_TABS: Array<{ key: TabKey; label: string }> = [
@@ -179,6 +181,8 @@ export const AdminDocuments: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<DocumentStatusFilter>('all');
+  const [relatedRecordFilter, setRelatedRecordFilter] = useState<RelatedRecordFilter>('all');
   const [sortKey, setSortKey] = useState<SortKey>('updated');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
@@ -318,14 +322,17 @@ export const AdminDocuments: React.FC = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [activeTab, searchQuery, pageSize]);
+  }, [activeTab, searchQuery, statusFilter, relatedRecordFilter, pageSize]);
 
   const filteredDocuments = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    const items = documents.filter((doc) =>
-      matchesTab(doc, activeTab) &&
-      (!q || searchTextOf(doc).includes(q))
-    );
+    const items = documents.filter((doc) => {
+      const hasLinkedRecord = Boolean(doc.relatedEntity && doc.relatedId);
+      return matchesTab(doc, activeTab) &&
+        (!q || searchTextOf(doc).includes(q)) &&
+        (statusFilter === 'all' || (statusFilter === 'ready' ? readyOf(doc) : !readyOf(doc))) &&
+        (relatedRecordFilter === 'all' || (relatedRecordFilter === 'linked' ? hasLinkedRecord : !hasLinkedRecord));
+    });
 
     return items.sort((a, b) => {
       let comparison = 0;
@@ -339,7 +346,7 @@ export const AdminDocuments: React.FC = () => {
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [documents, activeTab, searchQuery, sortKey, sortDirection]);
+  }, [documents, activeTab, searchQuery, statusFilter, relatedRecordFilter, sortKey, sortDirection]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -347,6 +354,11 @@ export const AdminDocuments: React.FC = () => {
 
   const resetFilters = () => {
     setSearchQuery('');
+    setStatusFilter('all');
+    setRelatedRecordFilter('all');
+    const next = new URLSearchParams(searchParams);
+    next.delete('documents');
+    setSearchParams(next);
     setPage(1);
   };
 
@@ -538,7 +550,12 @@ export const AdminDocuments: React.FC = () => {
     }
   };
 
-  const activeFilterCount = [searchQuery].filter(Boolean).length;
+  const activeFilterCount = [
+    searchQuery,
+    activeTab !== 'all' ? activeTab : '',
+    statusFilter !== 'all' ? statusFilter : '',
+    relatedRecordFilter !== 'all' ? relatedRecordFilter : '',
+  ].filter(Boolean).length;
   const tabLabel = DOCUMENT_TABS.find((tab) => tab.key === activeTab)?.label || 'All files';
 
   return (
@@ -622,6 +639,34 @@ export const AdminDocuments: React.FC = () => {
               size="sm"
               aria-label="Document category"
               options={DOCUMENT_TABS.map((tab) => ({ value: tab.key, label: tab.label }))}
+            />
+          </div>
+          <div className="w-full shrink-0 sm:w-[160px]">
+            <CustomSelect
+              value={statusFilter}
+              onChange={(value) => setStatusFilter(value as DocumentStatusFilter)}
+              size="sm"
+              aria-label="Filter document status"
+              slug="documents-status-filter"
+              options={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'ready', label: 'Ready' },
+                { value: 'pending', label: 'Pending / not ready' },
+              ]}
+            />
+          </div>
+          <div className="w-full shrink-0 sm:w-[175px]">
+            <CustomSelect
+              value={relatedRecordFilter}
+              onChange={(value) => setRelatedRecordFilter(value as RelatedRecordFilter)}
+              size="sm"
+              aria-label="Filter linked records"
+              slug="documents-related-filter"
+              options={[
+                { value: 'all', label: 'All relationships' },
+                { value: 'linked', label: 'Linked record' },
+                { value: 'unlinked', label: 'No linked record' },
+              ]}
             />
           </div>
           <div className="w-full shrink-0 sm:w-[180px]">

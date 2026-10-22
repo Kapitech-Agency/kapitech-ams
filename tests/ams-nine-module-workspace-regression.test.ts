@@ -299,10 +299,22 @@ test('Team and Resources distinguish unavailable source data from a true zero', 
   assert.match(timeLogs, /Previously loaded records are kept/);
 });
 
-test('Documents puts the private register before upload and has a distinct failure state', async () => {
+test('Documents keeps search and metadata filters before the private register and resets all active scopes', async () => {
   const documents = await read('src/pages/admin/AdminDocuments.tsx');
+  const header = documents.indexOf('<AdminModuleHeader');
+  const filters = documents.indexOf('<AdminFilterBar slug="documents-filters"');
+  const directory = documents.indexOf('data-ams-slug="documents-directory"');
+  const uploadDropzone = documents.indexOf('slug="documents-upload-dropzone"');
+
   assert.match(documents, /featureSlug="documents-module"/);
-  assert.ok(documents.indexOf('data-ams-slug="documents-directory"') < documents.indexOf('slug="documents-upload-dropzone"'));
+  assert.ok(header >= 0 && filters > header && directory > filters && uploadDropzone > directory,
+    'Search/category/metadata filters must lead the canonical register; upload support follows it.');
+  assert.match(documents, /slug="documents-status-filter"/);
+  assert.match(documents, /slug="documents-related-filter"/);
+  assert.match(documents, /statusFilter === 'all' \|\| \(statusFilter === 'ready' \? readyOf\(doc\) : !readyOf\(doc\)\)/);
+  assert.match(documents, /relatedRecordFilter === 'all' \|\| \(relatedRecordFilter === 'linked' \? hasLinkedRecord : !hasLinkedRecord\)/);
+  assert.match(documents, /const activeFilterCount = \[/);
+  assert.match(documents, /next\.delete\('documents'\)/);
   assert.match(documents, /Documents unavailable/);
   assert.match(documents, /No documents match the current filters/);
   assert.doesNotMatch(documents, /useReportingPeriod\(\)/, 'The canonical library must not inherit an invisible global date filter.');
