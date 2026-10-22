@@ -652,11 +652,11 @@ export const AdminSettings: React.FC = () => {
   const periodBackups = useMemo(() => backups.filter((backup) => matchesDate(backup.createdAt)), [backups, matchesDate]);
 
   const auditActorOptions = useMemo(
-    () => Array.from(new Set(logs.map((log) => log.actor || 'System'))).sort((left, right) => left.localeCompare(right)),
+    () => Array.from(new Set<string>(logs.map((log): string => log.actor || 'System'))).sort((left, right) => left.localeCompare(right)),
     [logs]
   );
   const auditEventOptions = useMemo(
-    () => Array.from(new Set(logs.map((log) => log.action).filter(Boolean))).sort((left, right) => left.localeCompare(right)),
+    () => Array.from(new Set<string>(logs.map((log): string => log.action).filter(Boolean))).sort((left, right) => left.localeCompare(right)),
     [logs]
   );
 
