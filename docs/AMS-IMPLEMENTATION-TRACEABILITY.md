@@ -1043,3 +1043,16 @@ Executive Summary now places selected-period context first, then the current ove
 **Changed files:** `src/pages/admin/AdminFinanceWorkspace.tsx`, `tests/ams-finance-overview-structure.test.ts`.
 
 Exact-SHA AMS Quality Gate [39846034348 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39846034348) and AMS CI [39846034388 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39846034388). Typecheck, regression tests, production build, migrations, security regression tests, PostgreSQL integration, dependency audit, packaged migration verification and HTTP smoke test passed. No finance math, posting, database, API, route or permission changes. **Browser/visual/role/accessibility status: NOT VERIFIED.** Proceed in Stage 4 with Team & Resources → Team & Capacity, preserving the distinction between planned allocation, tracked time and configured capacity.
+
+
+### VIEW-TEAM-CAPACITY: Make historical time ranges and the 40-hour reference explicit
+
+**Source/test SHA:** [8eaea7e097835fd5519dfc952bf85379d5c828d5](https://github.com/Kapitech-Agency/kapitech-ams/commit/8eaea7e097835fd5519dfc952bf85379d5c828d5); source patch [9eb71c9c](https://github.com/Kapitech-Agency/kapitech-ams/commit/9eb71c9cd15e43fb3e8e2fe0a61a5251333d5dea).
+
+Historical tracked-time columns now display concrete calendar-week date ranges. Percentages are labeled as recorded time compared with a 40h/week reference, not verified utilization or actual availability. CSV labels expose the same period and calculation basis. Historical time and planned resource-allocation rows remain distinct. No calculation, source contract, assignment, availability calendar or Finance rule changed. Exact-SHA Quality Gate [39847121119 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847121119) and CI [39847121189 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847121189). Browser/visual/accessibility state: **NOT VERIFIED**.
+
+### VIEW-TEAM-CAPACITY: Prioritize the Roles & Departments source matrix
+
+**Latest source/test SHA:** [b874a0bacf6304f4c21ec1e0ca8c0c1febd34861](https://github.com/Kapitech-Agency/kapitech-ams/commit/b874a0bacf6304f4c21ec1e0ca8c0c1febd34861); structural source commit [d06b5d6f](https://github.com/Kapitech-Agency/kapitech-ams/commit/d06b5d6f5d5bc876ddd71ad15ac3d95a5dd0769d).
+
+Roles & Departments no longer places duplicate counts for department, role, team members and active records ahead of the grouped matrix. The permission note is consolidated into the matrix description, which preserves the distinction between roster metadata and Settings access policy. Existing unavailable/empty states and route policy remain unchanged. No permissions, role assignment, model or endpoint changed. Exact-SHA Quality Gate [39847810072 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847810072) and AMS CI [39847810037 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847810037). Browser/visual/accessibility review remains open. Continue Stage 4 with Skills & Service Matrix; preserve the Admin-only route.

@@ -1882,3 +1882,27 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - No posting, account mapping, formula, API, database, authentication, permission or Finance workflow behavior changed.
 - Authenticated browser and accessibility verification is **NOT VERIFIED**. Stage 5 still must cover period changes/live-source parity, overdue queue outcomes, role access, responsive layout, keyboard/focus and table paging.
 - Next Stage 4 slice: Team & Resources → Team & Capacity. Keep planned allocation distinct from actual logged time; no approved-capacity/absence calendar is currently configured. Stage 5 and explicit user sign-off remain mandatory.
+
+
+## Team & Capacity historical time clarity · Stage 4 · 23 October 2026
+
+**Source/test SHA:** [8eaea7e097835fd5519dfc952bf85379d5c828d5](https://github.com/Kapitech-Agency/kapitech-ams/commit/8eaea7e097835fd5519dfc952bf85379d5c828d5). The source patch is [9eb71c9c](https://github.com/Kapitech-Agency/kapitech-ams/commit/9eb71c9cd15e43fb3e8e2fe0a61a5251333d5dea).
+
+- Historical tracked-time columns show exact inclusive calendar-week ranges instead of relying only on “Week 1/2/3”.
+- The percentage is labeled as recorded hours compared with a 40h/week reference, not verified utilization or approved capacity. CSV headings use the same period and reference.
+- Historical actual time and saved planned allocations stay separate. Their source rows, date ranges and semantics remain distinct.
+- No logged-time calculations, assignments, allocations, endpoint, permission, or availability model changed.
+- Exact-SHA Quality Gate [39847121119 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847121119) and AMS CI [39847121189 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847121189).
+- Authenticated browser/visual/accessibility status is **NOT VERIFIED**. Stage 5 must review periods, responsive overflow, keyboard/focus and authorized-role visibility.
+
+## Team & Resources Roles and Departments matrix-first hierarchy · Stage 4 · 23 October 2026
+
+**Source/test SHA:** [b874a0bacf6304f4c21ec1e0ca8c0c1febd34861](https://github.com/Kapitech-Agency/kapitech-ams/commit/b874a0bacf6304f4c21ec1e0ca8c0c1febd34861). Structural code change: [d06b5d6f](https://github.com/Kapitech-Agency/kapitech-ams/commit/d06b5d6f5d5bc876ddd71ad15ac3d95a5dd0769d).
+
+- Before: four summary cards for departments, roles, members and active records appeared above a matrix that already showed the same dimensions. A separate note repeated the permission boundary.
+- After: the grouped Department and role matrix is the primary work surface. Its description identifies the roster source, explains that role/division labels are not system access, and directs access-policy work to Settings → Users & Access.
+- The matrix preserves the source-unavailable and valid-empty states. No new model, permission or route was added.
+- Changed files: src/pages/admin/AdminTeams.tsx, tests/ams-team-roles-departments-structure.test.ts, tests/team-resource-data-availability.test.ts.
+- Exact-SHA AMS Quality Gate [39847810072 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847810072) and AMS CI [39847810037 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847810037).
+- Authenticated browser, role and responsive accessibility evidence is **NOT VERIFIED**.
+- Next Stage 4 slice: Team & Resources → Skills & Service Matrix. Keep role-derived focus distinct from vendor-recorded skills, and do not fabricate proficiency or qualification scores.
