@@ -299,7 +299,7 @@ test('Audit register separates actor and event scopes and opens read-only event 
   const table = source.indexOf('settings-system-table min-w-[1180px]', auditStart);
   const detailDrawer = source.indexOf('data-ams-feature-slug="settings-audit-event-details"');
 
-  assert.ok(auditStart >= 0 && filterBar > auditStart && register > filterBar && mobileRecords > register && table > mobileRecords);
+  assert.ok(auditStart >= 0 && register > auditStart && filterBar > register && mobileRecords > filterBar && table > mobileRecords);
   assert.match(source, /auditActorOptions = useMemo/);
   assert.match(source, /auditEventOptions = useMemo/);
   assert.match(source, /const matchesActor = auditActorFilter === 'all'/);
@@ -311,8 +311,8 @@ test('Audit register separates actor and event scopes and opens read-only event 
   assert.ok(source.includes("aria-label=\"Filter audit actor\""));
   assert.ok(source.includes("aria-label=\"Filter audit event\""));
   assert.ok(detailDrawer > table);
-  assert.match(source, /selectedAuditLog\?\.actorRole/);
-  assert.match(source, /selectedAuditLog\?\.userAgent/);
+  assert.match(source, /selectedAuditLog\.actorRole/);
+  assert.match(source, /selectedAuditLog\.userAgent/);
   assert.doesNotMatch(source.slice(detailDrawer, source.indexOf('</Drawer>', detailDrawer)), /selectedAuditLog\.(?:hash|prevHash|metadata)/,
     'The detail view must not expose chain hashes or arbitrary metadata payloads.');
 });
