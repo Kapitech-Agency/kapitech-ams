@@ -560,10 +560,11 @@ test('Embedded invoice, expense, and receivable workflows do not leak UI state a
   assert.match(workspace, /case 'accounts-receivable':[\s\S]{0,120}key=\{tab\.key\} embeddedView="receivables"/);
   assert.match(vendors, /\{!embedded && \([\s\S]{0,180}<AdminModuleHeader/);
   assert.match(vendors, /\{embedded && <button type="button" onClick=\{handleOpenAdd\}/);
-  assert.match(vendors, /data-ams-slug="vendor-snapshot"/);
-  assert.ok(vendors.indexOf('data-ams-feature-slug="vendor-snapshot"') < vendors.indexOf('aria-label="Vendor directory controls"'));
-  assert.ok(vendors.indexOf('aria-label="Vendor directory controls"') < vendors.indexOf('data-ams-feature-slug="vendor-directory-list"'));
-  assert.match(vendors, /flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between/);
+  const filters = vendors.indexOf('aria-label="Vendor directory controls"');
+  const registerHeader = vendors.indexOf('data-ams-feature-slug="vendor-directory-register-header"');
+  const directory = vendors.indexOf('data-ams-feature-slug="vendor-directory-list"');
+  assert.ok(filters >= 0 && registerHeader > filters && directory > registerHeader);
+  assert.doesNotMatch(vendors, /vendor-snapshot|vendor-kpis/);
 });
 
 test('Vendor contract editor protects unsaved changes on close and cancel', async () => {

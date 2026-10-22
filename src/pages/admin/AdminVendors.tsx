@@ -500,11 +500,17 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
       {/* Vendors Grid */}
       <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between" data-ams-feature-slug="vendor-directory-register-header" data-ams-slug="vendor-directory-register-header">
         <h2 id="vendor-directory-list-title" className="text-sm font-semibold text-fg">{language === 'id' ? 'Direktori vendor' : 'Vendor directory'}</h2>
-        <p className="text-[11px] tabular-nums text-muted" aria-live="polite">
-          {language === 'id'
-            ? `${filteredVendors.length} vendor cocok`
-            : `${filteredVendors.length} ${filteredVendors.length === 1 ? 'vendor' : 'vendors'}`}
-        </p>
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:shrink-0 sm:justify-end">
+          <p className="text-[11px] tabular-nums text-muted" aria-live="polite">
+            {language === 'id'
+              ? `${filteredVendors.length} vendor cocok`
+              : `${filteredVendors.length} ${filteredVendors.length === 1 ? 'vendor' : 'vendors'}`}
+          </p>
+          {embedded && <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="inline-flex h-8 min-h-8 items-center gap-2 whitespace-nowrap rounded-control bg-accent px-3 text-[11px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50">
+            <Plus size={13} aria-hidden="true" />
+            <span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span>
+          </button>}
+        </div>
       </div>
       <section data-ams-feature-slug="vendor-directory-list" data-ams-slug="vendor-directory-list" aria-labelledby="vendor-directory-list-title"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {paginatedVendors.map(vendor => (

@@ -730,8 +730,11 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   assert.ok(vendorPagination > vendorFilters && vendorMetrics > vendorPagination && vendorMetrics < capacityViewStart);
   const vendors = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminVendors.tsx'), 'utf8');
   const vendorHeader = vendors.indexOf('<AdminModuleHeader');
-  const vendorSnapshot = vendors.indexOf('data-ams-feature-slug="vendor-snapshot"');
-  assert.ok(vendorHeader >= 0 && vendorSnapshot > vendorHeader && vendorSnapshot < vendors.indexOf('data-ams-feature-slug="vendor-directory-filters"'));
+  const vendorFilters = vendors.indexOf('data-ams-feature-slug="vendor-directory-filters"');
+  const vendorRegisterHeader = vendors.indexOf('data-ams-feature-slug="vendor-directory-register-header"');
+  const vendorDirectory = vendors.indexOf('data-ams-feature-slug="vendor-directory-list"');
+  assert.ok(vendorHeader >= 0 && vendorFilters > vendorHeader && vendorRegisterHeader > vendorFilters && vendorDirectory > vendorRegisterHeader);
+  assert.equal(vendors.includes('data-ams-feature-slug="vendor-snapshot"'), false);
   assert.equal(teams.includes('SLA is not tracked by the current vendor data model'), false);
   assert.equal(teams.includes('className="w-[8%] text-center">SLA</th>'), false);
 
@@ -878,23 +881,24 @@ test('Time Tracking uses shared CustomSelect for linked tasks while preserving e
 });
 
 
-test('Vendor directory prioritizes its register, then the snapshot, and uses the shared detail drawer', () => {
+test('Vendor directory uses filters, a labelled primary register, and the shared detail drawer', () => {
   const vendors = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminVendors.tsx'), 'utf8');
   const filters = vendors.indexOf('aria-label="Vendor directory controls"');
+  const registerHeader = vendors.indexOf('data-ams-feature-slug="vendor-directory-register-header"');
   const directory = vendors.indexOf('data-ams-feature-slug="vendor-directory-list"');
   const emptyState = vendors.indexOf('filteredVendors.length === 0 && (');
   const pagination = vendors.indexOf('slug="vendor-directory-pagination"');
-  const snapshot = vendors.indexOf('data-ams-feature-slug="vendor-snapshot"');
   const detailDrawer = vendors.indexOf('slug="vendor-detail-drawer"');
-  assert.ok(snapshot > 0 && snapshot < filters, 'vendor snapshot leads the directory controls');
-  assert.ok(filters >= 0 && directory > filters);
+  assert.ok(filters >= 0 && registerHeader > filters && directory > registerHeader);
+  assert.ok(vendors.includes('aria-labelledby="vendor-directory-list-title"'));
+  assert.ok(vendors.includes('aria-live="polite"'));
+  assert.equal(vendors.includes('data-ams-feature-slug="vendor-snapshot"'), false);
   assert.ok(emptyState > directory && pagination > emptyState);
   assert.ok(detailDrawer > pagination);
   assert.equal(vendors.includes('<Modal'), false);
   assert.ok(vendors.includes('footer={('));
   assert.ok(vendors.includes("handleOpenEdit(selectedVendor)"));
   assert.ok(vendors.includes('{filteredVendors.length > 0 && ('));
-  assert.ok(vendors.includes('Array.from({ length: 4 })'));
 });
 
 
