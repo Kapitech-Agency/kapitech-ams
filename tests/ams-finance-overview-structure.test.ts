@@ -33,9 +33,9 @@ test('Finance Executive Summary highlights overdue invoices using the existing F
   const summary = source.slice(source.indexOf('const renderSummary = (dashboard: boolean) =>'), source.indexOf('const openVendorContractEditor'));
   assert.ok(source.includes("import { getEffectiveInvoiceStatus, normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore'"));
   assert.ok(summary.includes("getEffectiveInvoiceStatus(invoice) === 'overdue' && getInvoiceOutstanding(invoice) > 0"));
-    assert.ok(summary.includes('title="Items needing attention · overdue invoices"'));
+  assert.ok(summary.includes('title="Items needing attention · overdue invoices"'));
   assert.ok(summary.includes("formatMoney(getInvoiceOutstanding(invoice), invoice.currency)"));
-  assert.ok(summary.includes('const overdueInvoiceRows: TableRow[] = overdueInvoices.map((invoice) => ({')), 'The complete overdue queue should be paginated by FinanceDataTable instead of silently truncating at a fixed row count.');
+  assert.ok(summary.includes('const overdueInvoiceRows: TableRow[] = overdueInvoices.map((invoice) => ({'), 'The complete overdue queue should be paginated by FinanceDataTable instead of silently truncating at a fixed row count.');
   assert.ok(summary.includes("navigate('/admin/finance?tab=accounts-receivable')"));
   assert.ok(summary.includes('Invoice source refresh failed. Overdue rows use the last loaded invoice records and may be stale.'));
   assert.ok(summary.includes('Overdue invoice exceptions unavailable because the invoice source did not load.'));
@@ -48,6 +48,6 @@ test('Finance Executive Summary keeps cash movement and posted profit semantical
   assert.ok(summary.includes('Recorded cash movement is shown in Dashboard comparison.'));
   assert.ok(summary.includes('not the same as client payments'));
   assert.ok(summary.includes('not a substitute for posted General Ledger profit or bank reconciliation'));
-    assert.ok(summary.includes('title="Selected vs previous period"'));
+  assert.ok(summary.includes('title="Selected vs previous period"'));
   assert.ok(summary.includes('Net movement is a proxy and is not a reconciled closing cash balance.'));
 });
