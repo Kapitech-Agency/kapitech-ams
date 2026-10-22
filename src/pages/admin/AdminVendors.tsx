@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { Link } from 'react-router-dom';
 // Shared module chrome renders the canonical ams-page-header primitive.
 import {
@@ -43,7 +42,7 @@ import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { toSlug } from '../../lib/slug';
 
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
@@ -53,7 +52,6 @@ const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.R
 );
 
 export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }> = ({ embedded = false, searchTerm }) => {
-  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
   const navigationRole = getAmsRole(getAdminSession()?.user);
@@ -89,10 +87,6 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
     if (message) setStatusTone(tone);
   };
   const [isLoading, setIsLoading] = useState(true);
-  const ratedVendors = vendors.filter((vendor) => Number.isFinite(Number(vendor.rating)) && Number(vendor.rating) > 0);
-  const averageVendorRating = ratedVendors.length
-    ? ratedVendors.reduce((sum, vendor) => sum + Number(vendor.rating), 0) / ratedVendors.length
-    : null;
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -165,7 +159,6 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
   // Filtered list
   const filteredVendors = useMemo(() => {
     return vendors.filter(v => {
-      if (!matchesDate(v.createdAt || v.updatedAt)) return false;
       const matchSearch =
         v.name.toLowerCase().includes(effectiveSearchQuery.toLowerCase()) ||
         (v.companyName && v.companyName.toLowerCase().includes(effectiveSearchQuery.toLowerCase())) ||
@@ -179,14 +172,14 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
 
       return matchSearch && matchCat && matchType && matchStatus && matchVetted;
     });
-  }, [vendors, effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter, matchesDate]);
+  }, [vendors, effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
 
   const vendorPageCount = Math.max(1, Math.ceil(filteredVendors.length / vendorPageSize));
   const paginatedVendors = filteredVendors.slice((vendorPage - 1) * vendorPageSize, vendorPage * vendorPageSize);
 
   useEffect(() => {
     setVendorPage(1);
-  }, [effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter, reportPeriodValue, reportPeriodEnabled]);
+  }, [effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
 
   useEffect(() => {
     setVendorPage((current) => Math.min(current, vendorPageCount));
@@ -384,11 +377,6 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
         <div className="space-y-3" role="status" aria-label="Loading vendors">
           <Skeleton className="h-[72px] rounded-card border border-line bg-panel" />
           <Skeleton className="h-[420px] rounded-card border border-line bg-panel" />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-[116px] rounded-card border border-line bg-panel" />
-            ))}
-          </div>
         </div>
       </VendorWorkspaceContainer>
     );
@@ -440,18 +428,6 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
       )}
 
       {/* Filter & Search Bar */}
-      <section data-ams-feature-slug="vendor-snapshot" data-ams-slug="vendor-snapshot" aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
-        <div className="mb-3 flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:shrink-0 sm:justify-end">{embedded && <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="inline-flex h-8 min-h-8 items-center gap-2 whitespace-nowrap rounded-control bg-accent px-3 text-[11px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"><Plus size={13}/><span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span></button>}<span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div></div>
-        <AdminMetricStrip slug="vendor-kpis"
-          metrics={[
-            { id: 'total', label: language === 'id' ? 'Total Mitra Terdaftar' : 'Total vendors', value: vendors.length, context: vendors.filter(v => v.status === 'active').length + ' Active', sparkline: [vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.length], icon: <Users size={16} strokeWidth={1.8} /> },
-            { id: 'freelance', label: language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent', value: vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, context: 'Design, Dev & 3D', sparkline: [vendors.filter(v => v.type === 'freelancer').length, vendors.filter(v => v.type === 'contractor').length, vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
-            { id: 'agency', label: language === 'id' ? 'Partner Agensi' : 'Agency Partners', value: vendors.filter(v => v.type === 'agency_partner').length, context: 'DevOps, Cloud & Legal', sparkline: [vendors.filter(v => v.type === 'saas_vendor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.filter(v => v.type === 'freelancer').length], icon: <Building2 size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
-            { id: 'rating', label: language === 'id' ? 'Rata-rata rating vendor' : 'Average vendor rating', value: averageVendorRating === null ? '—' : <span className="inline-flex items-center gap-1.5">{averageVendorRating.toFixed(1)} <Star size={16} className="text-warning fill-warning" /></span>, context: ratedVendors.length ? (language === 'id' ? 'Dari ' + ratedVendors.length + ' profil vendor dengan rating' : 'Across ' + ratedVendors.length + ' rated vendor profiles') : (language === 'id' ? 'Belum ada data rating' : 'No rating data yet'), sparkline: ratedVendors.slice(0, 8).map(v => Number(v.rating)), icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-fg' }
-          ]}
-        />
-      </section>
-
       <section data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters" className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
         <div className={searchTerm !== undefined ? 'hidden' : 'relative w-full lg:w-96'}>
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
@@ -522,7 +498,15 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
       </section>
 
       {/* Vendors Grid */}
-      <section data-ams-feature-slug="vendor-directory-list" data-ams-slug="vendor-directory-list" aria-label="Vendor directory list"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between" data-ams-feature-slug="vendor-directory-register-header" data-ams-slug="vendor-directory-register-header">
+        <h2 id="vendor-directory-list-title" className="text-sm font-semibold text-fg">{language === 'id' ? 'Direktori vendor' : 'Vendor directory'}</h2>
+        <p className="text-[11px] tabular-nums text-muted" aria-live="polite">
+          {language === 'id'
+            ? `${filteredVendors.length} vendor cocok`
+            : `${filteredVendors.length} ${filteredVendors.length === 1 ? 'vendor' : 'vendors'}`}
+        </p>
+      </div>
+      <section data-ams-feature-slug="vendor-directory-list" data-ams-slug="vendor-directory-list" aria-labelledby="vendor-directory-list-title"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {paginatedVendors.map(vendor => (
           <div
             key={vendor.id}
@@ -686,9 +670,6 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
         slug="vendor-directory-pagination"
       />
       )}
-
-      {/* Top Summary Metrics */}
-
 
       {/* Detail Slideover Drawer */}
       {isDrawerOpen && selectedVendor && (

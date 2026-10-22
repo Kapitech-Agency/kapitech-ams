@@ -627,8 +627,6 @@ test('Shared metric strips use canonical breakpoints and match their metric coun
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');
   const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
-  const vendors = await read('src/pages/admin/AdminVendors.tsx');
-
   assert.ok(primitives.includes("if (metricCount <= 1) return 'grid-cols-1';"));
   assert.ok(primitives.includes("if (metricCount === 2) return 'grid-cols-1 min-[600px]:grid-cols-2';"));
   assert.ok(primitives.includes("if (metricCount === 3) return 'grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3';"));
@@ -652,10 +650,23 @@ test('Shared metric strips use canonical breakpoints and match their metric coun
   assert.doesNotMatch(retainers, /className="grid grid-cols-1 gap-3 text-\[11px\] text-muted min-\[600px\]:grid-cols-2 min-\[1100px\]:grid-cols-4"/,
     'Retainers must not reintroduce the removed duplicate lower summary grid.');
 
-  const vendorMetricStart = vendors.indexOf('<AdminMetricStrip slug="vendor-kpis"');
-  const vendorMetricEnd = vendors.indexOf('metrics={[', vendorMetricStart);
-  assert.ok(vendorMetricStart >= 0 && vendorMetricEnd > vendorMetricStart);
-  assert.equal(vendors.slice(vendorMetricStart, vendorMetricEnd).includes('className="lg:grid-cols-4"'), false);
+});
+
+test('Vendor & Freelancers keeps the canonical directory primary and independent of the global reporting period', async () => {
+  const vendors = await read('src/pages/admin/AdminVendors.tsx');
+  const filters = vendors.indexOf('data-ams-feature-slug="vendor-directory-filters"');
+  const registerHeader = vendors.indexOf('data-ams-feature-slug="vendor-directory-register-header"');
+  const register = vendors.indexOf('data-ams-feature-slug="vendor-directory-list"');
+  const pagination = vendors.indexOf('slug="vendor-directory-pagination"');
+
+  assert.ok(filters >= 0 && registerHeader > filters && register > registerHeader && pagination > register,
+    'Vendor directory should flow from filters to a named primary register and its pagination.');
+  assert.match(vendors, /aria-labelledby="vendor-directory-list-title"/);
+  assert.match(vendors, /aria-live="polite"/);
+  assert.doesNotMatch(vendors, /vendor-kpis|vendor-snapshot|AdminMetricStrip/,
+    'The supplier master directory must not put a KPI snapshot ahead of its primary work surface.');
+  assert.doesNotMatch(vendors, /useReportingPeriod|matchesDate|reportPeriodValue|reportPeriodEnabled/,
+    'A global reporting-period selection must not silently remove canonical vendor records.');
 });
 
 
