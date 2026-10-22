@@ -28,6 +28,14 @@ type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
 const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const;
 type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
 
+type DashboardRecentActivity = {
+  id?: string;
+  timestamp?: string;
+  action?: string;
+  actor?: string;
+  severity?: string;
+};
+
 interface DashboardProject {
   id: string;
   name: string;
@@ -433,6 +441,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const canManageProjects = hasAdminPermission('canManageProjects');
+  const canViewAuditLogs = hasAdminPermission('canViewSecurityAuditLogs');
   const requestedView = searchParams.get('view');
   const hasViewParameter = searchParams.has('view');
   const view: DashboardWorkspaceView = DASHBOARD_WORKSPACE_VIEWS.includes(requestedView as DashboardWorkspaceView)
@@ -452,7 +461,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
   const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
   const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
-  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; projectDataAvailable?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
+  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
     loading: true, projects: null, tasks: null, timeLogs: null, invoices: null, expenses: null
   });
@@ -468,10 +477,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         }
         const projectDataAvailable = Array.isArray(response.data?.projects);
         const projects = projectDataAvailable ? response.data.projects : [];
+        const recentActivityDataAvailable = Array.isArray(response.data?.recentActivity);
         setDashboardOverview({
           metrics: response.data?.metrics,
           financials: response.data?.financials,
           projects,
+          recentActivity: recentActivityDataAvailable ? response.data.recentActivity as DashboardRecentActivity[] : [],
+          recentActivityDataAvailable,
           projectDataAvailable,
           source: projectDataAvailable || Boolean(response.data?.metrics) ? 'server' : 'ab',
           loading: false
@@ -1106,6 +1118,73 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </div>
 
 
+
+        {canViewAuditLogs && (
+          <section data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
+            <AdminPanel
+              title="Recent activity"
+              description="Latest server-recorded audit events available to your role."
+              bodyClassName="p-0"
+              actions={(
+                <Link to="/admin/settings?tab=audit" className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-accent-text">
+                  View audit log <ArrowUpRight size={13} aria-hidden="true" />
+                </Link>
+              )}
+            >
+              {!dashboardOverview.recentActivityDataAvailable ? (
+                <div className="flex min-h-[130px] flex-col items-center justify-center px-5 py-8 text-center" role="status">
+                  <Clock3 size={19} className="text-muted" aria-hidden="true" />
+                  <p className="mt-3 text-xs font-semibold text-fg">{dashboardOverview.loading ? 'Loading recent activity' : 'Recent activity unavailable'}</p>
+                  <p className="mt-1 max-w-md text-[11px] leading-5 text-muted">
+                    {dashboardOverview.loading
+                      ? 'Waiting for the dashboard service to return recent audit events.'
+                      : 'The dashboard service did not return a usable recent-activity list.'}
+                  </p>
+                </div>
+              ) : (dashboardOverview.recentActivity || []).length === 0 ? (
+                <div className="flex min-h-[130px] flex-col items-center justify-center px-5 py-8 text-center" role="status">
+                  <Clock3 size={19} className="text-muted" aria-hidden="true" />
+                  <p className="mt-3 text-xs font-semibold text-fg">No recent activity available</p>
+                  <p className="mt-1 max-w-md text-[11px] leading-5 text-muted">The activity source returned no audit events for this account.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-line">
+                  {dashboardOverview.recentActivity.slice(0, 5).map((activity, index) => {
+                    const severity = String(activity.severity || 'info').toLowerCase();
+                    const severityClasses = severity === 'critical'
+                      ? 'border-danger/20 bg-danger/10 text-danger'
+                      : severity === 'warning'
+                        ? 'border-warning/20 bg-warning/10 text-warning'
+                        : 'border-line bg-bg text-muted';
+                    const severityLabel = severity === 'critical' ? 'Critical' : severity === 'warning' ? 'Warning' : 'Info';
+                    const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
+                    const timestampLabel = timestamp && !Number.isNaN(timestamp.getTime())
+                      ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(timestamp) + ' UTC'
+                      : 'Time not recorded';
+                    return (
+                      <article key={String(activity.id || activity.timestamp || index)} className="flex min-w-0 flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                            <Clock3 size={14} aria-hidden="true" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="break-words text-xs font-medium text-fg">{activity.action || 'Recorded audit event'}</p>
+                            <p className="mt-1 break-words text-[11px] leading-5 text-muted">
+                              {activity.actor ? 'By ' + activity.actor : 'By system'} · {timestampLabel}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={'ml-11 inline-flex w-fit shrink-0 items-center rounded-badge border px-2 py-1 text-[10px] font-medium sm:ml-0 ' + severityClasses}>
+                          {severityLabel}
+                        </span>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </AdminPanel>
+          </section>
+        )}
 
         </>
       ) : view === 'performance' ? (

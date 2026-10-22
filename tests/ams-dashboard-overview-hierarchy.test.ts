@@ -28,6 +28,8 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   assert.ok(projectsStart > chartStart, 'The active project register should follow the analysis row');
   assert.ok(capacityStart > projectsStart, 'Team capacity should remain alongside the primary project workspace');
   assert.ok(supportMetricsStart > capacityStart, 'Secondary indicators should remain below primary work areas');
+  const recentActivityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  assert.ok(recentActivityStart > supportMetricsStart, 'Recent activity should follow the main summaries and supporting metrics.');
 
   const overviewMetrics = overview.slice(metricStart, actionsStart);
   assert.ok(overviewMetrics.includes('className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"'), 'Dashboard KPI columns must change only at canonical design-system breakpoints.');
@@ -168,4 +170,27 @@ test('Dashboard Overview prioritizes source-backed exceptions before KPIs withou
   assert.match(metricArea, /id: 'outstanding'/);
   assert.match(metricArea, /id: 'utilization'/);
   assert.doesNotMatch(metricArea, /id: 'tasks-due'|id: 'overdue'/);
+});
+
+test('Dashboard Overview displays canonical recent audit activity only for permitted roles', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+
+  assert.ok(activity >= 0, 'Overview needs a source-backed recent activity surface.');
+  assert.match(dashboard, /hasAdminPermission\('canViewSecurityAuditLogs'\)/);
+  assert.match(dashboard, /recentActivityDataAvailable: Array\.isArray\(response\.data\?\.recentActivity\)/);
+  assert.match(dashboard, /recentActivity: recentActivityDataAvailable \? response\.data\.recentActivity as DashboardRecentActivity\[\] : \[\]/);
+  assert.ok(overview.includes('{canViewAuditLogs && ('), 'Audit events must remain hidden from roles without audit-log permission.');
+  assert.ok(overview.includes('No recent activity available'));
+  assert.ok(overview.includes('Recent activity unavailable'));
+  assert.ok(overview.includes('/admin/settings?tab=audit'));
+  const panel = overview.slice(activity);
+  assert.match(panel, /activity\.action/);
+  assert.match(panel, /activity\.actor/);
+  assert.match(panel, /activity\.timestamp/);
+  assert.doesNotMatch(panel, /activity\.(?:ip|userAgent|details|hash|prevHash|metadata)/,
+    'Dashboard must not expose IPs, free-form audit details or chain metadata in the summary feed.');
 });
