@@ -891,3 +891,12 @@ Tests: tests/projects-module-regression.test.ts verifies explicit selection, una
 **Source:** `src/pages/admin/AdminCmsProjects.tsx`. Added Published/Drafts scope alongside the existing search and pillar controls, and included it in pagination resets and Reset action behavior. The empty-state copy names publication scope. The existing normalizer's legacy rule is preserved: `isPublished !== false` means Published, while only explicit false means Draft. New records still begin as drafts. No backend/public route or mutation behavior changed.
 
 **Tests and evidence:** `tests/ams-nine-module-workspace-regression.test.ts` verifies filter/register order, legacy semantics, all-filter reset and empty-state guidance. Exact-SHA AMS Quality Gate [39810998385](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810998385) and AMS CI [39810997918](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39810997918) passed for `4d975a0a1da92df5e2871fdc38a71eeb0ac2775d`. Stage 5 authenticated browser and actual public `/work` visibility checks remain **NOT VERIFIED**.
+
+
+### VIEW-CMS-INSIGHTS: Reset all editorial filters from the canonical register
+
+**Source:** `src/pages/admin/AdminCmsInsights.tsx`. The existing filter bar already supports search, language, editorial status, category, author and featured state using server-backed query parameters. Added a localized Reset filters action that clears all six filters and returns pagination to page one. The action is disabled only when all filters are neutral and remains within the existing filter bar before transient status feedback and the register.
+
+**Preserved contracts:** no API/source, CMS status, translation, author/category taxonomy, block editor, content record, permission or public route changes. The reset acts only on list query state; request sequence guards and server-paginated totals continue unchanged. Success feedback still distinguishes saved CMS state from public-page visibility.
+
+**Tests and evidence:** `tests/ams-nine-module-workspace-regression.test.ts` checks hierarchy, all filter resets, neutral disabled state, and unchanged API use. AMS Quality Gate [39811959165](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39811959165) and AMS CI [39811959406](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39811959406) passed on `c0abd3a211e293d9e359c40b29eec12cc851f420`. Stage 5 direct-route, actual public-output, responsive and keyboard evidence remains **NOT VERIFIED**.

@@ -1648,3 +1648,22 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Browser evidence:** NOT CAPTURED. Stage 5 must verify filter/pillar interactions, save/preview, media, actual public `/work` output, permission role, keyboard/focus and responsive layout.
 - **Requirement status:** PARTIALLY COMPLETE pending Stage 5 and actual public visibility verification.
 - **Next action:** proceed to Website CMS → Insights, checking the current register/filters/editor against the content-state specification before choosing another source-backed structural change.
+
+
+## Stage 4 structural slice — Website CMS · Insights · Full editorial filter reset · 22 October 2026
+
+### View structure contract
+
+- **Requirement:** `VIEW-CMS-INSIGHTS`; workspace: Website CMS → Insights.
+- **Primary task:** find editorial content by search, language, status, category, author and featured state; edit the same canonical article and distinguish saved CMS status from independently verified public visibility.
+- **Current source:** `src/pages/admin/AdminCmsInsights.tsx`; the paginated register continues to query `api.cms.getInsights()` with the existing source-backed filter parameters.
+- **Before:** header/Create action → search and five source-backed controls → status notice → result count and register/editorial preview. The filters were present but there was no one-step reset for combined search/language/status/category/author/featured scope.
+- **Structural mismatch:** editors had to reset several dropdowns individually and clear search separately to return to the complete editorial queue.
+- **After:** header/Create action → search and existing source-backed filters → localized Reset filters action → status notice → result count and canonical register. Reset clears all six filter dimensions and returns pagination to page one. It is disabled only when all dimensions are already neutral.
+- **Data and workflow preserved:** request sequencing guards, server pagination, canonical taxonomy/author options, article CRUD, language variants, content block ordering, preview/edit and saved-publication feedback are unchanged. Reset clears frontend filter state only; it does not modify editorial records or publication state.
+- **Regression:** `tests/ams-nine-module-workspace-regression.test.ts` verifies filter-before-register order, the reset control's position relative to notices/register, clearing all filter fields, neutral disabled state, and continued use of the existing Insights API.
+- **Changed paths:** `src/pages/admin/AdminCmsInsights.tsx` and `tests/ams-nine-module-workspace-regression.test.ts` in [c0abd3a2](https://github.com/Kapitech-Agency/kapitech-ams/commit/c0abd3a211e293d9e359c40b29eec12cc851f420).
+- **Exact-SHA verification:** AMS Quality Gate [39811959165 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39811959165) and AMS CI [39811959406 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39811959406) on `c0abd3a211e293d9e359c40b29eec12cc851f420`. Typecheck, regression tests, production build, migrations, security tests, PostgreSQL integration, dependency audit and production HTTP smoke test passed.
+- **Browser evidence:** NOT CAPTURED. Stage 5 still needs authorized direct-route/translation checks, actual public `/insights` rendering/media, publishing failure/recovery, responsive layout and keyboard/focus review.
+- **Requirement status:** PARTIALLY COMPLETE. The reset control and filter/register hierarchy are source/test verified. Actual public output and Stage 5 review remain open.
+- **Next action:** continue to Website CMS → Testimonials and inspect the current search/publication-state control composition against the same canonical register requirements.
