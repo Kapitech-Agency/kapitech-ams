@@ -166,7 +166,7 @@ const buildFinancialTrend = (range: RangeKey, invoices: any[], expenses: any[]) 
       if (!day || day < spec.start || day >= spec.end) return sum;
       return sum + (Number(expense.amount || 0) || 0);
     }, 0);
-    return { label: spec.label, primary: invoiced, secondary: recordedExpenses, tertiary: invoiced - recordedExpenses };
+    return { label: spec.label, startDate: spec.start, endDate: spec.end, primary: invoiced, secondary: recordedExpenses, tertiary: invoiced - recordedExpenses };
   });
 };
 
@@ -392,21 +392,26 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
   );
 };
 
+type DashboardAnalyticsReport = 'financial-movement' | 'receivables' | 'project-status';
+
+const DASHBOARD_ANALYTICS_REPORT_OPTIONS: Array<{ value: DashboardAnalyticsReport; label: string }> = [
+  { value: 'financial-movement', label: 'Financial movement' },
+  { value: 'receivables', label: 'Receivables' },
+  { value: 'project-status', label: 'Project status' },
+];
+
 const AnalyticsView: React.FC<{
   snapshot: DashboardOperationalSnapshot;
   range: RangeKey;
   onRangeChange: (range: RangeKey) => void;
 }> = ({ snapshot, range, onRangeChange }) => {
+  const [report, setReport] = useState<DashboardAnalyticsReport>('financial-movement');
   const currency = 'IDR';
   const invoiceRows = snapshot.invoices || [];
   const expenseRows = snapshot.expenses || [];
   const trend = snapshot.invoices !== null && snapshot.expenses !== null
     ? buildFinancialTrend(range, invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency), expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency))
     : [];
-  const validInvoices = invoiceRows.filter((invoice) => String(invoice.currency || 'IDR').toUpperCase() === currency && !['draft', 'cancelled', 'voided'].includes(String(invoice.status || '').toLowerCase()));
-  const validExpenses = expenseRows.filter((expense) => String(expense.currency || 'IDR').toUpperCase() === currency);
-  const totalInvoiced = validInvoices.reduce((sum, invoice) => sum + (Number(invoice.total ?? invoice.amount ?? 0) || 0), 0);
-  const recordedExpenses = validExpenses.reduce((sum, expense) => sum + (Number(expense.amount || 0) || 0), 0);
   const receivables = invoiceRows.filter((invoice) => String(invoice.currency || 'IDR').toUpperCase() === currency).reduce((sum, invoice) => {
     const status = String(invoice.status || '').toLowerCase();
     if (status === 'paid' || status === 'cancelled' || status === 'voided' || status === 'draft') return sum;
@@ -414,45 +419,256 @@ const AnalyticsView: React.FC<{
     const balance = Number(invoice.balanceDue ?? Math.max(0, Number(invoice.total || invoice.amount || 0) - paid));
     return sum + Math.max(0, Number.isFinite(balance) ? balance : 0);
   }, 0);
-  const activeProjects = snapshot.projects?.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health)).length;
+  const openInvoiceCount = invoiceRows.filter((invoice) => {
+    if (String(invoice.currency || 'IDR').toUpperCase() !== currency) return false;
+    const status = String(invoice.status || '').toLowerCase();
+    return status !== 'paid' && status !== 'cancelled' && status !== 'voided' && status !== 'draft';
+  }).length;
+  const activeProjects = snapshot.projects === null
+    ? null
+    : snapshot.projects.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health)).length;
+  const projectStatusGroups = snapshot.projects === null ? [] : snapshot.projects.reduce((groups: Array<{ status: string; count: number }>, project: any) => {
+    const status = String(project.status || project.health || 'Not set');
+    const existing = groups.find((item) => item.status === status);
+    if (existing) existing.count += 1;
+    else groups.push({ status, count: 1 });
+    return groups;
+  }, []).sort((a, b) => b.count - a.count);
+  const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
+  const financialRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0;
+  const selectedRangeLabel = DASHBOARD_TREND_RANGES.find((option) => option.value === range)?.label || 'Selected period';
+  const formatReportDate = (value: string) => {
+    const date = new Date(value + 'T00:00:00');
+    return Number.isFinite(date.getTime())
+      ? date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+      : value;
+  };
+  const inclusiveEndDate = (endExclusive: string) => {
+    const date = new Date(endExclusive + 'T00:00:00');
+    if (!Number.isFinite(date.getTime())) return endExclusive;
+    date.setDate(date.getDate() - 1);
+    return localDateKey(date);
+  };
+  const selectedPeriodDescription = trend.length
+    ? formatReportDate(trend[0].startDate) + ' – ' + formatReportDate(inclusiveEndDate(trend[trend.length - 1].endDate))
+    : 'Period unavailable';
+  const periodInvoicedTotal = trend.reduce((sum, point) => sum + point.primary, 0);
+  const periodExpenseTotal = trend.reduce((sum, point) => sum + (point.secondary ?? 0), 0);
+  const periodDifferenceTotal = trend.reduce((sum, point) => sum + (point.tertiary ?? 0), 0);
 
   if (snapshot.loading) return <DashboardUnavailable title="Loading analytics" description="Invoice, expense, and portfolio records are being loaded from AMS." />;
-  const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
+
   return (
-    <div className="space-y-4">
-
-
-      <section className="grid gap-3 min-[1100px]:grid-cols-12" data-ams-feature-slug="dashboard-analytics-primary">
-      <AdminPanel className="min-[1100px]:col-span-8" title="Invoice and expense trend" description="Invoice totals are grouped by issue date; expenses are grouped by recorded date. Their difference is not a posted profit figure." actions={<DashboardTrendRangePicker range={range} onChange={onRangeChange} />} bodyClassName="p-4 sm:p-5">
-        {trend.length >= 2 ? (
-          <TrendChart data={trend} primaryLabel="Invoices issued" secondaryLabel="Recorded expenses" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, currency)} ariaLabel="Issued invoices and recorded expenses by period." />
-        ) : (
-          <DashboardUnavailable title="Financial trend unavailable" description="The selected sources did not return a usable period series. Values are not estimated." />
-        )}
-      </AdminPanel>
-
-      <AdminPanel className="min-[1100px]:col-span-4" title="Project status" description="Current project status values from the project register." bodyClassName="p-4 sm:p-5">
-        {snapshot.projects === null ? <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." /> : (
-          <div className="space-y-3">
-            {(snapshot.projects || []).reduce((groups: Array<{ status: string; count: number }>, project: any) => {
-              const status = String(project.status || project.health || 'Not set');
-              const existing = groups.find((item) => item.status === status);
-              if (existing) existing.count += 1; else groups.push({ status, count: 1 });
-              return groups;
-            }, []).sort((a, b) => b.count - a.count).map((group) => <div key={group.status} className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg px-3 py-2.5"><span className="text-xs text-fg">{group.status}</span><span className="text-xs font-semibold tabular-nums text-fg">{group.count}</span></div>)}
+    <div className="space-y-4" data-ams-feature-slug="dashboard-analytics-workspace">
+      <section
+        className="rounded-card border border-line bg-panel p-4 sm:p-5"
+        data-ams-feature-slug="dashboard-analytics-controls"
+        aria-label="Analytics report controls"
+      >
+        <div className="flex flex-col gap-4 min-[900px]:flex-row min-[900px]:items-end min-[900px]:justify-between">
+          <div className="min-w-0 space-y-2">
+            <p className="text-xs font-medium text-muted">Report</p>
+            <div role="group" aria-label="Analytics report" className="flex min-w-0 flex-wrap gap-2">
+              {DASHBOARD_ANALYTICS_REPORT_OPTIONS.map((option) => {
+                const active = report === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setReport(option.value)}
+                    className={[
+                      'inline-flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                      active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg',
+                    ].join(' ')}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        )}
-      </AdminPanel>
+          {report === 'financial-movement' ? (
+            <div className="min-w-0 space-y-2">
+              <p className="text-xs font-medium text-muted">Reporting period</p>
+              <DashboardTrendRangePicker range={range} onChange={onRangeChange} />
+            </div>
+          ) : (
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted">Scope</p>
+              <p className="mt-1 text-xs text-fg">{report === 'receivables' ? 'Current invoice balances' : 'Current project register'}</p>
+            </div>
+          )}
+        </div>
+        <p className="mt-3 text-xs leading-5 text-muted">
+          The reporting period applies to financial movement only. Receivables and project status are current snapshots.
+        </p>
       </section>
 
-      <section data-ams-feature-slug="dashboard-analytics-supporting-metrics" aria-label="Analytics summary metrics">
-        <AdminMetricStrip slug="dashboard-analytics-kpis" metrics={[
-        { id: 'analytics-invoiced', label: 'Invoices issued', value: financialDataAvailable ? formatLiveMoney(totalInvoiced, currency) : '—', icon: <FileText size={15} />, context: financialDataAvailable ? 'Issued invoices · IDR' : 'Live source unavailable' },
-        { id: 'analytics-expenses', label: 'Recorded expenses', value: financialDataAvailable ? formatLiveMoney(recordedExpenses, currency) : '—', icon: <CircleDollarSign size={15} />, context: financialDataAvailable ? 'Expense records · IDR' : 'Live source unavailable' },
-        { id: 'analytics-receivables', label: 'Outstanding receivables', value: snapshot.invoices !== null ? formatLiveMoney(receivables, currency) : '—', icon: <ReceiptText size={15} />, context: snapshot.invoices !== null ? 'Open, non-draft invoices · IDR' : 'Live source unavailable' },
-        { id: 'analytics-projects', label: 'Active projects', value: snapshot.projects !== null ? String(activeProjects || 0) : '—', icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : 'Live source unavailable' }
-        ]} />
-      </section>
+      {report === 'financial-movement' ? (
+        <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-financial-report" aria-label="Financial movement report">
+          <AdminPanel
+            title="Issued invoices vs recorded expenses"
+            description="Compare invoice values by issue date with expenses by recorded date. The difference is an arithmetic comparison, not posted profit."
+            actions={(
+              <Link to="/admin/finance?tab=chart-of-accounts" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
+                Open Transactions & Cash <ArrowUpRight size={13} />
+              </Link>
+            )}
+            bodyClassName="p-4 sm:p-5"
+          >
+            <div className="mb-4 flex flex-col gap-2 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-medium text-fg">{selectedRangeLabel}</p>
+                <p className="mt-1 text-xs text-muted">{selectedPeriodDescription}</p>
+              </div>
+              <p className="text-xs text-muted">Source: AMS invoice and expense records · Currency: IDR</p>
+            </div>
+
+            {!financialDataAvailable ? (
+              <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
+            ) : !financialRecordsReturned ? (
+              <DashboardUnavailable title="No financial records returned" description="The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source." />
+            ) : trend.length < 2 ? (
+              <DashboardUnavailable title="Financial trend unavailable" description="The selected sources did not return a usable period series. Values are not estimated." />
+            ) : (
+              <>
+                <TrendChart
+                  data={trend}
+                  primaryLabel="Invoices issued"
+                  secondaryLabel="Recorded expenses"
+                  tertiaryLabel="Difference"
+                  primaryFormat={(value) => formatLiveMoney(value, currency)}
+                  ariaLabel="Issued invoice values and recorded expenses by period. Exact values are listed in the table below."
+                />
+                <div className="mt-5 space-y-2" data-ams-feature-slug="dashboard-analytics-exact-values">
+                  <div>
+                    <h3 className="text-sm font-semibold text-fg">Exact period values</h3>
+                    <p className="mt-1 text-xs text-muted">The table provides the values and date ranges behind the chart.</p>
+                  </div>
+                  <div className="overflow-x-auto rounded-control border border-line" role="region" aria-label="Exact invoice and expense values by period" tabIndex={0}>
+                    <table className="w-full min-w-[680px] border-collapse text-left text-xs" aria-label="Exact invoice and expense values by period">
+                      <thead className="bg-bg text-muted">
+                        <tr className="border-b border-line">
+                          <th className="px-3 py-2.5 font-medium" scope="col">Period</th>
+                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Invoices issued · IDR</th>
+                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Expenses recorded · IDR</th>
+                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Difference · not profit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trend.map((point) => {
+                          const endDate = inclusiveEndDate(point.endDate);
+                          return (
+                            <tr key={point.startDate + '-' + point.endDate} className="border-b border-line last:border-0">
+                              <th className="px-3 py-3 font-medium text-fg" scope="row">
+                                <span className="block">{point.label}</span>
+                                <span className="mt-1 block text-[11px] font-normal text-muted">{formatReportDate(point.startDate)} – {formatReportDate(endDate)}</span>
+                              </th>
+                              <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.primary, currency)}</td>
+                              <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.secondary ?? 0, currency)}</td>
+                              <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.tertiary ?? 0, currency)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot className="bg-bg">
+                        <tr className="border-t border-line">
+                          <th className="px-3 py-3 font-semibold text-fg" scope="row">Selected period total</th>
+                          <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodInvoicedTotal, currency)}</td>
+                          <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodExpenseTotal, currency)}</td>
+                          <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodDifferenceTotal, currency)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+                <p className="mt-4 text-xs leading-5 text-muted">
+                  Invoice buckets use issue date. Expense buckets use recorded date. The difference is not revenue recognition, cash flow, or posted profit.
+                </p>
+              </>
+            )}
+          </AdminPanel>
+        </section>
+      ) : report === 'receivables' ? (
+        <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-receivables-report" aria-label="Receivables report">
+          <AdminPanel
+            title="Outstanding receivables"
+            description="Current open invoice balances. This is a balance snapshot, not an amount issued or cash collected."
+            actions={(
+              <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
+                Open Accounts Receivable <ArrowUpRight size={13} />
+              </Link>
+            )}
+            bodyClassName="p-4 sm:p-5"
+          >
+            {snapshot.invoices === null ? (
+              <DashboardUnavailable title="Receivables unavailable" description="The invoice source did not return data for the current role." />
+            ) : invoiceRows.length === 0 ? (
+              <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
+                <p className="text-xs font-medium text-fg">No invoice records returned</p>
+                <p className="mt-1 text-xs text-muted">An empty source is not represented as a confirmed zero balance.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-control border border-line bg-bg p-4">
+                  <p className="text-xs text-muted">Open invoice balance · IDR</p>
+                  <p className="mt-2 text-2xl font-semibold tabular-nums text-fg">{formatLiveMoney(receivables, currency)}</p>
+                  <p className="mt-1 text-xs text-muted">{openInvoiceCount} open invoice records</p>
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-xs font-medium text-fg">Definition and source</h3>
+                  <p className="text-xs leading-5 text-muted">
+                    Source: current AMS invoice records. The balance excludes paid, draft, cancelled, and voided statuses, and uses available balance fields with the existing invoice amount and paid amount fallback. This current snapshot is not filtered by the selected financial trend period.
+                  </p>
+                </div>
+              </div>
+            )}
+          </AdminPanel>
+        </section>
+      ) : (
+        <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-project-status-report" aria-label="Project status report">
+          <AdminPanel
+            title="Project status"
+            description="Current status distribution from the canonical project register."
+            actions={(
+              <Link to="/admin/projects" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
+                Open Projects <ArrowUpRight size={13} />
+              </Link>
+            )}
+            bodyClassName="p-4 sm:p-5"
+          >
+            {snapshot.projects === null ? (
+              <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." />
+            ) : snapshot.projects.length === 0 ? (
+              <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
+                <p className="text-xs font-medium text-fg">No project records returned</p>
+                <p className="mt-1 text-xs text-muted">The current source contains no project rows to group by status.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-control border border-line bg-bg p-4">
+                  <p className="text-xs text-muted">Active projects</p>
+                  <p className="mt-2 text-2xl font-semibold tabular-nums text-fg">{activeProjects}</p>
+                  <p className="mt-1 text-xs text-muted">Current portfolio snapshot</p>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xs font-medium text-fg">Projects by current status</h3>
+                  {projectStatusGroups.map((group) => (
+                    <div key={group.status} className="flex items-center justify-between gap-3 border-b border-line py-3 last:border-0">
+                      <span className="text-xs text-fg">{group.status}</span>
+                      <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{group.count}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs leading-5 text-muted">
+                  Source: current project records. Status counts are current-state groupings, not trends for the selected financial period. Records without a status use the existing health field, then “Not set”.
+                </p>
+              </div>
+            )}
+          </AdminPanel>
+        </section>
+      )}
     </div>
   );
 };
@@ -702,7 +918,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           ? 'Monitor agency delivery, financial movement, team capacity, and operational exceptions.'
           : view === 'performance'
             ? 'Track project delivery, task completion, overdue work, and recorded team time.'
-            : 'Review invoice and expense trends, outstanding receivables, and project status for the selected period.'}
+            : 'Choose a report to inspect financial movement, outstanding receivables, or current project status.'}
         actions={(
           <>
 

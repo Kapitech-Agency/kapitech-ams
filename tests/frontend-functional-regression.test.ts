@@ -249,8 +249,15 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />'));
   assert.ok(dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} onRangeChange={setRange} />'));
   const analyticsView = dashboard.slice(dashboard.indexOf('const AnalyticsView:'), dashboard.indexOf('export const GlobalExecutiveDashboard'));
-  assert.ok(analyticsView.includes('min-[1100px]:grid-cols-12'), 'Analytics should balance the trend chart with its supporting project-status panel on wide screens.');
-  assert.ok(analyticsView.includes('min-[1100px]:col-span-8') && analyticsView.includes('min-[1100px]:col-span-4'));
+  assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-controls"'), 'Analytics report selection and scope controls must precede report content.');
+  assert.ok(analyticsView.includes('aria-label="Analytics report"'), 'Analytics must expose accessible report selection controls.');
+  assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-financial-report"'));
+  assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-receivables-report"'));
+  assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-project-status-report"'));
+  assert.ok(analyticsView.includes('aria-label="Exact invoice and expense values by period"'), 'The chart must have an exact-value table alternative.');
+  assert.doesNotMatch(analyticsView, /dashboard-analytics-kpis/, 'Mixed-scope KPI cards must not trail unrelated reports.');
+  assert.ok(analyticsView.indexOf('dashboard-analytics-controls') < analyticsView.indexOf('dashboard-analytics-financial-report'));
+  assert.ok(analyticsView.includes('Open Transactions & Cash') && analyticsView.includes('Open Accounts Receivable') && analyticsView.includes('Open Projects'), 'Each report must drill down to its owning module.');
   assert.doesNotMatch(dashboard, /Preview data only|sampleProjects|sampleTeam|sampleRevenueByRange|isSlugFixtureMode|fixtureMode/);
   assert.ok(dashboard.includes('Live data unavailable'));
   assert.ok(dashboard.includes('buildFinancialTrend(range, invoices, expenses)'));

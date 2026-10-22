@@ -526,7 +526,7 @@ test('Dashboard header context follows the selected Overview, Performance, or An
   assert.match(dashboard, /eyebrow=\{view === 'overview' \? 'Overview' : view === 'performance' \? 'Performance' : 'Analytics'\}/);
   assert.match(dashboard, /Monitor agency delivery, financial movement, team capacity, and operational exceptions/);
   assert.match(dashboard, /Track project delivery, task completion, overdue work, and recorded team time/);
-  assert.match(dashboard, /Review invoice and expense trends, outstanding receivables, and project status for the selected period/);
+  assert.match(dashboard, /Choose a report to inspect financial movement, outstanding receivables, or current project status/);
 });
 
 

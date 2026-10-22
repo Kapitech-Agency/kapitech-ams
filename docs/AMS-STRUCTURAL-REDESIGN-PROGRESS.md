@@ -1811,3 +1811,21 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Requirement status:** PARTIALLY COMPLETE. Source/test/CI evidence confirms risk signal coverage and ordering; live-data and browser/accessibility acceptance remain open.
 - **Next:** Dashboard → Analytics. Audit the source of each report/metric and period, unit and drill-down contract before altering any chart.
 
+
+
+### Dashboard Analytics structural slice · Stage 4 · 23 October 2026
+
+**View contract**
+
+- Requirement: `VIEW-DASH-ANALYTICS`; route/workspace: existing Dashboard `/admin/dashboard?view=analytics`; source: `src/components/admin/GlobalExecutiveDashboard.tsx`.
+- Primary user task: answer a specific agency analysis question and follow it into the canonical source module.
+- **Before:** one mixed view placed the invoice/expense trend beside project status, then appended an unscoped KPI strip for total invoices, recorded expenses, receivables and active projects. The period selector lived only in the financial chart header, so the page did not make clear which values were period-based versus current balances/status.
+- **After target:** report selector → relevant scope controls → one focused report → exact values/definitions/source period → owning-module drill-down. Reports are Financial movement, Receivables, and Project status.
+- Primary surface: financial trend plus exact-value table; receivables balance snapshot; current project-status distribution. The report selector is local UI state only and does not add a route, record, data store, or permission.
+- Canonical sources and preserved semantics: existing dashboard invoice, expense and project snapshot only. Invoice buckets use the existing issue-date fallback; expense buckets use the existing recorded-date fallback. Receivables keep the existing invoice balance/paid-amount fallback and excluded statuses. Project grouping keeps the existing status → health → “Not set” fallback. Financial values remain IDR, and invoice/expense difference is not posted profit.
+- Actions: Finance Transactions & Cash, Finance Accounts Receivable, and Projects deep links use current AMS destinations. No financial formula, endpoint, API contract, permission, workflow or persistence change.
+- States: loading; source unavailable; empty invoice/expense sources (no plotted synthetic-zero trend); empty invoice/project sources; populated and selected-report state. Filtered-empty/stale/pending are not fabricated where no corresponding filter/action exists.
+- Responsive/accessibility target: scope controls wrap at narrow widths; the exact-value table provides a non-chart way to inspect values inside contained horizontal scrolling; report buttons expose pressed state and keyboard focus. Authenticated browser, touch, keyboard and viewport evidence remain unverified for Stage 5.
+- External reference decision: no external template layout copied. Existing AMS panels, tokens, trend chart and routes are reused; report-first ordering follows the canonical §4.10 contract.
+- Regression: update the existing workspace/header source assertions and add `tests/ams-dashboard-analytics-structure.test.ts` for report hierarchy, exact period values, source definitions, empty/unavailable states and drill-downs.
+- Structural scope: replaces the mixed side-by-side dashboard composition and trailing mixed-scope metric strip with a single-report work surface. CI evidence is pending until the resulting source/test SHA completes its workflows.
