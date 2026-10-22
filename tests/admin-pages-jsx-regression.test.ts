@@ -962,9 +962,9 @@ test('Client directory adapts its primary register for narrow screens without lo
   assert.ok(clients.includes('data-ams-slug="clients-directory-cards"') || clients.includes("statusScope === 'lead' ? 'clients-onboarding-cards' : 'clients-directory-cards'"),
     'The shared register keeps a mobile card surface with a distinct scope label for onboarding.');
   assert.ok(clients.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
-  assert.ok(clients.includes('min-w-[980px]'));
+  assert.ok(clients.includes('min-w-[1100px]'), 'The desktop directory reserves enough width for the canonical identity and service-context columns.');
   assert.ok(!clients.includes('min-w-[1240px]'));
-  assert.ok(clients.includes('colSpan={7}'));
+  assert.ok(clients.includes("colSpan={statusScope === 'lead' ? 7 : 8}"), 'Empty state must span the active onboarding or directory column count.');
   assert.ok(clients.includes('Primary contact'));
   assert.ok(clients.includes('getClientStatusTone(client.status)'));
   assert.ok(clients.includes('getClientTierLabel(client)'));
