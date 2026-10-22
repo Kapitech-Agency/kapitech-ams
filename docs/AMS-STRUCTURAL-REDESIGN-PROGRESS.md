@@ -1856,3 +1856,15 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Exact-SHA AMS Quality Gate [39842788314 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39842788314); AMS CI [39842788268 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39842788268). Typecheck, regression tests, production build, security regression, PostgreSQL integration, dependency audit, migration package validation and production HTTP smoke passed.
 - Browser visual/role verification is **NOT VERIFIED**; responsive behavior, owner/channel result parity, query/history interaction and keyboard/touch remain Stage 5 work.
 - Next canonical implementable Stage 4 slice: Projects → Planning & Delivery. Inbox Follow-ups and Routing/Templates remain blocked until canonical models/workflows exist. Stage 5 sign-off remains mandatory before broad Stage 6+ implementation.
+
+## Clients Directory desktop identity and service-context correction · Stage 4 · 23 October 2026
+
+Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github.com/Kapitech-Agency/kapitech-ams/commit/efa9d4adb8da82a603b1250ab32847e8bbae5277). UI source commit: [69dd56c385d1a71c62820b1f823844af16f1362f](https://github.com/Kapitech-Agency/kapitech-ams/commit/69dd56c385d1a71c62820b1f823844af16f1362f).
+
+- Before: the desktop Client Directory header included Client account, but non-Lead rows began with industry. Normal rows omitted the company identity cell and had one fewer data cell than the header. Service/retainer context was visible on compact cards but omitted from the desktop table.
+- After: company identity and record ID occupy the first cell for both Lead and normal clients. Normal client rows show status followed by recorded Service / Retainer context, then billing/spend-cap fields. Loading skeletons and empty-state colspans align with the active scope column count. Expanded table minimum width from 980px to 1100px within the existing horizontal scroll container.
+- No relationship owner was invented: the canonical AgencyClient model has no relationship owner/account manager field. Primary contact remains distinct from owner.
+- Changed files: src/pages/admin/AdminClients.tsx, tests/ams-client-directory-register-structure.test.ts, tests/admin-pages-jsx-regression.test.ts.
+- Quality Gate [39844036978 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39844036978) and AMS CI [39844037103 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39844037103) on exact source/test SHA efa9d4adb8da82a603b1250ab32847e8bbae5277. Typecheck, regression tests, PostgreSQL integration, security tests, dependency audit, production build, migration packaging and HTTP smoke test passed.
+- Stage 5 browser, role, keyboard, touch and viewport behavior remains NOT VERIFIED. Onboarding evidence workflows remain unavailable until their canonical models exist.
+- Next Stage 4 slice: Finance → Overview & Control. Stage 5 and explicit user sign-off remain mandatory before broad Stage 6+ work.

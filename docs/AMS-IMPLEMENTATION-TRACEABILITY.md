@@ -1021,3 +1021,15 @@ All Messages exposes owner/channel filters backed by the existing submission col
 **Changed files:** `src/pages/admin/AdminInbox.tsx`, `tests/ams-inbox-messages-workspace.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`.
 
 Exact-SHA AMS Quality Gate [39842788314 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39842788314) and AMS CI [39842788268 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39842788268). **Authenticated browser, responsive, keyboard/touch and visual state: NOT VERIFIED.** No due/SLA, project relation or message-history fields were fabricated. Next implementable Stage 4 slice is Projects → Planning & Delivery; Inbox Follow-ups and Routing/Templates remain blocked by missing canonical model/workflow contracts.
+
+### VIEW-CLIENTS-DIRECTORY: Restore the desktop identity cell and promote recorded service context
+
+Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github.com/Kapitech-Agency/kapitech-ams/commit/efa9d4adb8da82a603b1250ab32847e8bbae5277); UI source change [69dd56c3](https://github.com/Kapitech-Agency/kapitech-ams/commit/69dd56c385d1a71c62820b1f823844af16f1362f).
+
+The desktop client table had a Client account header, yet normal client rows omitted its matching identity cell and began with industry. This misaligned row semantics and removed the client name from the primary desktop register. The fix gives each row a shared first cell for company identity and record ID. Normal client rows additionally expose recorded Service / Retainer context immediately after status. Loading rows and empty states use the correct separate column counts for Lead onboarding and normal client directory scopes; table width allows the added context without narrowing every column.
+
+No owner/account manager field exists on the canonical AgencyClient model, so the UI keeps owner unavailable instead of treating primary contact as owner. No API, backend, database, permission or business workflow changes.
+
+Tests: tests/ams-client-directory-register-structure.test.ts and tests/admin-pages-jsx-regression.test.ts.
+
+Exact-SHA Quality Gate [39844036978 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39844036978) and CI [39844037103 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39844037103). Authenticated visual/role/accessibility status: NOT VERIFIED. Next Stage 4 slice: Finance → Overview & Control.
