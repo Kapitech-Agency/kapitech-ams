@@ -1010,3 +1010,14 @@ The default Needs action queue previously filtered only `status === 'new'`, hidi
 Files: `src/pages/admin/AdminInbox.tsx`, `src/lib/inboxTriage.ts`, `tests/ams-inbox-triage.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`.
 
 Exact-SHA AMS Quality Gate [39841510406 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39841510406) and AMS CI [39841510154 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39841510154). **Authenticated browser/visual/accessibility state: NOT VERIFIED.** The inspected inbound record contract has no real due-date/SLA field for this workflow, so no follow-up date or reminder was fabricated. Continue Stage 4 with Inbox → Messages, then complete Stage 5 visual/responsive/accessibility review and obtain explicit user sign-off before broad Stage 6+ work.
+
+
+### VIEW-INBOX-MESSAGES: Promote source and owner context in the canonical message register
+
+**Exact source/test SHA:** [22f41ee82802390998c67472358922df73a2d103](https://github.com/Kapitech-Agency/kapitech-ams/commit/22f41ee82802390998c67472358922df73a2d103).
+
+All Messages exposes owner/channel filters backed by the existing submission collection and includes those predicates in the same filter used by the displayed queue/register. Reset clears the new selections, and changing tabs resets scoped filters consistently. Accessible Review/Table controls let users switch the same records between selected-record review and table mode. The general table surfaces sender/context, channel, source, Owner/PIC, status/priority, received time and actions. Sales Inquiries retains requested services and budget columns. The canonical type fallback, Careers exclusion, source/API, route/query state, permission rules and mutation workflow are preserved.
+
+**Changed files:** `src/pages/admin/AdminInbox.tsx`, `tests/ams-inbox-messages-workspace.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`.
+
+Exact-SHA AMS Quality Gate [39842788314 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39842788314) and AMS CI [39842788268 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39842788268). **Authenticated browser, responsive, keyboard/touch and visual state: NOT VERIFIED.** No due/SLA, project relation or message-history fields were fabricated. Next implementable Stage 4 slice is Projects → Planning & Delivery; Inbox Follow-ups and Routing/Templates remain blocked by missing canonical model/workflow contracts.

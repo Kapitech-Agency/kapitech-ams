@@ -1831,7 +1831,7 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Structural scope: replaces the mixed side-by-side dashboard composition and trailing mixed-scope metric strip with a single-report work surface. Verified source/test SHA: [d812fe60252cec1385b74d6ac88b04ef8306fe1d](https://github.com/Kapitech-Agency/kapitech-ams/commit/d812fe60252cec1385b74d6ac88b04ef8306fe1d). Exact-SHA AMS Quality Gate [39840053958 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39840053958) and AMS CI [39840053891 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39840053891).
 
 
-## Forty-second implementation slice: Inbox Overview actionable triage queue · Stage 4 · 23 October 2026
+## Inbox Overview actionable triage queue · Stage 4 · 23 October 2026
 
 **Source/test checkpoint:** [620abf26ca51336db7efd186e2ff395eeb159722](https://github.com/Kapitech-Agency/kapitech-ams/commit/620abf26ca51336db7efd186e2ff395eeb159722). Structural code change: [94c55740](https://github.com/Kapitech-Agency/kapitech-ams/commit/94c55740b8f1907624e4edb2273f9600a36ad1bd).
 
@@ -1842,3 +1842,17 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Exact-SHA AMS Quality Gate [39841510406 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39841510406); AMS CI [39841510154 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39841510154). Typecheck, regression tests, production build, security regression, PostgreSQL integration, audit, package migration checks and HTTP smoke test passed.
 - Browser visual/role verification is **NOT VERIFIED**. Authenticated live queue and scope counts, responsive behavior, keyboard/focus and touch behavior remain Stage 5 requirements.
 - Next canonical Stage 4 slice: Inbox → Messages. Stage 5 and explicit user sign-off remain mandatory before broad Stage 6+ work.
+
+
+## Inbox Messages register and filter structural slice · Stage 4 · 23 October 2026
+
+**Exact source/test SHA:** [22f41ee82802390998c67472358922df73a2d103](https://github.com/Kapitech-Agency/kapitech-ams/commit/22f41ee82802390998c67472358922df73a2d103). The first implementation commit [a9fe2348](https://github.com/Kapitech-Agency/kapitech-ams/commit/a9fe23487b1c4628ca6f6f7bf1bb6c150175ec76) was corrected for explicit owner-option typing before validation.
+
+- Before: All Messages controls exposed status and priority but omitted owner/channel filters from the canonical filter path. The general table reused Sales Inquiries columns for Requested Services and Budget, which displaced Source and Owner/PIC. Table mode also was not selectable from All Messages.
+- After: added owner and channel controls that filter the existing submission collection, reset consistently, and retain current search/status/priority/date predicates. Owner choices are derived from existing assigned-owner fields. All Messages and Unread offer accessible Review/Table mode. General message rows prioritize source and owner; Sales Inquiries keeps the commercial service/budget presentation.
+- Preserved: single canonical submissions collection, source type fallback for legacy inquiry records, current Careers exclusion from Inbox, current routes and query behavior, status/priority transitions, record identity, authorization and CMS Applicants ownership.
+- Not added: fake due/SLA dates, project relation links absent from this contract, duplicate message store, new APIs, assignment mutations, backend, auth/RBAC or business workflow changes.
+- Tests: `tests/ams-inbox-messages-workspace.test.ts` and updated `tests/ams-nine-module-workspace-regression.test.ts`.
+- Exact-SHA AMS Quality Gate [39842788314 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39842788314); AMS CI [39842788268 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39842788268). Typecheck, regression tests, production build, security regression, PostgreSQL integration, dependency audit, migration package validation and production HTTP smoke passed.
+- Browser visual/role verification is **NOT VERIFIED**; responsive behavior, owner/channel result parity, query/history interaction and keyboard/touch remain Stage 5 work.
+- Next canonical implementable Stage 4 slice: Projects → Planning & Delivery. Inbox Follow-ups and Routing/Templates remain blocked until canonical models/workflows exist. Stage 5 sign-off remains mandatory before broad Stage 6+ implementation.
