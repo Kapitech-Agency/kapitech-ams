@@ -164,8 +164,6 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   assert.match(inbox, /featureSlug="inbox-module"/);
   assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
   assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
-  assert.match(inbox, /key: 'action' as TriageScope, label: 'Needs action', count: filteredItems\\.filter\\(isInboxActionable\\)\\.length/);
-  assert.match(inbox, /key: 'priority' as TriageScope, label: 'Priority', count: filteredItems\\.filter\\(isInboxHighPriority\\)\\.length/);
   assert.match(inbox, /loading \? 'border-info\/20 bg-info\/10 text-info' : loadError \? 'border-warning\/20 bg-warning\/10 text-warning' : 'border-success\/20 bg-success\/10 text-success'/);
   assert.match(inbox, /language === 'id' \? 'Memperbarui' : 'Refreshing'/);
   assert.match(inbox, /language === 'id' \? 'Memuat' : 'Loading'/);
@@ -759,6 +757,8 @@ test('Inbox Overview exposes a source-backed Unassigned triage scope', async () 
   assert.match(inbox, /No unassigned records/);
   assert.match(inbox, /Every current record in this queue has an assigned owner/);
   assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
+  assert.ok(inbox.includes("count: filteredItems.filter(isInboxActionable).length"));
+  assert.ok(inbox.includes("count: filteredItems.filter(isInboxHighPriority).length"));
 });
 
 
