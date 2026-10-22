@@ -47,22 +47,49 @@ test('team allocation distinguishes unavailable time logs from a recorded zero',
   assert.match(source, /sourceAvailability\.timeLogs === true \? formatHours\(teamTrackedMinutes\.get\(member\.id\) \?\? 0\) : 'Unavailable'/);
 });
 
+test('Capacity Allocation prioritizes saved project allocations and separates tracked-time history', () => {
+  assert.match(source, /const allocationRegisterRows = useMemo\(/);
+  assert.match(source, /startDate > allocationWindow\.endDate \|\| endDate < allocationWindow\.startDate/);
+  assert.match(source, /String\(plan\.memberId\) === String\(member\.id\)/);
+  assert.match(source, /row\.plan\.allocationPercent \* 0\.4/);
+
+  const start = source.indexOf('data-ams-feature-slug="capacity-allocation"');
+  const end = source.indexOf(") : currentView === 'skill-matrix' ?", start);
+  assert.ok(start >= 0 && end > start, 'Capacity Allocation should have a bounded primary workspace');
+  const view = source.slice(start, end);
+  const filters = view.indexOf('slug="capacity-allocation-filters"');
+  const register = view.indexOf('slug="capacity-allocation-register"');
+  const history = view.indexOf('slug="capacity-allocation-table"');
+  assert.ok(filters >= 0 && register > filters && history > register,
+    'The allocation filters and saved project-member register must precede secondary historical time.');
+  assert.match(view, /Member: All/);
+  assert.match(view, /Project: All/);
+  assert.match(view, /Resource & role/);
+  assert.match(view, /Allocation %/);
+  assert.match(view, /Planned hours \/ week/);
+  assert.match(view, /Planned date range/);
+  assert.match(view, /40h\/week reference only/);
+  assert.match(view, /No dated resource allocations overlap the next four weeks\./);
+  assert.match(view, /No allocations match these filters\./);
+  assert.match(view, /Project allocation source unavailable\. Refresh to retry\./);
+  assert.match(view, /Loading saved project allocations\.\.\./);
+  assert.match(view, /sourceAvailability\.timeLogs === false \? '—' : 'Loading'/);
+  assert.doesNotMatch(view, /capacity-allocation-kpi-utilization|futureCapacityRows/,
+    'The historical summary strip and aggregated forecast must not replace the saved plan register.');
+});
+
 test('Team project and capacity views do not show zero or no-plan states when sources are unavailable', () => {
   assert.match(source, /sourceAvailability\.projects === true \? projectsForMember\.length : '—'/);
   assert.match(source, /'Project data unavailable'/);
   assert.match(source, /sourceAvailability\.timeLogs === true \? week\.utilization \+ '%' : 'Unavailable'/);
-  assert.match(source, /sourceAvailability\.projects === true \? \(week\.projectCount \? week\.allocationPercent \+ '%' : 'No plan'\) : 'Unavailable'/);
-  assert.match(source, /sourceAvailability\.projects === true && !futureCapacityRows\.some/);
   const directoryStart = source.indexOf('data-ams-feature-slug="team-directory"');
   const directoryEnd = source.indexOf(") : currentView === 'roles-departments' ?", directoryStart);
   assert.ok(directoryStart >= 0 && directoryEnd > directoryStart);
   const directory = source.slice(directoryStart, directoryEnd);
-  assert.match(directory, /allocation\.percent === null \? '—' : allocation\.percent \+ '% of 40h baseline'/);
+  assert.match(directory, /allocation\.percent === null \? '—'/);
   assert.doesNotMatch(directory, /team-directory-kpi-headcount/);
-  assert.match(source, /sourceAvailability\.timeLogs === false \? '—' : 'Loading'/,
-    'Historical capacity must not display a utilization percentage when time logs are unavailable.');
-  assert.match(source, /currentViewDataUnavailable \? 'Time log data unavailable' : 'No time logs found'/,
-    'The Time Logs register must distinguish a missing source from a valid empty response.');
+  assert.match(source, /sourceAvailability\.timeLogs === false \? '—' : 'Loading'/);
+  assert.match(source, /currentViewDataUnavailable \? 'Time log data unavailable' : 'No time logs found'/);
 });
 
 

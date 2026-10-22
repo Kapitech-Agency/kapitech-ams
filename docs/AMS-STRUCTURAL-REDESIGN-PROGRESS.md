@@ -1523,3 +1523,23 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Verification:** targeted regression checks and both CI workflows are required on the exact source/test SHA. Authenticated browser screenshots, keyboard and responsive validation remain Stage 5.
 - **Status:** partially complete until exact-SHA checks pass and remaining module/role/browser acceptance is reviewed.
 - **Next action:** after CI is verified, continue the next unfinished frontend structural view in canonical module order; do not select an unrelated minor fix.
+
+
+## Stage 4 structural slice — Team & Resources · Team & Capacity · Capacity Allocation
+
+### View structure contract
+
+- **Requirement:** `VIEW-TEAM-CAPACITY`; workspace: Team & Resources → Team & Capacity → Capacity Allocation.
+- **Primary task:** identify saved project-member allocations overlapping the upcoming planning window and understand each recorded percentage, reference hours and date range.
+- **Key question:** which person is assigned to which project, at what recorded percentage, and during which dates?
+- **Current source:** `src/pages/admin/AdminTeams.tsx`; rows use existing project `resourceAllocations` and the canonical team directory. No new data source or API was added.
+- **Before:** a strip of historical time metrics led the view, followed by a per-member weekly time table; upcoming allocations were then aggregated per member/week, hiding individual project/date-range records.
+- **Structural mismatch:** historical activity dominated a planning task, and the aggregated forecast obscured which saved allocation contributed to planned workload.
+- **Target composition:** search/member/project filters → primary saved allocation register (resource/role, project, allocation percentage, reference hours/week, date range) → secondary historical tracked-time table.
+- **Data semantics:** rows come from existing project-member allocations with valid dates overlapping the next four weeks; completed/on-hold projects are excluded. Role/department is read from the existing team directory, with saved member name retained as fallback. Planned hours use the existing 40h/week comparison basis and do not represent approved capacity, availability, leave, billable time or conflict status. Failed/unavailable project source and a valid empty result remain distinct.
+- **Before/after sketch:** BEFORE: historical KPI strip → time-history grid → aggregated weekly plans. AFTER: plan filters → individual allocation register with dates → time-history grid as distinct supporting context.
+- **Regression coverage:** focused Team resource tests verify hierarchy, source filtering, planning-window inclusion, hours conversion, and unavailable-vs-empty states. Directory and time-source guards remain covered.
+- **Scope:** frontend composition and tests only. Existing allocation mutation paths, API/database/schema, auth/RBAC, Finance and business workflows are unchanged.
+- **Verification at commit preparation:** source/test diff and structural assertions reviewed; exact-SHA AMS CI and Quality Gate pending. Authenticated browser, viewport, role and keyboard evidence remain Stage 5.
+- **Status:** partially complete pending exact-SHA automated checks and Stage 5 visual/accessibility review.
+- **Next action:** verify the exact commit's CI, update the gap register/checkpoint with the confirmed SHA and workflow evidence, then continue the next authorized structural view in canonical order.

@@ -320,6 +320,11 @@ export const AdminTeams: React.FC = () => {
   const [timeBillable, setTimeBillable] = useState('all');
   const [capacityPage, setCapacityPage] = useState(1);
   const [capacityPageSize, setCapacityPageSize] = useState(10);
+  const [allocationSearch, setAllocationSearch] = useState('');
+  const [allocationProject, setAllocationProject] = useState('all');
+  const [allocationMember, setAllocationMember] = useState('all');
+  const [allocationPage, setAllocationPage] = useState(1);
+  const [allocationPageSize, setAllocationPageSize] = useState(10);
   const [skillPage, setSkillPage] = useState(1);
   const [skillPageSize, setSkillPageSize] = useState(10);
   const [roleMatrixPage, setRoleMatrixPage] = useState(1);
@@ -877,21 +882,63 @@ export const AdminTeams: React.FC = () => {
       };
     })
   })), [members, projects, futureCapacityWeeks]);
+  const allocationWindow = useMemo(() => {
+    if (!futureCapacityWeeks.length) return null;
+    const firstDay = dateKey(futureCapacityWeeks[0].start);
+    const lastWeekEnd = new Date(futureCapacityWeeks[futureCapacityWeeks.length - 1].end);
+    lastWeekEnd.setDate(lastWeekEnd.getDate() - 1);
+    return { startDate: firstDay, endDate: dateKey(lastWeekEnd) };
+  }, [futureCapacityWeeks]);
+
+  const allocationRegisterRows = useMemo(() => {
+    if (!allocationWindow) return [];
+    return projects
+      .filter((project) => !['completed', 'on_hold'].includes(String(project.status || '')))
+      .flatMap((project) => (project.resourceAllocations || []).flatMap((plan, planIndex) => {
+        const startDate = String(plan.startDate || '').trim();
+        const endDate = String(plan.endDate || '').trim();
+        const startTime = Date.parse(startDate + 'T00:00:00');
+        const endTime = Date.parse(endDate + 'T00:00:00');
+        if (!startDate || !endDate || Number.isNaN(startTime) || Number.isNaN(endTime) || startTime > endTime) return [];
+        if (startDate > allocationWindow.endDate || endDate < allocationWindow.startDate) return [];
+        return [{
+          key: project.id + ':' + String(plan.memberId) + ':' + startDate + ':' + endDate + ':' + planIndex,
+          project,
+          plan,
+          member: members.find((member) => String(member.id) === String(plan.memberId)) || null
+        }];
+      }))
+      .sort((a, b) =>
+        String(a.plan.startDate || '').localeCompare(String(b.plan.startDate || ''))
+        || String(a.member?.name || a.plan.memberName || '').localeCompare(String(b.member?.name || b.plan.memberName || ''))
+        || a.project.name.localeCompare(b.project.name)
+      );
+  }, [projects, members, allocationWindow]);
+
+  const filteredAllocationRows = useMemo(() => {
+    const query = allocationSearch.trim().toLowerCase();
+    return allocationRegisterRows.filter((row) => {
+      const memberName = String(row.member?.name || row.plan.memberName || '');
+      const role = String(row.member?.role || '');
+      const department = String(row.member?.division || '');
+      const matchesSearch = [memberName, role, department, row.project.name].some((value) => value.toLowerCase().includes(query));
+      return (!query || matchesSearch)
+        && (allocationProject === 'all' || String(row.project.id) === allocationProject)
+        && (allocationMember === 'all' || String(row.plan.memberId) === allocationMember);
+    });
+  }, [allocationRegisterRows, allocationSearch, allocationProject, allocationMember]);
+
+  const allocationPageCount = Math.max(1, Math.ceil(filteredAllocationRows.length / allocationPageSize));
+  const effectiveAllocationPage = Math.min(allocationPage, allocationPageCount);
+  const pagedAllocationRows = filteredAllocationRows.slice(
+    (effectiveAllocationPage - 1) * allocationPageSize,
+    effectiveAllocationPage * allocationPageSize
+  );
 
   const capacityPageCount = Math.max(1, Math.ceil(capacityRows.length / capacityPageSize));
   const pagedCapacityRows = capacityRows.slice((capacityPage - 1) * capacityPageSize, capacityPage * capacityPageSize);
 
-  const currentWeekCapacity = weeklyCapacity.length ? weeklyCapacity[weeklyCapacity.length - 1] : null;
-  const currentCapacityStats = useMemo(() => {
-    const rows = capacityRows.map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0);
-    const totalMinutes = capacityRows.reduce((sum, row) => sum + (row.weeks[row.weeks.length - 1]?.minutes || 0), 0);
-    return {
-      average: rows.length ? rows.reduce((sum, value) => sum + value, 0) / rows.length : 0,
-      highRisk: rows.filter((value) => value > 90).length,
-      active: rows.filter((value) => value > 0).length,
-      totalMinutes
-    };
-  }, [capacityRows]);
+
 
   const skillRows = useMemo(() => {
     const map = new Map<string, SkillRecord>();
@@ -1629,27 +1676,139 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'capacity-allocation' ? (
         <div className="space-y-4" data-ams-feature-slug="capacity-allocation" data-ams-slug="capacity-allocation">
-          <AdminMetricStrip
-            metrics={[
-              { id: 'utilization',
-                slug: 'capacity-allocation-kpi-utilization', label: 'Historical tracked utilization', value: currentViewDataUnavailable ? '—' : currentCapacityStats.average.toFixed(1) + '%', context: 'Actual time entries vs 40h baseline',  icon: <TrendingUp size={15} /> },
-              { id: 'risk',
-                slug: 'capacity-allocation-kpi-risk', label: 'High tracked hours', value: currentViewDataUnavailable ? '—' : currentCapacityStats.highRisk, context: '>90% of weekly baseline recorded',  icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
-              { id: 'allocated',
-                slug: 'capacity-allocation-kpi-tracked', label: 'Tracked this week', value: currentViewDataUnavailable ? '—' : formatHours(currentCapacityStats.totalMinutes), context: currentViewDataUnavailable ? 'Live source unavailable' : currentCapacityStats.active + ' active contributors', sparkline: currentViewDataUnavailable ? undefined : weeklyCapacity.map((week) => logs.filter((log) => { const date = new Date(log.date + 'T00:00:00'); return date >= week.start && date < week.end; }).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0)), icon: <Timer size={15} /> },
-              { id: 'baseline',
-                slug: 'capacity-allocation-kpi-baseline', label: 'Reference baseline', value: '40h', context: 'Comparison only, not planned capacity',  icon: <CalendarDays size={15} /> }
-            ]}
-          />
+          <AdminFilterBar
+            slug="capacity-allocation-filters"
+            searchValue={allocationSearch}
+            onSearchChange={(value) => { setAllocationSearch(value); setAllocationPage(1); }}
+            searchPlaceholder="Search resource or project..."
+            searchLabel="Search planned allocations"
+          >
+            <CustomSelect
+              value={allocationProject}
+              onChange={(value) => { setAllocationProject(value); setAllocationPage(1); }}
+              options={[
+                { value: 'all', label: 'Project: All' },
+                ...projects
+                  .filter((project) => !['completed', 'on_hold'].includes(String(project.status || '')))
+                  .map((project) => ({ value: String(project.id), label: project.name }))
+              ]}
+              triggerClassName="h-9 min-h-9 w-full sm:w-[200px]"
+            />
+            <CustomSelect
+              value={allocationMember}
+              onChange={(value) => { setAllocationMember(value); setAllocationPage(1); }}
+              options={[
+                { value: 'all', label: 'Member: All' },
+                ...members.map((member) => ({ value: String(member.id), label: member.name }))
+              ]}
+              triggerClassName="h-9 min-h-9 w-full sm:w-[200px]"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              icon={<RotateCcw size={14} />}
+              onClick={() => {
+                setAllocationSearch('');
+                setAllocationProject('all');
+                setAllocationMember('all');
+                setAllocationPage(1);
+              }}
+            >
+              Clear
+            </Button>
+          </AdminFilterBar>
+
+          <AdminPanel
+            slug="capacity-allocation-register"
+            title="Planned resource allocations"
+            description={allocationWindow
+              ? 'Saved project-member plans overlapping ' + formatDate(allocationWindow.startDate) + ' to ' + formatDate(allocationWindow.endDate) + '.'
+              : 'The upcoming allocation window is not available.'}
+            className="overflow-hidden"
+            actions={<span className="text-[10px] text-muted">Planned hours use a 40h/week reference only. They do not confirm actual availability.</span>}
+          >
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable planned resource allocation register">
+              <table className="ams-teams-table min-w-[960px] table-fixed">
+                <thead>
+                  <tr>
+                    <th className="w-[25%]">Resource & role</th>
+                    <th className="w-[27%]">Project</th>
+                    <th className="w-[14%] text-right">Allocation %</th>
+                    <th className="w-[16%] text-right">Planned hours / week</th>
+                    <th className="w-[18%]">Planned date range</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sourceAvailability.projects !== true ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-xs text-muted">
+                        {sourceAvailability.projects === false
+                          ? 'Project allocation source unavailable. Refresh to retry.'
+                          : 'Loading saved project allocations...'}
+                      </td>
+                    </tr>
+                  ) : pagedAllocationRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-xs text-muted">
+                        {allocationRegisterRows.length === 0
+                          ? 'No dated resource allocations overlap the next four weeks.'
+                          : 'No allocations match these filters.'}
+                      </td>
+                    </tr>
+                  ) : pagedAllocationRows.map((row) => (
+                    <tr key={row.key} data-ams-slug={row.key} className="transition-colors hover:bg-bg/40">
+                      <td>
+                        <p className="font-medium text-fg">{row.member?.name || row.plan.memberName || 'Team member not identified'}</p>
+                        <p className="mt-1 text-[10px] text-muted">
+                          {row.member
+                            ? (row.member.role || 'Role not set') + ' · ' + (row.member.division || 'Department not set')
+                            : 'Directory details unavailable'}
+                        </p>
+                      </td>
+                      <td>
+                        <p className="font-medium text-fg">{row.project.name}</p>
+                        <p className="mt-1 text-[10px] text-muted">Saved project record</p>
+                      </td>
+                      <td className="text-right font-semibold tabular-nums text-fg">
+                        {typeof row.plan.allocationPercent === 'number' && Number.isFinite(row.plan.allocationPercent)
+                          ? row.plan.allocationPercent + '%'
+                          : '—'}
+                      </td>
+                      <td className="text-right tabular-nums text-fg">
+                        {typeof row.plan.allocationPercent === 'number' && Number.isFinite(row.plan.allocationPercent)
+                          ? (row.plan.allocationPercent * 0.4).toFixed(1) + 'h / week'
+                          : '—'}
+                      </td>
+                      <td className="tabular-nums text-muted">
+                        <p>{formatDate(row.plan.startDate)}</p>
+                        <p className="mt-1 text-[10px]">to {formatDate(row.plan.endDate)}</p>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {sourceAvailability.projects === true && filteredAllocationRows.length > 0 && (
+              <AdminTablePagination
+                total={filteredAllocationRows.length}
+                page={effectiveAllocationPage}
+                pageSize={allocationPageSize}
+                onPageChange={setAllocationPage}
+                onPageSizeChange={(value) => { setAllocationPageSize(value); setAllocationPage(1); }}
+                itemLabel="planned allocations"
+                slug="capacity-allocation-register-pagination"
+              />
+            )}
+          </AdminPanel>
 
           <AdminPanel
             slug="capacity-allocation-table"
-            title="Historical capacity & project assignments"
-            description={currentWeekCapacity ? 'Historical time entries across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') + '. Actuals are separate from planned allocations below.' : 'Four-week historical time view.'}
+            title="Historical tracked time"
+            description={'Actual recorded time by member for ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') + '. These values are separate from the planned allocation register above.'}
             className="overflow-hidden"
-            actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
+            actions={<span className="text-[10px] text-muted">The 40h comparison is a reference baseline, not approved capacity.</span>}
           >
-            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable historical capacity table">
+            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable historical tracked time table">
               <table className="ams-teams-table min-w-[1180px] table-fixed">
                 <thead><tr>
                   <th className="w-[24%]">Resource & role</th>
@@ -1658,7 +1817,15 @@ export const AdminTeams: React.FC = () => {
                 <tbody>
                   {pagedCapacityRows.length === 0 && (
                     <tr><td colSpan={weeklyCapacity.length + 1} className="px-4 py-8 text-center text-xs text-muted">
-                      {currentViewDataUnavailable ? 'Capacity data unavailable. Refresh to retry.' : 'No team members or tracked time are available for this range.'}
+                      {sourceAvailability.members === false
+                        ? 'Team directory source unavailable. Refresh to retry.'
+                        : sourceAvailability.members === null
+                          ? 'Loading team directory...'
+                          : sourceAvailability.timeLogs === false
+                            ? 'Time log source unavailable. Refresh to retry.'
+                            : sourceAvailability.timeLogs === null
+                              ? 'Loading tracked time...'
+                              : 'No team members or tracked time are available for this range.'}
                     </td></tr>
                   )}
                   {pagedCapacityRows.map((row) => (
@@ -1686,37 +1853,6 @@ export const AdminTeams: React.FC = () => {
               </table>
             </div>
             <AdminTablePagination total={capacityRows.length} page={capacityPage} pageSize={capacityPageSize} onPageChange={setCapacityPage} onPageSizeChange={setCapacityPageSize} itemLabel="members" slug="capacity-allocation-pagination" />
-          </AdminPanel>
-
-          <AdminPanel slug="future-resource-allocation-plan" title="Upcoming resource allocation" description="Upcoming four weeks calculated from saved project-member plans. The 40-hour baseline is used to convert planned percentages into hours." className="overflow-hidden" actions={<span className="text-[10px] text-muted">No plan means unplanned, not automatically available.</span>}>
-            <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable planned resource allocation table">
-              <table className="ams-teams-table min-w-[1080px] table-fixed">
-                <thead><tr>
-                  <th className="w-[24%]">Resource & role</th>
-                  {futureCapacityWeeks.map((week) => <th key={week.label} className="w-[19%] text-center">{week.label}</th>)}
-                </tr></thead>
-                <tbody>
-                  {futureCapacityRows.map((row) => (
-                    <tr key={row.member.id}>
-                      <td><p className="font-medium text-fg">{row.member.name}</p><p className="mt-1 text-[10px] text-muted">{row.member.role} · {row.member.division}</p></td>
-                      {row.weeks.map((week, index) => (
-                        <td key={index} className="text-center">
-                          <div className={'rounded-control border px-3 py-2 ' + (sourceAvailability.projects !== true ? 'border-line bg-bg' : week.allocationPercent > 100 ? 'border-danger/30 bg-danger/5' : 'border-line bg-bg')}>
-                            <div className="flex items-center justify-between gap-2 text-xs">
-                              <span className={'font-semibold tabular-nums ' + (sourceAvailability.projects !== true ? 'text-muted' : week.allocationPercent > 100 ? 'text-danger' : 'text-fg')}>{sourceAvailability.projects === true ? (week.projectCount ? week.allocationPercent + '%' : '—') : sourceAvailability.projects === false ? 'Unavailable' : 'Loading'}</span>
-                              <span className="text-[10px] tabular-nums text-muted">{sourceAvailability.projects === true ? (week.projectCount ? week.plannedHours.toFixed(1) + 'h' : 'No plan') : sourceAvailability.projects === false ? 'Unavailable' : 'Loading'}</span>
-                            </div>
-                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (sourceAvailability.projects !== true ? 'bg-muted' : week.allocationPercent > 100 ? 'bg-danger' : 'bg-series-4')} style={{ width: sourceAvailability.projects === true ? Math.min(100, week.allocationPercent) + '%' : '0%' }} /></div>
-                            <p className="mt-1 text-left text-[10px] text-muted">{sourceAvailability.projects === true ? (week.projectCount ? week.projectCount + ' planned project(s)' : 'Not scheduled') : sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {sourceAvailability.projects === true && !futureCapacityRows.some((row) => row.weeks.some((week) => week.projectCount > 0)) && <div className="border-t border-line px-4 py-4 text-xs leading-5 text-muted">No dated resource plans saved for the next four weeks. Open Team Directory, choose Allocate, assign the member to a project, then enter the planned percentage and date range.</div>}
           </AdminPanel>
         </div>
       ) : currentView === 'skill-matrix' ? (
