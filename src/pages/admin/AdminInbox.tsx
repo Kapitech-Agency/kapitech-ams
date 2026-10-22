@@ -41,6 +41,7 @@ import {
   X
 } from 'lucide-react';
 import { ContactSubmission, getSubmissionSlug, normalizeContactSubmission } from '../../lib/submissions';
+import { isInboxActionable, isInboxHighPriority, isInboxUnassigned } from '../../lib/inboxTriage';
 import { EmailForwardingGuideModal } from '../../components/EmailForwardingGuideModal';
 import { CannedResponsesModal } from '../../components/admin/inbox/CannedResponsesModal';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -485,11 +486,11 @@ export const AdminInbox: React.FC = () => {
     return filteredItems
       .filter((item) =>
         triageScope === 'action'
-          ? item.status === 'new'
+          ? isInboxActionable(item)
           : triageScope === 'unassigned'
-            ? !String(item.assignedTo || '').trim()
+            ? isInboxUnassigned(item)
             : triageScope === 'priority'
-              ? item.priority === 'urgent' || item.priority === 'high'
+              ? isInboxHighPriority(item)
               : !!item.starred
       )
       .sort((a, b) => {
@@ -901,7 +902,7 @@ export const AdminInbox: React.FC = () => {
                     <h3 className="text-sm font-semibold text-fg">Triage queue</h3>
                     <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted">{triageItems.length}</span>
                   </div>
-                  <p className="mt-1 max-w-xl text-[11px] leading-4 text-muted">Review the next inbound records that need a decision, response, or follow-up.</p>
+                  <p className="mt-1 max-w-xl text-[11px] leading-4 text-muted">New, unassigned, and urgent/high-priority records appear here first. Use the scopes to focus the queue.</p>
                 </div>
                 <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel">
                   <Inbox size={12} />Open full inbox
@@ -909,9 +910,9 @@ export const AdminInbox: React.FC = () => {
               </div>
               <div className="mt-3 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
                 {[
-                  { key: 'action' as TriageScope, label: 'Needs action', count: filteredItems.filter((item) => item.status === 'new').length },
-                  { key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems.filter((item) => !String(item.assignedTo || '').trim()).length },
-                  { key: 'priority' as TriageScope, label: 'Priority', count: filteredItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length },
+                  { key: 'action' as TriageScope, label: 'Needs action', count: filteredItems.filter(isInboxActionable).length },
+                  { key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems.filter(isInboxUnassigned).length },
+                  { key: 'priority' as TriageScope, label: 'Priority', count: filteredItems.filter(isInboxHighPriority).length },
                   { key: 'saved' as TriageScope, label: 'Saved', count: filteredItems.filter((item) => !!item.starred).length }
                 ].map((scope) => (
                   <button
@@ -943,7 +944,7 @@ export const AdminInbox: React.FC = () => {
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-fg">{loadError && submissions.length === 0 ? (language === 'id' ? 'Inbox tidak tersedia' : 'Inbox unavailable') : triageScope === 'action' ? 'No records need action' : triageScope === 'unassigned' ? 'No unassigned records' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}</p>
-                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Sumber data gagal dimuat. Coba lagi untuk memverifikasi antrean.' : 'The inbox source failed to load. Retry to verify this queue.') : triageScope === 'action' ? 'New inbound records will appear here automatically.' : triageScope === 'unassigned' ? 'Every current record in this queue has an assigned owner.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
+                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Sumber data gagal dimuat. Coba lagi untuk memverifikasi antrean.' : 'The inbox source failed to load. Retry to verify this queue.') : triageScope === 'action' ? 'No new, unassigned, or urgent/high-priority records need attention.' : triageScope === 'unassigned' ? 'Every current record in this queue has an assigned owner.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
                       </div>
                     </div>
                   </div>

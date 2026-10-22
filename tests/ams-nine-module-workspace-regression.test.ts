@@ -164,6 +164,8 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   assert.match(inbox, /featureSlug="inbox-module"/);
   assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
   assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
+  assert.match(inbox, /key: 'action' as TriageScope, label: 'Needs action', count: filteredItems\\.filter\\(isInboxActionable\\)\\.length/);
+  assert.match(inbox, /key: 'priority' as TriageScope, label: 'Priority', count: filteredItems\\.filter\\(isInboxHighPriority\\)\\.length/);
   assert.match(inbox, /loading \? 'border-info\/20 bg-info\/10 text-info' : loadError \? 'border-warning\/20 bg-warning\/10 text-warning' : 'border-success\/20 bg-success\/10 text-success'/);
   assert.match(inbox, /language === 'id' \? 'Memperbarui' : 'Refreshing'/);
   assert.match(inbox, /language === 'id' \? 'Memuat' : 'Loading'/);
@@ -752,7 +754,7 @@ test('Inbox All Messages exposes source-backed status and priority filters befor
 test('Inbox Overview exposes a source-backed Unassigned triage scope', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   assert.match(inbox, /type TriageScope = 'action' \| 'unassigned' \| 'priority' \| 'saved'/);
-  assert.match(inbox, /key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems\.filter\(\(item\) => !String\(item\.assignedTo \|\| ''\)\.trim\(\)\)\.length/);
+  assert.match(inbox, /key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems\.filter\(isInboxUnassigned\)\.length/);
   assert.match(inbox, /triageScope === 'unassigned'[\s\S]{0,90}!String\(item\.assignedTo \|\| ''\)\.trim\(\)/);
   assert.match(inbox, /No unassigned records/);
   assert.match(inbox, /Every current record in this queue has an assigned owner/);
