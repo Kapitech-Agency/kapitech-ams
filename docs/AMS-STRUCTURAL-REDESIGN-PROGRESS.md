@@ -1868,3 +1868,17 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Quality Gate [39844036978 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39844036978) and AMS CI [39844037103 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39844037103) on exact source/test SHA efa9d4adb8da82a603b1250ab32847e8bbae5277. Typecheck, regression tests, PostgreSQL integration, security tests, dependency audit, production build, migration packaging and HTTP smoke test passed.
 - Stage 5 browser, role, keyboard, touch and viewport behavior remains NOT VERIFIED. Onboarding evidence workflows remain unavailable until their canonical models exist.
 - Next Stage 4 slice: Finance → Overview & Control. Stage 5 and explicit user sign-off remain mandatory before broad Stage 6+ work.
+
+## Finance Executive Summary control-exception hierarchy · Stage 4 · 23 October 2026
+
+**Current source/test SHA:** [69f46b3f648a844ce1765d0bb885c79275eabe23](https://github.com/Kapitech-Agency/kapitech-ams/commit/69f46b3f648a844ce1765d0bb885c79275eabe23). The first source implementation is in [15fefd15](https://github.com/Kapitech-Agency/kapitech-ams/commit/15fefd15340d3c57d6ecab077cedacdac012aa34); regression assertion corrections were finalized at [7f923146](https://github.com/Kapitech-Agency/kapitech-ams/commit/7f923146a92bf252cff0382fc3706ed5f116d58d).
+
+- Before: company-wide billed/collected/expenses figures preceded selected-period content, while recent invoice rows could follow a different scope. The urgent overdue receivable work surface did not lead the summary.
+- After: the page identifies the selected period, leads with the current overdue-invoice exception queue, then presents selected-period KPI values, their accounting/date basis, and the recent invoice register. The exception queue is explicitly current-state and independent of the invoice issue-date period.
+- Invoice value uses the existing invoice date; client payments use existing recorded payment dates; expenses use the recorded expense date. Current receivables remain a current snapshot. The existing invoice status helper determines overdue status. All overdue rows remain available through the existing paginated Finance table.
+- Source stale/unavailable states remain distinct from a confirmed empty exception queue. Dashboard comparison and its cash-movement proxy remain unchanged.
+- Changed files: `src/pages/admin/AdminFinanceWorkspace.tsx`, `tests/ams-finance-overview-structure.test.ts`.
+- Exact-SHA AMS Quality Gate [39846034348 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39846034348) and AMS CI [39846034388 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39846034388). Typecheck, regression tests, production build, security checks, PostgreSQL integration, dependency audit, migration packaging and production HTTP smoke passed.
+- No posting, account mapping, formula, API, database, authentication, permission or Finance workflow behavior changed.
+- Authenticated browser and accessibility verification is **NOT VERIFIED**. Stage 5 still must cover period changes/live-source parity, overdue queue outcomes, role access, responsive layout, keyboard/focus and table paging.
+- Next Stage 4 slice: Team & Resources → Team & Capacity. Keep planned allocation distinct from actual logged time; no approved-capacity/absence calendar is currently configured. Stage 5 and explicit user sign-off remain mandatory.

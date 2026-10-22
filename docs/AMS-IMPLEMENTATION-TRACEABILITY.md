@@ -1033,3 +1033,13 @@ No owner/account manager field exists on the canonical AgencyClient model, so th
 Tests: tests/ams-client-directory-register-structure.test.ts and tests/admin-pages-jsx-regression.test.ts.
 
 Exact-SHA Quality Gate [39844036978 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39844036978) and CI [39844037103 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39844037103). Authenticated visual/role/accessibility status: NOT VERIFIED. Next Stage 4 slice: Finance → Overview & Control.
+
+### VIEW-FIN-OVERVIEW: Prioritize live overdue exceptions before financial summary metrics
+
+**Current source/test SHA:** [69f46b3f648a844ce1765d0bb885c79275eabe23](https://github.com/Kapitech-Agency/kapitech-ams/commit/69f46b3f648a844ce1765d0bb885c79275eabe23). Finance Executive Summary source/test sequence: [15fefd15](https://github.com/Kapitech-Agency/kapitech-ams/commit/15fefd15340d3c57d6ecab077cedacdac012aa34), assertion correction [7f923146](https://github.com/Kapitech-Agency/kapitech-ams/commit/7f923146a92bf252cff0382fc3706ed5f116d58d).
+
+Executive Summary now places selected-period context first, then the current overdue-invoice exception queue, then period KPIs, definitions and recent invoices. The exception queue is independent of selected invoice issue-date period, uses `getEffectiveInvoiceStatus` and outstanding balance, preserves all matching rows for pagination, labels source stale/unavailable states and links to Accounts Receivable. Period KPIs distinguish invoice value issued, recorded invoice payments, expense records and current receivables. Current receivables are explicitly a snapshot; cash movement remains distinct from client payments and posted GL profit.
+
+**Changed files:** `src/pages/admin/AdminFinanceWorkspace.tsx`, `tests/ams-finance-overview-structure.test.ts`.
+
+Exact-SHA AMS Quality Gate [39846034348 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39846034348) and AMS CI [39846034388 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39846034388). Typecheck, regression tests, production build, migrations, security regression tests, PostgreSQL integration, dependency audit, packaged migration verification and HTTP smoke test passed. No finance math, posting, database, API, route or permission changes. **Browser/visual/role/accessibility status: NOT VERIFIED.** Proceed in Stage 4 with Team & Resources → Team & Capacity, preserving the distinction between planned allocation, tracked time and configured capacity.
