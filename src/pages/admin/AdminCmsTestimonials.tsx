@@ -3,6 +3,7 @@ import { Users, Plus, Star, Edit3, Trash2, Check, MessageSquare, MapPin, X, Eye,
 import type { TestimonialItem } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Button } from '../../components/ui/Button';
@@ -38,6 +39,7 @@ export const AdminCmsTestimonials: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
+  const [publicationFilter, setPublicationFilter] = useState<'all' | 'published' | 'draft'>('all');
 
   const loadData = async () => {
     setIsLoading(true); setLoadError(null);
@@ -54,6 +56,9 @@ export const AdminCmsTestimonials: React.FC = () => {
   }, []);
 
   const filteredTestimonials = testimonials.filter((item) => {
+    const matchesPublicationState = publicationFilter === 'all'
+      || (publicationFilter === 'published' ? item.isPublished === true : item.isPublished !== true);
+    if (!matchesPublicationState) return false;
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
     return [item.author, item.role, item.company, item.location, item.quote, item.quoteId]
@@ -65,7 +70,7 @@ export const AdminCmsTestimonials: React.FC = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, pageSize]);
+  }, [searchQuery, publicationFilter, pageSize]);
 
   useEffect(() => {
     setPage((current) => Math.min(current, totalTestimonialPages));
@@ -193,16 +198,36 @@ export const AdminCmsTestimonials: React.FC = () => {
             type="button"
             onClick={() => {
               setSearchQuery('');
+              setPublicationFilter('all');
               setPage(1);
             }}
-            disabled={!searchQuery}
+            disabled={!searchQuery && publicationFilter === 'all'}
             className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
           >
             <X size={13} />
             Reset
           </button>
         )}
-      />
+      >
+        <div className="w-full shrink-0 sm:w-[180px]">
+          <CustomSelect
+            value={publicationFilter}
+            onChange={(value) => {
+              setPublicationFilter(value as 'all' | 'published' | 'draft');
+              setPage(1);
+            }}
+            size="sm"
+            aria-label={language === 'id' ? 'Filter status publikasi testimoni' : 'Filter testimonial publication status'}
+            slug="cms-testimonials-publication-filter"
+            options={[
+              { value: 'all', label: language === 'id' ? 'Semua status publikasi' : 'All publication states' },
+              { value: 'published', label: language === 'id' ? 'Dipublikasikan' : 'Published' },
+              { value: 'draft', label: language === 'id' ? 'Draf' : 'Drafts' },
+            ]}
+            triggerClassName="h-9 min-h-9 w-full"
+          />
+        </div>
+      </AdminFilterBar>
 
 {statusMessage && (
         <AdminModuleNotice

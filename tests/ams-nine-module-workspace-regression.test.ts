@@ -351,6 +351,26 @@ test('Testimonial publish feedback confirms saved CMS state, not unverified publ
   assert.match(testimonials, /await loadData\(\)/);
 });
 
+test('Testimonials directory filters publication state before the canonical register and resets all scope', async () => {
+  const testimonials = await read('src/pages/admin/AdminCmsTestimonials.tsx');
+  const header = testimonials.indexOf('<AdminModuleHeader slug="cms-testimonials-header"');
+  const filters = testimonials.indexOf('slug="cms-testimonials-filters"');
+  const publicationFilter = testimonials.indexOf('slug="cms-testimonials-publication-filter"');
+  const notice = testimonials.indexOf('{statusMessage && (', header);
+  const register = testimonials.indexOf('slug="cms-testimonials-directory"');
+
+  assert.ok(header >= 0 && filters > header && publicationFilter > filters && notice > filters && register > notice,
+    'Publication-state scope must sit with search filters before the canonical testimonial register.');
+  assert.match(testimonials, /publicationFilter === 'all'\\s*\\|\\|\\s*\\(publicationFilter === 'published' \\? item\\.isPublished === true : item\\.isPublished !== true\\)/);
+  assert.match(testimonials, /isPublished: item\\?\\.isPublished !== false/);
+  assert.match(testimonials, /setPublicationFilter\\('all'\\)/);
+  assert.match(testimonials, /disabled=\\{!searchQuery && publicationFilter === 'all'\\}/);
+  assert.match(testimonials, /onChange=\\{\\(value\\) => \\{\\s*setPublicationFilter\\(value as 'all' \\| 'published' \\| 'draft'\\);\\s*setPage\\(1\\);/);
+  assert.match(testimonials, /\\}, \\[searchQuery, publicationFilter, pageSize\\]\\);/);
+  assert.match(testimonials, /value: 'published', label: language === 'id' \\? 'Dipublikasikan' : 'Published'/);
+  assert.match(testimonials, /value: 'draft', label: language === 'id' \\? 'Draf' : 'Drafts'/);
+});
+
 test('Careers publish feedback confirms saved CMS state, not unverified public visibility', async () => {
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
   assert.match(careers, /CMS status saved as Published\. Verify the public Careers page to confirm visibility\./);
