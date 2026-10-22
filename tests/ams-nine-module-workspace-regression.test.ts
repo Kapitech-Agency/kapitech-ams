@@ -753,7 +753,7 @@ test('Inbox Overview exposes a source-backed Unassigned triage scope', async () 
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   assert.match(inbox, /type TriageScope = 'action' \| 'unassigned' \| 'priority' \| 'saved'/);
   assert.match(inbox, /key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems\.filter\(isInboxUnassigned\)\.length/);
-  assert.match(inbox, /triageScope === 'unassigned'[\s\S]{0,90}!String\(item\.assignedTo \|\| ''\)\.trim\(\)/);
+  assert.ok(inbox.includes("? isInboxUnassigned(item)"), "The Unassigned scope should use the shared open-record predicate.");
   assert.match(inbox, /No unassigned records/);
   assert.match(inbox, /Every current record in this queue has an assigned owner/);
   assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
