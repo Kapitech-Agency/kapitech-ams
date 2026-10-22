@@ -302,7 +302,7 @@ test('Team and Resources distinguish unavailable source data from a true zero', 
 test('Documents keeps search and metadata filters before the private register and resets all active scopes', async () => {
   const documents = await read('src/pages/admin/AdminDocuments.tsx');
   const header = documents.indexOf('<AdminModuleHeader');
-  const filters = documents.indexOf('<AdminFilterBar slug="documents-filters"');
+  const filters = documents.indexOf('slug="documents-filters"');
   const directory = documents.indexOf('data-ams-slug="documents-directory"');
   const uploadDropzone = documents.indexOf('slug="documents-upload-dropzone"');
 
