@@ -679,16 +679,29 @@ test('SLA Monitoring never presents fixture telemetry as real client performance
   assert.doesNotMatch(sla, /isSlugFixtureMode/);
 });
 
-test('Resource Planning assignments persist on project records and distinguish tracked hours from forecasts', async () => {
+test('Resource Planning assignments persist and Capacity Allocation foregrounds saved plans over tracked-time history', async () => {
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const routes = await read('server/routes.ts');
 
   assert.match(teams, /const toggleProjectAssignment = async/);
   assert.match(teams, /api\.projects\.update\(project\.id, \{ teamMembers: nextMembers, resourceAllocations: nextPlans \}\)/);
-  assert.match(teams, /label: 'Historical tracked utilization'/);
   assert.match(teams, /planned weekly allocation and dates/);
-  assert.match(teams, /Upcoming resource allocation/);
-  assert.match(teams, /No plan means unplanned, not automatically available/);
+
+  const capacityStart = teams.indexOf('data-ams-feature-slug="capacity-allocation"');
+  const capacityEnd = teams.indexOf(") : currentView === 'skill-matrix' ?", capacityStart);
+  assert.ok(capacityStart >= 0 && capacityEnd > capacityStart, 'Capacity Allocation must retain a bounded workspace');
+  const capacity = teams.slice(capacityStart, capacityEnd);
+  const register = capacity.indexOf('slug="capacity-allocation-register"');
+  const history = capacity.indexOf('slug="capacity-allocation-table"');
+  assert.ok(register >= 0 && history > register, 'The saved allocation register must precede historical time context.');
+  assert.match(capacity, /title="Planned resource allocations"/);
+  assert.match(capacity, /Allocation %/);
+  assert.match(capacity, /Planned hours \/ week/);
+  assert.match(capacity, /Planned date range/);
+  assert.match(capacity, /title="Historical tracked time"/);
+  assert.match(capacity, /40h\/week reference only/);
+  assert.doesNotMatch(capacity, /Historical tracked utilization|Upcoming resource allocation|No plan means unplanned, not automatically available/);
+
   assert.match(teams, /key: 'capacity-allocation', label: 'Capacity Allocation', to: '\/admin\/team\?view=capacity-allocation'/);
   assert.match(routes, /pickFields\(updates, \['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers'/);
 });
