@@ -194,3 +194,17 @@ test('Dashboard Overview displays canonical recent audit activity only for permi
   assert.doesNotMatch(panel, /activity\.(?:ip|userAgent|details|hash|prevHash|metadata)/,
     'Dashboard must not expose IPs, free-form audit details or chain metadata in the summary feed.');
 });
+
+test('Dashboard Performance prioritizes overdue and risk-flagged projects before truncating the attention list', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('const PerformanceView: React.FC');
+  const end = dashboard.indexOf('const AnalyticsView: React.FC', start);
+  assert.ok(start >= 0 && end > start);
+  const performance = dashboard.slice(start, end);
+  assert.ok(performance.includes('const projectAttentionSignals = (project: any) => {'));
+  assert.ok(performance.includes("[project.health, project.status].filter(Boolean).join(' ')"));
+  assert.ok(performance.includes('return signals.flagged || signals.overdue;'));
+  assert.ok(performance.includes('if (leftSignals.overdue !== rightSignals.overdue) return leftSignals.overdue ? -1 : 1;'));
+  assert.ok(performance.includes('leftSignals.due.localeCompare(rightSignals.due)'));
+  assert.ok(performance.includes('const needsAttention = attentionProjects.slice(0, 8);'));
+});

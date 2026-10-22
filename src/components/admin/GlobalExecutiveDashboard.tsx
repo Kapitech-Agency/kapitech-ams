@@ -251,11 +251,31 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
     return map;
   }, new Map<string, number>());
   const workload = Array.from(memberTime.entries()).map(([name, minutes]) => ({ name, minutes })).sort((a, b) => b.minutes - a.minutes).slice(0, 8);
-  const attentionProjects = activeProjects.filter((project) => {
-    const state = String(project.health || project.status || '').toLowerCase();
+  const projectAttentionSignals = (project: any) => {
+    const state = [project.health, project.status].filter(Boolean).join(' ').toLowerCase();
     const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
-    return /risk|delay|blocked|hold|issue/.test(state) || (due && due < today);
-  });
+    return {
+      due,
+      overdue: Boolean(due && due < today),
+      flagged: /risk|delay|blocked|hold|issue/.test(state),
+    };
+  };
+  const attentionProjects = activeProjects
+    .filter((project) => {
+      const signals = projectAttentionSignals(project);
+      return signals.flagged || signals.overdue;
+    })
+    .sort((left, right) => {
+      const leftSignals = projectAttentionSignals(left);
+      const rightSignals = projectAttentionSignals(right);
+      if (leftSignals.overdue !== rightSignals.overdue) return leftSignals.overdue ? -1 : 1;
+      if (leftSignals.due && rightSignals.due && leftSignals.due !== rightSignals.due) {
+        return leftSignals.due.localeCompare(rightSignals.due);
+      }
+      if (leftSignals.due) return -1;
+      if (rightSignals.due) return 1;
+      return String(left.name || left.title || '').localeCompare(String(right.name || right.title || ''));
+    });
   const needsAttention = attentionProjects.slice(0, 8);
   const otherOpenTasks = Math.max(0, tasks.length - completedTasks - blockedTasks);
   const taskStatusBreakdown = [
