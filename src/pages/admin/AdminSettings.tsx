@@ -270,6 +270,9 @@ export const AdminSettings: React.FC = () => {
   const [auditPageSize, setAuditPageSize] = useState(10);
 
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
+  const [accountSearch, setAccountSearch] = useState('');
+  const [accountRoleFilter, setAccountRoleFilter] = useState('all');
+  const [accountStatusFilter, setAccountStatusFilter] = useState<AdminAccount['status'] | 'all'>('all');
   const [accountsLoading, setAccountsLoading] = useState(false);
   const [accountsError, setAccountsError] = useState<string | null>(null);
   const [accountFormMessage, setAccountFormMessage] = useState<{ success: boolean; text: string } | null>(null);
@@ -681,7 +684,7 @@ export const AdminSettings: React.FC = () => {
 
   useEffect(() => {
     setAccountPage(1);
-  }, [accountPageSize]);
+  }, [accountPageSize, accountSearch, accountRoleFilter, accountStatusFilter]);
 
   const auditPageCount = Math.max(1, Math.ceil(filteredLogs.length / auditPageSize));
   const pagedLogs = useMemo(
@@ -689,10 +692,25 @@ export const AdminSettings: React.FC = () => {
     [auditPage, auditPageSize, filteredLogs]
   );
 
-  const accountPageCount = Math.max(1, Math.ceil(accounts.length / accountPageSize));
+  const accountRoleOptions = useMemo(
+    () => Array.from(new Set<string>(accounts.map((account): string => account.role))).sort((left, right) => left.localeCompare(right)),
+    [accounts]
+  );
+  const hasAccountFilters = Boolean(accountSearch.trim()) || accountRoleFilter !== 'all' || accountStatusFilter !== 'all';
+  const filteredAccounts = useMemo(() => {
+    const query = accountSearch.trim().toLowerCase();
+    return accounts.filter((account) => {
+      const matchesQuery = !query || [account.name, account.username, account.email].some((value) => String(value || '').toLowerCase().includes(query));
+      const matchesRole = accountRoleFilter === 'all' || account.role === accountRoleFilter;
+      const matchesStatus = accountStatusFilter === 'all' || account.status === accountStatusFilter;
+      return matchesQuery && matchesRole && matchesStatus;
+    });
+  }, [accountRoleFilter, accountSearch, accountStatusFilter, accounts]);
+
+  const accountPageCount = Math.max(1, Math.ceil(filteredAccounts.length / accountPageSize));
   const pagedAccounts = useMemo(
-    () => accounts.slice((accountPage - 1) * accountPageSize, accountPage * accountPageSize),
-    [accountPage, accountPageSize, accounts]
+    () => filteredAccounts.slice((accountPage - 1) * accountPageSize, accountPage * accountPageSize),
+    [accountPage, accountPageSize, filteredAccounts]
   );
 
   useEffect(() => { setAuditPage((page) => Math.min(page, auditPageCount)); }, [auditPageCount]);
@@ -1727,7 +1745,7 @@ export const AdminSettings: React.FC = () => {
 
           {canManageAdminAccounts && (
             <>
-              <section className="overflow-hidden rounded-card border border-line bg-panel">
+              <section data-ams-feature-slug="settings-account-directory" data-ams-slug="settings-account-directory" className="overflow-hidden rounded-card border border-line bg-panel">
                 <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2">
                     <Users size={18} className="text-muted" />
@@ -1739,6 +1757,58 @@ export const AdminSettings: React.FC = () => {
                   <Button type="button" variant="primary" onClick={handleOpenAddAccount} icon={<UserPlus size={14} />}>
                     Add Account
                   </Button>
+                </div>
+
+                <div data-ams-feature-slug="settings-account-filter-bar" data-ams-slug="settings-account-filter-bar" className="grid grid-cols-1 gap-2 border-b border-line bg-bg/30 px-5 py-4 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_200px_170px_auto]">
+                  <label className="relative min-w-0">
+                    <span className="sr-only">Search account name, username or email</span>
+                    <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                    <input
+                      value={accountSearch}
+                      onChange={(event) => setAccountSearch(event.target.value)}
+                      placeholder="Search name, username, or email..."
+                      className="h-8 w-full bg-bg pl-9 pr-3 text-[11px]"
+                    />
+                  </label>
+                  <CustomSelect
+                    value={accountRoleFilter}
+                    onChange={setAccountRoleFilter}
+                    options={[
+                      { value: 'all', label: 'All roles' },
+                      ...accountRoleOptions.map((role) => ({ value: role, label: role }))
+                    ]}
+                    triggerClassName="h-8 min-h-8 w-full"
+                    aria-label="Filter accounts by role"
+                    slug="settings-account-role-filter"
+                  />
+                  <CustomSelect
+                    value={accountStatusFilter}
+                    onChange={(value) => setAccountStatusFilter(value as AdminAccount['status'] | 'all')}
+                    options={[
+                      { value: 'all', label: 'All statuses' },
+                      { value: 'active', label: 'Active' },
+                      { value: 'suspended', label: 'Suspended' }
+                    ]}
+                    triggerClassName="h-8 min-h-8 w-full"
+                    aria-label="Filter accounts by status"
+                    slug="settings-account-status-filter"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAccountSearch('');
+                      setAccountRoleFilter('all');
+                      setAccountStatusFilter('all');
+                      setAccountPage(1);
+                    }}
+                    disabled={!hasAccountFilters}
+                    className="inline-flex h-8 items-center justify-center rounded-control border border-line bg-bg px-3 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Reset filters
+                  </button>
+                  <p className="col-span-full text-[10px] leading-4 text-muted" role="status">
+                    Showing {filteredAccounts.length} of {accounts.length} accounts. Search uses the existing name, username, and email fields.
+                  </p>
                 </div>
 
                 {accountsError && accounts.length > 0 && (
@@ -1756,19 +1826,40 @@ export const AdminSettings: React.FC = () => {
                 <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable administrator accounts table">
                   {accountsLoading ? (
                     <div className="px-5 py-10">{renderSkeleton()}</div>
-                  ) : pagedAccounts.length === 0 && accountsError ? (
+                  ) : accounts.length === 0 && accountsError ? (
                     <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center" role="alert">
                       <AlertCircle size={22} className="text-danger" />
                       <p className="mt-3 text-sm font-medium text-fg">Admin accounts could not be loaded</p>
                       <p className="mt-1 max-w-md text-xs leading-5 text-muted">{accountsError}</p>
                       <Button type="button" variant="secondary" onClick={() => void loadAccounts()} disabled={accountsLoading} loading={accountsLoading} className="mt-4">Retry</Button>
                     </div>
-                  ) : pagedAccounts.length === 0 ? (
+                  ) : filteredAccounts.length === 0 && accounts.length > 0 ? (
+                    <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center">
+                      <Users size={22} className="text-muted" />
+                      <p className="mt-3 text-sm font-medium text-fg">No accounts match these filters</p>
+                      <p className="mt-1 max-w-md text-xs leading-5 text-muted">Change the search or filters to see other server-managed accounts.</p>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          setAccountSearch('');
+                          setAccountRoleFilter('all');
+                          setAccountStatusFilter('all');
+                          setAccountPage(1);
+                        }}
+                        className="mt-4"
+                      >
+                        Reset filters
+                      </Button>
+                    </div>
+                  ) : accounts.length === 0 ? (
                     <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center">
                       <Users size={22} className="text-muted" />
                       <p className="mt-3 text-sm font-medium text-fg">No admin accounts found</p>
                       <p className="mt-1 text-xs leading-5 text-muted">Create the first server-managed account from this section.</p>
                     </div>
+                  ) : pagedAccounts.length === 0 ? (
+                    <div className="px-5 py-10">{renderSkeleton()}</div>
                   ) : (
                     <>
                     <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="settings-account-cards" role="list" aria-label="Administrator account cards">
@@ -1856,7 +1947,7 @@ export const AdminSettings: React.FC = () => {
 
                 {!accountsLoading && (
                   <AdminTablePagination
-                    total={accounts.length}
+                    total={filteredAccounts.length}
                     page={accountPage}
                     pageSize={accountPageSize}
                     onPageChange={setAccountPage}

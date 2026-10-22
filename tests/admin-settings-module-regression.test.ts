@@ -190,7 +190,7 @@ test('Audit and account pagination clamp after refreshed data is reduced', async
   const source = await read('src/pages/admin/AdminSettings.tsx');
 
   assert.ok(source.includes('const auditPageCount = Math.max(1, Math.ceil(filteredLogs.length / auditPageSize));'));
-  assert.ok(source.includes('const accountPageCount = Math.max(1, Math.ceil(accounts.length / accountPageSize));'));
+  assert.ok(source.includes('const accountPageCount = Math.max(1, Math.ceil(filteredAccounts.length / accountPageSize));'));
   assert.ok(source.includes('[auditPageCount]'));
   assert.ok(source.includes('[accountPageCount]'));
 });
@@ -315,4 +315,27 @@ test('Audit register separates actor and event scopes and opens read-only event 
   assert.match(source, /selectedAuditLog\.userAgent/);
   assert.doesNotMatch(source.slice(detailDrawer, source.indexOf('</Drawer>', detailDrawer)), /selectedAuditLog\.(?:hash|prevHash|metadata)/,
     'The detail view must not expose chain hashes or arbitrary metadata payloads.');
+});
+
+
+test('Users & Access account directory searches and scopes the canonical register', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  const accountSection = source.indexOf('data-ams-feature-slug="settings-account-directory"');
+  const filterBar = source.indexOf('data-ams-feature-slug="settings-account-filter-bar"', accountSection);
+  const register = source.indexOf('data-ams-feature-slug="settings-account-cards"', filterBar);
+  const pagination = source.indexOf('slug="settings-account-pagination"', register);
+  const accessGuard = source.indexOf('{canManageAdminAccounts && (', source.indexOf("{activeTab === 'security' && ("));
+
+  assert.ok(accountSection >= 0 && filterBar > accountSection && register > filterBar && pagination > register);
+  assert.ok(accessGuard >= 0 && accessGuard < accountSection, 'Account directory remains inside the existing account-management permission guard.');
+  assert.match(source, /const matchesQuery = !query \|\| \[account\.name, account\.username, account\.email\]/);
+  assert.match(source, /const matchesRole = accountRoleFilter === 'all' \|\| account\.role === accountRoleFilter/);
+  assert.match(source, /const matchesStatus = accountStatusFilter === 'all' \|\| account\.status === accountStatusFilter/);
+  assert.match(source, /const accountPageCount = Math\.max\(1, Math\.ceil\(filteredAccounts\.length \/ accountPageSize\)\)/);
+  assert.match(source, /total=\{filteredAccounts\.length\}/);
+  assert.match(source, /setAccountPage\(1\);\s*\}\s*disabled=\{!hasAccountFilters\}/);
+  assert.match(source, /No accounts match these filters/);
+  assert.match(source, /Admin accounts could not be loaded/);
+  assert.match(source, /setAccountRoleFilter\('all'\)/);
+  assert.match(source, /setAccountStatusFilter\('all'\)/);
 });
