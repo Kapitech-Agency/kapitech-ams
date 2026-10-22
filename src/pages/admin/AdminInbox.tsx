@@ -159,7 +159,7 @@ export const AdminInbox: React.FC = () => {
     { value: 'newsletter', label: 'Newsletter' },
   ];
   const inboxOwnerOptions = useMemo(() => {
-    const owners = Array.from(new Set(submissions.map((item) => String(item.assignedTo || '').trim()).filter(Boolean)))
+    const owners = Array.from(new Set<string>(submissions.map((item) => String(item.assignedTo || '').trim()).filter(Boolean)))
       .sort((a, b) => a.localeCompare(b));
     return [
       { value: 'all', label: language === 'id' ? 'Semua PIC' : 'All owners' },
