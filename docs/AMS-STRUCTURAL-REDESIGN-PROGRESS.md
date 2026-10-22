@@ -1730,3 +1730,21 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Requirement status:** PARTIALLY COMPLETE. Filter hierarchy and detail affordance are source/test/CI verified; dedicated target filtering is missing from the existing data contract, and browser/accessibility evidence remains open.
 - **Next action:** follow the canonical workspace order with Settings → Users & Access. Inspect the existing registry/role policy and lifecycle presentation without changing server permission logic.
 
+
+
+## Stage 4 structural slice — Settings · Users & Access · Scoped account register · 23 October 2026
+
+- **Requirement:** `VIEW-SETTINGS-ACCESS`, inside the existing Security section.
+- **Task:** find a server-managed account by name/username/email; narrow by canonical role and status; inspect existing MFA/last-login fields.
+- **Before:** existing identity/MFA/password sections and account register, but no search/role/status scope.
+- **After:** existing self security sections → authorized Admin access accounts header/Add Account → responsive filter bar (search, role, status, Reset, visible/total count) → canonical cards/table → pagination derived from filtered records.
+- **Sources:** `AdminAccount[]` from the existing account loader. Search uses only name, username, email; role choices derive from current accounts; status is Active/Suspended.
+- **States:** true empty, filtered-no-match and failed-load states are distinct. Stale list warning remains visible if reload fails after a successful load. Changes reset to page one.
+- **Security:** account directory stays inside `canManageAdminAccounts`. Add/delete/root protections, server-managed permissions, MFA/password flows and auth policy are unchanged. No unsupported edit-role, impersonation, activation or suspension workflow was added.
+- **Regression:** `tests/admin-settings-module-regression.test.ts` covers section/filter/register/pagination order, searchable fields, role/status matching, filtered totals, distinct states and permission guard.
+- **Implementation:** [d602c798](https://github.com/Kapitech-Agency/kapitech-ams/commit/d602c7985f10c26aaf05ab501341467135701d07); test correction and final green source/test SHA [f5d4bf9f](https://github.com/Kapitech-Agency/kapitech-ams/commit/f5d4bf9fac2a3d6038ea06c5c5c5c0964c8d617e).
+- **Exact-SHA checks:** AMS Quality Gate [39828405506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39828405506); AMS CI [39828405520 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39828405520), including tests/build/migrations/security/PostgreSQL/dependency and HTTP checks.
+- **Browser evidence:** NOT CAPTURED. Stage 5 requires authorized-role, account actions, responsive, keyboard/focus and MFA/password flow review.
+- **Requirement status:** PARTIALLY COMPLETE.
+- **Next:** Settings → Integrations. Preserve unavailable/unverified Kopra H2H and distinguish configured, available, connected and sync success.
+

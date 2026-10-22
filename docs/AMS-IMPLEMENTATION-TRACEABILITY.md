@@ -935,3 +935,12 @@ The current composition matches the approved separation: role-aware Jobs and App
 **Data/safety boundaries:** current `SecurityAuditLog` has ID, timestamp, action, actor, IP, details and severity. The current endpoint also returns actor role and user-agent context. The drawer shows those safe explicit fields and omits `hash`, `prevHash` and arbitrary `metadata`. The model has no structured target/resource field; target references can only be searched when present inside details. A dedicated target filter is deliberately not fabricated in this frontend-only scope.
 
 **Tests and evidence:** `tests/admin-settings-module-regression.test.ts` checks actor/event option sources, predicates, time scope, filter reset, selected event details, and suppression of hash/arbitrary metadata fields. AMS Quality Gate [39827295446 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39827295446) and AMS CI [39827294995 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39827294995). No browser screenshot or authorized-role test was captured; Stage 5 review remains required.
+
+
+### VIEW-SETTINGS-ACCESS: Scope the canonical account register
+
+**Final source/test SHA:** [f5d4bf9f](https://github.com/Kapitech-Agency/kapitech-ams/commit/f5d4bf9fac2a3d6038ea06c5c5c5c0964c8d617e), following UI implementation [d602c798](https://github.com/Kapitech-Agency/kapitech-ams/commit/d602c7985f10c26aaf05ab501341467135701d07) and a test-only reset-assertion correction.
+
+The existing server-managed account register now has text search by name/username/email, role and status filters, Reset and a visible-vs-total count. Role options come from current canonical account records; filtered records drive responsive cards/table and pagination. Query changes return to page 1. Filtered-no-match is separate from a genuinely empty canonical list and an unavailable source.
+
+The account workspace remains guarded by `canManageAdminAccounts`; no auth/RBAC policy, root/master deletion protection, account mutation, MFA or password workflow changed. Regression checks cover filter predicates, hierarchy, pagination and states. AMS Quality Gate [39828405506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39828405506) and AMS CI [39828405520 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39828405520). Authorized browser/accessibility evidence remains unverified.
