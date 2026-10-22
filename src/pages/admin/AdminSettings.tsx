@@ -194,6 +194,33 @@ export const AdminSettings: React.FC = () => {
   const requestedIntegration = searchParams.get('integration');
   const hasIntegrationParameter = searchParams.has('integration');
   const integrationView: IntegrationView = requestedIntegration === 'website-cms' ? 'website-cms' : 'overview';
+  const reportedDatasource = productionReadiness?.status?.datasource?.trim();
+  const integrationDatasourceLabel = reportedDatasource || (overviewLoading && !productionReadiness ? 'Checking…' : 'Not reported');
+  const documentStorageGate = productionReadiness?.gates?.documentStorage;
+  const documentVaultLabel = documentStorageGate === true
+    ? 'Ready'
+    : documentStorageGate === false
+      ? 'Review required'
+      : overviewLoading
+        ? 'Checking…'
+        : 'Not reported';
+  const backupRecoveryState: 'verified' | 'review' | 'unknown' =
+    securityStatus?.backupFresh === true
+      && securityStatus.backupIntegrity.valid === true
+      && securityStatus.restoreVerified === true
+      ? 'verified'
+      : securityStatus?.backupFresh === false
+        || securityStatus?.backupIntegrity.valid === false
+        || securityStatus?.restoreVerified === false
+          ? 'review'
+          : 'unknown';
+  const backupRecoveryLabel = backupRecoveryState === 'verified'
+    ? 'Recovery verified'
+    : backupRecoveryState === 'review'
+      ? 'Review required'
+      : overviewLoading
+        ? 'Checking…'
+        : 'Not verified';
   const [activeTab, setActiveTab] = useState<SettingsTab>(requestedTab);
   const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';
 
@@ -2029,7 +2056,7 @@ export const AdminSettings: React.FC = () => {
           />
           {integrationView === 'overview' ? (
             <>
-              <section className="rounded-card border border-line bg-panel p-5">
+              <section data-ams-feature-slug="settings-integration-overview" data-ams-slug="settings-integration-overview" className="rounded-card border border-line bg-panel p-5">
               <div className="flex items-center gap-2 border-b border-line pb-4">
                 <Database size={18} className="text-info" />
                 <div>
@@ -2040,10 +2067,10 @@ export const AdminSettings: React.FC = () => {
 
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 {[
-                  ['Database', productionReadiness?.status?.datasource || 'PostgreSQL', 'Production data source'],
-                  ['Document vault', productionReadiness?.gates?.documentStorage ? 'Ready' : 'Check required', 'Storage is server-managed'],
-                  ['Notification settings', notificationStatus === 'available' ? 'Available' : notificationStatus === 'unavailable' ? 'Unavailable' : 'Checking', 'Delivery readiness is reported separately below'],
-                  ['Backup / DR', securityStatus?.backupFresh === true && securityStatus.backupIntegrity.valid && securityStatus.restoreVerified === true ? 'Recovery verified' : 'Review', 'Requires a fresh backup, valid integrity and restore verification']
+                  ['Database', integrationDatasourceLabel, 'Server-reported data source. Missing status is not inferred.'],
+                  ['Document vault', documentVaultLabel, 'Server-side storage readiness.'],
+                  ['Notification settings', notificationStatus === 'available' ? 'Settings available' : notificationStatus === 'unavailable' ? 'Unavailable' : 'Checking…', 'Confirms settings availability only, not provider connectivity or delivery.'],
+                  ['Backup / DR', backupRecoveryLabel, 'Recovery verification requires fresh backup, valid integrity and verified restore.']
                 ].map(([label, value, helper]) => (
                   <div key={String(label)} className="rounded-control border border-line bg-bg p-4">
                     <div className="flex items-center justify-between gap-2">
@@ -2058,12 +2085,12 @@ export const AdminSettings: React.FC = () => {
               </section>
             </>
           ) : (
-            <section className="rounded-card border border-line bg-panel p-5">
+            <section data-ams-feature-slug="settings-website-cms-settings" data-ams-slug="settings-website-cms-settings" className="rounded-card border border-line bg-panel p-5">
               <div className="flex items-center gap-2 border-b border-line pb-4">
                 <Palette size={18} className="text-accent-text" />
                 <div>
                   <h2 className="text-sm font-semibold text-fg">Brand identity & metadata</h2>
-                  <p className="mt-1 text-[10px] leading-4 text-muted">Public metadata is saved through the existing CMS API.</p>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Manage public metadata through the existing CMS API. This view does not report provider connection or content-sync health.</p>
                 </div>
               </div>
 
@@ -2138,27 +2165,40 @@ export const AdminSettings: React.FC = () => {
             </section>
           )}
           {integrationView === 'overview' && (
-            <section className="rounded-card border border-line bg-panel p-5">
+            <section data-ams-feature-slug="settings-integration-health" data-ams-slug="settings-integration-health" className="rounded-card border border-line bg-panel p-5">
               <div className="flex items-center gap-2 border-b border-line pb-4">
-                <ShieldCheck size={18} className="text-success" />
-              <div>
-                <h2 className="text-sm font-semibold text-fg">Integration health</h2>
-                <p className="mt-1 text-[10px] leading-4 text-muted">Current server-side readiness signals for the production environment.</p>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                ['Runtime', Boolean(productionReadiness?.gates?.runtime)],
-                ['Encryption', Boolean(productionReadiness?.gates?.encryption)],
-                ['MFA', Boolean(productionReadiness?.gates?.mfa)],
-                ['Notifications', Boolean(productionReadiness?.gates?.notifications)]
-              ].map(([label, ready]) => (
-                <div key={String(label)} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3">
-                  <span className="text-[10px] text-muted">{String(label)}</span>
-                  {ready ? <Check size={14} className="text-success" /> : <AlertCircle size={14} className="text-warning" />}
+                <ShieldCheck size={18} className="text-muted" />
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">Production readiness signals</h2>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Server-side environment checks. These states do not confirm a third-party provider connection or a successful delivery/sync.</p>
                 </div>
-              ))}
-            </div>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  { label: 'Runtime', key: 'runtime' },
+                  { label: 'Encryption', key: 'encryption' },
+                  { label: 'MFA', key: 'mfa' },
+                  { label: 'Notifications', key: 'notifications' }
+                ].map(({ label, key }) => {
+                  const gate = productionReadiness?.gates?.[key];
+                  const stateLabel = gate === true ? 'Ready' : gate === false ? 'Review required' : overviewLoading ? 'Checking…' : 'Not reported';
+                  const tone = gate === true ? 'success' : gate === false ? 'warning' : 'neutral';
+                  return (
+                    <div key={key} className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg px-3 py-3">
+                      <span className="text-[10px] text-muted">{label}</span>
+                      <StatusBadge
+                        tone={tone}
+                        label={stateLabel}
+                        icon={gate === true ? <Check size={12} /> : gate === false ? <AlertCircle size={12} /> : undefined}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div data-ams-feature-slug="settings-integration-evidence-boundary" className="mt-4 rounded-control border border-line bg-bg px-4 py-3">
+                <p className="text-[11px] font-semibold text-fg">Integration evidence boundary</p>
+                <p className="mt-1 text-[10px] leading-5 text-muted">This overview exposes server readiness checks and notification-settings availability. The current contract does not report provider connectivity, delivery confirmation, or content/data sync status. Treat those states as not reported, not connected or synced.</p>
+              </div>
             </section>
           )}
         </section>

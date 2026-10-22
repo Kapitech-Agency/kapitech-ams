@@ -152,7 +152,7 @@ test('Notification settings availability stays separate from provider delivery r
   assert.match(source, /Settings request succeeded; delivery readiness is reported separately below/);
   assert.match(source, /status=\{notificationLabel\}/);
   assert.match(source, /productionReadiness\?\.gates\?\.notifications/);
-  assert.match(source, /\['Notification settings', notificationStatus === 'available' \? 'Available'/);
+  assert.match(source, /\['Notification settings', notificationStatus === 'available' \? 'Settings available'/);
   assert.doesNotMatch(source, /notificationStatus === 'connected'|Provider credentials remain server-side/,
     'A successful settings read does not prove provider delivery is connected.');
 });
@@ -339,4 +339,22 @@ test('Users & Access account directory searches and scopes the canonical registe
   assert.match(source, /Admin accounts could not be loaded/);
   assert.match(source, /setAccountRoleFilter\('all'\)/);
   assert.match(source, /setAccountStatusFilter\('all'\)/);
+});
+
+
+test('Integration overview keeps unknown gates and provider connectivity distinct from verified readiness', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  const overviewStart = source.indexOf('data-ams-feature-slug="settings-integration-overview"');
+  const healthStart = source.indexOf('data-ams-feature-slug="settings-integration-health"', overviewStart);
+  const evidenceBoundary = source.indexOf('data-ams-feature-slug="settings-integration-evidence-boundary"', healthStart);
+  const websiteSettings = source.indexOf('data-ams-feature-slug="settings-website-cms-settings"');
+
+  assert.ok(overviewStart >= 0 && healthStart > overviewStart && evidenceBoundary > healthStart && websiteSettings > healthStart);
+  assert.match(source, /const integrationDatasourceLabel = reportedDatasource \|\| \(overviewLoading && !productionReadiness \? 'Checking…' : 'Not reported'\)/);
+  assert.match(source, /documentStorageGate === true[\s\S]*documentStorageGate === false[\s\S]*'Not reported'/);
+  assert.match(source, /backupRecoveryState: 'verified' \| 'review' \| 'unknown'/);
+  assert.match(source, /gate === true \? 'Ready' : gate === false \? 'Review required' : overviewLoading \? 'Checking…' : 'Not reported'/);
+  assert.match(source, /The current contract does not report provider connectivity, delivery confirmation, or content\/data sync status/);
+  assert.match(source, /Manage public metadata through the existing CMS API\. This view does not report provider connection or content-sync health\./);
+  assert.doesNotMatch(source.slice(overviewStart, healthStart), /productionReadiness\?\.status\?\.datasource \|\| 'PostgreSQL'/);
 });
