@@ -964,3 +964,14 @@ Reviewed `src/pages/admin/AdminSettings.tsx`, `src/lib/amsModuleSubnavigation.ts
 No frontend was added. Repurposing shared CMS/notification settings or adding localStorage-only presentation controls would not satisfy the requirement that personal preferences have reliable save/reset semantics and not affect other users. Record `VIEW-SETTINGS-PREFERENCES` as **MISSING / BLOCKED BY CANONICAL SOURCE CONTRACT** until an approved per-user source, fields and persistence behavior exist.
 
 Next Stage 4 slice returns to the roadmap's prescribed start: Dashboard → Overview. No source/test changes were made for this review.
+
+
+### VIEW-DASH-OVERVIEW: Add recent activity from the existing permission-filtered audit response
+
+**Final source/test SHA:** [2b926a98](https://github.com/Kapitech-Agency/kapitech-ams/commit/2b926a98c55660fad47c66497e07f034080e805a); UI change [efe57f61](https://github.com/Kapitech-Agency/kapitech-ams/commit/efe57f61caec877d9de94f8e7f42ff14c00034a2), with a test-only correction in the final SHA.
+
+The Overview now includes a Recent Activity panel after supporting metrics. It uses recentActivity returned by the existing dashboard endpoint, which obtains audit events from the canonical audit repository only when the server-side actor can view audit logs. The frontend panel also gates visibility with canViewSecurityAuditLogs. It shows at most five events using action, actor, UTC timestamp and severity, with a link to Settings → Audit Log. Loading, unavailable and genuine empty-list states are separate.
+
+The panel intentionally omits IP/user-agent, free-form details and chain/hash/arbitrary metadata. The existing response lacks a structured owning-record target or URL, so a direct record link is not available and was not invented. No API, backend, auth or permission rule was changed.
+
+Regression tests/ams-dashboard-overview-hierarchy.test.ts asserts hierarchy, permission-gating, source-backed state, safe fields and canonical log destination. AMS Quality Gate [39834166472 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39834166472) and AMS CI [39834166397 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39834166397). Browser/accessibility evidence remains open.

@@ -1777,3 +1777,22 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - **Requirement status:** **MISSING / BLOCKED BY CANONICAL SOURCE CONTRACT**. This is a real requirement gap, not a completed view.
 - **Next:** continue Stage 4 in the canonical roadmap order with Dashboard → Overview and verify the existing hierarchy against current data/source contracts before selecting one bounded structural slice.
 
+
+
+## Stage 4 structural slice — Dashboard · Overview · Recent activity from the canonical audit source · 23 October 2026
+
+- **Requirement:** VIEW-DASH-OVERVIEW; view composition defined in AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md §4.1.
+- **Task:** scan operational exceptions and decision indicators, then inspect a small source-backed set of recent audit activity without confusing summary data with a new record store.
+- **Before:** priority exceptions → decision KPIs → quick actions → financial trend/delivery pacing → active project register and team capacity → supporting metrics. The Overview had no recent-activity surface although the existing dashboard API response already returned recentActivity.
+- **After:** existing hierarchy preserved; a recent-activity register is added after supporting metrics, following the required content order. It presents at most five server-returned audit entries using action, actor, UTC timestamp and severity, with a link to the canonical Settings → Audit Log view.
+- **Source:** api.dashboard.getOverview() and the existing /api/dashboard/overview response. Server already supplies recent activity from the audit-log repository under canViewSecurityAuditLogs; the frontend panel repeats the permission boundary with hasAdminPermission('canViewSecurityAuditLogs').
+- **States:** keeps loading, unavailable response and genuine empty list distinct. No placeholders or synthetic audit activity are fabricated.
+- **Safe-data boundary:** does not display IP, user-agent, free-form audit details, hashes, prior hashes or arbitrary metadata. The existing response has no structured target/record URL for each event, so the panel links to the canonical Audit Log rather than inventing record-level deep links. The “linked owning record” part of the view contract remains incomplete until a supported canonical target/URL is available.
+- **Preserved contracts:** no backend/API, dashboard calculation, audit-log mutation, permission policy, route or source record changed. Performance and Analytics branches remain intact.
+- **Regression:** tests/ams-dashboard-overview-hierarchy.test.ts validates that recent activity follows supporting metrics and that visibility, state semantics, visible fields and the Audit Log link are permission/source-backed. A test-only assertion was corrected in [2b926a98](https://github.com/Kapitech-Agency/kapitech-ams/commit/2b926a98c55660fad47c66497e07f034080e805a) after the first test run used the wrong source pattern.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts. UI change [efe57f61](https://github.com/Kapitech-Agency/kapitech-ams/commit/efe57f61caec877d9de94f8e7f42ff14c00034a2); final source/test SHA [2b926a98](https://github.com/Kapitech-Agency/kapitech-ams/commit/2b926a98c55660fad47c66497e07f034080e805a).
+- **Exact-SHA verification:** AMS Quality Gate [39834166472 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39834166472); AMS CI [39834166397 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39834166397), including typecheck, regression tests, build, security, PostgreSQL integration, dependency audit, migration packaging and HTTP smoke.
+- **Browser evidence:** NOT CAPTURED. Stage 5 still needs authenticated role/direct-route review, viewport screenshots, keyboard/focus validation and confirmation that the panel remains hidden for users without audit permission.
+- **Requirement status:** PARTIALLY COMPLETE. Recent activity now appears in the mandated position with truthful source and safe fields. Event-to-owning-record links remain unavailable under the present API shape.
+- **Next:** Dashboard → Performance. Review source-backed trend windows/definitions and task/project analysis; preserve the current verified Overview hierarchy.
+
