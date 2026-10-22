@@ -1476,13 +1476,7 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'roles-departments' ? (
         <div className="space-y-4" data-ams-feature-slug="team-roles-departments" data-ams-slug="team-roles-departments">
-          <AdminMetricStrip metrics={[
-            { id: 'departments', slug: 'team-roles-departments-count', label: 'Departments', value: currentViewDataUnavailable ? '—' : new Set(roleDepartmentRows.map((row) => row.division)).size, context: 'Recorded team divisions', icon: <UsersRound size={15} /> },
-            { id: 'roles', slug: 'team-roles-count', label: 'Role groups', value: currentViewDataUnavailable ? '—' : new Set(roleDepartmentRows.map((row) => row.role)).size, context: 'Recorded team roles', icon: <ShieldCheck size={15} /> },
-            { id: 'members', slug: 'team-role-members-count', label: 'Team members', value: currentViewDataUnavailable ? '—' : members.length, context: 'Canonical team records', icon: <UsersRound size={15} /> },
-            { id: 'active', slug: 'team-role-active-count', label: 'Active records', value: currentViewDataUnavailable ? '—' : members.filter((member) => String(member.status || 'active').toLowerCase() === 'active').length, context: 'Status recorded as active', icon: <CheckCircle2 size={15} /> },
-          ]} />
-          <AdminPanel slug="team-roles-departments-matrix" title="Department and role matrix" description="Counts are grouped from current team member records. They do not grant, remove, or modify system permissions." className="overflow-hidden">
+          <AdminPanel slug="team-roles-departments-matrix" title="Department and role matrix" description="Counts are grouped from current team member records. Role and division labels describe the roster, not system access. Manage access policies in Settings → Users & Access." className="overflow-hidden">
             {currentViewDataUnavailable ? (
               <div className="p-5 text-xs leading-5 text-muted" role="status">Team member data is unavailable. Refresh to retry; group counts are not shown as zero.</div>
             ) : roleDepartmentRows.length === 0 ? (
@@ -1504,7 +1498,7 @@ export const AdminTeams: React.FC = () => {
               </div>
             )}
           </AdminPanel>
-          <div className="rounded-card border border-line bg-panel px-4 py-3 text-[11px] leading-5 text-muted">Role and department values come from the team directory. Access control remains managed in Settings and is not changed by this worksheet.</div>
+          
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
