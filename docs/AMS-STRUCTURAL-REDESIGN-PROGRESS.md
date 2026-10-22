@@ -1829,3 +1829,16 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - External reference decision: no external template layout copied. Existing AMS panels, tokens, trend chart and routes are reused; report-first ordering follows the canonical §4.10 contract.
 - Regression: update the existing workspace/header source assertions and add `tests/ams-dashboard-analytics-structure.test.ts` for report hierarchy, exact period values, source definitions, empty/unavailable states and drill-downs.
 - Structural scope: replaces the mixed side-by-side dashboard composition and trailing mixed-scope metric strip with a single-report work surface. Verified source/test SHA: [d812fe60252cec1385b74d6ac88b04ef8306fe1d](https://github.com/Kapitech-Agency/kapitech-ams/commit/d812fe60252cec1385b74d6ac88b04ef8306fe1d). Exact-SHA AMS Quality Gate [39840053958 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39840053958) and AMS CI [39840053891 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39840053891).
+
+
+## Forty-second implementation slice: Inbox Overview actionable triage queue · Stage 4 · 23 October 2026
+
+**Source/test checkpoint:** [620abf26ca51336db7efd186e2ff395eeb159722](https://github.com/Kapitech-Agency/kapitech-ams/commit/620abf26ca51336db7efd186e2ff395eeb159722). Structural code change: [94c55740](https://github.com/Kapitech-Agency/kapitech-ams/commit/94c55740b8f1907624e4edb2273f9600a36ad1bd).
+
+- Before: the default Needs action queue used only `status === 'new'`. Unassigned open records and urgent/high-priority records in later open statuses were visible only by switching to separate scopes, so the initial triage work surface could omit records that required attention.
+- After: the canonical default queue includes any open record that is new, unassigned or urgent/high-priority. Shared pure predicates drive the queue and its unassigned/priority counts. Closed records do not inflate those open-work queues.
+- Primary work surface remains the existing Triage queue plus Record review split. Existing filters, date context, source records, eight-row preview, priority/age ordering and selected-record actions remain in place. The slice does not add due dates, SLA promises, follow-up records or another record store.
+- Changed paths: `src/pages/admin/AdminInbox.tsx`, `src/lib/inboxTriage.ts`, `tests/ams-inbox-triage.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`.
+- Exact-SHA AMS Quality Gate [39841510406 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39841510406); AMS CI [39841510154 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39841510154). Typecheck, regression tests, production build, security regression, PostgreSQL integration, audit, package migration checks and HTTP smoke test passed.
+- Browser visual/role verification is **NOT VERIFIED**. Authenticated live queue and scope counts, responsive behavior, keyboard/focus and touch behavior remain Stage 5 requirements.
+- Next canonical Stage 4 slice: Inbox → Messages. Stage 5 and explicit user sign-off remain mandatory before broad Stage 6+ work.

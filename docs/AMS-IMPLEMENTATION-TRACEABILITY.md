@@ -999,3 +999,14 @@ Exact-SHA AMS Quality Gate [39836485893 passed](https://github.com/Kapitech-Agen
 **Regression coverage:** `tests/ams-dashboard-analytics-structure.test.ts`, `tests/ams-dashboard-overview-hierarchy.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`, and `tests/frontend-functional-regression.test.ts` assert report selection/order, exact period values, source date definitions, empty/unavailable behavior, snapshot semantics and canonical drill-down destinations.
 
 Exact-SHA AMS Quality Gate [39840053958 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39840053958) and AMS CI [39840053891 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39840053891). **Browser/visual/accessibility status: NOT VERIFIED.** Authenticated role, viewport/reflow, keyboard/focus and touch/chart checks remain in Stage 5, followed by the mandatory explicit user sign-off.
+
+
+### VIEW-INBOX-OVERVIEW: Expand the default queue to all open actionable records
+
+**Source/test checkpoint:** [620abf26ca51336db7efd186e2ff395eeb159722](https://github.com/Kapitech-Agency/kapitech-ams/commit/620abf26ca51336db7efd186e2ff395eeb159722); structural code commit [94c55740](https://github.com/Kapitech-Agency/kapitech-ams/commit/94c55740b8f1907624e4edb2273f9600a36ad1bd).
+
+The default Needs action queue previously filtered only `status === 'new'`, hiding unassigned open records and urgent/high-priority records in other open statuses until another scope was selected. It now includes open records satisfying any of those conditions. The same pure tested predicates compute Needs action, Unassigned and Priority counts; closed records are excluded from those scopes. Existing search/status/priority/global period filters, source records, age/priority ordering, max-eight preview, split-pane selected-record review and permitted actions remain unchanged.
+
+Files: `src/pages/admin/AdminInbox.tsx`, `src/lib/inboxTriage.ts`, `tests/ams-inbox-triage.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`.
+
+Exact-SHA AMS Quality Gate [39841510406 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39841510406) and AMS CI [39841510154 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39841510154). **Authenticated browser/visual/accessibility state: NOT VERIFIED.** The inspected inbound record contract has no real due-date/SLA field for this workflow, so no follow-up date or reminder was fabricated. Continue Stage 4 with Inbox → Messages, then complete Stage 5 visual/responsive/accessibility review and obtain explicit user sign-off before broad Stage 6+ work.
