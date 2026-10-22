@@ -730,10 +730,10 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   assert.ok(vendorPagination > vendorFilters && vendorMetrics > vendorPagination && vendorMetrics < capacityViewStart);
   const vendors = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminVendors.tsx'), 'utf8');
   const vendorHeader = vendors.indexOf('<AdminModuleHeader');
-  const vendorFilters = vendors.indexOf('data-ams-feature-slug="vendor-directory-filters"');
+  const vendorPrimaryFilters = vendors.indexOf('data-ams-feature-slug="vendor-directory-filters"');
   const vendorRegisterHeader = vendors.indexOf('data-ams-feature-slug="vendor-directory-register-header"');
   const vendorDirectory = vendors.indexOf('data-ams-feature-slug="vendor-directory-list"');
-  assert.ok(vendorHeader >= 0 && vendorFilters > vendorHeader && vendorRegisterHeader > vendorFilters && vendorDirectory > vendorRegisterHeader);
+  assert.ok(vendorHeader >= 0 && vendorPrimaryFilters > vendorHeader && vendorRegisterHeader > vendorPrimaryFilters && vendorDirectory > vendorRegisterHeader);
   assert.equal(vendors.includes('data-ams-feature-slug="vendor-snapshot"'), false);
   assert.equal(teams.includes('SLA is not tracked by the current vendor data model'), false);
   assert.equal(teams.includes('className="w-[8%] text-center">SLA</th>'), false);
