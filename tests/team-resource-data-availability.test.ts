@@ -59,7 +59,10 @@ test('Team project and capacity views do not show zero or no-plan states when so
   const directory = source.slice(directoryStart, directoryEnd);
   assert.match(directory, /allocation\.percent === null \? '—' : allocation\.percent \+ '% of 40h baseline'/);
   assert.doesNotMatch(directory, /team-directory-kpi-headcount/);
-  assert.match(source, /sourceAvailability\.timeLogs === false \? 'Time log data unavailable'/);
+  assert.match(source, /sourceAvailability\.timeLogs === false \? '—' : 'Loading'/,
+    'Historical capacity must not display a utilization percentage when time logs are unavailable.');
+  assert.match(source, /currentViewDataUnavailable \? 'Time log data unavailable' : 'No time logs found'/,
+    'The Time Logs register must distinguish a missing source from a valid empty response.');
 });
 
 
