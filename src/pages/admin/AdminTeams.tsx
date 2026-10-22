@@ -293,8 +293,10 @@ export const AdminTeams: React.FC = () => {
     .some((source) => sourceAvailability[source] !== true);
 
   // Skill Matrix combines two independent sources; failure of one should not hide the other.
-  const skillMatrixMembersUnavailable = sourceAvailability.members !== true;
-  const skillMatrixVendorsUnavailable = sourceAvailability.vendors !== true;
+  const skillMatrixMembersUnavailable = sourceAvailability.members !== true && members.length === 0;
+  const skillMatrixVendorsUnavailable = sourceAvailability.vendors !== true && skillRows.length === 0;
+  const skillMatrixMembersAvailable = !skillMatrixMembersUnavailable;
+  const skillMatrixVendorsAvailable = !skillMatrixVendorsUnavailable;
 
   const [teamSearch, setTeamSearch] = useState('');
   const [teamDepartment, setTeamDepartment] = useState('all');
@@ -1899,7 +1901,7 @@ export const AdminTeams: React.FC = () => {
                   {!skillMatrixMembersUnavailable && pagedRoleMatrixMembers.length === 0 && (
                     <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-muted">No internal team members found.</td></tr>
                   )}
-                  {!skillMatrixMembersUnavailable && pagedRoleMatrixMembers.map((member) => (
+                  {skillMatrixMembersAvailable && pagedRoleMatrixMembers.map((member) => (
                     <tr key={member.id} data-ams-slug={member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
@@ -1914,7 +1916,7 @@ export const AdminTeams: React.FC = () => {
                 </tbody>
               </table>
             </div>
-            {!skillMatrixMembersUnavailable && <AdminTablePagination total={members.length} page={roleMatrixPage} pageSize={roleMatrixPageSize} onPageChange={setRoleMatrixPage} onPageSizeChange={setRoleMatrixPageSize} itemLabel="members" slug="skill-matrix-role-matrix-pagination" />}
+            {skillMatrixMembersAvailable && <AdminTablePagination total={members.length} page={roleMatrixPage} pageSize={roleMatrixPageSize} onPageChange={setRoleMatrixPage} onPageSizeChange={setRoleMatrixPageSize} itemLabel="members" slug="skill-matrix-role-matrix-pagination" />}
           </AdminPanel>
 
           <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={sourceAvailability.vendors === false
@@ -1941,7 +1943,7 @@ export const AdminTeams: React.FC = () => {
                   {pagedSkillRows.length === 0 && sourceAvailability.vendors === true && (
                     <tr><td colSpan={4} className="px-4 py-8 text-center text-xs text-muted">No vendor skills have been recorded.</td></tr>
                   )}
-                  {sourceAvailability.vendors === true && pagedSkillRows.map((row) => (
+                  {skillMatrixVendorsAvailable && pagedSkillRows.map((row) => (
                     <tr key={row.slug} data-ams-slug={row.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <p className="font-medium text-fg">{row.skill}</p>
