@@ -82,7 +82,7 @@ test('Capacity Allocation prioritizes saved project allocations and separates tr
 test('Team project and capacity views do not show zero or no-plan states when sources are unavailable', () => {
   assert.match(source, /sourceAvailability\.projects === true \? projectsForMember\.length : '—'/);
   assert.match(source, /'Project data unavailable'/);
-  assert.match(source, /sourceAvailability\.timeLogs === true \? week\.utilization \+ '%' : 'Unavailable'/);
+  assert.match(source, /sourceAvailability\.timeLogs === true \? week\.referencePercent \+ '% of 40h reference' : 'Unavailable'/);
   const directoryStart = source.indexOf('data-ams-feature-slug="team-directory"');
   const directoryEnd = source.indexOf(") : currentView === 'roles-departments' ?", directoryStart);
   assert.ok(directoryStart >= 0 && directoryEnd > directoryStart);

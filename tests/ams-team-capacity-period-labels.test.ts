@@ -23,7 +23,7 @@ test('Team Capacity historical tracked-time columns show concrete weekly date ra
   assert.ok(panel.includes('{week.rangeLabel}'), 'Each weekly column must display a concrete date range');
   assert.ok(panel.includes('Hours · % of 40h ref.'));
   assert.ok(panel.includes('they do not confirm capacity or availability'));
-  assert.ok(panel.includes('are separate from planned allocations'));
+  assert.ok(panel.includes('separate from planned allocations'));
   assert.doesNotMatch(panel, /utilization/i, 'Tracked time versus a reference must not be presented as verified capacity utilization');
 });
 
