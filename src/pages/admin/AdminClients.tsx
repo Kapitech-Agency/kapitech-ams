@@ -1234,7 +1234,7 @@ export const AdminClients: React.FC = () => {
         </div>
 
         <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label={statusScope === 'lead' ? 'Scrollable onboarding account register' : 'Scrollable client directory'}>
-          <table className="ams-client-table w-full min-w-[980px] border-collapse text-left">
+          <table className="ams-client-table w-full min-w-[1100px] border-collapse text-left">
             <thead className="bg-bg">
               <tr className="border-b border-line text-[11px] font-medium text-muted">
                 <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('company')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">{statusScope === 'lead' ? 'Lead account' : 'Client account'} {sortKey === 'company' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
@@ -1251,6 +1251,7 @@ export const AdminClients: React.FC = () => {
                     <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('industry')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Industry {sortKey === 'industry' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
                     <th className="px-4 py-2.5">Primary contact</th>
                     <th className="px-4 py-2.5">Status</th>
+                    <th className="px-4 py-2.5">Service / Retainer</th>
                     <th className="px-4 py-2.5 text-right"><button type="button" onClick={() => toggleSort('totalSpend')} className="ml-auto inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Billed value {sortKey === 'totalSpend' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
                     <th className="px-4 py-2.5">Spend cap health</th>
                   </>
@@ -1259,8 +1260,8 @@ export const AdminClients: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-line text-[13px] leading-[18px]">
-              {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: 7 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
-                <tr><td colSpan={7} className="p-0"><div className="flex min-h-[280px] w-full flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="clients-empty-state"><div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div><p className="mt-3 text-sm font-medium text-fg">{errorMessage ? 'Client directory unavailable.' : clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 max-w-sm text-xs leading-5 text-muted">{errorMessage ? 'The client data could not be loaded. Use the retry action above.' : 'Adjust the search or active filters.'}</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</div></td></tr>
+              {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: statusScope === 'lead' ? 7 : 8 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
+                <tr><td colSpan={statusScope === 'lead' ? 7 : 8} className="p-0"><div className="flex min-h-[280px] w-full flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="clients-empty-state"><div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div><p className="mt-3 text-sm font-medium text-fg">{errorMessage ? 'Client directory unavailable.' : clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 max-w-sm text-xs leading-5 text-muted">{errorMessage ? 'The client data could not be loaded. Use the retry action above.' : 'Adjust the search or active filters.'}</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</div></td></tr>
               ) : paginatedClients.map((client) => {
                 const budget = typeof client.slaDailyAdSpendBudget === 'number' && Number.isFinite(client.slaDailyAdSpendBudget) && client.slaDailyAdSpendBudget > 0
                   ? client.slaDailyAdSpendBudget
@@ -1274,15 +1275,15 @@ export const AdminClients: React.FC = () => {
                 const clientSlug = getAgencyClientSlug(client as AgencyClient & Record<string, unknown>) || createClientSlug(client.company || client.name || 'client account', client.id);
                 return (
                   <tr key={client.id} data-ams-slug={'client-account-' + clientSlug} className="transition-colors hover:bg-bg/70">
-                    {statusScope === 'lead' ? (
-                  <>
                     <td className="px-4 py-3">
                       <button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[240px] text-left">
-                        <span className="block truncate font-medium text-fg">{client.company}</span>
+                        <span className="block truncate font-medium text-fg">{client.company || client.name || 'Client account'}</span>
                         <span className="mt-1 block truncate text-[11px] text-muted tabular-nums">ID: {client.id}</span>
-                        <span className="mt-1 block text-[10px] text-muted">Added {formatDate(client.createdAt, language)}</span>
+                        {statusScope === 'lead' && <span className="mt-1 block text-[10px] text-muted">Added {formatDate(client.createdAt, language)}</span>}
                       </button>
                     </td>
+                    {statusScope === 'lead' ? (
+                  <>
                     <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company }} /> : <span className="text-xs text-muted">Not recorded</span>}</td>
                     <td className="px-4 py-3"><div className="max-w-[240px] space-y-1 text-xs text-fg"><p className="break-all">{client.email || 'Email not recorded'}</p><p className="break-words text-muted">{client.phone || 'Phone not recorded'}</p></div></td>
                     <td className="px-4 py-3"><div className="max-w-[180px] space-y-1 text-xs text-fg"><p className="break-words">{client.industry || 'Industry not recorded'}</p><p className="break-words text-muted">{client.location || 'Location not recorded'}</p></div></td>
@@ -1294,6 +1295,9 @@ export const AdminClients: React.FC = () => {
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company, companyEmail: client.email, phone: client.phone }} /> : <span className="text-xs text-muted">—</span>}</td>
                     <td className="px-4 py-3"><span className={'inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + getClientStatusTone(client.status)}>{formatClientStatusLabel(client.status)}</span></td>
+                    <td className="px-4 py-3 max-w-[240px]">
+                      <span className="block break-words text-xs text-fg" data-ams-slug={'client-service-context-register-' + clientSlug}>{getClientServiceContext(client, language)}</span>
+                    </td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(client.totalSpend) : (language === 'id' ? 'Belum tercatat' : 'Not recorded')}</td>
                     <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={'h-2 w-2 rounded-full ' + (spendState === 'success' ? 'bg-success' : spendState === 'warning' ? 'bg-warning' : spendState === 'danger' ? 'bg-danger' : 'bg-line')} aria-hidden="true" /><span className={spendState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{headroom === null ? (slaState === 'not-configured' ? (language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured') : (language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded')) : headroom.toFixed(1) + (language === 'id' ? '% ruang tersisa' : '% headroom')}</span></div></td>
                   </>
