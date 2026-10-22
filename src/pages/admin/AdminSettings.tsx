@@ -194,33 +194,6 @@ export const AdminSettings: React.FC = () => {
   const requestedIntegration = searchParams.get('integration');
   const hasIntegrationParameter = searchParams.has('integration');
   const integrationView: IntegrationView = requestedIntegration === 'website-cms' ? 'website-cms' : 'overview';
-  const reportedDatasource = productionReadiness?.status?.datasource?.trim();
-  const integrationDatasourceLabel = reportedDatasource || (overviewLoading && !productionReadiness ? 'Checking…' : 'Not reported');
-  const documentStorageGate = productionReadiness?.gates?.documentStorage;
-  const documentVaultLabel = documentStorageGate === true
-    ? 'Ready'
-    : documentStorageGate === false
-      ? 'Review required'
-      : overviewLoading
-        ? 'Checking…'
-        : 'Not reported';
-  const backupRecoveryState: 'verified' | 'review' | 'unknown' =
-    securityStatus?.backupFresh === true
-      && securityStatus.backupIntegrity.valid === true
-      && securityStatus.restoreVerified === true
-      ? 'verified'
-      : securityStatus?.backupFresh === false
-        || securityStatus?.backupIntegrity.valid === false
-        || securityStatus?.restoreVerified === false
-          ? 'review'
-          : 'unknown';
-  const backupRecoveryLabel = backupRecoveryState === 'verified'
-    ? 'Recovery verified'
-    : backupRecoveryState === 'review'
-      ? 'Review required'
-      : overviewLoading
-        ? 'Checking…'
-        : 'Not verified';
   const [activeTab, setActiveTab] = useState<SettingsTab>(requestedTab);
   const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';
 
@@ -284,6 +257,34 @@ export const AdminSettings: React.FC = () => {
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [overviewMessage, setOverviewMessage] = useState<{ tone: 'success' | 'warning' | 'danger'; text: string } | null>(null);
   const [overviewLoadError, setOverviewLoadError] = useState<string | null>(null);
+
+  const reportedDatasource = productionReadiness?.status?.datasource?.trim();
+  const integrationDatasourceLabel = reportedDatasource || (overviewLoading && !productionReadiness ? 'Checking…' : 'Not reported');
+  const documentStorageGate = productionReadiness?.gates?.documentStorage;
+  const documentVaultLabel = documentStorageGate === true
+    ? 'Ready'
+    : documentStorageGate === false
+      ? 'Review required'
+      : overviewLoading
+        ? 'Checking…'
+        : 'Not reported';
+  const backupRecoveryState: 'verified' | 'review' | 'unknown' =
+    securityStatus?.backupFresh === true
+      && securityStatus.backupIntegrity.valid === true
+      && securityStatus.restoreVerified === true
+      ? 'verified'
+      : securityStatus?.backupFresh === false
+        || securityStatus?.backupIntegrity.valid === false
+        || securityStatus?.restoreVerified === false
+          ? 'review'
+          : 'unknown';
+  const backupRecoveryLabel = backupRecoveryState === 'verified'
+    ? 'Recovery verified'
+    : backupRecoveryState === 'review'
+      ? 'Review required'
+      : overviewLoading
+        ? 'Checking…'
+        : 'Not verified';
 
   const [logs, setLogs] = useState<SecurityAuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
