@@ -201,6 +201,12 @@ const formatDate = (value: string) => {
   return parsed.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+const weekRangeLabel = (start: Date, endExclusive: Date) => {
+  const endInclusive = new Date(endExclusive);
+  endInclusive.setDate(endInclusive.getDate() - 1);
+  return formatDate(dateKey(start)) + ' – ' + formatDate(dateKey(endInclusive));
+};
+
 const formatHours = (minutes: number) => {
   const safe = Math.max(0, Number(minutes) || 0);
   const hours = Math.floor(safe / 60);
@@ -828,7 +834,8 @@ export const AdminTeams: React.FC = () => {
       return {
         start,
         end,
-        label: index === 3 ? 'Current week' : 'Week ' + (index + 1)
+        label: index === 3 ? 'Current week' : 'Week ' + (index + 1),
+        rangeLabel: weekRangeLabel(start, end)
       };
     });
   }, []);
@@ -843,7 +850,7 @@ export const AdminTeams: React.FC = () => {
             return date >= week.start && date < week.end;
           })
           .reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0);
-        return { minutes, utilization: Math.min(160, Math.round((minutes / (40 * 60)) * 100)) };
+        return { minutes, referencePercent: Math.min(160, Math.round((minutes / (40 * 60)) * 100)) };
       });
       return { member, weeks };
     });
@@ -856,7 +863,7 @@ export const AdminTeams: React.FC = () => {
       start.setDate(start.getDate() + (index + 1) * 7);
       const end = new Date(start);
       end.setDate(end.getDate() + 7);
-      return { start, end, label: formatDate(dateKey(start)) };
+      return { start, end, label: formatDate(dateKey(start)), rangeLabel: weekRangeLabel(start, end) };
     });
   }, []);
 
@@ -1155,10 +1162,10 @@ export const AdminTeams: React.FC = () => {
       ]);
     } else if (currentView === 'capacity-allocation') {
       downloadCsv('kapitech-capacity-allocation.csv', [
-        ['Slug', 'Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' tracked utilization'), 'Current tracked hours', ...futureCapacityWeeks.map((week) => week.label + ' planned allocation')],
+        ['Slug', 'Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' (' + week.rangeLabel + ') tracked time vs 40h reference'), 'Current tracked hours', ...futureCapacityWeeks.map((week) => week.label + ' (' + week.rangeLabel + ') planned allocation')],
         ...capacityRows.map((row) => [
           row.member.slug, row.member.name, row.member.role,
-          ...row.weeks.map((week) => sourceAvailability.timeLogs === true ? week.utilization + '%' : 'Unavailable'),
+          ...row.weeks.map((week) => sourceAvailability.timeLogs === true ? week.referencePercent + '% of 40h reference' : 'Unavailable'),
           sourceAvailability.timeLogs === true ? formatHours(row.weeks[row.weeks.length - 1]?.minutes ?? 0) : 'Unavailable',
           ...(futureCapacityRows.find((item) => item.member.id === row.member.id)?.weeks || []).map((week) => sourceAvailability.projects === true ? (week.projectCount ? week.allocationPercent + '%' : 'No plan') : 'Unavailable')
         ])
@@ -1804,15 +1811,21 @@ export const AdminTeams: React.FC = () => {
           <AdminPanel
             slug="capacity-allocation-table"
             title="Historical tracked time"
-            description={'Actual recorded time by member for ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') + '. These values are separate from the planned allocation register above.'}
+            description="Actual time logged per team member, grouped by calendar week. Each column shows its exact date range. Percentages compare recorded time with a 40h/week reference only; they do not confirm capacity or availability and remain separate from planned allocations."
             className="overflow-hidden"
-            actions={<span className="text-[10px] text-muted">The 40h comparison is a reference baseline, not approved capacity.</span>}
+            actions={<span className="text-[10px] text-muted">Recorded hours are not a capacity or availability forecast.</span>}
           >
             <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable historical tracked time table">
               <table className="ams-teams-table min-w-[1180px] table-fixed">
                 <thead><tr>
                   <th className="w-[24%]">Resource & role</th>
-                  {weeklyCapacity.map((week) => <th key={week.label} className="w-[19%] text-center">{week.label}</th>)}
+                  {weeklyCapacity.map((week) => (
+                    <th key={week.label} className="w-[19%] text-center align-top">
+                      <span className="block">{week.label}</span>
+                      <span className="mt-1 block text-[10px] font-normal text-muted">{week.rangeLabel}</span>
+                      <span className="mt-1 block text-[10px] font-normal text-muted">Hours · % of 40h ref.</span>
+                    </th>
+                  ))}
                 </tr></thead>
                 <tbody>
                   {pagedCapacityRows.length === 0 && (
@@ -1836,13 +1849,13 @@ export const AdminTeams: React.FC = () => {
                       </td>
                       {row.weeks.map((week, index) => (
                         <td key={index} className="text-center">
-                          <div className={'rounded-control border px-3 py-2 ' + (sourceAvailability.timeLogs !== true ? 'border-line bg-bg' : week.utilization > 90 ? 'border-danger/30 bg-danger/5' : 'border-line bg-bg')}>
+                          <div className={'rounded-control border px-3 py-2 ' + (sourceAvailability.timeLogs !== true ? 'border-line bg-bg' : week.referencePercent > 90 ? 'border-danger/30 bg-danger/5' : 'border-line bg-bg')}>
                             <div className="flex items-center justify-between gap-3 text-xs">
-                              <span className={'font-semibold tabular-nums ' + (sourceAvailability.timeLogs !== true ? 'text-muted' : week.utilization > 90 ? 'text-danger' : week.utilization >= 70 ? 'text-fg' : 'text-muted')}>{sourceAvailability.timeLogs === true ? week.utilization + '%' : sourceAvailability.timeLogs === false ? '—' : 'Loading'}</span>
+                              <span className={'font-semibold tabular-nums ' + (sourceAvailability.timeLogs !== true ? 'text-muted' : week.referencePercent > 90 ? 'text-danger' : week.referencePercent >= 70 ? 'text-fg' : 'text-muted')}>{sourceAvailability.timeLogs === true ? week.referencePercent + '%' : sourceAvailability.timeLogs === false ? '—' : 'Loading'}</span>
                               <span className="text-[10px] tabular-nums text-muted">{sourceAvailability.timeLogs === true ? formatHours(week.minutes) : sourceAvailability.timeLogs === false ? 'Unavailable' : 'Loading'}</span>
                             </div>
                             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel">
-                              <div className={'h-full rounded-full ' + (sourceAvailability.timeLogs !== true ? 'bg-muted' : week.utilization > 90 ? 'bg-danger' : week.utilization >= 70 ? 'bg-series-3' : 'bg-series-4')} style={{ width: sourceAvailability.timeLogs === true ? Math.min(100, week.utilization) + '%' : '0%' }} />
+                              <div className={'h-full rounded-full ' + (sourceAvailability.timeLogs !== true ? 'bg-muted' : week.referencePercent > 90 ? 'bg-danger' : week.referencePercent >= 70 ? 'bg-series-3' : 'bg-series-4')} style={{ width: sourceAvailability.timeLogs === true ? Math.min(100, week.referencePercent) + '%' : '0%' }} />
                             </div>
                           </div>
                         </td>
