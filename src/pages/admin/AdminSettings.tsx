@@ -962,7 +962,7 @@ export const AdminSettings: React.FC = () => {
 
       {activeTab === 'overview' && canAccessServer && (
         <section data-ams-feature-slug="settings-overview" data-ams-slug="settings-overview" aria-label="System Status Summary" className="space-y-6">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div data-ams-feature-slug="settings-overview-status-summary" data-ams-slug="settings-overview-status-summary" className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <SummaryCard
               label="Backup & Recovery"
               value={overviewLoading ? 'Checking…' : backupValue}
@@ -989,6 +989,42 @@ export const AdminSettings: React.FC = () => {
               tone={notificationStatus === 'unavailable' ? 'warning' : 'neutral'}
             />
           </div>
+
+          <section data-ams-feature-slug="settings-system-integrity" data-ams-slug="settings-system-integrity" className="rounded-card border border-line bg-panel p-5">
+            <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <Activity size={18} className="text-muted" />
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">System Integrity</h2>
+                  <p className="mt-1 text-[10px] text-muted">Server-side checks across backup, audit, and production readiness controls.</p>
+                </div>
+              </div>
+              <StatusBadge
+                tone={readinessTone}
+                label={productionReadiness?.productionReady ? 'Production ready' : 'Review gates'}
+              />
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ['Runtime', Boolean(productionReadiness?.gates?.runtime)],
+                ['PostgreSQL', Boolean(productionReadiness?.gates?.postgres)],
+                ['MFA', Boolean(productionReadiness?.gates?.mfa)],
+                ['Documents', Boolean(productionReadiness?.gates?.documentStorage)]
+              ].map(([label, ready]) => (
+                <div key={String(label)} className="flex items-center justify-between gap-2 rounded-control border border-line bg-bg px-3 py-2.5">
+                  <span className="text-[10px] text-muted">{String(label)}</span>
+                  {ready ? <Check size={14} className="text-success" /> : <AlertCircle size={14} className="text-warning" />}
+                </div>
+              ))}
+            </div>
+
+            {productionReadiness?.status?.reason && (
+              <div className="mt-3 rounded-control border border-warning/20 bg-warning/5 px-3 py-2.5 text-[11px] leading-5 text-warning">
+                {productionReadiness.status.reason}
+              </div>
+            )}
+          </section>
 
           <section data-ams-feature-slug="settings-backup-history" data-ams-slug="settings-backup-history" className="overflow-hidden rounded-card border border-line bg-panel">
             <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1111,41 +1147,7 @@ export const AdminSettings: React.FC = () => {
             </div>
           </section>
 
-          <section className="rounded-card border border-line bg-panel p-5">
-            <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <Activity size={18} className="text-muted" />
-                <div>
-                  <h2 className="text-sm font-semibold text-fg">System Integrity</h2>
-                  <p className="mt-1 text-[10px] text-muted">Server-side checks across backup, audit, and production readiness controls.</p>
-                </div>
-              </div>
-              <StatusBadge
-                tone={readinessTone}
-                label={productionReadiness?.productionReady ? 'Production ready' : 'Review gates'}
-              />
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                ['Runtime', Boolean(productionReadiness?.gates?.runtime)],
-                ['PostgreSQL', Boolean(productionReadiness?.gates?.postgres)],
-                ['MFA', Boolean(productionReadiness?.gates?.mfa)],
-                ['Documents', Boolean(productionReadiness?.gates?.documentStorage)]
-              ].map(([label, ready]) => (
-                <div key={String(label)} className="flex items-center justify-between gap-2 rounded-control border border-line bg-bg px-3 py-2.5">
-                  <span className="text-[10px] text-muted">{String(label)}</span>
-                  {ready ? <Check size={14} className="text-success" /> : <AlertCircle size={14} className="text-warning" />}
-                </div>
-              ))}
-            </div>
-
-            {productionReadiness?.status?.reason && (
-              <div className="mt-3 rounded-control border border-warning/20 bg-warning/5 px-3 py-2.5 text-[11px] leading-5 text-warning">
-                {productionReadiness.status.reason}
-              </div>
-            )}
-          </section>
+          
         </section>
       )}
 

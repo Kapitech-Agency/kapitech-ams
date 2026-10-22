@@ -274,3 +274,18 @@ test('Settings Integrations exposes its documented nested navigation without ena
   assert.ok(settings.includes("setSearchParams((current) => {"));
   assert.ok(settings.includes("}, { replace: true });"));
 });
+
+test('Settings overview orders source-backed status before the backup evidence register', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  const overview = source.indexOf('data-ams-slug="settings-overview"');
+  const statusSummary = source.indexOf('data-ams-feature-slug="settings-overview-status-summary"');
+  const integrity = source.indexOf('data-ams-feature-slug="settings-system-integrity"');
+  const backups = source.indexOf('data-ams-feature-slug="settings-backup-history"');
+
+  assert.ok(overview >= 0 && statusSummary > overview && integrity > statusSummary && backups > integrity,
+    'System Overview must present current status and integrity/readiness context before the backup evidence register.');
+  const overviewBody = source.slice(overview, source.indexOf("{activeTab === 'audit'", overview));
+  assert.ok(overviewBody.indexOf('Recent Production Backups') > overviewBody.indexOf('System Integrity'));
+  assert.match(overviewBody, /backupVerificationFor/);
+  assert.match(overviewBody, /productionReadiness\?\.status\?\.reason/);
+});
