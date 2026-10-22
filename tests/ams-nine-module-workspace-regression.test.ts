@@ -934,3 +934,20 @@ test('Contracts & SOWs exposes saved agreement details without simulating Contra
   assert.doesNotMatch(contracts.slice(detailDrawer), /api\.contracts\.(create|update|transition|delete)\(/,
     'The detail drawer must not introduce a new agreement mutation path.');
 });
+
+test('Case Studies filters saved publication state without hiding legacy published records', async () => {
+  const projects = await read('src/pages/admin/AdminCmsProjects.tsx');
+  const header = projects.indexOf('<AdminModuleHeader slug="cms-projects-header"');
+  const filters = projects.indexOf('slug="cms-projects-filters"');
+  const publicationFilter = projects.indexOf('slug="cms-projects-publication-filter"');
+  const notice = projects.indexOf('{statusMessage && (', header);
+  const directory = projects.indexOf('data-ams-slug="cms-projects-directory"');
+
+  assert.ok(header >= 0 && filters > header && publicationFilter > filters && notice > filters && directory > notice,
+    'Publication filtering must follow the main content filter bar and precede the case-study register.');
+  assert.match(projects, /isPublished: project\.isPublished !== false/);
+  assert.match(projects, /publicationFilter === 'all' \|\|\s*\(publicationFilter === 'published' \? project\.isPublished !== false : project\.isPublished === false\)/);
+  assert.match(projects, /setPublicationFilter\('all'\)/);
+  assert.match(projects, /disabled=\{!searchQuery && filterPillar === 'All' && publicationFilter === 'all'\}/);
+  assert.match(projects, /Adjust the search, pillar, or publication filter/);
+});

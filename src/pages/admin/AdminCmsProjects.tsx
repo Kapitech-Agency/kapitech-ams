@@ -73,6 +73,7 @@ export const AdminCmsProjects: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [filterPillar, setFilterPillar] = useState<'All' | 'Visual Experience' | 'Innovation Development'>('All');
+  const [publicationFilter, setPublicationFilter] = useState<'all' | 'published' | 'draft'>('all');
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState<'details' | 'preview'>('details');
@@ -370,6 +371,9 @@ export const AdminCmsProjects: React.FC = () => {
 
   const filteredProjects = projects.filter((project) => {
     const matchesPillar = filterPillar === 'All' || project.pillar === filterPillar;
+    // Legacy CMS records remain visible unless publication is explicitly false.
+    const matchesPublication = publicationFilter === 'all' ||
+      (publicationFilter === 'published' ? project.isPublished !== false : project.isPublished === false);
     const query = searchQuery.trim().toLowerCase();
     const searchable = [
       project.title,
@@ -385,11 +389,11 @@ export const AdminCmsProjects: React.FC = () => {
       ...project.deliverables,
       ...project.technologies
     ].map((value) => String(value || '').toLowerCase());
-    return matchesPillar && (!query || searchable.some((value) => value.includes(query)));
+    return matchesPillar && matchesPublication && (!query || searchable.some((value) => value.includes(query)));
   });
   const totalProjectPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
   const pagedProjects = filteredProjects.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => { setPage(1); }, [searchQuery, filterPillar, pageSize]);
+  useEffect(() => { setPage(1); }, [searchQuery, filterPillar, publicationFilter, pageSize]);
   useEffect(() => { setPage((current) => Math.min(current, totalProjectPages)); }, [totalProjectPages]);
 
   return (
@@ -433,9 +437,10 @@ export const AdminCmsProjects: React.FC = () => {
             onClick={() => {
               setSearchQuery('');
               setFilterPillar('All');
+              setPublicationFilter('all');
               setPage(1);
             }}
-            disabled={!searchQuery && filterPillar === 'All'}
+            disabled={!searchQuery && filterPillar === 'All' && publicationFilter === 'all'}
             className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
           >
             <X size={13} />
@@ -467,6 +472,21 @@ export const AdminCmsProjects: React.FC = () => {
               </button>
             );
           })}
+        </div>
+        <div className="w-full shrink-0 sm:w-[180px]">
+          <CustomSelect
+            value={publicationFilter}
+            onChange={(value) => setPublicationFilter(value as 'all' | 'published' | 'draft')}
+            size="sm"
+            aria-label="Filter case study publication status"
+            slug="cms-projects-publication-filter"
+            options={[
+              { value: 'all', label: 'All publication states' },
+              { value: 'published', label: 'Published' },
+              { value: 'draft', label: 'Drafts' },
+            ]}
+            triggerClassName="h-9 min-h-9 w-full"
+          />
         </div>
       </AdminFilterBar>
 
@@ -511,7 +531,7 @@ export const AdminCmsProjects: React.FC = () => {
       ) : filteredProjects.length === 0 ? (
         <div className="rounded-card border border-line bg-panel p-10 text-center">
           <p className="text-sm font-semibold text-fg">{projects.length === 0 ? 'No case studies yet' : 'No matching case studies'}</p>
-          <p className="mt-1 text-xs leading-5 text-muted">{projects.length === 0 ? 'Add a case study to publish it through the CMS.' : 'Adjust the search or pillar filter.'}</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{projects.length === 0 ? 'Add a case study to publish it through the CMS.' : 'Adjust the search, pillar, or publication filter.'}</p>
           {projects.length === 0 && (
             <button type="button" onClick={handleOpenAdd} className="mt-4 min-h-10 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover">Add case study</button>
           )}
