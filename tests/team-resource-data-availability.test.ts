@@ -30,7 +30,8 @@ test('missing source arrays and failed requests show unavailable states instead 
   assert.ok(source.includes('timeRes.success && Array.isArray(timeRes.data?.timeLogs)'));
   assert.ok(source.includes('Team data unavailable'));
   assert.ok(source.includes('Vendor data unavailable'));
-  assert.ok(source.includes('Capacity data unavailable'));
+  assert.ok(source.includes('Project allocation source unavailable. Refresh to retry.'));
+  assert.ok(source.includes('Time log source unavailable. Refresh to retry.'));
   assert.ok(source.includes('Vendor skill data unavailable'));
   assert.ok(source.includes('Time log data unavailable'));
 });
