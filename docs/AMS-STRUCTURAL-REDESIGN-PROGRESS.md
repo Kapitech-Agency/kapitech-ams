@@ -1906,3 +1906,17 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Exact-SHA AMS Quality Gate [39847810072 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847810072) and AMS CI [39847810037 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39847810037).
 - Authenticated browser, role and responsive accessibility evidence is **NOT VERIFIED**.
 - Next Stage 4 slice: Team & Resources → Skills & Service Matrix. Keep role-derived focus distinct from vendor-recorded skills, and do not fabricate proficiency or qualification scores.
+
+
+## Team & Resources Skills & Service Matrix source-state separation · Stage 4 · 23 October 2026
+
+**Source/test SHA:** [e7ec1292a6dea9d825b2d95d056cb37457d70f76](https://github.com/Kapitech-Agency/kapitech-ams/commit/e7ec1292a6dea9d825b2d95d056cb37457d70f76). Source patch began in [fec89326](https://github.com/Kapitech-Agency/kapitech-ams/commit/fec893269c7d379900a7eaba874f7aa779cf8501), with the variable-order fix in e7ec1292.
+
+- Before: the page treated member and vendor source availability as one combined state. If either source failed, both the internal role matrix and vendor skill coverage could be reported unavailable, even when the other source had loaded correctly.
+- After: internal member availability and vendor skill-data availability are evaluated separately. Their KPIs and table empty/loading/unavailable states use their owning source.
+- Last successfully loaded rows remain visible when refresh fails, with clear stale/unavailable context. A confirmed empty result is only shown when its own source returned successfully.
+- The vendor availability expression is derived after the vendor skill rows are calculated. No model, endpoint, route, permission or proficiency score was added.
+- Changed files: src/pages/admin/AdminTeams.tsx, tests/team-resource-data-availability.test.ts, tests/ams-team-skill-matrix-source-independence.test.ts.
+- Exact-SHA Quality Gate [39849098853 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849098853) and AMS CI [39849099042 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849099042).
+- Authenticated visual, role, responsive and accessibility review is **NOT VERIFIED**.
+- Next Stage 4 slice: Documents → Library. Recheck the previously implemented Library against current source, preserve secure file ownership and do not create a parallel attachment store.
