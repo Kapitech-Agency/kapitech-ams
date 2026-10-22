@@ -133,22 +133,25 @@ test('Dashboard Performance prioritizes task/project analysis before supporting 
   assert.match(performance, /Showing 8 of \{attentionProjects\.length\} projects with attention signals/);
 });
 
-test('Dashboard Analytics leads with period-scoped reports before summary metrics', async () => {
+test('Dashboard Analytics exposes report-first hierarchy and a single focused work surface', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf('const AnalyticsView: React.FC');
+  const start = dashboard.indexOf('type DashboardAnalyticsReport');
   const end = dashboard.indexOf('export const GlobalExecutiveDashboard', start);
   assert.ok(start >= 0 && end > start, 'Analytics workspace should have a bounded source section');
   const analytics = dashboard.slice(start, end);
-  const primary = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-primary"');
-  const trend = analytics.indexOf('title="Invoice and expense trend"', primary);
-  const periodControl = analytics.indexOf('<DashboardTrendRangePicker range={range} onChange={onRangeChange} />', trend);
-  const projectStatus = analytics.indexOf('title="Project status"', trend);
-  const supportingMetrics = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-supporting-metrics"', projectStatus);
-  assert.ok(primary >= 0 && trend > primary && periodControl > trend && projectStatus > trend && supportingMetrics > projectStatus,
-    'Analytics report surfaces and period control should precede supporting summary metrics.');
-  assert.ok(analytics.indexOf('slug="dashboard-analytics-kpis"') > supportingMetrics);
-  assert.match(analytics, /not a posted profit figure/);
+  const controls = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-controls"');
+  const financial = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-financial-report"');
+  const receivables = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-receivables-report"');
+  const projects = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
+  assert.ok(controls >= 0 && financial > controls && receivables > controls && projects > controls,
+    'Report and scope controls must precede each selectable report surface.');
+  assert.match(analytics, /<DashboardTrendRangePicker range=\{range\} onChange=\{onRangeChange\} \/>/);
+  assert.doesNotMatch(analytics, /dashboard-analytics-kpis/, 'Mixed-period summary metrics should not appear after the selected report.');
+  assert.match(analytics, /not posted profit/);
   assert.match(analytics, /Financial trend unavailable/);
+  assert.match(analytics, /A zero-value trend is not inferred from an empty source/);
+  assert.match(analytics, /Current invoice balances/);
+  assert.match(analytics, /Current project register/);
 });
 
 
