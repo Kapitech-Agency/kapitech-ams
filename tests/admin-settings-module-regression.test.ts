@@ -211,6 +211,29 @@ test('MFA setup, verification, and disable cannot submit duplicate requests', as
   assert.ok(source.includes("setMfaDisableCode('')"));
 });
 
+
+
+test('Audit Log preserves loaded events while refreshing the canonical read-only ledger', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  const start = source.indexOf('data-ams-feature-slug="settings-audit-register"');
+  const viewport = source.indexOf('aria-label="Scrollable system audit log"', start);
+  const pagination = source.indexOf('slug="settings-audit-pagination"', viewport);
+  assert.ok(start >= 0 && viewport > start && pagination > viewport, 'Audit register and pagination should remain identifiable.');
+
+  const auditSection = source.slice(start, pagination);
+  assert.ok(auditSection.includes('auditLoading && logs.length > 0'),
+    'Refresh should present a non-blocking state while retaining loaded events.');
+  assert.ok(auditSection.includes('Previously loaded entries remain visible while the latest events are being checked.'));
+  assert.ok(auditSection.includes('auditLoading && logs.length === 0 ?'),
+    'Skeleton should replace the ledger only when no events have been loaded yet.');
+  assert.ok(auditSection.includes('auditError && filteredLogs.length > 0'));
+  assert.ok(auditSection.includes('Showing the last successfully loaded entries.'));
+  assert.ok(auditSection.includes('auditError && filteredLogs.length === 0'),
+    'A failed refresh with no matching cached rows must stay an unavailable state, not a confirmed empty ledger.');
+  assert.ok(auditSection.includes('No audit entries found'));
+  assert.ok(auditSection.includes('Time scope follows the shared reporting-period selection.'));
+  assert.ok(auditSection.includes('setSelectedAuditLog(log)'));
+});
 test('Audit and account pagination clamp after refreshed data is reduced', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
 

@@ -1298,6 +1298,13 @@ export const AdminSettings: React.FC = () => {
             <p className="col-span-full text-[10px] leading-4 text-muted">Time scope follows the shared reporting-period selection. Search covers recorded actor, event, details and origin/IP fields.</p>
           </div>
 
+          {auditLoading && logs.length > 0 && (
+            <div className="flex items-start gap-2.5 border-b border-line bg-bg px-5 py-3 text-[11px] text-muted" role="status" aria-live="polite">
+              <Activity size={14} className="mt-0.5 shrink-0" />
+              <span>Refreshing audit log. Previously loaded entries remain visible while the latest events are being checked.</span>
+            </div>
+          )}
+
           {auditError && filteredLogs.length > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-danger/20 bg-danger/5 px-5 py-3 text-[11px] text-danger" role="alert">
               <span>{auditError} Showing the last successfully loaded entries.</span>
@@ -1306,7 +1313,7 @@ export const AdminSettings: React.FC = () => {
           )}
 
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable system audit log">
-            {auditLoading ? (
+            {auditLoading && logs.length === 0 ? (
               <div className="px-5 py-10">{renderSkeleton()}</div>
             ) : auditError && filteredLogs.length === 0 ? (
               <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center" role="alert">
