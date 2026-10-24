@@ -844,6 +844,18 @@ test('Embedded invoice registers lead supporting summaries and receivables aging
   assert.ok(invoicing.includes('{!embedded && invoiceSummary}'));
   assert.ok(pagination >= 0 && embeddedSummary > pagination && agingView > embeddedSummary,
     'The actionable invoice register must precede supporting summary and aging views.');
+
+  const invoiceList = invoicing.indexOf('<div className="overflow-x-auto custom-scrollbar">{filteredInvoices.length===0?');
+  const invoiceTableStart = invoicing.indexOf('<table className="ams-finance-table min-w-[1120px] table-fixed border-separate border-spacing-0 text-xs">', invoiceList);
+  const invoiceTableEnd = invoicing.indexOf('</table>', invoiceTableStart);
+  const invoiceTable = invoicing.slice(invoiceTableStart, invoiceTableEnd);
+  assert.ok(invoiceList >= 0 && invoiceTableStart > invoiceList && invoiceTableEnd > invoiceTableStart,
+    'The primary invoice register must provide a contained horizontal scroll region on narrow screens.');
+  assert.ok(invoiceTable.includes('>Invoice</th>'));
+  assert.ok(invoiceTable.includes('Client & project'));
+  assert.ok(invoiceTable.includes('>Issued</th>') && invoiceTable.includes('>Due</th>'));
+  assert.ok(invoiceTable.includes('>Total</th>') && invoiceTable.includes('>Balance</th>'));
+  assert.ok(invoiceTable.includes('>Status</th>') && invoiceTable.includes('>Actions</th>'));
   assert.match(invoicing, /currencyInvoices\s+\.filter\(\(invoice\) => !\['draft', 'cancelled'\]\.includes\(invoice\.status\)\)/);
   assert.match(invoicing, /label: 'Due date missing or invalid'/);
   assert.match(invoicing, /balance <= 0\.009/);
