@@ -996,3 +996,23 @@ test('Insights exposes a full editorial-filter reset before the canonical regist
   assert.match(insights, /statusOptions = useMemo\(\(\) => \[\s*\{ value: '', label: 'All statuses' \}/);
   assert.match(insights, /api\.cms\.getInsights\(\{/);
 });
+
+test('Careers job list identifies title-text matches without implying a stable applicant-to-job link', async () => {
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+  assert.match(careers, /positionTitle\?: string;/);
+  assert.doesNotMatch(careers.slice(careers.indexOf('type Applicant ='), careers.indexOf('type WorkspaceTab')), /jobId|positionId/);
+  assert.match(careers, /String\(item\.positionTitle \|\| ''\)\.toLowerCase\(\) === position\.title\.toLowerCase\(\)/);
+  assert.match(careers, /String\(item\.positionTitle \|\| ''\)\.toLowerCase\(\) === position\.titleId\.toLowerCase\(\)/);
+
+  const jobs = careers.slice(careers.indexOf('data-ams-feature-slug="cms-careers-list"'), careers.indexOf('data-ams-feature-slug="cms-careers-applicants"'));
+  const basis = jobs.indexOf('data-ams-slug="careers-applicant-count-basis"');
+  const filters = jobs.indexOf('aria-label="Search job openings"');
+  const cards = jobs.indexOf('data-ams-feature-slug="cms-careers-jobs-cards"');
+  const table = jobs.indexOf('Scrollable job openings register');
+  assert.ok(filters >= 0 && basis > filters && cards > basis && table > basis,
+    'The explanation of title-text matches should appear after filters and before job rows.');
+  assert.match(jobs, /Position text matches/);
+  assert.match(jobs, /Kecocokan teks posisi/);
+  assert.match(jobs, /Current applicant records do not expose a stable job ID/);
+  assert.match(jobs, /Record pelamar saat ini tidak menyediakan ID lowongan yang stabil/);
+});

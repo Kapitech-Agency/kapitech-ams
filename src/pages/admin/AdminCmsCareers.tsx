@@ -583,6 +583,11 @@ export const AdminCmsCareers: React.FC = () => {
               <RefreshCw size={13} /> {isId ? 'Reset' : 'Reset'}
             </button>
           </div>
+          <p className="text-[10px] leading-5 text-muted" data-ams-slug="careers-applicant-count-basis">
+            {isId
+              ? 'Jumlah ini membandingkan teks posisi pada lamaran dengan judul atau judul ID lowongan. Record pelamar saat ini tidak menyediakan ID lowongan yang stabil.'
+              : 'This count compares submitted position text with the job title or title ID. Current applicant records do not expose a stable job ID.'}
+          </p>
 
           {jobsLoading ? (
             <div className="grid gap-3 lg:grid-cols-2" role="status" aria-label="Loading job openings">
@@ -626,7 +631,7 @@ export const AdminCmsCareers: React.FC = () => {
                         <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Departemen' : 'Department'}</p><p className="mt-1 break-words text-xs text-fg">{position.department || '—'}</p></div>
                         <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Jenis kerja' : 'Work type'}</p><p className="mt-1 break-words text-xs text-fg">{position.type} · {position.workplace}</p></div>
                         <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Lokasi' : 'Location'}</p><p className="mt-1 break-words text-xs text-fg">{position.location || '—'}</p></div>
-                        <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Pelamar' : 'Applicants'}</p><p className="mt-1 text-xs font-medium tabular-nums text-fg">{applicantCount === null ? '—' : applicantCount}</p></div>
+                        <div className="min-w-0"><p className="text-[10px] text-muted">{isId ? 'Kecocokan teks posisi' : 'Position text matches'}</p><p className="mt-1 text-xs font-medium tabular-nums text-fg">{applicantCount === null ? '—' : applicantCount}</p></div>
                       </div>
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                         <button type="button" onClick={() => void togglePublished(position)} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover" title={position.isPublished ? 'Unpublish' : 'Publish'}>
@@ -646,7 +651,7 @@ export const AdminCmsCareers: React.FC = () => {
                   <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                     <th className="px-4 py-3">{isId ? 'Lowongan' : 'Position'}</th>
                     <th className="px-4 py-3">{isId ? 'Detail' : 'Details'}</th>
-                    <th className="px-4 py-3">{isId ? 'Pelamar' : 'Applicants'}</th>
+                    <th className="px-4 py-3">{isId ? 'Kecocokan teks posisi' : 'Position text matches'}</th>
                     <th className="px-4 py-3">{isId ? 'Status' : 'Status'}</th>
                     <th className="px-4 py-3 text-right">{isId ? 'Aksi' : 'Actions'}</th>
                   </tr></thead>
@@ -672,7 +677,7 @@ export const AdminCmsCareers: React.FC = () => {
                             <p className="mt-1 text-[10px] text-muted">{position.type} · {position.workplace}</p>
                             <p className="mt-1 text-[10px] text-muted">{position.location}</p>
                           </td>
-                          <td className="px-4 py-3"><span className="font-mono tabular-nums text-fg">{applicantCount === null ? '—' : applicantCount}</span><span className="ml-1 text-[10px] text-muted">{isId ? 'lamaran' : 'applications'}</span></td>
+                          <td className="px-4 py-3"><span className="font-mono tabular-nums text-fg">{applicantCount === null ? '—' : applicantCount}</span></td>
                           <td className="px-4 py-3">
                             <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-medium ' + (position.isPublished ? 'border-success/25 bg-success/10 text-success' : 'border-line bg-bg text-muted')}>
                               <span className={'h-1.5 w-1.5 rounded-full ' + (position.isPublished ? 'bg-success' : 'bg-muted')} />
