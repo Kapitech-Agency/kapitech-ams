@@ -2002,3 +2002,17 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Exact-SHA Quality Gate [40068194479 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40068194479). AMS CI [40068194512 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40068194512), which reports high `body-parser@1.20.6` via Express (GHSA-27r3-jxmh-p828). Typecheck, migrations, security regression and PostgreSQL integration passed; production build and HTTP smoke were skipped. No dependency files changed. Keep the audit finding in a separate authorized dependency-maintenance task.
 - Privileged-role browser, responsive, keyboard/focus and provider-runtime checks remain **NOT VERIFIED**.
 - Next Stage 4 slice: Dashboard → Overview, following module order. Do not fabricate record-level links for audit entries without a structured target field.
+
+## Dashboard Overview manual refresh and stale-response recovery · Stage 4 · 24 October 2026
+
+**Source/test SHA:** [4ebf0d880a8537e85cee1ba6a9fe73aa8f850e04](https://github.com/Kapitech-Agency/kapitech-ams/commit/4ebf0d880a8537e85cee1ba6a9fe73aa8f850e04).
+
+- Before: Dashboard sources loaded only on mount. There was no explicit refresh control; a refresh or failed request could replace previously available source rows with unavailable/null results without retaining a last-known value for the failed source.
+- After: Dashboard header includes an accessible Refresh data action. Existing Dashboard, Projects, Tasks, Time Logs, Invoices and Expenses queries run together when refreshing. Existing values stay on screen while requests run.
+- If an operational endpoint fails or returns an unusable row collection, its prior successful array is retained; if no prior array exists, the source remains unavailable and is not represented as zero. The warning identifies failed sources.
+- A successful but partial dashboard-summary response preserves previously available metrics, financials and recent activity. The summary is explicitly marked stale when the latest response omits fields that existed previously. Current returned values replace retained values as they become available.
+- Existing aggregation formulas, priority-exception logic, routes/drill-downs, audit-log permission, audit-event field/privacy boundaries and data contracts remain unchanged. No API, backend, database, dependency, posting or permission changes.
+- Changed files: `src/components/admin/GlobalExecutiveDashboard.tsx`, `tests/ams-dashboard-overview-refresh-recovery.test.ts`, `tests/ams-dashboard-overview-hierarchy.test.ts`.
+- Exact-SHA Quality Gate [40069641643 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40069641643). AMS CI [40069641629 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40069641629), which reports the existing high `body-parser@1.20.6` advisory via Express, GHSA-27r3-jxmh-p828. This frontend slice changes no dependencies or lockfiles.
+- Authenticated browser refresh/failure combinations, role boundary, visual reflow, keyboard/focus and live-data reconciliation remain **NOT VERIFIED**. Stage 5 and explicit user sign-off remain mandatory.
+- Next Stage 4 slice: Projects → Planning & Delivery. Inspect current Brief, Milestones and Timeline implementation, then address only the next bounded source-backed content gap. Keep Campaigns and Project Controls unavailable without canonical models.

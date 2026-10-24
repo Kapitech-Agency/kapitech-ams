@@ -1141,3 +1141,15 @@ A non-blocking refresh state is displayed when server readiness is being recheck
 Exact-SHA Quality Gate [40068194479 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40068194479). AMS CI [40068194512 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40068194512), reporting one high `body-parser@1.20.6` DoS advisory via Express, GHSA-27r3-jxmh-p828. Typecheck, migration, security and PostgreSQL checks passed; downstream build and HTTP smoke were skipped. Browser/role/accessibility status: **NOT VERIFIED**.
 
 Next Stage 4 slice: Dashboard → Overview, following roadmap order.
+
+### VIEW-DASH-OVERVIEW: Add safe manual refresh and preserve last-known source values
+
+**Source/test SHA:** [4ebf0d880a8537e85cee1ba6a9fe73aa8f850e04](https://github.com/Kapitech-Agency/kapitech-ams/commit/4ebf0d880a8537e85cee1ba6a9fe73aa8f850e04).
+
+Dashboard Overview now exposes a keyboard-accessible Refresh data action that reruns the existing dashboard summary, Projects, Tasks, Time Logs, Invoices and Expenses queries. Last successful source values remain visible while requests run and when an individual request fails. Failed source labels appear in a non-blocking warning; unavailable first-load sources remain unavailable rather than becoming synthetic zeroes. A partial successful dashboard-summary response also marks the summary stale when fields previously available are omitted. Existing aggregate formulas, task/project exception rules, drill-downs, and audit-event permission and privacy boundaries remain unchanged.
+
+**Changed files:** `src/components/admin/GlobalExecutiveDashboard.tsx`, `tests/ams-dashboard-overview-refresh-recovery.test.ts`, `tests/ams-dashboard-overview-hierarchy.test.ts`.
+
+Exact-SHA Quality Gate [40069641643 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40069641643). AMS CI [40069641629 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40069641629), with the existing high `body-parser@1.20.6` advisory (GHSA-27r3-jxmh-p828). The frontend work made no dependency changes. **Authenticated browser, role, visual, responsive and accessibility status: NOT VERIFIED.**
+
+Continue Stage 4 with Projects → Planning & Delivery. Inspect source-backed Brief, Milestones and Timeline views before selecting the next bounded slice; keep Content & Campaigns and Project Controls unavailable while canonical models remain absent.
