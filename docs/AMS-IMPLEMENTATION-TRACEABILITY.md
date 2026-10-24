@@ -1203,3 +1203,15 @@ Client 360’s Finance shortcut adds `clientId=selectedClient.id` to the existin
 Exact-SHA Quality Gate [40078483239 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078483239): typecheck, regression tests and production build. AMS CI [40078483229 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078483229); migration, security regression and PostgreSQL integration passed. The only failing CI step remains the existing high `body-parser@1.20.6` advisory. **Browser/role/responsive/keyboard/assistive-technology: NOT VERIFIED.**
 
 **Next cross-module check:** Project → Client context. Verify the existing project drawer’s relationship link against canonical client ID and current route policy. Do not build a new page or invent data/API fields.
+
+### DATA-001: Project detail → Client Directory canonical relationship navigation · 24 October 2026
+
+**Latest exact source/test SHA:** [66cd7ca38fba9d2e4e3b053612df271815e67f64](https://github.com/Kapitech-Agency/kapitech-ams/commit/66cd7ca38fba9d2e4e3b053612df271815e67f64). Source change [b8ee1c7d](https://github.com/Kapitech-Agency/kapitech-ams/commit/b8ee1c7dcef694b2e7edada58891de6208a9e3fe).
+
+Project detail uses the existing `canReadClients` guard and canonical `api.clients.getAll()` source to resolve `selectedProjectDetail.clientId`. A link is rendered only if the loaded list contains the exact client ID; it targets the existing `/admin/clients/all-clients?client=ID` destination, which `AdminClients` consumes to open the selected record. No company-name matching is used. Loading, source-error, and unmatched-ID outcomes remain non-clickable status text. Users without client-read permission do not see this panel.
+
+**Changed files:** `src/pages/admin/AdminProjects.tsx`, `tests/ams-nine-module-workspace-regression.test.ts`, `tests/frontend-functional-regression.test.ts` (loader regression assertion aligned to `React.useCallback` and the loaded-state contract).
+
+Exact-SHA Quality Gate [40078994964 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078994964): typecheck, regression tests and production build. AMS CI [40078994978 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078994978); typecheck, migrations, security regression and PostgreSQL integration passed. Existing high `body-parser@1.20.6` advisory unchanged. **Browser/role/responsive/keyboard/assistive-technology: NOT VERIFIED.**
+
+**Next:** audit Project → Documents link eligibility. Documents route access is stricter than Projects for non-admin roles, so any shortcut must be gated by the existing route policy and must not grant access.

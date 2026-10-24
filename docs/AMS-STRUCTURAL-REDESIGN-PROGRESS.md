@@ -2139,3 +2139,15 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - **Validation:** Exact-SHA Quality Gate [40078483239 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078483239) for typecheck, full regression tests and production build. AMS CI [40078483229 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078483229); typecheck, PostgreSQL migration, security regression and PostgreSQL integration passed. No dependencies changed.
 - **Not verified:** authenticated browser access, real client/invoice visibility by role, direct-load/back-forward, responsive reflow, keyboard/focus and assistive technology. Stage 5 remains mandatory.
 - **Next:** Project → Client context using only existing canonical record links and role-safe routes. Do not introduce a new record-detail page or backend contract.
+
+## Stage 4 cross-module pass: Project detail → Client Directory canonical link · 24 October 2026
+
+**Latest exact source/test SHA:** [66cd7ca38fba9d2e4e3b053612df271815e67f64](https://github.com/Kapitech-Agency/kapitech-ams/commit/66cd7ca38fba9d2e4e3b053612df271815e67f64). Source change [b8ee1c7d](https://github.com/Kapitech-Agency/kapitech-ams/commit/b8ee1c7dcef694b2e7edada58891de6208a9e3fe).
+
+- **Before:** Project detail showed client contact/company text but did not route to the canonical Client record when an explicit `clientId` existed.
+- **After:** For roles already allowed to read Clients, the drawer resolves the project ID through the existing canonical client list. It displays a link only if the returned list contains the exact ID, to `/admin/clients/all-clients?client=ID`, which the Client Directory already uses to open the matching drawer. No company-name matching or new relationship is inferred.
+- **Recovery and role behavior:** Client-list loading is memoized with `React.useCallback` and a loaded state. Loading/error/unmatched results stay non-clickable. If `canReadClients` is false, the cross-module panel is omitted.
+- **Changed files:** `src/pages/admin/AdminProjects.tsx`, `tests/ams-nine-module-workspace-regression.test.ts`, and `tests/frontend-functional-regression.test.ts` updated to target the callback/loaded-state contract instead of requiring the old async declaration syntax.
+- **Validation:** Quality Gate [40078994964 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078994964), including typecheck, regression tests and production build. AMS CI [40078994978 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078994978); typecheck, migration, security regression and PostgreSQL integration passed. No dependencies changed.
+- **NOT VERIFIED:** real authenticated role/browser routing, direct URL/back/forward, responsive, keyboard/focus and assistive technology. Stage 5 remains open.
+- **Next:** audit Project → Documents link eligibility because the current Documents destination has a stricter route policy.
