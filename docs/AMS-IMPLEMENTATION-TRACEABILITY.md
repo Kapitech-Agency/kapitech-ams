@@ -514,15 +514,15 @@ The findings above are source-level risks and release-control gaps, not claims t
 
 ### PROJ-PLANNING-003: Planning & Delivery exposes source-backed brief, milestones and timeline views
 
-**Status:** IMPLEMENTED_VERIFIED for source, typecheck, regression tests and production build on `c0c63aea176ced4fc5c72613d056f1d5f28c3352`; authenticated browser verification remains outstanding.
-**Scope:** Frontend/query navigation and presentation over existing `AgencyProject` and `ProjectMilestone` records only. The current model does not supply separate scope/deliverable, internal QA, client review, revision history or dependency records; those worksheets remain unavailable.
+**Status:** IMPLEMENTED_VERIFIED for current source/test SHA [8b2458988516f75c72a1d323a9fdc21a1fdb7bc9](https://github.com/Kapitech-Agency/kapitech-ams/commit/8b2458988516f75c72a1d323a9fdc21a1fdb7bc9); authenticated browser verification remains outstanding.
+**Scope:** Frontend/query navigation and presentation over existing `AgencyProject`, `ProjectMilestone` and `ProjectTask` records only. The current model does not supply separate scope/deliverable, internal QA, client review, revision history, milestone owner or dependency records; those worksheets/fields remain unavailable.
 
 **Source:** `src/pages/admin/AdminProjects.tsx`, `src/lib/projectStore.ts`.  
-**Tests:** `tests/ams-sidebar-subnavigation.test.ts`, `tests/projects-module-regression.test.ts`.  
-**Acceptance:** Project Brief, Milestones and Timeline have distinct query state; project selector preserves the active worksheet; unknown worksheet values normalize to Brief; leaving Planning & Delivery removes stale worksheet state; no records are invented and no untracked workflow outcomes are inferred.  
-**Validation:** AMS Quality Gate [39157322660](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157322660) and AMS CI [39157322657](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39157322657) passed on that source commit. No local test/build can be claimed.
-**Next action:** Carry direct entry, refresh/back/forward, keyboard and responsive tests into Stage 5.
-
+**Tests:** `tests/projects-module-regression.test.ts`, `tests/ams-sidebar-subnavigation.test.ts`.  
+**Acceptance:** Project Brief, Milestones and Timeline have distinct query state; the project selector preserves the active worksheet; unknown worksheet values normalize to Brief; leaving Planning & Delivery removes stale worksheet state; no records are invented and no untracked workflow outcomes are inferred. The milestone register exposes a named semantic table with columnheader/cell roles, desktop headings for Milestone, Due date and Status, and a visible Due date label on compact layouts.  
+**Validation:** Exact-SHA AMS Quality Gate [40072909356 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40072909356): typecheck, regression tests and production build passed. AMS CI [40072909292 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40072909292) for the existing high `body-parser@1.20.6` advisory; downstream packaging and HTTP smoke were skipped. No dependency files were changed.  
+**Browser/accessibility:** NOT VERIFIED. No authenticated screenshot, role/permission matrix, viewport sweep, keyboard/touch or runtime assistive-technology evidence was captured. Do not claim WCAG 2.2 AA from source checks alone.  
+**Next action:** Continue Stage 4 in canonical order with Clients → Directory / Client 360; carry authenticated visual and responsive review into Stage 5.
 ### TIME-LOGS-002: Billing and project time worksheets are source-backed read-only views
 
 **Status:** IMPLEMENTED_VERIFIED for source, typecheck, regression tests, production build and AMS CI on descendant commit `9067e10f2d11333ada9b655de72241684e869e15`; authenticated browser verification remains outstanding.

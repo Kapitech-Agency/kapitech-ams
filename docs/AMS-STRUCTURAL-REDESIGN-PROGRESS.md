@@ -2016,3 +2016,17 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Exact-SHA Quality Gate [40069641643 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40069641643). AMS CI [40069641629 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40069641629), which reports the existing high `body-parser@1.20.6` advisory via Express, GHSA-27r3-jxmh-p828. This frontend slice changes no dependencies or lockfiles.
 - Authenticated browser refresh/failure combinations, role boundary, visual reflow, keyboard/focus and live-data reconciliation remain **NOT VERIFIED**. Stage 5 and explicit user sign-off remain mandatory.
 - Next Stage 4 slice: Projects → Planning & Delivery. Inspect current Brief, Milestones and Timeline implementation, then address only the next bounded source-backed content gap. Keep Campaigns and Project Controls unavailable without canonical models.
+
+## Projects Planning & Delivery milestone register clarity · Stage 4 · 24 October 2026
+
+**Exact source/test SHA:** [8b2458988516f75c72a1d323a9fdc21a1fdb7bc9](https://github.com/Kapitech-Agency/kapitech-ams/commit/8b2458988516f75c72a1d323a9fdc21a1fdb7bc9). Previous bounded UI change: [b4132fea](https://github.com/Kapitech-Agency/kapitech-ams/commit/b4132fea660150217bb0f4f5f6588c6cd2322939).
+
+- Before: the existing canonical milestone register had source-backed title, due date and completion/overdue state, but no explicit column headings; compact rows displayed a date without a visible field label.
+- After: the register uses semantic table, row, rowgroup, columnheader and cell roles. Desktop headings read Milestone, Due date and Status; compact rows label the recorded date as Due date.
+- The active project scope and query state, milestone sorting, existing due-date values, completion and overdue calculations, loading/empty states, routes and actions remain unchanged. No owners, dependencies, approvals, deliverables or extra project records were added because the canonical model does not supply those records.
+- Changed files: `src/pages/admin/AdminProjects.tsx`, `tests/projects-module-regression.test.ts`.
+- Exact-SHA Quality Gate [40072909356 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40072909356): typecheck, regression tests and production build succeeded.
+- Exact-SHA AMS CI [40072909292 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40072909292) due to the existing high `body-parser@1.20.6` advisory via Express. Downstream packaging/HTTP smoke stages were skipped. No dependency files changed.
+- Authenticated browser screenshots, role checks, viewport sweep, touch/keyboard behavior and runtime accessibility are **NOT VERIFIED**. Do not claim WCAG compliance from source/CI alone.
+- Next canonical slice: Clients → Directory / Client 360. The Projects Campaigns and Project Controls workspaces stay unavailable until canonical records and workflows exist.
+
