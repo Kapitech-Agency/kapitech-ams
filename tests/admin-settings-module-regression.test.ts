@@ -443,3 +443,26 @@ test('Integration overview keeps unknown gates and provider connectivity distinc
   assert.match(source, /Manage public metadata through the existing CMS API\. This view does not report provider connection or content-sync health\./);
   assert.doesNotMatch(source.slice(overviewStart, healthStart), /productionReadiness\?\.status\?\.datasource \|\| 'PostgreSQL'/);
 });
+
+test('Users & Access distinguishes missing MFA data from explicitly disabled MFA', async () => {
+  const settings = await read('src/pages/admin/AdminSettings.tsx');
+  const auth = await read('src/lib/adminAuth.ts');
+  const routes = await read('server/routes.ts');
+
+  assert.match(auth, /mfaEnabled\?: boolean/);
+  assert.match(routes, /mfaEnabled: u\.mfaEnabled/);
+  assert.match(settings, /const accountMfaLabel = \(value: boolean \| undefined\) =>/);
+  assert.match(settings, /value === true \? 'Enabled' : value === false \? 'Not configured' : 'Not reported'/);
+  assert.match(settings, /const accountMfaTone = \(value: boolean \| undefined\): keyof typeof statusClasses =>/);
+  assert.match(settings, /value === true \? 'success' : value === false \? 'warning' : 'neutral'/);
+
+  const accountStart = settings.indexOf('data-ams-feature-slug="settings-account-directory"');
+  const auditStart = settings.indexOf("{activeTab === 'audit'", accountStart);
+  assert.ok(accountStart >= 0 && auditStart > accountStart);
+  const accountView = settings.slice(accountStart, auditStart);
+  assert.equal((accountView.match(/accountMfaLabel\(account\.mfaEnabled\)/g) || []).length, 2,
+    'Compact cards and desktop table must use the same truthful MFA state label.');
+  assert.equal((accountView.match(/accountMfaTone\(account\.mfaEnabled\)/g) || []).length, 2,
+    'Compact cards and desktop table must use the same MFA tone.');
+  assert.doesNotMatch(accountView, /account\.mfaEnabled \? 'Enabled' : 'Not configured'/);
+});

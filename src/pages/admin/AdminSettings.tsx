@@ -137,6 +137,12 @@ const StatusBadge: React.FC<{
   </span>
 );
 
+const accountMfaLabel = (value: boolean | undefined) =>
+  value === true ? 'Enabled' : value === false ? 'Not configured' : 'Not reported';
+
+const accountMfaTone = (value: boolean | undefined): keyof typeof statusClasses =>
+  value === true ? 'success' : value === false ? 'warning' : 'neutral';
+
 const SummaryCard: React.FC<{
   label: string;
   value: string;
@@ -1942,7 +1948,7 @@ export const AdminSettings: React.FC = () => {
                             <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
                               <div className="min-w-0"><p className="text-[10px] text-muted">Role</p><p className="mt-1 break-words text-xs text-fg">{account.role}</p></div>
                               <div className="min-w-0"><p className="text-[10px] text-muted">Division</p><p className="mt-1 break-words text-xs text-fg">{account.division}</p></div>
-                              <div className="min-w-0"><p className="text-[10px] text-muted">MFA</p><div className="mt-1"><StatusBadge tone={account.mfaEnabled ? 'success' : 'warning'} label={account.mfaEnabled ? 'Enabled' : 'Not configured'} /></div></div>
+                              <div className="min-w-0"><p className="text-[10px] text-muted">MFA</p><div className="mt-1"><StatusBadge tone={accountMfaTone(account.mfaEnabled)} label={accountMfaLabel(account.mfaEnabled)} /></div></div>
                               <div className="min-w-0"><p className="text-[10px] text-muted">Last login (UTC)</p><p className="mt-1 break-words text-xs tabular-nums text-fg">{formatUtc(account.lastLogin)}</p></div>
                             </div>
                             <div className="mt-3 flex justify-end">
@@ -1983,7 +1989,7 @@ export const AdminSettings: React.FC = () => {
                               <td className="text-[11px] text-fg">{account.role}</td>
                               <td className="text-[11px] text-muted">{account.division}</td>
                               <td><StatusBadge tone={account.status === 'active' ? 'success' : 'warning'} label={account.status === 'active' ? 'Active' : 'Suspended'} /></td>
-                              <td><StatusBadge tone={account.mfaEnabled ? 'success' : 'warning'} label={account.mfaEnabled ? 'Enabled' : 'Not configured'} /></td>
+                              <td><StatusBadge tone={accountMfaTone(account.mfaEnabled)} label={accountMfaLabel(account.mfaEnabled)} /></td>
                               <td className="text-[11px] tabular-nums text-muted">{formatUtc(account.lastLogin)}</td>
                               <td className="text-right">
                                 {isCurrentMaster && !masterAccount ? (
