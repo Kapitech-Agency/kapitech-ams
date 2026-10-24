@@ -1089,3 +1089,16 @@ The applicants register now keeps the last successfully loaded records visible w
 Exact-SHA Quality Gate [40066713946 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40066713946). AMS CI [40066713864 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40066713864) due one high `body-parser` denial-of-service advisory for versions below 1.20.9. Typecheck, migration, security regression and PostgreSQL integration passed; downstream build and smoke steps were skipped. Do not claim full CI passed. Resolve the audit finding in an authorized dependency-maintenance task, outside this UI slice. Browser/visual/accessibility status: **NOT VERIFIED**.
 
 Next Stage 4 slice: Settings → System Overview. Verify source-backed status, freshness and exceptions. Distinguish backup existence, integrity verification and proven restore.
+
+
+### VIEW-SETTINGS-OVERVIEW: Keep operational backup history independent of the business reporting period
+
+**Source/test SHA:** [4e2312f2e56c248352e1efe10f620e0be3cc1420](https://github.com/Kapitech-Agency/kapitech-ams/commit/4e2312f2e56c248352e1efe10f620e0be3cc1420); source implementation [c8d5cfe6](https://github.com/Kapitech-Agency/kapitech-ams/commit/c8d5cfe657c2ebb79f60bbfffebff26349f0fe43).
+
+Recent Production Backups now shows up to eight latest server-returned snapshots in compact and desktop layouts without filtering them by the shared business reporting period. Empty-source copy refers to production backup snapshots. Existing API source-error/stale behavior and freshness/integrity/restore evidence remain unchanged. The Audit Log continues to use `matchesDate(log.timestamp)` and retains its visible reporting-period message.
+
+**Changed files:** `src/pages/admin/AdminSettings.tsx`, `tests/ams-settings-backup-period-independence.test.ts`, `tests/global-reporting-period.test.ts`.
+
+Exact-SHA Quality Gate [40067197014 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067197014). AMS CI [40067196870 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067196870), reporting one high `body-parser@1.20.6` denial-of-service advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. No dependency files changed. Browser/visual/accessibility verification: **NOT VERIFIED**.
+
+Next Stage 4 slice: Settings → Users & Access. Retain existing server-managed policy and permissions.

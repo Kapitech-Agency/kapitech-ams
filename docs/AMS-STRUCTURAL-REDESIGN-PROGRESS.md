@@ -1947,4 +1947,18 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Exact-SHA Quality Gate [40066713946 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40066713946). Typecheck, regression tests and production build succeeded.
 - AMS CI [40066713864 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40066713864). Logs report one high `body-parser` denial-of-service advisory affecting versions below 1.20.9. Typecheck, migrations, security regression and PostgreSQL integration passed. Production build, packaged-migration verification and HTTP smoke were skipped after the audit gate failure. The frontend slice changed no dependency manifests or lockfiles. Route the audit finding to the authorized dependency-maintenance task instead of expanding this frontend-only change.
 - Authenticated browser, reviewer-role, responsive, keyboard/focus and public-output evidence remains **NOT VERIFIED**.
-- Next Stage 4 slice: Settings → System Overview. Use only existing source-backed status and exception records; do not infer backup integrity or successful restore from snapshot creation. Preferences stays unavailable until its per-user source/API contract is approved.
+- Next Stage 4 slice: Settings → Users & Access. Use only existing source-backed status and exception records; do not infer backup integrity or successful restore from snapshot creation. Preferences stays unavailable until its per-user source/API contract is approved.
+
+
+## Settings System Overview operational backup history · Stage 4 · 24 October 2026
+
+**Source/test SHA:** [4e2312f2e56c248352e1efe10f620e0be3cc1420](https://github.com/Kapitech-Agency/kapitech-ams/commit/4e2312f2e56c248352e1efe10f620e0be3cc1420). Implementation starts at [c8d5cfe6](https://github.com/Kapitech-Agency/kapitech-ams/commit/c8d5cfe657c2ebb79f60bbfffebff26349f0fe43); legacy period-scope assertions were aligned in [4e2312f2](https://github.com/Kapitech-Agency/kapitech-ams/commit/4e2312f2e56c248352e1efe10f620e0be3cc1420).
+
+- Before: Recent Production Backups used the shared business reporting period, so an operational snapshot could disappear when a month/quarter/year other than its creation date was selected.
+- After: both compact cards and desktop table show up to eight latest server-returned backup records independently of the global business period. A valid empty result is labeled “No production backup snapshots are available.”
+- The existing loading, backup source error, last-successful data, integrity/freshness/restore evidence labels, integrity-check action and Create Snapshot action remain unchanged.
+- Audit Log intentionally retains its shared reporting-period scope and visible time-scope explanation.
+- Changed files: `src/pages/admin/AdminSettings.tsx`, `tests/ams-settings-backup-period-independence.test.ts`, `tests/global-reporting-period.test.ts`. No API, backend, database, role policy, backup behavior, dependency, or lockfile changes.
+- Exact-SHA Quality Gate [40067197014 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067197014). AMS CI [40067196870 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067196870), reporting one high `body-parser@1.20.6` DoS advisory through Express. Typecheck, migrations, security regression and PostgreSQL integration passed; production build and HTTP smoke were skipped after the audit gate failed. Route the dependency finding to the authorized dependency-maintenance task.
+- Authenticated browser, permission-role, visual, responsive, keyboard/focus and restore verification remains **NOT VERIFIED**. Snapshot creation does not imply successful recovery.
+- Next Stage 4 slice: Settings → Users & Access. Preserve the current account register and existing server-managed access policy without adding permissions or unsupported actions.
