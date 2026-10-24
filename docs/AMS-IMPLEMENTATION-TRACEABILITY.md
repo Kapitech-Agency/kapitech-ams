@@ -1076,3 +1076,16 @@ The Document Library search text now includes canonical linked Client/Project na
 **Changed files:** src/pages/admin/AdminDocuments.tsx, src/lib/documentLibrarySearch.ts, tests/ams-document-library-linked-record-search.test.ts, tests/ams-nine-module-workspace-regression.test.ts.
 
 Exact-SHA Quality Gate [39849779600 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849779600) and AMS CI [39849779585 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849779585). Typecheck, regression tests, production build, security tests, PostgreSQL integration, migration package check and production HTTP smoke passed. No API, storage, file permission, route or business workflow changed. **Browser/visual/role/accessibility: NOT VERIFIED.** Continue Stage 4 with Website CMS → Careers & Applicants.
+
+
+### VIEW-CMS-CAREERS: Keep the last successful applicant register visible during refresh recovery
+
+**Implementation SHA:** [de42f24c9af61dd26c69272a221f9e1ad87c008d](https://github.com/Kapitech-Agency/kapitech-ams/commit/de42f24c9af61dd26c69272a221f9e1ad87c008d). Final test SHA: [d185484084027089eea3cad16764f7e4bd437a4b](https://github.com/Kapitech-Agency/kapitech-ams/commit/d185484084027089eea3cad16764f7e4bd437a4b).
+
+The applicants register now keeps the last successfully loaded records visible while a refresh is running. If refresh fails after a successful load, a warning distinguishes stale data from current source state. If the last successfully loaded list was empty, the UI no longer reports a confirmed current empty result after a failed refresh. Initial-load skeleton and unavailable states stay separate.
+
+**Changed files:** `src/pages/admin/AdminCmsCareers.tsx`, `tests/ams-careers-applicant-refresh-state.test.ts`. Applicant ownership in Careers, Inbox applicant exclusion, current route access, status updates and existing data contracts remain unchanged. No backend, API, database, permission, route, package or lockfile changes.
+
+Exact-SHA Quality Gate [40066713946 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40066713946). AMS CI [40066713864 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40066713864) due one high `body-parser` denial-of-service advisory for versions below 1.20.9. Typecheck, migration, security regression and PostgreSQL integration passed; downstream build and smoke steps were skipped. Do not claim full CI passed. Resolve the audit finding in an authorized dependency-maintenance task, outside this UI slice. Browser/visual/accessibility status: **NOT VERIFIED**.
+
+Next Stage 4 slice: Settings → System Overview. Verify source-backed status, freshness and exceptions. Distinguish backup existence, integrity verification and proven restore.

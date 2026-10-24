@@ -1934,3 +1934,17 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Exact-SHA Quality Gate [39849779600 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849779600); AMS CI [39849779585 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39849779585). Regression checks, typecheck, production build, security tests, PostgreSQL integration and HTTP smoke passed.
 - Authenticated visual, role and accessibility evidence remains **NOT VERIFIED**. Stage 5 must validate search outcomes and security/keyboard/responsive behavior using authorized sessions.
 - Next Stage 4 slice: Website CMS → Careers & Applicants. Continue to preserve dedicated CMS ownership; never duplicate restricted applicant records into Inbox or CRM.
+
+
+## Website CMS Careers Applicants refresh recovery · Stage 4 · 24 October 2026
+
+**Implementation SHA:** [de42f24c9af61dd26c69272a221f9e1ad87c008d](https://github.com/Kapitech-Agency/kapitech-ams/commit/de42f24c9af61dd26c69272a221f9e1ad87c008d). Final test correction: [d185484084027089eea3cad16764f7e4bd437a4b](https://github.com/Kapitech-Agency/kapitech-ams/commit/d185484084027089eea3cad16764f7e4bd437a4b).
+
+- Before: a refresh replaced applicant records with skeletons. If refresh failed after a successful load, the page replaced the register with an error panel. A failed refresh after a previously empty response could be mistaken for a current empty state.
+- After: the skeleton/error panel appears only before the first successful load. A refresh shows a non-blocking status while preserving existing records. A failed refresh retains last-loaded records and presents a warning that the current count and newer changes cannot be confirmed. A last-successful empty list is labeled stale and unconfirmed.
+- The single canonical Careers applicant workspace, applicant exclusion from Inbox, current role boundary, status-update actions and persisted applicant fields are unchanged. Recruitment History remains unavailable without a canonical persisted event source.
+- Changed files: `src/pages/admin/AdminCmsCareers.tsx`, `tests/ams-careers-applicant-refresh-state.test.ts`.
+- Exact-SHA Quality Gate [40066713946 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40066713946). Typecheck, regression tests and production build succeeded.
+- AMS CI [40066713864 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40066713864). Logs report one high `body-parser` denial-of-service advisory affecting versions below 1.20.9. Typecheck, migrations, security regression and PostgreSQL integration passed. Production build, packaged-migration verification and HTTP smoke were skipped after the audit gate failure. The frontend slice changed no dependency manifests or lockfiles. Route the audit finding to the authorized dependency-maintenance task instead of expanding this frontend-only change.
+- Authenticated browser, reviewer-role, responsive, keyboard/focus and public-output evidence remains **NOT VERIFIED**.
+- Next Stage 4 slice: Settings → System Overview. Use only existing source-backed status and exception records; do not infer backup integrity or successful restore from snapshot creation. Preferences stays unavailable until its per-user source/API contract is approved.
