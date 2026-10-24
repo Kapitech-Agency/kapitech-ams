@@ -2070,6 +2070,12 @@ export const AdminSettings: React.FC = () => {
           />
           {integrationView === 'overview' ? (
             <>
+              {overviewLoading && productionReadiness && (
+                <div data-ams-feature-slug="settings-integration-refresh-status" className="flex items-start gap-2.5 rounded-card border border-line bg-panel px-4 py-3 text-[11px] text-muted" role="status" aria-live="polite">
+                  <Activity size={14} className="mt-0.5 shrink-0" />
+                  <span>Refreshing server readiness. Previously loaded server readiness results remain visible while the latest checks run.</span>
+                </div>
+              )}
               <section data-ams-feature-slug="settings-integration-overview" data-ams-slug="settings-integration-overview" className="rounded-card border border-line bg-panel p-5">
               <div className="flex items-center gap-2 border-b border-line pb-4">
                 <Database size={18} className="text-info" />

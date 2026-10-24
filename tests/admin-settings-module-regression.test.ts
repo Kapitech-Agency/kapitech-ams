@@ -390,6 +390,23 @@ test('Users & Access account directory searches and scopes the canonical registe
 });
 
 
+
+
+test('Integrations identifies prior readiness values while a fresh server check is running', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  const routeStart = source.indexOf("{activeTab === 'integrations' && canAccessServer && (");
+  const overviewStart = source.indexOf("{integrationView === 'overview' ? (", routeStart);
+  const refreshStart = source.indexOf('data-ams-feature-slug="settings-integration-refresh-status"', overviewStart);
+  const summaryStart = source.indexOf('data-ams-feature-slug="settings-integration-overview"', overviewStart);
+  assert.ok(routeStart >= 0 && overviewStart > routeStart && refreshStart > overviewStart && summaryStart > refreshStart,
+    'Refresh status should be inside the authorized integration overview and precede its status cards.');
+  const refreshStatus = source.slice(refreshStart, summaryStart);
+  assert.ok(refreshStatus.includes('overviewLoading && productionReadiness'));
+  assert.ok(refreshStatus.includes('Previously loaded server readiness results remain visible while the latest checks run.'));
+  assert.ok(refreshStatus.includes('role="status" aria-live="polite"'));
+  assert.doesNotMatch(refreshStatus, /connected|synced|delivery confirmed/i,
+    'A refresh indicator must not imply third-party connectivity or successful delivery.');
+});
 test('Integration overview keeps unknown gates and provider connectivity distinct from verified readiness', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
   const overviewStart = source.indexOf('data-ams-feature-slug="settings-integration-overview"');
