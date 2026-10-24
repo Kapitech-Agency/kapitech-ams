@@ -1189,3 +1189,17 @@ Client 360's Documents shortcut now passes the selected canonical Client ID with
 Exact-SHA Quality Gate [40077964259 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40077964259). AMS CI [40077964330 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40077964330); typecheck, migrations, security regression and PostgreSQL integration passed. Existing high `body-parser@1.20.6` via Express is unchanged. Browser permission, actual record visibility, responsive, focus, keyboard and assistive-technology behavior remain **NOT VERIFIED**.
 
 **Next:** Client 360 → Finance invoice context. Inspect existing AR query support first; if Finance does not support canonical invoice selection, do not invent a new route or API.
+
+### DATA-001: Client 360 → Finance invoice-register context · 24 October 2026
+
+**Exact source/test SHA:** [b94599505397f514f0ea6518c67c5b6ff135f6e3](https://github.com/Kapitech-Agency/kapitech-ams/commit/b94599505397f514f0ea6518c67c5b6ff135f6e3).
+
+The source-of-truth invoice repository `server/postgres-invoice-repository.ts` maps the existing `invoices.client_id` column into `clientId`, and the canonical write path stores that same ID. The frontend `AgencyInvoice` type was missing the optional `clientId` property, despite Client 360 already consuming this field for its source-backed invoice references. The frontend type is now aligned to the existing contract; no server/API/schema change was made.
+
+Client 360’s Finance shortcut adds `clientId=selectedClient.id` to the existing `/admin/finance?tab=accounts-receivable` route. `AdminInvoicing` reads this query only when embedded as Accounts Receivable, filters the canonical invoice register by exact `invoice.clientId`, provides a context label and a clear-filter button, and resets pagination when the context changes. Supporting summary/aging widgets remain at their existing overall/current-source scope and are explicitly not labelled client-specific. Invalid empty `clientId` is removed from the URL. Clearing the context removes only that query key.
+
+**Changed files:** `src/pages/admin/AdminClients.tsx`, `src/pages/admin/AdminInvoicing.tsx`, `src/lib/financeStore.ts`, `tests/finance-ui-consistency.test.ts`.
+
+Exact-SHA Quality Gate [40078483239 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078483239): typecheck, regression tests and production build. AMS CI [40078483229 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078483229); migration, security regression and PostgreSQL integration passed. The only failing CI step remains the existing high `body-parser@1.20.6` advisory. **Browser/role/responsive/keyboard/assistive-technology: NOT VERIFIED.**
+
+**Next cross-module check:** Project → Client context. Verify the existing project drawer’s relationship link against canonical client ID and current route policy. Do not build a new page or invent data/API fields.

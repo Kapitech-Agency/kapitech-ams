@@ -2126,3 +2126,16 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - **Validation:** Exact-SHA Quality Gate [40077964259 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40077964259) for typecheck, all regression tests, and production build. AMS CI [40077964330 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40077964330); migration, security regression and PostgreSQL integration passed. Existing high `body-parser@1.20.6` advisory remains out of scope for this frontend slice.
 - **NOT VERIFIED:** actual authenticated Client/Document visibility, public or private data rendering in a browser, responsive layout, direct-load/back-forward, keyboard/focus and assistive technology. Stage 5 remains mandatory.
 - **Next:** Client 360 → Finance invoice context. Keep Finance canonical, do not add invoice APIs or new record-detail routes.
+
+## Stage 4 cross-module pass: Client 360 → Finance Accounts Receivable context · 24 October 2026
+
+**Exact source/test SHA:** [b94599505397f514f0ea6518c67c5b6ff135f6e3](https://github.com/Kapitech-Agency/kapitech-ams/commit/b94599505397f514f0ea6518c67c5b6ff135f6e3).
+
+- **Source contract:** The canonical PostgreSQL invoice repository maps `invoices.client_id` to `clientId` and writes that existing column. `AdminClients` already filters its invoice references by exact `invoice.clientId`; `AgencyInvoice` in the frontend type had failed to document the same source field. Only the TypeScript model declaration was added.
+- **Before:** The Client 360 Finance shortcut opened the global Accounts Receivable tab without preserving the selected client.
+- **After:** The link passes `clientId=selectedClient.id`. The existing AR invoice register filters rows by exact client ID, shows a context banner and clear-filter control, and resets pagination when the client context changes. The note explicitly says the filter applies to the invoice register only; summary/aging views keep their existing scope. Clearing the context removes only `clientId`, preserving the selected Finance tab and other URL parameters.
+- **Tests:** Added a regression in `tests/finance-ui-consistency.test.ts` for the Client 360 URL, source mapping, exact-ID filter, active context, clear behavior, and existing AR tab route.
+- **Changed files:** `src/pages/admin/AdminClients.tsx`, `src/pages/admin/AdminInvoicing.tsx`, `src/lib/financeStore.ts`, `tests/finance-ui-consistency.test.ts`.
+- **Validation:** Exact-SHA Quality Gate [40078483239 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078483239) for typecheck, full regression tests and production build. AMS CI [40078483229 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078483229); typecheck, PostgreSQL migration, security regression and PostgreSQL integration passed. No dependencies changed.
+- **Not verified:** authenticated browser access, real client/invoice visibility by role, direct-load/back-forward, responsive reflow, keyboard/focus and assistive technology. Stage 5 remains mandatory.
+- **Next:** Project → Client context using only existing canonical record links and role-safe routes. Do not introduce a new record-detail page or backend contract.
