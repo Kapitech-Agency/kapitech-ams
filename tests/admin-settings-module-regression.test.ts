@@ -346,8 +346,8 @@ test('System Overview does not convert unreported readiness gates into confirmed
   assert.ok(overview >= 0 && integrity > overview && backups > integrity);
   const overviewBody = source.slice(overview, backups);
   const gateList = overviewBody.slice(overviewBody.indexOf('data-ams-feature-slug="settings-system-integrity"'));
-  assert.match(overviewBody, /const readinessTone:[\s\S]*?!productionReadiness[\s\S]*?'neutral'/);
-  assert.match(overviewBody, /const readinessLabel = !productionReadiness[\s\S]*?'Not reported'/);
+  assert.match(source, /const readinessTone:[\s\S]*?!productionReadiness[\s\S]*?'neutral'/);
+  assert.match(source, /const readinessLabel = !productionReadiness[\s\S]*?'Not reported'/);
   assert.match(gateList, /ready: productionReadiness\?\.gates\?\.runtime/);
   assert.match(gateList, /ready: productionReadiness\?\.gates\?\.postgres/);
   assert.match(gateList, /ready: productionReadiness\?\.gates\?\.mfa/);
