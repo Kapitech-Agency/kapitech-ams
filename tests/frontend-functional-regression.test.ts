@@ -113,7 +113,9 @@ test('Project editor can link an existing canonical client without guessing by d
   const projects = await read('src/pages/admin/AdminProjects.tsx');
 
   assert.ok(projects.includes("const canReadClients = hasAdminPermission('canManageClients') || hasAdminPermission('canManageCrm');"));
-  assert.ok(projects.includes('const loadProjectClients = async () => {'));
+  assert.match(projects, /const loadProjectClients = React\.useCallback\(async \(\) => \{/);
+  assert.match(projects, /setClientOptionsLoaded\(true\)/);
+  assert.match(projects, /\[canReadClients\]\);/);
   assert.ok(projects.includes("clientId: project.clientId || ''"));
   assert.ok(projects.includes('clientId: projectForm.clientId || undefined'));
   assert.ok(projects.includes('slug="projects-client-link"'));
