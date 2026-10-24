@@ -130,6 +130,30 @@ test('Admin account loading failures remain distinct from a genuinely empty acco
   assert.ok(source.includes('Admin accounts could not be loaded'));
 });
 
+
+
+test('Users & Access preserves the last loaded account register during refresh', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  const accountStart = source.indexOf('data-ams-feature-slug="settings-account-directory"');
+  const viewportStart = source.indexOf('aria-label="Scrollable administrator accounts table"', accountStart);
+  const paginationEnd = source.indexOf('slug="settings-account-pagination"', viewportStart);
+  assert.ok(accountStart >= 0 && viewportStart > accountStart && paginationEnd > viewportStart,
+    'Account directory, register and pagination should remain identifiable.');
+
+  const accountSection = source.slice(accountStart, paginationEnd);
+  assert.ok(accountSection.includes('accountsLoading && accounts.length > 0'),
+    'A refresh of an existing account list should show a non-blocking status.');
+  assert.ok(accountSection.includes('Previously loaded account rows remain visible while the latest list is being checked.'));
+  assert.ok(accountSection.includes('accountsLoading && accounts.length === 0 ?'),
+    'Only an initial load without any last-known rows should replace the register with skeletons.');
+  assert.ok(accountSection.includes('accountsError && accounts.length > 0'));
+  assert.ok(accountSection.includes('Showing the last successfully loaded accounts.'));
+  assert.ok(accountSection.includes('accounts.length === 0 && accountsError ?'),
+    'A failed initial load remains distinct from a valid empty result.');
+  assert.ok(accountSection.includes('No accounts match these filters'));
+  assert.ok(accountSection.includes("onClick={() => void loadAccounts()}"), 'Existing refresh/retry stays available.');
+});
+
 test('Account create and delete failures stay visible inside their active dialogs', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
   const drawerStart = source.indexOf('open={isAddAccountModalOpen}');

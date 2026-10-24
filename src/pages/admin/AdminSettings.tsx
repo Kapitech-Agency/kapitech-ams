@@ -1839,6 +1839,12 @@ export const AdminSettings: React.FC = () => {
                   </p>
                 </div>
 
+                {accountsLoading && accounts.length > 0 && (
+                  <div className="flex items-start gap-2.5 border-b border-line bg-bg px-5 py-3 text-[11px] text-muted" role="status" aria-live="polite">
+                    <Activity size={14} className="mt-0.5 shrink-0" />
+                    <span>Refreshing admin accounts. Previously loaded account rows remain visible while the latest list is being checked.</span>
+                  </div>
+                )}
                 {accountsError && accounts.length > 0 && (
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-danger/20 bg-danger/5 px-5 py-3 text-[11px] text-danger" role="alert">
                     <span>{accountsError} Showing the last successfully loaded accounts.</span>
@@ -1852,7 +1858,7 @@ export const AdminSettings: React.FC = () => {
                 )}
 
                 <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable administrator accounts table">
-                  {accountsLoading ? (
+                  {accountsLoading && accounts.length === 0 ? (
                     <div className="px-5 py-10">{renderSkeleton()}</div>
                   ) : accounts.length === 0 && accountsError ? (
                     <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center" role="alert">
