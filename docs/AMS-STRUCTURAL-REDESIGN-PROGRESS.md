@@ -2082,3 +2082,15 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Authenticated visual/role/reflow/keyboard/screen-reader checks remain **NOT VERIFIED**. Do not infer WCAG conformance from these source/CI assertions.
 - Next: Settings → Users & Access, then Audit Log and Integrations in order.
 
+
+
+## Settings → Users & Access: distinguish missing MFA telemetry · Stage 4 · 24 October 2026
+
+**Exact source/test SHA:** [70cd7c8a0295cff4ff38e0bbab9d1a633d358c4d](https://github.com/Kapitech-Agency/kapitech-ams/commit/70cd7c8a0295cff4ff38e0bbab9d1a633d358c4d).
+
+- **Before:** the responsive account cards and desktop account table used `account.mfaEnabled ? 'Enabled' : 'Not configured'`. The canonical `AdminUser` field is optional, and the current `GET /api/auth/users` mapper forwards `u.mfaEnabled` as received; a missing value could therefore appear as explicitly disabled.
+- **After:** shared helpers distinguish true (Enabled, success), false (Not configured, warning), and undefined (Not reported, neutral) on both compact cards and the desktop table. The account register, filters, pagination, root-account delete restriction, server-managed authorization and MFA actions are unchanged.
+- **Changed files:** `src/pages/admin/AdminSettings.tsx`; `tests/admin-settings-module-regression.test.ts`; `tests/admin-pages-jsx-regression.test.ts` updated to validate the shared badge helper.
+- **Validation:** Exact-SHA Quality Gate [40075953554 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075953554) for typecheck, all regression tests and production build. AMS CI [40075953547 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075953547). Typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; audit reports existing high `body-parser@1.20.6` via Express. No dependency files changed.
+- **NOT VERIFIED:** authenticated account-admin role session, rendered visual parity, viewport reflow, keyboard/focus and assistive-technology runtime checks. Stage 5 remains pending.
+- **Next:** Settings → Audit Log, preserving its read-only semantics and explicit reporting-period scope.
