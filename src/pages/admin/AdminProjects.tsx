@@ -2333,7 +2333,16 @@ export const AdminProjects: React.FC = () => {
                   {planningMilestones.length === 0 ? (
                     <div className="p-5 text-xs leading-5 text-muted" role="status">No milestones are recorded for this project.</div>
                   ) : (
-                    <div className="divide-y divide-line">
+                    <div className="divide-y divide-line" data-ams-slug="planning-milestone-register">
+                      <div
+                        className="hidden bg-bg px-4 py-2 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(130px,0.35fr)_auto] sm:items-center sm:gap-4"
+                        aria-hidden="true"
+                        data-ams-slug="planning-milestone-column-headings"
+                      >
+                        <span className="text-[10px] font-medium text-muted">Milestone</span>
+                        <span className="text-[10px] font-medium text-muted">Due date</span>
+                        <span className="text-[10px] font-medium text-muted">Status</span>
+                      </div>
                       {planningMilestones.map((milestone, index) => {
                         const overdue = !milestone.completed && isOverdue(milestone.dueDate);
                         return (
@@ -2342,7 +2351,10 @@ export const AdminProjects: React.FC = () => {
                               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold tabular-nums text-muted">{index + 1}</span>
                               <span className="min-w-0 break-words text-xs font-semibold text-fg">{milestone.title || 'Untitled milestone'}</span>
                             </div>
-                            <div className="pl-9 text-xs tabular-nums text-muted sm:pl-0">{formatDate(milestone.dueDate)}</div>
+                            <div className="flex min-w-0 items-baseline gap-1.5 pl-9 text-xs tabular-nums text-muted sm:pl-0">
+                              <span className="shrink-0 text-[10px] font-medium text-muted sm:hidden">Due date</span>
+                              <span>{formatDate(milestone.dueDate)}</span>
+                            </div>
                             <span className={'inline-flex w-fit rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (
                               milestone.completed
                                 ? 'border-success/25 bg-success/10 text-success'

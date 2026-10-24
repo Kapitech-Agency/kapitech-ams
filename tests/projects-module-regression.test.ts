@@ -379,6 +379,12 @@ test('Planning & Delivery Milestones keeps the canonical register primary and di
   assert.match(milestones, /milestone\.title \|\| 'Untitled milestone'/);
   assert.match(milestones, /formatDate\(milestone\.dueDate\)/);
   assert.match(milestones, /milestone\.completed \? 'Completed' : overdue \? 'Overdue'/);
+  assert.match(milestones, /data-ams-slug="planning-milestone-column-headings"/);
+  assert.match(milestones, /text-\[10px\] font-medium text-muted">Milestone<\/span>/);
+  assert.match(milestones, /text-\[10px\] font-medium text-muted">Due date<\/span>/);
+  assert.match(milestones, /text-\[10px\] font-medium text-muted">Status<\/span>/);
+  assert.match(milestones, /text-\[10px\] font-medium text-muted sm:hidden">Due date<\/span>/);
+  assert.match(milestones, /data-ams-slug="planning-milestone-register"/);
   assert.match(milestones, /No milestones are recorded for this project\./);
   assert.doesNotMatch(milestones, /ownerId|dependencyId|fakeMilestone|demoMilestone/,
     'The worksheet must not fabricate milestone owners, dependency records, or sample milestones.');
