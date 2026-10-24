@@ -401,7 +401,8 @@ test('Integrations identifies prior readiness values while a fresh server check 
   assert.ok(routeStart >= 0 && overviewStart > routeStart && refreshStart > overviewStart && summaryStart > refreshStart,
     'Refresh status should be inside the authorized integration overview and precede its status cards.');
   const refreshStatus = source.slice(refreshStart, summaryStart);
-  assert.ok(refreshStatus.includes('overviewLoading && productionReadiness'));
+  assert.ok(source.includes('{overviewLoading && productionReadiness && ('));
+  assert.ok(refreshStatus.includes('settings-integration-refresh-status'));
   assert.ok(refreshStatus.includes('Previously loaded server readiness results remain visible while the latest checks run.'));
   assert.ok(refreshStatus.includes('role="status" aria-live="polite"'));
   assert.doesNotMatch(refreshStatus, /connected|synced|delivery confirmed/i,
