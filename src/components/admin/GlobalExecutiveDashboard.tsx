@@ -698,7 +698,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
   const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
   const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
-  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
+  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
     loading: true, projects: null, tasks: null, timeLogs: null, invoices: null, expenses: null
   });
@@ -740,6 +740,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           recentActivity: activityDataReturned ? data.recentActivity as DashboardRecentActivity[] : previous.recentActivity ?? [],
           recentActivityDataAvailable: activityDataReturned ? true : previous.recentActivityDataAvailable,
           projectDataAvailable: projectDataReturned ? true : previous.projectDataAvailable,
+          stale: (!data.metrics && previous.metrics != null) || (!data.financials && previous.financials != null) || (!activityDataReturned && previous.recentActivityDataAvailable === true),
           source: projectDataReturned || Boolean(data.metrics) ? 'server' : previous.source,
           loading: false
         }));
@@ -971,6 +972,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       {isRefreshing && !dashboardOverview.loading && !operationalSnapshot.loading ? (
         <p className="rounded-control border border-line bg-panel px-3 py-2 text-xs text-muted" role="status" data-ams-feature-slug="dashboard-refreshing-status">
           Refreshing dashboard sources. Previously loaded values remain visible.
+        </p>
+      ) : null}
+      {dashboardOverview.stale ? (
+        <p className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-xs text-muted" role="status" data-ams-feature-slug="dashboard-summary-stale">
+          The latest dashboard response omitted previously available summary fields. Previously loaded values remain visible and may be stale.
         </p>
       ) : null}
       {refreshNotice ? (

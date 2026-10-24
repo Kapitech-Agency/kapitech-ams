@@ -14,6 +14,8 @@ test('Dashboard Overview exposes an accessible manual refresh action and keeps l
   assert.match(source, /disabled=\{isRefreshing\}/);
   assert.match(source, /Refreshing dashboard sources\. Previously loaded values remain visible\./);
   assert.match(source, /data-ams-feature-slug="dashboard-refresh-warning"/);
+  assert.match(source, /data-ams-feature-slug="dashboard-summary-stale"/);
+  assert.ok(source.includes("stale: (!data.metrics && previous.metrics != null) || (!data.financials && previous.financials != null) || (!activityDataReturned && previous.recentActivityDataAvailable === true)"));
   assert.match(source, /setRefreshNotice\(failedSources\.length/);
 });
 
