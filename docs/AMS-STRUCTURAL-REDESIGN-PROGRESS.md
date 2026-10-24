@@ -2151,3 +2151,14 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - **Validation:** Quality Gate [40078994964 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078994964), including typecheck, regression tests and production build. AMS CI [40078994978 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078994978); typecheck, migration, security regression and PostgreSQL integration passed. No dependencies changed.
 - **NOT VERIFIED:** real authenticated role/browser routing, direct URL/back/forward, responsive, keyboard/focus and assistive technology. Stage 5 remains open.
 - **Next:** audit Project → Documents link eligibility because the current Documents destination has a stricter route policy.
+
+## Stage 4 cross-module pass: permission-gated Project → Document Library shortcut · 24 October 2026
+
+**Exact source/test SHA:** [2adbae9e4d0f234555a65eb26dbcaa186f6d8270](https://github.com/Kapitech-Agency/kapitech-ams/commit/2adbae9e4d0f234555a65eb26dbcaa186f6d8270).
+
+- **Policy evidence:** `canAccessAmsRoute` explicitly allows `/admin/documents` for Admin and denies that route for the other current roles. Project routes are available to some roles who cannot open Documents. The shortcut therefore must not render for those roles.
+- **After:** Project detail derives the active AMS role from the current cached session and calls the existing `canAccessAmsRoute(currentAmsRole, '/admin/documents')`. Only when that helper allows the route and a canonical project ID exists does it show “Open project documents”. The link passes the canonical project ID to the already supported Document Library relationship query. No role policy or server/API permission changed.
+- **Tests:** Added regression coverage for the shared route-guard check, Admin-only policy, canonical ID query, and existing Document Library context parser.
+- **Validation:** Exact-SHA Quality Gate [40079373731 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40079373731): typecheck, regression tests and production build. AMS CI [40079373714 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40079373714); migrations, security regression and PostgreSQL integration passed.
+- **Not verified:** authenticated Admin vs non-Admin visual display, responsive geometry, direct URL/back-forward, keyboard/focus and assistive technology. Stage 5 remains mandatory.
+- **Next:** audit Project → Finance context using existing project-finance state only.

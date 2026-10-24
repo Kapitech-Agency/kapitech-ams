@@ -1215,3 +1215,17 @@ Project detail uses the existing `canReadClients` guard and canonical `api.clien
 Exact-SHA Quality Gate [40078994964 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078994964): typecheck, regression tests and production build. AMS CI [40078994978 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40078994978); typecheck, migrations, security regression and PostgreSQL integration passed. Existing high `body-parser@1.20.6` advisory unchanged. **Browser/role/responsive/keyboard/assistive-technology: NOT VERIFIED.**
 
 **Next:** audit Project → Documents link eligibility. Documents route access is stricter than Projects for non-admin roles, so any shortcut must be gated by the existing route policy and must not grant access.
+
+### UX-001 / DATA-001: Permission-gated Project → Document Library navigation · 24 October 2026
+
+**Exact source/test SHA:** [2adbae9e4d0f234555a65eb26dbcaa186f6d8270](https://github.com/Kapitech-Agency/kapitech-ams/commit/2adbae9e4d0f234555a65eb26dbcaa186f6d8270).
+
+Route-policy evidence in `src/lib/amsNavigationAccess.ts` confirms that the current `/admin/documents` route is available to Admin and denied to non-Admin roles, while Project workspace access includes roles that do not have Documents access. Project detail now derives the active role from `getAdminSession()` and `getAmsRole()`, then calls the existing `canAccessAmsRoute(role, '/admin/documents')` helper before rendering the shortcut. It does not change route policy, navigation visibility, server permission, or API access.
+
+The Admin-only shortcut passes the canonical project ID to the existing Document Library query `documents=project-client&relatedEntity=Project&relatedId=ID`. Document Library already validates the relation type and ID, then matches by the exact pair. No new API, model, or database relationship is created.
+
+**Changed files:** `src/pages/admin/AdminProjects.tsx`, `tests/ams-nine-module-workspace-regression.test.ts`.
+
+Exact-SHA Quality Gate [40079373731 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40079373731): typecheck, regression tests and production build. AMS CI [40079373714 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40079373714); PostgreSQL migrations, security regression and PostgreSQL integration passed. Existing high `body-parser@1.20.6` advisory unchanged. **Browser role visibility, responsive layout, keyboard/focus and assistive technology: NOT VERIFIED.**
+
+**Next:** Project → Finance context audit. Inspect whether the existing Project Finance view supports an exact project-ID query before adding any shortcut; preserve the existing route permission model.
