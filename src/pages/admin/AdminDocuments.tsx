@@ -32,7 +32,12 @@ import {
   AdminTablePagination,
 } from '../../components/admin/AdminModulePrimitives';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { documentLibrarySearchText, hasCanonicalDocumentLink } from '../../lib/documentLibrarySearch';
+import {
+  documentLibrarySearchText,
+  hasCanonicalDocumentLink,
+  matchesDocumentRelatedContext,
+  normalizeDocumentRelatedContext,
+} from '../../lib/documentLibrarySearch';
 
 interface DocumentItem {
   id: string;
@@ -170,6 +175,13 @@ export const AdminDocuments: React.FC = () => {
   const hasDocumentCategoryParam = searchParams.has('documents');
   const isSupportedDocumentCategory = DOCUMENT_TABS.some((tab) => tab.key === requestedTab);
   const activeTab: TabKey = isSupportedDocumentCategory ? requestedTab as TabKey : 'all';
+  const hasRelatedContextParams = searchParams.has('relatedEntity') || searchParams.has('relatedId');
+  const relatedContext = normalizeDocumentRelatedContext(
+    searchParams.get('relatedEntity'),
+    searchParams.get('relatedId'),
+  );
+  const relatedContextEntity = relatedContext?.entity || '';
+  const relatedContextId = relatedContext?.id || '';
 
   useEffect(() => {
     if (!hasDocumentCategoryParam || isSupportedDocumentCategory) return;
@@ -177,6 +189,14 @@ export const AdminDocuments: React.FC = () => {
     canonicalParams.delete('documents');
     setSearchParams(canonicalParams, { replace: true });
   }, [hasDocumentCategoryParam, isSupportedDocumentCategory, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!hasRelatedContextParams || relatedContext) return;
+    const canonicalParams = new URLSearchParams(searchParams);
+    canonicalParams.delete('relatedEntity');
+    canonicalParams.delete('relatedId');
+    setSearchParams(canonicalParams, { replace: true });
+  }, [hasRelatedContextParams, Boolean(relatedContext), searchParams, setSearchParams]);
 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -323,7 +343,7 @@ export const AdminDocuments: React.FC = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [activeTab, searchQuery, statusFilter, relatedRecordFilter, pageSize]);
+  }, [activeTab, searchQuery, statusFilter, relatedRecordFilter, pageSize, relatedContextEntity, relatedContextId]);
 
   const filteredDocuments = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -332,6 +352,7 @@ export const AdminDocuments: React.FC = () => {
       const searchableText = documentLibrarySearchText(doc, relatedClients, relatedProjects);
       return matchesTab(doc, activeTab) &&
         (!q || searchableText.includes(q)) &&
+        matchesDocumentRelatedContext(doc, relatedContext) &&
         (statusFilter === 'all' || (statusFilter === 'ready' ? readyOf(doc) : !readyOf(doc))) &&
         (relatedRecordFilter === 'all' || (relatedRecordFilter === 'linked' ? hasLinkedRecord : !hasLinkedRecord));
     });
@@ -348,7 +369,7 @@ export const AdminDocuments: React.FC = () => {
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [documents, activeTab, searchQuery, statusFilter, relatedRecordFilter, sortKey, sortDirection, relatedClients, relatedProjects]);
+  }, [documents, activeTab, searchQuery, statusFilter, relatedRecordFilter, sortKey, sortDirection, relatedClients, relatedProjects, relatedContextEntity, relatedContextId]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -360,6 +381,8 @@ export const AdminDocuments: React.FC = () => {
     setRelatedRecordFilter('all');
     const next = new URLSearchParams(searchParams);
     next.delete('documents');
+    next.delete('relatedEntity');
+    next.delete('relatedId');
     setSearchParams(next);
     setPage(1);
   };
@@ -431,6 +454,15 @@ export const AdminDocuments: React.FC = () => {
 
     return null;
   };
+  const relatedContextName = relatedContextEntity === 'Client'
+    ? relatedClients.find((record) => record.id === relatedContextId)?.name
+    : relatedContextEntity === 'Project'
+      ? relatedProjects.find((record) => record.id === relatedContextId)?.name
+      : null;
+  const relatedContextCaption = relatedContext
+    ? `Showing documents linked to ${relatedContextName || relatedContextEntity + ' record ' + relatedContextId}. The filter uses the canonical record ID.`
+    : null;
+
   const relatedLabel = (doc: DocumentItem) => {
     if (!doc.relatedId || !['Client', 'Project'].includes(String(doc.relatedEntity || ''))) return doc.relatedEntity || doc.department || 'Internal';
     const records = doc.relatedEntity === 'Client' ? relatedClients : relatedProjects;
@@ -572,6 +604,7 @@ export const AdminDocuments: React.FC = () => {
     activeTab !== 'all' ? activeTab : '',
     statusFilter !== 'all' ? statusFilter : '',
     relatedRecordFilter !== 'all' ? relatedRecordFilter : '',
+    relatedContextId,
   ].filter(Boolean).length;
   const tabLabel = DOCUMENT_TABS.find((tab) => tab.key === activeTab)?.label || 'All files';
 
@@ -674,8 +707,9 @@ export const AdminDocuments: React.FC = () => {
           </div>
           <div className="w-full shrink-0 sm:w-[175px]">
             <CustomSelect
-              value={relatedRecordFilter}
+              value={relatedContext ? 'linked' : relatedRecordFilter}
               onChange={(value) => setRelatedRecordFilter(value as RelatedRecordFilter)}
+              disabled={Boolean(relatedContext)}
               size="sm"
               aria-label="Filter linked records"
               slug="documents-related-filter"
@@ -709,6 +743,16 @@ export const AdminDocuments: React.FC = () => {
             />
           </div>
         </AdminFilterBar>
+
+        {relatedContextCaption && (
+          <div
+            className="flex items-start gap-2 rounded-control border border-line bg-bg px-3 py-2.5 text-xs text-muted"
+            role="status"
+            data-ams-slug="documents-related-context"
+          >
+            <span className="min-w-0">{relatedContextCaption}</span>
+          </div>
+        )}
 
         {isLoading && documents.length > 0 && (
           <div className="flex items-center gap-2 rounded-control border border-line bg-bg px-3 py-2 text-xs text-muted" role="status" data-ams-slug="documents-refreshing">

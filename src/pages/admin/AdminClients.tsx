@@ -1588,7 +1588,7 @@ export const AdminClients: React.FC = () => {
                 <section aria-label="Client documents" data-ams-slug="client-360-documents" className="min-w-0">
                   <div className="flex items-start justify-between gap-2 border-b border-line px-3 py-3">
                     <div><h4 className="text-xs font-semibold text-fg">Documents</h4><p className="mt-1 text-[10px] text-muted">Files linked by client ID.</p></div>
-                    <Link to="/admin/documents?documents=project-client" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Documents</Link>
+                    <Link to={'/admin/documents?documents=project-client&relatedEntity=Client&relatedId=' + encodeURIComponent(selectedClient.id)} className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Documents</Link>
                   </div>
                   {renderClientLinkedRecords<ClientDocumentReference>(clientRelatedDocuments, 'No document is explicitly linked to this client.', (records) => (
                     <div className="divide-y divide-line">

@@ -3,6 +3,32 @@ export interface DocumentLibraryReference {
   name: string;
 }
 
+export type DocumentRelatedEntity = 'Client' | 'Project';
+
+export interface DocumentRelatedContext {
+  entity: DocumentRelatedEntity;
+  id: string;
+}
+
+export const normalizeDocumentRelatedContext = (
+  entity: unknown,
+  id: unknown,
+): DocumentRelatedContext | null => {
+  const normalizedEntity = entity === 'Client' || entity === 'Project' ? entity : null;
+  const normalizedId = String(id || '').trim();
+  return normalizedEntity && normalizedId
+    ? { entity: normalizedEntity, id: normalizedId }
+    : null;
+};
+
+export const matchesDocumentRelatedContext = (
+  doc: Pick<DocumentLibrarySearchRecord, 'relatedEntity' | 'relatedId'>,
+  context: DocumentRelatedContext | null,
+): boolean => !context || (
+  doc.relatedEntity === context.entity &&
+  String(doc.relatedId || '').trim() === context.id
+);
+
 export interface DocumentLibrarySearchRecord {
   id?: string;
   name?: string;

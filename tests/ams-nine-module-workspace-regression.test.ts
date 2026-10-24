@@ -352,6 +352,23 @@ test('Document Library links open the canonical selected Client or Project only 
     'The canonical project workspace opens the selected record drawer for an ID or slug.');
 });
 
+test('Client 360 opens Document Library filtered to the canonical selected client ID', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+  const helper = await read('src/lib/documentLibrarySearch.ts');
+
+  assert.match(clients, /documents\?documents=project-client&relatedEntity=Client&relatedId=' \+ encodeURIComponent\(selectedClient\.id\)/);
+  assert.match(documents, /normalizeDocumentRelatedContext\(\s*searchParams\.get\('relatedEntity'\),\s*searchParams\.get\('relatedId'\),\s*\)/);
+  assert.match(documents, /matchesDocumentRelatedContext\(doc, relatedContext\)/);
+  assert.match(documents, /relatedContextCaption/);
+  assert.match(documents, /next\.delete\('relatedEntity'\);\s*next\.delete\('relatedId'\);/);
+  assert.match(documents, /value=\{relatedContext \? 'linked' : relatedRecordFilter\}/);
+  assert.match(documents, /disabled=\{Boolean\(relatedContext\)\}/);
+  assert.match(helper, /normalizedEntity = entity === 'Client' \|\| entity === 'Project' \? entity : null/);
+  assert.match(helper, /doc\.relatedEntity === context\.entity/);
+  assert.match(helper, /String\(doc\.relatedId \|\| ''\)\.trim\(\) === context\.id/);
+});
+
 test('Careers jobs/applicants tabs follow compact AMS geometry and retain tab semantics', async () => {
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
   assert.match(careers, /ams-workspace-tabs inline-flex max-w-full flex-wrap/);
