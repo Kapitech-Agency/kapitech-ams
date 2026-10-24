@@ -680,7 +680,7 @@ export const AdminSettings: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const periodBackups = useMemo(() => backups.filter((backup) => matchesDate(backup.createdAt)), [backups, matchesDate]);
+  // Operational backup history is not a business reporting-period register; keep the latest server snapshots visible.
 
   const auditActorOptions = useMemo(
     () => Array.from(new Set<string>(logs.map((log): string => log.actor || 'System'))).sort((left, right) => left.localeCompare(right)),
@@ -1136,9 +1136,9 @@ export const AdminSettings: React.FC = () => {
                     </div>
                   )}
                   <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="settings-backup-cards" role="list" aria-label="Production backup snapshots">
-                    {periodBackups.length === 0 ? (
-                      <div className="rounded-control border border-line bg-bg p-5 text-center text-xs text-muted">{reportPeriodEnabled ? 'No backup snapshots in the selected reporting period.' : 'No backup snapshots are available.'}</div>
-                    ) : periodBackups.slice(0, 8).map((backup, index) => (
+                    {backups.length === 0 ? (
+                      <div className="rounded-control border border-line bg-bg p-5 text-center text-xs text-muted">'No production backup snapshots are available.'</div>
+                    ) : backups.slice(0, 8).map((backup, index) => (
                       <article key={backup.createdAt + String(index)} role="listitem" data-ams-slug={'settings-backup-card-' + index} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
                         <div className="flex min-w-0 items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -1170,13 +1170,13 @@ export const AdminSettings: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {periodBackups.length === 0 ? (
+                    {backups.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-3 py-6 text-center text-xs text-muted">
-                          {reportPeriodEnabled ? 'No backup snapshots in the selected reporting period.' : 'No backup snapshots are available.'}
+                          'No production backup snapshots are available.'
                         </td>
                       </tr>
-                    ) : periodBackups.slice(0, 8).map((backup, index) => (
+                    ) : backups.slice(0, 8).map((backup, index) => (
                       <tr key={backup.createdAt + String(index)}>
                         <td className="font-mono text-[11px] text-fg">{archiveIdentifier(backup.createdAt, index)}</td>
                         <td>
