@@ -19,7 +19,7 @@ test('Settings System Overview backup history is independent of the business rep
   assert.ok(backupSection.includes('backups.length === 0'));
   assert.ok(backupSection.includes('backups.slice(0, 8).map((backup, index) =>'));
   assert.ok(backupSection.includes('No production backup snapshots are available.'));
-  assert.ok(backupSection.includes('Previously loaded backup entries remain visible.'));
+  assert.ok(backupSection.includes('Previously loaded entries remain visible.'));
   assert.ok(backupSection.includes('Showing the last successfully loaded backup entries.'));
   assert.doesNotMatch(backupSection, /matchesDate|reportPeriodEnabled|selected reporting period/);
 });
