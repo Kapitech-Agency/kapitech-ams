@@ -2094,3 +2094,24 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - **Validation:** Exact-SHA Quality Gate [40075953554 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075953554) for typecheck, all regression tests and production build. AMS CI [40075953547 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075953547). Typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; audit reports existing high `body-parser@1.20.6` via Express. No dependency files changed.
 - **NOT VERIFIED:** authenticated account-admin role session, rendered visual parity, viewport reflow, keyboard/focus and assistive-technology runtime checks. Stage 5 remains pending.
 - **Next:** Settings → Audit Log, preserving its read-only semantics and explicit reporting-period scope.
+
+## Settings subworkspace source audit · Stage 4 · 24 October 2026
+
+- Audit Log remains a read-only server-event ledger. Source and current regression tests confirm actor/event/outcome filters, shared reporting-period scope, stale-data retention on refresh, distinct unavailable/empty states, sanitized detail, and CSV formula neutralization.
+- Integrations remains limited to actual source-backed signals. The status list distinguishes notification-settings availability from provider connectivity, delivery or data sync. Unknown gates show Not reported, old values remain during refresh, and Kopra H2H stays disabled. No code change was justified by this source/test review.
+- Exact-SHA Quality Gate [40076581187 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40076581187). AMS CI [40076581063 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40076581063); typecheck, migrations, security regression and PostgreSQL integration passed. Existing `body-parser@1.20.6` high advisory remains separate dependency-maintenance scope.
+
+## Breadcrumb consumer audit · Stage 4 Step 12 · 24 October 2026
+
+- Rechecked `src/App.tsx`, `src/pages/admin/AdminLayout.tsx`, `src/components/admin/AdminModulePrimitives.tsx`, `src/pages/admin/AdminProjects.tsx`, `src/pages/admin/AdminClients.tsx`, Navigation IA and the detailed checklist.
+- There are no eligible full-page record-detail routes in the present static workspace route tree. Client and Project selections are drawers/modal surfaces inside the correct module, so a breadcrumb bar would be redundant and conflict with the approved conditional policy. No new shared UI component was added.
+- `UX-NAV-BREADCRUMB-001` remains tracked with the source decision and Stage 5 verification requirement. Runtime/back-forward/keyboard/compact behavior remains **NOT VERIFIED**; re-audit if a full-page record-detail route is introduced.
+
+## Stage 4 cross-module pass: fix Document Library Client destination · 24 October 2026
+
+- Exact source/test SHA: [970093fd](https://github.com/Kapitech-Agency/kapitech-ams/commit/970093fd0cd34069cf1f0249ab894a82fb92b374).
+- A Client link previously used an alias route that discarded `?client=ID` during redirect. Updated the link to the canonical Client Directory route, where the existing component consumes the ID and opens the selected Client drawer.
+- Project link selection accepts ID or slug in the existing workspace; no change to its route contract. Both links now require a matching canonical Client/Project in the loaded reference list; stale or unavailable records remain non-clickable text.
+- Test asserts Client query preservation, project ID selection, root alias behavior, and target-existence gating. Exact-SHA Quality Gate [40076581187 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40076581187); AMS CI [40076581063 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40076581063), after typecheck, migrations, security and PostgreSQL integration passed.
+- No API, backend, database, role permission, document storage or business workflow changes. Stage 5 direct browser/role/keyboard/responsive verification remains pending.
+- Next: continue the Stage 4 cross-module pass with Client 360 → Project / Document / Finance context.
