@@ -873,7 +873,10 @@ test('Client 360 exposes only canonically linked records behind existing permiss
   assert.match(section, /data-ams-slug="client-360-inbox"/);
   assert.match(section, /data-ams-slug="client-360-finance"/);
   assert.match(section, /data-ams-slug="client-360-documents"/);
-  assert.match(section, /Only explicit client ID relationships are shown/);
+  const contractLinkPolicy = clients.indexOf('when linked by client ID or exact company name');
+  assert.ok(contractLinkPolicy >= 0 && contractLinkPolicy < linked,
+    'The legacy exact-name contract matching policy remains separately disclosed before the ID-linked panels.');
+  assert.match(section, /The Projects, Inbox, Finance and Documents panels below use only explicit client ID relationships/);
   assert.match(section, /\/admin\/projects\?project=/);
   assert.match(section, /\/admin\/inbox\?view=client/);
   assert.match(section, /\/admin\/finance\?tab=accounts-receivable/);

@@ -1520,7 +1520,7 @@ export const AdminClients: React.FC = () => {
             <section aria-label="Client 360 linked records" data-ams-feature-slug="client-360-linked-records" data-ams-slug="client-360-linked-records" className="overflow-hidden rounded-card border border-line bg-panel">
               <div className="border-b border-line px-4 py-3">
                 <h3 className="text-sm font-semibold text-fg">Linked work and records</h3>
-                <p className="mt-1 text-xs leading-5 text-muted">Only explicit client ID relationships are shown. Missing links are not inferred from company names.</p>
+                <p className="mt-1 text-xs leading-5 text-muted">The Projects, Inbox, Finance and Documents panels below use only explicit client ID relationships. Missing links in these panels are not inferred from company names.</p>
               </div>
               <div className="grid min-w-0 grid-cols-1 gap-0 min-[900px]:grid-cols-2">
                 <section aria-label="Client projects" data-ams-slug="client-360-projects" className="min-w-0 border-b border-line min-[900px]:border-r">
