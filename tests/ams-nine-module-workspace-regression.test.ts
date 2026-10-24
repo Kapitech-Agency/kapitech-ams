@@ -352,6 +352,22 @@ test('Document Library links open the canonical selected Client or Project only 
     'The canonical project workspace opens the selected record drawer for an ID or slug.');
 });
 
+test('Project detail exposes Document Library only when the current route policy allows Documents', async () => {
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+  const access = await read('src/lib/amsNavigationAccess.ts');
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+
+  assert.match(projects, /const currentAmsRole = getAmsRole\(getAdminSession\(\)\?\.user\)/);
+  assert.match(projects, /const canAccessDocuments = canAccessAmsRoute\(currentAmsRole, '\/admin\/documents'\)/);
+  assert.match(projects, /canAccessDocuments && selectedProjectDetail\.id/);
+  assert.match(projects, /data-ams-slug="projects-linked-documents-context"/);
+  assert.match(projects, /documents=project-client&relatedEntity=Project&relatedId=' \+ encodeURIComponent\(selectedProjectDetail\.id\)/);
+  assert.match(documents, /normalizeDocumentRelatedContext\([\s\S]*?searchParams\.get\('relatedId'\)/);
+
+  assert.match(access, /if \(role === 'Admin'\) return true/);
+  assert.match(access, /if \(path === '\/admin\/documents' \|\| path\.startsWith\('\/admin\/documents\/'\)\) return false/);
+});
+
 test('Project detail links to Client Directory only through a loaded canonical client ID and existing access policy', async () => {
   const projects = await read('src/pages/admin/AdminProjects.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');

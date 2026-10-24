@@ -43,7 +43,8 @@ import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, Ad
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
-import { hasAdminPermission } from '../../lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 
 type ProjectHealth = 'Good' | 'At Risk' | 'Delayed' | 'Blocked';
@@ -417,6 +418,8 @@ export const AdminProjects: React.FC = () => {
   const { language } = useLanguage();
   const canManageProjects = hasAdminPermission('canManageProjects');
   const canReadClients = hasAdminPermission('canManageClients') || hasAdminPermission('canManageCrm');
+  const currentAmsRole = getAmsRole(getAdminSession()?.user);
+  const canAccessDocuments = canAccessAmsRoute(currentAmsRole, '/admin/documents');
   const canManageKanbanTasks = hasAdminPermission('canManageKanbanTasks');
   const canManageTasks = canManageKanbanTasks;
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1772,6 +1775,26 @@ export const AdminProjects: React.FC = () => {
               </span>
             </div>
 
+            {canAccessDocuments && selectedProjectDetail.id && (
+              <section
+                className="flex min-w-0 flex-col gap-2 rounded-card border border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                aria-label="Project documents"
+                data-ams-slug="projects-linked-documents-context"
+              >
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold text-fg">Project documents</div>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Open the existing Document Library filtered by this project's canonical ID. This shortcut does not grant Documents access to other roles.</p>
+                </div>
+                <Link
+                  to={'/admin/documents?documents=project-client&relatedEntity=Project&relatedId=' + encodeURIComponent(selectedProjectDetail.id)}
+                  className="inline-flex min-h-9 shrink-0 items-center gap-1.5 self-start rounded-control border border-line bg-panel px-3 text-xs font-medium text-accent-text hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:self-auto"
+                  data-ams-slug="projects-open-linked-documents"
+                >
+                  Open project documents
+                  <ExternalLink size={12} aria-hidden="true" />
+                </Link>
+              </section>
+            )}
             {canReadClients && selectedProjectDetail.clientId && (
               <section
                 className="flex min-w-0 flex-col gap-2 rounded-card border border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
