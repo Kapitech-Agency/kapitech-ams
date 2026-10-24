@@ -941,7 +941,14 @@ export const AdminSettings: React.FC = () => {
       : notificationStatus === 'unavailable'
         ? 'Unavailable'
         : 'Checking';
-  const readinessTone: keyof typeof statusClasses = productionReadiness?.productionReady ? 'success' : 'warning';
+  const readinessTone: keyof typeof statusClasses = !productionReadiness
+    ? 'neutral'
+    : productionReadiness.productionReady
+      ? 'success'
+      : 'warning';
+  const readinessLabel = !productionReadiness
+    ? overviewLoading ? 'Checking…' : 'Not reported'
+    : productionReadiness.productionReady ? 'Production ready' : 'Review gates';
 
   const renderSkeleton = () => (
     <div className="animate-pulse space-y-3" aria-hidden="true">
@@ -1062,22 +1069,38 @@ export const AdminSettings: React.FC = () => {
               </div>
               <StatusBadge
                 tone={readinessTone}
-                label={productionReadiness?.productionReady ? 'Production ready' : 'Review gates'}
+                label={readinessLabel}
               />
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ['Runtime', Boolean(productionReadiness?.gates?.runtime)],
-                ['PostgreSQL', Boolean(productionReadiness?.gates?.postgres)],
-                ['MFA', Boolean(productionReadiness?.gates?.mfa)],
-                ['Documents', Boolean(productionReadiness?.gates?.documentStorage)]
-              ].map(([label, ready]) => (
-                <div key={String(label)} className="flex items-center justify-between gap-2 rounded-control border border-line bg-bg px-3 py-2.5">
-                  <span className="text-[10px] text-muted">{String(label)}</span>
-                  {ready ? <Check size={14} className="text-success" /> : <AlertCircle size={14} className="text-warning" />}
-                </div>
-              ))}
+                { label: 'Runtime', ready: productionReadiness?.gates?.runtime },
+                { label: 'PostgreSQL', ready: productionReadiness?.gates?.postgres },
+                { label: 'MFA', ready: productionReadiness?.gates?.mfa },
+                { label: 'Documents', ready: productionReadiness?.gates?.documentStorage }
+              ].map(({ label, ready }) => {
+                const gateLabel = ready === true
+                  ? 'Ready'
+                  : ready === false
+                    ? 'Review'
+                    : overviewLoading
+                      ? 'Checking…'
+                      : 'Not reported';
+                return (
+                  <div key={label} className="flex items-center justify-between gap-2 rounded-control border border-line bg-bg px-3 py-2.5" aria-label={label + ': ' + gateLabel}>
+                    <div className="min-w-0">
+                      <span className="block text-[10px] text-muted">{label}</span>
+                      <span className="mt-1 block text-[10px] font-medium text-fg">{gateLabel}</span>
+                    </div>
+                    {ready === true
+                      ? <Check size={14} className="shrink-0 text-success" aria-label="Ready" />
+                      : ready === false
+                        ? <AlertCircle size={14} className="shrink-0 text-warning" aria-label="Review required" />
+                        : <span className="shrink-0 text-xs text-muted" aria-label={gateLabel}>—</span>}
+                  </div>
+                );
+              })}
             </div>
 
             {productionReadiness?.status?.reason && (

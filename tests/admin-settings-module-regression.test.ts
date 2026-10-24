@@ -338,6 +338,25 @@ test('Settings overview orders source-backed status before the backup evidence r
   assert.match(overviewBody, /productionReadiness\?\.status\?\.reason/);
 });
 
+test('System Overview does not convert unreported readiness gates into confirmed failures', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+  const overview = source.indexOf('data-ams-feature-slug="settings-overview"');
+  const integrity = source.indexOf('data-ams-feature-slug="settings-system-integrity"', overview);
+  const backups = source.indexOf('data-ams-feature-slug="settings-backup-history"', integrity);
+  assert.ok(overview >= 0 && integrity > overview && backups > integrity);
+  const overviewBody = source.slice(overview, backups);
+  const gateList = overviewBody.slice(overviewBody.indexOf('data-ams-feature-slug="settings-system-integrity"'));
+  assert.match(overviewBody, /const readinessTone:[\s\S]*?!productionReadiness[\s\S]*?'neutral'/);
+  assert.match(overviewBody, /const readinessLabel = !productionReadiness[\s\S]*?'Not reported'/);
+  assert.match(gateList, /ready: productionReadiness\?\.gates\?\.runtime/);
+  assert.match(gateList, /ready: productionReadiness\?\.gates\?\.postgres/);
+  assert.match(gateList, /ready: productionReadiness\?\.gates\?\.mfa/);
+  assert.match(gateList, /ready: productionReadiness\?\.gates\?\.documentStorage/);
+  assert.doesNotMatch(gateList, /Boolean\(productionReadiness\?\.gates/);
+  assert.match(gateList, /ready === true[\s\S]*?'Ready'[\s\S]*?ready === false[\s\S]*?'Review'[\s\S]*?'Not reported'/);
+  assert.match(gateList, /aria-label=\{label \+ ': ' \+ gateLabel\}/);
+});
+
 test('Audit register separates actor and event scopes and opens read-only event details', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
   const auditStart = source.indexOf("{activeTab === 'audit' && canViewAuditLogs && (");
