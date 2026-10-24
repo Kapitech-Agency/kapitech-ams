@@ -154,5 +154,10 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.doesNotMatch(documents, /matchesDate\(doc\.updatedAt/, 'Document date metadata is not a hidden list filter without a visible date control.');
   assert.ok(teams.includes('matchesDate(log.date)'));
   assert.ok(dashboard.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
-  assert.ok(settings.includes('backups.filter((backup) => matchesDate(backup.createdAt))'));
+  assert.doesNotMatch(settings, /backups\.filter\(\(backup\) => matchesDate\(backup\.createdAt\)\)/,
+    'Production backup history is operational status, not a business reporting-period register.');
+  assert.ok(settings.includes('backups.slice(0, 8).map((backup, index) =>'),
+    'System Overview should retain the latest server-returned backup snapshots regardless of the selected reporting period.');
+  assert.ok(settings.includes('if (!matchesDate(log.timestamp)) return false;'),
+    'Audit Log remains scoped to the selected reporting period.');
 });
