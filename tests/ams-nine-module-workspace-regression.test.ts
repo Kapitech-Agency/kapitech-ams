@@ -352,6 +352,26 @@ test('Document Library links open the canonical selected Client or Project only 
     'The canonical project workspace opens the selected record drawer for an ID or slug.');
 });
 
+test('Project detail links to Client Directory only through a loaded canonical client ID and existing access policy', async () => {
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const access = await read('src/lib/amsNavigationAccess.ts');
+  const app = await read('src/App.tsx');
+
+  assert.match(projects, /const canReadClients = hasAdminPermission\('canManageClients'\) \|\| hasAdminPermission\('canManageCrm'\)/);
+  assert.match(projects, /const selectedProjectClientRecord = canReadClients && selectedProjectDetail\?\.clientId[\s\S]*?client\.id\) === String\(selectedProjectDetail\.clientId\)/);
+  assert.match(projects, /data-ams-slug="projects-linked-client-context"/);
+  assert.match(projects, /selectedProjectClientRecord \? \([\s\S]*?\/admin\/clients\/all-clients\?client='/);
+  assert.match(projects, /encodeURIComponent\(selectedProjectClientRecord\.id\)/);
+  assert.match(projects, /clientOptionsLoaded/);
+  assert.match(projects, /No matching client record was found\./);
+  assert.match(clients, /const requestedClientId = searchParams\.get\('client'\)/);
+  assert.match(clients, /clients\.find\(\(client\) => String\(client\.id\) === requestedClientId\)/);
+  assert.match(app, /<Route path="clients\/all-clients" element=\{<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients \/><\/ModuleRoute>\} \/>/);
+  assert.match(access, /if \(path === '\/admin\/clients' \|\| path === '\/admin\/clients\/all-clients'[\s\S]*?return \['Finance', 'PM'\]\.includes\(role\)/);
+  assert.match(access, /if \(role === 'Admin'\) return true/);
+});
+
 test('Client 360 opens Document Library filtered to the canonical selected client ID', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   const documents = await read('src/pages/admin/AdminDocuments.tsx');

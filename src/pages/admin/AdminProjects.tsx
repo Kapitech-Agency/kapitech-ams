@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Download,
   ArrowUpRight,
@@ -436,6 +436,7 @@ export const AdminProjects: React.FC = () => {
   const [clientOptions, setClientOptions] = useState<AgencyClient[]>([]);
   const [clientOptionsLoading, setClientOptionsLoading] = useState(false);
   const [clientOptionsError, setClientOptionsError] = useState<string | null>(null);
+  const [clientOptionsLoaded, setClientOptionsLoaded] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimeoutRef = React.useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -627,7 +628,7 @@ export const AdminProjects: React.FC = () => {
     subtasks: '',
   });
 
-  const loadProjectClients = async () => {
+  const loadProjectClients = React.useCallback(async () => {
     if (!canReadClients) return;
     setClientOptionsLoading(true);
     setClientOptionsError(null);
@@ -641,9 +642,10 @@ export const AdminProjects: React.FC = () => {
     } catch (error) {
       setClientOptionsError(error instanceof Error ? error.message : 'Client records could not be loaded.');
     } finally {
+      setClientOptionsLoaded(true);
       setClientOptionsLoading(false);
     }
-  };
+  }, [canReadClients]);
 
   const showToast = (message: string) => {
     if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);
@@ -1694,6 +1696,14 @@ export const AdminProjects: React.FC = () => {
       (selectedProject?.id ? projects.find(project => project.id === selectedProject.id) : null) ||
       (selectedProjectSlug ? projects.find(project => project.id === selectedProjectSlug || project.slug === selectedProjectSlug) || null : null)
     );
+  const selectedProjectClientRecord = canReadClients && selectedProjectDetail?.clientId
+    ? clientOptions.find((client) => String(client.id) === String(selectedProjectDetail.clientId)) || null
+    : null;
+
+  React.useEffect(() => {
+    if (!canReadClients || !selectedProjectDetail?.clientId || clientOptionsLoaded) return;
+    void loadProjectClients();
+  }, [canReadClients, selectedProjectDetail?.clientId, clientOptionsLoaded, loadProjectClients]);
 
   return (
     <AdminPageShell featureSlug="projects-module" className="projects-module">
@@ -1762,6 +1772,38 @@ export const AdminProjects: React.FC = () => {
               </span>
             </div>
 
+            {canReadClients && selectedProjectDetail.clientId && (
+              <section
+                className="flex min-w-0 flex-col gap-2 rounded-card border border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                aria-label="Linked client record"
+                data-ams-slug="projects-linked-client-context"
+              >
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold text-fg">Linked client record</div>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Resolved by the project's canonical client ID. No company-name matching is used for this link.</p>
+                </div>
+                {selectedProjectClientRecord ? (
+                  <Link
+                    to={'/admin/clients/all-clients?client=' + encodeURIComponent(selectedProjectClientRecord.id)}
+                    className="inline-flex min-h-9 shrink-0 items-center gap-1.5 self-start rounded-control border border-line bg-panel px-3 text-xs font-medium text-accent-text hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:self-auto"
+                    data-ams-slug="projects-open-linked-client"
+                  >
+                    {selectedProjectClientRecord.company || selectedProjectClientRecord.name || 'Open client record'}
+                    <ExternalLink size={12} aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <span className="text-[11px] text-muted" role="status">
+                    {clientOptionsLoading
+                      ? 'Checking client record…'
+                      : clientOptionsError
+                        ? 'Client record could not be verified.'
+                        : clientOptionsLoaded
+                          ? 'No matching client record was found.'
+                          : 'Client record is not verified yet.'}
+                  </span>
+                )}
+              </section>
+            )}
             <div className="grid gap-3 sm:grid-cols-2">
               {[
                 ['Progress', selectedProjectDetail.progressPercent + '%'],
