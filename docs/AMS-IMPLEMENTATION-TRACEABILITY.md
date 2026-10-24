@@ -1101,7 +1101,7 @@ Recent Production Backups now shows up to eight latest server-returned snapshots
 
 Exact-SHA Quality Gate [40067197014 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067197014). AMS CI [40067196870 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067196870), reporting one high `body-parser@1.20.6` denial-of-service advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. No dependency files changed. Browser/visual/accessibility verification: **NOT VERIFIED**.
 
-Next Stage 4 slice: Settings → Audit Log. Preserve the read-only ledger, period scope and sanitized details.
+Next Stage 4 slice: Settings → Integrations. Keep configuration readiness distinct from confirmed provider connectivity, delivery and sync.
 
 
 ### VIEW-SETTINGS-ACCESS: Keep the account register visible during refresh
@@ -1115,3 +1115,16 @@ During account-directory refresh, Users & Access now keeps the last loaded rows 
 Exact-SHA Quality Gate [40067484980 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067484980). AMS CI [40067485225 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067485225) due one high `body-parser@1.20.6` DoS advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. Browser/role/accessibility verification: **NOT VERIFIED**.
 
 Next Stage 4 slice: Settings → Audit Log. Preserve the current read-only ledger, reporting-period scope and sanitized detail drawer.
+
+
+### VIEW-SETTINGS-AUDIT: Keep loaded events visible during refresh
+
+**Source/test SHA:** [e84c67709703f4f70b0f57ff9a01bb8e7c713905](https://github.com/Kapitech-Agency/kapitech-ams/commit/e84c67709703f4f70b0f57ff9a01bb8e7c713905).
+
+The Settings Audit Log now displays a non-blocking refresh status while preserving previously loaded filtered events. The initial skeleton is used only before events have been loaded. Source failure remains distinguishable from a valid no-match/empty state. Shared reporting-period scope, actor/event/outcome filters, pagination, export and sanitized read-only detail drawer remain unchanged.
+
+**Changed files:** `src/pages/admin/AdminSettings.tsx`, `tests/admin-settings-module-regression.test.ts`. No event model, API, database, access policy, dependency or lockfile changes.
+
+Exact-SHA Quality Gate [40067777656 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067777656). AMS CI [40067777675 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067777675) due one high `body-parser@1.20.6` DoS advisory, GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. Browser/role/accessibility verification: **NOT VERIFIED**.
+
+Next Stage 4 slice: Settings → Integrations. Keep configuration readiness distinct from confirmed provider connectivity, delivery and sync.

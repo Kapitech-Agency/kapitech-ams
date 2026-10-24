@@ -1961,7 +1961,7 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Changed files: `src/pages/admin/AdminSettings.tsx`, `tests/ams-settings-backup-period-independence.test.ts`, `tests/global-reporting-period.test.ts`. No API, backend, database, role policy, backup behavior, dependency, or lockfile changes.
 - Exact-SHA Quality Gate [40067197014 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067197014). AMS CI [40067196870 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067196870), reporting one high `body-parser@1.20.6` DoS advisory through Express. Typecheck, migrations, security regression and PostgreSQL integration passed; production build and HTTP smoke were skipped after the audit gate failed. Route the dependency finding to the authorized dependency-maintenance task.
 - Authenticated browser, permission-role, visual, responsive, keyboard/focus and restore verification remains **NOT VERIFIED**. Snapshot creation does not imply successful recovery.
-- Next Stage 4 slice: Settings → Audit Log. Preserve the read-only ledger, existing period scope and sanitized details.
+- Next Stage 4 slice: Settings → Integrations. Keep provider connectivity, delivery and sync unavailable unless current server contracts prove them.
 
 
 ## Settings Users & Access account-register refresh recovery · Stage 4 · 24 October 2026
@@ -1976,3 +1976,16 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Exact-SHA Quality Gate [40067484980 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067484980). AMS CI [40067485225 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067485225), reporting one high `body-parser@1.20.6` DoS advisory via Express. Typecheck, migrations, security regression and PostgreSQL integration passed; production build and HTTP smoke were skipped following audit failure. The frontend slice changed no dependency files.
 - Authenticated admin/non-admin role, responsive, keyboard/focus and account-action review remains **NOT VERIFIED**.
 - Next Stage 4 slice: Settings → Audit Log. Preserve read-only ledger semantics, the selected reporting-period scope and sanitized detail content.
+
+
+## Settings Audit Log refresh recovery · Stage 4 · 24 October 2026
+
+**Source/test SHA:** [e84c67709703f4f70b0f57ff9a01bb8e7c713905](https://github.com/Kapitech-Agency/kapitech-ams/commit/e84c67709703f4f70b0f57ff9a01bb8e7c713905).
+
+- Before: refreshing the audit log replaced the register with a skeleton, even when server-recorded events had already loaded.
+- After: the prior filtered ledger remains visible with a non-blocking refresh status. The skeleton appears only before the first successful load when no events are available.
+- Source errors and valid empty/filter-no-match results remain distinct. The selected reporting period, actor/event/outcome predicates, pagination, CSV export and sanitized read-only details stay unchanged.
+- Changed files: `src/pages/admin/AdminSettings.tsx`, `tests/admin-settings-module-regression.test.ts`. No event schema, API, database, access policy, dependency or lockfile changes.
+- Exact-SHA Quality Gate [40067777656 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067777656). AMS CI [40067777675 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067777675), reporting high `body-parser@1.20.6` advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; downstream build and smoke were skipped. This dependency issue remains a separate authorized-maintenance task.
+- Authenticated role, responsive, keyboard/focus and sensitive-detail verification remains **NOT VERIFIED**.
+- Next Stage 4 slice: Settings → Integrations. Preserve existing source-backed provider/configuration states and do not infer delivery/sync from notification settings availability.
