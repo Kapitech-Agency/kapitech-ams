@@ -322,6 +322,36 @@ test('Documents keeps search and metadata filters before the private register an
   assert.match(documents, /matchesTab\(doc, activeTab\)\s*&&\s*\(!q \|\| searchableText\.includes\(q\)\)/);
 });
 
+test('Document Library links open the canonical selected Client or Project only when the target record is loaded', async () => {
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+  const app = await read('src/App.tsx');
+
+  const hrefStart = documents.indexOf('const relatedHref = (doc: DocumentItem) =>');
+  const hrefEnd = documents.indexOf('const relatedLabel = (doc: DocumentItem) =>', hrefStart);
+  assert.ok(hrefStart >= 0 && hrefEnd > hrefStart, 'Document relationship navigation must remain a bounded helper.');
+  const href = documents.slice(hrefStart, hrefEnd);
+
+  assert.match(href, /relatedClients\.find\(\(record\) => record\.id === relatedId\)/);
+  assert.match(href, /'\/admin\/clients\/all-clients\?client='/);
+  assert.doesNotMatch(href, /'\/admin\/clients\?client='/,
+    'The legacy clients alias redirects without retaining query parameters.');
+  assert.match(href, /relatedProjects\.find\(\(record\) => record\.id === relatedId\)/);
+  assert.match(href, /'\/admin\/projects\?project='/);
+  assert.match(href, /return linkedClient[\s\S]*?: null/);
+  assert.match(href, /return linkedProject[\s\S]*?: null/);
+
+  assert.match(clients, /const requestedClientId = searchParams\.get\('client'\)/);
+  assert.match(clients, /clients\.find\(\(client\) => String\(client\.id\) === requestedClientId\)/);
+  assert.match(clients, /setSelectedClient\(linkedClient\)/);
+  assert.match(app, /<Route path="clients\/all-clients" element=\{<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients \/><\/ModuleRoute>\} \/>/);
+
+  assert.match(projects, /project\.id === selectedProjectSlug \|\| project\.slug === selectedProjectSlug/);
+  assert.match(projects, /open=\{Boolean\(selectedProjectDetail\)\}/,
+    'The canonical project workspace opens the selected record drawer for an ID or slug.');
+});
+
 test('Careers jobs/applicants tabs follow compact AMS geometry and retain tab semantics', async () => {
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
   assert.match(careers, /ams-workspace-tabs inline-flex max-w-full flex-wrap/);

@@ -411,11 +411,26 @@ export const AdminDocuments: React.FC = () => {
   const relatedRecords = uploadRelatedType === 'Client' ? relatedClients : uploadRelatedType === 'Project' ? relatedProjects : [];
   const relatedRecordLoading = uploadRelatedType === 'Client' ? relatedClientsLoading : uploadRelatedType === 'Project' ? relatedProjectsLoading : false;
   const relatedRecordError = uploadRelatedType === 'Client' ? relatedClientsError : uploadRelatedType === 'Project' ? relatedProjectsError : null;
-  const relatedHref = (doc: DocumentItem) => doc.relatedId && doc.relatedEntity === 'Client'
-    ? '/admin/clients?client=' + encodeURIComponent(doc.relatedId)
-    : doc.relatedId && doc.relatedEntity === 'Project'
-      ? '/admin/projects?project=' + encodeURIComponent(doc.relatedId)
-      : null;
+  const relatedHref = (doc: DocumentItem) => {
+    const relatedId = String(doc.relatedId || '').trim();
+    if (!relatedId) return null;
+
+    if (doc.relatedEntity === 'Client') {
+      const linkedClient = relatedClients.find((record) => record.id === relatedId);
+      return linkedClient
+        ? '/admin/clients/all-clients?client=' + encodeURIComponent(relatedId)
+        : null;
+    }
+
+    if (doc.relatedEntity === 'Project') {
+      const linkedProject = relatedProjects.find((record) => record.id === relatedId);
+      return linkedProject
+        ? '/admin/projects?project=' + encodeURIComponent(relatedId)
+        : null;
+    }
+
+    return null;
+  };
   const relatedLabel = (doc: DocumentItem) => {
     if (!doc.relatedId || !['Client', 'Project'].includes(String(doc.relatedEntity || ''))) return doc.relatedEntity || doc.department || 'Internal';
     const records = doc.relatedEntity === 'Client' ? relatedClients : relatedProjects;
