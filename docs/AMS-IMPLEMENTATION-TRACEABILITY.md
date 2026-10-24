@@ -1101,4 +1101,17 @@ Recent Production Backups now shows up to eight latest server-returned snapshots
 
 Exact-SHA Quality Gate [40067197014 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067197014). AMS CI [40067196870 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067196870), reporting one high `body-parser@1.20.6` denial-of-service advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. No dependency files changed. Browser/visual/accessibility verification: **NOT VERIFIED**.
 
-Next Stage 4 slice: Settings → Users & Access. Retain existing server-managed policy and permissions.
+Next Stage 4 slice: Settings → Audit Log. Preserve the read-only ledger, period scope and sanitized details.
+
+
+### VIEW-SETTINGS-ACCESS: Keep the account register visible during refresh
+
+**Source/test SHA:** [b8967c1db55887b5ec12d614bf94ea93f3fac91a](https://github.com/Kapitech-Agency/kapitech-ams/commit/b8967c1db55887b5ec12d614bf94ea93f3fac91a).
+
+During account-directory refresh, Users & Access now keeps the last loaded rows visible and shows a non-blocking status. Skeleton loading is limited to the first load with no known account rows. Existing load failure, stale data, retry, filtered-empty and true-empty behavior remain separate. The current account-management guard, search/role/status filters, pagination and server-managed account/password/MFA operations are unchanged.
+
+**Changed files:** `src/pages/admin/AdminSettings.tsx`, `tests/admin-settings-module-regression.test.ts`. No API, database, permission policy, route, dependency or lockfile changes.
+
+Exact-SHA Quality Gate [40067484980 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067484980). AMS CI [40067485225 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067485225) due one high `body-parser@1.20.6` DoS advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. Browser/role/accessibility verification: **NOT VERIFIED**.
+
+Next Stage 4 slice: Settings → Audit Log. Preserve the current read-only ledger, reporting-period scope and sanitized detail drawer.
