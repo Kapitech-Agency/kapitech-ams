@@ -2030,3 +2030,18 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Authenticated browser screenshots, role checks, viewport sweep, touch/keyboard behavior and runtime accessibility are **NOT VERIFIED**. Do not claim WCAG compliance from source/CI alone.
 - Next canonical slice: Clients → Directory / Client 360. The Projects Campaigns and Project Controls workspaces stay unavailable until canonical records and workflows exist.
 
+
+
+## Clients Directory / Client 360 link-policy clarification · Stage 4 · 24 October 2026
+
+**Exact source/test SHA:** [0b506fecaac56c5cf5acbb5dcfcb670663dbeae3](https://github.com/Kapitech-Agency/kapitech-ams/commit/0b506fecaac56c5cf5acbb5dcfcb670663dbeae3).
+
+- Before: the Client 360 header copy for Projects / Inbox / Finance / Documents used a general statement about explicit client-ID relationships after a separate Contracts & SOWs panel, whose canonical matching deliberately supports an exact normalized company-name fallback only when a contract has no client ID.
+- After: the note states that ID-only relationship matching applies to the Projects, Inbox, Finance and Documents panels below. The separate contract panel still explains the exact-name legacy fallback. Regression coverage now checks the two policies independently.
+- Matching predicates, canonical record associations, access controls, routes, persistence and Finance behavior remain unchanged. No API, backend, database, auth, permission or workflow changes.
+- Changed files: `src/pages/admin/AdminClients.tsx`, `tests/ams-nine-module-workspace-regression.test.ts`.
+- Exact-SHA Quality Gate [40073190083 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40073190083): typecheck, regression tests and production build succeeded.
+- Exact-SHA AMS CI [40073190078 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40073190078) due to the existing high `body-parser@1.20.6` advisory. No dependency files changed. Downstream production build/packaging/HTTP smoke were skipped after the audit gate.
+- Browser visual/role/responsive/keyboard/accessibility evidence is **NOT VERIFIED**. Stage 5 and explicit user sign-off remain required.
+- Next slice: Finance → Transactions & Cash → Revenue, after preserving the source-verified Overview & Control and Cash & Bank structures.
+
