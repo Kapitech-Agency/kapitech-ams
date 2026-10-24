@@ -656,6 +656,8 @@ Verification: AMS CI [39207941880](https://github.com/Kapitech-Agency/kapitech-a
 **Tests:** tests/finance-ui-consistency.test.ts verifies source/status/positive-balance rules, invalid-date handling, bucket share calculation, register-first ordering, blocked-source recovery and empty state. Both AMS CI and AMS Quality Gate must pass on the resulting SHA. Browser, screen-reader, responsive viewport and production visual verification remain Stage 5.
 
 
+**Shared register responsive evidence (24 October 2026):** Commit [61754d82](https://github.com/Kapitech-Agency/kapitech-ams/commit/61754d821a6bb1f1060b8c3eb2e074f28f9113de) replaces the invoice register's clipping wrapper with a contained horizontal-scroll region. This same canonical component is used by Accounts Receivable; exact-SHA Quality Gate [40073753699 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40073753699). The later combined Finance regression SHA [24589cdc](https://github.com/Kapitech-Agency/kapitech-ams/commit/24589cdc8abad578d74d6d53c143458c5512d417) also passed Quality Gate [40074278685](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40074278685). Stage 5 browser/reflow/keyboard/assistive-technology confirmation remains **NOT VERIFIED**.
+
 **Finance breakpoint test correction:** CI and Quality Gate on `b93f08e595831489bd85b15d9107303b9fa06730` failed four source assertions expecting `lg:flex-1` or using over-escaped `min-[1100px]` regexes after the 1100px breakpoint adjustment. Three suites now assert the current implementation instead of the outdated class. This test-only correction is separate from Accounts Receivable aging; verify both suites on the corrective commit before declaring the combined slice green.
 
 
@@ -1153,3 +1155,17 @@ Dashboard Overview now exposes a keyboard-accessible Refresh data action that re
 Exact-SHA Quality Gate [40069641643 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40069641643). AMS CI [40069641629 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40069641629), with the existing high `body-parser@1.20.6` advisory (GHSA-27r3-jxmh-p828). The frontend work made no dependency changes. **Authenticated browser, role, visual, responsive and accessibility status: NOT VERIFIED.**
 
 Continue Stage 4 with Projects → Planning & Delivery. Inspect source-backed Brief, Milestones and Timeline views before selecting the next bounded slice; keep Content & Campaigns and Project Controls unavailable while canonical models remain absent.
+
+### Finance transaction-register clarity pass · Stage 4 · 24 October 2026
+
+This pass is tracked under the existing gap-register requirement IDs `VIEW-FIN-CASH` and `VIEW-FIN-ARAP`. No new or duplicate requirement ID is introduced.
+
+**Latest source/test SHA:** [24589cdc8abad578d74d6d53c143458c5512d417](https://github.com/Kapitech-Agency/kapitech-ams/commit/24589cdc8abad578d74d6d53c143458c5512d417).
+
+- **Revenue and Accounts Receivable shared invoice register:** Previously the table wrapper clipped content despite the table minimum width. The register now scrolls horizontally inside its own container. It preserves its canonical columns and stays before supporting totals and AR aging.
+- **Expenses:** Added Supplier sourced from `AgencyExpense.vendorId` → canonical `AgencyVendor`, and Payment status from the recorded `paymentStatus` union. Missing link, unavailable source, unresolved vendor and missing status are distinct. The existing Schedule column, category, project/date/currency amount, details and void action remain. Search can match a linked vendor's company/name. No payment computation or persistence changes.
+- **Quotations:** The quotation table now uses its own horizontal-scroll container to prevent clipping. All current columns and supported actions remain, including the approved/unlinked-only convert-to-invoice action gate. No conversion workflow logic was altered.
+- **Tests:** `tests/finance-ui-consistency.test.ts` now guards Expense supplier/payment-state data and preserved Schedule, quotation register scrolling/columns/actions, and invoice register scrolling/column presence.
+- Exact-SHA Quality Gate [40074278685 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40074278685): Typecheck, regression tests and production build. Exact-SHA AMS CI [40074278688 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40074278688) for the existing high `body-parser@1.20.6` advisory; no dependency files changed, downstream build/packaged migration/HTTP smoke were skipped.
+- **NOT VERIFIED:** authenticated browser screenshot/role state, all design-system viewport widths, touch/keyboard, screen-reader runtime, and WCAG 2.2 AA. CI/source assertions do not prove these.
+- **Next:** continue Stage 4 with Accounts Receivable aging/source-state verification, then Accounts Payable and vendor payment schedule review. Stage 5 and explicit user sign-off remain required.

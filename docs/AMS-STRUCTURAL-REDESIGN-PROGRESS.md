@@ -2045,3 +2045,17 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Browser visual/role/responsive/keyboard/accessibility evidence is **NOT VERIFIED**. Stage 5 and explicit user sign-off remain required.
 - Next slice: Finance → Transactions & Cash → Revenue, after preserving the source-verified Overview & Control and Cash & Bank structures.
 
+
+
+## Finance register source and responsive clarity · Stage 4 · 24 October 2026
+
+**Latest code/test SHA:** [24589cdc8abad578d74d6d53c143458c5512d417](https://github.com/Kapitech-Agency/kapitech-ams/commit/24589cdc8abad578d74d6d53c143458c5512d417).
+
+- **Revenue / shared invoice register:** The prior overflow-hidden wrapper could clip the canonical invoice table when its columns exceeded the workspace. Replaced it with a local horizontal-scroll region and a defined table minimum width. The invoice identity, client/project, issue/due date, total, balance, status and actions remain unchanged. The register still precedes the supporting summary and receivable-aging content.
+- **Expenses:** The existing canonical `AgencyExpense.vendorId` and `paymentStatus` fields were not visible in the register. Added Supplier and Payment status columns. Supplier labels resolve from the canonical vendor relation only; absent relations, unavailable vendor source and unresolved IDs have distinct honest labels. Payment status displays only saved `paid`, `partially_paid`, or `unpaid`; missing values read Not recorded. The previous Schedule column and existing project/date/currency/void actions are preserved. Search includes actual linked vendor company/name. No payment amounts, formulas, source relationships or workflow transitions were changed.
+- **Quotations:** The wide canonical quotation ledger had a minimum width but was nested in `overflow-hidden`, allowing clipping on narrow screens. Switched the wrapper to contained horizontal scrolling and raised the table minimum width so Quotation, Client, Value, Created, Valid until, Status, Owner and Actions remain accessible. Search/status/sort controls and authorized view/edit/convert/delete actions stay unchanged.
+- **Changed source/test files:** `src/pages/admin/AdminInvoicing.tsx`; `tests/finance-ui-consistency.test.ts`.
+- Exact-SHA Quality Gate [40074278685 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40074278685): typecheck, regression tests and production build. Exact-SHA AMS CI [40074278688 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40074278688), reporting the existing high `body-parser@1.20.6` advisory through Express. No dependency files changed; downstream packaging/HTTP smoke steps were skipped.
+- Browser/visual verification is **NOT VERIFIED**: no authenticated screenshot/role session, viewport sweep, keyboard/touch or assistive-technology runtime evidence. Stage 5 and user sign-off remain required.
+- Next: Finance → Receivables & Payables → Accounts Receivable. The shared invoice register changes apply to both Revenue and AR. Verify AR aging and failure/empty states before considering it structurally complete.
+
