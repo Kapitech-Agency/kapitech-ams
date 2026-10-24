@@ -1961,7 +1961,7 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Changed files: `src/pages/admin/AdminSettings.tsx`, `tests/ams-settings-backup-period-independence.test.ts`, `tests/global-reporting-period.test.ts`. No API, backend, database, role policy, backup behavior, dependency, or lockfile changes.
 - Exact-SHA Quality Gate [40067197014 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067197014). AMS CI [40067196870 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067196870), reporting one high `body-parser@1.20.6` DoS advisory through Express. Typecheck, migrations, security regression and PostgreSQL integration passed; production build and HTTP smoke were skipped after the audit gate failed. Route the dependency finding to the authorized dependency-maintenance task.
 - Authenticated browser, permission-role, visual, responsive, keyboard/focus and restore verification remains **NOT VERIFIED**. Snapshot creation does not imply successful recovery.
-- Next Stage 4 slice: Settings → Integrations. Keep provider connectivity, delivery and sync unavailable unless current server contracts prove them.
+- Next Stage 4 slice: Dashboard → Overview. Do not fabricate record-level links when the audit event source omits structured targets.
 
 
 ## Settings Users & Access account-register refresh recovery · Stage 4 · 24 October 2026
@@ -1989,3 +1989,16 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Exact-SHA Quality Gate [40067777656 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067777656). AMS CI [40067777675 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067777675), reporting high `body-parser@1.20.6` advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; downstream build and smoke were skipped. This dependency issue remains a separate authorized-maintenance task.
 - Authenticated role, responsive, keyboard/focus and sensitive-detail verification remains **NOT VERIFIED**.
 - Next Stage 4 slice: Settings → Integrations. Preserve existing source-backed provider/configuration states and do not infer delivery/sync from notification settings availability.
+
+
+## Settings Integrations readiness refresh state · Stage 4 · 24 October 2026
+
+**Latest source/test SHA:** [64542952b2d0ad612127afc275f8686d85b061be](https://github.com/Kapitech-Agency/kapitech-ams/commit/64542952b2d0ad612127afc275f8686d85b061be). The UI source change is [f5c13f5c169ea79103d6c41c8f67377e6f190233](https://github.com/Kapitech-Agency/kapitech-ams/commit/f5c13f5c169ea79103d6c41c8f67377e6f190233).
+
+- A non-blocking status announces that the latest server readiness checks are refreshing while previously loaded values remain visible.
+- Existing Ready/Review/Not reported meanings and the evidence boundary remain intact. The UI does not claim fresh provider connectivity, delivery or sync.
+- No API, database, auth, access policy, provider contract, dependency or lockfile changes.
+- Changed files: `src/pages/admin/AdminSettings.tsx`, `tests/admin-settings-module-regression.test.ts`.
+- Exact-SHA Quality Gate [40068194479 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40068194479). AMS CI [40068194512 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40068194512), which reports high `body-parser@1.20.6` via Express (GHSA-27r3-jxmh-p828). Typecheck, migrations, security regression and PostgreSQL integration passed; production build and HTTP smoke were skipped. No dependency files changed. Keep the audit finding in a separate authorized dependency-maintenance task.
+- Privileged-role browser, responsive, keyboard/focus and provider-runtime checks remain **NOT VERIFIED**.
+- Next Stage 4 slice: Dashboard → Overview, following module order. Do not fabricate record-level links for audit entries without a structured target field.

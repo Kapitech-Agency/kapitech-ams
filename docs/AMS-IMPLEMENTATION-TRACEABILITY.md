@@ -1101,7 +1101,7 @@ Recent Production Backups now shows up to eight latest server-returned snapshots
 
 Exact-SHA Quality Gate [40067197014 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067197014). AMS CI [40067196870 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067196870), reporting one high `body-parser@1.20.6` denial-of-service advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. No dependency files changed. Browser/visual/accessibility verification: **NOT VERIFIED**.
 
-Next Stage 4 slice: Settings → Integrations. Keep configuration readiness distinct from confirmed provider connectivity, delivery and sync.
+Next Stage 4 slice: Dashboard → Overview, following roadmap order.
 
 
 ### VIEW-SETTINGS-ACCESS: Keep the account register visible during refresh
@@ -1127,4 +1127,17 @@ The Settings Audit Log now displays a non-blocking refresh status while preservi
 
 Exact-SHA Quality Gate [40067777656 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067777656). AMS CI [40067777675 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067777675) due one high `body-parser@1.20.6` DoS advisory, GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. Browser/role/accessibility verification: **NOT VERIFIED**.
 
-Next Stage 4 slice: Settings → Integrations. Keep configuration readiness distinct from confirmed provider connectivity, delivery and sync.
+Next Stage 4 slice: Dashboard → Overview, following roadmap order.
+
+
+### VIEW-SETTINGS-INTEGRATIONS: Mark previously loaded readiness during refresh
+
+**Latest source/test SHA:** [64542952b2d0ad612127afc275f8686d85b061be](https://github.com/Kapitech-Agency/kapitech-ams/commit/64542952b2d0ad612127afc275f8686d85b061be); UI source commit [f5c13f5c](https://github.com/Kapitech-Agency/kapitech-ams/commit/f5c13f5c169ea79103d6c41c8f67377e6f190233).
+
+A non-blocking refresh state is displayed when server readiness is being rechecked and a previously loaded readiness response exists. Existing gate values are retained, but the banner clarifies that a new check is in progress. It does not claim third-party connectivity, delivery or sync. Existing Kopra disabled state and Website & CMS settings/API remain unchanged.
+
+**Changed files:** `src/pages/admin/AdminSettings.tsx`, `tests/admin-settings-module-regression.test.ts`. No provider contract, API, database, auth, permission, dependency or lockfile changes.
+
+Exact-SHA Quality Gate [40068194479 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40068194479). AMS CI [40068194512 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40068194512), reporting one high `body-parser@1.20.6` DoS advisory via Express, GHSA-27r3-jxmh-p828. Typecheck, migration, security and PostgreSQL checks passed; downstream build and HTTP smoke were skipped. Browser/role/accessibility status: **NOT VERIFIED**.
+
+Next Stage 4 slice: Dashboard → Overview, following roadmap order.
