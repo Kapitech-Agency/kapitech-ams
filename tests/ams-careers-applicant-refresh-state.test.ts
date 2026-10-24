@@ -32,7 +32,7 @@ test('Careers applicants remain separate from Inbox and Recruitment History rema
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   assert.ok(careers.includes("(item as any).type === 'career'"));
   assert.ok(careers.includes('data-ams-feature-slug="cms-careers-applicants"'));
-  assert.ok(careers.includes('Recruitment History is not available yet.'));
+  assert.ok(careers.includes('Recruitment history is not available yet.'));
   assert.ok(access.includes("if (path === '/admin/cms/careers' && params.get('tab') === 'applicants')"));
   assert.ok(inbox.includes(".filter((item) => item.type !== 'career')"));
 });
