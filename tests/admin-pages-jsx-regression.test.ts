@@ -1096,7 +1096,7 @@ test('Settings backup, audit, and account registers provide compact cards and ke
   assert.ok(settings.includes('hidden min-[1280px]:block overflow-x-auto'));
   assert.ok(settings.includes('onClick={() => void triggerIntegrityCheck()}'));
   assert.ok(settings.includes("log.ip || 'Internal cluster'"));
-  assert.ok(settings.includes('account.mfaEnabled ? \'success\' : \'warning\''));
+  assert.ok(settings.includes('accountMfaTone(account.mfaEnabled)'));
   assert.ok(settings.includes('isCurrentMaster && !masterAccount'));
   assert.ok(settings.includes('setConfirmDelete({ id: account.id, name: account.name })'));
 });

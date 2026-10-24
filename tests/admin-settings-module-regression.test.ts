@@ -457,9 +457,8 @@ test('Users & Access distinguishes missing MFA data from explicitly disabled MFA
   assert.match(settings, /value === true \? 'success' : value === false \? 'warning' : 'neutral'/);
 
   const accountStart = settings.indexOf('data-ams-feature-slug="settings-account-directory"');
-  const auditStart = settings.indexOf("{activeTab === 'audit'", accountStart);
-  assert.ok(accountStart >= 0 && auditStart > accountStart);
-  const accountView = settings.slice(accountStart, auditStart);
+  assert.ok(accountStart >= 0);
+  const accountView = settings.slice(accountStart);
   assert.equal((accountView.match(/accountMfaLabel\(account\.mfaEnabled\)/g) || []).length, 2,
     'Compact cards and desktop table must use the same truthful MFA state label.');
   assert.equal((accountView.match(/accountMfaTone\(account\.mfaEnabled\)/g) || []).length, 2,
