@@ -842,11 +842,11 @@ test('Finance Expenses register shows canonical supplier links and recorded paym
   assert.ok(start >= 0 && end > start, 'Expense register should exist before its pagination.');
   const expenses = invoicing.slice(start, end);
 
-  assert.ok(expenses.includes('min-w-[1248px]'));
+  assert.ok(expenses.includes('min-w-[1360px]'));
   assert.ok(expenses.includes('>Expense</th>') && expenses.includes('>Supplier</th>'));
   assert.ok(expenses.includes('>Category</th>') && expenses.includes('>Project</th>'));
   assert.ok(expenses.includes('>Date</th>') && expenses.includes('>Amount</th>'));
-  assert.ok(expenses.includes('>Payment status</th>') && expenses.includes('>Action</th>'));
+  assert.ok(expenses.includes('>Schedule</th>') && expenses.includes('>Payment status</th>') && expenses.includes('>Action</th>'));
   assert.match(expenses, /vendors\.find\(\(item\) => item\.id === expense\.vendorId\)/);
   assert.match(expenses, /vendor\.companyName \|\| vendor\.name/);
   assert.match(expenses, /'Vendor data unavailable'[\s\S]*?'Linked vendor unavailable'/);
