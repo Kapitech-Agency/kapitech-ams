@@ -835,6 +835,31 @@ test('Accounts Payable and vendor payment schedule use compact cards for dense r
   assert.match(ap, /registerRecordActions\('vendor-bill',record/);
 });
 
+test('Finance Expenses register shows canonical supplier links and recorded payment status', async () => {
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const start = invoicing.indexOf('filteredExpenses.length === 0');
+  const end = invoicing.indexOf('AdminTablePagination total={filteredExpenses.length', start);
+  assert.ok(start >= 0 && end > start, 'Expense register should exist before its pagination.');
+  const expenses = invoicing.slice(start, end);
+
+  assert.ok(expenses.includes('min-w-[1248px]'));
+  assert.ok(expenses.includes('>Expense</th>') && expenses.includes('>Supplier</th>'));
+  assert.ok(expenses.includes('>Category</th>') && expenses.includes('>Project</th>'));
+  assert.ok(expenses.includes('>Date</th>') && expenses.includes('>Amount</th>'));
+  assert.ok(expenses.includes('>Payment status</th>') && expenses.includes('>Action</th>'));
+  assert.match(expenses, /vendors\.find\(\(item\) => item\.id === expense\.vendorId\)/);
+  assert.match(expenses, /vendor\.companyName \|\| vendor\.name/);
+  assert.match(expenses, /'Vendor data unavailable'[\s\S]*?'Linked vendor unavailable'/);
+  assert.match(expenses, /'Unlinked'/);
+  assert.match(expenses, /expense\.paymentStatus === 'paid'[\s\S]*?'Paid'/);
+  assert.match(expenses, /expense\.paymentStatus === 'partially_paid'[\s\S]*?'Partially paid'/);
+  assert.match(expenses, /expense\.paymentStatus === 'unpaid'[\s\S]*?'Unpaid'/);
+  assert.match(expenses, /'Not recorded'/);
+  assert.ok(expenses.includes('expense.recurringInterval'));
+  assert.ok(expenses.includes('projectsById.get(expense.projectId'));
+  assert.match(invoicing, /linkedVendor\?\.companyName,[\s\S]*?linkedVendor\?\.name/);
+});
+
 test('Embedded invoice registers lead supporting summaries and receivables aging stays source-backed', async () => {
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const pagination = invoicing.indexOf('slug="finance-invoices-pagination"');

@@ -1318,7 +1318,16 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const filteredExpenses = useMemo(() => {
     const query = expenseSearch.trim().toLowerCase();
     const result = currencyExpenses.filter((expense) => {
-      const searchable = [expense.description, expense.category, expense.type || 'OpEx', expense.recordedBy, expense.date].join(' ').toLowerCase();
+      const linkedVendor = vendors.find((vendor) => vendor.id === expense.vendorId);
+      const searchable = [
+        expense.description,
+        expense.category,
+        expense.type || 'OpEx',
+        expense.recordedBy,
+        expense.date,
+        linkedVendor?.companyName,
+        linkedVendor?.name
+      ].join(' ').toLowerCase();
       const matchesSearch = !query || searchable.includes(query);
       const matchesType = expenseTypeFilter === 'all' || (expense.type || 'OpEx') === expenseTypeFilter;
       const matchesCategory = expenseCategoryFilter === 'all' || expense.category === expenseCategoryFilter;
@@ -3037,10 +3046,31 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         {filteredExpenses.length === 0 ? (
           <div className="p-5"><EmptyState title={loading || refreshing ? 'Loading expenses…' : expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'} description={loading || refreshing ? 'Loading the latest expense records.' : expenseSourceUnavailable ? 'The expense source could not be loaded. Retry before relying on this list.' : 'Adjust the search or filters.'}/></div>
         ) : (
-          <table className="ams-finance-table min-w-[980px] border-separate border-spacing-0 text-xs">
-            <thead><tr><th className="w-[27%]">Expense</th><th className="w-[19%]">Category</th><th className="w-[18%]">Project</th><th className="w-[12%]">Date</th><th className="w-[13%] text-right">Amount</th><th className="w-[11%]">Schedule</th><th className="w-[48px] text-right">Action</th></tr></thead>
+          <table className="ams-finance-table min-w-[1248px] border-separate border-spacing-0 text-xs">
+            <thead><tr><th className="w-[22%]">Expense</th><th className="w-[17%]">Supplier</th><th className="w-[15%]">Category</th><th className="w-[15%]">Project</th><th className="w-[10%]">Date</th><th className="w-[11%] text-right">Amount</th><th className="w-[10%]">Payment status</th><th className="w-[48px] text-right">Action</th></tr></thead>
             <tbody>
-              {paginatedExpenses.map((expense) => (
+              {paginatedExpenses.map((expense) => {
+                const vendor = expense.vendorId ? vendors.find((item) => item.id === expense.vendorId) : undefined;
+                const supplierLabel = !expense.vendorId
+                  ? 'Unlinked'
+                  : vendor
+                    ? vendor.companyName || vendor.name
+                    : vendorSourceBlocked
+                      ? 'Vendor data unavailable'
+                      : 'Linked vendor unavailable';
+                const paymentStatusLabel = expense.paymentStatus === 'paid'
+                  ? 'Paid'
+                  : expense.paymentStatus === 'partially_paid'
+                    ? 'Partially paid'
+                    : expense.paymentStatus === 'unpaid'
+                      ? 'Unpaid'
+                      : 'Not recorded';
+                const paymentStatusTone = expense.paymentStatus === 'paid'
+                  ? 'border-success/30 bg-success/10 text-success'
+                  : expense.paymentStatus === 'partially_paid'
+                    ? 'border-warning/30 bg-warning/10 text-warning'
+                    : 'border-line bg-bg text-muted';
+                return (
                 <tr key={expense.id}>
                   <td>
                     <button type="button" onClick={() => setExpenseDetail(expense)} className="text-left">
@@ -3048,14 +3078,19 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                       <p className="mt-1 text-[10px] text-muted">{expense.recordedBy || "Finance"} · {expense.type || "OpEx"}</p>
                     </button>
                   </td>
+                  <td>
+                    <p className="max-w-[220px] truncate text-xs font-medium text-fg">{supplierLabel}</p>
+                    <p className="mt-1 text-[10px] text-muted">{vendor ? (vendor.companyName && vendor.companyName !== vendor.name ? vendor.name : 'Supplier record') : expense.vendorId ? 'Saved vendor reference' : 'No supplier link recorded'}</p>
+                  </td>
                   <td><p className="text-xs text-fg">{expense.category}</p><p className="mt-1 text-[10px] text-muted">{expense.receiptUrl ? "Receipt attached" : "No receipt"}</p></td>
                   <td><span className="text-xs text-fg">{projectsById.get(expense.projectId || "")?.name || "Unassigned"}</span></td>
                   <td className="tabular-nums text-muted">{formatFinanceTableDate(expense.date)}</td>
                   <td className="text-right"><span className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</span></td>
-                  <td><p className="text-xs text-fg">{expense.recurringInterval && expense.recurringInterval !== "none" ? expense.recurringInterval : "One-time"}</p><p className="mt-1 text-[10px] text-muted">{expense.recurringInterval && expense.recurringInterval !== "none" ? "Recurring" : "Single charge"}</p></td>
+                  <td><span className={'inline-flex whitespace-nowrap rounded-badge border px-2 py-1 text-[10px] font-semibold ' + paymentStatusTone}>{paymentStatusLabel}</span></td>
                   <td><div className="flex justify-end">{canManageInvoices&&<button type="button" onClick={() => setConfirmAction({ type: "expense", id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</div></td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         )}
