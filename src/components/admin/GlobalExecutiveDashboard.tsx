@@ -9,6 +9,7 @@ import {
   Clock3,
   FolderKanban,
   FileText,
+  RefreshCw,
   MoreHorizontal,
   Plus,
   ReceiptText,
@@ -701,62 +702,87 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
     loading: true, projects: null, tasks: null, timeLogs: null, invoices: null, expenses: null
   });
+  const [refreshRequest, setRefreshRequest] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshNotice, setRefreshNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    api.dashboard.getOverview()
-      .then((response) => {
-        if (!active) return;
-        if (!response.success) {
-          setDashboardOverview({ source: 'ab', loading: false });
-          return;
-        }
-        const projectDataAvailable = Array.isArray(response.data?.projects);
-        const projects = projectDataAvailable ? response.data.projects : [];
-        const recentActivityDataAvailable = Array.isArray(response.data?.recentActivity);
-        setDashboardOverview({
-          metrics: response.data?.metrics,
-          financials: response.data?.financials,
-          projects,
-          recentActivity: recentActivityDataAvailable ? response.data.recentActivity as DashboardRecentActivity[] : [],
-          recentActivityDataAvailable,
-          projectDataAvailable,
-          source: projectDataAvailable || Boolean(response.data?.metrics) ? 'server' : 'ab',
-          loading: false
-        });
-      })
-      .catch(() => {
-        if (active) setDashboardOverview({ source: 'ab', loading: false });
-      });
-    return () => { active = false; };
-  }, []);
+    setIsRefreshing(true);
 
-  useEffect(() => {
-    let active = true;
-    const readRows = (result: PromiseSettledResult<any>, field: string): any[] | null => {
-      if (result.status !== 'fulfilled' || !result.value?.success || !Array.isArray(result.value.data?.[field])) return null;
-      return result.value.data[field];
-    };
     const requests: Array<Promise<any>> = [
+      api.dashboard.getOverview(),
       api.projects.getAll(),
       api.tasks.getAll(),
       api.timeLogs.getAll(),
       api.finance.getInvoices(),
       api.finance.getExpenses()
     ];
+
+    const readRows = (result: PromiseSettledResult<any>, field: string): any[] | null => {
+      if (result.status !== 'fulfilled' || !result.value?.success || !Array.isArray(result.value.data?.[field])) return null;
+      return result.value.data[field];
+    };
+
     Promise.allSettled(requests).then((results) => {
       if (!active) return;
-      setOperationalSnapshot({
+      const failedSources: string[] = [];
+      const overviewResult = results[0];
+
+      if (overviewResult.status === 'fulfilled' && overviewResult.value?.success) {
+        const data = overviewResult.value.data || {};
+        const projectDataReturned = Array.isArray(data.projects);
+        const activityDataReturned = Array.isArray(data.recentActivity);
+        setDashboardOverview((previous) => ({
+          metrics: data.metrics ?? previous.metrics,
+          financials: data.financials ?? previous.financials,
+          projects: projectDataReturned ? data.projects : previous.projects,
+          recentActivity: activityDataReturned ? data.recentActivity as DashboardRecentActivity[] : previous.recentActivity ?? [],
+          recentActivityDataAvailable: activityDataReturned ? true : previous.recentActivityDataAvailable,
+          projectDataAvailable: projectDataReturned ? true : previous.projectDataAvailable,
+          source: projectDataReturned || Boolean(data.metrics) ? 'server' : previous.source,
+          loading: false
+        }));
+      } else {
+        failedSources.push('dashboard summary');
+        setDashboardOverview((previous) => ({ ...previous, loading: false }));
+      }
+
+      const projects = readRows(results[1], 'projects');
+      const tasks = readRows(results[2], 'tasks');
+      const timeLogs = readRows(results[3], 'timeLogs');
+      const invoices = readRows(results[4], 'invoices');
+      const expenses = readRows(results[5], 'expenses');
+
+      if (projects === null) failedSources.push('projects');
+      if (tasks === null) failedSources.push('tasks');
+      if (timeLogs === null) failedSources.push('time logs');
+      if (invoices === null) failedSources.push('invoices');
+      if (expenses === null) failedSources.push('expenses');
+
+      setOperationalSnapshot((previous) => ({
         loading: false,
-        projects: readRows(results[0], 'projects'),
-        tasks: readRows(results[1], 'tasks'),
-        timeLogs: readRows(results[2], 'timeLogs'),
-        invoices: readRows(results[3], 'invoices'),
-        expenses: readRows(results[4], 'expenses')
-      });
+        projects: projects ?? previous.projects,
+        tasks: tasks ?? previous.tasks,
+        timeLogs: timeLogs ?? previous.timeLogs,
+        invoices: invoices ?? previous.invoices,
+        expenses: expenses ?? previous.expenses
+      }));
+
+      setRefreshNotice(failedSources.length
+        ? 'Could not refresh ' + failedSources.join(', ') + '. Previously loaded values are retained where available; unavailable sources are not treated as zero.'
+        : null);
+      setIsRefreshing(false);
+    }).catch(() => {
+      if (!active) return;
+      setDashboardOverview((previous) => ({ ...previous, loading: false }));
+      setOperationalSnapshot((previous) => ({ ...previous, loading: false }));
+      setRefreshNotice('Dashboard refresh failed. Previously loaded values are retained where available; unavailable sources are not treated as zero.');
+      setIsRefreshing(false);
     });
+
     return () => { active = false; };
-  }, []);
+  }, [refreshRequest]);
 
   useEffect(() => {
     if (!projectActionId) return;
@@ -921,7 +947,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             : 'Choose a report to inspect financial movement, outstanding receivables, or current project status.'}
         actions={(
           <>
-
+            <button
+              type="button"
+              onClick={() => setRefreshRequest((current) => current + 1)}
+              disabled={isRefreshing}
+              aria-label="Refresh dashboard data"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9 sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
+              {isRefreshing ? 'Refreshing…' : 'Refresh data'}
+            </button>
             <Link
               to={canManageProjects ? '/admin/projects?create=1' : '/admin/projects'}
               className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium sm:min-h-9 sm:w-auto text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -933,7 +968,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         )}
       />
 
-      
+      {isRefreshing && !dashboardOverview.loading && !operationalSnapshot.loading ? (
+        <p className="rounded-control border border-line bg-panel px-3 py-2 text-xs text-muted" role="status" data-ams-feature-slug="dashboard-refreshing-status">
+          Refreshing dashboard sources. Previously loaded values remain visible.
+        </p>
+      ) : null}
+      {refreshNotice ? (
+        <p className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-xs text-muted" role="status" data-ams-feature-slug="dashboard-refresh-warning">
+          {refreshNotice}
+        </p>
+      ) : null}
 
       {view === 'overview' ? (
         <>
