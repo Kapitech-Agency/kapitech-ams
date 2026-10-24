@@ -2115,3 +2115,14 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Test asserts Client query preservation, project ID selection, root alias behavior, and target-existence gating. Exact-SHA Quality Gate [40076581187 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40076581187); AMS CI [40076581063 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40076581063), after typecheck, migrations, security and PostgreSQL integration passed.
 - No API, backend, database, role permission, document storage or business workflow changes. Stage 5 direct browser/role/keyboard/responsive verification remains pending.
 - Next: continue the Stage 4 cross-module pass with Client 360 → Project / Document / Finance context.
+
+## Stage 4 cross-module pass: Client 360 → Document Library exact record context · 24 October 2026
+
+**Exact source/test SHA:** [460409347c6b3ef7eba9b1f96ff19b715403285e](https://github.com/Kapitech-Agency/kapitech-ams/commit/460409347c6b3ef7eba9b1f96ff19b715403285e).
+
+- **Before:** Client 360's Documents shortcut opened the general Project & Client Files category but did not retain the current client identity. Users then had to search again and could see documents linked to other clients.
+- **After:** the shortcut passes the selected client's canonical ID via `relatedEntity=Client&relatedId=...`. The Document Library normalizes allowed context values, filters by exact entity+ID pair, shows the current relationship context, and locks the broader linked/unlinked selector while the exact relationship is active. Reset removes the context constraint and category parameter but preserves unrelated query values. Invalid or incomplete context parameters are removed from the URL instead of being treated as a valid scope.
+- **Changed files:** `src/pages/admin/AdminClients.tsx`, `src/pages/admin/AdminDocuments.tsx`, `src/lib/documentLibrarySearch.ts`, `tests/ams-document-library-linked-record-search.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`.
+- **Validation:** Exact-SHA Quality Gate [40077964259 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40077964259) for typecheck, all regression tests, and production build. AMS CI [40077964330 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40077964330); migration, security regression and PostgreSQL integration passed. Existing high `body-parser@1.20.6` advisory remains out of scope for this frontend slice.
+- **NOT VERIFIED:** actual authenticated Client/Document visibility, public or private data rendering in a browser, responsive layout, direct-load/back-forward, keyboard/focus and assistive technology. Stage 5 remains mandatory.
+- **Next:** Client 360 → Finance invoice context. Keep Finance canonical, do not add invoice APIs or new record-detail routes.

@@ -1177,3 +1177,15 @@ This pass is tracked under the existing gap-register requirement IDs `VIEW-FIN-C
 - **Validation:** Exact-SHA Quality Gate [40076581187 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40076581187), including typecheck, regression tests and production build. AMS CI [40076581063 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40076581063); typecheck, PostgreSQL migrations, security tests and PostgreSQL integration passed. Audit reports existing high `body-parser@1.20.6` via Express (GHSA-27r3-jxmh-p828). No dependency files changed.
 - **Not verified:** authenticated browser access, permission-aware navigation outcomes, direct-load/back-forward behavior in browser, responsive layout, keyboard/focus and assistive-technology runtime. Stage 5 is mandatory.
 - **Next Stage 4 step:** continue cross-module pass, one bounded journey at a time, starting with Client 360 → Project / Document / Finance context.
+
+### DATA-001: Client 360 → Document Library exact relationship scope · 24 October 2026
+
+**Exact source/test SHA:** [460409347c6b3ef7eba9b1f96ff19b715403285e](https://github.com/Kapitech-Agency/kapitech-ams/commit/460409347c6b3ef7eba9b1f96ff19b715403285e).
+
+Client 360's Documents shortcut now passes the selected canonical Client ID with `relatedEntity=Client`. `AdminDocuments` normalizes only exact Client/Project entity names and non-empty IDs, matches documents by both canonical relationship entity and ID, displays a context message, constrains the linked/unlinked selector while the context is active, and includes the context in active-filter count. Reset removes the relationship context and document category parameters while retaining other query parameters. Invalid/incomplete relationship query values are normalized out of the URL. This is a frontend view/filter change only; it does not create or alter document links, add data, change permissions or change the API contract.
+
+**Changed files:** `src/pages/admin/AdminClients.tsx`, `src/pages/admin/AdminDocuments.tsx`, `src/lib/documentLibrarySearch.ts`, `tests/ams-document-library-linked-record-search.test.ts`, `tests/ams-nine-module-workspace-regression.test.ts`.
+
+Exact-SHA Quality Gate [40077964259 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40077964259). AMS CI [40077964330 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40077964330); typecheck, migrations, security regression and PostgreSQL integration passed. Existing high `body-parser@1.20.6` via Express is unchanged. Browser permission, actual record visibility, responsive, focus, keyboard and assistive-technology behavior remain **NOT VERIFIED**.
+
+**Next:** Client 360 → Finance invoice context. Inspect existing AR query support first; if Finance does not support canonical invoice selection, do not invent a new route or API.
