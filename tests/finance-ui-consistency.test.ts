@@ -860,6 +860,26 @@ test('Finance Expenses register shows canonical supplier links and recorded paym
   assert.match(invoicing, /linkedVendor\?\.companyName,[\s\S]*?linkedVendor\?\.name/);
 });
 
+test('Finance Quotations register contains its wide table and keeps commercial context visible', async () => {
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const quotationHeading = invoicing.indexOf('>Quotation ledger</h2>');
+  const scrollRegion = invoicing.indexOf('<div className="overflow-x-auto custom-scrollbar">{filteredQuotations.length===0?', quotationHeading);
+  const tableStart = invoicing.indexOf('<table className="ams-finance-table min-w-[1180px] border-separate border-spacing-0 text-xs">', scrollRegion);
+  const tableEnd = invoicing.indexOf('</table>', tableStart);
+  const quotations = invoicing.slice(tableStart, tableEnd);
+  assert.ok(quotationHeading >= 0 && scrollRegion > quotationHeading && tableStart > scrollRegion && tableEnd > tableStart,
+    'The primary quotation register must contain horizontal scrolling within its own workspace.');
+  for (const column of ['>Quotation</th>', '>Client</th>', '>Value</th>', '>Created</th>', '>Valid until</th>', '>Status</th>', '>Owner</th>', '>Actions</th>']) {
+    assert.ok(quotations.includes(column), 'Quotation register must retain ' + column);
+  }
+  assert.ok(quotations.includes('quotation.quotationNumber'));
+  assert.ok(quotations.includes('quotation.validUntil'));
+  assert.ok(quotations.includes('quotation.owner || "Finance"'));
+  assert.ok(quotations.includes('Convert to invoice'));
+  assert.ok(quotations.includes('quotation.status === "approved" && !quotation.invoiceId'));
+});
+
+
 test('Embedded invoice registers lead supporting summaries and receivables aging stays source-backed', async () => {
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const pagination = invoicing.indexOf('slug="finance-invoices-pagination"');
