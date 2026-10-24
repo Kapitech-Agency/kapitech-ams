@@ -379,11 +379,17 @@ test('Planning & Delivery Milestones keeps the canonical register primary and di
   assert.match(milestones, /milestone\.title \|\| 'Untitled milestone'/);
   assert.match(milestones, /formatDate\(milestone\.dueDate\)/);
   assert.match(milestones, /milestone\.completed \? 'Completed' : overdue \? 'Overdue'/);
+  assert.match(milestones, /role="table" aria-label="Project milestones"/);
   assert.match(milestones, /data-ams-slug="planning-milestone-column-headings"/);
-  assert.match(milestones, /text-\[10px\] font-medium text-muted">Milestone<\/span>/);
-  assert.match(milestones, /text-\[10px\] font-medium text-muted">Due date<\/span>/);
-  assert.match(milestones, /text-\[10px\] font-medium text-muted">Status<\/span>/);
+  assert.match(milestones, /role="columnheader" className="text-\[10px\] font-medium text-muted">Milestone<\/span>/);
+  assert.match(milestones, /role="columnheader" className="text-\[10px\] font-medium text-muted">Due date<\/span>/);
+  assert.match(milestones, /role="columnheader" className="text-\[10px\] font-medium text-muted">Status<\/span>/);
+  assert.match(milestones, /role="rowgroup" className="divide-y divide-line"/);
+  assert.match(milestones, /role="row" key=\{milestone\.id\}/);
+  assert.match(milestones, /role="cell" className="flex min-w-0 items-baseline/);
+  assert.match(milestones, /className="sr-only">Milestone: <\/span>/);
   assert.match(milestones, /text-\[10px\] font-medium text-muted sm:hidden">Due date<\/span>/);
+  assert.doesNotMatch(milestones, /aria-hidden="true"/, 'Column headings remain exposed to assistive technology.');
   assert.match(milestones, /data-ams-slug="planning-milestone-register"/);
   assert.match(milestones, /No milestones are recorded for this project\./);
   assert.doesNotMatch(milestones, /ownerId|dependencyId|fakeMilestone|demoMilestone/,
