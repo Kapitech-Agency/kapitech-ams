@@ -2059,3 +2059,26 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Browser/visual verification is **NOT VERIFIED**: no authenticated screenshot/role session, viewport sweep, keyboard/touch or assistive-technology runtime evidence. Stage 5 and user sign-off remain required.
 - Next: Finance → Receivables & Payables → Accounts Receivable. The shared invoice register changes apply to both Revenue and AR. Verify AR aging and failure/empty states before considering it structurally complete.
 
+
+
+## Website CMS → Careers: qualify the job-list applicant-count metric · Stage 4 · 24 October 2026
+
+**Source change:** [d122371fe82b06ae0039bad3b0584a022aa1c878](https://github.com/Kapitech-Agency/kapitech-ams/commit/d122371fe82b06ae0039bad3b0584a022aa1c878). **Latest combined code/test SHA:** [bffa1c8a6d8832608791120444ddc61b0df5a3b8](https://github.com/Kapitech-Agency/kapitech-ams/commit/bffa1c8a6d8832608791120444ddc61b0df5a3b8).
+
+- Before: Jobs cards/table displayed the metric under the generic label “Applicants”, while the current applicant projection only contains `positionTitle`, not stable `jobId` / `positionId`. The current predicate compares the submitted text against job title and title ID.
+- After: the card/table label says “Position text matches” / “Kecocokan teks posisi”; a compact note ahead of the register explains the text comparison and missing stable ID. The count predicate is deliberately unchanged because changing it would require a canonical application-to-job relationship.
+- Changed files: `src/pages/admin/AdminCmsCareers.tsx`, `tests/ams-nine-module-workspace-regression.test.ts`.
+- Exact source SHA Quality Gate [40075032131 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075032131). Latest combined Quality Gate [40075459535 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075459535). Latest AMS CI [40075459710 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075459710) due the existing high `body-parser@1.20.6` advisory. No data/backend/CMS/inbox/permission logic changed.
+- Browser/table-card/role/public-site/keyboard verification is **NOT VERIFIED**. Stage 5 remains pending.
+
+## Settings → System Overview: represent unreported readiness gates as unknown · Stage 4 · 24 October 2026
+
+**Source change:** [e5210f58182cc8a4c312a4a5ed2287e59d2908e2](https://github.com/Kapitech-Agency/kapitech-ams/commit/e5210f58182cc8a4c312a4a5ed2287e59d2908e2). **Corrected and verified combined code/test SHA:** [bffa1c8a6d8832608791120444ddc61b0df5a3b8](https://github.com/Kapitech-Agency/kapitech-ams/commit/bffa1c8a6d8832608791120444ddc61b0df5a3b8).
+
+- Before: the four System Integrity gates wrapped optional server readiness fields in `Boolean(...)`. Missing readiness data therefore rendered as false and displayed a warning icon, even when the server had not reported that gate. The overall badge also showed “Review gates” while readiness was absent.
+- After: each gate preserves `true`, `false`, or `undefined`. Visible labels distinguish Ready, Review, Checking and Not reported. The overall badge is neutral and says Checking / Not reported until the readiness object is returned. The view stays read-only and uses the existing source.
+- Changed files: `src/pages/admin/AdminSettings.tsx`, `tests/admin-settings-module-regression.test.ts`. The first regression run failed due to assertions looking for declarations inside the JSX slice; the test was corrected to check declarations in the whole module and render logic inside the scoped overview. No production code change was needed for that correction.
+- Exact combined Quality Gate [40075459535 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075459535): typecheck, regression tests and production build. AMS CI [40075459710 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075459710) because of existing high `body-parser@1.20.6`; CI typecheck, migration, security regression and PostgreSQL integration steps passed. Dependency files were not changed.
+- Authenticated visual/role/reflow/keyboard/screen-reader checks remain **NOT VERIFIED**. Do not infer WCAG conformance from these source/CI assertions.
+- Next: Settings → Users & Access, then Audit Log and Integrations in order.
+

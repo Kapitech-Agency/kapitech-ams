@@ -1093,32 +1093,22 @@ Exact-SHA Quality Gate [40066713946 passed](https://github.com/Kapitech-Agency/k
 Next Stage 4 slice: Settings → System Overview. Verify source-backed status, freshness and exceptions. Distinguish backup existence, integrity verification and proven restore.
 
 
-### VIEW-SETTINGS-OVERVIEW: Keep operational backup history independent of the business reporting period
 
-**Source/test SHA:** [4e2312f2e56c248352e1efe10f620e0be3cc1420](https://github.com/Kapitech-Agency/kapitech-ams/commit/4e2312f2e56c248352e1efe10f620e0be3cc1420); source implementation [c8d5cfe6](https://github.com/Kapitech-Agency/kapitech-ams/commit/c8d5cfe657c2ebb79f60bbfffebff26349f0fe43).
+**Additional bounded clarification (24 October 2026):** Commit [d122371f](https://github.com/Kapitech-Agency/kapitech-ams/commit/d122371fe82b06ae0039bad3b0584a022aa1c878) changes the job list count label to “Position text matches” and adds a note explaining the title-text predicate. The current applicant projection contains `positionTitle` but no stable job ID. Matching and count remain unchanged; no new relationship or workflow is inferred. Latest combined Quality Gate [40075459535 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075459535). AMS CI [40075459710 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075459710); no dependencies changed.
 
-Recent Production Backups now shows up to eight latest server-returned snapshots in compact and desktop layouts without filtering them by the shared business reporting period. Empty-source copy refers to production backup snapshots. Existing API source-error/stale behavior and freshness/integrity/restore evidence remain unchanged. The Audit Log continues to use `matchesDate(log.timestamp)` and retains its visible reporting-period message.
+### VIEW-SETTINGS-OVERVIEW: Preserve unknown readiness gates as unreported, not failed
 
-**Changed files:** `src/pages/admin/AdminSettings.tsx`, `tests/ams-settings-backup-period-independence.test.ts`, `tests/global-reporting-period.test.ts`.
+**Source change:** [e5210f58182cc8a4c312a4a5ed2287e59d2908e2](https://github.com/Kapitech-Agency/kapitech-ams/commit/e5210f58182cc8a4c312a4a5ed2287e59d2908e2). **Corrected test / latest combined SHA:** [bffa1c8a6d8832608791120444ddc61b0df5a3b8](https://github.com/Kapitech-Agency/kapitech-ams/commit/bffa1c8a6d8832608791120444ddc61b0df5a3b8).
 
-Exact-SHA Quality Gate [40067197014 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067197014). AMS CI [40067196870 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067196870), reporting one high `body-parser@1.20.6` denial-of-service advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. No dependency files changed. Browser/visual/accessibility verification: **NOT VERIFIED**.
+Existing System Overview order remains source-backed status summary → System Integrity → Recent Production Backups. Recent backups remain latest server-returned snapshots, independent of the global business reporting-period selector; Audit Log remains scoped to that selector.
 
-Next Stage 4 slice: Dashboard → Overview, following roadmap order.
+The four runtime/PostgreSQL/MFA/document-storage gate indicators no longer coerce missing values to `false`. Each displays Ready for `true`, Review for confirmed `false`, and Checking / Not reported for an unresolved value. The overall badge is neutral and says Checking / Not reported until the readiness object exists. Existing source/API, permission controls, snapshot actions and production-readiness meaning are unchanged.
 
+**Changed source/test files:** `src/pages/admin/AdminSettings.tsx`, `tests/admin-settings-module-regression.test.ts`. The first exact-SHA Quality Gate [40075344848 failed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075344848) because the new test incorrectly expected the readiness variables to be declared inside the JSX section. The test scope was corrected in [bffa1c8a](https://github.com/Kapitech-Agency/kapitech-ams/commit/bffa1c8a6d8832608791120444ddc61b0df5a3b8); latest exact-SHA Quality Gate [40075459535 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075459535), including typecheck, full regression tests and production build. AMS CI [40075459710 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40075459710) for existing high `body-parser@1.20.6`; typecheck, migrations, security regression and PostgreSQL integration all passed.
 
-### VIEW-SETTINGS-ACCESS: Keep the account register visible during refresh
+**Browser/accessibility:** NOT VERIFIED. This slice does not prove real role visibility, responsive behavior, keyboard/focus, screen-reader output or WCAG 2.2 AA. Stage 5 remains mandatory.
 
-**Source/test SHA:** [b8967c1db55887b5ec12d614bf94ea93f3fac91a](https://github.com/Kapitech-Agency/kapitech-ams/commit/b8967c1db55887b5ec12d614bf94ea93f3fac91a).
-
-During account-directory refresh, Users & Access now keeps the last loaded rows visible and shows a non-blocking status. Skeleton loading is limited to the first load with no known account rows. Existing load failure, stale data, retry, filtered-empty and true-empty behavior remain separate. The current account-management guard, search/role/status filters, pagination and server-managed account/password/MFA operations are unchanged.
-
-**Changed files:** `src/pages/admin/AdminSettings.tsx`, `tests/admin-settings-module-regression.test.ts`. No API, database, permission policy, route, dependency or lockfile changes.
-
-Exact-SHA Quality Gate [40067484980 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067484980). AMS CI [40067485225 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40067485225) due one high `body-parser@1.20.6` DoS advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; build and smoke were skipped. Browser/role/accessibility verification: **NOT VERIFIED**.
-
-Next Stage 4 slice: Settings → Audit Log. Preserve the current read-only ledger, reporting-period scope and sanitized detail drawer.
-
-
+**Next:** Settings → Users & Access.
 ### VIEW-SETTINGS-AUDIT: Keep loaded events visible during refresh
 
 **Source/test SHA:** [e84c67709703f4f70b0f57ff9a01bb8e7c713905](https://github.com/Kapitech-Agency/kapitech-ams/commit/e84c67709703f4f70b0f57ff9a01bb8e7c713905).
