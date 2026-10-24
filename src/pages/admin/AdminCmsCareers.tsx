@@ -727,11 +727,11 @@ export const AdminCmsCareers: React.FC = () => {
             <button type="button" onClick={() => void loadApplicants(true)} disabled={applicantsLoading} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs text-muted hover:text-fg disabled:opacity-50"><RefreshCw size={13} className={applicantsLoading ? 'animate-spin' : ''} />{isId ? 'Refresh' : 'Refresh'}</button>
           </div>
 
-          {applicantsLoading ? (
+          {applicantsLoading && !applicantsLoaded ? (
             <div className="space-y-2" role="status" aria-label="Loading job applicants">
               {[1, 2, 3].map(item => <div key={item} className="flex items-center gap-3 rounded-card border border-line bg-panel p-4"><Skeleton className="h-9 w-9 rounded-full" /><div className="flex-1"><Skeleton className="h-4 w-40" /><Skeleton className="mt-2 h-3 w-60" /></div></div>)}
             </div>
-          ) : applicantsError ? (
+          ) : applicantsError && !applicantsLoaded ? (
             <div className="rounded-card border border-warning/30 bg-warning/5 p-5">
               <div className="flex items-start gap-3">
                 <ShieldAlert size={17} className="mt-0.5 shrink-0 text-warning" />
@@ -746,11 +746,32 @@ export const AdminCmsCareers: React.FC = () => {
                 </div>
               </div>
             </div>
-          ) : filteredApplicants.length === 0 ? (
+          ) : (
+            <>
+              {applicantsLoading && applicantsLoaded && (
+                <div className="flex items-start gap-2.5 rounded-card border border-line bg-panel px-4 py-3" role="status" aria-live="polite">
+                  <RefreshCw size={14} className="mt-0.5 shrink-0 text-muted" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-fg">{isId ? 'Memperbarui daftar pelamar' : 'Refreshing applicant list'}</p>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">{isId ? 'Data terakhir yang berhasil dimuat tetap ditampilkan selama pembaruan.' : 'Previously loaded applicant records remain visible while the latest list is being checked.'}</p>
+                  </div>
+                </div>
+              )}
+              {applicantsError && applicantsLoaded && (
+                <div className="flex items-start gap-2.5 rounded-card border border-warning/30 bg-warning/5 px-4 py-3" role="status">
+                  <ShieldAlert size={15} className="mt-0.5 shrink-0 text-warning" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-fg">{isId ? 'Pembaruan daftar pelamar gagal' : 'Applicant refresh failed'}</p>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">{isId ? 'Data terakhir yang berhasil dimuat tetap dipertahankan. Jumlah lamaran terkini dan perubahan terbaru belum dapat dikonfirmasi. Gunakan Refresh untuk mencoba lagi.' : 'Previously loaded applicant data remains unchanged. The current applicant count and newer changes cannot be confirmed. Use Refresh to try again.'}</p>
+                    <p className="mt-1 break-words text-[10px] text-muted">{applicantsError}</p>
+                  </div>
+                </div>
+              )}
+              {filteredApplicants.length === 0 ? (
             <div className="rounded-card border border-line bg-panel px-6 py-12 text-center">
               <Users size={23} className="mx-auto text-muted" />
-              <h3 className="mt-3 text-sm font-semibold text-fg">{applicants.length === 0 ? (isId ? 'Belum ada pelamar' : 'No applicants yet') : (isId ? 'Tidak ada pelamar yang cocok' : 'No matching applicants')}</h3>
-              <p className="mt-1 text-xs leading-5 text-muted">{isId ? 'Lamaran dari halaman Career public site akan muncul di sini secara otomatis.' : 'Applications submitted through the public Careers page will appear here automatically.'}</p>
+              <h3 className="mt-3 text-sm font-semibold text-fg">{applicantsError && applicantsLoaded && applicants.length === 0 ? (isId ? 'Daftar terakhir kosong, kondisi terkini belum terkonfirmasi' : 'Last successful applicant list was empty') : applicants.length === 0 ? (isId ? 'Belum ada pelamar' : 'No applicants yet') : (isId ? 'Tidak ada pelamar yang cocok' : 'No matching applicants')}</h3>
+              <p className="mt-1 text-xs leading-5 text-muted">{applicantsError && applicantsLoaded && applicants.length === 0 ? (isId ? 'Pembaruan gagal sehingga jumlah lamaran terkini tidak dapat dipastikan. Muat ulang untuk memeriksa kembali.' : 'The refresh failed, so the current applicant count cannot be confirmed. Refresh to check again.') : (isId ? 'Lamaran dari halaman Career public site akan muncul di sini secara otomatis.' : 'Applications submitted through the public Careers page will appear here automatically.')}</p>
 
             </div>
           ) : (
@@ -878,6 +899,8 @@ export const AdminCmsCareers: React.FC = () => {
                 slug="cms-careers-applicants-pagination"
               />
             </AdminDataTableShell>
+              )}
+            </>
           )}
         </section>
       )}
