@@ -349,6 +349,26 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   assert.match(apView, /Outstanding \{formatMoney\(installment\.outstanding, currency\)\}/);
 });
 
+test('Client 360 Finance shortcut scopes the existing Accounts Receivable register by canonical client ID', async () => {
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const financeStore = await read('src/lib/financeStore.ts');
+  const repository = await read('server/postgres-invoice-repository.ts');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(clients, /finance\?tab=accounts-receivable&clientId=' \+ encodeURIComponent\(selectedClient\.id\)/);
+  assert.match(invoicing, /const requestedClientId = String\(searchParams\.get\('clientId'\) \|\| ''\)\.trim\(\)/);
+  assert.match(invoicing, /const clientContextId = embeddedReceivablesOnly \? requestedClientId : ''/);
+  assert.match(invoicing, /!clientContextId \|\| String\(invoice\.clientId \|\| ''\)\.trim\(\) === clientContextId/);
+  assert.match(invoicing, /data-ams-slug="finance-invoice-client-context"/);
+  assert.match(invoicing, /This filter applies to the invoice register only; supporting summary views keep their existing scope\./);
+  assert.match(invoicing, /next\.delete\('clientId'\)/);
+  assert.match(invoicing, /data-ams-slug="finance-invoice-client-context-clear"/);
+  assert.match(financeStore, /export interface AgencyInvoice \{[\s\S]*?clientId\?: string/);
+  assert.match(repository, /clientId:row\.client_id\?\?''/);
+  assert.match(workspace, /case 'accounts-receivable':[\s\S]{0,100}AdminInvoicing key=\{tab\.key\} embeddedView="receivables"/);
+});
+
 test('Finance locale uses the selected application language and localized finance account labels', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const translations = await read('src/lib/LanguageContext.tsx');

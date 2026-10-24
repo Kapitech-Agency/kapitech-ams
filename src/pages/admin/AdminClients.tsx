@@ -1568,7 +1568,7 @@ export const AdminClients: React.FC = () => {
                 <section aria-label="Client finance references" data-ams-slug="client-360-finance" className="min-w-0 border-b border-line min-[900px]:border-r">
                   <div className="flex items-start justify-between gap-2 border-b border-line px-3 py-3">
                     <div><h4 className="text-xs font-semibold text-fg">Finance references</h4><p className="mt-1 text-[10px] text-muted">Invoice records linked by client ID.</p></div>
-                    <Link to="/admin/finance?tab=accounts-receivable" className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Finance</Link>
+                    <Link to={'/admin/finance?tab=accounts-receivable&clientId=' + encodeURIComponent(selectedClient.id)} className="shrink-0 text-[10px] font-medium text-accent-text hover:underline">Finance</Link>
                   </div>
                   {renderClientLinkedRecords<ClientInvoiceReference>(clientRelatedInvoices, 'No invoice is explicitly linked to this client.', (records) => (
                     <div className="divide-y divide-line">

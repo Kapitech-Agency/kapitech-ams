@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowDown,
@@ -589,6 +589,9 @@ type AdminInvoicingProps = {
   embeddedIncomeExpenseMode?: 'income' | 'expenses';
 };
 export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedClientId = String(searchParams.get('clientId') || '').trim();
+  const hasClientContextParameter = searchParams.has('clientId');
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const isProposalWorkspace = embeddedView === 'quotations';
@@ -602,6 +605,20 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const embedded = true;
   const embeddedReceivablesOnly = embeddedView === 'receivables';
+  const clientContextId = embeddedReceivablesOnly ? requestedClientId : '';
+
+  useEffect(() => {
+    if (!embeddedReceivablesOnly || !hasClientContextParameter || requestedClientId) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('clientId');
+    setSearchParams(next, { replace: true });
+  }, [embeddedReceivablesOnly, hasClientContextParameter, requestedClientId, searchParams, setSearchParams]);
+
+  const clearClientContext = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('clientId');
+    setSearchParams(next, { replace: true });
+  };
 
   const financeView: string = useMemo(
     () => embeddedView === 'receivables' ? 'invoices' : embeddedView,
@@ -1181,6 +1198,11 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       : currencyInvoices.filter((invoice) => isInQuarter(invoice.issueDate, reportingQuarter)),
     [currencyInvoices, ledgerPeriod, reportingQuarter]
   );
+  const clientContextName = clientContextId
+    ? clients.find((client) => String(client.id) === clientContextId)?.company
+      || clients.find((client) => String(client.id) === clientContextId)?.name
+      || clientContextId
+    : '';
 
   const filteredInvoices = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -1193,6 +1215,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       const hasOpenReceivable = invoice.status !== 'draft' && invoice.status !== 'cancelled' && balance > 0.009;
       return matchesDate(invoice.issueDate || invoice.createdAt)
         && (!embeddedReceivablesOnly || hasOpenReceivable)
+        && (!clientContextId || String(invoice.clientId || '').trim() === clientContextId)
         && (!query || searchable.includes(query))
         && (statusFilter === 'all' || (statusFilter === 'due_soon' ? isDueSoonInvoice(invoice) : invoice.status === statusFilter))
         && (paymentFilter === 'all' || paymentState === paymentFilter)
@@ -1206,11 +1229,11 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       if (sort === 'invoice') return a.invoiceNumber.localeCompare(b.invoiceNumber);
       return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
     });
-  }, [ledgerInvoices, search, statusFilter, paymentFilter, dueFilter, sort, projectsById, embeddedReceivablesOnly, matchesDate]);
+  }, [ledgerInvoices, search, statusFilter, paymentFilter, dueFilter, sort, projectsById, embeddedReceivablesOnly, clientContextId, matchesDate]);
 
   useEffect(() => {
     setInvoicePage(1);
-  }, [search, statusFilter, paymentFilter, dueFilter, sort, currency, reportPeriodValue, reportPeriodEnabled]);
+  }, [search, statusFilter, paymentFilter, dueFilter, sort, currency, reportPeriodValue, reportPeriodEnabled, clientContextId]);
 
   useEffect(() => {
     setExpensePage(1);
@@ -3244,6 +3267,15 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 </div></div></div><div className="p-4">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 5 aging buckets.</p></div><div className="p-4"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
           )}
           <section className="rounded-card border border-line bg-panel overflow-hidden">
+  {clientContextId && (
+    <div className="flex flex-col gap-2 border-b border-line bg-bg px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-5" role="status" data-ams-slug="finance-invoice-client-context">
+      <div className="min-w-0">
+        <p className="font-medium text-fg">Invoices linked to Client: {clientContextName}</p>
+        <p className="mt-1 text-[10px] leading-4 text-muted">The register uses the canonical client ID. This filter applies to the invoice register only; supporting summary views keep their existing scope.</p>
+      </div>
+      <button type="button" onClick={clearClientContext} className={actionClass + ' shrink-0'} data-ams-slug="finance-invoice-client-context-clear">Clear client filter</button>
+    </div>
+  )}
   <div className="border-b border-line bg-panel p-4 sm:px-5">
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">

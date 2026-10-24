@@ -45,6 +45,7 @@ export interface AgencyInvoice {
   type?: 'invoice' | 'quotation';
   clientName: string;
   clientCompany: string;
+  clientId?: string;
   clientEmail: string;
   clientPhone?: string;
   projectId?: string;
