@@ -211,7 +211,7 @@ export const TrendChart: React.FC<{
     <div className={['relative min-w-0 ams-trend-chart', isMavenPresentation ? 'ams-trend-chart--maven' : ''].join(' ')} role={isMavenPresentation ? 'group' : 'img'} aria-label={ariaLabel}>
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted ams-trend-chart__legend">
         <span className="inline-flex items-center gap-2"><i className={isMavenPresentation ? 'h-[2px] w-4 rounded-full' : 'h-2 w-2 rounded-full bg-accent'} style={{ backgroundColor: primaryLineColor }} aria-hidden="true" />{primaryLabel}</span>
-        {secondaryLabel && <span className="inline-flex items-center gap-2"><i className={isMavenPresentation ? 'h-[2px] w-4 rounded-full' : 'h-2 w-2 rounded-full bg-series-3'} style={{ backgroundColor: secondaryLineColor }} aria-hidden="true" />{secondaryLabel}</span>
+        {secondaryLabel && <span className="inline-flex items-center gap-2"><i className={isMavenPresentation ? 'h-[2px] w-4 rounded-full' : 'h-2 w-2 rounded-full bg-series-3'} style={{ backgroundColor: secondaryLineColor }} aria-hidden="true" />{secondaryLabel}</span>}
         {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className={isMavenPresentation ? 'h-[2px] w-4 rounded-full' : 'h-2 w-2 rounded-full bg-success'} style={{ backgroundColor: tertiaryLineColor }} aria-hidden="true" />{tertiaryLabel}</span>}
       </div>
 
