@@ -1056,7 +1056,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const serviceLineSummaries = useMemo(() => serviceLineConfiguration.map((line) => {
     const lineProjects = activeProjectRows.filter((project: any) => getDashboardServiceLine(project) === line.key);
     const projectIds = new Set(lineProjects.map((project: any) => String(project.id || '')));
-    const lineTasks = activeDashboardTasks.filter((task) => projectIds.has(task.projectId) || (task.serviceLine === line.key && !task.projectId));
+    const lineTasks = canOpenTasks
+      ? activeDashboardTasks.filter((task) => projectIds.has(task.projectId) || (task.serviceLine === line.key && !task.projectId))
+      : [];
     const lineCommitments = lineProjects.reduce((count: number, project: any) => {
       const milestones = Array.isArray(project.milestones) ? project.milestones : [];
       const hasOverdueMilestone = milestones.some((milestone: any) => milestone?.completed !== true && !isFinishedWork(milestone?.status) &&
@@ -1069,9 +1071,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       ...line,
       projectCount: lineProjects.length,
       openTaskCount: lineTasks.length,
+      reviewTaskCount: lineTasks.filter((task) => task.status === 'review' || task.status === 'in_review').length,
+      blockedTaskCount: lineTasks.filter((task) => task.blocked).length,
+      unassignedTaskCount: lineTasks.filter((task) => !task.assigned).length,
+      overdueTaskCount: lineTasks.filter((task) => dashboardTaskIsOverdue(task, currentDayKey)).length,
       overdueCommitmentCount: lineCommitments
     };
-  }), [activeDashboardTasks, activeProjectRows, currentDayKey]);
+  }), [activeDashboardTasks, activeProjectRows, canOpenTasks, currentDayKey]);
 
   const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() => {
     if (operationalSnapshot.projects === null) return [];
@@ -1526,7 +1532,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             description="Project groupings use each saved service category. Unrecognized or missing categories stay visible under Other / Unclassified."
             bodyClassName="p-0"
           >
-            {operationalSnapshot.projects === null ? (
+            {!canOpenProjects ? (
+              <div className="p-4"><DashboardUnavailable title="Workstream data unavailable to this role" description="Project categories and workstream counts are hidden when the current role cannot open Projects." /></div>
+            ) : operationalSnapshot.projects === null ? (
               <div className="p-4"><DashboardUnavailable title="Workstream data unavailable" description="The canonical project source did not return project categories for this role." /></div>
             ) : rawProjectRows.length === 0 ? (
               <div className="px-4 py-8" role="status">
@@ -1545,16 +1553,25 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] tabular-nums text-muted">{line.projectCount} projects</span>
                         </div>
                         <p className="mt-1 text-[11px] leading-5 text-muted">{line.description}</p>
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                          <div className="rounded-control border border-line bg-bg px-3 py-2">
-                            <p className="text-[10px] text-muted">Open tasks</p>
-                            <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{operationalSnapshot.tasks === null ? '—' : line.openTaskCount}</p>
-                          </div>
-                          <div className="rounded-control border border-line bg-bg px-3 py-2">
-                            <p className="text-[10px] text-muted">Projects with overdue delivery</p>
-                            <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{line.overdueCommitmentCount}</p>
-                          </div>
+                        <div className="mt-3 grid grid-cols-2 gap-2 min-[900px]:grid-cols-3">
+                          {[
+                            { label: 'Active projects', value: operationalSnapshot.projects !== null && canOpenProjects ? line.projectCount : null },
+                            { label: 'Open tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.openTaskCount : null },
+                            { label: 'Tasks in review', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.reviewTaskCount : null },
+                            { label: 'Blocked tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.blockedTaskCount : null },
+                            { label: 'Unassigned tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.unassignedTaskCount : null },
+                            { label: 'Overdue tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.overdueTaskCount : null },
+                            { label: 'Projects with overdue delivery', value: operationalSnapshot.projects !== null && canOpenProjects ? line.overdueCommitmentCount : null }
+                          ].map((metric) => (
+                            <div key={metric.label} className="min-w-0 rounded-control border border-line bg-bg px-3 py-2">
+                              <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
+                              <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{metric.value == null ? '—' : metric.value}</p>
+                            </div>
+                          ))}
                         </div>
+                        {(!canOpenTasks || operationalSnapshot.tasks === null) ? (
+                          <p className="mt-2 text-[10px] leading-4 text-muted">Task-state breakdown is unavailable for this role or source.</p>
+                        ) : null}
                       </div>
                     </div>
                   </div>

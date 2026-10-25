@@ -40,6 +40,17 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes('Creative & IT workstreams'));
   assert.ok(overview.includes('serviceCategory'));
   assert.ok(overview.includes('Other / Unclassified'));
+  assert.ok(dashboard.includes("reviewTaskCount: lineTasks.filter((task) => task.status === 'review' || task.status === 'in_review').length"));
+  assert.ok(dashboard.includes("blockedTaskCount: lineTasks.filter((task) => task.blocked).length"));
+  assert.ok(dashboard.includes("unassignedTaskCount: lineTasks.filter((task) => !task.assigned).length"));
+  assert.ok(dashboard.includes("overdueTaskCount: lineTasks.filter((task) => dashboardTaskIsOverdue(task, currentDayKey)).length"));
+  assert.ok(overview.includes("label: 'Tasks in review'"));
+  assert.ok(overview.includes("label: 'Blocked tasks'"));
+  assert.ok(overview.includes("label: 'Unassigned tasks'"));
+  assert.ok(overview.includes("label: 'Overdue tasks'"));
+  assert.ok(overview.includes("!canOpenProjects ? ("));
+  assert.ok(overview.includes("operationalSnapshot.tasks !== null && canOpenTasks ? line.reviewTaskCount : null"));
+  assert.ok(overview.includes('Task-state breakdown is unavailable for this role or source.'));
   assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
   assert.ok(overview.includes('Open tasks by owner'));
   assert.ok(overview.includes('Recorded time'));
