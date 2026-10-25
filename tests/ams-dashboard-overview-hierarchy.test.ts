@@ -240,9 +240,9 @@ test('Dashboard project creation action opens the existing create drawer only fo
 
   assert.match(dashboard, /hasAdminPermission\('canManageProjects'\)/);
   assert.match(dashboard, /const canCreateProject = canManageProjects && canOpenDashboardRoute\('\/admin\/projects\?create=1'\)/);
-  assert.match(dashboard, /canCreateProject \|\| canOpenProjects/);
+  assert.ok(dashboard.includes('{canOpenProjects ? ('));
   assert.match(dashboard, /to=\{canCreateProject \? '\/admin\/projects\?create=1' : '\/admin\/projects'\}/);
-  assert.match(dashboard, /\{canCreateProject \? 'New project' : 'Open Projects'\}/);
+  assert.match(dashboard, /\{canCreateProject \? 'New project' : 'Projects'\}/);
   assert.match(projects, /const createProjectRequestHandled = React\.useRef\(false\)/);
   assert.match(projects, /searchParams\.get\('create'\) === '1'/);
   assert.match(projects, /next\.delete\('create'\)/);
@@ -290,7 +290,12 @@ test('Dashboard quick actions and project-header links respect route access', as
   assert.ok(dashboard.includes('return canAccessAmsRoute(currentNavigationRole, target.pathname, target.search)'));
   assert.ok(dashboard.includes('.filter((action) => canOpenDashboardRoute(action.href)).map((action) => ('));
   assert.ok(dashboard.includes("href: '/admin/finance?tab=accounts-receivable'"));
-  assert.ok(dashboard.includes('canCreateProject || canOpenProjects'));
+  assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-quick-actions"'));
+  assert.ok(dashboard.includes("const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister"));
+  assert.ok(dashboard.includes("const canCreateTask = hasAdminPermission('canManageKanbanTasks') && canOpenTasks"));
+  assert.ok(dashboard.includes("to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}"));
+  assert.ok(dashboard.includes("to={canCreateTask ? '/admin/tasks?create=1' : '/admin/tasks'}"));
+  assert.ok(dashboard.includes("to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}"));
 });
 
 test('Dashboard Analytics does not infer zero financial trends from empty or currency-mismatched sources', async () => {
@@ -771,8 +776,8 @@ test('Dashboard header provides permission-aware invoice, task and project quick
   assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Dashboard header must be a bounded region.');
   const header = dashboard.slice(headerStart, headerEnd);
   assert.ok(header.includes('data-ams-feature-slug="dashboard-quick-actions"'));
-  assert.ok(header.includes("const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister"));
-  assert.ok(header.includes("const canCreateTask = hasAdminPermission('canManageKanbanTasks') && canOpenTasks"));
+  assert.ok(dashboard.includes("const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister"));
+  assert.ok(dashboard.includes("const canCreateTask = hasAdminPermission('canManageKanbanTasks') && canOpenTasks"));
   assert.ok(header.includes("'/admin/finance?tab=accounts-receivable&action=create-invoice'"));
   assert.ok(header.includes("'/admin/tasks?create=1'"));
   assert.ok(header.includes("'/admin/projects?create=1'"));
@@ -789,6 +794,7 @@ test('Dashboard header provides permission-aware invoice, task and project quick
   assert.ok(tasks.includes("const requestedCreate = searchParams.get('create') === '1'"));
   assert.ok(tasks.includes('createTaskRequestHandled.current = true'));
   assert.ok(tasks.includes('if (canManageTasks) openNewTask();'));
-  assert.ok(styles.includes('.ams-dashboard-header-actions > a:hover') === false || styles.includes('transition: background-color 150ms ease'));
+  assert.ok(styles.includes('.ams-dashboard-header-actions > a,'));
+  assert.ok(styles.includes('.ams-dashboard-header-actions > a:focus-visible'));
   assert.ok(styles.includes('prefers-reduced-motion: reduce'));
 });
