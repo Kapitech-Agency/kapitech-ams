@@ -1414,3 +1414,20 @@ The service-line project ID set now excludes empty identifiers. Task/project mat
 **Validation:** exact-SHA Quality Gate [40183390506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390506): typecheck, regression tests and production build. AMS CI [40183390498 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390498) due to the existing high body-parser@1.20.6 advisory. Typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; downstream build/package/smoke checks were skipped.
 
 **Next:** continue Dashboard Overview content acceptance against §4.1/§4.10, then complete Analytics. Do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW: Resolve client identity and project drill-downs from persisted identifiers · 25 October 2026
+
+**Source/test SHA:** [8469c88f](https://github.com/Kapitech-Agency/kapitech-ams/commit/8469c88fc3b58ba27912ffe86c8193bb0129c6e5). Exact-SHA Quality Gate [40187377703 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377703).
+
+Dashboard Overview now groups Client Delivery Focus using persisted `clientId` when available. It calls existing `api.clients.getAll()` only if the current role can access `/admin/clients/all-clients`. A matching record supplies the canonical label and a client link; older projects without an ID use normalized saved company-name grouping. Tasks attached to a project inherit its client group rather than splitting counts based on task-level text.
+
+Project/commitment drill-downs use an existing slug or a persisted project ID route. Generated display slugs are never treated as canonical identifiers. A project without a slug or ID remains visible without a fabricated direct link.
+
+**Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts. No new endpoint, schema, route policy, permission rule, Finance formula or posting workflow was added.
+
+**Validation:** Quality Gate [40187377703 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377703): typecheck, regression suite and production build. AMS CI [40187377730 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377730) due to existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828; typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; dependent production build/package/HTTP smoke were skipped.
+
+**Unverified:** authenticated client visibility, direct click-through and real record selection, responsive viewports, keyboard/focus, contrast and assistive technology.
+
+**Next:** finish Overview source/empty-state and period-scope acceptance against §4.1/§4.10, then close Analytics. Do not move to Inbox.

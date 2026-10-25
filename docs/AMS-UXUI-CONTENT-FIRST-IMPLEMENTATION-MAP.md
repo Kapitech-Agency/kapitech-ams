@@ -1,7 +1,7 @@
 # AMS Content-First UX/UI Implementation Map
 
 Historical baseline date: 17 October 2026  
-Roadmap cross-reference updated: 25 October 2026 (this Dashboard source/test slice is reverified; prior entries remain historical)
+Roadmap cross-reference updated: 25 October 2026 (Dashboard identity/link slice verified; prior entries remain historical)
 
 > **Document role:** This is the detailed source/change history and view-by-view implementation map for the content-first UX/UI effort. Historical commit, branch, CI, and remaining-work notes are snapshots from the dates stated and are not a live status feed. [`AMS-STRUCTURAL-REDESIGN-PROGRESS.md`](AMS-STRUCTURAL-REDESIGN-PROGRESS.md) is the compact roll-up checkpoint; verify the latest `main` source and current CI/browser evidence before acting or declaring completion. The redesign remains incomplete until its currently applicable acceptance checks are verified. **Historical row and status notes** (including older module/subtab labels in the initial inventory) describe the state captured at that checkpoint; they do not supersede the currently approved product/ownership structure in `AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`, destinations/navigation depth in `architecture/ams-navigation-information-architecture.md`, or per-workspace content order in `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §4.10.
 
@@ -892,3 +892,17 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - Regression coverage checks both safeguards. No new API or schema introduced.
 - **AMS CI:** [40183390498](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390498) failed at the existing high body-parser@1.20.6 advisory; typecheck, migrations, security regression and PostgreSQL integration passed.
 - **Next:** finish Dashboard Overview §4.1/§4.10 acceptance, then Analytics. Browser/role/accessibility review remains NOT VERIFIED.
+
+
+## Dashboard Overview · Client and project identity resolution · 25 October 2026
+
+**Current source/test SHA:** [8469c88f](https://github.com/Kapitech-Agency/kapitech-ams/commit/8469c88fc3b58ba27912ffe86c8193bb0129c6e5). Exact-SHA Quality Gate [40187377703 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377703).
+
+- Client Delivery Focus is grouped by saved Client Directory ID where present. For roles allowed to open Client Directory, the existing `api.clients.getAll()` source supplies canonical company/name fields. Client links use `/admin/clients/all-clients?client=...` only if a matching record is available and route access permits it.
+- Legacy projects without a client ID use normalized saved company-name grouping and display that fallback. A saved ID without a matched master row remains visible as an unresolved identity.
+- Task workload linked to a project inherits that project's resolved client identity before task display names are considered.
+- Project/milestone drill-downs use an existing stored slug or persisted project ID. If neither exists, the project label remains visible without a synthetic direct URL.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts.
+- **Validation:** typecheck, regression tests and production build passed on [Quality Gate 40187377703](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377703). AMS CI [40187377730](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377730) failed at the existing high body-parser@1.20.6 dependency audit after typecheck, migrations, security regression and PostgreSQL integration passed.
+- **Still unverified:** authenticated role/client visibility, direct click-through, rendered browser selection, viewport/reflow, keyboard/focus and assistive technology.
+- **Next:** continue Dashboard Overview source/content acceptance against §4.1 and §4.10, then complete Analytics. Do not move to Inbox.

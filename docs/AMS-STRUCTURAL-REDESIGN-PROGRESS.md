@@ -1,7 +1,7 @@
 # Kapitech AMS Structural UX/UI Redesign Progress
 
 Progress evidence last recorded: 25 October 2026  
-Documentation cross-reference updated: 25 October 2026 (current Dashboard source/test and §4.10 order evidence recorded; no browser verification implied)
+Documentation cross-reference updated: 25 October 2026 (Dashboard client/project identity source/test slice recorded; no browser verification implied)
 Repository: `Kapitech-Agency/kapitech-ams`
 Required delivery branch: `main`
 
@@ -2301,3 +2301,16 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts.
 - **Validation:** Quality Gate [40183390506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390506): typecheck, regression tests and production build. AMS CI [40183390498 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390498) due to the existing high body-parser@1.20.6 advisory after typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed.
 - **Next:** continue Dashboard Overview acceptance against §4.1/§4.10, especially identity, source/route states and remaining current-state semantics. Do not move to Inbox.
+
+
+## Stage 4 structural slice — Dashboard client and project identity resolution · 25 October 2026
+
+- **Requirement:** Dashboard Overview §4.1 and mandatory composition §4.10. Main task remains the agency delivery workboard, with client context and authorized project/client drill-downs.
+- **Gap:** Client Delivery Focus grouped only by a lower-cased saved company name. Tasks with a linked project could be assigned to a conflicting task-level client label. Project links generated a slug from display text and sent it as if it were a persisted slug.
+- **Fix:** Overview reads the existing Client Directory source only when the current role may open that route. Groups key by persisted `clientId` where available, use canonical company/name when a matching record is returned, and retain normalized saved company-name grouping as an explicit fallback for legacy rows. Tasks linked to a project inherit its client identity.
+- **Project drill-down:** Use a stored slug, or a persisted project ID route fallback. If neither exists, show the project label without inventing a direct link.
+- **Changed paths:** `src/components/admin/GlobalExecutiveDashboard.tsx`; `tests/ams-dashboard-overview-hierarchy.test.ts`.
+- **Validation:** Quality Gate [40187377703 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377703): typecheck, regression tests and production build. AMS CI [40187377730 failed at the existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377730) after typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed.
+- **Scope:** No new endpoint/backend, schema, permission policy, Finance formula or posting behavior. Existing sources and route guards are reused.
+- **Still open:** authenticated browser role/direct-route, real-client selection, responsive viewport, keyboard/focus and assistive-technology verification. Recent Activity has no per-record URL in the current response contract.
+- **Next:** finish Overview source/empty states and current-state versus period scope against §4.1/§4.10, then finish Analytics. Do not move to Inbox.
