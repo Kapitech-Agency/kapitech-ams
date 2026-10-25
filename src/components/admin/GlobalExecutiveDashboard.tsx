@@ -1526,7 +1526,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <p className="mt-1 text-xs text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Current agency workload · all recorded dates'}</p>
           </div>
           <p className="max-w-3xl text-xs leading-5 text-muted">
-            Operational queues show current records. Delivery deadlines cover overdue items and the next 30 days. The shared reporting period applies to Performance and Analytics trends. Recorded time follows that selected period, but open task counts and project states remain current. Finance control values use the current month or current receivable balances. No capacity, approval or client SLA is inferred when its source is unavailable.
+            Task ownership, review queues, delivery commitments and Finance balances show current operational state. Delivery deadlines cover overdue items and the next 30 days. The shared reporting period applies to Performance and Analytics trends. Recorded time follows that selected period, but open task counts and project states remain current. Finance control values use the current month or current receivable balances. No capacity, approval or client SLA is inferred when its source is unavailable.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-3 border-t border-line pt-3 sm:grid-cols-2 min-[1100px]:grid-cols-4">
