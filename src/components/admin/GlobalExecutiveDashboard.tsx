@@ -23,9 +23,8 @@ import { ProfileIdentity } from './ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
-import { getReportingPeriodRange } from '../../lib/reportingPeriods';
+import { getReportingPeriodRange, type ReportingPeriodMode } from '../../lib/reportingPeriods';
 
-type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
 const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const;
 type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
@@ -127,46 +126,10 @@ const buildProjectDeliveryBreakdown = (source: any[]) => {
   ];
 };
 
-const buildFinancialTrend = (range: RangeKey, invoices: any[], expenses: any[]) => {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
-  const specs: Array<{ label: string; start: string; end: string }> = [];
-  const addMonth = (year: number, month: number) => {
-    const startDate = new Date(year, month, 1);
-    const endDate = new Date(year, month + 1, 1);
-    specs.push({
-      label: startDate.toLocaleDateString('en-US', { month: 'short' }),
-      start: localDateKey(startDate),
-      end: localDateKey(endDate),
-    });
-  };
-  if (range === 'Q2') {
-    const year = currentMonth < 3 ? currentYear - 1 : currentYear;
-    [3, 4, 5].forEach((month) => addMonth(year, month));
-  } else if (range === 'YTD') {
-    for (let month = 0; month <= currentMonth; month++) addMonth(currentYear, month);
-  } else if (range === '12M') {
-    for (let offset = 11; offset >= 0; offset--) {
-      const date = new Date(currentYear, currentMonth - offset, 1);
-      addMonth(date.getFullYear(), date.getMonth());
-    }
-  } else {
-    const firstDate = new Date(now);
-    firstDate.setDate(now.getDate() - 29);
-    const endDate = new Date(now);
-    endDate.setDate(now.getDate() + 1);
-    for (let index = 0; index < 5; index++) {
-      const startDate = new Date(firstDate);
-      startDate.setDate(firstDate.getDate() + index * 7);
-      if (startDate >= endDate) break;
-      const bucketEnd = new Date(startDate);
-      bucketEnd.setDate(startDate.getDate() + 7);
-      const effectiveEnd = bucketEnd < endDate ? bucketEnd : endDate;
-      specs.push({ label: 'W' + (index + 1), start: localDateKey(startDate), end: localDateKey(effectiveEnd) });
-    }
-  }
-  return specs.map((spec) => {
+type FinancialTrendSpec = { label: string; start: string; end: string };
+
+const aggregateFinancialTrend = (specs: FinancialTrendSpec[], invoices: any[], expenses: any[]) =>
+  specs.map((spec) => {
     const invoiced = invoices.reduce((sum, invoice) => {
       const status = String(invoice.status || '').toLowerCase();
       const day = dateKey(invoice.issueDate || invoice.invoiceDate || invoice.createdAt);
@@ -180,6 +143,69 @@ const buildFinancialTrend = (range: RangeKey, invoices: any[], expenses: any[]) 
     }, 0);
     return { label: spec.label, startDate: spec.start, endDate: spec.end, primary: invoiced, secondary: recordedExpenses, tertiary: invoiced - recordedExpenses };
   });
+
+const buildRecentFinancialTrend = (invoices: any[], expenses: any[]) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const firstDate = new Date(today);
+  firstDate.setDate(today.getDate() - 29);
+  const endExclusive = new Date(today);
+  endExclusive.setDate(today.getDate() + 1);
+  const specs: FinancialTrendSpec[] = [];
+  let cursor = firstDate;
+  let index = 1;
+  while (cursor < endExclusive) {
+    const next = new Date(cursor);
+    next.setDate(next.getDate() + 7);
+    const effectiveEnd = next < endExclusive ? next : endExclusive;
+    specs.push({ label: 'W' + index, start: localDateKey(cursor), end: localDateKey(effectiveEnd) });
+    cursor = effectiveEnd;
+    index += 1;
+  }
+  return aggregateFinancialTrend(specs, invoices, expenses);
+};
+
+const buildFinancialTrendForReportingPeriod = (mode: ReportingPeriodMode, value: string, invoices: any[], expenses: any[]) => {
+  const period = getReportingPeriodRange(value, mode);
+  if (!period) return buildRecentFinancialTrend(invoices, expenses);
+  const start = new Date(period.startDate + 'T00:00:00');
+  const endExclusive = new Date(period.endDate + 'T00:00:00');
+  endExclusive.setDate(endExclusive.getDate() + 1);
+  const specs: FinancialTrendSpec[] = [];
+  if (mode === 'month') {
+    let cursor = start;
+    let index = 1;
+    while (cursor < endExclusive) {
+      const next = new Date(cursor);
+      next.setDate(next.getDate() + 7);
+      const effectiveEnd = next < endExclusive ? next : endExclusive;
+      specs.push({ label: 'W' + index, start: localDateKey(cursor), end: localDateKey(effectiveEnd) });
+      cursor = effectiveEnd;
+      index += 1;
+    }
+  } else {
+    let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+    while (cursor < endExclusive) {
+      const next = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+      const effectiveEnd = next < endExclusive ? next : endExclusive;
+      specs.push({ label: cursor.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }), start: localDateKey(cursor), end: localDateKey(effectiveEnd) });
+      cursor = next;
+    }
+  }
+  return aggregateFinancialTrend(specs, invoices, expenses);
+};
+
+const formatFinancialTrendDate = (value: string) => {
+  const date = new Date(value + 'T00:00:00');
+  return Number.isFinite(date.getTime()) ? date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : value;
+};
+
+const describeFinancialTrendScope = (trend: Array<{ startDate: string; endDate: string }>, reportPeriodEnabled: boolean, reportPeriodLabel: string) => {
+  if (reportPeriodEnabled) return reportPeriodLabel;
+  if (!trend.length) return 'Recent 30-day default window';
+  const lastEnd = new Date(trend[trend.length - 1].endDate + 'T00:00:00');
+  lastEnd.setDate(lastEnd.getDate() - 1);
+  return 'Recent 30-day default window (' + formatFinancialTrendDate(trend[0].startDate) + ' – ' + formatFinancialTrendDate(localDateKey(lastEnd)) + ')';
 };
 
 const DashboardUnavailable: React.FC<{ title: string; description: string }> = ({ title, description }) => (
@@ -190,45 +216,6 @@ const DashboardUnavailable: React.FC<{ title: string; description: string }> = (
   </div>
 );
 
-
-const DASHBOARD_TREND_RANGES: Array<{ value: RangeKey; label: string }> = [
-  { value: '30D', label: '30 days' },
-  { value: 'Q2', label: 'Q2 (Apr–Jun)' },
-  { value: 'YTD', label: 'Year to date' },
-  { value: '12M', label: '12 months' },
-];
-
-const DashboardTrendRangePicker: React.FC<{
-  range: RangeKey;
-  onChange: (range: RangeKey) => void;
-}> = ({ range, onChange }) => (
-  <div
-    role="group"
-    aria-label="Trend period"
-    data-ams-slug="dashboard-trend-period"
-    className="flex min-w-0 flex-wrap items-center gap-1.5"
-  >
-    {DASHBOARD_TREND_RANGES.map((option) => {
-      const active = range === option.value;
-      return (
-        <button
-          key={option.value}
-          type="button"
-          aria-pressed={active}
-          onClick={() => onChange(option.value)}
-          className={[
-            'inline-flex min-h-10 min-[1100px]:min-h-9 items-center justify-center rounded-control border px-2.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-            active
-              ? 'border-accent/20 bg-accent/10 text-fg'
-              : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg',
-          ].join(' ')}
-        >
-          {option.label}
-        </button>
-      );
-    })}
-  </div>
-);
 
 const PerformanceView: React.FC<{
   snapshot: DashboardOperationalSnapshot;
@@ -463,15 +450,21 @@ const DASHBOARD_ANALYTICS_REPORT_OPTIONS: Array<{ value: DashboardAnalyticsRepor
 
 const AnalyticsView: React.FC<{
   snapshot: DashboardOperationalSnapshot;
-  range: RangeKey;
-  onRangeChange: (range: RangeKey) => void;
-}> = ({ snapshot, range, onRangeChange }) => {
+  reportPeriodMode: ReportingPeriodMode;
+  reportPeriodValue: string;
+  reportPeriodLabel: string;
+  reportPeriodEnabled: boolean;
+  currency: string;
+}> = ({ snapshot, reportPeriodMode, reportPeriodValue, reportPeriodLabel, reportPeriodEnabled, currency }) => {
   const [report, setReport] = useState<DashboardAnalyticsReport>('financial-movement');
-  const currency = 'IDR';
   const invoiceRows = snapshot.invoices || [];
   const expenseRows = snapshot.expenses || [];
+  const inCurrencyInvoices = invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
+  const inCurrencyExpenses = expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
   const trend = snapshot.invoices !== null && snapshot.expenses !== null
-    ? buildFinancialTrend(range, invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency), expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency))
+    ? reportPeriodEnabled
+      ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, inCurrencyInvoices, inCurrencyExpenses)
+      : buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)
     : [];
   const receivables = invoiceRows.filter((invoice) => String(invoice.currency || 'IDR').toUpperCase() === currency).reduce((sum, invoice) => {
     const status = String(invoice.status || '').toLowerCase();
@@ -497,7 +490,7 @@ const AnalyticsView: React.FC<{
   }, []).sort((a, b) => b.count - a.count);
   const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
   const financialRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0;
-  const selectedRangeLabel = DASHBOARD_TREND_RANGES.find((option) => option.value === range)?.label || 'Selected period';
+  const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel);
   const formatReportDate = (value: string) => {
     const date = new Date(value + 'T00:00:00');
     return Number.isFinite(date.getTime())
@@ -550,9 +543,9 @@ const AnalyticsView: React.FC<{
             </div>
           </div>
           {report === 'financial-movement' ? (
-            <div className="min-w-0 space-y-2">
-              <p className="text-xs font-medium text-muted">Reporting period</p>
-              <DashboardTrendRangePicker range={range} onChange={onRangeChange} />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted">Shared reporting period</p>
+              <p className="mt-1 text-xs text-fg">{selectedRangeLabel}</p>
             </div>
           ) : (
             <div className="min-w-0">
@@ -562,7 +555,7 @@ const AnalyticsView: React.FC<{
           )}
         </div>
         <p className="mt-3 text-xs leading-5 text-muted">
-          The reporting period applies to financial movement only. Receivables and project status are current snapshots.
+          Financial movement uses the shared Filter selection. When it is set to All dates, this chart uses the recent 30-day default window. Receivables and project status are current snapshots.
         </p>
       </section>
 
@@ -583,7 +576,7 @@ const AnalyticsView: React.FC<{
                 <p className="text-xs font-medium text-fg">{selectedRangeLabel}</p>
                 <p className="mt-1 text-xs text-muted">{selectedPeriodDescription}</p>
               </div>
-              <p className="text-xs text-muted">Source: AMS invoice and expense records · Currency: IDR</p>
+              <p className="text-xs text-muted">Source: AMS invoice and expense records · Currency: {currency}</p>
             </div>
 
             {!financialDataAvailable ? (
@@ -612,8 +605,8 @@ const AnalyticsView: React.FC<{
                       <thead className="bg-bg text-muted">
                         <tr className="border-b border-line">
                           <th className="px-3 py-2.5 font-medium" scope="col">Period</th>
-                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Invoices issued · IDR</th>
-                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Expenses recorded · IDR</th>
+                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Invoices issued · {currency}</th>
+                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Expenses recorded · {currency}</th>
                           <th className="px-3 py-2.5 text-right font-medium" scope="col">Difference · not profit</th>
                         </tr>
                       </thead>
@@ -673,7 +666,7 @@ const AnalyticsView: React.FC<{
             ) : (
               <div className="space-y-4">
                 <div className="rounded-control border border-line bg-bg p-4">
-                  <p className="text-xs text-muted">Open invoice balance · IDR</p>
+                  <p className="text-xs text-muted">Open invoice balance · {currency}</p>
                   <p className="mt-2 text-2xl font-semibold tabular-nums text-fg">{formatLiveMoney(receivables, currency)}</p>
                   <p className="mt-1 text-xs text-muted">{openInvoiceCount} open invoice records</p>
                 </div>
@@ -755,7 +748,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const reportPeriodLabel = reportPeriodEnabled && selectedReportingRange
     ? selectedReportingRange.label + ' (' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate + ')'
     : 'All dates';
-  const [range, setRange] = useState<RangeKey>('30D');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
   const [projectActionPosition, setProjectActionPosition] = useState<{ top: number; left: number } | null>(null);
@@ -971,8 +963,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     if (!financeSourcesAvailable) return [];
     const invoices = (operationalSnapshot.invoices || []).filter((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency);
     const expenses = (operationalSnapshot.expenses || []).filter((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency);
-    return buildFinancialTrend(range, invoices, expenses);
-  }, [financeSourcesAvailable, operationalSnapshot.invoices, operationalSnapshot.expenses, financeCurrency, range]);
+    return reportPeriodEnabled
+      ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, invoices, expenses)
+      : buildRecentFinancialTrend(invoices, expenses);
+  }, [financeSourcesAvailable, operationalSnapshot.invoices, operationalSnapshot.expenses, financeCurrency, reportPeriodEnabled, reportPeriodMode, reportPeriodValue]);
+  const financialTrendScopeLabel = describeFinancialTrendScope(revenueData, reportPeriodEnabled, reportPeriodLabel);
 
   const currentMonthKey = localDateKey(new Date()).slice(0, 7);
   const liveProjectRows = operationalSnapshot.projects || [];
@@ -1001,7 +996,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const activeProjectsMetric = dashboardOverview.metrics?.activeProjects ?? (operationalSnapshot.projects !== null ? activeProjectRows.length : null);
   const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? dashboardOverview.financials?.revenueThisMonth ?? liveCashCollected;
   const outstandingMetric = dashboardOverview.financials?.outstandingReceivables ?? liveOutstanding;
-  const cashDifferenceMetric = dashboardOverview.financials?.netOperatingProfit ?? liveCashDifference;
+  const cashDifferenceMetric = liveCashDifference;
 
   return (
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
@@ -1140,27 +1135,27 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"
           metrics={[
             {
-              id: 'active-projects', label: 'Active projects',
+              id: 'active-projects', label: 'Active projects now',
               value: activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
-              context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Live project records' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Current open project records' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
               icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
             },
             {
               id: 'revenue', label: 'Cash collected this month',
               value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
-              context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Recorded invoice payments' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Invoice payments recorded this month' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
               icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
             },
             {
               id: 'outstanding', label: 'Outstanding invoices',
               value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
-              context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Current open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
               icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
             },
             {
               id: 'utilization', label: 'Team utilization',
               value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : '—',
-              context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
+              context: dashboardOverview.metrics?.teamUtilization != null ? 'Current team utilization' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
               icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
             }
           ]}
@@ -1199,7 +1194,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </section>
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description="Issued invoice value and recorded expenses by record date. The difference is not a posted profit figure." actions={<DashboardTrendRangePicker range={range} onChange={setRange} />}>
+        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description={'Invoice values use issue date and expenses use recorded date for ' + financialTrendScopeLabel + '. The difference is not posted profit.'}>
           {revenueData.length >= 2 ? (
             <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + range + '.'} />
           ) : (
@@ -1211,7 +1206,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           )}
         </AdminPanel>
 
-        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
+        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Current active portfolio snapshot. This is not historical status-transition data.">
           {deliveryProjects !== null ? totalDelivery === 0 ? (
             <div className="flex min-h-[180px] flex-col items-center justify-center px-4 py-8 text-center" role="status">
               <FolderKanban size={20} className="text-muted" aria-hidden="true" />
@@ -1292,7 +1287,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </div>
 
       <div className="mt-3 grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-0" title="Active projects" description="Current delivery status across the agency portfolio." actions={(
+        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-0" title="Active projects" description={reportPeriodEnabled ? 'Active projects overlapping ' + reportPeriodLabel + '.' : 'Active projects across all dates.'} actions={(
           <Link to="/admin/projects" className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-accent-text">View all <ArrowUpRight size={13} /></Link>
         )}>
           <div className="border-b border-line px-4 pt-3 sm:px-5">
@@ -1484,20 +1479,20 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <div className="mt-3 min-w-0" data-ams-feature-slug="dashboard-supporting-metrics">
           <AdminMetricStrip slug="dashboard-supporting-kpis" metrics={[
             {
-              id: 'avg-project-value', label: 'Avg. active project budget',
+              id: 'avg-project-value', label: 'Avg. active project budget now',
               value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : '—',
-              context: averageActiveBudget != null ? 'Average of active project budgets' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
+              context: averageActiveBudget != null ? 'Average of current active project budgets' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
               icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
             },
             {
-              id: 'net-operating-profit', label: 'Cash surplus / deficit',
+              id: 'cash-expense-difference', label: 'Payments less recorded expenses this month',
               value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : '—',
-              context: dashboardOverview.financials?.netOperatingProfit != null || liveCashDifference !== null ? 'Cash collected less recorded expenses; not posted profit' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
+              context: liveCashDifference !== null ? 'Invoice payments recorded this month less expenses recorded this month; not posted profit' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
               icon: <CircleDollarSign size={15} />,
-              toneClassName: dashboardOverview.financials?.netOperatingProfit != null
-                ? Number(dashboardOverview.financials.netOperatingProfit) >= 0 ? 'text-success' : 'text-danger'
+              toneClassName: liveCashDifference != null
+                ? liveCashDifference >= 0 ? 'text-success' : 'text-danger'
                 : 'text-fg',
-              slug: 'dashboard-net-operating-profit'
+              slug: 'dashboard-cash-expense-difference'
             }
           ]} />
         </div>
@@ -1581,7 +1576,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           reportPeriodEnabled={reportPeriodEnabled}
         />
       ) : (
-        <AnalyticsView snapshot={operationalSnapshot} range={range} onRangeChange={setRange} />
+        <AnalyticsView
+          snapshot={operationalSnapshot}
+          reportPeriodMode={reportPeriodMode}
+          reportPeriodValue={reportPeriodValue}
+          reportPeriodLabel={reportPeriodLabel}
+          reportPeriodEnabled={reportPeriodEnabled}
+          currency={financeCurrency}
+        />
       )}
       <Modal
         open={Boolean(projectDetails)}

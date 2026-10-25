@@ -44,9 +44,7 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   assert.equal(quickActions.includes('min-[390px]'), false, 'Quick actions must not introduce a 390px breakpoint.');
   assert.equal(quickActions.includes('min-[760px]'), false, 'Quick actions must not introduce a 760px breakpoint.');
   assert.doesNotMatch(quickActions, /label:\s*'New project'/, 'New project already belongs in the page header, so it must not be duplicated');
-  const trendPicker = overview.indexOf('<DashboardTrendRangePicker range={range} onChange={setRange} />');
-  assert.ok(trendPicker > chartStart && trendPicker < projectsStart,
-    'The trend-period control should sit in the chart header before the project register.');
+  assert.ok(overview.includes('financialTrendScopeLabel'), 'The invoice/expense chart must describe the single global reporting scope.');
 
   for (const label of ['Review tasks', 'Log time', 'View invoices', 'View clients', 'View documents']) {
     assert.ok(quickActions.includes("label: '" + label + "'"), 'Missing quick action: ' + label);
@@ -83,29 +81,25 @@ test('Dashboard project creation action opens the existing create drawer only fo
 });
 
 
-test('Dashboard trend range is selectable in Overview and Analytics without a duplicate legend', async () => {
+test('Dashboard Overview and Analytics share the topbar reporting period without a duplicate chart filter', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const charts = await read('src/components/charts/DashboardCharts.tsx');
-
-  assert.match(dashboard, /const \[range, setRange\] = useState<RangeKey>\('30D'\)/);
-  assert.ok(dashboard.includes("{ value: '30D', label: '30 days' }"));
-  assert.ok(dashboard.includes("{ value: 'Q2', label: 'Q2 (Apr–Jun)' }"));
-  assert.ok(dashboard.includes("{ value: 'YTD', label: 'Year to date' }"));
-  assert.ok(dashboard.includes("{ value: '12M', label: '12 months' }"));
-  assert.match(dashboard, /role="group"[\s\S]{0,80}aria-label="Trend period"/);
-  assert.match(dashboard, /aria-pressed=\{active\}/);
-  assert.match(dashboard, /onClick=\{\(\) => onChange\(option\.value\)\}/);
-  assert.match(dashboard, /<DashboardTrendRangePicker range=\{range\} onChange=\{setRange\} \/>/);
-  assert.match(dashboard, /<DashboardTrendRangePicker range=\{range\} onChange=\{onRangeChange\} \/>/);
-  assert.match(dashboard, /<AnalyticsView snapshot=\{operationalSnapshot\} range=\{range\} onRangeChange=\{setRange\} \/>/);
-  assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false,
-    'The overview should not duplicate the legend already rendered by TrendChart.');
-  assert.ok(charts.includes('<div className="relative min-w-0" role="img" aria-label={ariaLabel}>'),
-    'TrendChart should expose its chart with an accessible summary.');
-  assert.ok(charts.includes('<span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>'),
-    'TrendChart should render its own primary-series legend.');
-  assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'),
-    'TrendChart should render its own comparison-series legend.');
+  assert.match(dashboard, /const \{ matchesDate, matchesInterval, value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled \} = useReportingPeriod\(\)/);
+  assert.ok(dashboard.includes('getReportingPeriodRange(reportPeriodValue, reportPeriodMode, \'en-GB\')'));
+  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(dashboard.includes('buildRecentFinancialTrend(invoices, expenses)'));
+  assert.ok(dashboard.includes('Recent 30-day default window'));
+  assert.ok(dashboard.includes('Active projects overlapping '));
+  assert.ok(dashboard.includes('Active projects across all dates.'));
+  assert.ok(dashboard.includes('Active projects now'));
+  assert.ok(dashboard.includes('Current open project records'));
+  assert.ok(dashboard.includes('Payments less recorded expenses this month'));
+  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false, 'Use the global reporting-period Filter instead of a second chart picker.');
+  assert.equal(dashboard.includes('RangeKey'), false, 'Dashboard-local range state must not compete with the shared reporting period.');
+  assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false, 'The Overview should not duplicate the legend rendered by TrendChart.');
+  assert.ok(charts.includes('<div className="relative min-w-0" role="img" aria-label={ariaLabel}>'));
+  assert.ok(charts.includes('<span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>'));
+  assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'));
 });
 
 
@@ -148,7 +142,12 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
   const projects = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
   assert.ok(controls >= 0 && financial > controls && receivables > controls && projects > controls,
     'Report and scope controls must precede each selectable report surface.');
-  assert.match(analytics, /<DashboardTrendRangePicker range=\{range\} onChange=\{onRangeChange\} \/>/);
+  assert.ok(analytics.includes('reportPeriodMode: ReportingPeriodMode'));
+  assert.ok(analytics.includes('reportPeriodValue: string'));
+  assert.ok(analytics.includes('reportPeriodEnabled: boolean'));
+  assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(analytics.includes('Shared reporting period'));
+  assert.equal(analytics.includes('DashboardTrendRangePicker'), false, 'Analytics must use the single topbar period control.');
   assert.doesNotMatch(analytics, /dashboard-analytics-kpis/, 'Mixed-period summary metrics should not appear after the selected report.');
   assert.match(analytics, /not posted profit/);
   assert.match(analytics, /Financial trend unavailable/);

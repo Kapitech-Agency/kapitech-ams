@@ -33,8 +33,8 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
   assert.ok(source.includes('startDate: spec.start, endDate: spec.end'), 'Trend buckets need date boundaries for exact-value inspection');
   assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'));
   assert.ok(analytics.includes('Selected period total'));
-  assert.ok(analytics.includes('Invoices issued · IDR'));
-  assert.ok(analytics.includes('Expenses recorded · IDR'));
+  assert.ok(analytics.includes('Invoices issued · {currency}'));
+  assert.ok(analytics.includes('Expenses recorded · {currency}'));
   assert.ok(analytics.includes('Difference · not profit'));
   assert.ok(analytics.includes('Invoice buckets use issue date'));
   assert.ok(analytics.includes('Expense buckets use recorded date'));
