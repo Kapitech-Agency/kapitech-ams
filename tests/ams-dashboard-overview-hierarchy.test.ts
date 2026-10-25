@@ -615,8 +615,8 @@ test('Dashboard priority exceptions sort urgent items before warning and informa
   const dashboardAttentionStart = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"');
   const dashboardAttentionEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"', dashboardAttentionStart);
   const attention = dashboard.slice(dashboardAttentionStart, dashboardAttentionEnd);
-  assert.ok(attention.indexOf("metric.label === 'Urgent' ? 'text-2xl'") >= 0);
-  assert.ok(attention.includes("urgent ? 'border-danger/25 bg-danger/5'"));
+  assert.ok(attention.indexOf("metric.label === 'Urgent' && metric.count > 0 ? 'text-2xl'") >= 0);
+  assert.ok(attention.includes("urgent ? 'border-danger pl-3'"));
 });
 
 
