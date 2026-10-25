@@ -142,8 +142,9 @@ test('Dashboard Overview does not infer a zero financial trend from empty invoic
   assert.ok(chart.includes('!expenseHistoryReturned'), 'An empty expense source must not become a zero expense trend.');
   assert.ok(chart.includes('A zero-value trend is not inferred from another currency.'));
   assert.ok(chart.includes('No financial records in selected currency'));
-  assert.ok(chart.includes('invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some'));
-  assert.ok(chart.includes('expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some'));
+  assert.ok(dashboard.includes('invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some'));
+  assert.ok(dashboard.includes('expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some'));
+
   assert.ok(chart.includes('A zero-value invoice series is not inferred.'));
   assert.ok(chart.includes('A zero-value expense series is not inferred.'));
 });
