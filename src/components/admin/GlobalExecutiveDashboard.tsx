@@ -1073,7 +1073,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     };
   }), [activeDashboardTasks, activeProjectRows, currentDayKey]);
 
-  const upcomingCommitments = useMemo<DashboardCommitment[]>(() => {
+  const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() => {
     if (operationalSnapshot.projects === null) return [];
     const commitments: DashboardCommitment[] = [];
     for (const project of activeProjectRows) {
@@ -1126,10 +1126,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       const rightOverdue = right.dueDate < currentDayKey;
       if (leftOverdue !== rightOverdue) return leftOverdue ? -1 : 1;
       return left.dueDate.localeCompare(right.dueDate);
-    }).slice(0, 8);
+    });
   }, [activeProjectRows, currentDayKey, nextThirtyDaysKey, operationalSnapshot.projects]);
 
-  const nextSevenDayCommitmentCount = upcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
+  const upcomingCommitments = allUpcomingCommitments.slice(0, 8);
+  const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
   const overdueCommitmentCount = operationalSnapshot.projects === null ? null : activeProjectRows.reduce((total: number, project: any) => {
     const targetDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
     const dueProjectIsOverdue = isValidDashboardDate(targetDate) && targetDate < currentDayKey;
@@ -1550,7 +1551,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{operationalSnapshot.tasks === null ? '—' : line.openTaskCount}</p>
                           </div>
                           <div className="rounded-control border border-line bg-bg px-3 py-2">
-                            <p className="text-[10px] text-muted">Overdue delivery items</p>
+                            <p className="text-[10px] text-muted">Projects with overdue delivery</p>
                             <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{line.overdueCommitmentCount}</p>
                           </div>
                         </div>

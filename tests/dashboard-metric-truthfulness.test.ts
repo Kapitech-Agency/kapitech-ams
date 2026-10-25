@@ -11,7 +11,7 @@ test('Dashboard priority exceptions distinguish the source-backed queue, genuine
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
   assert.ok(dashboard.includes('No exceptions returned by the Dashboard service'));
   assert.ok(dashboard.includes('Cross-module exception data unavailable'));
-  assert.ok(dashboard.includes('The interface does not infer that there are no exceptions.'));
+  assert.ok(dashboard.includes('This is not interpreted as a clean operational state.'));
   assert.ok(dashboard.includes("const safeDestination = destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null;"));
 });
 
@@ -29,6 +29,14 @@ test('Dashboard Overview groups active canonical projects for service and delive
   assert.equal(overview.includes('pagedDashboardProjects'), false);
   assert.equal(overview.includes('progressPercent'), false);
   assert.equal(overview.includes('project.budget'), false);
+});
+
+test('Dashboard next-seven-day delivery indicator counts all commitments, not only the visible preview rows', () => {
+  assert.ok(dashboard.includes('const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>'));
+  assert.ok(dashboard.includes('const upcomingCommitments = allUpcomingCommitments.slice(0, 8)'));
+  assert.ok(dashboard.includes('const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length'));
+  assert.doesNotMatch(dashboard, /const nextSevenDayCommitmentCount = upcomingCommitments\.filter/);
+  assert.ok(dashboard.includes('Projects with overdue delivery'));
 });
 
 test('Dashboard cash control uses canonical issued-invoice payment rows, never monthly revenue', () => {
