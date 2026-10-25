@@ -40,10 +40,10 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
   assert.ok(analytics.includes('Expense buckets use recorded date'));
   assert.ok(analytics.includes('The difference is an arithmetic comparison, not posted profit'));
   assert.ok(analytics.includes('!financialDataAvailable'));
-  assert.ok(analytics.includes('invoiceRows.length === 0'));
-  assert.ok(analytics.includes('expenseRows.length === 0'));
-  assert.ok(analytics.includes('A zero-value invoice series is not inferred from an empty source.'));
-  assert.ok(analytics.includes('A zero-value expense series is not inferred from an empty source.'));
+  assert.ok(analytics.includes('inCurrencyInvoices.length === 0'));
+  assert.ok(analytics.includes('inCurrencyExpenses.length === 0'));
+  assert.ok(analytics.includes('A zero-value invoice series is not inferred.'));
+  assert.ok(analytics.includes('A zero-value expense series is not inferred.'));
   assert.ok(analytics.includes('!financialRecordsReturned'));
   assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
   assert.ok(analytics.includes('const financialRecordsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenses.length > 0'));

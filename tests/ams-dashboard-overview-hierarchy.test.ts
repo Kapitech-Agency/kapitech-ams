@@ -130,8 +130,8 @@ test('Dashboard quick actions and project-header links respect route access', as
 
 test('Dashboard Overview does not infer a zero financial trend from empty invoice or expense sources', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  assert.match(dashboard, /const invoiceHistoryReturned = Boolean\(operationalSnapshot\.invoices\?\.length\)/);
-  assert.match(dashboard, /const expenseHistoryReturned = Boolean\(operationalSnapshot\.expenses\?\.length\)/);
+  assert.match(dashboard, /const invoiceSourceHasRows = Boolean\(operationalSnapshot\.invoices\?\.length\)/);
+  assert.match(dashboard, /const expenseSourceHasRows = Boolean\(operationalSnapshot\.expenses\?\.length\)/);
   const chartStart = dashboard.indexOf('title="Invoices vs expenses"');
   const chartEnd = dashboard.indexOf('</AdminPanel>', chartStart);
   assert.ok(chartStart >= 0 && chartEnd > chartStart, 'Overview financial chart should have a bounded panel section');
@@ -140,9 +140,12 @@ test('Dashboard Overview does not infer a zero financial trend from empty invoic
   assert.ok(chart.includes('!invoiceHistoryReturned && !expenseHistoryReturned'), 'Two empty sources must remain an explicit no-record state.');
   assert.ok(chart.includes('!invoiceHistoryReturned'), 'An empty invoice source must not become a zero invoice trend.');
   assert.ok(chart.includes('!expenseHistoryReturned'), 'An empty expense source must not become a zero expense trend.');
-  assert.ok(chart.includes('A zero-value trend is not inferred from an empty source.'));
-  assert.ok(chart.includes('A zero-value invoice series is not inferred from an empty source.'));
-  assert.ok(chart.includes('A zero-value expense series is not inferred from an empty source.'));
+  assert.ok(chart.includes('A zero-value trend is not inferred from another currency.'));
+  assert.ok(chart.includes('No financial records in selected currency'));
+  assert.ok(chart.includes('invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some'));
+  assert.ok(chart.includes('expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some'));
+  assert.ok(chart.includes('A zero-value invoice series is not inferred.'));
+  assert.ok(chart.includes('A zero-value expense series is not inferred.'));
 });
 
 test('Dashboard Performance scopes source-backed delivery records to the shared reporting period', async () => {
