@@ -263,6 +263,20 @@ test('Dashboard mobile and desktop project register respect the same pagination 
   assert.ok(dashboard.includes('onPageSizeChange={setDashboardProjectPageSize}'));
 });
 
+test('Dashboard Overview gates project and time-log drilldowns through the existing route-access policy', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  assert.ok(dashboard.includes("const canOpenProjects = canOpenDashboardRoute('/admin/projects');"));
+  assert.ok(overview.includes('actions={canOpenProjects ? ('), 'The project registry header action must follow route access.');
+  assert.ok(overview.includes('{canOpenProjects ? <Link to="/admin/projects"'), 'Project empty states must hide unauthorized navigation.');
+  assert.ok(overview.includes("{canOpenDashboardRoute('/admin/time-logs') ? ("), 'Time Logs navigation must follow route access.');
+  assert.ok(overview.includes('{canOpenProjects && ('), 'Project workspace menu/modal actions must be access-gated.');
+  assert.ok(overview.includes('canOpenDashboardRoute(destination)'), 'Exception links must check both internal path and role-aware route access.');
+  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart);
+});
+
 test('Dashboard Overview displays canonical recent audit activity only for permitted roles', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");

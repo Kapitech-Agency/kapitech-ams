@@ -1290,7 +1290,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <FolderKanban size={20} className="text-muted" aria-hidden="true" />
               <p className="mt-3 text-xs font-semibold text-fg">No active projects to assess</p>
               <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">The live project source returned no active projects for delivery-risk assessment.</p>
-              <Link to="/admin/projects" className="mt-3 inline-flex min-h-8 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">Open Projects</Link>
+              {canOpenProjects ? <Link to="/admin/projects" className="mt-3 inline-flex min-h-8 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">Open Projects</Link> : null}
             </div>
           ) : (
           <div className="space-y-4">
@@ -1365,9 +1365,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </div>
 
       <div className="mt-3 grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-0" title="Active projects" description={reportPeriodEnabled ? 'Active projects overlapping ' + reportPeriodLabel + '.' : 'Active projects across all dates.'} actions={(
+        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-0" title="Active projects" description={reportPeriodEnabled ? 'Active projects overlapping ' + reportPeriodLabel + '.' : 'Active projects across all dates.'} actions={canOpenProjects ? (
           <Link to="/admin/projects" className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-accent-text">View all <ArrowUpRight size={13} /></Link>
-        )}>
+        ) : undefined}>
           <div className="border-b border-line px-4 pt-3 sm:px-5">
             <div className="flex gap-1.5 overflow-x-auto pb-3 custom-scrollbar">
               {(['All', 'Enterprise', 'Retainer', 'Fixed-fee'] as ProjectFilter[]).map((filter) => (
@@ -1393,14 +1393,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 {dashboardOverview.loading || operationalSnapshot.loading
                   ? 'Waiting for the live dashboard and project services to return their records.'
                   : !dashboardProjectDataAvailable
-                    ? 'The dashboard and project services did not return project records. Open Projects to retry from the canonical workspace.'
+                    ? (canOpenProjects ? 'The dashboard and project services did not return project records. Open Projects to retry from the canonical workspace.' : 'The dashboard and project services did not return project records available to this role.')
                     : dashboardProjects.length === 0
                       ? 'The canonical project source returned no records.'
                       : activeDashboardProjects.length === 0
-                        ? 'The returned project records are completed or archived. Open Projects to review the wider history.'
-                        : 'No current project matches the selected reporting period and type. Adjust the scope or open Projects.'}
+                        ? (canOpenProjects ? 'The returned project records are completed or archived. Open Projects to review the wider history.' : 'The returned project records are completed or archived.')
+                        : (canOpenProjects ? 'No current project matches the selected reporting period and type. Adjust the scope or open Projects.' : 'No current project matches the selected reporting period and type. Adjust the scope or type filter.')}
               </p>
-              <Link to="/admin/projects" className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Projects</Link>
+              {canOpenProjects ? <Link to="/admin/projects" className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Projects</Link> : null}
             </div>
           ) : (
             <>
@@ -1505,6 +1505,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           >
                             View project details
                           </button>
+{canOpenProjects && (
                           <button
                             type="button"
                             role="menuitem"
@@ -1517,6 +1518,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           >
                             Open project workspace
                           </button>
+                          )}
                         </div>
                       )}
                     </td>
@@ -1549,7 +1551,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <Users size={20} className="text-muted" aria-hidden="true" />
             <p className="mt-3 text-xs font-semibold text-fg">Team workload data is unavailable</p>
             <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">Live assignments and utilization are not available from the dashboard service yet.</p>
-            <Link to="/admin/time-logs" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={13} /></Link>
+            {canOpenDashboardRoute('/admin/time-logs') ? <Link to="/admin/time-logs" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={13} /></Link> : null}
           </div>
         </AdminPanel>
       </div>
@@ -1709,6 +1711,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             >
               Close
             </button>
+{canOpenProjects && (
             <button
               type="button"
               className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
@@ -1719,6 +1722,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             >
               Open workspace
             </button>
+            )}
           </>
         )}
       >
