@@ -95,7 +95,8 @@ test('Dashboard work queue and service-line summaries come from canonical task/p
   assert.ok(dashboard.includes("label: 'Creative & Content'"));
   assert.ok(dashboard.includes("label: 'Web & IT Development'"));
   assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
-  assert.ok(dashboard.includes("const upcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
+  assert.ok(dashboard.includes("const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
+  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.slice(0, 8)"));
   assert.ok(dashboard.includes("const taskLoadByAssignee = useMemo(() =>"));
   assert.ok(dashboard.includes("const periodTimeRows = useMemo(() =>"));
   assert.ok(dashboard.includes("const activeTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.length"));

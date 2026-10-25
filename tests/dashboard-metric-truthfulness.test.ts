@@ -21,7 +21,8 @@ test('Dashboard Overview groups active canonical projects for service and delive
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.ok(dashboard.includes("const activeProjectRows = rawProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health))"));
   assert.ok(dashboard.includes("const serviceLineSummaries = useMemo(() => serviceLineConfiguration.map((line) =>"));
-  assert.ok(dashboard.includes("const upcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
+  assert.ok(dashboard.includes("const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
+  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.slice(0, 8)"));
   assert.ok(dashboard.includes("for (const project of activeProjectRows)"));
   assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
   assert.ok(overview.includes('Creative & IT workstreams'));
@@ -147,7 +148,8 @@ test('Dashboard Overview does not duplicate unverified project progress or budge
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.ok(dashboard.includes("const serviceLineConfiguration = ["));
   assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
-  assert.ok(dashboard.includes("const upcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
+  assert.ok(dashboard.includes("const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
+  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.slice(0, 8)"));
   assert.ok(dashboard.includes("project.targetEndDate || project.endDate || project.dueDate || project.deadline"));
   assert.equal(overview.includes('progressPercent'), false, 'Overview should not invent or duplicate a project progress field.');
   assert.equal(overview.includes('project.budget'), false, 'Budget belongs to Project/Finance workspaces, not the delivery workboard.');
