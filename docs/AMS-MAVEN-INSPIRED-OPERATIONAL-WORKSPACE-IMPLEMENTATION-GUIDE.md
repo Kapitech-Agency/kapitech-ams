@@ -180,16 +180,16 @@ Retain Overview, Performance, and Analytics. Complete all three before proceedin
 
 ## 4.2 Overview composition
 
-Follow the authoritative order:
-1. Page header and applicable reporting scope.
-2. Needs Attention.
-3. Decision-grade operating indicators.
-4. Delivery queue and Creative/IT workstreams.
-5. Deadline horizon and assignment/recorded-time context.
-6. Client Delivery Focus.
+Follow the action-first order:
+1. Page header and compact reporting/source scope.
+2. Needs Attention, with urgent/critical exceptions ranked ahead of warnings and informational items. Keep the canonical exception list and authorized Inbox triage distinct and balanced.
+3. Active delivery: primary delivery queue plus Creative/IT workstream visual comparison.
+4. Deadlines & team load: overdue/upcoming commitments, open tasks by owner, and recorded-time context.
+5. Operating snapshot: a restrained supporting KPI strip, placed after the actionable delivery surfaces.
+6. Client Delivery Focus, ranked by overdue commitments/tasks, blocked and unassigned work, review workload, and next commitment before portfolio size.
 7. Finance control context.
 8. Workspace shortcuts.
-9. Recent source-linked activity when useful.
+9. Recent source-linked audit activity when useful and when a safe destination is provided by the source.
 
 ### Card group A: Needs Attention
 
@@ -470,8 +470,10 @@ Show service demand or campaign outcomes only when sourced. Include objective, p
 
 ### Dashboard acceptance
 - Overview, Performance, and Analytics have distinct purposes.
-- Needs Attention precedes secondary context.
-- Visual balance avoids an overloaded left column and underused right column.
+- Needs Attention is the first operational decision surface after the compact reporting scope.
+- Urgent/critical exceptions precede warnings and informational items without mixing exception records with Inbox records.
+- The delivery queue, workstream comparison and deadlines/team-load context appear before the generic operating KPI strip.
+- The source-backed left/right Needs Attention panels have balanced visual weight and do not leave one side underused.
 - No fake values or unsupported trends.
 - Cards do not duplicate the same metric without a reason.
 - Every visual has exact readable values and a defined scope.
