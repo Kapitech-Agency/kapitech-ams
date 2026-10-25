@@ -37,6 +37,7 @@ type DashboardWorkTask = {
   projectId: string;
   projectSlug: string;
   projectName: string;
+  clientId: string;
   clientName: string;
   serviceCategory: string;
   serviceLine: 'creative' | 'technology' | 'other';
@@ -52,7 +53,9 @@ type DashboardCommitment = {
   id: string;
   projectId: string;
   projectSlug: string;
+  projectHref: string | null;
   projectName: string;
+  clientId: string;
   clientName: string;
   serviceCategory: string;
   serviceLine: 'creative' | 'technology' | 'other';
@@ -66,7 +69,10 @@ type DashboardClientDeliveryFocus = {
   key: string;
   name: string;
   projectCount: number;
-  projects: Array<{ name: string; href: string }>;
+  projects: Array<{ name: string; href: string | null }>;
+  clientId: string | null;
+  clientIdentityLabel: string;
+  clientRecordAvailable: boolean;
   serviceLines: string[];
   openTaskCount: number | null;
   reviewTaskCount: number | null;
@@ -118,6 +124,7 @@ const formatLiveMoney = (value: number, currency: string) => {
 type DashboardOperationalSnapshot = {
   loading: boolean;
   projects: any[] | null;
+  clients: any[] | null;
   tasks: any[] | null;
   timeLogs: any[] | null;
   invoices: any[] | null;
@@ -152,6 +159,22 @@ const getDashboardServiceLine = (project: any): DashboardWorkTask['serviceLine']
   if (/web|website|development|software|application|\bit\b|support|data|e-commerce|ecommerce|integration|automation|technical|hosting|cms|api/.test(category)) return 'technology';
   if (!category && stack.length > 0) return 'technology';
   return 'other';
+};
+
+const getDashboardProjectHref = (project: any): string | null => {
+  const slug = String(project?.slug || '').trim();
+  const id = String(project?.id || '').trim();
+  if (slug) return '/admin/projects?projects=sprint&project=' + encodeURIComponent(slug);
+  if (id) return '/admin/projects?projects=all&project=' + encodeURIComponent(id);
+  return null;
+};
+
+const resolveDashboardClientName = (clientId: unknown, clientDirectoryById: Map<string, any>, ...fallbackNames: unknown[]) => {
+  const id = String(clientId || '').trim();
+  const client = id ? clientDirectoryById.get(id) : null;
+  const canonicalName = client?.company || client?.companyName || client?.company_name || client?.name;
+  const fallbackName = fallbackNames.find((value) => String(value || '').trim());
+  return String(canonicalName || fallbackName || '').trim();
 };
 
 const isDashboardTaskBlocked = (task: any) =>
@@ -860,6 +883,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses');
   const canCreateProject = canManageProjects && canOpenDashboardRoute('/admin/projects?create=1');
   const canOpenProjects = canOpenDashboardRoute('/admin/projects');
+  const canOpenClientDirectory = canOpenDashboardRoute('/admin/clients/all-clients');
   const canOpenTasks = canOpenDashboardRoute('/admin/tasks');
   const canOpenTimeLogs = canOpenDashboardRoute('/admin/time-logs');
   const canOpenDocuments = canOpenDashboardRoute('/admin/documents');
@@ -883,7 +907,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [overviewTaskFilter, setOverviewTaskFilter] = useState<DashboardTaskFilter>('action');
   const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; attentionItems?: DashboardAttentionItem[]; attentionItemsDataAvailable?: boolean; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
-    loading: true, projects: null, tasks: null, timeLogs: null, invoices: null, expenses: null
+    loading: true, projects: null, clients: null, tasks: null, timeLogs: null, invoices: null, expenses: null
   });
   const [refreshRequest, setRefreshRequest] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -899,7 +923,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       api.tasks.getAll(),
       api.timeLogs.getAll(),
       api.finance.getInvoices(),
-      api.finance.getExpenses()
+      api.finance.getExpenses(),
+      canOpenClientDirectory ? api.clients.getAll() : Promise.resolve({ success: true, data: { clients: [] } })
     ];
 
     const readRows = (result: PromiseSettledResult<any>, field: string): any[] | null => {
@@ -940,16 +965,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       const timeLogs = readRows(results[3], 'timeLogs');
       const invoices = readRows(results[4], 'invoices');
       const expenses = readRows(results[5], 'expenses');
+      const clients = canOpenClientDirectory ? readRows(results[6], 'clients') : null;
 
       if (projects === null) failedSources.push('projects');
       if (tasks === null) failedSources.push('tasks');
       if (timeLogs === null) failedSources.push('time logs');
       if (invoices === null) failedSources.push('invoices');
       if (expenses === null) failedSources.push('expenses');
+      if (canOpenClientDirectory && clients === null) failedSources.push('client directory');
 
       setOperationalSnapshot((previous) => ({
         loading: false,
         projects: projects ?? previous.projects,
+        clients: canOpenClientDirectory ? clients ?? previous.clients : null,
         tasks: tasks ?? previous.tasks,
         timeLogs: timeLogs ?? previous.timeLogs,
         invoices: invoices ?? previous.invoices,
@@ -969,7 +997,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     });
 
     return () => { active = false; };
-  }, [refreshRequest]);
+  }, [refreshRequest, canOpenClientDirectory]);
 
   const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
   const currentDayKey = localDateKey(new Date());
@@ -983,6 +1011,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const activeProjectRows = rawProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
   const openProjectCount = projectSourceAvailable ? activeProjectRows.length : null;
 
+  const clientDirectoryById = useMemo(
+    () => new Map<string, any>(
+      (canOpenClientDirectory ? operationalSnapshot.clients || [] : [])
+        .map((client: any): [string, any] => [String(client.id || '').trim(), client])
+        .filter(([id]) => Boolean(id))
+    ),
+    [canOpenClientDirectory, operationalSnapshot.clients]
+  );
+
+
   const dashboardWorkTasks = useMemo<DashboardWorkTask[]>(() => {
     if (!Array.isArray(operationalSnapshot.tasks)) return [];
     const projectById = new Map<string, any>((operationalSnapshot.projects || []).map((project: any) => [String(project.id || ''), project]));
@@ -991,6 +1029,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       const projectId = String(task?.projectId || task?.project_id || '');
       const project = projectById.get(projectId);
       const projectName = String(task?.projectName || task?.project_name || project?.name || project?.title || 'Unlinked project');
+      const clientId = String(project?.clientId || project?.client_id || task?.clientId || task?.client_id || '').trim();
+      const clientName = resolveDashboardClientName(clientId, clientDirectoryById, project?.clientCompany, project?.client, task?.clientCompany, project?.clientName, task?.clientName);
       const serviceCategory = String(project?.serviceCategory || task?.serviceCategory || task?.service || '');
       const rawStatus = String(task?.status || 'todo').toLowerCase();
       const rawPriority = String(task?.priority || 'medium').toLowerCase();
@@ -1003,9 +1043,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         id,
         title: String(task?.title || task?.name || 'Untitled task'),
         projectId,
-        projectSlug: String(project?.slug || projectName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ''),
+        projectSlug: String(project?.slug || ''),
         projectName,
-        clientName: String(task?.clientName || task?.clientCompany || project?.clientCompany || project?.clientName || project?.client || ''),
+        clientId,
+        clientName,
         serviceCategory,
         serviceLine: getDashboardServiceLine(project || { serviceCategory, techStack: task?.techStack }),
         status: rawStatus,
@@ -1016,7 +1057,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         blocked: isDashboardTaskBlocked(task)
       };
     }).filter((task: DashboardWorkTask) => Boolean(task.id));
-  }, [operationalSnapshot.projects, operationalSnapshot.tasks]);
+  }, [clientDirectoryById, operationalSnapshot.projects, operationalSnapshot.tasks]);
 
   const activeDashboardTasks = dashboardWorkTasks.filter(dashboardTaskIsOpen);
   const taskQueueCounts = useMemo(() => ({
@@ -1100,8 +1141,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     for (const project of activeProjectRows) {
       const projectId = String(project.id || '');
       const projectName = String(project.name || project.title || 'Untitled project');
-      const projectSlug = String(project.slug || projectName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''));
-      const clientName = String(project.clientCompany || project.clientName || project.client || '');
+      const projectSlug = String(project.slug || '');
+      const projectHref = getDashboardProjectHref(project);
+      const clientId = String(project.clientId || project.client_id || '').trim();
+      const clientName = resolveDashboardClientName(clientId, clientDirectoryById, project.clientCompany, project.client, project.clientName);
       const serviceCategory = String(project.serviceCategory || '');
       const serviceLine = getDashboardServiceLine(project);
       const milestones = Array.isArray(project.milestones) ? project.milestones : [];
@@ -1115,7 +1158,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           id: 'milestone-' + String(milestone.id || milestone.slug || milestone.title || projectId + '-' + dueDate),
           projectId,
           projectSlug,
+          projectHref,
           projectName,
+          clientId,
           clientName,
           serviceCategory,
           serviceLine,
@@ -1131,7 +1176,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           id: 'project-deadline-' + projectId,
           projectId,
           projectSlug,
+          projectHref,
           projectName,
+          clientId,
           clientName,
           serviceCategory,
           serviceLine,
@@ -1148,7 +1195,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       if (leftOverdue !== rightOverdue) return leftOverdue ? -1 : 1;
       return left.dueDate.localeCompare(right.dueDate);
     });
-  }, [activeProjectRows, currentDayKey, nextThirtyDaysKey, operationalSnapshot.projects]);
+  }, [activeProjectRows, clientDirectoryById, currentDayKey, nextThirtyDaysKey, operationalSnapshot.projects]);
 
   const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() => {
     if (!canOpenProjects || operationalSnapshot.projects === null) return [];
@@ -1159,17 +1206,31 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       serviceLineKeys: Set<string>;
     };
     const groups = new Map<string, ClientAccumulator>();
-    const projectClientById = new Map<string, string>();
+    const projectClientById = new Map<string, { key: string; name: string; clientId: string | null }>();
 
-    const ensureClient = (rawName: unknown): ClientAccumulator | null => {
-      const name = String(rawName || '').trim();
-      if (!name) return null;
-      const key = name.toLocaleLowerCase();
+    const ensureClient = (rawClientId: unknown, rawName: unknown): ClientAccumulator | null => {
+      const clientId = String(rawClientId || '').trim();
+      const name = resolveDashboardClientName(clientId, clientDirectoryById, rawName) || (clientId ? 'Client record unavailable' : '');
+      if (!clientId && !name) return null;
+      const normalizedName = name.toLocaleLowerCase().replace(/\s+/g, ' ').trim();
+      const key = clientId ? 'client-id:' + clientId : 'saved-name:' + normalizedName;
+      const clientRecordAvailable = Boolean(clientId && clientDirectoryById.has(clientId));
+      const clientIdentityLabel = clientRecordAvailable
+        ? 'Client directory record'
+        : clientId
+          ? 'Saved client ID · master record not resolved'
+          : 'Grouped by saved company name';
       const current = groups.get(key);
-      if (current) return current;
+      if (current) {
+        if (clientRecordAvailable && name) current.name = name;
+        return current;
+      }
       const created: ClientAccumulator = {
         key,
         name,
+        clientId: clientId || null,
+        clientIdentityLabel,
+        clientRecordAvailable,
         projectCount: 0,
         projects: [],
         serviceLines: [],
@@ -1195,19 +1256,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         : 'Other / Unclassified';
 
     for (const project of activeProjectRows) {
-      const clientName = String(project.clientCompany || project.clientName || project.client || '').trim();
-      const group = ensureClient(clientName);
-      if (!group) continue;
-
-      const projectId = String(project.id || '');
+      const projectId = String(project.id || '').trim();
       const projectName = String(project.name || project.title || 'Untitled project');
-      const projectSlug = String(project.slug || projectName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''));
-      const href = '/admin/projects?projects=sprint&project=' + encodeURIComponent(projectSlug);
-      group.projectIds.add(projectId ? 'id:' + projectId : 'href:' + href);
+      const clientId = String(project.clientId || project.client_id || '').trim();
+      const savedClientName = resolveDashboardClientName(clientId, clientDirectoryById, project.clientCompany, project.client, project.clientName);
+      const group = ensureClient(clientId, savedClientName);
+      if (!group) continue;
+      const href = getDashboardProjectHref(project);
+      const projectIdentity = projectId ? 'id:' + projectId : href ? 'href:' + href : 'name:' + projectName.toLocaleLowerCase();
+      group.projectIds.add(projectIdentity);
       group.projectCount = group.projectIds.size;
-      if (projectId) projectClientById.set(projectId, group.name);
-      if (!group.projectHrefs.has(href)) {
-        group.projectHrefs.add(href);
+      if (projectId) projectClientById.set(projectId, { key: group.key, name: group.name, clientId: group.clientId });
+      if (!group.projectHrefs.has(projectIdentity)) {
+        group.projectHrefs.add(projectIdentity);
         group.projects.push({ name: projectName, href });
       }
       group.serviceLineKeys.add(serviceLineLabel(getDashboardServiceLine(project)));
@@ -1215,8 +1276,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
     if (taskMetricsAvailable) {
       for (const task of activeDashboardTasks) {
-        const clientName = String(task.clientName || projectClientById.get(task.projectId) || '').trim();
-        const group = ensureClient(clientName);
+        const projectIdentity = projectClientById.get(task.projectId);
+        const group = projectIdentity
+          ? groups.get(projectIdentity.key) || null
+          : ensureClient(task.clientId, task.clientName);
         if (!group) continue;
         group.openTaskCount = (group.openTaskCount ?? 0) + 1;
         group.reviewTaskCount = (group.reviewTaskCount ?? 0) + (task.status === 'review' || task.status === 'in_review' ? 1 : 0);
@@ -1228,7 +1291,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     }
 
     for (const commitment of allUpcomingCommitments) {
-      const group = ensureClient(commitment.clientName);
+      const projectIdentity = projectClientById.get(commitment.projectId);
+      const group = projectIdentity
+        ? groups.get(projectIdentity.key) || null
+        : ensureClient(commitment.clientId, commitment.clientName);
       if (!group) continue;
       if (commitment.dueDate < currentDayKey) {
         group.overdueCommitmentCount += 1;
@@ -1241,6 +1307,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       .map((group) => ({
         key: group.key,
         name: group.name,
+        clientId: group.clientId,
+        clientIdentityLabel: group.clientIdentityLabel,
+        clientRecordAvailable: group.clientRecordAvailable,
         projectCount: group.projectCount,
         projects: group.projects,
         serviceLines: Array.from(group.serviceLineKeys),
@@ -1260,7 +1329,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         left.name.localeCompare(right.name)
       )
       .slice(0, 5);
-  }, [activeDashboardTasks, activeProjectRows, allUpcomingCommitments, canOpenProjects, canOpenTasks, currentDayKey, operationalSnapshot.projects, operationalSnapshot.tasks]);
+  }, [activeDashboardTasks, activeProjectRows, allUpcomingCommitments, canOpenClientDirectory, canOpenProjects, canOpenTasks, clientDirectoryById, currentDayKey, operationalSnapshot.projects, operationalSnapshot.tasks]);
 
   const upcomingCommitments = allUpcomingCommitments.slice(0, 8);
   const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
@@ -1746,8 +1815,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 {upcomingCommitments.map((item) => {
                   const overdue = item.dueDate < currentDayKey;
                   const dueTone: DashboardTone = overdue ? 'danger' : item.dueDate === currentDayKey ? 'warning' : 'info';
-                  const projectHref = '/admin/projects?projects=sprint&project=' + encodeURIComponent(item.projectSlug);
-                  const projectRouteAvailable = canOpenProjects && canOpenDashboardRoute(projectHref);
+                  const projectHref = item.projectHref;
+                  const projectRouteAvailable = Boolean(projectHref && canOpenProjects && canOpenDashboardRoute(projectHref));
                   return (
                     <article key={item.id} className="flex min-w-0 flex-col gap-2 px-4 py-3 sm:px-5 sm:flex-row sm:items-center">
                       <span className={['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control border', toneClasses[dueTone]].join(' ')}><CalendarDays size={14} aria-hidden="true" /></span>
@@ -1762,7 +1831,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
                       <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:gap-1">
                         <span className={['text-xs tabular-nums', overdue ? 'font-semibold text-danger' : 'font-medium text-fg'].join(' ')}>{formatDashboardDate(item.dueDate)}</span>
-                        {projectRouteAvailable ? <Link to={projectHref} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project <ArrowUpRight size={12} aria-hidden="true" /></Link> : null}
+                        {projectRouteAvailable && projectHref ? <Link to={projectHref} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project <ArrowUpRight size={12} aria-hidden="true" /></Link> : null}
                       </div>
                     </article>
                   );
@@ -1840,7 +1909,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <section data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
         <AdminPanel
           title="Client delivery focus"
-          description="Current project and task workload grouped by saved client name. This is delivery context, not a client health, contract or SLA score."
+          description="Current delivery workload grouped by Client Directory ID when linked. Saved company-name grouping is a fallback for legacy records without a client ID. This is delivery context, not a client health, contract or SLA score."
           bodyClassName="p-0"
           actions={canOpenProjects ? (
             <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -1863,7 +1932,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <article key={client.key} className="min-w-0 space-y-3 px-4 py-4 sm:px-5">
                   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
-                      <h3 className="break-words text-xs font-semibold text-fg">{client.name}</h3>
+                      {client.clientRecordAvailable && canOpenClientDirectory && client.clientId ? (
+                        <Link to={'/admin/clients/all-clients?client=' + encodeURIComponent(client.clientId)} className="inline-flex items-center gap-1 break-words text-xs font-semibold text-fg hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                          {client.name} <ArrowUpRight size={12} aria-hidden="true" />
+                        </Link>
+                      ) : (
+                        <h3 className="break-words text-xs font-semibold text-fg">{client.name}</h3>
+                      )}
+                      <p className="mt-1 text-[10px] text-muted">{client.clientIdentityLabel}</p>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {client.serviceLines.map((line) => (
                           <span key={line} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{line}</span>
@@ -1890,11 +1966,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   </div>
                   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-wrap gap-x-3 gap-y-1">
-                      {client.projects.slice(0, 3).map((project) => canOpenDashboardRoute(project.href) ? (
+                      {client.projects.slice(0, 3).map((project, index) => project.href && canOpenDashboardRoute(project.href) ? (
                         <Link key={project.href} to={project.href} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                           {project.name} <ArrowUpRight size={11} aria-hidden="true" />
                         </Link>
-                      ) : null)}
+                      ) : (
+                        <span key={project.href || project.name + '-' + index} className="inline-flex min-h-8 items-center text-[11px] text-muted">{project.name}</span>
+                      ))}
                       {client.projects.length > 3 ? <span className="inline-flex min-h-8 items-center text-[11px] text-muted">+{client.projects.length - 3} more projects</span> : null}
                     </div>
                     <p className="shrink-0 text-[11px] text-muted">

@@ -55,7 +55,7 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes('Task-state breakdown is unavailable for this role or source.'));
   assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
   assert.ok(overview.includes('Client delivery focus'));
-  assert.ok(overview.includes('grouped by saved client name'));
+  assert.ok(overview.includes('Saved company-name grouping is a fallback'));
   assert.ok(overview.includes('not a client health, contract or SLA score'));
   assert.ok(overview.includes('No client-linked delivery records'));
   assert.ok(overview.includes('Open tasks by owner'));
@@ -89,8 +89,9 @@ test('Dashboard Overview client delivery focus groups saved client relationships
   assert.ok(start >= 0 && end > start, 'Client delivery focus should be a separate bounded source summary.');
   const clientFocus = dashboard.slice(start, end);
   assert.ok(dashboard.includes('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>'));
-  assert.ok(dashboard.includes("project.clientCompany || project.clientName || project.client || ''"));
-  assert.ok(dashboard.includes("task.clientName || projectClientById.get(task.projectId) || ''"));
+  assert.ok(dashboard.includes("resolveDashboardClientName(clientId, clientDirectoryById, project.clientCompany, project.client, project.clientName)"));
+  assert.ok(dashboard.includes('const projectIdentity = projectClientById.get(task.projectId)'));
+  assert.ok(dashboard.includes('ensureClient(task.clientId, task.clientName)'));
   assert.ok(clientFocus.includes('active projects'));
   assert.ok(clientFocus.includes('overdue commitments'));
   assert.ok(clientFocus.includes('Tasks in review'));
@@ -100,6 +101,32 @@ test('Dashboard Overview client delivery focus groups saved client relationships
   assert.ok(clientFocus.includes('not a client health, contract or SLA score'));
   assert.ok(clientFocus.includes('No future date · overdue work remains'));
   assert.ok(clientFocus.includes('No dated commitment in the next 30 days'));
+});
+
+test('Dashboard client delivery focus resolves canonical client IDs and never invents project slugs for drill-downs', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
+  const end = dashboard.indexOf('{(canOpenInvoiceRegister || canOpenExpenseRegister) ? (', start);
+  assert.ok(start >= 0 && end > start);
+  const clientFocus = dashboard.slice(start, end);
+
+  assert.ok(dashboard.includes("const canOpenClientDirectory = canOpenDashboardRoute('/admin/clients/all-clients')"));
+  assert.ok(dashboard.includes("canOpenClientDirectory ? api.clients.getAll() : Promise.resolve"));
+  assert.ok(dashboard.includes("const clientId = String(project.clientId || project.client_id || '').trim()"));
+  assert.ok(dashboard.includes("const key = clientId ? 'client-id:' + clientId : 'saved-name:' + normalizedName"));
+  assert.ok(dashboard.includes('const projectIdentity = projectClientById.get(task.projectId)'));
+  assert.ok(dashboard.includes('ensureClient(task.clientId, task.clientName)'));
+  assert.ok(dashboard.includes('Saved client ID · master record not resolved'));
+  assert.ok(dashboard.includes('Grouped by saved company name'));
+  assert.ok(dashboard.includes("'/admin/clients/all-clients?client=' + encodeURIComponent(client.clientId)"));
+  assert.ok(clientFocus.includes('client.clientRecordAvailable && canOpenClientDirectory && client.clientId'));
+  assert.ok(dashboard.includes("if (slug) return '/admin/projects?projects=sprint&project=' + encodeURIComponent(slug)"));
+  assert.ok(dashboard.includes("if (id) return '/admin/projects?projects=all&project=' + encodeURIComponent(id)"));
+  assert.ok(dashboard.includes('getDashboardProjectHref(project)'));
+  assert.ok(dashboard.includes('const projectHref = item.projectHref'));
+  assert.equal(dashboard.includes("'/admin/projects?projects=sprint&project=' + encodeURIComponent(projectSlug)"), false,
+    'A generated slug must not be treated as a canonical project route.');
+  assert.ok(clientFocus.includes('project.href && canOpenDashboardRoute(project.href)'));
 });
 
 test('Dashboard Overview Finance controls link to canonical ledgers only when route access allows them', async () => {
@@ -131,7 +158,7 @@ test('Dashboard work queue and service-line summaries come from canonical task/p
   assert.ok(dashboard.includes("const serviceLineConfiguration = ["));
   assert.ok(dashboard.includes("const projectIds = new Set(lineProjects.map((project: any) => String(project.id || '')).filter(Boolean));"));
   assert.ok(dashboard.includes("(Boolean(task.projectId) && projectIds.has(task.projectId)) || (task.serviceLine === line.key && !task.projectId)"));
-  assert.ok(dashboard.includes("group.projectIds.add(projectId ? 'id:' + projectId : 'href:' + href);"));
+  assert.ok(dashboard.includes("const projectIdentity = projectId ? 'id:' + projectId : href ? 'href:' + href : 'name:' + projectName.toLocaleLowerCase();"));
   assert.ok(dashboard.includes("group.projectCount = group.projectIds.size;"));
   assert.ok(dashboard.includes("label: 'Creative & Content'"));
   assert.ok(dashboard.includes("label: 'Web & IT Development'"));
