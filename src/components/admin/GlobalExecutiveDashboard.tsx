@@ -2401,7 +2401,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         ] as Array<{ key: DashboardProjectFilter; label: string; count: number }>).map((filter) => (
                           <button key={filter.key} type="button" aria-pressed={overviewProjectFilter === filter.key} onClick={() => setOverviewProjectFilter(filter.key)} className={[
                             'inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                            overviewProjectFilter === filter.key ? 'bg-panel text-fg shadow-sm' : 'text-muted hover:bg-panel/70 hover:text-fg'
+                            overviewProjectFilter === filter.key ? 'bg-panel text-fg font-semibold' : 'text-muted hover:bg-panel/70 hover:text-fg'
                           ].join(' ')}>
                             {filter.label}
                             <span className="text-[10px] tabular-nums text-muted">{filter.count}</span>

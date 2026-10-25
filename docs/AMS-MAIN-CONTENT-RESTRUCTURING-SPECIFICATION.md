@@ -139,6 +139,12 @@ Use the user-provided production dashboard as the composition reference: a domin
 5. **Team workload + Client delivery focus.** Use proportional task-load bars and recorded-time context. Client delivery risk uses source-backed measures; recorded time is not capacity or utilization.
 6. **Recent activity + Workspace shortcuts** at the bottom. Audit events remain informational unless the source provides an actual record destination.
 
+**Required header and filter behavior**
+- The Dashboard header contains one clear title/purpose, refresh, and the role-permitted project creation action. A visible view navigation switches between Overview, Performance and Analytics and preserves the selected view in the URL.
+- The reporting toolbar exposes a functional Month/Quarter/Year selector, a period selector with supported years from 2021 onward, previous/next period controls, and a clear-period action. These controls use the shared AMS reporting-period context and persist using its existing behavior.
+- State exactly what the period scopes: on Overview it changes financial movement and recorded-time summaries; open tasks, portfolio/health, outstanding receivables and deadline horizon remain current-state measures. Do not imply that every card is filtered by a historical period.
+- Project progress offers All/Creative/IT filters with counts, and the deadline distribution offers All/Overdue/Today–7 days/Days 8–30 filters that update the adjacent deadline list. The existing task-queue filters remain available with counts. Every filter needs a real result change, selected state, and an honest filtered-empty message; no decorative/inert controls.
+
 **Responsive composition:** use a 12-column desktop grid; when both leading cards are available, Finance takes approximately 7 columns and Projects 5. Stack the cards on narrow screens. The remaining content is grouped into balanced card rows and reflows into one column without horizontal page overflow. Establish visual variety with chart scale, meaningful data marks, compact metrics and concise lists, not additional explanatory paragraphs, repeated KPI cards or decorative numbering.
 
 Finance fields retain different meanings: issued invoice value, cash received, expenses, outstanding receivables, cash balance and posted profit are separate concepts. Do not label an arithmetic difference as posted profit or cash flow. Never convert unavailable data into zero. Project progress bars may use only a valid saved progressPercent; do not infer completion from task counts.

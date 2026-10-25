@@ -192,6 +192,14 @@ Follow this card order:
 
 Let the financial trend and project risk visualization establish the primary visual anchors. Use balanced card proportions, compact counters, bars and concise rows. Preserve AMS design tokens and responsive behavior. Do not invent values, create inferred project progress, repeat a generic KPI strip or bury Finance and Projects beneath exception lists.
 
+### Header, reporting and filter behavior
+
+- Show direct navigation for Overview, Performance and Analytics in the Dashboard header area; the active state and URL must agree.
+- Provide functional reporting controls for Month, Quarter and Year, period selection, previous/next period navigation and clearing back to the Recent 30 days default. The control uses the shared reporting-period context rather than a local decorative date label.
+- Label scope clearly: the selected date period drives financial movement and recorded-time summaries on Overview, while project health, open tasks, current receivables and the upcoming deadline horizon remain current-state views.
+- The Projects in progress card must filter its short list by All, Creative or IT and show counts. The deadline horizon segmentation must filter the related list by All, Overdue, Today–7 days or Days 8–30. Task queue filters already in place remain functional and discoverable.
+- All controls must have visible selected state, accessible labels, hover/focus feedback and contextual empty states. Filters must change records shown, not only highlight a button.
+
 ### Card group A: Needs Attention
 
 This is a compact secondary exception card below the Finance and Projects cards. Sort danger/critical items before warnings and informational items, preserve source order inside each severity, and keep authorized Inbox triage in its own source-backed subsection. Do not manufacture hierarchy with rank numbering; use card placement, relative visual weight and actual source-backed urgency.

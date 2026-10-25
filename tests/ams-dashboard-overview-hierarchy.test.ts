@@ -714,3 +714,40 @@ test('Dashboard Overview uses a rounded reference-led visual system and interact
   assert.ok(designSystem.includes('Dashboard reference-led visual variant'));
   assert.ok(designSystem.includes('dark mode remains shadow-free'));
 });
+
+
+test('Dashboard Overview exposes complete header navigation, reporting controls, and working operational filters', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+
+  assert.ok(dashboard.includes('aria-label="Dashboard views"'));
+  assert.ok(dashboard.includes("to={tab.key === 'overview' ? '/admin/dashboard' : '/admin/dashboard?view=' + tab.key}"));
+  assert.ok(dashboard.includes('aria-label="Reporting period type"'));
+  assert.ok(dashboard.includes('aria-label="Reporting date range"'));
+  assert.ok(dashboard.includes('setMode: setReportingPeriodMode'));
+  assert.ok(dashboard.includes('setValue: setReportingPeriodValue'));
+  assert.ok(dashboard.includes('clearFilter: clearReportingPeriodFilter'));
+  assert.ok(dashboard.includes('getReportingYearOptions(currentYear, [], selectedReportingRange?.year ?? currentYear)'));
+  assert.ok(dashboard.includes('formatReportingPeriodLabel(value, reportPeriodMode, \'en-GB\')'));
+  assert.ok(dashboard.includes('aria-label="Previous reporting period"'));
+  assert.ok(dashboard.includes('aria-label="Next reporting period"'));
+  assert.ok(dashboard.includes('onClick={clearReportingPeriodFilter}'));
+  assert.ok(overview.includes('The selected period controls financial movement and recorded-time summaries'));
+  assert.ok(overview.includes('Finance trend: {overviewPeriodDisplay}'));
+
+  assert.ok(dashboard.includes("orderedActiveDashboardProjects\n    .filter((project) => overviewProjectFilter === 'all' || getDashboardServiceLine(project) === overviewProjectFilter)"));
+  assert.ok(overview.includes('aria-label="Filter projects by service line"'));
+  assert.ok(overview.includes("aria-pressed={overviewProjectFilter === filter.key}"));
+  assert.ok(overview.includes('activeDashboardProjectFilterCounts[overviewProjectFilter]'));
+
+  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.filter((item) => {"));
+  assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey"));
+  assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'next7') return item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey"));
+  assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'days8to30') return item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey"));
+  assert.ok(overview.includes('aria-label="Filter deadlines"'));
+  assert.ok(overview.includes('aria-pressed={overviewDeadlineFilter === item.key}'));
+  assert.ok(overview.includes('aria-label="Task queue filters"'));
+  assert.equal(overview.includes('Priority 01'), false);
+});
