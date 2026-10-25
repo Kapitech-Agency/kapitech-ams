@@ -1064,7 +1064,7 @@ const AnalyticsView: React.FC<{
                   </div>
                 </div>
                 <p className="mt-4 text-xs leading-5 text-muted">
-                  Invoice buckets use issue date; expense buckets use recorded date. The difference is an arithmetic comparison, not posted profit.
+                  Invoice buckets use issue date; Expense buckets use recorded date. The difference is an arithmetic comparison, not posted profit.
                 </p>
               </>
             )}

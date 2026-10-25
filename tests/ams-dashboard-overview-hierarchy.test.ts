@@ -409,8 +409,8 @@ test('Dashboard Performance puts decision KPIs first and visualizes recorded tim
   assert.ok(performance.includes("label: 'Task completion'"));
   assert.ok(performance.includes("label: 'Overdue tasks'"));
   assert.ok(performance.includes("label: 'Blocked tasks'"));
-  assert.ok(performance.includes('Total recorded time'));
-  assert.ok(performance.includes('Time entries in scope'));
+  assert.ok(performance.includes('Total hours'));
+  assert.ok(performance.includes('Entries'));
   assert.ok(performance.includes('const maxMemberTimeMinutes = Math.max(1, ...workload.map((member) => member.minutes))'));
   assert.ok(performance.includes('Top eight contributors by recorded time. Bars compare within this list only.'));
   assert.ok(performance.includes('const timeTrendModel = useMemo(() =>'));
