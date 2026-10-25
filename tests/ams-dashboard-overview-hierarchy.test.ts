@@ -421,7 +421,7 @@ test('Dashboard Overview places the canonical exception queue before agency indi
   assert.ok(overview.includes('No exceptions returned by the Dashboard service'));
   assert.ok(overview.includes('This is not interpreted as a clean operational state.'));
   assert.ok(overview.includes('Destination not mapped to an authorized workspace'));
-  assert.ok(overview.includes("destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null"));
+  assert.ok(overview.includes("candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate))"));
   assert.ok(overview.includes("id: 'open-tasks', label: 'Open tasks'"));
   assert.ok(overview.includes("id: 'overdue-tasks', label: 'Overdue tasks'"));
   assert.ok(overview.includes("id: 'review-queue', label: 'Tasks in review'"));
@@ -464,7 +464,7 @@ test('Dashboard Overview gates task, project, time and Finance links through the
   assert.ok(overview.includes('{canOpenTimeLogs ? <Link to="/admin/time-logs"'));
   assert.ok(overview.includes('{canOpenInvoiceRegister ? ('));
   assert.ok(overview.includes('{canOpenExpenseRegister ? ('));
-  assert.ok(overview.includes('canOpenDashboardRoute(destination)'), 'Exception links must check both internal path and current route access.');
+  assert.ok(overview.includes('candidates.find((candidate) => candidate.startsWith(\'/admin/\') && canOpenDashboardRoute(candidate))'), 'Exception links must choose a destination allowed for the current role.');
 });
 
 test('Dashboard Overview displays canonical recent audit activity only for permitted roles', async () => {

@@ -12,7 +12,7 @@ test('Dashboard priority exceptions distinguish the source-backed queue, genuine
   assert.ok(dashboard.includes('No exceptions returned by the Dashboard service'));
   assert.ok(dashboard.includes('Cross-module exception data unavailable'));
   assert.ok(dashboard.includes('This is not interpreted as a clean operational state.'));
-  assert.ok(dashboard.includes("const safeDestination = destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null;"));
+  assert.ok(dashboard.includes("const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;"));
 });
 
 test('Dashboard Overview groups active canonical projects for service and delivery commitments without duplicating Project Registry', () => {
