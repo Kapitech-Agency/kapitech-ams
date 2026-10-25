@@ -1,7 +1,7 @@
 # AMS Content-First UX/UI Implementation Map
 
 Historical baseline date: 17 October 2026  
-Roadmap cross-reference updated: 19 October 2026 (historical implementation entries not reverified by this documentation change)
+Roadmap cross-reference updated: 25 October 2026 (this Dashboard source/test slice is reverified; prior entries remain historical)
 
 > **Document role:** This is the detailed source/change history and view-by-view implementation map for the content-first UX/UI effort. Historical commit, branch, CI, and remaining-work notes are snapshots from the dates stated and are not a live status feed. [`AMS-STRUCTURAL-REDESIGN-PROGRESS.md`](AMS-STRUCTURAL-REDESIGN-PROGRESS.md) is the compact roll-up checkpoint; verify the latest `main` source and current CI/browser evidence before acting or declaring completion. The redesign remains incomplete until its currently applicable acceptance checks are verified. **Historical row and status notes** (including older module/subtab labels in the initial inventory) describe the state captured at that checkpoint; they do not supersede the currently approved product/ownership structure in `AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`, destinations/navigation depth in `architecture/ams-navigation-information-architecture.md`, or per-workspace content order in `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §4.10.
 
@@ -791,3 +791,16 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - Shared period, source-state integrity, financial record semantic filters and route-aware drill-downs have current regression coverage.
 - No browser role/real-data/reflow/keyboard/focus/contrast/assistive-technology evidence has been claimed. Stage 5 remains pending.
 - Next: finish Dashboard Overview and Analytics acceptance review; stay in Dashboard.
+
+## Dashboard · Finance source consistency and issued-record semantics · 25 October 2026
+
+**Current source/test SHA:** [684bd04b](https://github.com/Kapitech-Agency/kapitech-ams/commit/684bd04b6cdbc839edbc3090afda3b1f90b4bb51). Exact-SHA Quality Gate [40167743158 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167743158).
+
+- Financial movement uses the single global period selector shared by Overview and Analytics. All dates is explicitly described as a recent 30-day default window, not an all-history total.
+- Dashboard reuses existing Finance helpers for invoice date, issued-invoice inclusion, payment rows and outstanding balances. Quotations and non-issued rows do not count as invoice history. Cash collection retains the supported legacy payment fallback and does not fall back to monthly revenue.
+- Source-state handling is currency-aware. Records denominated in other currencies are not rendered as zero-value series. Cancelled, canceled, voided and deleted expenses do not enter trend buckets. The invoice/expense arithmetic difference is not described as posted profit.
+- No Finance formulas, payment posting, API/backend, schema, authentication or permission behavior changed. This is frontend reuse of existing definitions.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-dashboard-analytics-structure.test.ts; tests/dashboard-metric-truthfulness.test.ts. Source commits [1ce6337c](https://github.com/Kapitech-Agency/kapitech-ams/commit/1ce6337ce2b08d69118ecec2e6e0aa61734a4283) and [8e3b461f](https://github.com/Kapitech-Agency/kapitech-ams/commit/8e3b461fbab1b19e7fdeb42bdcf890efef2a419a); final regression alignment [684bd04b](https://github.com/Kapitech-Agency/kapitech-ams/commit/684bd04b6cdbc839edbc3090afda3b1f90b4bb51).
+- **AMS CI:** [40167743171](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167743171) failed at the existing high body-parser@1.20.6 audit advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; dependent build/package/HTTP smoke steps were skipped.
+- **Still unverified:** authenticated roles/direct URLs, live values, responsive/zoom matrix, keyboard/focus, contrast, touch, screen reader and Stage 5 sign-off.
+- **Next:** complete Dashboard Overview §4.1/§4.10 acceptance, then finish Analytics view-by-view. Do not start Inbox.

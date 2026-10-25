@@ -1,7 +1,7 @@
 # Kapitech AMS Structural UX/UI Redesign Progress
 
-Progress evidence last recorded: 23 October 2026  
-Documentation cross-reference updated: 23 October 2026 (source/test evidence updated; no browser verification implied)
+Progress evidence last recorded: 25 October 2026  
+Documentation cross-reference updated: 25 October 2026 (current Dashboard source/test slice recorded; no browser verification implied)
 Repository: `Kapitech-Agency/kapitech-ams`
 Required delivery branch: `main`
 
@@ -2209,3 +2209,15 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - Empty invoice/expense source arrays no longer become zero-value histories; quotation rows and cancelled expense records are excluded from financial movement; open receivable snapshots use one shared status helper.
 - Quick actions, priority exception links and Analytics report/drill-down links respect existing route access. No server/API/DB/auth-policy/Finance formula/dependency changes.
 - Stage 5 browser and accessibility verification remains unverified. Next: complete Overview §4.1/§4.10 review, then Analytics.
+
+## Stage 4 structural slice — Dashboard financial source consistency and issued-record semantics · 25 October 2026
+
+- **Requirements:** VIEW-DASH-OVERVIEW and VIEW-DASH-ANALYTICS, per Main-Content Restructuring Specification §4.1 and §4.10.
+- **Before:** Dashboard duplicated invoice date/status and outstanding-balance fallbacks in several surfaces. Payment aggregation only read the direct payments array; invoice-history availability did not distinguish quotations/non-issued rows from issued-invoice history.
+- **After:** Dashboard reuses existing Finance workbook helpers for invoice date, issued-invoice inclusion, outstanding balances and payment rows. The helper retains its supported legacy payment fallback. Financial trend availability is currency-aware; quotations/non-issued rows do not count as invoice history. Cancelled, canceled, voided and deleted expenses are excluded. Cash collected does not fall back to monthly revenue.
+- **Scope:** Frontend and regression tests only. Finance formula definitions, API/backend, DB/schema, authentication and permission policies were not changed.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-dashboard-analytics-structure.test.ts; tests/dashboard-metric-truthfulness.test.ts.
+- **Evidence:** helper reuse [1ce6337c](https://github.com/Kapitech-Agency/kapitech-ams/commit/1ce6337ce2b08d69118ecec2e6e0aa61734a4283); issued invoice and expense-state filtering [8e3b461f](https://github.com/Kapitech-Agency/kapitech-ams/commit/8e3b461fbab1b19e7fdeb42bdcf890efef2a419a); final regression alignment [684bd04b](https://github.com/Kapitech-Agency/kapitech-ams/commit/684bd04b6cdbc839edbc3090afda3b1f90b4bb51).
+- **Validation:** Quality Gate [40167743158 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167743158): typecheck, regression suite, production build. AMS CI [40167743171 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167743171); typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed. Existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828 caused downstream build/package/HTTP smoke checks to be skipped.
+- **Open:** authenticated browser/data, role/direct-route, canonical viewport, keyboard/focus, contrast, touch and assistive-technology verification remain NOT VERIFIED. Stage 5 sign-off is pending.
+- **Next:** complete Overview region-by-region against §4.1/§4.10, then finish Analytics acceptance. Stay within Dashboard.

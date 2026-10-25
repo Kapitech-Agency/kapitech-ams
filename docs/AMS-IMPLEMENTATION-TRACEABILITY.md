@@ -1287,3 +1287,19 @@ Current source/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-
 Current source/tests cover a shared global reporting-period filter; explicit no-record/unavailable financial history; excluding quotation-type rows from invoice value/receivables and canceled expense statuses from trends; and role-aware internal route destinations for quick actions, priority exceptions and Analytics drill-downs. No server/API/schema/auth policy/Finance formula changes.
 
 Still unverified: authenticated browser data, roles/direct URLs, responsive and zoom matrix, keyboard/focus, contrast, touch and assistive technology. The Dashboard module remains active; finish Overview, then Analytics before moving to Inbox.
+
+### VIEW-DASH-OVERVIEW / VIEW-DASH-ANALYTICS: Reuse the canonical Finance source contract · 25 October 2026
+
+**Current source/test SHA:** [684bd04b](https://github.com/Kapitech-Agency/kapitech-ams/commit/684bd04b6cdbc839edbc3090afda3b1f90b4bb51). Helper reuse [1ce6337c](https://github.com/Kapitech-Agency/kapitech-ams/commit/1ce6337ce2b08d69118ecec2e6e0aa61734a4283); issued-record and expense-state filtering [8e3b461f](https://github.com/Kapitech-Agency/kapitech-ams/commit/8e3b461fbab1b19e7fdeb42bdcf890efef2a419a); final assertion alignment [684bd04b](https://github.com/Kapitech-Agency/kapitech-ams/commit/684bd04b6cdbc839edbc3090afda3b1f90b4bb51).
+
+Dashboard trend buckets use getInvoiceDate and isIssuedInvoice from the Finance workbook layer. Monthly cash collection uses getPaymentRows, including supported legacy payment fallback. Current outstanding and Analytics receivables use getInvoiceOutstanding. This removes the Dashboard-specific duplicate invoice-balance formula while preserving Finance-owned definitions.
+
+Quotation/non-issued invoice records do not count as invoice history. Currency mismatch is not treated as a zero-value trend. Cancelled/canceled/voided/deleted expenses do not enter financial trend buckets. Cash collected does not fall back to monthly revenue. The arithmetic difference remains distinct from posted profit. Overview and Analytics share the topbar reporting period; All dates explicitly uses the recent 30-day default window.
+
+**Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-dashboard-analytics-structure.test.ts; tests/dashboard-metric-truthfulness.test.ts. No Finance formulas, payment posting, API/backend, database/schema, authentication or permission policy changed.
+
+**Validation:** exact-SHA Quality Gate [40167743158 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167743158), including typecheck, regression tests and production build. AMS CI [40167743171 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167743171) due to existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; downstream production build, packaged migration verification and HTTP smoke were skipped.
+
+**Unverified:** authenticated data, roles/direct URLs, responsive/zoom viewports, keyboard/focus, contrast, touch and assistive technology. Stage 5 approval remains pending.
+
+**Next:** finish Dashboard Overview region by region, then close Analytics acceptance. Do not move to Inbox.
