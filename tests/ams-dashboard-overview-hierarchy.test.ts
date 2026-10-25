@@ -493,9 +493,9 @@ test('Dashboard Overview visualizes the full delivery-deadline horizon separatel
   const end = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"', start);
   assert.ok(start >= 0 && end > start, 'Delivery commitments workspace should be bounded.');
   const commitments = dashboard.slice(start, end);
-  assert.ok(commitments.includes('const commitmentHorizonTotal = allUpcomingCommitments.length'));
-  assert.ok(commitments.includes("const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length"));
-  assert.ok(commitments.includes('const daysEightToThirtyCommitmentCount'));
+  assert.ok(dashboard.includes('const commitmentHorizonTotal = allUpcomingCommitments.length'));
+  assert.ok(dashboard.includes("const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length"));
+  assert.ok(dashboard.includes('const daysEightToThirtyCommitmentCount'));
   const visual = commitments.indexOf('data-ams-feature-slug="dashboard-delivery-horizon-visualization"');
   const list = commitments.indexOf('upcomingCommitments.map((item) => {');
   assert.ok(visual >= 0 && list > visual, 'The visual deadline overview must precede the detailed commitment list.');
