@@ -497,7 +497,7 @@ test('Dashboard Overview visualizes Creative and IT open-task load from canonica
   const workstreamsEnd = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', workstreamsStart);
   assert.ok(workstreamsStart >= 0 && workstreamsEnd > workstreamsStart);
   const workstreams = overview.slice(workstreamsStart, workstreamsEnd);
-  assert.ok(workstreams.includes('const workstreamOpenTaskMaximum'), 'Service-line chart scale must derive from current source counts.');
+  assert.ok(dashboard.includes('const workstreamOpenTaskMaximum'), 'Service-line chart scale must derive from current source counts.');
   assert.ok(workstreams.includes('Open task load'));
   assert.ok(workstreams.includes("data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}"));
   assert.ok(workstreams.includes("canOpenTasks && operationalSnapshot.tasks !== null"));

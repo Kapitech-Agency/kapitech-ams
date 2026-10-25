@@ -2176,7 +2176,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminPanel
             className="min-w-0 min-[1100px]:col-span-4"
             title="Creative & IT workstreams"
-            description="Bars compare open task volume across saved service lines. Review, blocked, unassigned and overdue task flags can overlap; they are not stacked as parts of a total."
+            description="Bars compare open task volume across saved service lines. Other / Unclassified remains visible when a saved service category is missing. Review, blocked, unassigned and overdue task flags can overlap; they are not stacked as parts of a total."
             bodyClassName="p-0"
           >
             {!canOpenProjects ? (
