@@ -243,7 +243,7 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   assert.ok(sidebar.includes('aria-label="Primary navigation"'));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(dashboard.includes('api.finance.getExpenses()') && dashboard.includes('api.tasks.getAll()'));
-  assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />') && dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} onRangeChange={setRange} />'));
+  assert.ok(dashboard.includes('<PerformanceView') && dashboard.includes('matchesDate={matchesDate}') && dashboard.includes('reportPeriodLabel={reportPeriodLabel}') && dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} onRangeChange={setRange} />'));
   assert.ok(dashboard.includes('className="mb-0"'));
   assert.equal(dashboard.includes('ariaLabel="Dashboard view"'), false);
   assert.ok(!dashboard.includes('-mt-2'));

@@ -248,7 +248,7 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
     'api.finance.getExpenses()'
   ]) assert.ok(dashboard.includes(sourceCall), 'Dashboard source missing: ' + sourceCall);
 
-  assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />'));
+  assert.ok(dashboard.includes('<PerformanceView') && dashboard.includes('matchesDate={matchesDate}') && dashboard.includes('reportPeriodLabel={reportPeriodLabel}'));
   assert.ok(dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} onRangeChange={setRange} />'));
   const analyticsView = dashboard.slice(dashboard.indexOf('const AnalyticsView:'), dashboard.indexOf('export const GlobalExecutiveDashboard'));
   assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-controls"'), 'Analytics report selection and scope controls must precede report content.');
