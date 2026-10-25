@@ -35,10 +35,11 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(attentionCenter.includes("min-[1100px]:col-span-12"), 'Exception queue uses full width when Inbox is not available to the role.');
   assert.ok(attentionCenter.includes('dashboard-priority-exceptions'));
   assert.ok(attentionCenter.includes('dashboard-inbox-triage'));
-  assert.ok(overview.includes('Operational queues'));
-  assert.ok(overview.includes('Current open records'));
-  assert.ok(overview.includes('Overdue and next 30 days'));
-  assert.ok(overview.includes('Current month · current receivables'));
+  assert.ok(overview.includes('Current operational queues'));
+  assert.ok(overview.includes('Dashboard source scope'));
+  assert.equal(overview.includes('grid grid-cols-1 gap-2 border-t border-line pt-3 sm:grid-cols-2 min-[1100px]:grid-cols-4'), false, 'Reporting scope should not be rendered as four nested text cards.');
+  assert.ok(overview.includes('Deadlines: overdue + next 30 days'));
+  assert.ok(overview.includes('Finance: current month + receivables'));
   assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
   assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
   assert.ok(deliveryDeskStart > indicatorsStart, 'Task-level delivery work follows the decision indicators.');
@@ -87,7 +88,7 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes('grid grid-cols-2 gap-2 sm:grid-cols-4'));
   assert.ok(overview.includes("label: 'Total', count: attentionSeveritySummary.total"));
   assert.ok(overview.includes("aria-label={'New inquiries: ' + inboxTriageSummary.newCount + ' out of ' + inboxTriageSummary.openCount + ' open records.'}"));
-  assert.ok(overview.includes('min-h-[78px]'));
+  assert.ok(overview.includes('min-h-[68px]'));
 
   assert.equal(overview.includes('title="Invoices vs expenses"'), false,
     'Overview should not repeat the financial trend that belongs in Analytics.');

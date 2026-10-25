@@ -1990,13 +1990,23 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           </div>
           <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">{reportPeriodEnabled ? 'Selected period' : 'Current operations'}</span>
         </div>
-        <div className="grid grid-cols-1 gap-2 border-t border-line pt-3 sm:grid-cols-2 min-[1100px]:grid-cols-4">
-          <div className="flex min-w-0 items-center gap-2.5 rounded-control border border-line bg-bg px-3 py-2.5"><FolderKanban size={15} className="shrink-0 text-muted" aria-hidden="true" /><div className="min-w-0"><p className="text-[10px] text-muted">Operational queues</p><p className="mt-0.5 text-xs font-medium text-fg">Current open records</p></div></div>
-          <div className="flex min-w-0 items-center gap-2.5 rounded-control border border-line bg-bg px-3 py-2.5"><CalendarDays size={15} className="shrink-0 text-warning" aria-hidden="true" /><div className="min-w-0"><p className="text-[10px] text-muted">Delivery window</p><p className="mt-0.5 text-xs font-medium text-fg">Overdue and next 30 days</p></div></div>
-          <div className="flex min-w-0 items-center gap-2.5 rounded-control border border-line bg-bg px-3 py-2.5"><Clock3 size={15} className="shrink-0 text-muted" aria-hidden="true" /><div className="min-w-0"><p className="text-[10px] text-muted">Recorded time</p><p className="mt-0.5 text-xs font-medium text-fg">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</p></div></div>
-          <div className="flex min-w-0 items-center gap-2.5 rounded-control border border-line bg-bg px-3 py-2.5"><CircleDollarSign size={15} className="shrink-0 text-muted" aria-hidden="true" /><div className="min-w-0"><p className="text-[10px] text-muted">Finance control</p><p className="mt-0.5 text-xs font-medium text-fg">Current month · current receivables</p></div></div>
+        <div className="flex flex-col gap-3 border-t border-line pt-3 min-[900px]:flex-row min-[900px]:items-center min-[900px]:justify-between">
+          <div className="flex min-w-0 flex-wrap gap-2" aria-label="Dashboard source scope">
+            <span className="inline-flex min-h-8 items-center gap-2 rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">
+              <FolderKanban size={13} className="shrink-0" aria-hidden="true" />
+              Current operational queues
+            </span>
+            <span className="inline-flex min-h-8 items-center gap-2 rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">
+              <CalendarDays size={13} className="shrink-0" aria-hidden="true" />
+              Deadlines: overdue + next 30 days
+            </span>
+            <span className="inline-flex min-h-8 items-center gap-2 rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">
+              <CircleDollarSign size={13} className="shrink-0" aria-hidden="true" />
+              Finance: current month + receivables
+            </span>
+          </div>
+          <p className="text-[10px] leading-4 text-muted min-[900px]:max-w-[230px]">Trends follow the selected period; task queues and project states show current records.</p>
         </div>
-        <p className="text-[10px] leading-4 text-muted">Trends follow the selected period; task queues and project states show current records.</p>
       </section>
 
       <section className="space-y-3" data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
@@ -2072,7 +2082,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         ? Users
                         : Clock3;
                 return (
-                  <article key={String(item.id || category + '-' + item.title || index)} className="flex min-h-[78px] min-w-0 flex-col justify-center gap-2 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
+                  <article key={String(item.id || category + '-' + item.title || index)} className="flex min-h-[68px] min-w-0 flex-col justify-center gap-2 px-3 py-2.5 min-[900px]:flex-row min-[900px]:items-center">
                     <span className={['flex h-9 w-9 shrink-0 items-center justify-center rounded-control border', toneClasses[tone]].join(' ')}>
                       <AttentionIcon size={15} aria-hidden="true" />
                     </span>
@@ -2159,7 +2169,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       const services = Array.isArray(lead.services) ? lead.services.filter(Boolean).slice(0, 2).join(' · ') : '';
                       const received = isValidDashboardDate(dateKey(lead.createdAt)) ? formatDashboardDate(dateKey(lead.createdAt)) : 'Date not recorded';
                       return (
-                        <article key={lead.id} className="flex min-h-[78px] min-w-0 flex-col justify-center gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                        <article key={lead.id} className="flex min-h-[68px] min-w-0 flex-col justify-center gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="line-clamp-1 break-words text-xs font-semibold text-fg">{lead.fullName || 'Inbound contact'}</p>
