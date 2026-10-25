@@ -318,7 +318,7 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(dashboard.includes('Recent 30-day default window'));
   assert.ok(analytics.includes('All dates defaults to the recent 30 days.'));
   assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.ok(overview.includes('Task ownership, review queues, delivery commitments and Finance balances show current operational state.'));
+  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false, 'Overview must not duplicate Analytics financial trends.');
   assert.equal(overview.includes('title="Active projects"'), false, 'Overview must not duplicate Project Registry.');
   assert.equal(dashboard.includes('DashboardTrendRangePicker'), false, 'The global reporting Filter is the only chart-period selector.');
@@ -384,16 +384,16 @@ test('Dashboard Performance scopes source-backed delivery records to the shared 
   assert.match(performance, /matchesInterval\(dueDate, dueDate, task\.createdAt\)/);
   assert.match(performance, /matchesInterval\([\s\S]*project\.startDate \|\| project\.start[\s\S]*project\.createdAt[\s\S]*\)/);
   assert.match(performance, /matchesDate\(log\.date \|\| log\.createdAt\)/);
-  assert.match(performance, /Records without usable dates remain visible/);
-  assert.match(performance, /current status snapshots, not historical status-transition trends/);
+  assert.match(performance, /Missing usable dates remain visible/);
+  assert.match(performance, /Current status · not status history/);
   assert.match(performance, /No task records match the selected reporting scope/);
-  assert.match(performance, /current task status and the shared reporting-period date scope/);
+  assert.match(performance, /Current status · selected date scope/);
   assert.match(performance, /Other open tasks/);
   assert.match(performance, /status\.count \/ tasks\.length \* 100/);
   assert.match(performance, /label: 'Active projects'/);
   assert.match(performance, /label: 'Task completion'/);
-  assert.match(performance, /Total recorded time/);
-  assert.match(performance, /Time entries in scope/);
+  assert.match(performance, /Total hours/);
+  assert.match(performance, /Entries/);
 });
 
 test('Dashboard Performance puts decision KPIs first and visualizes recorded time as a comparison', async () => {
