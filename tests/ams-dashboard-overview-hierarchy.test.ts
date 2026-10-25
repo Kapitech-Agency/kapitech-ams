@@ -312,7 +312,7 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(analytics.includes("ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. Exact values are listed in the table below.'}"));
   assert.ok(dashboard.includes('Recent 30-day default window'));
-  assert.ok(analytics.includes('recent 30-day default window'));
+  assert.ok(analytics.includes('“All dates” uses a labelled recent 30-day chart window.'));
   assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
   assert.ok(overview.includes('Task ownership, review queues, delivery commitments and Finance balances show current operational state.'));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false, 'Overview must not duplicate Analytics financial trends.');
@@ -382,8 +382,10 @@ test('Dashboard Performance scopes source-backed delivery records to the shared 
   assert.match(performance, /current task status and the shared reporting-period date scope/);
   assert.match(performance, /Other open tasks/);
   assert.match(performance, /status\.count \/ tasks\.length \* 100/);
-  assert.match(performance, /Active projects in scope/);
-  assert.match(performance, /Tasks in scope/);
+  assert.match(performance, /label: 'Active projects'/);
+  assert.match(performance, /label: 'Task completion'/);
+  assert.match(performance, /Total recorded time/);
+  assert.match(performance, /Time entries in scope/);
 });
 
 test('Dashboard Performance puts decision KPIs first and visualizes recorded time as a comparison', async () => {
@@ -454,7 +456,7 @@ test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox
   assert.ok(inquiryStart >= 0 && projectsStart > inquiryStart, 'Inquiry analysis should be a distinct selectable report before project status.');
   const inquiry = analytics.slice(inquiryStart, projectsStart);
 
-  assert.ok(dashboard.includes("{ value: 'inquiry-pipeline', label: 'Inquiry pipeline' }"));
+  assert.ok(dashboard.includes("{ value: 'inquiry-pipeline', label: 'Inquiry pipeline', description: 'Current demand, status and requested services' }"));
   assert.ok(analytics.includes("option.value !== 'inquiry-pipeline' || canOpenInbox"));
   assert.ok(analytics.includes("if (!canOpenInbox && report === 'inquiry-pipeline') setReport('financial-movement')"));
   assert.ok(analytics.includes("record.type === 'inquiry'"));

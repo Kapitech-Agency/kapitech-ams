@@ -694,11 +694,11 @@ const PerformanceView: React.FC<{
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3 rounded-control border border-line bg-bg p-3 min-[600px]:grid-cols-2">
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted">Total recorded time</p>
+                <p className="text-[10px] font-medium text-muted">Total recorded time</p>
                 <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{Math.floor(totalTrackedMinutes / 60)}h {totalTrackedMinutes % 60}m</p>
               </div>
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted">Time entries in scope</p>
+                <p className="text-[10px] font-medium text-muted">Time entries in scope</p>
                 <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{trackedTimeEntryCount}</p>
               </div>
             </div>
