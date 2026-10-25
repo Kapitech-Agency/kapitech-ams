@@ -390,7 +390,8 @@ export const DonutChart: React.FC<{
   data: DonutPoint[];
   ariaLabel: string;
   showLegend?: boolean;
-}> = ({ data, ariaLabel, showLegend = true }) => {
+  centerLabel?: string;
+}> = ({ data, ariaLabel, showLegend = true, centerLabel = 'Projects' }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const total = data.reduce((sum, point) => sum + Math.max(0, point.value), 0);
   const radius = 42;
@@ -437,7 +438,7 @@ export const DonutChart: React.FC<{
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className="text-2xl font-medium tabular-nums text-fg">{total}</span>
-          <span className="text-xs text-muted">Projects</span>
+          <span className="text-xs text-muted">{centerLabel}</span>
         </div>
       </div>
 

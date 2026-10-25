@@ -18,7 +18,7 @@ import {
   Users,
 } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge } from './AdminModulePrimitives';
-import { DonutChart, TrendChart } from '../charts/DashboardCharts';
+import { DonutChart, TrendChart, type DonutPoint, type TrendPoint } from '../charts/DashboardCharts';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
@@ -342,6 +342,104 @@ const describeFinancialTrendScope = (trend: Array<{ startDate: string; endDate: 
   return 'Recent 30-day default window (' + formatFinancialTrendDate(trend[0].startDate) + ' – ' + formatFinancialTrendDate(localDateKey(lastEnd)) + ')';
 };
 
+type InquiryTrendSpec = { label: string; start: string; end: string };
+
+const formatInquiryTrendBucketLabel = (start: string, endExclusive: string) => {
+  const startDate = new Date(start + 'T00:00:00');
+  const lastDate = new Date(endExclusive + 'T00:00:00');
+  lastDate.setDate(lastDate.getDate() - 1);
+  const formatter = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' });
+  return formatter.format(startDate) + '–' + formatter.format(lastDate);
+};
+
+const buildInquiryVolumeTrend = (
+  inquiries: ContactSubmission[],
+  mode: ReportingPeriodMode,
+  value: string,
+  periodEnabled: boolean,
+  periodLabel: string
+): { data: TrendPoint[]; scopeLabel: string } => {
+  const period = periodEnabled ? getReportingPeriodRange(value, mode) : null;
+  const specs: InquiryTrendSpec[] = [];
+  if (period) {
+    const start = new Date(period.startDate + 'T00:00:00');
+    const endExclusive = new Date(period.endDate + 'T00:00:00');
+    endExclusive.setDate(endExclusive.getDate() + 1);
+    if (mode === 'month') {
+      let cursor = start;
+      while (cursor < endExclusive) {
+        const next = new Date(cursor);
+        next.setDate(next.getDate() + 7);
+        const end = next < endExclusive ? next : endExclusive;
+        const startKey = localDateKey(cursor);
+        const endKey = localDateKey(end);
+        specs.push({ label: formatInquiryTrendBucketLabel(startKey, endKey), start: startKey, end: endKey });
+        cursor = end;
+      }
+    } else {
+      let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      while (cursor < endExclusive) {
+        const next = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+        const end = next < endExclusive ? next : endExclusive;
+        const startKey = localDateKey(cursor);
+        const endKey = localDateKey(end);
+        specs.push({
+          label: cursor.toLocaleDateString('en-GB', { month: 'short' }),
+          start: startKey,
+          end: endKey,
+        });
+        cursor = next;
+      }
+    }
+  } else {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(today);
+    start.setDate(today.getDate() - 29);
+    const endExclusive = new Date(today);
+    endExclusive.setDate(endExclusive.getDate() + 1);
+    let cursor = start;
+    while (cursor < endExclusive) {
+      const next = new Date(cursor);
+      next.setDate(next.getDate() + 7);
+      const end = next < endExclusive ? next : endExclusive;
+      const startKey = localDateKey(cursor);
+      const endKey = localDateKey(end);
+      specs.push({ label: formatInquiryTrendBucketLabel(startKey, endKey), start: startKey, end: endKey });
+      cursor = end;
+    }
+  }
+
+  const data = specs.map((spec) => ({
+    label: spec.label,
+    primary: inquiries.reduce((count, inquiry) => {
+      const createdDate = dateKey(inquiry.createdAt);
+      if (!createdDate || !isValidDashboardDate(createdDate) || createdDate < spec.start || createdDate >= spec.end) return count;
+      return count + 1;
+    }, 0),
+  }));
+  const lastEndExclusive = specs.length ? new Date(specs[specs.length - 1].end + 'T00:00:00') : null;
+  if (lastEndExclusive) lastEndExclusive.setDate(lastEndExclusive.getDate() - 1);
+  const scopeLabel = period && specs.length
+    ? periodLabel
+    : specs.length && lastEndExclusive
+      ? 'Recent 30-day default window (' + formatFinancialTrendDate(specs[0].start) + ' – ' + formatFinancialTrendDate(localDateKey(lastEndExclusive)) + ')'
+      : 'Period unavailable';
+  return { data, scopeLabel };
+};
+
+const formatInquiryStatusLabel = (status: string) =>
+  status.replace(/[-_]/g, ' ').replace(/\\b\\w/g, (character) => character.toUpperCase());
+
+const getInquiryStatusTone = (status: string): DonutPoint['tone'] => {
+  const normalized = status.trim().toLowerCase().replace(/[_\\s]+/g, '-');
+  if (normalized === 'new') return 'accent';
+  if (['in-review', 'contacted', 'screening', 'shortlisted', 'interview'].includes(normalized)) return 'info';
+  if (normalized === 'hired') return 'success';
+  if (normalized === 'rejected') return 'danger';
+  return 'muted';
+};
+
 const DashboardUnavailable: React.FC<{ title: string; description: string }> = ({ title, description }) => (
   <div className="flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-8 text-center" role="status">
     <AlertTriangle size={20} className="text-muted" aria-hidden="true" />
@@ -644,6 +742,21 @@ const AnalyticsView: React.FC<{
     });
     return groups;
   }, [] as Array<{ service: string; count: number }>).sort((a, b) => b.count - a.count || a.service.localeCompare(b.service));
+  const inquiryStatusChartData: DonutPoint[] = inquiryStatusGroups.map((group) => ({
+    label: formatInquiryStatusLabel(group.status),
+    value: group.count,
+    tone: getInquiryStatusTone(group.status),
+  }));
+  const inquiryVolumeTrend = buildInquiryVolumeTrend(
+    inquiryRecords,
+    reportPeriodMode,
+    reportPeriodValue,
+    reportPeriodEnabled,
+    reportPeriodLabel
+  );
+  const datedInquiryCount = inquiryRecords.filter((record) => isValidDashboardDate(dateKey(record.createdAt))).length;
+  const undatedInquiryCount = inquiryRecords.length - datedInquiryCount;
+  const maxInquiryServiceCount = Math.max(1, ...inquiryServiceGroups.map((group) => group.count));
 
   const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
   const financialSourceRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0;
@@ -714,7 +827,7 @@ const AnalyticsView: React.FC<{
           )}
         </div>
         <p className="mt-3 text-xs leading-5 text-muted">
-          Financial movement uses the shared Filter selection. When it is set to All dates, this chart uses the recent 30-day default window. Receivables and project status are current snapshots. Inquiry pipeline summarizes current canonical inquiry status and requested services, not historic conversion performance or booked revenue.
+          Financial movement uses the shared Filter selection. When set to All dates, its chart uses the recent 30-day default window. Inquiry volume also follows the shared Filter and uses the same default window. Receivables and project status are current snapshots; inquiry status and service demand are current-state groupings. No historic conversion performance or booked revenue is inferred.
         </p>
       </section>
 
@@ -895,32 +1008,96 @@ const AnalyticsView: React.FC<{
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-1 gap-4 min-[900px]:grid-cols-2">
-                  <section className="min-w-0 space-y-2" aria-label="Inquiry status distribution">
-                    <h3 className="text-xs font-semibold text-fg">Current status distribution</h3>
-                    <div className="divide-y divide-line">
-                      {inquiryStatusGroups.map((group) => (
-                        <div key={group.status} className="flex items-center justify-between gap-3 py-2.5">
-                          <span className="text-xs text-fg">{group.status.replace(/[-_]/g, ' ')}</span>
-                          <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{group.count}</span>
-                        </div>
-                      ))}
+                <section
+                  className="space-y-3 rounded-card border border-line bg-bg p-3 sm:p-4"
+                  data-ams-feature-slug="dashboard-analytics-inquiry-volume-trend"
+                  aria-label="Inquiry volume trend"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-fg">Inquiry volume</h3>
+                      <p className="mt-1 text-[11px] leading-5 text-muted">{inquiryVolumeTrend.scopeLabel} · grouped by saved submission date</p>
                     </div>
+                    <span className="inline-flex w-fit items-center gap-2 rounded-badge border border-line bg-panel px-2.5 py-1 text-[10px] text-muted">
+                      <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
+                      New inquiries
+                    </span>
+                  </div>
+                  {datedInquiryCount > 0 && inquiryVolumeTrend.data.length > 0 ? (
+                    <TrendChart
+                      data={inquiryVolumeTrend.data}
+                      primaryLabel="New inquiries"
+                      primaryFormat={(count) => count + (count === 1 ? ' inquiry' : ' inquiries')}
+                      ariaLabel={'New inquiry count by date bucket for ' + inquiryVolumeTrend.scopeLabel + '. The chart uses saved inquiry submission dates.'}
+                    />
+                  ) : (
+                    <div className="flex min-h-32 flex-col items-center justify-center rounded-control border border-line bg-panel px-4 py-6 text-center" role="status">
+                      <CalendarDays size={18} className="text-muted" aria-hidden="true" />
+                      <p className="mt-2 text-xs font-semibold text-fg">Inquiry volume trend unavailable</p>
+                      <p className="mt-1 max-w-md text-[11px] leading-5 text-muted">No usable submission dates are available for the inquiry records. The current status totals remain available above.</p>
+                    </div>
+                  )}
+                  <p className="text-[11px] leading-5 text-muted">
+                    {undatedInquiryCount > 0
+                      ? undatedInquiryCount + ' inquiry record(s) without a valid submission date are excluded from this trend. Counts above still include those records.'
+                      : 'The selected period scopes this volume trend only. Status and service demand below are current snapshots.'}
+                  </p>
+                </section>
+
+                <div className="grid grid-cols-1 gap-4 min-[900px]:grid-cols-2">
+                  <section
+                    className="min-w-0 space-y-3 rounded-card border border-line bg-bg p-3 sm:p-4"
+                    data-ams-feature-slug="dashboard-analytics-inquiry-status-visualization"
+                    aria-label="Inquiry status distribution"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-fg">Current status distribution</h3>
+                        <p className="mt-1 text-[11px] text-muted">All current inquiry records</p>
+                      </div>
+                      <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">Current</span>
+                    </div>
+                    {inquiryStatusChartData.length > 0 ? (
+                      <DonutChart
+                        data={inquiryStatusChartData}
+                        centerLabel="Inquiries"
+                        ariaLabel={'Current inquiry status distribution: ' + inquiryStatusChartData.map((item) => item.label + ' ' + item.value).join(', ')}
+                      />
+                    ) : (
+                      <p className="rounded-control border border-line bg-panel px-3 py-3 text-xs text-muted" role="status">No current status values are available to chart.</p>
+                    )}
                   </section>
-                  <section className="min-w-0 space-y-2" aria-label="Requested services">
-                    <h3 className="text-xs font-semibold text-fg">Requested services</h3>
+                  <section
+                    className="min-w-0 space-y-3 rounded-card border border-line bg-bg p-3 sm:p-4"
+                    aria-label="Requested services"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-fg">Requested services</h3>
+                        <p className="mt-1 text-[11px] text-muted">Inquiry count by service category</p>
+                      </div>
+                      <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">Top {Math.min(8, inquiryServiceGroups.length)}</span>
+                    </div>
                     <p className="text-[11px] leading-5 text-muted">One inquiry may request multiple services, so service counts can overlap.</p>
                     {inquiryServiceGroups.length > 0 ? (
-                      <div className="divide-y divide-line">
-                        {inquiryServiceGroups.slice(0, 8).map((group) => (
-                          <div key={group.service} className="flex items-center justify-between gap-3 py-2.5">
-                            <span className="break-words text-xs text-fg">{group.service}</span>
-                            <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{group.count}</span>
-                          </div>
-                        ))}
+                      <div className="space-y-3">
+                        {inquiryServiceGroups.slice(0, 8).map((group) => {
+                          const width = Math.max(4, (group.count / maxInquiryServiceCount) * 100);
+                          return (
+                            <div key={group.service} className="space-y-1.5">
+                              <div className="flex min-w-0 items-start justify-between gap-3">
+                                <span className="min-w-0 break-words text-xs text-fg">{group.service}</span>
+                                <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{group.count}</span>
+                              </div>
+                              <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={group.service + ': ' + group.count + ' inquiries'}>
+                                <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: width + '%' }} />
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
-                      <p className="rounded-control border border-line bg-bg px-3 py-3 text-xs text-muted" role="status">No requested service categories were recorded for these inquiries.</p>
+                      <p className="rounded-control border border-line bg-panel px-3 py-3 text-xs text-muted" role="status">No requested service categories were recorded for these inquiries.</p>
                     )}
                   </section>
                 </div>

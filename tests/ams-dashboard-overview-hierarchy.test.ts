@@ -369,6 +369,7 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
 
 test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox access is allowed', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const charts = await read('src/components/charts/DashboardCharts.tsx');
   const start = dashboard.indexOf('const AnalyticsView:');
   const end = dashboard.indexOf('export const GlobalExecutiveDashboard', start);
   assert.ok(start >= 0 && end > start, 'Analytics workspace should be bounded.');
@@ -395,6 +396,16 @@ test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox
   assert.ok(inquiry.includes('Client linkage requires a saved Client Directory ID.'));
   assert.ok(inquiry.includes('No conversion rate or booked revenue is inferred.'));
   assert.ok(inquiry.includes('to="/admin/inbox"'));
+  assert.ok(inquiry.includes('buildInquiryVolumeTrend('));
+  assert.ok(inquiry.includes('data-ams-feature-slug="dashboard-analytics-inquiry-volume-trend"'));
+  assert.ok(inquiry.includes('data-ams-feature-slug="dashboard-analytics-inquiry-status-visualization"'));
+  assert.ok(inquiry.includes('<TrendChart'));
+  assert.ok(inquiry.includes('<DonutChart'));
+  assert.ok(inquiry.includes('bg-accent transition-[width]'));
+  assert.ok(inquiry.includes('grouped by saved submission date'));
+  assert.ok(inquiry.includes('without a valid submission date are excluded from this trend'));
+  assert.ok(charts.includes('centerLabel?: string'));
+  assert.ok(charts.includes("centerLabel = 'Projects'"), 'Existing donut users must retain their current center label by default.');
   assert.equal(inquiry.includes('budget'), false, 'Budget strings must not be aggregated as currency without a canonical numeric model.');
 });
 
