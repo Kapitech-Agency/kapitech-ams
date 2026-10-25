@@ -881,3 +881,14 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - **AMS CI:** [40182831679](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40182831679) failed at the existing high body-parser@1.20.6 audit advisory GHSA-27r3-jxmh-p828 after typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed.
 - **Unverified:** authenticated client/project/task data, role/direct-route behavior, viewport/reflow, keyboard/focus, contrast, touch, screen reader and Stage 5 sign-off.
 - **Next:** finish Dashboard Overview acceptance against §4.1/§4.10; then finish Analytics. Do not move to Inbox.
+
+
+## Dashboard · Workstream/client identity edge cases · 25 October 2026
+
+**Current source/test SHA:** [367acf31](https://github.com/Kapitech-Agency/kapitech-ams/commit/367acf319a5124224c07b74c52258d5ef4304dc4). Exact-SHA Quality Gate [40183390506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390506).
+
+- Unlinked tasks no longer match an empty-string project ID in every service-line project set. A task without projectId can be categorized only through its own saved serviceLine.
+- Client project counts use project ID where present and the existing project-detail href as fallback when an ID is missing. This prevents a visible client project row from being counted as zero solely because the identifier is absent.
+- Regression coverage checks both safeguards. No new API or schema introduced.
+- **AMS CI:** [40183390498](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390498) failed at the existing high body-parser@1.20.6 advisory; typecheck, migrations, security regression and PostgreSQL integration passed.
+- **Next:** finish Dashboard Overview §4.1/§4.10 acceptance, then Analytics. Browser/role/accessibility review remains NOT VERIFIED.

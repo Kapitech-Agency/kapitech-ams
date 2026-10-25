@@ -2292,3 +2292,12 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Validation:** exact-SHA Quality Gate [40182831752 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40182831752): typecheck, regression suite and production build. AMS CI [40182831679 failed at the existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40182831679); typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed. Existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828 caused dependent build/package/HTTP smoke steps to be skipped.
 - **Unverified:** authenticated live data, role/direct routes, required viewport sweep, keyboard/focus, contrast, touch, assistive technology and Stage 5 sign-off. Recent Activity still lacks source per-record destinations.
 - **Next:** complete remaining Dashboard Overview §4.1/§4.10 acceptance, then Dashboard Analytics. Do not move to Inbox.
+
+
+## Stage 4 verification slice — Dashboard workstream identity and missing-ID resilience · 25 October 2026
+
+- **Finding:** Workstream aggregation built its project ID set from stringified IDs including empty strings. An unlinked task with an empty project ID could therefore match every workstream's empty-ID entry. Client aggregation also derived projectCount only from project IDs, potentially showing zero even when a source project lacked an ID but had an existing project-detail identity.
+- **Fix:** Empty project IDs are removed from the workstream matching set. A task without a project ID can match a service line only through its own saved serviceLine. Client aggregation uses the existing project href as fallback count identity when a project ID is absent.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts.
+- **Validation:** Quality Gate [40183390506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390506): typecheck, regression tests and production build. AMS CI [40183390498 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390498) due to the existing high body-parser@1.20.6 advisory after typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed.
+- **Next:** continue Dashboard Overview acceptance against §4.1/§4.10, especially identity, source/route states and remaining current-state semantics. Do not move to Inbox.

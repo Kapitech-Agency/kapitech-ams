@@ -1401,3 +1401,16 @@ A separate Client delivery focus section appears after commitment/resource summa
 **Unverified:** authenticated live values, roles/direct paths, canonical viewport sweep, keyboard/focus, contrast, touch, assistive technology and explicit Stage 5 sign-off. Recent Activity remains limited by the missing per-record destination field.
 
 **Next:** continue Dashboard Overview content acceptance region by region, then close Analytics review. Do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW: Prevent unlinked-task duplication across service lines · 25 October 2026
+
+**Current source/test SHA:** [367acf31](https://github.com/Kapitech-Agency/kapitech-ams/commit/367acf319a5124224c07b74c52258d5ef4304dc4). Quality Gate [40183390506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390506).
+
+The service-line project ID set now excludes empty identifiers. Task/project matching requires a non-empty task projectId before it may match a project's ID. A task without a project ID can still be categorized by its saved serviceLine, but is not repeated across all workstreams through an empty-ID collision. Client delivery aggregation uses an existing project-detail href as fallback identity when the source project lacks an ID.
+
+**Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts.
+
+**Validation:** exact-SHA Quality Gate [40183390506 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390506): typecheck, regression tests and production build. AMS CI [40183390498 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40183390498) due to the existing high body-parser@1.20.6 advisory. Typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; downstream build/package/smoke checks were skipped.
+
+**Next:** continue Dashboard Overview content acceptance against §4.1/§4.10, then complete Analytics. Do not move to Inbox.
