@@ -51,7 +51,9 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
   assert.ok(analytics.includes('No financial records in selected currency'));
   assert.ok(analytics.includes('inCurrencyInvoices.length === 0'));
   assert.ok(analytics.includes('inCurrencyExpenses.length === 0'));
-  assert.ok(analytics.includes('const receivables = inCurrencyInvoices.reduce'));
+  assert.ok(analytics.includes('const receivableInvoices = inCurrencyInvoices.filter(isIssuedInvoice)'));
+  assert.ok(analytics.includes('const receivables = receivableInvoices.reduce((sum, invoice) => sum + getInvoiceOutstanding(invoice), 0)'));
+  assert.ok(analytics.includes('const openInvoiceCount = receivableInvoices.filter((invoice) => getInvoiceOutstanding(invoice) > 0).length'));
   assert.ok(analytics.includes('No invoice records in selected currency'));
 });
 

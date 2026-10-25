@@ -34,6 +34,24 @@ test('Dashboard does not substitute monthly revenue for cash collected', () => {
   assert.doesNotMatch(cashKpi, /revenueThisMonth/, 'Revenue must not be used as a cash-received fallback.');
 });
 
+test('Dashboard reuses canonical Finance invoice, issue-date, and payment helpers', () => {
+  assert.ok(dashboard.includes("import { getInvoiceDate, getInvoiceOutstanding, getPaymentRows, isIssuedInvoice } from '../../lib/financeWorkbook';"));
+  const trendStart = dashboard.indexOf('const aggregateFinancialTrend');
+  const trendEnd = dashboard.indexOf('const buildRecentFinancialTrend', trendStart);
+  const trend = dashboard.slice(trendStart, trendEnd);
+  const currentCash = dashboard.slice(dashboard.indexOf('const liveCashCollected'), dashboard.indexOf('const liveOutstanding'));
+  const currentOutstanding = dashboard.slice(dashboard.indexOf('const liveOutstanding'), dashboard.indexOf('const liveMonthlyExpenses'));
+  const analyticsStart = dashboard.indexOf('const receivableInvoices = inCurrencyInvoices.filter(isIssuedInvoice)');
+  const analyticsEnd = dashboard.indexOf('const activeProjects =', analyticsStart);
+  const analytics = dashboard.slice(analyticsStart, analyticsEnd);
+  assert.ok(trend.includes('getInvoiceDate(invoice)') && trend.includes('isIssuedInvoice(invoice)'));
+  assert.ok(currentCash.includes('getPaymentRows(invoice)') && currentCash.includes('isIssuedInvoice(invoice)'));
+  assert.ok(currentOutstanding.includes('getInvoiceOutstanding(invoice)') && currentOutstanding.includes('isIssuedInvoice(invoice)'));
+  assert.ok(analytics.includes('getInvoiceOutstanding(invoice)') && analytics.includes('isIssuedInvoice'));
+  assert.doesNotMatch(currentOutstanding, /const balance = invoice\.balanceDue/);
+  assert.doesNotMatch(analytics, /const paid = Number\(invoice\.amountPaid/);
+});
+
 test('Dashboard financial trends do not treat records in another currency as a zero-value series', () => {
   assert.ok(dashboard.includes("invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency))"));
   assert.ok(dashboard.includes("expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency))"));

@@ -25,6 +25,7 @@ import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { getReportingPeriodRange, type ReportingPeriodMode } from '../../lib/reportingPeriods';
+import { getInvoiceDate, getInvoiceOutstanding, getPaymentRows, isIssuedInvoice } from '../../lib/financeWorkbook';
 
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
 const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const;
@@ -132,9 +133,8 @@ type FinancialTrendSpec = { label: string; start: string; end: string };
 const aggregateFinancialTrend = (specs: FinancialTrendSpec[], invoices: any[], expenses: any[]) =>
   specs.map((spec) => {
     const invoiced = invoices.reduce((sum, invoice) => {
-      const status = String(invoice.status || '').toLowerCase();
-      const day = dateKey(invoice.issueDate || invoice.invoiceDate || invoice.createdAt);
-      if (!day || day < spec.start || day >= spec.end || status === 'draft' || status === 'cancelled' || status === 'voided') return sum;
+      const day = dateKey(getInvoiceDate(invoice));
+      if (!day || day < spec.start || day >= spec.end || !isIssuedInvoice(invoice)) return sum;
       return sum + (Number(invoice.total ?? invoice.amount ?? 0) || 0);
     }, 0);
     const recordedExpenses = expenses.reduce((sum, expense) => {
@@ -467,17 +467,9 @@ const AnalyticsView: React.FC<{
       ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, inCurrencyInvoices, inCurrencyExpenses)
       : buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)
     : [];
-  const receivables = inCurrencyInvoices.reduce((sum, invoice) => {
-    const status = String(invoice.status || '').toLowerCase();
-    if (status === 'paid' || status === 'cancelled' || status === 'voided' || status === 'draft') return sum;
-    const paid = Number(invoice.amountPaid ?? invoice.paidAmount ?? 0) || 0;
-    const balance = Number(invoice.balanceDue ?? Math.max(0, Number(invoice.total || invoice.amount || 0) - paid));
-    return sum + Math.max(0, Number.isFinite(balance) ? balance : 0);
-  }, 0);
-  const openInvoiceCount = inCurrencyInvoices.filter((invoice) => {
-    const status = String(invoice.status || '').toLowerCase();
-    return status !== 'paid' && status !== 'cancelled' && status !== 'voided' && status !== 'draft';
-  }).length;
+  const receivableInvoices = inCurrencyInvoices.filter(isIssuedInvoice);
+  const receivables = receivableInvoices.reduce((sum, invoice) => sum + getInvoiceOutstanding(invoice), 0);
+  const openInvoiceCount = receivableInvoices.filter((invoice) => getInvoiceOutstanding(invoice) > 0).length;
   const activeProjects = snapshot.projects === null
     ? null
     : snapshot.projects.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health)).length;
@@ -1000,16 +992,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     ? activeProjectBudgets.reduce((sum: number, value: number) => sum + value, 0) / activeProjectBudgets.length
     : null;
   const liveCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
-    if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency) return sum;
-    const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
-    return sum + payments.filter((payment: any) => String(payment.date || '').slice(0, 7) === currentMonthKey).reduce((paymentSum: number, payment: any) => paymentSum + Math.max(0, Number(payment.amount) || 0), 0);
+    if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency || !isIssuedInvoice(invoice)) return sum;
+    return sum + getPaymentRows(invoice)
+      .filter((payment) => String(payment.date || '').slice(0, 7) === currentMonthKey)
+      .reduce((paymentSum, payment) => paymentSum + Math.max(0, Number(payment.amount) || 0), 0);
   }, 0);
   const liveOutstanding = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
-    if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency || ['draft', 'cancelled', 'canceled', 'voided', 'deleted', 'paid'].includes(String(invoice.status || '').toLowerCase())) return sum;
-    const balance = invoice.balanceDue != null
-      ? Math.max(0, Number(invoice.balanceDue) || 0)
-      : Math.max(0, (Number(invoice.total ?? invoice.amount ?? 0) || 0) - (Number(invoice.amountPaid ?? invoice.paidAmount ?? 0) || 0));
-    return sum + balance;
+    if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency || !isIssuedInvoice(invoice)) return sum;
+    return sum + getInvoiceOutstanding(invoice);
   }, 0);
   const liveMonthlyExpenses = operationalSnapshot.expenses === null ? null : operationalSnapshot.expenses.reduce((sum: number, expense: any) => {
     if (String(expense.currency || 'IDR').toUpperCase() !== financeCurrency || String(expense.date || '').slice(0, 7) !== currentMonthKey || ['voided', 'cancelled', 'canceled', 'deleted'].includes(String(expense.status || '').toLowerCase())) return sum;
