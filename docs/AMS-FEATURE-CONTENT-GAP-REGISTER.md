@@ -1,7 +1,7 @@
 # AMS Feature & Content Gap Register
 
 **Status:** Stage 3 evidence-backed source inventory refreshed against the latest main on 23 October 2026. Stage 4 changes are recorded per workspace with exact source/test SHA and CI evidence. End-to-end, authenticated-browser, responsive, role and accessibility claims remain unverified until their later roadmap gates.  
-**Last updated:** 25 October 2026. Current Dashboard source/test HEAD [e33d811e](https://github.com/Kapitech-Agency/kapitech-ams/commit/e33d811e77fb759e8268ec7c4df6a60ed5774159); Quality Gate [40200940679 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40200940679). AMS CI [40200940728](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40200940728) passed type check, PostgreSQL migrations, security regression and PostgreSQL integration, then failed at the existing `body-parser@1.20.6` dependency audit advisory.
+**Last updated:** 26 October 2026. Current Dashboard source/test HEAD [64725ba](https://github.com/Kapitech-Agency/kapitech-ams/commit/64725ba5647323c6a7366c45783a14e9f9e5306f). Exact-HEAD Quality Gate [40216837643 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40216837643) including typecheck, regression tests and production build. AMS CI [40216837672](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40216837672) passed type check, PostgreSQL migrations, security regression and PostgreSQL integration, then failed at the existing high body-parser@1.20.6 dependency audit advisory.
 **Repository:** `Kapitech-Agency/kapitech-ams`  
 **Current-state authority:** Current `main`, current source/tests/CI, and authorized runtime evidence  
 **Sequence authority:** [AMS End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md)
@@ -260,3 +260,12 @@ A shared dependency should be fixed before its dependent modules. Never prioriti
 - Keep the progress roll-up in `docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md` for structural UX/UI slices and `docs/AMS-IMPLEMENTATION-TRACEABILITY.md` for feature/workflow requirement IDs and evidence.
 - Before a stage is closed, audit rows for that stage and identify remaining unverified/blocked items. No missing evidence is interpreted as success.
 - Do not claim production readiness until Stage 14's operational gate and Stage 15's deployment verification pass.
+
+## Latest Dashboard Overview card-composition verification — 26 October 2026
+
+- **Requirement:** use the supplied production dashboard as a composition reference, with Finance and Projects as the first/main card row; no artificial rank labels such as “Priority 01”.
+- **Current source:** Finance financial-movement/receivables card + Projects portfolio/risk donut/Creative & IT workload card; then Projects in progress + Needs attention; Task queue + Upcoming deadlines; Team workload + Client delivery focus; Recent activity + Workspace shortcuts.
+- **Source/test commits:** [62abbbcc](https://github.com/Kapitech-Agency/kapitech-ams/commit/62abbbcc8b3f161343b38b4d8d2edf1df5267e2c), [41a48be](https://github.com/Kapitech-Agency/kapitech-ams/commit/41a48be29dd78bc47fef489cb42b79bb49dc2fe7), [1ac957e](https://github.com/Kapitech-Agency/kapitech-ams/commit/1ac957e6fc0e03700a290fdfb0220c8d78a92cd7), [64725ba](https://github.com/Kapitech-Agency/kapitech-ams/commit/64725ba5647323c6a7366c45783a14e9f9e5306f).
+- **Quality Gate:** [40216837643 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40216837643) on exact current HEAD: typecheck, regression tests and production build.
+- **AMS CI:** [40216837672](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40216837672) passed type check, migration, security regression and PostgreSQL integration; blocked only by high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Later packaging/build/HTTP smoke steps did not run.
+- **Still unverified:** authenticated rendering, current role-specific visibility, responsiveness at canonical breakpoints, keyboard/focus/200% zoom and WCAG 2.2 AA checks. Do not start the next module before Dashboard review and explicit sign-off.
