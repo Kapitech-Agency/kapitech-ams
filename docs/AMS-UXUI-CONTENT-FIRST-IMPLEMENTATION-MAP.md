@@ -842,3 +842,15 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - **AMS CI:** [40169966026](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966026) failed at the existing high body-parser@1.20.6 audit advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; downstream build/package/HTTP smoke were skipped.
 - **Still unverified:** authenticated role visibility, real target resolution, focus sequence, prescribed viewport sweep, contrast, touch and assistive technology.
 - **Next:** finish Overview source/content acceptance, then Analytics. Stage 5 remains mandatory.
+
+
+## Dashboard · Cash KPI source-of-truth correction · 25 October 2026
+
+**Current source/test SHA:** [bc5839ce](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5839ced96ba46c302cb7337f6b6652d0f9f13e). Exact-SHA Quality Gate [40170368659 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40170368659).
+
+- Verified the current overview response in server/routes.ts: financials.cashCollected is assigned from primary.revenueThisMonth. These are semantically different values.
+- To remain inside the frontend-only stage, Dashboard now ignores the mislabeled summary field and uses existing invoice payment rows for the cash KPI. When invoice/payment data is unavailable, the KPI shows unavailable instead of displaying revenue as cash.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/dashboard-metric-truthfulness.test.ts.
+- **No backend/API or Finance formula changes.** The incorrect API summary must be corrected later in a separately authorized backend slice.
+- **AMS CI:** [40170368655](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40170368655) failed at existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, migration, security regression and PostgreSQL integration passed; dependent steps were skipped.
+- **Next:** continue Overview §4.1/§4.10 review. Track the server summary correction as a later backend dependency; do not expand current frontend scope.

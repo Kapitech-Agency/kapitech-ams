@@ -2255,3 +2255,14 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Validation:** Quality Gate [40169966035 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966035): typecheck, regression suite and production build. AMS CI [40169966026 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966026); typecheck, migrations, security regression and PostgreSQL integration passed. Existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828 blocked downstream build/package/HTTP smoke checks.
 - **Open:** verify chart action visibility, route resolution and focus order under authenticated roles at the canonical viewport/keyboard/accessibility sweep. Stage 5 remains NOT VERIFIED.
 - **Next:** close remaining Overview §4.1/§4.10 source/content review, then finish Analytics. Stay within Dashboard.
+
+
+## Stage 4 FE slice — Prevent revenue summary from masquerading as cash collected · 25 October 2026
+
+- **Finding:** server/routes.ts handleOverview currently builds financials.cashCollected from primary.revenueThisMonth. That summary field is not a cash-collected measure.
+- **Frontend mitigation:** src/components/admin/GlobalExecutiveDashboard.tsx now derives the cash-collected KPI only from invoice payment rows via the existing Finance helper. If the invoice source is unavailable, the KPI remains unavailable; it does not fall back to the mislabeled summary value. Its context only says “Invoice payments recorded this month” when payment-row data is available.
+- **Scope:** Frontend and regression test only. No server/API, database, Finance formula or permission policy changed. The API field contract is recorded as a dependency for a later authorized backend stage.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/dashboard-metric-truthfulness.test.ts.
+- **Validation:** Quality Gate [40170368659 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40170368659): typecheck, regression tests and production build. AMS CI [40170368655 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40170368655), after typecheck, migrations, security regression and PostgreSQL integration passed. Existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828 blocked downstream workflow steps.
+- **Open:** Correct financials.cashCollected API semantics during an authorized backend stage. Verify actual KPI rendering, route permissions, viewport, focus, contrast and assistive technology in Stage 5.
+- **Next:** finish Dashboard Overview source/content acceptance against §4.1/§4.10, then Analytics. Do not move to Inbox.

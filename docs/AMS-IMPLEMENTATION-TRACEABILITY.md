@@ -1350,3 +1350,20 @@ The cash-collected KPI now uses a cash-specific ID/slug instead of a revenue ide
 **Unverified:** authenticated role matrix, actual browser navigation, keyboard/focus, responsive/zoom, contrast, touch and assistive technology. Stage 5 remains pending.
 
 **Next:** finish Overview §4.1/§4.10 acceptance, then finish Analytics. Do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW: Ignore mislabeled API cash summary and use payment rows · 25 October 2026
+
+**Current source/test SHA:** [bc5839ce](https://github.com/Kapitech-Agency/kapitech-ams/commit/bc5839ced96ba46c302cb7337f6b6652d0f9f13e). Exact-SHA Quality Gate [40170368659 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40170368659).
+
+**Source evidence:** server/routes.ts handleOverview currently sets financials.cashCollected from primary.revenueThisMonth. This does not represent collected cash. The frontend now derives the cash-collected KPI only from invoice payment rows via the existing Finance helper, and labels payment activity only when that data is actually available. If invoice/payment rows cannot be read, the KPI displays unavailable rather than falling back to the server's mislabeled revenue value.
+
+**Scope boundary:** no server/API, schema, Finance formula, or permission changes in this FE commit. Correcting the server response semantics is a later authorized backend dependency.
+
+**Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/dashboard-metric-truthfulness.test.ts.
+
+**Validation:** Quality Gate [40170368659 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40170368659), including typecheck, regression tests and production build. AMS CI [40170368655 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40170368655) because of existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; downstream steps were skipped.
+
+**Still unverified:** authenticated browser data/roles, actual route resolution, responsive/zoom, keyboard/focus, contrast, touch and assistive technology. Stage 5 remains pending.
+
+**Next:** finish Dashboard Overview source/content acceptance, then Analytics. Do not move to Inbox.
