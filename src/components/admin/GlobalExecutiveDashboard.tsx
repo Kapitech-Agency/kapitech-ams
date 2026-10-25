@@ -1675,7 +1675,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, [activeDashboardTasks, activeProjectRows, allUpcomingCommitments, canOpenClientDirectory, canOpenProjects, canOpenTasks, clientDirectoryById, currentDayKey, operationalSnapshot.projects, operationalSnapshot.tasks]);
 
   const upcomingCommitments = allUpcomingCommitments.slice(0, 8);
+  const commitmentHorizonTotal = allUpcomingCommitments.length;
+  const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length;
   const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
+  const daysEightToThirtyCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey).length;
   const overdueCommitmentCount = operationalSnapshot.projects === null ? null : activeProjectRows.reduce((total: number, project: any) => {
     const targetDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
     const dueProjectIsOverdue = isValidDashboardDate(targetDate) && targetDate < currentDayKey;
@@ -2280,7 +2283,45 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <p className="mt-1 text-xs text-muted">No open milestone or project target dates were returned within this window. Missing dates are not estimated.</p>
               </div>
             ) : (
-              <div className="divide-y divide-line">
+              <div className="space-y-0">
+                <section
+                  className="space-y-3 border-b border-line bg-bg/50 px-4 py-4 sm:px-5"
+                  data-ams-feature-slug="dashboard-delivery-horizon-visualization"
+                  aria-label="Delivery deadline horizon"
+                >
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <h3 className="text-xs font-semibold text-fg">Deadline horizon</h3>
+                      <p className="mt-1 text-[10px] leading-4 text-muted">All {commitmentHorizonTotal} dated commitments in the current 30-day window</p>
+                    </div>
+                    <p className="text-[10px] leading-4 text-muted">The list below shows up to 8 highest-priority deadlines.</p>
+                  </div>
+                  <div
+                    className="flex h-3 overflow-hidden rounded-full bg-line"
+                    role="img"
+                    aria-label={'Deadline distribution: ' + overdueHorizonCount + ' overdue, ' + nextSevenDayCommitmentCount + ' due from today through 7 days, ' + daysEightToThirtyCommitmentCount + ' due in days 8 through 30.'}
+                  >
+                    {overdueHorizonCount > 0 ? <span className="h-full bg-danger" style={{ width: (overdueHorizonCount / commitmentHorizonTotal) * 100 + '%' }} aria-hidden="true" /> : null}
+                    {nextSevenDayCommitmentCount > 0 ? <span className="h-full bg-warning" style={{ width: (nextSevenDayCommitmentCount / commitmentHorizonTotal) * 100 + '%' }} aria-hidden="true" /> : null}
+                    {daysEightToThirtyCommitmentCount > 0 ? <span className="h-full bg-info" style={{ width: (daysEightToThirtyCommitmentCount / commitmentHorizonTotal) * 100 + '%' }} aria-hidden="true" /> : null}
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-3">
+                    {[
+                      { label: 'Overdue', count: overdueHorizonCount, dotClass: 'bg-danger' },
+                      { label: 'Today–7 days', count: nextSevenDayCommitmentCount, dotClass: 'bg-warning' },
+                      { label: 'Days 8–30', count: daysEightToThirtyCommitmentCount, dotClass: 'bg-info' }
+                    ].map((item) => (
+                      <div key={item.label} className="flex min-w-0 items-center justify-between gap-2 rounded-control border border-line bg-panel px-3 py-2">
+                        <span className="flex min-w-0 items-center gap-2 text-[11px] text-muted">
+                          <span className={['h-2 w-2 shrink-0 rounded-full', item.dotClass].join(' ')} aria-hidden="true" />
+                          {item.label}
+                        </span>
+                        <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+                <div className="divide-y divide-line">
                 {upcomingCommitments.map((item) => {
                   const overdue = item.dueDate < currentDayKey;
                   const dueTone: DashboardTone = overdue ? 'danger' : item.dueDate === currentDayKey ? 'warning' : 'info';
@@ -2305,6 +2346,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </article>
                   );
                 })}
+                </div>
               </div>
             )}
             {operationalSnapshot.projects !== null && rawProjectRows.length > 0 && upcomingCommitments.length > 0 && (overdueCommitmentCount || 0) > 0 ? (

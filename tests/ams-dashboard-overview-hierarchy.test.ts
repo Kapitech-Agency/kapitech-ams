@@ -487,6 +487,32 @@ test('Dashboard Overview places the canonical exception queue before agency indi
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-quick-actions"'), false);
 });
 
+test('Dashboard Overview visualizes the full delivery-deadline horizon separately from its eight-row preview', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"', start);
+  assert.ok(start >= 0 && end > start, 'Delivery commitments workspace should be bounded.');
+  const commitments = dashboard.slice(start, end);
+  assert.ok(commitments.includes('const commitmentHorizonTotal = allUpcomingCommitments.length'));
+  assert.ok(commitments.includes("const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length"));
+  assert.ok(commitments.includes('const daysEightToThirtyCommitmentCount'));
+  const visual = commitments.indexOf('data-ams-feature-slug="dashboard-delivery-horizon-visualization"');
+  const list = commitments.indexOf('upcomingCommitments.map((item) => {');
+  assert.ok(visual >= 0 && list > visual, 'The visual deadline overview must precede the detailed commitment list.');
+  assert.ok(commitments.includes('All {commitmentHorizonTotal} dated commitments in the current 30-day window'));
+  assert.ok(commitments.includes('The list below shows up to 8 highest-priority deadlines.'));
+  assert.ok(commitments.includes('role="img"'));
+  assert.ok(commitments.includes("aria-label={'Deadline distribution: ' + overdueHorizonCount"));
+  assert.ok(commitments.includes("label: 'Overdue'"));
+  assert.ok(commitments.includes("label: 'Today–7 days'"));
+  assert.ok(commitments.includes("label: 'Days 8–30'"));
+  assert.ok(commitments.includes("overdueHorizonCount / commitmentHorizonTotal"));
+  assert.ok(commitments.includes("nextSevenDayCommitmentCount / commitmentHorizonTotal"));
+  assert.ok(commitments.includes("daysEightToThirtyCommitmentCount / commitmentHorizonTotal"));
+});
+
+
+
 test('Dashboard Overview visualizes Creative and IT open-task load from canonical service-line counts', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
