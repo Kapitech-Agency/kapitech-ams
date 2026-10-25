@@ -2200,3 +2200,12 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - Validation: Quality Gate [40166216286 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216286), including typecheck, regression tests and production build. AMS CI [40166216296 failed at existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216296) after typecheck, migrations, security regression and PostgreSQL integration passed. No dependency or server/domain files changed.
 - Still open: authenticated browser/role checks, prescribed viewport sweep, 200% text resize, keyboard/focus, contrast and assistive-technology review. Full Overview content review and Analytics acceptance review remain open.
 - Next: continue Dashboard Overview region-by-region, then complete Analytics. Do not move to Inbox.
+
+## Dashboard FE-only verification checkpoint · 25 October 2026
+
+Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/commit/34abbb1fd5fc64243f9226e9e990e513791a3943); Quality Gate [40167301350](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167301350) passed.
+
+- Dashboard charts share the global reporting Filter, without a duplicate local period picker.
+- Empty invoice/expense source arrays no longer become zero-value histories; quotation rows and cancelled expense records are excluded from financial movement; open receivable snapshots use one shared status helper.
+- Quick actions, priority exception links and Analytics report/drill-down links respect existing route access. No server/API/DB/auth-policy/Finance formula/dependency changes.
+- Stage 5 browser and accessibility verification remains unverified. Next: complete Overview §4.1/§4.10 review, then Analytics.

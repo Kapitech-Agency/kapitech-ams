@@ -1279,3 +1279,11 @@ Validation: Quality Gate [40166216286 passed](https://github.com/Kapitech-Agency
 Unverified: authenticated browser values, role/direct-route behavior, all prescribed viewports and 200% text resize, keyboard/focus, contrast, touch and screen-reader use. Stage 5 and explicit user sign-off remain mandatory.
 
 Next: finish Dashboard Overview region-by-region against §4.1/§4.10, then complete Analytics. Do not move to Inbox.
+
+### Dashboard Overview / Analytics · Current source and access safeguards · 25 October 2026
+
+Current source/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/commit/34abbb1fd5fc64243f9226e9e990e513791a3943); Quality Gate [40167301350](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167301350) passed.
+
+Current source/tests cover a shared global reporting-period filter; explicit no-record/unavailable financial history; excluding quotation-type rows from invoice value/receivables and canceled expense statuses from trends; and role-aware internal route destinations for quick actions, priority exceptions and Analytics drill-downs. No server/API/schema/auth policy/Finance formula changes.
+
+Still unverified: authenticated browser data, roles/direct URLs, responsive and zoom matrix, keyboard/focus, contrast, touch and assistive technology. The Dashboard module remains active; finish Overview, then Analytics before moving to Inbox.

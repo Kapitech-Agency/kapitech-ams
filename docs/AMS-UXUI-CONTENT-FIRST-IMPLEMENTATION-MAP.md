@@ -783,3 +783,11 @@ Status: Source/test verified for global period alignment. View-by-view content r
 - Evidence: period source [12ad8c83](https://github.com/Kapitech-Agency/kapitech-ams/commit/12ad8c83ebacd7f36d24d7ed151de605d1f4317e), accessible name [3d90a4a3](https://github.com/Kapitech-Agency/kapitech-ams/commit/3d90a4a3cb9546d195a709c4359d63bf3799baa7), regression alignment [5ab84f82](https://github.com/Kapitech-Agency/kapitech-ams/commit/5ab84f82d0566c66cba770823964fa5b2be73b36). Quality Gate [40166216286 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216286).
 - CI limitation: AMS CI [40166216296](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216296) failed at the existing dependency audit; typecheck, migrations, security regression and PostgreSQL integration passed.
 - Remaining: complete Overview §4.1/§4.10 acceptance and the Analytics view audit. Browser role/data, viewport sweep, keyboard/focus and accessibility remain unverified. Do not advance to Inbox.
+
+## Dashboard FE-only source/test checkpoint · 25 October 2026
+
+Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/commit/34abbb1fd5fc64243f9226e9e990e513791a3943); Quality Gate [40167301350](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167301350) passed.
+
+- Shared period, source-state integrity, financial record semantic filters and route-aware drill-downs have current regression coverage.
+- No browser role/real-data/reflow/keyboard/focus/contrast/assistive-technology evidence has been claimed. Stage 5 remains pending.
+- Next: finish Dashboard Overview and Analytics acceptance review; stay in Dashboard.
