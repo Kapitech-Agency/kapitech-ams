@@ -759,3 +759,15 @@ This closes a source/test discrepancy in the earlier checkpoint: the implementat
 - **Evidence:** source commit [c8e0bea4](https://github.com/Kapitech-Agency/kapitech-ams/commit/c8e0bea4aafc39e78005c87049769261164d3da0), test assertion alignment [e662d6a1](https://github.com/Kapitech-Agency/kapitech-ams/commit/e662d6a1a2d3915ef8f066bc6443c4db8b9b7c91); Quality Gate [40164451181 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40164451181). AMS CI [40164451257](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40164451257) is blocked by the existing high dependency audit advisory after required type, regression, migration and PostgreSQL integration checks passed.
 - **Browser/runtime:** authenticated data, each role, route direct-entry, responsive viewport matrix, focus/keyboard, screen-reader and contrast are **NOT VERIFIED**. Stage 5 is still required.
 - **Next:** Dashboard Overview, then Analytics. Do not move to Inbox until the entire Dashboard module is source/test-reviewed against all three view contracts.
+
+
+## Dashboard Overview · Cross-module attention queue and active project register · 25 October 2026
+
+**Status:** Source/test verified for this slice; whole Overview remains partially complete.
+
+- **Before:** local exception rendering considered only task overdue and project risk counters. The canonical Dashboard summary attentionItems array was ignored. The project register included completed/archived projects.
+- **After:** Overview renders cross-module items from the existing response, distinguishes unavailable from empty and populated states, and only links validated internal destinations. The active register excludes completed/archived status and health records before applying the selected period and project-type filter. Empty state explains whether the source failed, returned no records, has no active projects, or produced no matches.
+- **Evidence:** queue implementation [40b07b55](https://github.com/Kapitech-Agency/kapitech-ams/commit/40b07b552244cbb4ab36e3ac04cdf96cc0dc8edc), project scope [da6d1077](https://github.com/Kapitech-Agency/kapitech-ams/commit/da6d1077387bc81f2b1424d5a464cb3bb4908ef9), test correction [fa043825](https://github.com/Kapitech-Agency/kapitech-ams/commit/fa0438254916b656d78ecff6b07c462df352056f); Quality Gate [40165080061 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40165080061).
+- **CI limitation:** AMS CI [40165080058](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40165080058) failed at the pre-existing high dependency audit finding; typecheck, migrations, security regression and PostgreSQL integration passed. No dependency changed.
+- **Remaining:** clarify in-view period scope versus chart-specific period, current-state KPI definitions, and Stage 5 authenticated browser/role/viewport/keyboard/accessibility evidence. Recent Activity per-record links remain unavailable in the current source response.
+- **Next:** remain in Dashboard Overview until period semantics are clear, then finish Analytics. Do not move to Inbox.

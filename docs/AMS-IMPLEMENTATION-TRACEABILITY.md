@@ -1245,3 +1245,20 @@ The existing source contract does not include historical task/project status tra
 **Browser/accessibility:** NOT VERIFIED. Stage 5 still requires an authenticated browser, role coverage, canonical viewport matrix, keyboard/focus and assistive-technology review.
 
 **Next:** Dashboard Overview, then Analytics; Dashboard remains the active module until its three views have been reviewed and source/test-verified.
+
+
+### VIEW-DASH-OVERVIEW: Use the canonical cross-module attention queue and truthful active-project register · 25 October 2026
+
+**Current source/test SHA:** [fa043825](https://github.com/Kapitech-Agency/kapitech-ams/commit/fa0438254916b656d78ecff6b07c462df352056f). Queue implementation [40b07b55](https://github.com/Kapitech-Agency/kapitech-ams/commit/40b07b552244cbb4ab36e3ac04cdf96cc0dc8edc); active-project filter [da6d1077](https://github.com/Kapitech-Agency/kapitech-ams/commit/da6d1077387bc81f2b1424d5a464cb3bb4908ef9).
+
+Dashboard Overview exception panel now consumes attentionItems from the existing Dashboard summary response rather than rendering only two locally derived delivery counters. Missing/failed initial summary data remains unavailable; a returned empty array is an explicit empty state. Populated rows show the source title/description/category/severity. Internal path validation is required before a response link becomes a drill-down. Successfully loaded exception rows remain visible if a later successful response omits that field and the global summary is marked stale.
+
+The Active projects register now carries the separate source health field and excludes completed/closed/archived statuses or health records before the existing reporting-period and project-type filters. Empty-state copy distinguishes source unavailable, no records, only finished records, and no matches for current filters. Existing routes, actions, pagination, period filter and project types remain intact.
+
+**Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx, tests/ams-dashboard-overview-hierarchy.test.ts, tests/ams-dashboard-overview-refresh-recovery.test.ts, tests/dashboard-metric-truthfulness.test.ts. The metric-truthfulness test initially failed Typecheck because it referenced a helper not declared in that test file; the helper was removed and the test now reuses its file-level source string. No test was skipped or weakened.
+
+**Validation:** Quality Gate [40165080061 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40165080061): typecheck, regression tests and production build. AMS CI [40165080058 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40165080058); typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed. No dependency files changed.
+
+**Unverified:** authenticated source values, role/direct-route and browser behavior, viewport/reflow, keyboard/focus, contrast and assistive technology. Recent Activity per-record destinations are not provided by the current source contract.
+
+**Next:** continue within Dashboard Overview to reconcile the visible reporting scope with chart-specific range control and clarify current-state KPI scope. Then complete Analytics; do not move to Inbox.
