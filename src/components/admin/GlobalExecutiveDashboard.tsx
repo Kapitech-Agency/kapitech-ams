@@ -765,7 +765,7 @@ const PerformanceView: React.FC<{
                     </details>
                   </>
                 ) : (
-                  <div className="rounded-control border border-line bg-bg px-3 py-4" role="status"><p className="text-xs font-medium text-fg">No dated time entries in this chart window</p><p className="mt-1 text-[11px] text-muted">Recorded totals still include entries that have no usable date.</p></div>
+                  <div className="rounded-control border border-line bg-bg px-3 py-4" role="status"><p className="text-xs font-medium text-fg">No dated time entries in this chart window</p><p className="mt-1 text-[11px] text-muted">Total hours still covers the selected scope outside this chart window.</p></div>
                 )}
                 {timeTrendModel.entriesWithoutUsableDate > 0 ? <p className="mt-2 text-[10px] leading-4 text-muted">{timeTrendModel.entriesWithoutUsableDate} entries without a usable date remain in total hours but are not plotted.</p> : null}
               </section>
@@ -2029,7 +2029,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Cross-module exception data unavailable'}</p>
               <p className="mt-1 text-[11px] leading-5 text-muted">The Dashboard service did not return a usable exception list. This is not interpreted as a clean operational state.</p>
             </div>
-          ) : (dashboardOverview.attentionItems || []).length === 0 ? (
+          ) : overviewAttentionItems.length === 0 ? (
             <div className="px-4 py-5" role="status">
               <p className="text-xs font-medium text-fg">{canOpenInbox ? 'No other cross-module exceptions returned' : 'No exceptions returned by the Dashboard service'}</p>
               <p className="mt-1 text-[11px] leading-5 text-muted">{canOpenInbox ? 'Inbound records are reviewed separately below using the canonical Inbox source.' : 'Task and milestone queues below are still calculated from their own current source records.'}</p>
@@ -2109,11 +2109,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </Link>
             )}
             bodyClassName="flex min-h-0 flex-1 flex-col p-0"
-            actions={(
-              <Link to="/admin/inbox?view=messages" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                Open Inbox <ArrowUpRight size={13} aria-hidden="true" />
-              </Link>
-            )}
           >
             {inboxTriageSummary.state === 'loading' ? (
               <div className="px-4 py-5" role="status">
