@@ -1132,7 +1132,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     : 'info';
                 const category = String(item.category || 'Operations');
                 const destination = String(item.linkUrl || '');
-                const safeDestination = /^\/admin\/[a-z0-9/_-]+$/i.test(destination) && canOpenDashboardRoute(destination) ? destination : null;
+                const safeDestination = destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null;
                 const linkLabel = category === 'Finance'
                   ? 'Open Finance'
                   : category === 'Sales'

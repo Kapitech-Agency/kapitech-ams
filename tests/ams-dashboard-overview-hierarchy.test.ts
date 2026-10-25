@@ -237,7 +237,7 @@ test('Dashboard Overview shows the source-owned cross-module attention queue bef
   assert.ok(overview.includes('The interface does not infer that there are no exceptions.'));
   assert.ok(overview.includes('Destination unavailable'));
   assert.ok(overview.includes('/^\\/admin\\/[a-z0-9/_-]+$/i.test(destination)'));
-  assert.ok(overview.includes('&& canOpenDashboardRoute(destination)'), 'An internal path must also pass the current route-access policy.');
+  assert.ok(overview.includes("destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null"), 'Internal drill-downs must preserve valid query parameters and pass the current route-access policy.');
   const kpiEnd = overview.indexOf('<div className="grid gap-3 min-[1100px]:grid-cols-12">', kpis);
   assert.ok(kpiEnd > kpis, 'KPI strip should end before the grouped analysis row.');
   assert.ok(actions > overview.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"'), 'Quick Actions should not interrupt summary analysis.');
