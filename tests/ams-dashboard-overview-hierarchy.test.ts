@@ -65,20 +65,29 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
 });
 
 
-test('Dashboard Overview financial trend drills down to the existing Finance registers only when authorized', async () => {
+test('Dashboard Overview Finance controls link to canonical ledgers only when route access allows them', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-finance-control"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"', start);
+  assert.ok(start >= 0 && end > start, 'Finance control summary must remain a bounded Overview section.');
+  const finance = dashboard.slice(start, end);
+
   assert.ok(dashboard.includes("const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable')"));
   assert.ok(dashboard.includes("const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses')"));
-  assert.ok(dashboard.includes('actions={canOpenInvoiceRegister || canOpenExpenseRegister ? ('));
-  assert.ok(dashboard.includes('to="/admin/finance?tab=accounts-receivable"'));
-  assert.ok(dashboard.includes('to="/admin/finance?tab=expenses"'));
-  assert.ok(dashboard.includes('View invoices'));
-  assert.ok(dashboard.includes('View expenses'));
+  assert.ok(finance.includes('{canOpenInvoiceRegister ? ('));
+  assert.ok(finance.includes('{canOpenExpenseRegister ? ('));
+  assert.ok(finance.includes('Cash received this month'));
+  assert.ok(finance.includes('Outstanding receivables'));
+  assert.ok(finance.includes('Recorded expenses this month'));
+  assert.ok(finance.includes('to="/admin/finance?tab=accounts-receivable"'));
+  assert.ok(finance.includes('to="/admin/finance?tab=expenses"'));
+  assert.ok(finance.includes('Finance owns posted accounting truth'));
+  assert.doesNotMatch(finance, /revenueThisMonth|netOperatingProfit/, 'Current cash control must not substitute revenue or an unposted profit estimate.');
 });
 
 test('Dashboard work queue and service-line summaries come from canonical task/project records', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  assert.ok(dashboard.includes("api.tasks.getAll()"));
+  assert.ok(dashboard.includes('api.tasks.getAll()'));
   assert.ok(dashboard.includes("const dashboardWorkTasks = useMemo<DashboardWorkTask[]>(() =>"));
   assert.ok(dashboard.includes("const projectId = String(task?.projectId || task?.project_id || '')"));
   assert.ok(dashboard.includes("const serviceCategory = String(project?.serviceCategory || task?.serviceCategory || task?.service || '')"));
@@ -90,37 +99,59 @@ test('Dashboard work queue and service-line summaries come from canonical task/p
   assert.ok(dashboard.includes("const taskLoadByAssignee = useMemo(() =>"));
   assert.ok(dashboard.includes("const periodTimeRows = useMemo(() =>"));
   assert.ok(dashboard.includes("const activeTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.length"));
-  assert.ok(dashboard.includes("if (operationalSnapshot.tasks === null)"));
-  assert.ok(dashboard.includes("if (operationalSnapshot.projects === null)"));
+  assert.ok(dashboard.includes("operationalSnapshot.tasks === null ? ("));
+  assert.ok(dashboard.includes("operationalSnapshot.projects === null ? ("));
+  assert.ok(dashboard.includes('Task queue unavailable'));
+  assert.ok(dashboard.includes('Workstream data unavailable'));
   assert.doesNotMatch(dashboard, /const taskCount\s*=\s*0/);
 });
 
-test('Dashboard Overview financial-history availability respects the selected currency', async () => {
+test('Dashboard Analytics financial-history availability respects currency and issued-invoice rules', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  assert.ok(dashboard.includes("invoiceSourceHasRows = Boolean(operationalSnapshot.invoices?.length)"));
-  assert.ok(dashboard.includes("invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)))"));
-  assert.ok(dashboard.includes("expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency && isDashboardExpenseEligible(expense)))"));
-  assert.ok(dashboard.includes("const expenseSourceHasSelectedCurrencyRows = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency))"));
-  assert.ok(dashboard.includes('No usable financial records in selected currency'));
-  assert.ok(dashboard.includes('No financial records in selected currency'));
-  assert.ok(dashboard.includes('A zero-value trend is not inferred from another currency.'));
+  const start = dashboard.indexOf('const AnalyticsView:');
+  const end = dashboard.indexOf('export const GlobalExecutiveDashboard', start);
+  assert.ok(start >= 0 && end > start, 'Analytics source should have a bounded financial reporting surface.');
+  const analytics = dashboard.slice(start, end);
+
+  assert.ok(analytics.includes("const inCurrencyInvoices = invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency)"));
+  assert.ok(analytics.includes('const inCurrencyIssuedInvoices = inCurrencyInvoices.filter(isIssuedInvoice)'));
+  assert.ok(analytics.includes('const inCurrencyExpenseRows = expenseRows.filter((row) => String(row.currency || \'IDR\').toUpperCase() === currency)'));
+  assert.ok(analytics.includes('const inCurrencyExpenses = inCurrencyExpenseRows.filter(isDashboardExpenseEligible)'));
+  assert.ok(analytics.includes('const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0'));
+  assert.ok(analytics.includes('const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0'));
+  assert.ok(analytics.includes('No usable financial records in selected currency'));
+  assert.ok(analytics.includes('No financial records in selected currency'));
+  assert.ok(analytics.includes('A zero-value trend is not inferred from another currency.'));
+  assert.ok(analytics.includes('No issued invoice or expense records in selected currency'));
 });
 
-test('Dashboard overview keeps operational data and financial labels source-backed', async () => {
+test('Dashboard overview keeps its operational queues source-backed and preserves financial source states in Analytics', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   for (const sourceCall of [
     'api.dashboard.getOverview()',
     'api.projects.getAll()',
     'api.tasks.getAll()',
+    'api.timeLogs.getAll()',
     'api.finance.getInvoices()',
     'api.finance.getExpenses()',
   ]) {
     assert.ok(dashboard.includes(sourceCall), 'Dashboard data source missing: ' + sourceCall);
   }
-  assert.ok(dashboard.includes('Live data unavailable'), 'Missing live sources must remain explicit');
-  assert.ok(dashboard.includes('not a posted profit figure'), 'Difference must not be relabeled as posted profit');
-  assert.ok(dashboard.includes('A usable issued-invoice and recorded-expense trend could not be built for this reporting window. Missing values are not estimated.'));
-  assert.ok(dashboard.includes('Financial trend unavailable'));
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const analyticsStart = dashboard.indexOf('const AnalyticsView:');
+  const analyticsEnd = dashboard.indexOf('export const GlobalExecutiveDashboard', analyticsStart);
+  const analytics = dashboard.slice(analyticsStart, analyticsEnd);
+
+  assert.ok(overview.includes('Task queue unavailable'), 'Missing task sources must remain explicit.');
+  assert.ok(overview.includes('Workstream data unavailable'), 'Missing project sources must remain explicit.');
+  assert.ok(overview.includes('Time-log source unavailable'), 'Missing time sources must remain explicit.');
+  assert.ok(overview.includes('Invoice/payment source unavailable.'), 'Missing Finance sources must remain explicit.');
+  assert.ok(analytics.includes('Financial trend unavailable'));
+  assert.ok(analytics.includes('not posted profit'), 'Difference must not be relabeled as posted profit.');
+  assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
+  assert.doesNotMatch(dashboard, /Preview data only|sampleProjects|sampleTeam|sampleRevenueByRange|isSlugFixtureMode|fixtureMode/);
 });
 
 test('Dashboard project creation action opens the existing create drawer only for permitted roles', async () => {
@@ -139,28 +170,33 @@ test('Dashboard project creation action opens the existing create drawer only fo
 });
 
 
-test('Dashboard Overview and Analytics share the topbar reporting period without a duplicate chart filter', async () => {
+test('Dashboard Overview separates current operations from period-scoped Analytics without a duplicate chart filter', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const charts = await read('src/components/charts/DashboardCharts.tsx');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const analyticsStart = dashboard.indexOf('const AnalyticsView:');
+  const analyticsEnd = dashboard.indexOf('export const GlobalExecutiveDashboard', analyticsStart);
+  const analytics = dashboard.slice(analyticsStart, analyticsEnd);
+
   assert.match(dashboard, /const \{ matchesDate, matchesInterval, value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled \} = useReportingPeriod\(\)/);
-  assert.ok(dashboard.includes('getReportingPeriodRange(reportPeriodValue, reportPeriodMode, \'en-GB\')'));
-  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
-  assert.ok(dashboard.includes('buildRecentFinancialTrend(invoices, expenses)'));
-  assert.ok(dashboard.includes('Recent 30-day default window'));
-  assert.ok(dashboard.includes("ariaLabel={'Issued invoices, recorded expenses, and difference for ' + financialTrendScopeLabel + '.'}"), 'Chart accessible name must follow the same period label as its content.');
-  assert.ok(dashboard.includes('Active projects overlapping '));
-  assert.ok(dashboard.includes('Active projects across all dates.'));
-  assert.ok(dashboard.includes('Active projects now'));
-  assert.ok(dashboard.includes('Current open project records'));
-  assert.ok(dashboard.includes('Payments less recorded expenses this month'));
-  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false, 'Use the global reporting-period Filter instead of a second chart picker.');
-  assert.equal(dashboard.includes('RangeKey'), false, 'Dashboard-local range state must not compete with the shared reporting period.');
-  assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false, 'The Overview should not duplicate the legend rendered by TrendChart.');
+  assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(analytics.includes('buildRecentFinancialTrend(invoices, expenses)'));
+  assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
+  assert.ok(analytics.includes("ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. Exact values are listed in the table below.'}"));
+  assert.ok(analytics.includes('Recent 30-day default window'));
+  assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
+  assert.ok(overview.includes('Task ownership, review queues, delivery commitments and Finance balances show current operational state.'));
+  assert.equal(overview.includes('title="Invoices vs expenses"'), false, 'Overview must not duplicate Analytics financial trends.');
+  assert.equal(overview.includes('title="Active projects"'), false, 'Overview must not duplicate Project Registry.');
+  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false, 'The global reporting Filter is the only chart-period selector.');
+  assert.equal(dashboard.includes('RangeKey'), false, 'Dashboard-local range state must not compete with global reporting scope.');
+  assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'), 'The chart must provide a keyboard-focusable exact-value table.');
   assert.ok(charts.includes('<div className="relative min-w-0" role="img" aria-label={ariaLabel}>'));
   assert.ok(charts.includes('<span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>'));
   assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'));
 });
-
 
 test('Dashboard quick actions and project-header links respect route access', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
@@ -171,25 +207,24 @@ test('Dashboard quick actions and project-header links respect route access', as
   assert.ok(dashboard.includes('canCreateProject || canOpenProjects'));
 });
 
-test('Dashboard Overview does not infer a zero financial trend from empty invoice or expense sources', async () => {
+test('Dashboard Analytics does not infer zero financial trends from empty or currency-mismatched sources', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  assert.match(dashboard, /const invoiceSourceHasRows = Boolean\(operationalSnapshot\.invoices\?\.length\)/);
-  assert.match(dashboard, /const expenseSourceHasRows = Boolean\(operationalSnapshot\.expenses\?\.length\)/);
-  const chartStart = dashboard.indexOf('title="Invoices vs expenses"');
-  const chartEnd = dashboard.indexOf('</AdminPanel>', chartStart);
-  assert.ok(chartStart >= 0 && chartEnd > chartStart, 'Overview financial chart should have a bounded panel section');
-  const chart = dashboard.slice(chartStart, chartEnd);
-  assert.ok(chart.includes('!financeSourcesAvailable'), 'Failed source reads must remain unavailable.');
-  assert.ok(chart.includes('!invoiceHistoryReturned && !expenseHistoryReturned'), 'Two empty sources must remain an explicit no-record state.');
-  assert.ok(chart.includes('!invoiceHistoryReturned'), 'An empty invoice source must not become a zero invoice trend.');
-  assert.ok(chart.includes('!expenseHistoryReturned'), 'An empty expense source must not become a zero expense trend.');
-  assert.ok(chart.includes('A zero-value trend is not inferred from another currency.'));
-  assert.ok(chart.includes('No financial records in selected currency'));
-  assert.ok(dashboard.includes('invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some'));
-  assert.ok(dashboard.includes('expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some'));
+  const start = dashboard.indexOf('const AnalyticsView:');
+  const end = dashboard.indexOf('export const GlobalExecutiveDashboard', start);
+  assert.ok(start >= 0 && end > start, 'Analytics view must remain bounded.');
+  const analytics = dashboard.slice(start, end);
 
-  assert.ok(chart.includes('A zero-value invoice series is not inferred.'));
-  assert.ok(chart.includes('A zero-value expense series is not inferred.'));
+  assert.ok(analytics.includes('const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null'));
+  assert.ok(analytics.includes('const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0'));
+  assert.ok(analytics.includes('const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0'));
+  assert.ok(analytics.includes('!financialDataAvailable'), 'Failed source reads must remain unavailable.');
+  assert.ok(analytics.includes('!financialRecordsReturned'), 'Empty or non-issued records must not become a zero trend.');
+  assert.ok(analytics.includes('No usable financial records in selected currency'));
+  assert.ok(analytics.includes('A zero-value trend is not inferred from another currency.'));
+  assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source.'));
+  assert.ok(analytics.includes('A zero-value invoice series is not inferred.'));
+  assert.ok(analytics.includes('A zero-value expense series is not inferred.'));
+  assert.ok(analytics.includes('Financial trend unavailable'));
 });
 
 test('Dashboard Performance scopes source-backed delivery records to the shared reporting period', async () => {
@@ -246,62 +281,71 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
 });
 
 
-test('Dashboard Overview shows the source-owned cross-module attention queue before KPIs and preserves unavailable states', async () => {
+test('Dashboard Overview places the canonical exception queue before agency indicators and delivery work', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const branchStart = dashboard.indexOf("{view === 'overview' ? (");
   const branchEnd = dashboard.indexOf(") : view === 'performance' ? (", branchStart);
   assert.ok(branchStart >= 0 && branchEnd > branchStart);
   const overview = dashboard.slice(branchStart, branchEnd);
+  const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
   const priority = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
-  const kpis = overview.indexOf('data-ams-feature-slug="dashboard-overview"');
-  const actions = overview.indexOf('data-ams-feature-slug="dashboard-quick-actions"');
-  assert.ok(priority >= 0 && kpis > priority && actions > kpis);
+  const indicators = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  const deliveryDesk = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const commitments = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
+  const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
+  assert.ok(scope >= 0 && priority > scope && indicators > priority && deliveryDesk > indicators && commitments > deliveryDesk);
+  assert.ok(finance > commitments && shortcuts > finance);
   assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
-  assert.ok(dashboard.includes('attentionItems: attentionItemsDataReturned ? data.attentionItems as DashboardAttentionItem[] : previous.attentionItems ?? []'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
-  assert.ok(overview.includes('Priority exception data unavailable'));
-  assert.ok(overview.includes('No priority exceptions returned'));
-  assert.ok(overview.includes('The interface does not infer that there are no exceptions.'));
-  assert.ok(overview.includes('Destination unavailable'));
+  assert.ok(overview.includes('Cross-module exception data unavailable'));
+  assert.ok(overview.includes('No exceptions returned by the Dashboard service'));
+  assert.ok(overview.includes('This is not interpreted as a clean operational state.'));
+  assert.ok(overview.includes('Destination not mapped to an authorized workspace'));
   assert.ok(overview.includes("destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null"));
-  assert.ok(overview.includes("destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null"), 'Internal drill-downs must preserve valid query parameters and pass the current route-access policy.');
-  const kpiEnd = overview.indexOf('<div className="grid gap-3 min-[1100px]:grid-cols-12">', kpis);
-  assert.ok(kpiEnd > kpis, 'KPI strip should end before the grouped analysis row.');
-  assert.ok(actions > overview.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"'), 'Quick Actions should not interrupt summary analysis.');
-  const metricArea = overview.slice(kpis, kpiEnd);
-  assert.match(metricArea, /id: 'outstanding'/);
-  assert.match(metricArea, /id: 'utilization'/);
-  assert.doesNotMatch(metricArea, /id: 'tasks-due'|id: 'overdue'/);
+  assert.ok(overview.includes("id: 'open-tasks', label: 'Open tasks'"));
+  assert.ok(overview.includes("id: 'overdue-tasks', label: 'Overdue tasks'"));
+  assert.ok(overview.includes("id: 'review-queue', label: 'Tasks in review'"));
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-overview"'), false);
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-quick-actions"'), false);
 });
 
-test('Dashboard mobile and desktop project register respect the same pagination window', async () => {
-  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const mobileStart = dashboard.indexOf('<div className="min-[900px]:hidden divide-y divide-line">');
-  const desktopStart = dashboard.indexOf('<div className="hidden min-[900px]:block overflow-x-auto', mobileStart);
-  const mobileRegister = dashboard.slice(mobileStart, desktopStart);
-  const desktopEnd = dashboard.indexOf('          </div>', desktopStart);
-  const desktopRegister = dashboard.slice(desktopStart, desktopEnd);
-  assert.ok(mobileStart >= 0 && desktopStart > mobileStart, 'Both responsive register layouts must exist.');
-  assert.ok(mobileRegister.includes('pagedDashboardProjects.map((project) => ('), 'Mobile cards must use the current pagination slice.');
-  assert.ok(desktopRegister.includes('pagedDashboardProjects.map((project) => ('), 'Desktop table must use the same pagination slice.');
-  assert.ok(!mobileRegister.includes('filteredProjects.map((project) => ('), 'Mobile cards must not bypass pagination.');
-  assert.ok(dashboard.includes('<AdminTablePagination'));
-  assert.ok(dashboard.includes('onPageChange={setDashboardProjectPage}'));
-  assert.ok(dashboard.includes('onPageSizeChange={setDashboardProjectPageSize}'));
-});
-
-test('Dashboard Overview gates project and time-log drilldowns through the existing route-access policy', async () => {
+test('Dashboard agency delivery panels use responsive task cards and do not duplicate the project registry', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
-  assert.ok(dashboard.includes("const canOpenProjects = canOpenDashboardRoute('/admin/projects');"));
-  assert.ok(overview.includes('actions={canOpenProjects ? ('), 'The project registry header action must follow route access.');
-  assert.ok(overview.includes('{canOpenProjects ? <Link to="/admin/projects"'), 'Project empty states must hide unauthorized navigation.');
-  assert.ok(overview.includes("{canOpenDashboardRoute('/admin/time-logs') ? <Link to=\"/admin/time-logs\""), 'Time Logs navigation must follow route access.');
-  assert.ok(overview.includes('{canOpenProjects && ('), 'Project workspace menu/modal actions must be access-gated.');
-  assert.ok(overview.includes('canOpenDashboardRoute(destination)'), 'Exception links must check both internal path and role-aware route access.');
-  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart);
+  const queueStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const commitmentStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  assert.ok(queueStart >= 0 && commitmentStart > queueStart);
+  const queue = overview.slice(queueStart, commitmentStart);
+  assert.ok(queue.includes('visibleOverviewTasks.map((task) => ('));
+  assert.ok(queue.includes('min-[900px]:flex-row'));
+  assert.ok(queue.includes('role="group" aria-label="Delivery queue filters"'));
+  assert.ok(queue.includes('aria-pressed={overviewTaskFilter === tab.key}'));
+  assert.ok(queue.includes('Showing {visibleOverviewTasks.length} highest-priority tasks'));
+  assert.equal(overview.includes('pagedDashboardProjects'), false, 'Overview must not duplicate the paginated Project Registry.');
+  assert.equal(overview.includes('AdminTablePagination'), false, 'Task cards must not borrow registry pagination.');
+  assert.equal(overview.includes('title="Active projects"'), false);
+});
+
+test('Dashboard Overview gates task, project, time and Finance links through the existing route-access policy', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  assert.ok(dashboard.includes("const canOpenProjects = canOpenDashboardRoute('/admin/projects')"));
+  assert.ok(dashboard.includes("const canOpenTasks = canOpenDashboardRoute('/admin/tasks')"));
+  assert.ok(dashboard.includes("const canOpenTimeLogs = canOpenDashboardRoute('/admin/time-logs')"));
+  assert.ok(dashboard.includes("const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable')"));
+  assert.ok(dashboard.includes("const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses')"));
+  assert.ok(overview.includes('.filter((action) => canOpenDashboardRoute(action.href)).map((action) => ('));
+  assert.ok(overview.includes('canOpenTasks && canOpenDashboardRoute(taskQueueDestination)'));
+  assert.ok(overview.includes('canOpenProjects && canOpenDashboardRoute(projectHref)'));
+  assert.ok(overview.includes('{canOpenTimeLogs ? <Link to="/admin/time-logs"'));
+  assert.ok(overview.includes('{canOpenInvoiceRegister ? ('));
+  assert.ok(overview.includes('{canOpenExpenseRegister ? ('));
+  assert.ok(overview.includes('canOpenDashboardRoute(destination)'), 'Exception links must check both internal path and current route access.');
 });
 
 test('Dashboard Overview displays canonical recent audit activity only for permitted roles', async () => {

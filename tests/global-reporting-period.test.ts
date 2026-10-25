@@ -153,7 +153,17 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.doesNotMatch(documents, /useReportingPeriod\(\)/, 'Document Library is excluded from implicit global-period scoping.');
   assert.doesNotMatch(documents, /matchesDate\(doc\.updatedAt/, 'Document date metadata is not a hidden list filter without a visible date control.');
   assert.ok(teams.includes('matchesDate(log.date)'));
-  assert.ok(dashboard.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
+  assert.ok(dashboard.includes('value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled'));
+  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(dashboard.includes('matchesDate(item.date)'));
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  assert.ok(overview.includes('Task ownership, review queues, delivery commitments and Finance balances show current operational state.'));
+  assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
+  assert.ok(overview.includes('const visibleOverviewTasks = useMemo(() =>'));
+  assert.doesNotMatch(overview, /matchesInterval\(task\.dueDate/,
+    'The action queue shows current open work. The selected global period is not an invisible task filter.');
   assert.doesNotMatch(settings, /backups\.filter\(\(backup\) => matchesDate\(backup\.createdAt\)\)/,
     'Production backup history is operational status, not a business reporting-period register.');
   assert.ok(settings.includes('backups.slice(0, 8).map((backup, index) =>'),

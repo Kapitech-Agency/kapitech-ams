@@ -7,21 +7,27 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Dashboard preserves finance context and canonical responsive KPI breakpoints', async () => {
+test('Dashboard agency workboard uses canonical breakpoints and keeps Finance separate', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /featureSlug="dashboard-module"/);
-  const canonicalKpiGrid = 'className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"';
-  assert.ok(dashboard.includes(canonicalKpiGrid), 'Dashboard KPI strips should use canonical breakpoints');
-  assert.equal(dashboard.split(canonicalKpiGrid).length - 1, 1, 'the four-metric Overview strip uses canonical grid thresholds; the two-metric support strip adapts through the shared primitive');
-  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false, 'Overview and Analytics must use the shared topbar reporting-period Filter.');
+  const canonicalKpiGrid = 'grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5';
+  assert.ok(dashboard.includes(canonicalKpiGrid), 'The five agency operating indicators should use canonical design-system breakpoints.');
+  assert.equal(dashboard.split(canonicalKpiGrid).length - 1, 1);
+  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false, 'Analytics uses the global reporting-period Filter.');
   assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(dashboard.includes('Recent 30-day default window'));
+  assert.equal(dashboard.includes('title="Invoices vs expenses"'), false, 'Overview must not duplicate Analytics financial movement.');
   assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false);
-  assert.doesNotMatch(dashboard, /className="hidden items-center gap-3 text-\[11px\] text-muted sm:flex"/);
-  assert.match(dashboard, /Issued invoice value and recorded expenses/);
-  assert.match(dashboard, /project\.progress == null \? '—' : project\.progress \+ '%'/, 'Unreported project progress must be shown as unavailable, not as null%.');
-  assert.match(dashboard, /width: \(project\.progress \?\? 0\) \+ '%'/);
-  assert.match(dashboard, /width: \(projectDetails\.progress \?\? 0\) \+ '%'/);
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+  assert.ok(overview.includes('Creative & IT workstreams'));
+  assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
+  assert.ok(overview.includes('Assigned work & logged time'));
+  assert.ok(overview.includes('Finance control'));
+  assert.equal(overview.includes('title="Active projects"'), false);
+  assert.equal(overview.includes('title="Team capacity"'), false);
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-supporting-metrics"'), false);
 });
 
 test('Time Tracking scopes precede the canonical register and supporting summaries follow it', async () => {
@@ -99,24 +105,28 @@ test('Client exports use one scope-aware CSV handler and preserve missing billed
   assert.match(exportHandler, /showToast\(statusScope === 'lead'/);
 });
 
-test('Dashboard prioritizes operational KPIs and the primary workspace before supporting metrics', async () => {
+test('Dashboard agency workboard places delivery decisions before secondary navigation', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overview = dashboard.indexOf('data-ams-feature-slug="dashboard-overview"');
-  const primaryKpis = dashboard.indexOf("id: 'active-projects'", overview);
-  const fourthPrimaryKpi = dashboard.indexOf("id: 'cash-collected'", primaryKpis);
-  const chart = dashboard.indexOf('title="Invoices vs expenses"', fourthPrimaryKpi);
-  const supportingMetrics = dashboard.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"', chart);
-  const projects = dashboard.indexOf('title="Active projects"', chart);
-  const teamCapacity = dashboard.indexOf('title="Team capacity"', projects);
-  assert.ok(overview < primaryKpis && primaryKpis < fourthPrimaryKpi && fourthPrimaryKpi < chart);
-  assert.ok(chart < projects && projects < teamCapacity && teamCapacity < supportingMetrics);
-  assert.ok(dashboard.indexOf("id: 'outstanding'", primaryKpis) > primaryKpis && dashboard.indexOf("id: 'outstanding'", primaryKpis) < chart);
-  assert.ok(dashboard.indexOf("id: 'utilization'", primaryKpis) > primaryKpis && dashboard.indexOf("id: 'utilization'", primaryKpis) < chart);
-  for (const id of ["avg-project-value", "cash-expense-difference"]) {
-    assert.ok(dashboard.indexOf("id: '" + id + "'", supportingMetrics) > supportingMetrics, 'missing supporting KPI ' + id);
-  }
-  assert.ok(dashboard.includes("label: 'Payments less recorded expenses this month'"));
-  assert.ok(dashboard.includes('Invoice payments recorded this month less expenses recorded this month; not posted profit'));
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+  const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
+  const exceptions = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
+  const indicators = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  const delivery = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const commitments = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
+  const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
+  const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  assert.ok(scope >= 0 && exceptions > scope && indicators > exceptions && delivery > indicators);
+  assert.ok(commitments > delivery && finance > commitments && shortcuts > finance);
+  assert.ok(activity > shortcuts);
+  assert.ok(overview.includes("id: 'open-tasks', label: 'Open tasks'"));
+  assert.ok(overview.includes("id: 'overdue-tasks', label: 'Overdue tasks'"));
+  assert.ok(overview.includes("id: 'review-queue', label: 'Tasks in review'"));
+  assert.ok(overview.includes("label: 'Delivery dates · next 7 days'"));
+  assert.ok(overview.includes('Cash received this month'));
+  assert.ok(overview.includes('Outstanding receivables'));
 });
 
 test('Inbox toast feedback follows the stable page header instead of shifting it', async () => {
@@ -611,11 +621,10 @@ test('CMS editor headers share the same spacing ownership', async () => {
 test('Dashboard header context follows the selected Overview, Performance, or Analytics workspace', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /eyebrow=\{view === 'overview' \? 'Overview' : view === 'performance' \? 'Performance' : 'Analytics'\}/);
-  assert.match(dashboard, /Monitor agency delivery, financial movement, team capacity, and operational exceptions/);
+  assert.match(dashboard, /Coordinate creative production, web and IT delivery, task ownership, delivery dates, and current Finance control/);
   assert.match(dashboard, /Track project delivery, task completion, overdue work, and recorded team time/);
   assert.match(dashboard, /Choose a report to inspect financial movement, outstanding receivables, or current project status/);
 });
-
 
 test('Dashboard invalid workspace query values normalize to Overview', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');

@@ -261,12 +261,20 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(analyticsView.indexOf('dashboard-analytics-controls') < analyticsView.indexOf('dashboard-analytics-financial-report'));
   assert.ok(analyticsView.includes('Open Transactions & Cash') && analyticsView.includes('Open Accounts Receivable') && analyticsView.includes('Open Projects'), 'Each report must drill down to its owning module.');
   assert.doesNotMatch(dashboard, /Preview data only|sampleProjects|sampleTeam|sampleRevenueByRange|isSlugFixtureMode|fixtureMode/);
-  assert.ok(dashboard.includes('Live data unavailable'));
+  assert.ok(dashboard.includes('Task queue unavailable'));
+  assert.ok(dashboard.includes('Workstream data unavailable'));
+  assert.ok(dashboard.includes('Time-log source unavailable'));
   assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(dashboard.includes('buildRecentFinancialTrend(invoices, expenses)'));
   assert.ok(dashboard.includes('not a posted profit figure'));
-  assert.ok(dashboard.indexOf('title="Active projects"') < dashboard.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"'), 'The active project workspace must precede secondary dashboard metrics.');
-  assert.ok(dashboard.indexOf('title="Team capacity"') < dashboard.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"'), 'Supporting metrics should follow the primary project and capacity workspace.');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  assert.ok(overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"') < overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"'));
+  assert.ok(overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"') < overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"'));
+  assert.ok(overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"') < overview.indexOf('data-ams-feature-slug="dashboard-finance-control"'));
+  assert.equal(overview.includes('title="Invoices vs expenses"'), false);
+  assert.equal(overview.includes('title="Team capacity"'), false);
   assert.doesNotMatch(dashboard, /const deliveryBreakdown = \[/);
 });
 

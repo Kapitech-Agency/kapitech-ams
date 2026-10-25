@@ -696,7 +696,7 @@ const AnalyticsView: React.FC<{
                   secondaryLabel="Recorded expenses"
                   tertiaryLabel="Difference"
                   primaryFormat={(value) => formatLiveMoney(value, currency)}
-                  ariaLabel="Issued invoice values and recorded expenses by period. Exact values are listed in the table below."
+                  ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. Exact values are listed in the table below.'}
                 />
                 <div className="mt-5 space-y-2" data-ams-feature-slug="dashboard-analytics-exact-values">
                   <div>
@@ -1174,7 +1174,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const activeProjectsMetric = openProjectCount ?? (canOpenProjects ? dashboardOverview.metrics?.activeProjects ?? null : null);
   const taskKpiRoute = canOpenTasks ? '/admin/tasks' : '';
   const projectKpiRoute = canOpenProjects ? '/admin/projects?projects=all' : '';
-  const currentMonthIssuedInvoices = (operationalSnapshot.invoices || []).filter((invoice: any) =>
+  const issuedInvoicesInSelectedCurrency = (operationalSnapshot.invoices || []).filter((invoice: any) =>
     String(invoice.currency || 'IDR').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)
   );
   const financeExpenseRows = (operationalSnapshot.expenses || []).filter((expense: any) =>
@@ -1194,8 +1194,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     if (String(expense.currency || 'IDR').toUpperCase() !== financeCurrency || String(expense.date || '').slice(0, 7) !== currentMonthKey || !isDashboardExpenseEligible(expense)) return sum;
     return sum + Math.max(0, Number(expense.amount) || 0);
   }, 0);
-  const cashValueAvailable = operationalSnapshot.invoices !== null && currentMonthIssuedInvoices.length > 0;
-  const outstandingValueAvailable = operationalSnapshot.invoices !== null && currentMonthIssuedInvoices.length > 0;
+  const cashValueAvailable = operationalSnapshot.invoices !== null && issuedInvoicesInSelectedCurrency.length > 0;
+  const outstandingValueAvailable = operationalSnapshot.invoices !== null && issuedInvoicesInSelectedCurrency.length > 0;
   const expensesValueAvailable = operationalSnapshot.expenses !== null && financeExpenseRows.length > 0;
 
   return (
