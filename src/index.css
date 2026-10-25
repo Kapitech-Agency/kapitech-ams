@@ -75,6 +75,8 @@
   --radius-chip: 6px;
   --radius-control: 8px;
   --radius-card: 12px;
+  --radius-dashboard-card: 16px;
+  --radius-dashboard-plot: 12px;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 

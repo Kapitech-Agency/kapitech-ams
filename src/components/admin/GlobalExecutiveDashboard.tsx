@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import './GlobalExecutiveDashboard.css';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -1975,7 +1976,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         eyebrow={view === 'overview' ? 'Overview' : view === 'performance' ? 'Performance' : 'Analytics'}
         title="Dashboard"
         description={view === 'overview'
-          ? 'Finance position, project progress, and delivery priorities in one operational overview.'
+          ? 'A clear view of financial movement, project health, and delivery.'
           : view === 'performance'
             ? 'Review delivery progress, bottlenecks, and recorded team effort for the selected reporting period.'
             : 'Explore source-backed financial movement, inquiry demand, receivables, and portfolio status.'}
@@ -2023,7 +2024,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       {view === 'overview' ? (
         <>
           <section
-            className="flex min-w-0 flex-col gap-3 rounded-card border border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="ams-overview-scope flex min-w-0 flex-col gap-3 rounded-card border border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
             data-ams-feature-slug="dashboard-overview-reporting-scope"
             aria-label="Overview reporting scope"
           >
@@ -2032,16 +2033,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <p className="mt-0.5 text-[11px] text-muted">Financial trends use the selected period or recent 30 days. Project, task and invoice balances reflect their current saved state.</p>
             </div>
             <div className="flex min-w-0 flex-wrap gap-2">
-              <span className="inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
+              <span className="ams-overview-scope__chip inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
                 <CircleDollarSign size={13} aria-hidden="true" /> Finance: current month + receivables
               </span>
-              <span className="inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
+              <span className="ams-overview-scope__chip inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
                 <CalendarDays size={13} aria-hidden="true" /> Deadlines: overdue + next 30 days
               </span>
             </div>
           </section>
 
-          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Finance and project overview">
+          <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Finance and project overview">
             {canOpenFinanceOverview ? (
               <section
                 className={['min-w-0', canOpenProjects ? 'min-[1100px]:col-span-7' : 'min-[1100px]:col-span-12'].join(' ')}
@@ -2050,8 +2051,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               >
                 <AdminPanel
                   title="Finance"
-                  description="Receivables and financial movement"
-                  className="h-full"
+                  description="Receivables, cash received, and spending trends"
+                  className="h-full ams-overview-panel ams-overview-panel--finance"
                   bodyClassName="p-4 sm:p-5"
                   actions={(
                     <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2119,7 +2120,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0">
+                    <div className="ams-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0">
                       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
                         <h3 className="text-xs font-semibold text-fg">Financial movement</h3>
                         <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Recent 30 days'}</span>
@@ -2142,6 +2143,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             secondaryLabel="Recorded expenses"
                             tertiaryLabel=""
                             primaryFormat={(value) => formatLiveMoney(value, financeCurrency)}
+                            axisFormat={(value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: financeCurrency, notation: 'compact', maximumFractionDigits: 1 }).format(value)}
+                            presentation="maven"
                             ariaLabel={'Issued-invoice totals by invoice date and eligible expenses by recorded date. Scope: ' + describeFinancialTrendScope(overviewFinanceTrendRows, reportPeriodEnabled, reportPeriodLabel) + '. This comparison is not posted profit or cash flow.'}
                           />
                           <p className="mt-2 text-[10px] leading-4 text-muted">Invoice values use issue dates; expenses use recorded dates. This comparison is not posted profit or cash flow.</p>
@@ -2163,8 +2166,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               >
                 <AdminPanel
                   title="Projects"
-                  description="Current delivery state across Creative and IT"
-                  className="h-full"
+                  description="Portfolio health and Creative/IT workload"
+                  className="h-full ams-overview-panel ams-overview-panel--projects"
                   bodyClassName="p-4 sm:p-5"
                   actions={(
                     <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2205,7 +2208,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <>
                           <div className="grid min-w-0 gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
                             {projectRiskBreakdown.reduce((sum, item) => sum + item.value, 0) > 0 ? (
-                              <DonutChart data={projectRiskBreakdown} ariaLabel="Active projects grouped by saved risk and deadline signals" showLegend={false} centerLabel="Active" />
+                              <DonutChart data={projectRiskBreakdown} ariaLabel="Active projects grouped by saved risk and deadline signals" showLegend={false} centerLabel="Active" presentation="maven" />
                             ) : (
                               <div className="flex min-h-[150px] items-center justify-center rounded-control border border-line bg-bg px-3 text-center text-[11px] text-muted" role="status">No risk or deadline distribution to chart.</div>
                             )}
@@ -2257,12 +2260,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ) : null}
           </section>
 
-          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
+          <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
             {canOpenProjects ? (
               <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-project-progress" aria-label="Projects in progress">
                 <AdminPanel
                   title="Projects in progress"
-                  className="h-full"
+                  className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
                   actions={(
                     <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2330,7 +2333,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <section className={['min-w-0', canOpenProjects ? 'min-[1100px]:col-span-5' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
               <AdminPanel
                 title="Needs attention"
-                className="h-full"
+                className="h-full ams-overview-panel ams-overview-panel--attention"
                 bodyClassName="p-0"
                 actions={dashboardOverview.attentionItemsDataAvailable ? (
                   <div className="flex flex-wrap items-center gap-2">
@@ -2435,12 +2438,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </section>
           </section>
 
-          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Task queue and delivery deadlines">
+          <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Task queue and delivery deadlines">
             <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Task delivery queue">
               <AdminPanel
                 title="Task queue"
                 description="Open work ordered by recorded delivery risk"
-                className="h-full"
+                className="h-full ams-overview-panel ams-overview-panel--list"
                 bodyClassName="p-0"
                 actions={canOpenTasks ? (
                   <Link to={overviewTaskQueueHref} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2542,7 +2545,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-delivery-commitments" aria-label="Upcoming delivery deadlines">
               <AdminPanel
                 title="Upcoming deadlines"
-                className="h-full"
+                className="h-full ams-overview-panel ams-overview-panel--list"
                 bodyClassName="p-0"
                 actions={canOpenProjects ? (
                   <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2617,9 +2620,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </section>
           </section>
 
-          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Team and client delivery">
+          <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Team and client delivery">
             <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-team-workload" aria-label="Team workload">
-              <AdminPanel title="Team workload" className="h-full" bodyClassName="p-4 sm:p-5">
+              <AdminPanel title="Team workload" className="h-full ams-overview-panel" bodyClassName="p-4 sm:p-5">
                 <section data-ams-feature-slug="dashboard-task-load-by-owner" aria-label="Open tasks by owner">
                   <div className="mb-3 flex items-baseline justify-between gap-2">
                     <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
@@ -2678,7 +2681,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
                 <AdminPanel
                   title="Client delivery focus"
-                  className="h-full"
+                  className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
                   actions={(
                     <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project delivery <ArrowUpRight size={13} aria-hidden="true" /></Link>
@@ -2737,12 +2740,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ) : null}
           </section>
 
-          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Recent activity and shortcuts">
+          <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Recent activity and shortcuts">
             {canViewAuditLogs ? (
               <section className="min-w-0 min-[1100px]:col-span-8" data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
                 <AdminPanel
                   title="Recent activity"
-                  className="h-full"
+                  className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
                   actions={(
                     <Link to="/admin/settings?tab=audit" className="inline-flex min-h-9 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
@@ -2786,7 +2789,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ) : null}
 
             <section className={['min-w-0', canViewAuditLogs ? 'min-[1100px]:col-span-4' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-workspace-shortcuts" aria-label="Workspace shortcuts">
-              <AdminPanel title="Workspaces" className="h-full" bodyClassName="p-4">
+              <AdminPanel title="Workspaces" className="h-full ams-overview-panel ams-overview-panel--shortcuts" bodyClassName="p-4">
                 <div className="space-y-1.5">
                   {[
                     { label: 'Finance', icon: <CircleDollarSign size={14} />, href: '/admin/finance?tab=accounts-receivable' },

@@ -117,7 +117,18 @@ Sentence case everywhere. No all-caps labels, no tracked-out eyebrows.
 - **Radius:** 5 (badges), 6 (chips, segmented items), 8 (buttons, inputs, nav items), 12 (cards). One radius per role, not one for everything.
 - **Elevation:** dark mode has **no shadows**; separation is `1px solid var(--line)` plus panel color. Light mode may use `0 1px 2px rgba(0,0,0,.05)` on cards only. Popovers and tooltips use `--bg` fill plus a 1px border.
 
-### 2.6 Tailwind v4 setup (copy-paste)
+### 2.6 Dashboard reference-led visual variant
+
+The Dashboard Overview may use a dedicated, scoped visual variant inspired by the Maven / Orbix reference. This is an intentional exception for the Overview work surface only; do not apply the variant to every module.
+
+- **Card geometry:** `--radius-dashboard-card: 16px`; chart plot radius uses `--radius-dashboard-plot: 12px`. Other modules continue to use the canonical 12px `--radius-card`.
+- **Surface treatment:** maintain a quiet one-pixel outline, low-contrast secondary surfaces and one consistent header/body rhythm. Light mode may use a very subtle card shadow; dark mode remains shadow-free.
+- **Trend chart:** use restrained blue and teal lines for the two financial series, a soft grid, concise axis values, smooth curves and a small floating detail surface on hover. Hover follows the nearest data point, not the raw pointer position. On the Overview Finance trend, canonical data remains issued invoices and eligible expenses; visual colors must not imply that one series is profit or cash flow.
+- **Project ring:** hover/focus emphasizes one segment and updates the center to the corresponding saved count and share. Underlying risk/deadline calculations stay unchanged.
+- **Interactions:** links and header actions use rounded pill surfaces, quiet hover/focus borders and short transitions. Lists and workload bars get a restrained hover response. Honor `prefers-reduced-motion`; preserve visible keyboard focus.
+- **Scope boundary:** CSS and chart presentation props are scoped to Dashboard Overview. Do not modify the global theme, navigation, API, permission policy, source records or Finance formulas to imitate the reference.
+
+### 2.7 Tailwind v4 setup (copy-paste)
 
 Put this in the app's main CSS file (usually `src/index.css`). Merge with what exists rather than replacing it.
 

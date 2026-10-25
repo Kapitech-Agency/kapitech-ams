@@ -1,0 +1,345 @@
+/* Dashboard Overview visual variant inspired by Maven's restrained, rounded card language.
+   This file is scoped to Dashboard and does not alter other modules. */
+.ams-shell .ams-dashboard {
+  --dashboard-card-border: color-mix(in srgb, var(--line) 82%, transparent);
+  --dashboard-card-shadow: 0 3px 18px color-mix(in srgb, var(--text) 4%, transparent);
+  --dashboard-hover-surface: color-mix(in srgb, var(--text) 3%, var(--panel));
+}
+
+:root[data-theme="dark"] .ams-shell .ams-dashboard {
+  --dashboard-card-border: var(--line);
+  --dashboard-card-shadow: none;
+  --dashboard-hover-surface: color-mix(in srgb, var(--text) 5%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-page-header {
+  padding-bottom: 8px;
+  border-bottom: 0;
+}
+
+.ams-shell .ams-dashboard .ams-overview-card-row {
+  align-items: stretch;
+  gap: 16px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-scope {
+  padding: 14px 18px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: var(--radius-dashboard-card);
+  background: var(--panel);
+  box-shadow: var(--dashboard-card-shadow);
+}
+
+.ams-shell .ams-dashboard .ams-overview-scope > div:first-child > p:first-child {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.ams-shell .ams-dashboard .ams-overview-scope > div:first-child > p:last-child {
+  max-width: 62ch;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-scope__chip {
+  min-height: 30px;
+  padding-inline: 11px;
+  border-color: var(--dashboard-card-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 72%, var(--panel));
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-overview-scope__chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--line));
+  background: color-mix(in srgb, var(--accent) 4%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel {
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: var(--radius-dashboard-card);
+  background: var(--panel);
+  box-shadow: var(--dashboard-card-shadow);
+  transition: border-color 170ms ease, box-shadow 170ms ease, transform 170ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+  gap: 12px;
+  padding: 19px 20px 0;
+  border-bottom: 0;
+  background: transparent;
+}
+
+@media (min-width: 600px) {
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+    align-items: center;
+  }
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child p {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child {
+  gap: 7px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:last-child:not([class~="p-0"]) {
+  padding: 16px 20px 20px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:last-child[class~="p-0"] {
+  padding: 0;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .rounded-badge {
+  border-radius: 999px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .rounded-control {
+  border-radius: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .divide-y > article {
+  transition: background-color 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .divide-y > article:hover {
+  background: var(--dashboard-hover-surface);
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel a {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child a {
+  min-height: 34px;
+  border-radius: 999px;
+  padding-inline: 13px;
+  background: color-mix(in srgb, var(--bg) 72%, var(--panel));
+  border-color: var(--dashboard-card-border);
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child a:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  transform: translateY(-1px);
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel a:focus-visible,
+.ams-shell .ams-dashboard .ams-overview-panel button:focus-visible {
+  border-radius: 999px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel:has(a:hover),
+.ams-shell .ams-dashboard .ams-overview-panel:has(button:hover),
+.ams-shell .ams-dashboard .ams-overview-panel:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--line));
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel:has(a:hover),
+.ams-shell .ams-dashboard .ams-overview-panel:has(button:hover) {
+  transform: translateY(-1px);
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--finance > div:first-child h2 {
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-region {
+  min-width: 0;
+  border-color: color-mix(in srgb, var(--line) 75%, transparent);
+}
+
+@media (min-width: 900px) {
+  .ams-shell .ams-dashboard .ams-finance-trend-region {
+    border-top: 0;
+    border-left: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+    padding-top: 0;
+    padding-left: 20px;
+  }
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--projects .ams-donut-chart--maven .ams-donut-chart__ring {
+  width: 138px;
+  height: 138px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--projects .ams-donut-chart__center {
+  gap: 1px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--projects .ams-donut-chart__center span {
+  max-width: 100%;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--projects .ams-donut-chart__ring circle {
+  transition: stroke-width 150ms ease, opacity 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--projects .ams-donut-chart__ring circle:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--accent) 45%, transparent));
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--shortcuts a {
+  min-height: 42px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 72%, var(--panel));
+  border-color: var(--dashboard-card-border);
+  transition: transform 150ms ease, color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--shortcuts a:hover {
+  transform: translateY(-1px);
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .h-2.overflow-hidden.rounded-full {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 64%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .h-2.overflow-hidden.rounded-full > div {
+  border-radius: 999px;
+  transition: width 220ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven {
+  min-width: 0;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__legend {
+  gap: 14px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__legend > span {
+  gap: 7px;
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__plot {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2.25 / 1;
+  min-height: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-dashboard-plot);
+  background: color-mix(in srgb, var(--bg) 62%, var(--panel));
+  cursor: crosshair;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__plot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__plot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__primary-line,
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__secondary-line {
+  transition: stroke 160ms ease, opacity 160ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-tooltip {
+  width: min(210px, calc(100% - 24px));
+  padding: 12px 14px;
+  border-radius: var(--radius-dashboard-card);
+  border-color: var(--dashboard-card-border);
+  background: var(--panel);
+  box-shadow: var(--dashboard-card-shadow);
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-tooltip > p:first-child {
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-tooltip .text-\[10px\] {
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__data-toggle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin-top: 5px;
+  padding: 5px 11px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 70%, var(--panel));
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__data-toggle:hover {
+  color: var(--text);
+  background: var(--dashboard-hover-surface);
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--line));
+}
+
+.ams-shell .ams-dashboard .ams-trend-chart--maven .ams-trend-chart__data-toggle:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-overview-scope {
+    padding: 14px;
+  }
+
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+    padding: 16px 16px 0;
+  }
+
+  .ams-shell .ams-dashboard .ams-overview-panel > div:last-child:not([class~="p-0"]) {
+    padding: 14px 16px 16px;
+  }
+
+  .ams-shell .ams-dashboard .ams-overview-panel--finance .ams-finance-trend-region {
+    padding-left: 0;
+  }
+
+  .ams-shell .ams-dashboard .ams-overview-panel--projects .ams-donut-chart--maven .ams-donut-chart__ring {
+    width: 128px;
+    height: 128px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-overview-panel,
+  .ams-shell .ams-dashboard .ams-overview-panel a,
+  .ams-shell .ams-dashboard .ams-overview-panel button,
+  .ams-shell .ams-dashboard .ams-trend-chart--maven *,
+  .ams-shell .ams-dashboard .ams-donut-chart--maven * {
+    transition-duration: 0.01ms;
+  }
+}

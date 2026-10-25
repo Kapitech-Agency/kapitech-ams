@@ -686,3 +686,30 @@ test('Dashboard Performance prioritizes overdue and risk-flagged projects before
   assert.ok(performance.includes('leftSignals.due.localeCompare(rightSignals.due)'));
   assert.ok(performance.includes('const needsAttention = attentionProjects.slice(0, 8);'));
 });
+
+
+test('Dashboard Overview uses a rounded reference-led visual system and interactive financial trend', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const chart = await read('src/components/charts/DashboardCharts.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const designSystem = await read('AMS-DESIGN-SYSTEM.md');
+  assert.ok(dashboard.includes("import './GlobalExecutiveDashboard.css';"));
+  assert.ok(dashboard.includes('presentation="maven"'));
+  assert.ok(dashboard.includes('ams-overview-panel--finance'));
+  assert.ok(dashboard.includes('ams-overview-panel--projects'));
+  assert.ok(dashboard.includes('ams-overview-card-row'));
+  assert.ok(chart.includes("presentation?: 'default' | 'maven'"));
+  assert.ok(chart.includes("const primaryLineColor = isMavenPresentation ? 'var(--series-3)' : 'var(--series-1)'"));
+  assert.ok(chart.includes("const secondaryLineColor = isMavenPresentation ? 'var(--series-2)' : 'var(--series-3)'"));
+  assert.ok(chart.includes("event.key === 'ArrowLeft' || event.key === 'ArrowRight'"));
+  assert.ok(chart.includes('Use left and right arrow keys to inspect points'));
+  assert.ok(chart.includes("style={{ touchAction: isMavenPresentation ? 'pan-y' : 'none' }}"));
+  assert.ok(styles.includes('--dashboard-card-shadow: 0 3px 18px'));
+  assert.ok(styles.includes('--dashboard-card-shadow: none'));
+  assert.ok(styles.includes('border-radius: var(--radius-dashboard-card)'));
+  assert.ok(styles.includes('.ams-overview-panel:has(a:hover)'));
+  assert.ok(styles.includes('@media (prefers-reduced-motion: reduce)'));
+  assert.ok(!styles.includes('!important'));
+  assert.ok(designSystem.includes('Dashboard reference-led visual variant'));
+  assert.ok(designSystem.includes('dark mode remains shadow-free'));
+});

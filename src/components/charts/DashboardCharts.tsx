@@ -88,11 +88,18 @@ export const TrendChart: React.FC<{
   secondaryLabel?: string;
   tertiaryLabel?: string;
   primaryFormat?: (value: number) => string;
+  axisFormat?: (value: number) => string;
+  presentation?: 'default' | 'maven';
   ariaLabel: string;
-}> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, ariaLabel }) => {
+}> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, axisFormat, presentation = 'default', ariaLabel }) => {
   const [hover, setHover] = useState<{ index: number; x: number; percent: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const gradientId = `dashboard-trend-${useId().replace(/:/g, '')}`;
+  const isMavenPresentation = presentation === 'maven';
+  const primaryLineColor = isMavenPresentation ? 'var(--series-3)' : 'var(--series-1)';
+  const secondaryLineColor = isMavenPresentation ? 'var(--series-2)' : 'var(--series-3)';
+  const tertiaryLineColor = isMavenPresentation ? 'var(--series-4)' : 'var(--success)';
+  const formatAxisValue = axisFormat || primaryFormat;
   const width = 720;
   const height = 320;
   const left = 52;
@@ -142,10 +149,11 @@ export const TrendChart: React.FC<{
       }
     });
 
+    const selectedPoint = points[nearestIndex];
     setHover({
       index: nearestIndex,
-      x: viewBoxX,
-      percent: (viewBoxX / width) * 100,
+      x: selectedPoint.x,
+      percent: (selectedPoint.x / width) * 100,
     });
   };
 
@@ -171,19 +179,47 @@ export const TrendChart: React.FC<{
   };
 
   const active = hover ? points[hover.index] : null;
+  const selectPoint = (index: number) => {
+    const safeIndex = Math.max(0, Math.min(points.length - 1, index));
+    const selectedPoint = points[safeIndex];
+    if (!selectedPoint) return;
+    setHover({ index: safeIndex, x: selectedPoint.x, percent: (selectedPoint.x / width) * 100 });
+  };
+  const handleChartKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      setHover(null);
+      return;
+    }
+    if (event.key === 'Home') {
+      event.preventDefault();
+      selectPoint(0);
+      return;
+    }
+    if (event.key === 'End') {
+      event.preventDefault();
+      selectPoint(points.length - 1);
+      return;
+    }
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      const currentIndex = hover?.index ?? (event.key === 'ArrowLeft' ? points.length : -1);
+      selectPoint(currentIndex + (event.key === 'ArrowRight' ? 1 : -1));
+    }
+  };
 
   return (
-    <div className="relative min-w-0" role="img" aria-label={ariaLabel}>
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
-        <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>
-        {secondaryLabel && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-series-3" />{secondaryLabel}</span>}
-        {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />{tertiaryLabel}</span>}
+    <div className={['relative min-w-0 ams-trend-chart', isMavenPresentation ? 'ams-trend-chart--maven' : ''].join(' ')} role={isMavenPresentation ? 'group' : 'img'} aria-label={ariaLabel}>
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted ams-trend-chart__legend">
+        <span className="inline-flex items-center gap-2"><i className={isMavenPresentation ? 'h-[2px] w-4 rounded-full' : 'h-2 w-2 rounded-full bg-accent'} style={{ backgroundColor: primaryLineColor }} aria-hidden="true" />{primaryLabel}</span>
+        {secondaryLabel && <span className="inline-flex items-center gap-2"><i className={isMavenPresentation ? 'h-[2px] w-4 rounded-full' : 'h-2 w-2 rounded-full bg-series-3'} style={{ backgroundColor: secondaryLineColor }} aria-hidden="true" />{secondaryLabel}</span>
+        {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className={isMavenPresentation ? 'h-[2px] w-4 rounded-full' : 'h-2 w-2 rounded-full bg-success'} style={{ backgroundColor: tertiaryLineColor }} aria-hidden="true" />{tertiaryLabel}</span>}
       </div>
 
       <div
         className={[
-          'relative h-[250px] w-full overflow-hidden rounded-card border border-line/80 bg-bg/30 sm:h-[280px] lg:h-[320px]',
-          dragging ? 'cursor-grabbing select-none' : 'cursor-grab',
+          'relative h-[250px] w-full overflow-hidden rounded-card border border-line/80 bg-bg/30 sm:h-[280px] lg:h-[320px] ams-trend-chart__plot',
+          isMavenPresentation ? 'ams-trend-chart__plot--maven' : '',
+          dragging ? 'cursor-grabbing select-none' : isMavenPresentation ? 'cursor-crosshair' : 'cursor-grab',
         ].join(' ')}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -192,7 +228,11 @@ export const TrendChart: React.FC<{
         onPointerLeave={() => {
           if (!dragging) setHover(null);
         }}
-        style={{ touchAction: 'none' }}
+        onKeyDown={isMavenPresentation ? handleChartKeyDown : undefined}
+        tabIndex={isMavenPresentation ? 0 : undefined}
+        aria-label={isMavenPresentation ? ariaLabel + ' Use left and right arrow keys to inspect points, Home or End to jump to the first or last point, and Escape to clear the selection.' : undefined}
+        role={isMavenPresentation ? 'group' : undefined}
+        style={{ touchAction: isMavenPresentation ? 'pan-y' : 'none' }}
       >
         <svg
           viewBox={`0 0 ${width} ${height}`}
@@ -202,8 +242,8 @@ export const TrendChart: React.FC<{
         >
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--series-1)" stopOpacity="0.24" />
-              <stop offset="68%" stopColor="var(--series-1)" stopOpacity="0.075" />
+              <stop offset="0%" stopColor={primaryLineColor} stopOpacity={isMavenPresentation ? "0.10" : "0.24"} />
+              <stop offset="68%" stopColor={primaryLineColor} stopOpacity={isMavenPresentation ? "0.025" : "0.075"} />
               <stop offset="100%" stopColor="var(--series-1)" stopOpacity="0" />
             </linearGradient>
           </defs>
@@ -213,19 +253,19 @@ export const TrendChart: React.FC<{
             const yy = top + ratio * innerHeight;
             return (
               <g key={ratio}>
-                <line x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" strokeDasharray="2 5" opacity="0.55" vectorEffect="non-scaling-stroke" />
-                <text x={left - 9} y={yy + 4} textAnchor="end" fontSize="10" fill="var(--muted)">{primaryFormat(value)}</text>
+                <line x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" strokeDasharray={isMavenPresentation ? "1 0" : "2 5"} opacity={isMavenPresentation ? 0.34 : 0.55} vectorEffect="non-scaling-stroke" />
+                <text x={left - 9} y={yy + 4} textAnchor="end" fontSize={isMavenPresentation ? "14" : "10"} fill="var(--muted)">{formatAxisValue(value)}</text>
               </g>
             );
           })}
 
           <path d={primaryAreaPath} fill={`url(#${gradientId})`} />
-          <path d={primaryPath} fill="none" stroke="var(--series-1)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <path className="ams-trend-chart__primary-line" d={primaryPath} fill="none" stroke={primaryLineColor} strokeWidth={isMavenPresentation ? "2.5" : "3"} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           {secondaryLabel && secondaryPath && (
-            <path d={secondaryPath} fill="none" stroke="var(--series-3)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.82" />
+            <path className="ams-trend-chart__secondary-line" d={secondaryPath} fill="none" stroke={secondaryLineColor} strokeWidth={isMavenPresentation ? "2.3" : "2.2"} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.94" />
           )}
           {tertiaryPath && (
-            <path d={tertiaryPath} fill="none" stroke="var(--success)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.78" />
+            <path className="ams-trend-chart__tertiary-line" d={tertiaryPath} fill="none" stroke={tertiaryLineColor} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.78" />
           )}
 
           {hover && (
@@ -246,7 +286,7 @@ export const TrendChart: React.FC<{
             const activePoint = hover?.index === index;
             return (
               <g key={point.label}>
-                <text x={point.x} y={height - 15} textAnchor="middle" fontSize="10" fill="var(--muted)">{point.label}</text>
+                <text x={point.x} y={height - 15} textAnchor="middle" fontSize={isMavenPresentation ? "14" : "10"} fill="var(--muted)">{point.label}</text>
                 {activePoint && (
                   <>
                     <circle cx={point.x} cy={point.y} r="5.5" fill="var(--panel)" stroke="var(--series-1)" strokeWidth="2.2" vectorEffect="non-scaling-stroke" />
@@ -263,8 +303,8 @@ export const TrendChart: React.FC<{
         <div className="pointer-events-none absolute inset-x-3 top-3 bottom-3">
           {active && (
             <div
-              className="absolute top-0 z-10 w-[190px] -translate-x-1/2 rounded-card border border-line bg-panel px-3 py-2 text-xs"
-              style={{ left: `${Math.max(8, Math.min(92, hover?.percent ?? 50))}%` }}
+              className={["absolute top-0 z-10 w-[190px] -translate-x-1/2 rounded-card border border-line bg-panel px-3 py-2 text-xs ams-trend-tooltip", isMavenPresentation ? "ams-trend-tooltip--maven" : ""].join(" ")}
+              style={{ left: isMavenPresentation ? `clamp(108px, ${hover?.percent ?? 50}%, calc(100% - 108px))` : `${Math.max(8, Math.min(92, hover?.percent ?? 50))}%` }}
             >
               <p className="font-semibold text-fg">{active.label}</p>
               <div className="mt-1 text-[10px] text-muted">{dragging ? 'Drag to inspect another period' : 'Hover or drag across the chart'}</div>
@@ -279,7 +319,7 @@ export const TrendChart: React.FC<{
       </div>
 
       <details className="mt-2">
-        <summary className="cursor-pointer text-[11px] text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View data table</summary>
+        <summary className="ams-trend-chart__data-toggle cursor-pointer text-[11px] text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View data table</summary>
         <div className="mt-2 overflow-x-auto rounded-control border border-line">
           <table className="w-full min-w-[480px] text-xs">
             <thead className="border-b border-line text-left text-muted">
@@ -391,8 +431,10 @@ export const DonutChart: React.FC<{
   ariaLabel: string;
   showLegend?: boolean;
   centerLabel?: string;
-}> = ({ data, ariaLabel, showLegend = true, centerLabel = 'Projects' }) => {
+  presentation?: 'default' | 'maven';
+}> = ({ data, ariaLabel, showLegend = true, centerLabel = 'Projects', presentation = 'default' }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const isMavenPresentation = presentation === 'maven';
   const total = data.reduce((sum, point) => sum + Math.max(0, point.value), 0);
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
@@ -410,11 +452,13 @@ export const DonutChart: React.FC<{
 
   if (!data.length || total === 0) return null;
 
+  const active = activeIndex === null ? null : segments[activeIndex];
+
   return (
-    <div className={showLegend ? 'flex flex-col gap-4 sm:flex-row sm:items-center' : 'flex items-center justify-center'} role="img" aria-label={ariaLabel}>
-      <div className="relative mx-auto h-40 w-40 shrink-0">
+    <div className={['ams-donut-chart', showLegend ? 'flex flex-col gap-4 sm:flex-row sm:items-center' : 'flex items-center justify-center', isMavenPresentation ? 'ams-donut-chart--maven' : ''].join(' ')} role={isMavenPresentation ? 'group' : 'img'} aria-label={ariaLabel}>
+      <div className="relative mx-auto h-40 w-40 shrink-0 ams-donut-chart__ring">
         <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" preserveAspectRatio="xMidYMid meet">
-          <circle cx="60" cy="60" r={radius} fill="none" stroke="var(--line)" strokeWidth="12" opacity="0.7" />
+          <circle cx="60" cy="60" r={radius} fill="none" stroke="var(--line)" strokeWidth={isMavenPresentation ? "10" : "12"} opacity="0.7" />
           {segments.map((segment, index) => (
             <circle
               key={segment.label}
@@ -423,22 +467,34 @@ export const DonutChart: React.FC<{
               r={radius}
               fill="none"
               stroke={toneVar[segment.tone]}
-              strokeWidth={activeIndex === index ? 15 : 12}
+              strokeWidth={activeIndex === index ? (isMavenPresentation ? 13 : 15) : (isMavenPresentation ? 10 : 12)}
               strokeDasharray={`${segment.visibleLength} ${circumference - segment.visibleLength}`}
               strokeDashoffset={-segment.offset}
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
               opacity={activeIndex === null || activeIndex === index ? 1 : 0.45}
               onMouseEnter={() => setActiveIndex(index)}
+              onMouseLeave={isMavenPresentation ? () => setActiveIndex(null) : undefined}
               onFocus={() => setActiveIndex(index)}
+              onBlur={isMavenPresentation ? () => setActiveIndex(null) : undefined}
               tabIndex={0}
               aria-label={`${segment.label}: ${segment.value}`}
             />
           ))}
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-2xl font-medium tabular-nums text-fg">{total}</span>
-          <span className="text-xs text-muted">{centerLabel}</span>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-2 text-center ams-donut-chart__center">
+          {isMavenPresentation && active ? (
+            <>
+              <span className="text-xl font-semibold tabular-nums text-fg">{active.value}</span>
+              <span className="mt-0.5 max-w-full truncate text-[10px] text-muted">{active.label}</span>
+              <span className="mt-0.5 text-[10px] tabular-nums text-muted">{Math.round(active.value / total * 100)}% of active</span>
+            </>
+          ) : (
+            <>
+              <span className="text-2xl font-medium tabular-nums text-fg">{total}</span>
+              <span className="text-xs text-muted">{centerLabel}</span>
+            </>
+          )}
         </div>
       </div>
 
