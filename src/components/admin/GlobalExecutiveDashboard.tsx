@@ -1953,7 +1953,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const projectRiskBreakdown: DonutPoint[] = operationalSnapshot.projects === null
     ? []
     : buildProjectDeliveryBreakdown(rawProjectRows).map((item) => ({ label: item.label, value: item.value, tone: item.tone }));
-  const workstreamProjectMaximum = Math.max(1, ...serviceLineSummaries.map((line) => line.projectCount));
   const featuredDashboardProjects = activeProjectRows.slice().sort((left, right) => {
     const leftDue = dateKey(left.targetEndDate || left.endDate || left.dueDate || left.deadline);
     const rightDue = dateKey(right.targetEndDate || right.endDate || right.dueDate || right.deadline);
@@ -2557,7 +2556,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <p className="px-4 py-8 text-center text-xs text-muted" role="status">No project records returned.</p>
                 ) : (
                   <>
-                    <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4">
+                    <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
                       <div className="flex flex-wrap items-end justify-between gap-3">
                         <div><p className="text-[11px] text-muted">Overdue and due within 30 days</p><p className="mt-1 text-xl font-semibold tabular-nums text-fg">{commitmentHorizonTotal}</p></div>
                         <p className="text-[10px] text-muted">Current dated commitments</p>
@@ -2704,6 +2703,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             </div>
                             <span className="shrink-0 text-[10px] text-muted">{client.projectCount} active projects</span>
                           </div>
+                          {client.openTaskCount === null ? <p className="text-[10px] leading-4 text-muted">Task measures unavailable for this role or source.</p> : null}
                           <div className="grid grid-cols-2 gap-x-4 gap-y-2 min-[600px]:grid-cols-5">
                             {[
                               { label: 'Overdue tasks', value: client.overdueTaskCount },
