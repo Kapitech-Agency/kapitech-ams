@@ -246,6 +246,22 @@ test('Dashboard Overview shows the source-owned cross-module attention queue bef
   assert.doesNotMatch(metricArea, /id: 'tasks-due'|id: 'overdue'/);
 });
 
+test('Dashboard mobile and desktop project register respect the same pagination window', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const mobileStart = dashboard.indexOf('<div className="min-[900px]:hidden divide-y divide-line">');
+  const desktopStart = dashboard.indexOf('<div className="hidden min-[900px]:block overflow-x-auto', mobileStart);
+  const mobileRegister = dashboard.slice(mobileStart, desktopStart);
+  const desktopEnd = dashboard.indexOf('          </div>', desktopStart);
+  const desktopRegister = dashboard.slice(desktopStart, desktopEnd);
+  assert.ok(mobileStart >= 0 && desktopStart > mobileStart, 'Both responsive register layouts must exist.');
+  assert.ok(mobileRegister.includes('pagedDashboardProjects.map((project) => ('), 'Mobile cards must use the current pagination slice.');
+  assert.ok(desktopRegister.includes('pagedDashboardProjects.map((project) => ('), 'Desktop table must use the same pagination slice.');
+  assert.ok(!mobileRegister.includes('filteredProjects.map((project) => ('), 'Mobile cards must not bypass pagination.');
+  assert.ok(dashboard.includes('<AdminTablePagination'));
+  assert.ok(dashboard.includes('onPageChange={setDashboardProjectPage}'));
+  assert.ok(dashboard.includes('onPageSizeChange={setDashboardProjectPageSize}'));
+});
+
 test('Dashboard Overview displays canonical recent audit activity only for permitted roles', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");

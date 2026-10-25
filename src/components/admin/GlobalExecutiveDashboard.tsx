@@ -1405,7 +1405,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           ) : (
             <>
           <div className="min-[900px]:hidden divide-y divide-line">
-            {filteredProjects.map((project) => (
+            {pagedDashboardProjects.map((project) => (
               <article key={project.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
