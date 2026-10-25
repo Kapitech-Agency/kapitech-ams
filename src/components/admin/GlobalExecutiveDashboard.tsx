@@ -130,6 +130,11 @@ const buildProjectDeliveryBreakdown = (source: any[]) => {
 
 type FinancialTrendSpec = { label: string; start: string; end: string };
 
+const isDashboardExpenseEligible = (expense: any) => {
+  const status = String(expense.status || '').toLowerCase();
+  return !['voided', 'cancelled', 'canceled', 'deleted'].includes(status);
+};
+
 const aggregateFinancialTrend = (specs: FinancialTrendSpec[], invoices: any[], expenses: any[]) =>
   specs.map((spec) => {
     const invoiced = invoices.reduce((sum, invoice) => {
@@ -140,7 +145,7 @@ const aggregateFinancialTrend = (specs: FinancialTrendSpec[], invoices: any[], e
     const recordedExpenses = expenses.reduce((sum, expense) => {
       const day = dateKey(expense.date || expense.expenseDate || expense.createdAt);
       const status = String(expense.status || '').toLowerCase();
-      if (!day || day < spec.start || day >= spec.end || ['voided', 'cancelled', 'canceled', 'deleted'].includes(status)) return sum;
+      if (!day || day < spec.start || day >= spec.end || !isDashboardExpenseEligible(expense)) return sum;
       return sum + (Number(expense.amount || 0) || 0);
     }, 0);
     return { label: spec.label, startDate: spec.start, endDate: spec.end, primary: invoiced, secondary: recordedExpenses, tertiary: invoiced - recordedExpenses };
@@ -463,7 +468,8 @@ const AnalyticsView: React.FC<{
   const expenseRows = snapshot.expenses || [];
   const inCurrencyInvoices = invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
   const inCurrencyIssuedInvoices = inCurrencyInvoices.filter(isIssuedInvoice);
-  const inCurrencyExpenses = expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
+  const inCurrencyExpenseRows = expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
+  const inCurrencyExpenses = inCurrencyExpenseRows.filter(isDashboardExpenseEligible);
   const trend = snapshot.invoices !== null && snapshot.expenses !== null
     ? reportPeriodEnabled
       ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, inCurrencyInvoices, inCurrencyExpenses)
@@ -485,6 +491,7 @@ const AnalyticsView: React.FC<{
   const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
   const financialSourceRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0;
   const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0;
+  const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0;
   const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel);
   const formatReportDate = (value: string) => {
     const date = new Date(value + 'T00:00:00');
@@ -579,18 +586,14 @@ const AnalyticsView: React.FC<{
             ) : !financialRecordsReturned ? (
               <DashboardUnavailable
                 title={financialSourceRecordsReturned
-                  ? inCurrencyInvoices.length > 0 && inCurrencyIssuedInvoices.length === 0 && inCurrencyExpenses.length === 0
-                    ? 'No issued invoice or expense records in selected currency'
-                    : inCurrencyInvoices.length === 0 && inCurrencyExpenses.length === 0
-                      ? 'No financial records in selected currency'
-                      : 'No financial records returned'
+                  ? selectedCurrencyFinancialRowsReturned
+                    ? 'No usable financial records in selected currency'
+                    : 'No financial records in selected currency'
                   : 'No financial records returned'}
                 description={financialSourceRecordsReturned
-                  ? inCurrencyInvoices.length > 0 && inCurrencyIssuedInvoices.length === 0 && inCurrencyExpenses.length === 0
-                    ? 'The selected currency contains quotations or non-issued invoices only. Quotations are excluded from the invoice trend.'
-                    : inCurrencyInvoices.length === 0 && inCurrencyExpenses.length === 0
-                      ? 'The sources returned records, but none match ' + currency + '. A zero-value trend is not inferred from another currency.'
-                      : 'The invoice and expense sources returned no usable records for the selected period. A zero-value trend is not inferred.'
+                  ? selectedCurrencyFinancialRowsReturned
+                    ? 'Rows match ' + currency + ', but include only quotations or non-issued invoices and/or cancelled, voided, or deleted expenses. These records do not form a financial trend.'
+                    : 'The invoice and expense sources returned records, but none match ' + currency + '. A zero-value trend is not inferred from another currency.'
                   : 'The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source.'}
               />
             ) : inCurrencyIssuedInvoices.length === 0 ? (
@@ -677,8 +680,8 @@ const AnalyticsView: React.FC<{
                 <p className="text-xs font-medium text-fg">No invoice records returned</p>
                 <p className="mt-1 text-xs text-muted">An empty source is not represented as a confirmed zero balance.</p>
               </div>
-            ) : inCurrencyInvoices.length === 0 ? (
-              <DashboardUnavailable title="No invoice records in selected currency" description={'The invoice source returned rows, but none match ' + currency + '. A zero balance is not inferred.'} />
+            ) : inCurrencyIssuedInvoices.length === 0 ? (
+              <DashboardUnavailable title="No issued invoice records in selected currency" description={'The invoice source returned no issued invoice records in ' + currency + '. Quotations and non-issued invoice rows are excluded from receivables.'} />
             ) : (
               <div className="space-y-4">
                 <div className="rounded-control border border-line bg-bg p-4">
@@ -984,8 +987,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const financeSourcesAvailable = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null;
   const invoiceSourceHasRows = Boolean(operationalSnapshot.invoices?.length);
   const expenseSourceHasRows = Boolean(operationalSnapshot.expenses?.length);
+  const invoiceSourceHasSelectedCurrencyRows = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency));
+  const expenseSourceHasSelectedCurrencyRows = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency));
   const invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)));
-  const expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency));
+  const expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency && isDashboardExpenseEligible(expense)));
   const revenueData = useMemo(() => {
     if (!financeSourcesAvailable) return [];
     const invoices = (operationalSnapshot.invoices || []).filter((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency);
@@ -1215,9 +1220,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
           ) : !invoiceHistoryReturned && !expenseHistoryReturned ? (
             <DashboardUnavailable
-              title={invoiceSourceHasRows || expenseSourceHasRows ? 'No financial records in selected currency' : 'No financial records returned'}
+              title={invoiceSourceHasRows || expenseSourceHasRows
+                ? invoiceSourceHasSelectedCurrencyRows || expenseSourceHasSelectedCurrencyRows
+                  ? 'No usable financial records in selected currency'
+                  : 'No financial records in selected currency'
+                : 'No financial records returned'}
               description={invoiceSourceHasRows || expenseSourceHasRows
-                ? 'The invoice and expense sources returned records, but none match ' + financeCurrency + '. A zero-value trend is not inferred from another currency.'
+                ? invoiceSourceHasSelectedCurrencyRows || expenseSourceHasSelectedCurrencyRows
+                  ? 'Records match ' + financeCurrency + ', but none are issued invoices or eligible expenses. Quotations and cancelled, voided, or deleted expenses do not form a financial trend.'
+                  : 'The invoice and expense sources returned records, but none match ' + financeCurrency + '. A zero-value trend is not inferred from another currency.'
                 : 'The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source.'}
             />
           ) : !invoiceHistoryReturned ? (

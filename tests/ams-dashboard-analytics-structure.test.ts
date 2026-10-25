@@ -46,15 +46,18 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
   assert.ok(analytics.includes('A zero-value expense series is not inferred.'));
   assert.ok(analytics.includes('!financialRecordsReturned'));
   assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
+  assert.ok(analytics.includes('const inCurrencyExpenseRows = expenseRows.filter((row) => String(row.currency || \'IDR\').toUpperCase() === currency)'));
+  assert.ok(analytics.includes('const inCurrencyExpenses = inCurrencyExpenseRows.filter(isDashboardExpenseEligible)'));
   assert.ok(analytics.includes('const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0'));
+  assert.ok(analytics.includes('const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0'));
   assert.ok(analytics.includes('const financialSourceRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0'));
   assert.ok(analytics.includes('No financial records in selected currency'));
-  assert.ok(analytics.includes('inCurrencyInvoices.length === 0'));
+  assert.ok(analytics.includes('selectedCurrencyFinancialRowsReturned'));
   assert.ok(analytics.includes('inCurrencyExpenses.length === 0'));
   assert.ok(analytics.includes('const receivableInvoices = inCurrencyIssuedInvoices'));
   assert.ok(analytics.includes('const receivables = receivableInvoices.reduce((sum, invoice) => sum + getInvoiceOutstanding(invoice), 0)'));
   assert.ok(analytics.includes('const openInvoiceCount = receivableInvoices.filter((invoice) => getInvoiceOutstanding(invoice) > 0).length'));
-  assert.ok(analytics.includes('No invoice records in selected currency'));
+  assert.ok(analytics.includes('No issued invoice records in selected currency'));
 });
 
 test('Dashboard Analytics distinguishes balance and status snapshots from period trends', async () => {

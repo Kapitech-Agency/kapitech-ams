@@ -41,9 +41,11 @@ test('Dashboard financial trends use issued invoice rules and exclude void expen
   const trend = source.slice(trendStart, trendEnd);
   assert.ok(trend.includes('dateKey(getInvoiceDate(invoice))'));
   assert.ok(trend.includes('!isIssuedInvoice(invoice)'));
-  assert.ok(trend.includes("['voided', 'cancelled', 'canceled', 'deleted'].includes(status)"));
+  assert.ok(trend.includes('!isDashboardExpenseEligible(expense)'));
+  assert.ok(source.includes("return !['voided', 'cancelled', 'canceled', 'deleted'].includes(status)"));
   assert.ok(source.includes('invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || \'IDR\').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)))'));
   assert.ok(source.includes('const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0'));
+  assert.ok(source.includes('const inCurrencyExpenses = inCurrencyExpenseRows.filter(isDashboardExpenseEligible)'));
 });
 
 test('Dashboard reuses canonical Finance invoice, issue-date, and payment helpers', () => {
