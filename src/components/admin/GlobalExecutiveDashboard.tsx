@@ -1516,7 +1516,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       {view === 'overview' ? (
         <>
       <section
-        className="space-y-2 rounded-card border border-line bg-panel px-4 py-3 sm:px-5"
+        className="space-y-3 rounded-card border border-line bg-panel px-4 py-3 sm:px-5"
         data-ams-feature-slug="dashboard-overview-reporting-scope"
         aria-label="Overview reporting scope"
       >
@@ -1526,12 +1526,36 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <p className="mt-1 text-xs text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Current agency workload · all recorded dates'}</p>
           </div>
           <p className="max-w-3xl text-xs leading-5 text-muted">
-            Task ownership, review queues, delivery commitments and Finance balances show current operational state. The shared reporting period applies to Performance and Analytics trends. No capacity, approval or client SLA is inferred when its source is unavailable.
+            Operational queues show current records. Delivery deadlines cover overdue items and the next 30 days. The shared reporting period applies to Performance and Analytics trends. Recorded time follows that selected period, but open task counts and project states remain current. Finance control values use the current month or current receivable balances. No capacity, approval or client SLA is inferred when its source is unavailable.
           </p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 border-t border-line pt-3 sm:grid-cols-2 min-[1100px]:grid-cols-4">
+          <div className="min-w-0">
+            <p className="text-[10px] leading-4 text-muted">Operational queues</p>
+            <p className="mt-1 text-xs font-medium text-fg">Current open records</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] leading-4 text-muted">Delivery window</p>
+            <p className="mt-1 text-xs font-medium text-fg">Overdue and next 30 days</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] leading-4 text-muted">Recorded time</p>
+            <p className="mt-1 text-xs font-medium text-fg">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] leading-4 text-muted">Finance control</p>
+            <p className="mt-1 text-xs font-medium text-fg">Current month · current receivables</p>
+          </div>
         </div>
       </section>
 
-      <section data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
+      <section className="space-y-3" data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-fg">Needs attention</h2>
+          <p className="mt-1 text-xs leading-5 text-muted">Cross-module exceptions and incoming work that may need action. Open the owning workspace for the canonical record.</p>
+        </div>
+        <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
+          <section className={['min-w-0', canOpenInbox ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
         <AdminPanel
           title="Priority exceptions"
           description="Cross-module issues returned by the authorized Dashboard service. Use the owning workspace for the underlying record."
@@ -1611,7 +1635,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </section>
 
       {canOpenInbox ? (
-        <section data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
+        <section className="min-w-0 min-[1100px]:col-span-6" data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
           <AdminPanel
             title="Inbound triage"
             description="Open inbound records that are new, unassigned or high priority. Careers applicants are kept in the Careers workspace."
@@ -1691,6 +1715,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           </AdminPanel>
         </section>
       ) : null}
+        </div>
+      </section>
 
       <section className="space-y-3" data-ams-feature-slug="dashboard-agency-operating-indicators" aria-label="Agency operating indicators">
         <AdminMetricStrip

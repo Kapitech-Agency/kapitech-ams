@@ -15,7 +15,9 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   const overview = dashboard.slice(overviewStart, performanceStart);
 
   const scopeStart = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
+  const attentionCenterStart = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
   const exceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
+  const inboxTriageStart = overview.indexOf('data-ams-feature-slug="dashboard-inbox-triage"');
   const indicatorsStart = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
   const deliveryDeskStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const commitmentsStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
@@ -24,8 +26,21 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   const shortcutsStart = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
   const activityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
 
-  assert.ok(scopeStart >= 0 && exceptionsStart > scopeStart, 'The page must explain scope before cross-module exceptions.');
-  assert.ok(indicatorsStart > exceptionsStart, 'Agency work indicators follow the exception queue.');
+  assert.ok(scopeStart >= 0 && attentionCenterStart > scopeStart, 'The page must define reporting semantics before the attention queue.');
+  assert.ok(exceptionsStart > attentionCenterStart, 'Cross-module exceptions sit inside the Needs attention workspace.');
+  assert.ok(inboxTriageStart > exceptionsStart && indicatorsStart > inboxTriageStart, 'Incoming triage is grouped with cross-module exceptions before operating indicators.');
+  const attentionCenter = overview.slice(attentionCenterStart, indicatorsStart);
+  assert.ok(attentionCenter.includes('Needs attention'));
+  assert.ok(attentionCenter.includes("min-[1100px]:col-span-6"));
+  assert.ok(attentionCenter.includes("min-[1100px]:col-span-12"), 'Exception queue uses full width when Inbox is not available to the role.');
+  assert.ok(attentionCenter.includes('dashboard-priority-exceptions'));
+  assert.ok(attentionCenter.includes('dashboard-inbox-triage'));
+  assert.ok(overview.includes('Operational queues'));
+  assert.ok(overview.includes('Current open records'));
+  assert.ok(overview.includes('Overdue and next 30 days'));
+  assert.ok(overview.includes('Current month · current receivables'));
+  assert.ok(overview.includes('Recorded time follows that selected period, but open task counts and project states remain current.'));
+  assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
   assert.ok(deliveryDeskStart > indicatorsStart, 'Task-level delivery work follows the decision indicators.');
   assert.ok(commitmentsStart > deliveryDeskStart, 'Project milestone/deadline and resource views follow the primary task queue.');
   assert.ok(clientFocusStart > commitmentsStart, 'Client delivery focus follows delivery commitments and resource context.');
