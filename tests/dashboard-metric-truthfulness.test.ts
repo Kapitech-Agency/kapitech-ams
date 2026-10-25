@@ -24,7 +24,7 @@ test('Dashboard Overview groups canonical project and service-line data without 
   assert.ok(dashboard.includes("const activeProjectRows = rawProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health))"));
   assert.ok(dashboard.includes("const serviceLineSummaries = useMemo(() => serviceLineConfiguration.map((line) =>"));
   assert.ok(dashboard.includes("const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
-  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.filter((item) => {")));
+  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.filter((item) => {"));
   assert.ok(dashboard.includes("for (const project of activeProjectRows)"));
   assert.ok(overview.includes('Upcoming deadlines'));
   assert.ok(overview.includes('Creative & IT workload'));
@@ -40,7 +40,7 @@ test('Dashboard Overview groups canonical project and service-line data without 
 
 test('Dashboard deadline distribution counts all source commitments rather than only the visible preview', () => {
   assert.ok(dashboard.includes('const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>'));
-  assert.ok(dashboard.includes('const upcomingCommitments = allUpcomingCommitments.filter((item) => {')));
+  assert.ok(dashboard.includes('const upcomingCommitments = allUpcomingCommitments.filter((item) => {'));
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey"));
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'next7') return item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey"));
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'days8to30') return item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey"));
@@ -167,7 +167,7 @@ test('Dashboard Overview does not duplicate unverified project progress or budge
   assert.ok(dashboard.includes("const serviceLineConfiguration = ["));
   assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
   assert.ok(dashboard.includes("const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
-  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.filter((item) => {")));
+  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.filter((item) => {"));
   assert.ok(dashboard.includes("project.targetEndDate || project.endDate || project.dueDate || project.deadline"));
   assert.equal(overview.includes('progressPercent'), false, 'Overview should not invent or duplicate a project progress field.');
   assert.equal(overview.includes('project.budget'), false, 'Budget belongs to Project/Finance workspaces, not the delivery workboard.');
