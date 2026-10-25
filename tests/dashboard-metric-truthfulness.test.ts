@@ -24,6 +24,16 @@ test('Dashboard Overview active project register excludes completed and archived
   assert.ok(dashboard.includes('The returned project records are completed or archived.'));
 });
 
+test('Dashboard does not substitute monthly revenue for cash collected', () => {
+  assert.ok(dashboard.includes('const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? liveCashCollected;'));
+  const start = dashboard.indexOf("id: 'revenue', label: 'Cash collected this month'");
+  const end = dashboard.indexOf("id: 'outstanding', label: 'Outstanding invoices'", start);
+  assert.ok(start >= 0 && end > start, 'Cash KPI should be separate from receivables.');
+  const cashKpi = dashboard.slice(start, end);
+  assert.ok(cashKpi.includes('Invoice payments recorded this month'));
+  assert.doesNotMatch(cashKpi, /revenueThisMonth/, 'Revenue must not be used as a cash-received fallback.');
+});
+
 test('Dashboard distinguishes an empty portfolio from an unavailable project source', () => {
   assert.ok(dashboard.includes('projectDataAvailable'));
   assert.ok(dashboard.includes('No active projects to assess'));

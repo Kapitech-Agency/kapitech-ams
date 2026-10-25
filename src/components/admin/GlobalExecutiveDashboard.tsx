@@ -1000,7 +1000,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, 0);
   const liveCashDifference = liveCashCollected !== null && liveMonthlyExpenses !== null ? liveCashCollected - liveMonthlyExpenses : null;
   const activeProjectsMetric = dashboardOverview.metrics?.activeProjects ?? (operationalSnapshot.projects !== null ? activeProjectRows.length : null);
-  const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? dashboardOverview.financials?.revenueThisMonth ?? liveCashCollected;
+  const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? liveCashCollected;
   const outstandingMetric = dashboardOverview.financials?.outstandingReceivables ?? liveOutstanding;
   const cashDifferenceMetric = liveCashDifference;
 
@@ -1149,7 +1149,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             {
               id: 'revenue', label: 'Cash collected this month',
               value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
-              context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Invoice payments recorded this month' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              context: dashboardOverview.financials?.cashCollected != null || liveCashCollected !== null ? 'Invoice payments recorded this month' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
               icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
             },
             {
