@@ -21,7 +21,8 @@ import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 import { ProfileIdentity } from './ProfileIdentity';
 import { api } from '../../lib/apiClient';
-import { hasAdminPermission } from '../../lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { getReportingPeriodRange, type ReportingPeriodMode } from '../../lib/reportingPeriods';
 
@@ -735,6 +736,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const canManageProjects = hasAdminPermission('canManageProjects');
+  const currentNavigationRole = getAmsRole(getAdminSession()?.user);
+  const canOpenDashboardRoute = (destination: string) => {
+    const target = new URL(destination, 'https://ams.kapitech.local');
+    return canAccessAmsRoute(currentNavigationRole, target.pathname, target.search);
+  };
+  const canCreateProject = canManageProjects && canOpenDashboardRoute('/admin/projects?create=1');
+  const canOpenProjects = canOpenDashboardRoute('/admin/projects');
   const canViewAuditLogs = hasAdminPermission('canViewSecurityAuditLogs');
   const requestedView = searchParams.get('view');
   const hasViewParameter = searchParams.has('view');
@@ -1027,13 +1035,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
               {isRefreshing ? 'Refreshing…' : 'Refresh data'}
             </button>
-            <Link
-              to={canManageProjects ? '/admin/projects?create=1' : '/admin/projects'}
-              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium sm:min-h-9 sm:w-auto text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              <Plus size={14} />
-              {canManageProjects ? 'New project' : 'Open Projects'}
-            </Link>
+            {canCreateProject || canOpenProjects ? (
+              <Link
+                to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium sm:min-h-9 sm:w-auto text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                <Plus size={14} />
+                {canCreateProject ? 'New project' : 'Open Projects'}
+              </Link>
+            ) : null}
           </>
         )}
       />
@@ -1200,10 +1210,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           {[
             { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
             { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
-            { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/invoicing' },
+            { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/finance?tab=accounts-receivable' },
             { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
             { label: 'View documents', icon: <FileText size={14} />, href: '/admin/documents' }
-          ].map((action) => (
+          ].filter((action) => canOpenDashboardRoute(action.href)).map((action) => (
             <Link
               key={action.label}
               to={action.href}

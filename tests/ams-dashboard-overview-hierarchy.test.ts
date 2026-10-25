@@ -76,8 +76,10 @@ test('Dashboard project creation action opens the existing create drawer only fo
   const projects = await read('src/pages/admin/AdminProjects.tsx');
 
   assert.match(dashboard, /hasAdminPermission\('canManageProjects'\)/);
-  assert.match(dashboard, /to=\{canManageProjects \? '\/admin\/projects\?create=1' : '\/admin\/projects'\}/);
-  assert.match(dashboard, /\{canManageProjects \? 'New project' : 'Open Projects'\}/);
+  assert.match(dashboard, /const canCreateProject = canManageProjects && canOpenDashboardRoute\('\/admin\/projects\?create=1'\)/);
+  assert.match(dashboard, /canCreateProject \|\| canOpenProjects/);
+  assert.match(dashboard, /to=\{canCreateProject \? '\/admin\/projects\?create=1' : '\/admin\/projects'\}/);
+  assert.match(dashboard, /\{canCreateProject \? 'New project' : 'Open Projects'\}/);
   assert.match(projects, /const createProjectRequestHandled = React\.useRef\(false\)/);
   assert.match(projects, /searchParams\.get\('create'\) === '1'/);
   assert.match(projects, /next\.delete\('create'\)/);
@@ -107,6 +109,15 @@ test('Dashboard Overview and Analytics share the topbar reporting period without
   assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'));
 });
 
+
+test('Dashboard quick actions and project-header links respect route access', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  assert.ok(dashboard.includes('const currentNavigationRole = getAmsRole(getAdminSession()?.user)'));
+  assert.ok(dashboard.includes('return canAccessAmsRoute(currentNavigationRole, target.pathname, target.search)'));
+  assert.ok(dashboard.includes('.filter((action) => canOpenDashboardRoute(action.href)).map((action) => ('));
+  assert.ok(dashboard.includes("href: '/admin/finance?tab=accounts-receivable'"));
+  assert.ok(dashboard.includes('canCreateProject || canOpenProjects'));
+});
 
 test('Dashboard Overview does not infer a zero financial trend from empty invoice or expense sources', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
