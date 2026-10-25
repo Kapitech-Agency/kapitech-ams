@@ -58,7 +58,7 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
 test('Dashboard Overview financial-history availability respects the selected currency', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.ok(dashboard.includes("invoiceSourceHasRows = Boolean(operationalSnapshot.invoices?.length)"));
-  assert.ok(dashboard.includes("invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency))"));
+  assert.ok(dashboard.includes("invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)))"));
   assert.ok(dashboard.includes("expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency))"));
   assert.ok(dashboard.includes('No financial records in selected currency'));
   assert.ok(dashboard.includes('A zero-value trend is not inferred from another currency.'));

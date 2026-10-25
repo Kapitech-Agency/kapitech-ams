@@ -139,7 +139,8 @@ const aggregateFinancialTrend = (specs: FinancialTrendSpec[], invoices: any[], e
     }, 0);
     const recordedExpenses = expenses.reduce((sum, expense) => {
       const day = dateKey(expense.date || expense.expenseDate || expense.createdAt);
-      if (!day || day < spec.start || day >= spec.end) return sum;
+      const status = String(expense.status || '').toLowerCase();
+      if (!day || day < spec.start || day >= spec.end || ['voided', 'cancelled', 'canceled', 'deleted'].includes(status)) return sum;
       return sum + (Number(expense.amount || 0) || 0);
     }, 0);
     return { label: spec.label, startDate: spec.start, endDate: spec.end, primary: invoiced, secondary: recordedExpenses, tertiary: invoiced - recordedExpenses };
@@ -461,13 +462,14 @@ const AnalyticsView: React.FC<{
   const invoiceRows = snapshot.invoices || [];
   const expenseRows = snapshot.expenses || [];
   const inCurrencyInvoices = invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
+  const inCurrencyIssuedInvoices = inCurrencyInvoices.filter(isIssuedInvoice);
   const inCurrencyExpenses = expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
   const trend = snapshot.invoices !== null && snapshot.expenses !== null
     ? reportPeriodEnabled
       ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, inCurrencyInvoices, inCurrencyExpenses)
       : buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)
     : [];
-  const receivableInvoices = inCurrencyInvoices.filter(isIssuedInvoice);
+  const receivableInvoices = inCurrencyIssuedInvoices;
   const receivables = receivableInvoices.reduce((sum, invoice) => sum + getInvoiceOutstanding(invoice), 0);
   const openInvoiceCount = receivableInvoices.filter((invoice) => getInvoiceOutstanding(invoice) > 0).length;
   const activeProjects = snapshot.projects === null
@@ -482,7 +484,7 @@ const AnalyticsView: React.FC<{
   }, []).sort((a, b) => b.count - a.count);
   const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
   const financialSourceRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0;
-  const financialRecordsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenses.length > 0;
+  const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0;
   const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel);
   const formatReportDate = (value: string) => {
     const date = new Date(value + 'T00:00:00');
@@ -576,12 +578,22 @@ const AnalyticsView: React.FC<{
               <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
             ) : !financialRecordsReturned ? (
               <DashboardUnavailable
-                title={financialSourceRecordsReturned ? 'No financial records in selected currency' : 'No financial records returned'}
+                title={financialSourceRecordsReturned
+                  ? inCurrencyInvoices.length > 0 && inCurrencyIssuedInvoices.length === 0 && inCurrencyExpenses.length === 0
+                    ? 'No issued invoice or expense records in selected currency'
+                    : inCurrencyInvoices.length === 0 && inCurrencyExpenses.length === 0
+                      ? 'No financial records in selected currency'
+                      : 'No financial records returned'
+                  : 'No financial records returned'}
                 description={financialSourceRecordsReturned
-                  ? 'The invoice and expense sources returned records, but none match ' + currency + '. A zero-value trend is not inferred from another currency.'
+                  ? inCurrencyInvoices.length > 0 && inCurrencyIssuedInvoices.length === 0 && inCurrencyExpenses.length === 0
+                    ? 'The selected currency contains quotations or non-issued invoices only. Quotations are excluded from the invoice trend.'
+                    : inCurrencyInvoices.length === 0 && inCurrencyExpenses.length === 0
+                      ? 'The sources returned records, but none match ' + currency + '. A zero-value trend is not inferred from another currency.'
+                      : 'The invoice and expense sources returned no usable records for the selected period. A zero-value trend is not inferred.'
                   : 'The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source.'}
               />
-            ) : inCurrencyInvoices.length === 0 ? (
+            ) : inCurrencyIssuedInvoices.length === 0 ? (
               <DashboardUnavailable title="Invoice history unavailable" description={'The invoice source returned no usable records in ' + currency + '. A zero-value invoice series is not inferred.'} />
             ) : inCurrencyExpenses.length === 0 ? (
               <DashboardUnavailable title="Expense history unavailable" description={'The expense source returned no usable records in ' + currency + '. A zero-value expense series is not inferred.'} />
@@ -972,7 +984,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const financeSourcesAvailable = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null;
   const invoiceSourceHasRows = Boolean(operationalSnapshot.invoices?.length);
   const expenseSourceHasRows = Boolean(operationalSnapshot.expenses?.length);
-  const invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency));
+  const invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)));
   const expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency));
   const revenueData = useMemo(() => {
     if (!financeSourcesAvailable) return [];

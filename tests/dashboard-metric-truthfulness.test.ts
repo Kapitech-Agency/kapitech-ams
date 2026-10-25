@@ -34,6 +34,18 @@ test('Dashboard does not substitute monthly revenue for cash collected', () => {
   assert.doesNotMatch(cashKpi, /revenueThisMonth/, 'Revenue must not be used as a cash-received fallback.');
 });
 
+test('Dashboard financial trends use issued invoice rules and exclude void expense records', () => {
+  const source = dashboard;
+  const trendStart = source.indexOf('const aggregateFinancialTrend');
+  const trendEnd = source.indexOf('const buildRecentFinancialTrend', trendStart);
+  const trend = source.slice(trendStart, trendEnd);
+  assert.ok(trend.includes('dateKey(getInvoiceDate(invoice))'));
+  assert.ok(trend.includes('!isIssuedInvoice(invoice)'));
+  assert.ok(trend.includes("['voided', 'cancelled', 'canceled', 'deleted'].includes(status)"));
+  assert.ok(source.includes('invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || \'IDR\').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)))'));
+  assert.ok(source.includes('const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0'));
+});
+
 test('Dashboard reuses canonical Finance invoice, issue-date, and payment helpers', () => {
   assert.ok(dashboard.includes("import { getInvoiceDate, getInvoiceOutstanding, getPaymentRows, isIssuedInvoice } from '../../lib/financeWorkbook';"));
   const trendStart = dashboard.indexOf('const aggregateFinancialTrend');
