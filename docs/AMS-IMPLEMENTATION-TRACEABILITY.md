@@ -1382,3 +1382,22 @@ Mobile and desktop project views both map the pagination slice. The project regi
 **Unverified:** authenticated real data and role behavior, direct routes, responsive browser screenshots/viewport sweep, keyboard/focus, contrast, touch and assistive technology. Stage 5 sign-off is pending.
 
 **Next:** complete Dashboard Overview source/content acceptance against §4.1/§4.10, then close Analytics. Do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW: Add service-line delivery status and client-linked workload · 25 October 2026
+
+**Current source/test SHA:** [eb7c92f9](https://github.com/Kapitech-Agency/kapitech-ams/commit/eb7c92f9acd3a8e1899c0a9702cd0cde5036f485). Workstream status change [700160ea](https://github.com/Kapitech-Agency/kapitech-ams/commit/700160eaee06784568aa91dd9a843cc53048e0d5).
+
+The Creative & IT workstream panel reports active projects, open tasks, tasks in review, blocked tasks, unassigned tasks, overdue tasks and projects with overdue delivery per saved service line. It reuses normalized task/project/milestone data. Task metrics show unavailable when the current role cannot open Tasks or the source has not returned data. Workstream project details stay hidden if Projects access is denied.
+
+A separate Client delivery focus section appears after commitment/resource summaries and before Finance control. It groups current active project and open-task workload by saved client display name and reports project/task status counts, overdue commitments and the next upcoming date. Project detail links render only if the route-access helper allows them.
+
+**Data limitation:** the current Dashboard snapshot does not establish a canonical client-master ID for this aggregation. Client rows are grouped by normalized saved display name and must not be represented as client health, SLA, contract, retainer or renewal status. No new API, routes, workflow state or database schema was introduced.
+
+**Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts.
+
+**Validation:** exact-SHA Quality Gate [40182831752 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40182831752): typecheck, regression tests and production build. AMS CI [40182831679 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40182831679) due to existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; downstream build, packaged migration and HTTP-smoke checks were skipped.
+
+**Unverified:** authenticated live values, roles/direct paths, canonical viewport sweep, keyboard/focus, contrast, touch, assistive technology and explicit Stage 5 sign-off. Recent Activity remains limited by the missing per-record destination field.
+
+**Next:** continue Dashboard Overview content acceptance region by region, then close Analytics review. Do not move to Inbox.

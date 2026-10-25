@@ -867,3 +867,17 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - **CI:** [AMS CI 40173353081](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40173353081) failed at the existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed.
 - **Still unverified:** authenticated browser/role sessions, real data, the prescribed viewport sweep, keyboard/focus, contrast, touch and assistive technology. Recent Activity still lacks per-record destination URLs; the current server cash summary still maps revenue to cash, so the frontend deliberately ignores it.
 - **Next:** finish Dashboard Overview acceptance against §4.1/§4.10, then finish Analytics. Do not start Inbox.
+
+
+## Dashboard · Agency workstream and client delivery content · 25 October 2026
+
+**Current source/test SHA:** [eb7c92f9](https://github.com/Kapitech-Agency/kapitech-ams/commit/eb7c92f9acd3a8e1899c0a9702cd0cde5036f485). Exact-SHA Quality Gate [40182831752 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40182831752).
+
+- Creative & IT workstreams report active projects, open tasks, tasks in review, blocked tasks, unassigned tasks, overdue tasks and projects with overdue delivery for each saved service line.
+- Task metrics remain unavailable when route access or the task source does not support them. Workstream project detail is hidden if Projects access is denied.
+- Client delivery focus groups active project/task workload by saved client name. It shows project count, task-state counts, overdue commitments, next upcoming deadline and up to three permitted project links. It is a delivery-context aggregation, not a Client 360 master or client-health/SLA/contract assessment.
+- No new routes, API, DB/schema, Finance formulas or permission rules were introduced. Project links use existing project-detail patterns and the current route-access helper.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts. **Commits:** [700160ea](https://github.com/Kapitech-Agency/kapitech-ams/commit/700160eaee06784568aa91dd9a843cc53048e0d5), [eb7c92f9](https://github.com/Kapitech-Agency/kapitech-ams/commit/eb7c92f9acd3a8e1899c0a9702cd0cde5036f485).
+- **AMS CI:** [40182831679](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40182831679) failed at the existing high body-parser@1.20.6 audit advisory GHSA-27r3-jxmh-p828 after typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed.
+- **Unverified:** authenticated client/project/task data, role/direct-route behavior, viewport/reflow, keyboard/focus, contrast, touch, screen reader and Stage 5 sign-off.
+- **Next:** finish Dashboard Overview acceptance against §4.1/§4.10; then finish Analytics. Do not move to Inbox.
