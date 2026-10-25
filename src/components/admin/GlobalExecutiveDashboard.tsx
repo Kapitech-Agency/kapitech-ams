@@ -2036,8 +2036,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <div className="space-y-2.5 border-b border-line bg-bg/50 px-4 py-3">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[
-                  { label: 'Urgent', count: attentionSeveritySummary.urgent, color: 'text-danger' },
-                  { label: 'Attention', count: attentionSeveritySummary.attention, color: 'text-warning' },
+                  { label: 'Urgent', count: attentionSeveritySummary.urgent, color: attentionSeveritySummary.urgent > 0 ? 'text-danger' : 'text-muted' },
+                  { label: 'Attention', count: attentionSeveritySummary.attention, color: attentionSeveritySummary.attention > 0 ? 'text-warning' : 'text-muted' },
                   { label: 'Other', count: attentionSeveritySummary.other, color: 'text-muted' },
                   { label: 'Total', count: attentionSeveritySummary.total, color: 'text-fg' }
                 ].map((metric) => {
@@ -2047,12 +2047,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <div
                       key={metric.label}
                       className={[
-                        'min-w-0 rounded-control border px-2.5 py-2 sm:px-3',
-                        urgent ? 'border-danger/25 bg-danger/5' : attention ? 'border-warning/25 bg-warning/5' : 'border-line bg-panel'
+                        'min-w-0 border-l px-2.5 py-1 sm:px-3',
+                        urgent ? 'border-danger pl-3' : attention ? 'border-warning pl-3' : 'border-line pl-3'
                       ].join(' ')}
                     >
                       <p className="text-[10px] text-muted">{metric.label}</p>
-                      <p className={['mt-0.5 font-semibold tabular-nums', metric.label === 'Urgent' ? 'text-2xl' : 'text-lg', metric.color].join(' ')}>{metric.count}</p>
+                      <p className={['mt-0.5 font-semibold tabular-nums', metric.label === 'Urgent' && metric.count > 0 ? 'text-2xl' : metric.label === 'Total' ? 'text-xl' : 'text-base', metric.color].join(' ')}>{metric.count}</p>
                     </div>
                   );
                 })}
@@ -2374,7 +2374,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <h3 className="text-xs font-semibold text-fg">{line.label}</h3>
                           <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] tabular-nums text-muted">{line.projectCount} projects</span>
                         </div>
-                        <p className="mt-1 text-[11px] leading-5 text-muted">{line.description}</p>
+                        <p className="sr-only">{line.description}</p>
                         {canOpenTasks && operationalSnapshot.tasks !== null ? (
                           <div className="mt-3 space-y-1.5" data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}>
                             <div className="flex items-center justify-between gap-3">
@@ -2395,17 +2395,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         ) : (
                           <p className="mt-3 rounded-control border border-line bg-bg px-3 py-2 text-[10px] leading-4 text-muted" role="status">Open task distribution is unavailable for this role or task source.</p>
                         )}
-                        <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2" role="group" aria-label={line.label + ' delivery risk signals'}>
                           {[
-                            { label: 'Tasks in review', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.reviewTaskCount : null },
-                            { label: 'Blocked tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.blockedTaskCount : null },
-                            { label: 'Unassigned tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.unassignedTaskCount : null },
-                            { label: 'Overdue tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.overdueTaskCount : null },
-                            { label: 'Projects with overdue delivery', value: operationalSnapshot.projects !== null && canOpenProjects ? line.overdueCommitmentCount : null }
+                            { label: 'Tasks in review', compactLabel: 'Review', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.reviewTaskCount : null },
+                            { label: 'Blocked tasks', compactLabel: 'Blocked', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.blockedTaskCount : null },
+                            { label: 'Unassigned tasks', compactLabel: 'Unassigned', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.unassignedTaskCount : null },
+                            { label: 'Overdue tasks', compactLabel: 'Overdue', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.overdueTaskCount : null },
+                            { label: 'Projects with overdue delivery', compactLabel: 'Late delivery', value: operationalSnapshot.projects !== null && canOpenProjects ? line.overdueCommitmentCount : null }
                           ].map((metric) => (
-                            <div key={metric.label} className="min-w-0 rounded-control border border-line bg-bg px-3 py-2">
-                              <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
-                              <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{metric.value == null ? '—' : metric.value}</p>
+                            <div key={metric.label} className="min-w-0 flex-1 basis-[54px]" role="group" aria-label={metric.label + ': ' + (metric.value == null ? 'unavailable' : metric.value)} title={metric.label}>
+                              <p className="text-[9px] leading-3 text-muted">{metric.compactLabel}</p>
+                              <p className={['mt-1 text-sm font-semibold tabular-nums', metric.value == null ? 'text-muted' : metric.label === 'Blocked tasks' && metric.value > 0 || metric.label === 'Overdue tasks' && metric.value > 0 || metric.label === 'Projects with overdue delivery' && metric.value > 0 ? 'text-danger' : 'text-fg'].join(' ')}>{metric.value == null ? '—' : metric.value}</p>
                             </div>
                           ))}
                         </div>
