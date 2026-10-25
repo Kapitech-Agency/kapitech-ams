@@ -906,3 +906,14 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - **Validation:** typecheck, regression tests and production build passed on [Quality Gate 40187377703](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377703). AMS CI [40187377730](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40187377730) failed at the existing high body-parser@1.20.6 dependency audit after typecheck, migrations, security regression and PostgreSQL integration passed.
 - **Still unverified:** authenticated role/client visibility, direct click-through, rendered browser selection, viewport/reflow, keyboard/focus and assistive technology.
 - **Next:** continue Dashboard Overview source/content acceptance against §4.1 and §4.10, then complete Analytics. Do not move to Inbox.
+
+## Dashboard Overview · Needs attention composition and reporting-scope semantics · 25 October 2026
+
+- **Current source/test HEAD:** [bd64d338](https://github.com/Kapitech-Agency/kapitech-ams/commit/bd64d338039468a22252df1a9706d0679fec215a).
+- **Structure:** Cross-module Dashboard exceptions and role-authorized canonical Inbox triage now share a “Needs attention” region. On desktop at 1100px they sit in balanced columns; on smaller widths they stack. If Inbox is unavailable to the user's role, the exception panel spans the full desktop row. The two content surfaces retain their separate sources, role-aware links, loading/error/empty behavior and source ownership.
+- **Scope semantics:** Overview now labels current open operational records, overdue/next-30-day delivery commitments, period-scoped recorded time, and Finance controls based on the current month or current receivable balances. Current task/project state is not portrayed as a historical trend.
+- **Evidence:** structural slice [1e13e0ae](https://github.com/Kapitech-Agency/kapitech-ams/commit/1e13e0aeb6692ea093091d87b513f61895ce1c48), compatibility fix [bd64d338](https://github.com/Kapitech-Agency/kapitech-ams/commit/bd64d338039468a22252df1a9706d0679fec215a), test file `tests/ams-dashboard-overview-hierarchy.test.ts`.
+- **Validation:** Quality Gate [40193689375 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40193689375) with type check, regressions and production build. AMS CI [40193689372 failed at the existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40193689372) after type check, migrations, security regression and PostgreSQL integration passed; downstream build/package/HTTP smoke steps were skipped.
+- **Unverified:** Authenticated live-data and role review, rendered browser visuals at prescribed viewports, keyboard/focus, touch, contrast and assistive technology. Stage 5 sign-off is still required.
+- **Next:** continue remaining Dashboard Overview source/empty/error-state and Recent Activity contract acceptance, then finish Analytics. Do not switch to Inbox.
+

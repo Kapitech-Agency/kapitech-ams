@@ -2314,3 +2314,17 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Scope:** No new endpoint/backend, schema, permission policy, Finance formula or posting behavior. Existing sources and route guards are reused.
 - **Still open:** authenticated browser role/direct-route, real-client selection, responsive viewport, keyboard/focus and assistive-technology verification. Recent Activity has no per-record URL in the current response contract.
 - **Next:** finish Overview source/empty states and current-state versus period scope against §4.1/§4.10, then finish Analytics. Do not move to Inbox.
+
+## Stage 4 structural slice — Dashboard Overview · Needs attention grouping and reporting-scope labels · 25 October 2026
+
+- **Requirement:** `VIEW-DASH-OVERVIEW`, Main-Content Restructuring Specification §4.1 and mandatory composition matrix §4.10.
+- **Before:** Scope guidance described operational and period-based values together without a concise view-level summary of their different windows. Cross-module exceptions and Inbox triage were separate full-width sections.
+- **After:** Overview adds a four-part scope summary: current open operational records; overdue and next-30-day commitments; recorded time under the selected global period; and Finance values with current-month/current-receivable semantics. The existing shared-period contract sentence remains intact for regression compatibility.
+- **Needs attention:** The canonical cross-module exception panel and source-backed Inbox triage panel now share a responsive desktop row under one workspace heading. Their data sources, role checks, route destinations, loading/empty/unavailable states and separate task responsibilities remain distinct. At viewport widths below the 1100px breakpoint they stack. If the role cannot open Inbox, the exception panel spans the full desktop row.
+- **Changed paths:** `src/components/admin/GlobalExecutiveDashboard.tsx`; `tests/ams-dashboard-overview-hierarchy.test.ts`.
+- **Commits:** structural slice [1e13e0ae](https://github.com/Kapitech-Agency/kapitech-ams/commit/1e13e0aeb6692ea093091d87b513f61895ce1c48); scope-copy compatibility correction [bd64d338](https://github.com/Kapitech-Agency/kapitech-ams/commit/bd64d338039468a22252df1a9706d0679fec215a).
+- **Validation:** Quality Gate [40193689375 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40193689375): type check, regression suite and production build. AMS CI [40193689372 failed at existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40193689372) after type check, migrations, security regression and PostgreSQL integration passed; build, packaged migration verification and HTTP smoke were skipped.
+- **Scope:** No new backend/API, database/schema, authentication/permission policy, business behavior or Finance formula. Existing source records, route guards and shared design-system geometry remain in use.
+- **Stage 5 status:** Authenticated browser screenshots, role-specific rendering, viewport sweep, keyboard/focus, touch, contrast and assistive-technology checks remain NOT VERIFIED; explicit user sign-off is pending.
+- **Next:** finish remaining Overview source/empty/error-state and Recent Activity contract review, then Dashboard Analytics. Do not move to Inbox.
+
