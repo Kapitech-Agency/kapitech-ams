@@ -59,7 +59,8 @@ test('Dashboard reuses canonical Finance invoice, issue-date, and payment helper
   assert.ok(trend.includes('getInvoiceDate(invoice)') && trend.includes('isIssuedInvoice(invoice)'));
   assert.ok(currentCash.includes('getPaymentRows(invoice)') && currentCash.includes('isIssuedInvoice(invoice)'));
   assert.ok(currentOutstanding.includes('getInvoiceOutstanding(invoice)') && currentOutstanding.includes('isIssuedInvoice(invoice)'));
-  assert.ok(analytics.includes('getInvoiceOutstanding(invoice)') && analytics.includes('isIssuedInvoice'));
+  assert.ok(dashboard.includes('const inCurrencyIssuedInvoices = inCurrencyInvoices.filter(isIssuedInvoice)'));
+  assert.ok(analytics.includes('getInvoiceOutstanding(invoice)'));
   assert.doesNotMatch(currentOutstanding, /const balance = invoice\.balanceDue/);
   assert.doesNotMatch(analytics, /const paid = Number\(invoice\.amountPaid/);
 });
