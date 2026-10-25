@@ -97,6 +97,37 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
 });
 
 
+test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');
+  const modelEnd = dashboard.indexOf('const upcomingCommitments = allUpcomingCommitments.slice(0, 8);', modelStart);
+  assert.ok(modelStart >= 0 && modelEnd > modelStart, 'Client delivery priority must be derived inside the canonical-source summary.');
+  const model = dashboard.slice(modelStart, modelEnd);
+  const prioritySignals = [
+    'right.overdueCommitmentCount - left.overdueCommitmentCount',
+    '(right.overdueTaskCount ?? -1) - (left.overdueTaskCount ?? -1)',
+    '(right.blockedTaskCount ?? -1) - (left.blockedTaskCount ?? -1)',
+    '(right.unassignedTaskCount ?? -1) - (left.unassignedTaskCount ?? -1)',
+    '(right.reviewTaskCount ?? -1) - (left.reviewTaskCount ?? -1)',
+    "(left.nextCommitmentDate || '9999-12-31').localeCompare(right.nextCommitmentDate || '9999-12-31')",
+    '(right.openTaskCount ?? -1) - (left.openTaskCount ?? -1)',
+    'right.projectCount - left.projectCount',
+    'left.name.localeCompare(right.name)'
+  ];
+  let previousPosition = -1;
+  for (const signal of prioritySignals) {
+    const position = model.indexOf(signal);
+    assert.ok(position > previousPosition, 'Client rows must sort by delivery urgency before less urgent tie-breakers: ' + signal);
+    previousPosition = position;
+  }
+  const panelStart = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
+  const panelEnd = dashboard.indexOf('{(canOpenInvoiceRegister || canOpenExpenseRegister) ? (', panelStart);
+  const panel = dashboard.slice(panelStart, panelEnd);
+  assert.ok(panel.includes('Rows prioritize overdue commitments, overdue tasks, blocked work, unassigned tasks and pending review'));
+  assert.ok(panel.includes('Unavailable task metrics remain unavailable, not zero.'));
+  assert.ok(panel.includes('not a client health, contract or SLA score'));
+});
+
 test('Dashboard Overview client delivery focus groups saved client relationships and preserves source boundaries', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');

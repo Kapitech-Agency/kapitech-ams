@@ -1668,6 +1668,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         right.overdueCommitmentCount - left.overdueCommitmentCount ||
         (right.overdueTaskCount ?? -1) - (left.overdueTaskCount ?? -1) ||
         (right.blockedTaskCount ?? -1) - (left.blockedTaskCount ?? -1) ||
+        (right.unassignedTaskCount ?? -1) - (left.unassignedTaskCount ?? -1) ||
+        (right.reviewTaskCount ?? -1) - (left.reviewTaskCount ?? -1) ||
+        (left.nextCommitmentDate || '9999-12-31').localeCompare(right.nextCommitmentDate || '9999-12-31') ||
+        (right.openTaskCount ?? -1) - (left.openTaskCount ?? -1) ||
         right.projectCount - left.projectCount ||
         left.name.localeCompare(right.name)
       )
@@ -2420,7 +2424,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <section data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
         <AdminPanel
           title="Client delivery focus"
-          description="Current delivery workload grouped by Client Directory ID when linked. Saved company-name grouping is a fallback for legacy records without a client ID. This is delivery context, not a client health, contract or SLA score."
+          description="Current delivery workload grouped by Client Directory ID when linked. Rows prioritize overdue commitments, overdue tasks, blocked work, unassigned tasks and pending review, then the nearest dated commitment and open workload. Unavailable task metrics remain unavailable, not zero. Saved company-name grouping is a fallback for legacy records without a client ID. This is delivery context, not a client health, contract or SLA score."
           bodyClassName="p-0"
           actions={canOpenProjects ? (
             <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
