@@ -10,7 +10,7 @@
 
 Act as the senior frontend engineer executing the controlling structural-redesign specification linked above.
 
-Read that specification **in full** before changing application code. This is an execution task, not a request to create another plan or repeat the audit. Reconcile it with the current repository, find the earliest unfinished structural requirement, redesign that view around Kapitech's actual operational task, implement the material content-structure change, verify it, update the durable checkpoint, and continue in the documented order.
+Read that specification **in full** before changing application code, together with the Main-Content Restructuring Specification and the Maven-Inspired Operational Workspace Implementation Guide. This is an execution task, not a request to create another plan or repeat the audit. Reconcile them with current source, tests, checkpoint, and gap register; find the earliest unfinished structural requirement; redesign the selected view around Kapitech's actual operational task; implement the material content-structure change; verify it; update the durable checkpoint; and continue in the documented order.
 
 The objective is to make the actual main content of every AMS module/workspace fit its purpose. Do not substitute a series of isolated component fixes, copy changes, cosmetic polish, or test-only changes for structural redesign.
 
@@ -21,19 +21,20 @@ Read in full, then follow relevant cross-references:
 1. `AGENTS.md` and `docs/README.md`.
 2. `docs/AMS-END-TO-END-DELIVERY-ROADMAP.md`. This owns the overall Stage 0–15 sequence.
 3. `docs/AMS-FRONTEND-STRUCTURAL-REDESIGN-AUDIT-AND-EXECUTION-SPEC.md`. This controls the frontend structural-redesign method, view contract, module targets, evidence and Stage 5 approval gate.
-4. `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`.
-5. `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`.
-6. `docs/architecture/ams-navigation-information-architecture.md`.
-7. `AMS-DESIGN-SYSTEM.md`.
-8. `docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md`.
-9. `docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md` and `docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md`.
-10. `docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md`.
-11. `docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md` and `docs/AMS-UX-INTERACTION-STANDARDS.md`.
-12. `docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md`, `docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md`, `docs/AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md`, and `docs/AMS-EXECUTION-CHECKPOINT.md`.
-13. `docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md` and `docs/AMS-RESUME-AFTER-INTERRUPTION.md`.
-14. Relevant module, Finance, drawer, modal, Kanban, accessibility and regression guides.
+4. `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`. This owns the baseline composition and required relative order for each workspace.
+5. `docs/AMS-MAVEN-INSPIRED-OPERATIONAL-WORKSPACE-IMPLEMENTATION-GUIDE.md`. This defines detailed card, chart, register, and detail-surface content for implementation; it supplements but does not override the main-content specification.
+6. `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`.
+7. `docs/architecture/ams-navigation-information-architecture.md`.
+8. `AMS-DESIGN-SYSTEM.md`.
+9. `docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md`.
+10. `docs/AMS-ROLE-BASED-CONTENT-BLUEPRINT.md` and `docs/AMS-WORKSHEET-ROLE-PRESENTATION-MATRIX.md`.
+11. `docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md`.
+12. `docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md` and `docs/AMS-UX-INTERACTION-STANDARDS.md`.
+13. `docs/AMS-FEATURE-CONTENT-GAP-REGISTER.md`, `docs/AMS-STRUCTURAL-REDESIGN-PROGRESS.md`, `docs/AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md`, and `docs/AMS-EXECUTION-CHECKPOINT.md`.
+14. `docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md` and `docs/AMS-RESUME-AFTER-INTERRUPTION.md`.
+15. Relevant module, Finance, drawer, modal, Kanban, accessibility and regression guides.
 
-Respect each document's defined authority. The End-to-End Delivery Roadmap owns the overall stage sequence. The Structural Redesign Audit and Execution Specification owns the audit findings, bounded frontend execution method, verification discipline and Stage 5 user sign-off gate. `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` owns the baseline target main-content composition and required relative content order for each workspace. The Role-Based Content Blueprint and Worksheet Role Presentation Matrix refine persona-specific fields/emphasis without overriding baseline content requirements, approved navigation or permissions. The Navigation IA owns approved destinations and navigation depth. The Design System owns visual tokens/geometry. The Feature & Content Gap Register owns evidence-backed implementation availability and blockers. Target documents describe intended behavior; they are not proof that code implements it. If active specifications conflict, follow `AGENTS.md`, inspect current source and tests, preserve domain contracts, and record unresolved conflicts instead of guessing.
+Respect each document's defined authority. The End-to-End Delivery Roadmap owns the overall stage sequence. The Structural Redesign Audit and Execution Specification owns the audit findings, bounded frontend execution method, verification discipline and Stage 5 user sign-off gate. `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` owns the baseline target main-content composition and required relative content order for each workspace. `docs/AMS-MAVEN-INSPIRED-OPERATIONAL-WORKSPACE-IMPLEMENTATION-GUIDE.md` expands the intended content of each card, chart, register, and detail surface; it must not create new routes, override canonical record ownership, add unsupported fields/actions, or displace the required workspace composition. The Role-Based Content Blueprint and Worksheet Role Presentation Matrix refine persona-specific fields/emphasis without overriding baseline content requirements, approved navigation or permissions. The Navigation IA owns approved destinations and navigation depth. The Design System owns visual tokens/geometry. The Feature & Content Gap Register owns evidence-backed implementation availability and blockers. Target documents describe intended behavior; they are not proof that code implements it. If active specifications conflict, follow `AGENTS.md`, inspect current source and tests, preserve domain contracts, and record unresolved conflicts instead of guessing.
 
 ## 2. Restore the live state before acting
 
