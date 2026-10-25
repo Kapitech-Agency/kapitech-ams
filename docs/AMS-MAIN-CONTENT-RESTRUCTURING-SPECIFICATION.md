@@ -129,17 +129,19 @@ General requirements:
 **Views:** Overview, Performance, Analytics. Dashboard summarizes canonical sources and is not an independent record store.
 
 ### Overview
-Content order:
-1. Dashboard title and compact reporting/source scope.
-2. Needs attention: source-backed priority exceptions first, with urgent/critical items ahead of warnings and informational items. Keep authorized Inbox triage alongside the exception list without mixing or duplicating their canonical records.
-3. Active delivery: primary task queue and Creative/IT workstream load visualization. Delivery actions must appear before the supporting KPI strip.
-4. Deadlines and team load: overdue/upcoming commitments, open tasks by owner, and recorded time where sources are available.
-5. Operating snapshot: a restrained set of decision-grade indicators with clear definition, period, unit/currency, source and authorized drill-down. This is secondary context, not the primary work surface.
-6. Client Delivery Focus, ranked by source-backed delivery risk rather than portfolio size.
-7. Finance control context, followed by workspace shortcuts.
-8. Relevant recent audit activity linked to an owning record where the current source provides that destination. Do not invent a record link when event metadata does not include one.
+Use the user-provided production dashboard as the composition reference: a dominant primary card, a compact companion card, meaningful financial/project visuals and distinct supporting cards. Adapt its layout pattern to Kapitech operations rather than copying bank-specific labels, values or assumptions.
 
-Possible indicators include active projects, overdue tasks, risky milestones, active clients, requests requiring action, quotation value, issued invoices/receivables, overdue receivables, recorded expenses, cash position and supported capacity. Revenue, issued invoice, cash received, expenses, cash balance and posted profit are separate concepts. Never convert unavailable data into zero.
+**Required content order**
+1. Compact reporting/source scope.
+2. **Primary card row: Finance + Projects.** Finance is the dominant card when the role can access Finance: lead with outstanding receivables, keep cash received and recorded expenses as distinct values, and show a source-backed trend of issued-invoice values versus eligible expenses. The companion Projects portfolio card shows active-project count, current risk/deadline distribution and Creative/IT workload bars.
+3. **Project progress + Needs attention.** Show a short active-project list with progress bars only when a valid saved progressPercent is present. Missing or invalid progress must be displayed as not recorded, never estimated. Needs attention sorts danger/critical before warning and informational exceptions; authorized Inbox triage remains a separate subsection using canonical Inbox records. Do not use artificial rank labels such as “Priority 01”.
+4. **Task queue + Upcoming deadlines.** Keep task filters, state, owner and due date adjacent in the real task queue. Pair the queue with a proportional visualization of overdue/upcoming commitments and a short source-linked list.
+5. **Team workload + Client delivery focus.** Use proportional task-load bars and recorded-time context. Client delivery risk uses source-backed measures; recorded time is not capacity or utilization.
+6. **Recent activity + Workspace shortcuts** at the bottom. Audit events remain informational unless the source provides an actual record destination.
+
+**Responsive composition:** use a 12-column desktop grid; when both leading cards are available, Finance takes approximately 7 columns and Projects 5. Stack the cards on narrow screens. The remaining content is grouped into balanced card rows and reflows into one column without horizontal page overflow. Establish visual variety with chart scale, meaningful data marks, compact metrics and concise lists, not additional explanatory paragraphs, repeated KPI cards or decorative numbering.
+
+Finance fields retain different meanings: issued invoice value, cash received, expenses, outstanding receivables, cash balance and posted profit are separate concepts. Do not label an arithmetic difference as posted profit or cash flow. Never convert unavailable data into zero. Project progress bars may use only a valid saved progressPercent; do not infer completion from task counts.
 
 ### Performance
 Period/comparison controls → trends grouped by delivery/client-service/commercial-financial/resource load where valid → exact values or data table → source drill-down. Metrics may include on-time delivery, task throughput, revision/quality trend, renewals, valid Finance trends and resource utilization. Definitions and time windows must be comparable; handle zero/missing baselines honestly.
@@ -159,7 +161,7 @@ Period and supported grouping/filter → reports grouped by business question �
 
 **Acceptance:** No fake metrics; every chart answers a real question; sources, period and units are clear; drill-down obeys authorization; important values remain inspectable without relying only on color/chart.
 
-**Overview content order:** compact operating scope → Needs attention (severity-ranked) → Active delivery (task queue and Creative/IT workstreams) → Deadlines & team load (commitments, owner-load visualization and recorded time) → Operating snapshot (supporting KPIs) → Client Delivery Focus → Finance control → workspace shortcuts → recent audit activity. Keep actionable work ahead of generic KPIs. Within Needs attention, show urgent/critical exceptions before warnings and informational items while preserving source order within each severity.
+**Overview content order:** compact scope → primary Finance card with financial trend + Projects portfolio card with risk visualization/workstream bars → saved project progress + Needs attention → task queue + upcoming deadlines → team workload + client delivery focus → recent activity + workspace shortcuts. Finance and Projects lead the screen. Severity ordering applies within the Needs attention card and does not replace the primary card hierarchy.
 
 **Client Delivery Focus ordering:** sort canonical client groups by overdue commitments, overdue tasks, blocked tasks, unassigned tasks, tasks in review, nearest upcoming commitment, open-task load, project count and then saved client name. Apply task-signal ranking only where the task source is accessible and available; missing metrics remain unavailable, not zero. This is a delivery-prioritization view, not a client health, contract or SLA score.
 

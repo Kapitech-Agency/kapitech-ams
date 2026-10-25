@@ -180,20 +180,21 @@ Retain Overview, Performance, and Analytics. Complete all three before proceedin
 
 ## 4.2 Overview composition
 
-Follow the action-first order:
-1. Page header and compact reporting/source scope.
-2. Needs Attention, with urgent/critical exceptions ranked ahead of warnings and informational items. Keep the canonical exception list and authorized Inbox triage distinct and balanced.
-3. Active delivery: primary delivery queue plus Creative/IT workstream visual comparison.
-4. Deadlines & team load: overdue/upcoming commitments, open tasks by owner, and recorded-time context.
-5. Operating snapshot: a restrained supporting KPI strip, placed after the actionable delivery surfaces.
-6. Client Delivery Focus, ranked by overdue commitments/tasks, blocked and unassigned work, review workload, and next commitment before portfolio size.
-7. Finance control context.
-8. Workspace shortcuts.
-9. Recent source-linked audit activity when useful and when a safe destination is provided by the source.
+Follow the production-ready dashboard reference supplied by the user as the layout pattern. Adapt its large financial/chart card, compact portfolio companion, concise metric groups and short row lists to Kapitech data. Do not copy bank-specific labels, sample data or unsupported financial assumptions.
+
+Follow this card order:
+1. Compact page/reporting scope.
+2. **Finance + Projects portfolio** as the primary card row. Finance leads with outstanding receivables, cash received and recorded expenses as separate values plus a source-backed issued-invoice/expense trend. Projects pairs it with active-project totals, a risk/deadline donut and Creative/IT workload bars.
+3. **Projects in progress + Needs attention.** Show saved project-progress bars only when valid progressPercent is present; otherwise show “Progress not recorded”. Needs attention is a compact secondary exception card, severity-sorted and visually distinct from canonical Inbox triage. Never use artificial labels such as “Priority 01”.
+4. **Task queue + Upcoming deadlines.** Keep task filters, state, owner and due date in a clear queue; pair it with the source-backed deadline horizon and concise commitment rows.
+5. **Team workload + Client delivery focus.** Use proportional task-load bars, factual recorded-time values and source-backed client delivery signals.
+6. **Recent activity + Workspace shortcuts** at the bottom.
+
+Let the financial trend and project risk visualization establish the primary visual anchors. Use balanced card proportions, compact counters, bars and concise rows. Preserve AMS design tokens and responsive behavior. Do not invent values, create inferred project progress, repeat a generic KPI strip or bury Finance and Projects beneath exception lists.
 
 ### Card group A: Needs Attention
 
-Treat this as the primary operational surface. Use a balanced layout so that left and right regions have comparable visual weight. Do not let one side become a long dense text list while the other holds a few small, unrelated cards.
+This is a compact secondary exception card below the Finance and Projects cards. Sort danger/critical items before warnings and informational items, preserve source order inside each severity, and keep authorized Inbox triage in its own source-backed subsection. Do not manufacture hierarchy with rank numbering; use card placement, relative visual weight and actual source-backed urgency.
 
 **A1. Delivery Risks**
 - Project name and client.
@@ -470,12 +471,12 @@ Show service demand or campaign outcomes only when sourced. Include objective, p
 
 ### Dashboard acceptance
 - Overview, Performance, and Analytics have distinct purposes.
-- Needs Attention is the first operational decision surface after the compact reporting scope.
-- Urgent/critical exceptions precede warnings and informational items without mixing exception records with Inbox records.
-- The delivery queue, workstream comparison and deadlines/team-load context appear before the generic operating KPI strip.
-- The source-backed left/right Needs Attention panels have balanced visual weight and do not leave one side underused.
-- No fake values or unsupported trends.
-- Cards do not duplicate the same metric without a reason.
+- Finance and Projects are the first and most prominent Overview cards; hierarchy does not rely on artificial priority numbering.
+- Finance trend values come from canonical issued-invoice and eligible-expense records, with source and period semantics clear; no arithmetic difference is described as posted profit or cash flow.
+- Project visuals use current saved project/deadline/task records. Project progress bars appear only when valid saved progressPercent exists.
+- Needs attention follows the Finance/Projects row; exceptions are severity-ranked and not mixed into the Inbox source.
+- Task queue, deadlines, team workload, client delivery focus, audit activity and shortcuts are arranged in balanced responsive card rows.
+- No fake values, unsupported trends, sub-10px operational text or duplicated metrics without a reason.
 - Every visual has exact readable values and a defined scope.
 - Drill-down opens the canonical source.
 - Dashboard remains an aggregation layer.
