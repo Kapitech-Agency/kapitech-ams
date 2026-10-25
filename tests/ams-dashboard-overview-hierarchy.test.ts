@@ -39,7 +39,7 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes('Current open records'));
   assert.ok(overview.includes('Overdue and next 30 days'));
   assert.ok(overview.includes('Current month · current receivables'));
-  assert.ok(overview.includes('Recorded time follows that selected period, but open task counts and project states remain current.'));
+  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
   assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
   assert.ok(deliveryDeskStart > indicatorsStart, 'Task-level delivery work follows the decision indicators.');
   assert.ok(commitmentsStart > deliveryDeskStart, 'Project milestone/deadline and resource views follow the primary task queue.');
@@ -80,7 +80,11 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes('Outstanding receivables'));
   assert.ok(overview.includes('Task source unavailable'));
   assert.ok(overview.includes('Milestone source unavailable'));
-  assert.ok(overview.includes('Destination not mapped to an authorized workspace'));
+  assert.ok(overview.includes('No mapped destination'));
+  assert.ok(overview.includes('attentionSeveritySummary'));
+  assert.ok(overview.includes("overviewAttentionItems.slice(0, 5).map"));
+  assert.ok(overview.includes('Showing 5 of {overviewAttentionItems.length} exceptions'));
+  assert.ok(overview.includes('min-h-[78px]'));
 
   assert.equal(overview.includes('title="Invoices vs expenses"'), false,
     'Overview should not repeat the financial trend that belongs in Analytics.');
@@ -371,6 +375,10 @@ test('Dashboard Performance scopes source-backed delivery records to the shared 
   assert.ok(performance.includes("label: 'Task completion'"), 'Completion rate should be visible before detailed distribution.');
   assert.ok(performance.includes('const maxMemberTimeMinutes = Math.max(1, ...workload.map((member) => member.minutes))'));
   assert.ok(performance.includes('const totalTrackedMinutes = scopedTimeLogs.reduce'));
+  assert.ok(performance.includes('const timeTrendModel = useMemo(() =>'));
+  assert.ok(performance.includes('Recent 12 months'));
+  assert.ok(performance.includes('<TrendChart'));
+  assert.ok(performance.includes('View exact period values'));
   assert.ok(performance.includes('data-ams-feature-slug="dashboard-performance-supporting-metrics"'));
   assert.ok(performance.includes('role="img" aria-label={member.name +'));
   assert.match(performance, /matchesInterval\(dueDate, dueDate, task\.createdAt\)/);
@@ -404,7 +412,8 @@ test('Dashboard Performance puts decision KPIs first and visualizes recorded tim
   assert.ok(performance.includes('Total recorded time'));
   assert.ok(performance.includes('Time entries in scope'));
   assert.ok(performance.includes('const maxMemberTimeMinutes = Math.max(1, ...workload.map((member) => member.minutes))'));
-  assert.ok(performance.includes('Bars compare logged effort within this list; they do not represent capacity, utilization or billable time.'));
+  assert.ok(performance.includes('Top eight contributors by recorded time. Bars compare within this list only.'));
+  assert.ok(performance.includes('const timeTrendModel = useMemo(() =>'));
   assert.ok(performance.includes("style={{ width: shareWidth + '%' }}"));
 });
 
@@ -433,9 +442,10 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
   assert.match(analytics, /A zero-value trend is not inferred from an empty source/);
   assert.match(analytics, /Current invoice balances/);
   assert.match(analytics, /Current project register/);
-  assert.ok(analytics.includes('Choose one report. Each view keeps its source, time scope and definition visible.'));
+  assert.ok(analytics.includes('Analytics reports'));
   assert.ok(analytics.includes('min-[900px]:grid-cols-4'), 'Report choices should have a consistent responsive grid.');
-  assert.ok(analytics.includes('option.description'), 'Each report choice should explain its business question.');
+  assert.ok(analytics.includes('min-h-12 min-w-0 items-center'), 'Report selection should favor compact visual labels over explanatory text.');
+  assert.equal(analytics.includes('option.description'), false, 'Report tiles should not repeat explanatory copy.');
   assert.ok(analytics.includes('const projectStatusMaximum = Math.max(1, ...projectStatusGroups.map((group) => group.count))'));
   assert.ok(analytics.includes('data-ams-feature-slug="dashboard-analytics-project-status-report"'));
   assert.ok(analytics.includes('Projects by current status'));
@@ -523,8 +533,8 @@ test('Dashboard Overview adds a permission-gated Inbox triage work surface from 
   assert.ok(dashboard.includes('.filter(isInboxUnassigned)'));
   assert.ok(dashboard.includes('.filter(isInboxHighPriority)'));
   assert.ok(dashboard.includes('Inbox source did not return records'));
-  assert.ok(dashboard.includes('Open inbound records that are new, unassigned or high priority. Careers applicants are kept in the Careers workspace.'));
-  assert.ok(dashboard.includes('Triage counts can overlap: a record can be new, unassigned and high priority at once.'));
+  assert.ok(dashboard.includes('No dated time entries in this chart window'));
+  assert.ok(dashboard.includes('Triage counts can overlap: one inquiry may match multiple signals.'));
   assert.ok(dashboard.includes('No inbound records need immediate triage'));
   assert.ok(dashboard.includes('Closed records and Careers applicants are excluded.'));
   assert.match(dashboard, /return canOpenInbox\s+\? items\.filter\(\(item\) => String\(item\.category \|\| ''\)\.toLowerCase\(\) !== 'sales' && item\.id !== 'att_leads_new'\)/);

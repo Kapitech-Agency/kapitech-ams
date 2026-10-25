@@ -455,7 +455,9 @@ const PerformanceView: React.FC<{
   matchesInterval: (startValue: unknown, endValue?: unknown, fallbackValue?: unknown) => boolean;
   reportPeriodLabel: string;
   reportPeriodEnabled: boolean;
-}> = ({ snapshot, matchesDate, matchesInterval, reportPeriodLabel, reportPeriodEnabled }) => {
+  reportPeriodValue: string;
+  reportPeriodMode: ReportingPeriodMode;
+}> = ({ snapshot, matchesDate, matchesInterval, reportPeriodLabel, reportPeriodEnabled, reportPeriodValue, reportPeriodMode }) => {
   const allTasks = snapshot.tasks || [];
   const allProjects = snapshot.projects || [];
   const allTimeLogs = snapshot.timeLogs || [];
@@ -506,6 +508,59 @@ const PerformanceView: React.FC<{
     0
   );
   const trackedTimeEntryCount = scopedTimeLogs.length;
+  const timeTrendModel = useMemo(() => {
+    type TimeTrendBucket = { key: string; label: string; startDate: string; endDate: string; minutes: number; entries: number };
+    const buckets: TimeTrendBucket[] = [];
+    const dateFor = (year: number, month: number, day: number) =>
+      String(year) + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    const addMonth = (year: number, month: number, label: string) => {
+      const startDate = dateFor(year, month, 1);
+      const endDate = dateFor(year, month, new Date(year, month, 0).getDate());
+      buckets.push({ key: startDate.slice(0, 7), label, startDate, endDate, minutes: 0, entries: 0 });
+    };
+    const selectedRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode, 'en-GB') : null;
+    if (selectedRange && reportPeriodMode === 'month') {
+      const year = Number(selectedRange.startDate.slice(0, 4));
+      const month = Number(selectedRange.startDate.slice(5, 7));
+      const monthEndDay = Number(selectedRange.endDate.slice(8, 10));
+      for (let startDay = 1; startDay <= monthEndDay; startDay += 7) {
+        const endDay = Math.min(monthEndDay, startDay + 6);
+        buckets.push({ key: dateFor(year, month, startDay), label: startDay + '–' + endDay, startDate: dateFor(year, month, startDay), endDate: dateFor(year, month, endDay), minutes: 0, entries: 0 });
+      }
+    } else if (selectedRange) {
+      const [startYear, startMonth] = selectedRange.startMonth.split('-').map(Number);
+      const [endYear, endMonth] = selectedRange.endMonth.split('-').map(Number);
+      for (let year = startYear, month = startMonth; year < endYear || (year === endYear && month <= endMonth); month += 1) {
+        if (month > 12) { year += 1; month = 1; }
+        const label = new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(new Date(year, month - 1, 1));
+        addMonth(year, month, label);
+      }
+    } else {
+      const now = new Date();
+      for (let offset = 11; offset >= 0; offset -= 1) {
+        const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+        addMonth(date.getFullYear(), date.getMonth() + 1, new Intl.DateTimeFormat('en-GB', { month: 'short', year: '2-digit' }).format(date));
+      }
+    }
+    let datedEntriesInWindow = 0;
+    let entriesWithoutUsableDate = 0;
+    scopedTimeLogs.forEach((log: any) => {
+      const loggedDate = dateKey(log.date || log.createdAt);
+      if (!isValidDashboardDate(loggedDate)) { entriesWithoutUsableDate += 1; return; }
+      const bucket = buckets.find((candidate) => loggedDate >= candidate.startDate && loggedDate <= candidate.endDate);
+      if (!bucket) return;
+      bucket.minutes += Math.max(0, Number(log.durationMinutes ?? log.minutes ?? 0) || 0);
+      bucket.entries += 1;
+      datedEntriesInWindow += 1;
+    });
+    return {
+      rows: buckets,
+      points: datedEntriesInWindow ? buckets.map((bucket) => ({ label: bucket.label, primary: bucket.minutes / 60 })) : [],
+      datedEntriesInWindow,
+      entriesWithoutUsableDate,
+      chartScope: selectedRange ? reportPeriodLabel : 'Recent 12 months'
+    };
+  }, [reportPeriodEnabled, reportPeriodMode, reportPeriodValue, reportPeriodLabel, scopedTimeLogs]);
 
   const projectAttentionSignals = (project: any) => {
     const state = [project.health, project.status].filter(Boolean).join(' ').toLowerCase();
@@ -558,9 +613,7 @@ const PerformanceView: React.FC<{
             {reportPeriodEnabled ? 'Period filter active' : 'All dates'}
           </span>
         </div>
-        <p className="text-xs leading-5 text-muted">
-          Tasks use due date, with creation date as a fallback. Projects use recorded schedule overlap, with creation date as a fallback. Time entries use their logged date, with creation timestamp as a fallback. Records without usable dates remain visible. The current sources do not provide status-transition history, so these are current status snapshots, not historical status-transition trends.
-        </p>
+        <p className="text-[11px] leading-4 text-muted">Tasks use due dates, projects use scheduled overlap, and time uses logged dates. Statuses are current snapshots, not history.</p>
       </section>
 
       <section data-ams-feature-slug="dashboard-performance-supporting-metrics" aria-label="Performance summary metrics">
@@ -602,7 +655,7 @@ const PerformanceView: React.FC<{
       <section className="grid gap-4 min-[1100px]:grid-cols-2" data-ams-feature-slug="dashboard-performance-primary">
         <AdminPanel
           title="Task status in scope"
-          description="Current status distribution for task records selected by the shared reporting period. This does not mean a task changed status during that period."
+          description="Task status mix for the selected period."
           actions={(
             <Link to="/admin/tasks" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
               Open Tasks <ArrowUpRight size={13} />
@@ -635,14 +688,14 @@ const PerformanceView: React.FC<{
                         <span className="text-muted">{status.label}</span>
                         <span className="shrink-0 font-medium tabular-nums text-fg">{status.count} <span className="font-normal text-muted">({percentage}%)</span></span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-line">
+                      <div className="h-3 overflow-hidden rounded-full bg-line">
                         <div className={'h-full rounded-full ' + status.tone} style={{ width: percentage + '%' }} />
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-xs leading-5 text-muted">Source: current canonical task records. Counts use current task status and the shared reporting-period date scope.</p>
+              <p className="text-[10px] leading-4 text-muted">Current status · selected date scope</p>
             </div>
           )}
         </AdminPanel>
@@ -683,42 +736,55 @@ const PerformanceView: React.FC<{
         </AdminPanel>
       </section>
 
-      <AdminPanel
-        title="Tracked time in scope"
-        description={reportPeriodEnabled ? 'Recorded time during ' + reportPeriodLabel + '. Logged time is not a forecast of remaining capacity.' : 'Recorded time across all available dates. Logged time is not a forecast of remaining capacity.'}
-        bodyClassName="p-4 sm:p-5"
-      >
-        {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking service did not return records for the current role." /> : workload.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted" role="status">{scopedTimeLogs.length === 0 && allTimeLogs.length > 0 ? 'No time entries match the selected reporting scope.' : 'No time entries recorded in this scope.'}</p>
+      <AdminPanel title="Recorded time" bodyClassName="p-4 sm:p-5">
+        {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking source did not return records." /> : scopedTimeLogs.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted" role="status">{allTimeLogs.length > 0 ? 'No time entries in the selected period.' : 'No time entries recorded.'}</p>
         ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 rounded-control border border-line bg-bg p-3 min-[600px]:grid-cols-2">
-              <div>
-                <p className="text-[10px] font-medium text-muted">Total recorded time</p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{Math.floor(totalTrackedMinutes / 60)}h {totalTrackedMinutes % 60}m</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-medium text-muted">Time entries in scope</p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{trackedTimeEntryCount}</p>
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All dates'} · hours by period and contributor</p>
+              <div className="flex flex-wrap gap-2">
+                <div className="rounded-control border border-line bg-bg px-3 py-2"><p className="text-[10px] text-muted">Total hours</p><p className="mt-0.5 text-lg font-semibold tabular-nums text-fg">{(totalTrackedMinutes / 60).toLocaleString('en-US', { maximumFractionDigits: 1 })}h</p></div>
+                <div className="rounded-control border border-line bg-bg px-3 py-2"><p className="text-[10px] text-muted">Entries</p><p className="mt-0.5 text-lg font-semibold tabular-nums text-fg">{trackedTimeEntryCount}</p></div>
               </div>
             </div>
-            <div className="space-y-4" aria-label="Recorded time by team member">
-              {workload.map((member) => {
-                const shareWidth = Math.max(0, Math.min(100, (member.minutes / maxMemberTimeMinutes) * 100));
-                return (
-                  <div key={member.name} className="min-w-0 space-y-1.5">
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                      <span className="min-w-0 break-words text-xs font-medium text-fg">{member.name}</span>
-                      <span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={member.name + ': ' + Math.floor(member.minutes / 60) + ' hours and ' + member.minutes % 60 + ' minutes recorded'}>
-                      <div className="h-full rounded-full bg-series-3 transition-[width]" style={{ width: shareWidth + '%' }} />
-                    </div>
+            <div className="grid min-w-0 gap-6 min-[1100px]:grid-cols-12">
+              <section className="min-w-0 min-[1100px]:col-span-7" aria-label="Recorded hours over time">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><h3 className="text-xs font-semibold text-fg">Hours over time</h3><span className="text-[10px] text-muted">{timeTrendModel.chartScope}</span></div>
+                {timeTrendModel.points.length ? (
+                  <>
+                    <TrendChart data={timeTrendModel.points} primaryLabel="Logged hours" primaryFormat={(value) => (Math.round(value * 10) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 }) + 'h'} ariaLabel={'Recorded hours over time for ' + timeTrendModel.chartScope + '. Exact values are available in the period table.'} />
+                    <details className="mt-3 rounded-control border border-line bg-bg px-3 py-2">
+                      <summary className="cursor-pointer text-xs font-medium text-fg">View exact period values</summary>
+                      <div className="mt-2 overflow-x-auto">
+                        <table className="w-full min-w-[240px] text-xs">
+                          <thead className="text-muted"><tr><th className="py-2 text-left font-medium">Period</th><th className="py-2 text-right font-medium">Hours</th><th className="py-2 text-right font-medium">Entries</th></tr></thead>
+                          <tbody>{timeTrendModel.rows.map((row) => <tr key={row.key} className="border-t border-line"><th scope="row" className="py-2 text-left font-medium text-fg">{row.label}</th><td className="py-2 text-right tabular-nums text-fg">{(row.minutes / 60).toLocaleString('en-US', { maximumFractionDigits: 2 })}h</td><td className="py-2 text-right tabular-nums text-muted">{row.entries}</td></tr>)}</tbody>
+                        </table>
+                      </div>
+                    </details>
+                  </>
+                ) : (
+                  <div className="rounded-control border border-line bg-bg px-3 py-4" role="status"><p className="text-xs font-medium text-fg">No dated time entries in this chart window</p><p className="mt-1 text-[11px] text-muted">Recorded totals still include entries that have no usable date.</p></div>
+                )}
+                {timeTrendModel.entriesWithoutUsableDate > 0 ? <p className="mt-2 text-[10px] leading-4 text-muted">{timeTrendModel.entriesWithoutUsableDate} entries without a usable date remain in total hours but are not plotted.</p> : null}
+              </section>
+              <section className="min-w-0 min-[1100px]:col-span-5" aria-label="Recorded time by contributor">
+                <h3 className="mb-3 text-xs font-semibold text-fg">By contributor</h3>
+                {workload.length === 0 ? <p className="text-xs text-muted" role="status">No contributor totals to compare.</p> : (
+                  <div className="space-y-4">
+                    {workload.map((member) => {
+                      const shareWidth = Math.max(0, Math.min(100, (member.minutes / maxMemberTimeMinutes) * 100));
+                      return <div key={member.name} className="min-w-0 space-y-1.5">
+                        <div className="flex min-w-0 items-start justify-between gap-3"><span className="min-w-0 break-words text-xs font-medium text-fg">{member.name}</span><span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span></div>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-line" role="img" aria-label={member.name + ': ' + Math.floor(member.minutes / 60) + ' hours and ' + member.minutes % 60 + ' minutes recorded'}><div className="h-full rounded-full bg-series-3 transition-[width]" style={{ width: shareWidth + '%' }} /></div>
+                      </div>;
+                    })}
                   </div>
-                );
-              })}
+                )}
+                <p className="mt-3 text-[10px] leading-4 text-muted">Top eight contributors by recorded time. Bars compare within this list only.</p>
+              </section>
             </div>
-            <p className="text-[11px] leading-5 text-muted">Showing up to eight contributors by recorded time. Bars compare logged effort within this list; they do not represent capacity, utilization or billable time.</p>
           </div>
         )}
       </AdminPanel>
@@ -730,11 +796,11 @@ const PerformanceView: React.FC<{
 
 type DashboardAnalyticsReport = 'financial-movement' | 'receivables' | 'inquiry-pipeline' | 'project-status';
 
-const DASHBOARD_ANALYTICS_REPORT_OPTIONS: Array<{ value: DashboardAnalyticsReport; label: string; description: string }> = [
-  { value: 'financial-movement', label: 'Financial movement', description: 'Issued invoices compared with recorded expenses' },
-  { value: 'receivables', label: 'Receivables', description: 'Open balances from issued invoices' },
-  { value: 'inquiry-pipeline', label: 'Inquiry pipeline', description: 'Current demand, status and requested services' },
-  { value: 'project-status', label: 'Project status', description: 'Current portfolio grouped by saved status' },
+const DASHBOARD_ANALYTICS_REPORT_OPTIONS: Array<{ value: DashboardAnalyticsReport; label: string }> = [
+  { value: 'financial-movement', label: 'Financial movement' },
+  { value: 'receivables', label: 'Receivables' },
+  { value: 'inquiry-pipeline', label: 'Inquiry pipeline' },
+  { value: 'project-status', label: 'Project status' },
 ];
 
 const AnalyticsView: React.FC<{
@@ -852,8 +918,7 @@ const AnalyticsView: React.FC<{
         <div className="flex flex-col gap-4 min-[900px]:flex-row min-[900px]:items-end min-[900px]:justify-between">
           <div className="min-w-0 flex-1 space-y-3">
             <div>
-              <p className="text-xs font-semibold text-fg">Reports</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">Choose one report. Each view keeps its source, time scope and definition visible.</p>
+              <p className="text-xs font-semibold text-fg">Analytics reports</p>
             </div>
             <div role="group" aria-label="Analytics report" className="grid min-w-0 grid-cols-2 gap-2 min-[900px]:grid-cols-4">
               {DASHBOARD_ANALYTICS_REPORT_OPTIONS.filter((option) => option.value !== 'inquiry-pipeline' || canOpenInbox).map((option) => {
@@ -872,7 +937,7 @@ const AnalyticsView: React.FC<{
                     aria-pressed={active}
                     onClick={() => setReport(option.value)}
                     className={[
-                      'flex min-h-[84px] min-w-0 items-start gap-2.5 rounded-control border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                      'flex min-h-12 min-w-0 items-center gap-2.5 rounded-control border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                       active ? 'border-accent/35 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg',
                     ].join(' ')}
                   >
@@ -884,7 +949,6 @@ const AnalyticsView: React.FC<{
                     </span>
                     <span className="min-w-0">
                       <span className="block break-words text-xs font-semibold leading-4">{option.label}</span>
-                      <span className="mt-1.5 block break-words text-[10px] leading-4 text-muted">{option.description}</span>
                     </span>
                   </button>
                 );
@@ -903,17 +967,14 @@ const AnalyticsView: React.FC<{
             </div>
           )}
         </div>
-        <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 text-[11px] leading-5 text-muted sm:flex-row sm:items-start sm:justify-between">
-          <p className="min-w-0">Financial movement and inquiry volume follow the shared reporting filter. “All dates” uses a labelled recent 30-day chart window.</p>
-          <p className="min-w-0 sm:max-w-[42%]">Receivables, inquiry status and project status are current snapshots, not historical trends. No conversion rate or booked revenue is inferred.</p>
-        </div>
+        <p className="mt-3 border-t border-line pt-3 text-[10px] leading-4 text-muted">Trend charts follow the reporting period; receivables and status views show current records.</p>
       </section>
 
       {report === 'financial-movement' ? (
         <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-financial-report" aria-label="Financial movement report">
           <AdminPanel
             title="Issued invoices vs recorded expenses"
-            description="Compare invoice values by issue date with expenses by recorded date. The difference is an arithmetic comparison, not posted profit."
+            description="Issued invoices vs recorded expenses by date; difference is not posted profit."
             actions={(
               <Link to="/admin/finance?tab=chart-of-accounts" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
                 Open Transactions & Cash <ArrowUpRight size={13} />
@@ -963,7 +1024,7 @@ const AnalyticsView: React.FC<{
                 <div className="mt-5 space-y-2" data-ams-feature-slug="dashboard-analytics-exact-values">
                   <div>
                     <h3 className="text-sm font-semibold text-fg">Exact period values</h3>
-                    <p className="mt-1 text-xs text-muted">The table provides the values and date ranges behind the chart.</p>
+                    <p className="mt-1 text-[11px] text-muted">Exact values behind the chart.</p>
                   </div>
                   <div className="overflow-x-auto rounded-control border border-line" role="region" aria-label="Exact invoice and expense values by period" tabIndex={0}>
                     <table className="w-full min-w-[680px] border-collapse text-left text-xs" aria-label="Exact invoice and expense values by period">
@@ -1013,7 +1074,7 @@ const AnalyticsView: React.FC<{
         <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-receivables-report" aria-label="Receivables report">
           <AdminPanel
             title="Outstanding receivables"
-            description="Current open invoice balances. This is a balance snapshot, not an amount issued or cash collected."
+            description="Current outstanding balance from issued invoices."
             actions={(
               <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
                 Open Accounts Receivable <ArrowUpRight size={13} />
@@ -1051,7 +1112,7 @@ const AnalyticsView: React.FC<{
         <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report" aria-label="Inquiry pipeline report">
           <AdminPanel
             title="Inquiry pipeline"
-            description="Current status distribution and requested service demand from canonical Inbox inquiry records. This report does not infer historical conversion performance or booked revenue."
+            description="Current inquiry status and requested service demand."
             actions={canOpenInbox ? (
               <Link to="/admin/inbox" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
                 Open Inbox <ArrowUpRight size={13} />
@@ -1463,7 +1524,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       : items;
   }, [canOpenInbox, dashboardOverview.attentionItems]);
 
-
+  const attentionSeveritySummary = useMemo(() => {
+    const counts = { total: overviewAttentionItems.length, urgent: 0, attention: 0, other: 0 };
+    for (const item of overviewAttentionItems) {
+      const severity = String(item.severity || 'info').toLowerCase();
+      if (severity === 'danger' || severity === 'critical') counts.urgent += 1;
+      else if (severity === 'warning') counts.attention += 1;
+      else counts.other += 1;
+    }
+    return counts;
+  }, [overviewAttentionItems]);
 
   const dashboardWorkTasks = useMemo<DashboardWorkTask[]>(() => {
     if (!Array.isArray(operationalSnapshot.tasks)) return [];
@@ -1912,47 +1982,48 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         data-ams-feature-slug="dashboard-overview-reporting-scope"
         aria-label="Overview reporting scope"
       >
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-semibold text-fg">Operating scope</p>
-            <p className="mt-1 text-xs text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Current agency workload · all recorded dates'}</p>
+            <p className="mt-0.5 text-xs text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</p>
           </div>
-          <p className="max-w-3xl text-xs leading-5 text-muted">
-            Task ownership, review queues, delivery commitments and Finance balances show current operational state. Delivery deadlines cover overdue items and the next 30 days. The shared reporting period applies to Performance and Analytics trends. Recorded time follows that selected period, but open task counts and project states remain current. Finance control values use the current month or current receivable balances. No capacity, approval or client SLA is inferred when its source is unavailable.
-          </p>
+          <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">{reportPeriodEnabled ? 'Selected period' : 'Current operations'}</span>
         </div>
-        <div className="grid grid-cols-1 gap-3 border-t border-line pt-3 sm:grid-cols-2 min-[1100px]:grid-cols-4">
-          <div className="min-w-0">
-            <p className="text-[10px] leading-4 text-muted">Operational queues</p>
-            <p className="mt-1 text-xs font-medium text-fg">Current open records</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] leading-4 text-muted">Delivery window</p>
-            <p className="mt-1 text-xs font-medium text-fg">Overdue and next 30 days</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] leading-4 text-muted">Recorded time</p>
-            <p className="mt-1 text-xs font-medium text-fg">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] leading-4 text-muted">Finance control</p>
-            <p className="mt-1 text-xs font-medium text-fg">Current month · current receivables</p>
-          </div>
+        <div className="grid grid-cols-1 gap-2 border-t border-line pt-3 sm:grid-cols-2 min-[1100px]:grid-cols-4">
+          <div className="flex min-w-0 items-center gap-2.5 rounded-control border border-line bg-bg px-3 py-2.5"><FolderKanban size={15} className="shrink-0 text-muted" aria-hidden="true" /><div className="min-w-0"><p className="text-[10px] text-muted">Operational queues</p><p className="mt-0.5 text-xs font-medium text-fg">Current open records</p></div></div>
+          <div className="flex min-w-0 items-center gap-2.5 rounded-control border border-line bg-bg px-3 py-2.5"><CalendarDays size={15} className="shrink-0 text-warning" aria-hidden="true" /><div className="min-w-0"><p className="text-[10px] text-muted">Delivery window</p><p className="mt-0.5 text-xs font-medium text-fg">Overdue and next 30 days</p></div></div>
+          <div className="flex min-w-0 items-center gap-2.5 rounded-control border border-line bg-bg px-3 py-2.5"><Clock3 size={15} className="shrink-0 text-muted" aria-hidden="true" /><div className="min-w-0"><p className="text-[10px] text-muted">Recorded time</p><p className="mt-0.5 text-xs font-medium text-fg">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</p></div></div>
+          <div className="flex min-w-0 items-center gap-2.5 rounded-control border border-line bg-bg px-3 py-2.5"><CircleDollarSign size={15} className="shrink-0 text-muted" aria-hidden="true" /><div className="min-w-0"><p className="text-[10px] text-muted">Finance control</p><p className="mt-0.5 text-xs font-medium text-fg">Current month · current receivables</p></div></div>
         </div>
+        <p className="text-[10px] leading-4 text-muted">Trends follow the selected period; task queues and project states show current records.</p>
       </section>
 
       <section className="space-y-3" data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-fg">Needs attention</h2>
-          <p className="mt-1 text-xs leading-5 text-muted">Cross-module exceptions and incoming work that may need action. Open the owning workspace for the canonical record.</p>
+          <p className="mt-1 text-xs text-muted">Priority exceptions and inquiries that need action.</p>
         </div>
         <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
-          <section className={['min-w-0', canOpenInbox ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
-        <AdminPanel
-          title="Priority exceptions"
-          description="Cross-module issues returned by the authorized Dashboard service. Use the owning workspace for the underlying record."
-          bodyClassName="p-0"
-        >
+          <section className={['h-full min-w-0', canOpenInbox ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
+        <AdminPanel className="flex h-full flex-col" title="Priority exceptions" bodyClassName="flex min-h-0 flex-1 flex-col p-0">
+          {dashboardOverview.attentionItemsDataAvailable && attentionSeveritySummary.total > 0 ? (
+            <div className="space-y-2.5 border-b border-line bg-bg/50 px-4 py-3">
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Urgent', count: attentionSeveritySummary.urgent, color: 'text-danger' },
+                  { label: 'Attention', count: attentionSeveritySummary.attention, color: 'text-warning' },
+                  { label: 'Other', count: attentionSeveritySummary.other, color: 'text-muted' }
+                ].map((metric) => (
+                  <div key={metric.label} className="min-w-0 rounded-control border border-line bg-panel px-3 py-2"><p className="text-[10px] text-muted">{metric.label}</p><p className={['mt-0.5 text-lg font-semibold tabular-nums', metric.color].join(' ')}>{metric.count}</p></div>
+                ))}
+              </div>
+              <div className="flex h-1.5 overflow-hidden rounded-full bg-line" role="img" aria-label={'Priority exception mix: ' + attentionSeveritySummary.urgent + ' urgent, ' + attentionSeveritySummary.attention + ' attention, ' + attentionSeveritySummary.other + ' other.'}>
+                {attentionSeveritySummary.urgent > 0 ? <span className="h-full bg-danger" style={{ width: (attentionSeveritySummary.urgent / attentionSeveritySummary.total) * 100 + '%' }} aria-hidden="true" /> : null}
+                {attentionSeveritySummary.attention > 0 ? <span className="h-full bg-warning" style={{ width: (attentionSeveritySummary.attention / attentionSeveritySummary.total) * 100 + '%' }} aria-hidden="true" /> : null}
+                {attentionSeveritySummary.other > 0 ? <span className="h-full bg-info" style={{ width: (attentionSeveritySummary.other / attentionSeveritySummary.total) * 100 + '%' }} aria-hidden="true" /> : null}
+              </div>
+            </div>
+          ) : null}
           {!dashboardOverview.attentionItemsDataAvailable ? (
             <div className="px-4 py-5" role="status">
               <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Cross-module exception data unavailable'}</p>
@@ -1964,8 +2035,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <p className="mt-1 text-[11px] leading-5 text-muted">{canOpenInbox ? 'Inbound records are reviewed separately below using the canonical Inbox source.' : 'Task and milestone queues below are still calculated from their own current source records.'}</p>
             </div>
           ) : (
-            <div className="divide-y divide-line">
-              {overviewAttentionItems.map((item, index) => {
+            <div className="flex-1 divide-y divide-line">
+              {overviewAttentionItems.slice(0, 5).map((item, index) => {
                 const severity = String(item.severity || 'info').toLowerCase();
                 const tone: DashboardTone = severity === 'danger' || severity === 'critical'
                   ? 'danger'
@@ -1982,12 +2053,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 const candidates = knownDestinationCandidates[String(item.id || '')] || [String(item.linkUrl || '')];
                 const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;
                 const linkLabel = category === 'Finance'
-                  ? 'Open receivables'
+                  ? 'Receivables'
                   : category === 'Sales'
-                    ? 'Open Inbox'
+                    ? 'Inbox'
                     : category === 'Delivery'
-                      ? 'Open delivery work'
-                      : 'Review workspace';
+                      ? 'Delivery'
+                      : 'Review';
                 const severityLabel = tone === 'danger' ? 'Urgent' : tone === 'warning' ? 'Attention' : 'Informational';
                 const AttentionIcon = tone === 'danger'
                   ? AlertTriangle
@@ -1999,39 +2070,45 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         ? Users
                         : Clock3;
                 return (
-                  <article key={String(item.id || category + '-' + item.title || index)} className="flex min-w-0 flex-col gap-3 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
+                  <article key={String(item.id || category + '-' + item.title || index)} className="flex min-h-[78px] min-w-0 flex-col justify-center gap-2 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
                     <span className={['flex h-9 w-9 shrink-0 items-center justify-center rounded-control border', toneClasses[tone]].join(' ')}>
                       <AttentionIcon size={15} aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="break-words text-xs font-semibold text-fg">{item.title || 'Attention item'}</p>
+                        <p className="line-clamp-2 break-words text-xs font-semibold leading-4 text-fg">{item.title || 'Attention item'}</p>
                         <span className={['inline-flex items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[tone]].join(' ')}>{severityLabel}</span>
                         <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{category}</span>
                       </div>
-                      {item.description ? <p className="mt-1 break-words text-[11px] leading-5 text-muted">{item.description}</p> : null}
+                      {item.description ? <p className="mt-1 line-clamp-2 break-words text-[11px] leading-4 text-muted">{item.description}</p> : null}
                     </div>
                     {safeDestination ? (
                       <Link to={safeDestination} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                         {linkLabel} <ArrowUpRight size={13} aria-hidden="true" />
                       </Link>
                     ) : (
-                      <span className="inline-flex min-h-9 shrink-0 items-center text-[11px] text-muted">Destination not mapped to an authorized workspace</span>
+                      <span className="inline-flex min-h-8 shrink-0 items-center text-[10px] text-muted">No mapped destination</span>
                     )}
                   </article>
                 );
               })}
+              {overviewAttentionItems.length > 5 ? <div className="border-t border-line px-4 py-2 text-[10px] text-muted">Showing 5 of {overviewAttentionItems.length} exceptions</div> : null}
             </div>
           )}
         </AdminPanel>
       </section>
 
       {canOpenInbox ? (
-        <section className="min-w-0 min-[1100px]:col-span-6" data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
+        <section className="h-full min-w-0 min-[1100px]:col-span-6" data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
           <AdminPanel
+            className="flex h-full flex-col"
             title="Inbound triage"
-            description="Open inbound records that are new, unassigned or high priority. Careers applicants are kept in the Careers workspace."
-            bodyClassName="p-0"
+            actions={(
+              <Link to="/admin/inbox?view=messages" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                Open Inbox <ArrowUpRight size={13} aria-hidden="true" />
+              </Link>
+            )}
+            bodyClassName="flex min-h-0 flex-1 flex-col p-0"
             actions={(
               <Link to="/admin/inbox?view=messages" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                 Open Inbox <ArrowUpRight size={13} aria-hidden="true" />
@@ -2069,21 +2146,21 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <p className="mt-1 text-[11px] leading-5 text-muted">No open record is new, unassigned or high priority. Closed records and Careers applicants are excluded. The counts above come from the current Inbox source.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-line">
+                  <div className="flex-1 divide-y divide-line">
                     {inboxTriageSummary.actionable.slice(0, 5).map((lead) => {
                       const priority = lead.priority === 'urgent' || lead.priority === 'high';
                       const assignedTo = String(lead.assignedTo || '').trim();
                       const services = Array.isArray(lead.services) ? lead.services.filter(Boolean).slice(0, 2).join(' · ') : '';
                       const received = isValidDashboardDate(dateKey(lead.createdAt)) ? formatDashboardDate(dateKey(lead.createdAt)) : 'Date not recorded';
                       return (
-                        <article key={lead.id} className="flex min-w-0 flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                        <article key={lead.id} className="flex min-h-[78px] min-w-0 flex-col justify-center gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="break-words text-xs font-semibold text-fg">{lead.fullName || 'Inbound contact'}</p>
+                              <p className="line-clamp-1 break-words text-xs font-semibold text-fg">{lead.fullName || 'Inbound contact'}</p>
                               <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[lead.status === 'new' ? 'warning' : 'info']].join(' ')}>{lead.status || 'Status unavailable'}</span>
                               {priority ? <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[lead.priority === 'urgent' ? 'danger' : 'warning']].join(' ')}>{lead.priority === 'urgent' ? 'Urgent' : 'High priority'}</span> : null}
                             </div>
-                            <p className="mt-1 break-words text-[11px] text-muted">{lead.company || 'Company not provided'}{services ? ' · ' + services : ''}</p>
+                            <p className="mt-1 line-clamp-1 break-words text-[11px] text-muted">{lead.company || 'Company not provided'}{services ? ' · ' + services : ''}</p>
                           </div>
                           <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
                             <span className={['text-[11px]', assignedTo ? 'text-muted' : 'font-medium text-warning'].join(' ')}>{assignedTo || 'Unassigned'}</span>
@@ -2094,12 +2171,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     })}
                     {inboxTriageSummary.actionable.length > 5 ? (
                       <div className="px-4 py-3 text-[11px] text-muted">
-                        Showing 5 of {inboxTriageSummary.actionable.length} actionable inbound records, ordered by priority and age.
+                        Showing 5 of {inboxTriageSummary.actionable.length} actionable inquiries.
                       </div>
                     ) : null}
-                    <div className="border-t border-line px-4 py-3 text-[10px] leading-5 text-muted">
-                      Triage counts can overlap: a record can be new, unassigned and high priority at once. These are source-backed indicators, not mutually exclusive totals or a second record store.
-                    </div>
+                    <div className="border-t border-line px-4 py-2 text-[10px] text-muted">Triage counts can overlap: one inquiry may match multiple signals.</div>
                   </div>
                 )}
               </>
@@ -2742,6 +2817,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           matchesInterval={matchesInterval}
           reportPeriodLabel={reportPeriodLabel}
           reportPeriodEnabled={reportPeriodEnabled}
+          reportPeriodValue={reportPeriodValue}
+          reportPeriodMode={reportPeriodMode}
         />
       ) : (
         <AnalyticsView
