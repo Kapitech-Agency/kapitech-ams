@@ -158,7 +158,7 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
 });
 
 
-test('Dashboard Overview prioritizes source-backed exceptions before KPIs without duplicating exception metrics', async () => {
+test('Dashboard Overview shows the source-owned cross-module attention queue before KPIs and preserves unavailable states', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const branchStart = dashboard.indexOf("{view === 'overview' ? (");
   const branchEnd = dashboard.indexOf(") : view === 'performance' ? (", branchStart);
@@ -168,10 +168,14 @@ test('Dashboard Overview prioritizes source-backed exceptions before KPIs withou
   const kpis = overview.indexOf('data-ams-feature-slug="dashboard-overview"');
   const actions = overview.indexOf('data-ams-feature-slug="dashboard-quick-actions"');
   assert.ok(priority >= 0 && kpis > priority && actions > kpis);
-  assert.ok(overview.includes('No overdue tasks or project risk flags reported'));
+  assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
+  assert.ok(dashboard.includes('attentionItems: attentionItemsDataReturned ? data.attentionItems as DashboardAttentionItem[] : previous.attentionItems ?? []'));
+  assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
   assert.ok(overview.includes('Priority exception data unavailable'));
-  assert.ok(overview.includes('/admin/tasks?taskscope=due'));
-  assert.ok(overview.includes('/admin/projects?projects=active'));
+  assert.ok(overview.includes('No priority exceptions returned'));
+  assert.ok(overview.includes('The interface does not infer that there are no exceptions.'));
+  assert.ok(overview.includes('Destination unavailable'));
+  assert.ok(overview.includes('/^\\/admin\\/[a-z0-9/_-]+$/i.test(destination)'));
   const metricArea = overview.slice(kpis, actions);
   assert.match(metricArea, /id: 'outstanding'/);
   assert.match(metricArea, /id: 'utilization'/);

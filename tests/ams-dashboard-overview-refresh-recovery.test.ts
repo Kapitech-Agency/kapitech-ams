@@ -15,7 +15,8 @@ test('Dashboard Overview exposes an accessible manual refresh action and keeps l
   assert.match(source, /Refreshing dashboard sources\. Previously loaded values remain visible\./);
   assert.match(source, /data-ams-feature-slug="dashboard-refresh-warning"/);
   assert.match(source, /data-ams-feature-slug="dashboard-summary-stale"/);
-  assert.ok(source.includes("stale: (!data.metrics && previous.metrics != null) || (!data.financials && previous.financials != null) || (!activityDataReturned && previous.recentActivityDataAvailable === true)"));
+  assert.ok(source.includes("(!attentionItemsDataReturned && previous.attentionItemsDataAvailable === true)"), 'Previously loaded exception data must be marked stale if omitted by a later successful response.');
+  assert.ok(source.includes("(!activityDataReturned && previous.recentActivityDataAvailable === true)"));
   assert.match(source, /setRefreshNotice\(failedSources\.length/);
 });
 
@@ -29,6 +30,8 @@ test('Dashboard refresh retains prior source data when an individual endpoint fa
   assert.match(source, /setDashboardOverview\(\(previous\) => \(\{ \.\.\.previous, loading: false \}\)\)/);
   assert.match(source, /recentActivity: activityDataReturned \? data\.recentActivity as DashboardRecentActivity\[\] : previous\.recentActivity \?\? \[\]/);
   assert.match(source, /recentActivityDataAvailable: activityDataReturned \? true : previous\.recentActivityDataAvailable/);
+  assert.match(source, /attentionItems: attentionItemsDataReturned \? data\.attentionItems as DashboardAttentionItem\[\] : previous\.attentionItems \?\? \[\]/);
+  assert.match(source, /attentionItemsDataAvailable: attentionItemsDataReturned \? true : previous\.attentionItemsDataAvailable/);
   assert.match(source, /unavailable sources are not treated as zero/);
   for (const sourceCall of [
     'api.dashboard.getOverview()',

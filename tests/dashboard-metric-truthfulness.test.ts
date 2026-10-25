@@ -5,14 +5,14 @@ import test from 'node:test';
 
 const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
 
-test('Dashboard priority exceptions distinguish positive counts, genuine zero, and unavailable data', () => {
+test('Dashboard priority exceptions distinguish the source-backed queue, genuine empty, and unavailable data', () => {
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
-  assert.ok(dashboard.includes('Number(overdueTasksMetric) > 0'));
-  assert.ok(dashboard.includes('Number(projectsAtRiskMetric) > 0'));
-  assert.ok(dashboard.includes('No overdue tasks or project risk flags reported'));
+  assert.ok(dashboard.includes('attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
+  assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
+  assert.ok(dashboard.includes('No priority exceptions returned'));
   assert.ok(dashboard.includes('Priority exception data unavailable'));
-  assert.ok(dashboard.includes('Overdue task count unavailable'));
-  assert.ok(dashboard.includes('Project risk count unavailable'));
+  assert.ok(dashboard.includes('The interface does not infer that there are no exceptions.'));
+  assert.ok(dashboard.includes("const safeDestination = /^\\/admin\\/[a-z0-9/_-]+$/i.test(destination) ? destination : null;"));
 });
 
 test('Dashboard distinguishes an empty portfolio from an unavailable project source', () => {

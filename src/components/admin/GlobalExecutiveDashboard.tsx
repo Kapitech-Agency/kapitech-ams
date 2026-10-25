@@ -38,6 +38,15 @@ type DashboardRecentActivity = {
   severity?: string;
 };
 
+type DashboardAttentionItem = {
+  id?: string;
+  title?: string;
+  description?: string;
+  severity?: string;
+  category?: string;
+  linkUrl?: string;
+};
+
 interface DashboardProject {
   id: string;
   name: string;
@@ -752,7 +761,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
   const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
   const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
-  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
+  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; attentionItems?: DashboardAttentionItem[]; attentionItemsDataAvailable?: boolean; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
     loading: true, projects: null, tasks: null, timeLogs: null, invoices: null, expenses: null
   });
@@ -787,14 +796,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         const data = overviewResult.value.data || {};
         const projectDataReturned = Array.isArray(data.projects);
         const activityDataReturned = Array.isArray(data.recentActivity);
+        const attentionItemsDataReturned = Array.isArray(data.attentionItems);
         setDashboardOverview((previous) => ({
           metrics: data.metrics ?? previous.metrics,
           financials: data.financials ?? previous.financials,
           projects: projectDataReturned ? data.projects : previous.projects,
+          attentionItems: attentionItemsDataReturned ? data.attentionItems as DashboardAttentionItem[] : previous.attentionItems ?? [],
+          attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable,
           recentActivity: activityDataReturned ? data.recentActivity as DashboardRecentActivity[] : previous.recentActivity ?? [],
           recentActivityDataAvailable: activityDataReturned ? true : previous.recentActivityDataAvailable,
           projectDataAvailable: projectDataReturned ? true : previous.projectDataAvailable,
-          stale: (!data.metrics && previous.metrics != null) || (!data.financials && previous.financials != null) || (!activityDataReturned && previous.recentActivityDataAvailable === true),
+          stale: (!data.metrics && previous.metrics != null) || (!data.financials && previous.financials != null) || (!attentionItemsDataReturned && previous.attentionItemsDataAvailable === true) || (!activityDataReturned && previous.recentActivityDataAvailable === true),
           source: projectDataReturned || Boolean(data.metrics) ? 'server' : previous.source,
           loading: false
         }));
@@ -960,11 +972,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const averageActiveBudget = activeProjectBudgets.length
     ? activeProjectBudgets.reduce((sum: number, value: number) => sum + value, 0) / activeProjectBudgets.length
     : null;
-  const liveOverdueTaskCount = operationalSnapshot.tasks === null ? null : operationalSnapshot.tasks.filter((task: any) => {
-    const due = dateKey(task.dueDate || task.deadline);
-    return due && due < localDateKey(new Date()) && !isFinishedWork(task.status);
-  }).length;
-  const liveRiskProjectCount = operationalSnapshot.projects === null ? null : buildProjectDeliveryBreakdown(operationalSnapshot.projects).filter((item) => item.label !== 'No risk flag').reduce((sum, item) => sum + item.value, 0);
   const liveCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
     if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency) return sum;
     const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
@@ -983,8 +990,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, 0);
   const liveCashDifference = liveCashCollected !== null && liveMonthlyExpenses !== null ? liveCashCollected - liveMonthlyExpenses : null;
   const activeProjectsMetric = dashboardOverview.metrics?.activeProjects ?? (operationalSnapshot.projects !== null ? activeProjectRows.length : null);
-  const overdueTasksMetric = dashboardOverview.metrics?.overdueTasks ?? liveOverdueTaskCount;
-  const projectsAtRiskMetric = dashboardOverview.metrics?.projectsAtRisk ?? liveRiskProjectCount;
   const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? dashboardOverview.financials?.revenueThisMonth ?? liveCashCollected;
   const outstandingMetric = dashboardOverview.financials?.outstandingReceivables ?? liveOutstanding;
   const cashDifferenceMetric = dashboardOverview.financials?.netOperatingProfit ?? liveCashDifference;
@@ -1042,51 +1047,74 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       {view === 'overview' ? (
         <>
       <section data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
-        <AdminPanel title="Priority exceptions" description="Overdue work and project risk signals reported by current AMS sources." bodyClassName="p-0">
-          {overdueTasksMetric !== null && Number(overdueTasksMetric) === 0 && projectsAtRiskMetric !== null && Number(projectsAtRiskMetric) === 0 ? (
+        <AdminPanel
+          title="Priority exceptions"
+          description="Actionable cross-module items returned by the Dashboard service for your authorized scope."
+          bodyClassName="p-0"
+        >
+          {!dashboardOverview.attentionItemsDataAvailable ? (
             <div className="px-4 py-5" role="status">
-              <p className="text-xs font-medium text-fg">No overdue tasks or project risk flags reported</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">The current sources report no priority delivery exceptions.</p>
+              <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading priority exceptions' : 'Priority exception data unavailable'}</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">The Dashboard service did not return a usable attention list. The interface does not infer that there are no exceptions.</p>
             </div>
-          ) : overdueTasksMetric === null && projectsAtRiskMetric === null ? (
+          ) : (dashboardOverview.attentionItems || []).length === 0 ? (
             <div className="px-4 py-5" role="status">
-              <p className="text-xs font-medium text-fg">{dashboardOverview.loading || operationalSnapshot.loading ? 'Loading priority exception data' : 'Priority exception data unavailable'}</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">Live task and project summary counts were not returned. The dashboard does not assume zero exceptions.</p>
+              <p className="text-xs font-medium text-fg">No priority exceptions returned</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">The Dashboard service reports no actionable exceptions for this authorized scope.</p>
             </div>
           ) : (
             <div className="divide-y divide-line">
-              {overdueTasksMetric === null ? (
-                <div className="px-4 py-3" role="status">
-                  <p className="text-xs font-medium text-fg">Overdue task count unavailable</p>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">The task source did not return a usable count.</p>
-                </div>
-              ) : Number(overdueTasksMetric) > 0 ? (
-                <div className="flex min-w-0 flex-col gap-2 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-danger/25 bg-danger/10 text-danger"><CalendarDays size={15} aria-hidden="true" /></span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-fg">Overdue tasks</p>
-                    <p className="mt-1 text-[11px] leading-5 text-muted">Open tasks past their recorded due date. The destination includes the wider due-work queue.</p>
-                  </div>
-                  <span className="text-lg font-semibold tabular-nums text-danger">{overdueTasksMetric}</span>
-                  <Link to="/admin/tasks?taskscope=due" className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open due-work queue <ArrowUpRight size={13} aria-hidden="true" /></Link>
-                </div>
-              ) : null}
-              {projectsAtRiskMetric === null ? (
-                <div className="px-4 py-3" role="status">
-                  <p className="text-xs font-medium text-fg">Project risk count unavailable</p>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">The project source did not return a usable risk count.</p>
-                </div>
-              ) : Number(projectsAtRiskMetric) > 0 ? (
-                <div className="flex min-w-0 flex-col gap-2 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-warning/25 bg-warning/10 text-warning"><AlertTriangle size={15} aria-hidden="true" /></span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-fg">Projects at risk</p>
-                    <p className="mt-1 text-[11px] leading-5 text-muted">Projects with overdue delivery or a recorded risk state.</p>
-                  </div>
-                  <span className="text-lg font-semibold tabular-nums text-warning">{projectsAtRiskMetric}</span>
-                  <Link to="/admin/projects?projects=active" className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Review active projects <ArrowUpRight size={13} aria-hidden="true" /></Link>
-                </div>
-              ) : null}
+              {(dashboardOverview.attentionItems || []).map((item, index) => {
+                const severity = String(item.severity || 'info').toLowerCase();
+                const tone: DashboardProject['statusTone'] = severity === 'danger' || severity === 'critical'
+                  ? 'danger'
+                  : severity === 'warning'
+                    ? 'warning'
+                    : 'info';
+                const category = String(item.category || 'Operations');
+                const destination = String(item.linkUrl || '');
+                const safeDestination = /^\/admin\/[a-z0-9/_-]+$/i.test(destination) ? destination : null;
+                const linkLabel = category === 'Finance'
+                  ? 'Open Finance'
+                  : category === 'Sales'
+                    ? 'Open Inbox'
+                    : category === 'Delivery'
+                      ? 'Open Projects'
+                      : 'Review operations';
+                const severityLabel = tone === 'danger' ? 'Urgent' : tone === 'warning' ? 'Attention' : 'Informational';
+                const AttentionIcon = tone === 'danger'
+                  ? AlertTriangle
+                  : category === 'Delivery'
+                    ? CalendarDays
+                    : category === 'Finance'
+                      ? CircleDollarSign
+                      : category === 'Sales'
+                        ? Users
+                        : Clock3;
+
+                return (
+                  <article key={String(item.id || category + '-' + item.title || index)} className="flex min-w-0 flex-col gap-3 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
+                    <span className={['flex h-9 w-9 shrink-0 items-center justify-center rounded-control border', toneClasses[tone]].join(' ')}>
+                      <AttentionIcon size={15} aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="break-words text-xs font-semibold text-fg">{item.title || 'Attention item'}</p>
+                        <span className={['inline-flex items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[tone]].join(' ')}>{severityLabel}</span>
+                        <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{category}</span>
+                      </div>
+                      {item.description ? <p className="mt-1 break-words text-[11px] leading-5 text-muted">{item.description}</p> : null}
+                    </div>
+                    {safeDestination ? (
+                      <Link to={safeDestination} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                        {linkLabel} <ArrowUpRight size={13} aria-hidden="true" />
+                      </Link>
+                    ) : (
+                      <span className="inline-flex min-h-9 shrink-0 items-center text-[11px] text-muted">Destination unavailable</span>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           )}
         </AdminPanel>
