@@ -2404,7 +2404,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             { label: 'Projects with overdue delivery', compactLabel: 'Late delivery', value: operationalSnapshot.projects !== null && canOpenProjects ? line.overdueCommitmentCount : null }
                           ].map((metric) => (
                             <div key={metric.label} className="min-w-0 flex-1 basis-[54px]" role="group" aria-label={metric.label + ': ' + (metric.value == null ? 'unavailable' : metric.value)} title={metric.label}>
-                              <p className="text-[9px] leading-3 text-muted">{metric.compactLabel}</p>
+                              <p className="text-[10px] leading-4 text-muted">{metric.compactLabel}</p>
                               <p className={['mt-1 text-sm font-semibold tabular-nums', metric.value == null ? 'text-muted' : metric.label === 'Blocked tasks' && metric.value > 0 || metric.label === 'Overdue tasks' && metric.value > 0 || metric.label === 'Projects with overdue delivery' && metric.value > 0 ? 'text-danger' : 'text-fg'].join(' ')}>{metric.value == null ? '—' : metric.value}</p>
                             </div>
                           ))}
