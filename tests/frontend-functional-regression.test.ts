@@ -262,10 +262,10 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(analyticsView.includes('Open Transactions & Cash') && analyticsView.includes('Open Accounts Receivable') && analyticsView.includes('Open Projects'), 'Each report must drill down to its owning module.');
   assert.doesNotMatch(dashboard, /Preview data only|sampleProjects|sampleTeam|sampleRevenueByRange|isSlugFixtureMode|fixtureMode/);
   assert.ok(dashboard.includes('Task queue unavailable'));
-  assert.ok(dashboard.includes('Workstream data unavailable'));
+  assert.ok(dashboard.includes('Task queue unavailable for this role or source.'));
   assert.ok(dashboard.includes('Time-log source unavailable'));
   assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
-  assert.ok(dashboard.includes('buildRecentFinancialTrend(invoices, expenses)'));
+  assert.ok(dashboard.includes('buildRecentFinancialTrend(issuedInvoicesInSelectedCurrency, financeExpenseRows)'));
   assert.ok(dashboard.includes('The difference is an arithmetic comparison, not posted profit.'));
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);

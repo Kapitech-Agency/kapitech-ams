@@ -5,17 +5,19 @@ import test from 'node:test';
 
 const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
 
-test('Dashboard priority exceptions distinguish the source-backed queue, genuine empty, and unavailable data', () => {
+
+test('Dashboard priority exceptions distinguish source-backed records, empty data and unavailable data', () => {
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
   assert.ok(dashboard.includes('attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
-  assert.ok(dashboard.includes('No exceptions returned by the Dashboard service'));
-  assert.ok(dashboard.includes('Cross-module exception data unavailable'));
-  assert.ok(dashboard.includes('This is not interpreted as a clean operational state.'));
+  assert.ok(dashboard.includes('No cross-module exceptions returned'));
+  assert.ok(dashboard.includes('Exception data unavailable'));
+  assert.ok(dashboard.includes('unavailable data is not treated as a clean state'));
   assert.ok(dashboard.includes("const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;"));
 });
 
-test('Dashboard Overview groups active canonical projects for service and delivery commitments without duplicating Project Registry', () => {
+
+test('Dashboard Overview groups canonical project and service-line data without duplicating Project Registry', () => {
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
@@ -24,25 +26,39 @@ test('Dashboard Overview groups active canonical projects for service and delive
   assert.ok(dashboard.includes("const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
   assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.slice(0, 8)"));
   assert.ok(dashboard.includes("for (const project of activeProjectRows)"));
-  assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
-  assert.ok(overview.includes('Creative & IT workstreams'));
+  assert.ok(overview.includes('Upcoming deadlines'));
+  assert.ok(overview.includes('Creative & IT workload'));
   assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
+  assert.ok(overview.includes('data-ams-feature-slug="dashboard-project-portfolio"'));
+  assert.ok(overview.includes('data-ams-feature-slug="dashboard-project-progress"'));
   assert.equal(overview.includes('pagedDashboardProjects'), false);
-  assert.equal(overview.includes('progressPercent'), false);
   assert.equal(overview.includes('project.budget'), false);
+  assert.ok(overview.includes('getDashboardSavedProgress(project)'));
+  assert.ok(overview.includes('Progress not recorded'));
 });
 
-test('Dashboard next-seven-day delivery indicator counts all commitments, not only the visible preview rows', () => {
+
+test('Dashboard deadline distribution counts all source commitments rather than only the visible preview', () => {
   assert.ok(dashboard.includes('const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>'));
   assert.ok(dashboard.includes('const upcomingCommitments = allUpcomingCommitments.slice(0, 8)'));
   assert.ok(dashboard.includes('const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length'));
   assert.doesNotMatch(dashboard, /const nextSevenDayCommitmentCount = upcomingCommitments\.filter/);
-  assert.ok(dashboard.includes('Projects with overdue delivery'));
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const deadlineStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const teamStart = overview.indexOf('data-ams-feature-slug="dashboard-team-workload"', deadlineStart);
+  assert.ok(deadlineStart >= 0 && teamStart > deadlineStart);
+  const deadlines = overview.slice(deadlineStart, teamStart);
+  assert.ok(deadlines.includes('Today–7 days'));
+  assert.ok(deadlines.includes('Days 8–30'));
+  assert.ok(deadlines.includes('overdueHorizonCount / commitmentHorizonTotal'));
 });
 
-test('Dashboard cash control uses canonical issued-invoice payment rows, never monthly revenue', () => {
-  const financeStart = dashboard.indexOf('data-ams-feature-slug="dashboard-finance-control"');
-  const financeEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"', financeStart);
+
+test('Dashboard Finance card uses canonical invoice payments for cash received, never revenue aliases', () => {
+  const financeStart = dashboard.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const financeEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
   assert.ok(financeStart >= 0 && financeEnd > financeStart);
   const finance = dashboard.slice(financeStart, financeEnd);
   const cashStart = dashboard.indexOf('const liveCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce');
@@ -53,9 +69,10 @@ test('Dashboard cash control uses canonical issued-invoice payment rows, never m
   assert.ok(cashSource.includes('getPaymentRows(invoice)'));
   assert.ok(cashSource.includes('currentMonthKey'));
   assert.ok(finance.includes('Cash received this month'));
-  assert.ok(finance.includes('{cashValueAvailable && liveCashCollected !== null ? formatLiveMoney(liveCashCollected, financeCurrency) : \'—\'}'));
-  assert.ok(finance.includes('Payments recorded against issued invoices in the current month.'));
-  assert.doesNotMatch(finance, /revenueThisMonth|cashCollectedMetric/, 'Revenue and the legacy API cash alias must not populate cash received.');
+  assert.ok(finance.includes("cashValueAvailable && liveCashCollected !== null ? formatLiveMoney(liveCashCollected, financeCurrency) : '—'"));
+  assert.ok(finance.includes('Outstanding receivables'));
+  assert.ok(finance.includes('Recorded expenses this month'));
+  assert.doesNotMatch(finance, /revenueThisMonth|cashCollectedMetric/);
 });
 
 test('Dashboard Analytics uses issued invoice rules and excludes invalid expense states from trends', () => {
@@ -108,36 +125,34 @@ test('Dashboard Analytics does not turn currency-mismatched or quotation-only re
   assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source.'));
 });
 
-test('Dashboard work indicators and Finance summaries use their owning route policy', () => {
-  const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
+
+test('Dashboard work and Finance cards use their owning route-access policy', () => {
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.ok(dashboard.includes('const canOpenDashboardRoute = (destination: string) =>'));
   assert.ok(dashboard.includes('return canAccessAmsRoute(currentNavigationRole, target.pathname, target.search)'));
-  assert.ok(dashboard.includes("const taskKpiRoute = canOpenTasks ? '/admin/tasks' : ''"));
-  assert.ok(dashboard.includes('href: taskKpiRoute || undefined'));
-  assert.ok(dashboard.includes("href: canOpenTasks ? '/admin/tasks?taskscope=due' : undefined"));
-  assert.ok(overview.includes('Projects in delivery'));
-  assert.ok(overview.includes('Open tasks'));
-  assert.ok(overview.includes('Tasks in review'));
-  assert.ok(overview.includes('canOpenInvoiceRegister ? ('));
-  assert.ok(overview.includes('canOpenExpenseRegister ? ('));
-  assert.ok(primitives.includes('href?: string;'));
-  assert.ok(primitives.includes('linkLabel?: string;'));
-  assert.ok(primitives.includes('to={href}') && primitives.includes('aria-label={linkLabel ||'));
+  assert.ok(dashboard.includes("const canOpenTasks = canOpenDashboardRoute('/admin/tasks')"));
+  assert.ok(dashboard.includes("const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable')"));
+  assert.ok(dashboard.includes("const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses')"));
+  assert.ok(overview.includes('disabled={!canOpenTasks}'));
+  assert.ok(overview.includes('canOpenDashboardRoute(taskDestination)'));
+  assert.ok(overview.includes('canOpenProjects && canOpenDashboardRoute(projectHref)'));
+  assert.ok(overview.includes('{canOpenInvoiceRegister ? ('));
+  assert.ok(overview.includes('{canOpenExpenseRegister ? ('));
 });
 
-test('Dashboard task, project and Finance panels distinguish unavailable sources from empty records', () => {
+
+test('Dashboard Finance and delivery cards distinguish unavailable sources from empty records', () => {
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.ok(overview.includes('Task queue unavailable'));
   assert.ok(overview.includes('No task records returned'));
-  assert.ok(overview.includes('Workstream data unavailable'));
+  assert.ok(overview.includes('Project portfolio unavailable'));
   assert.ok(overview.includes('No project records returned'));
   assert.ok(overview.includes('Delivery schedule unavailable'));
-  assert.ok(overview.includes('Invoice/payment source unavailable.'));
+  assert.ok(overview.includes('Invoice source unavailable.'));
   assert.ok(overview.includes('Expense source unavailable.'));
   assert.ok(overview.includes('No eligible expense records are available to confirm a monthly total.'));
 });

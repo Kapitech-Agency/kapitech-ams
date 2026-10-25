@@ -7,27 +7,33 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Dashboard agency workboard uses canonical breakpoints and keeps Finance separate', async () => {
+
+test('Dashboard Overview leads with balanced Finance and Projects cards using canonical layout tokens', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /featureSlug="dashboard-module"/);
-  const canonicalKpiGrid = 'grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5';
-  assert.ok(dashboard.includes(canonicalKpiGrid), 'The five agency operating indicators should use canonical design-system breakpoints.');
-  assert.equal(dashboard.split(canonicalKpiGrid).length - 1, 1);
-  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false, 'Analytics uses the global reporting-period Filter.');
-  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
-  assert.ok(dashboard.includes('Recent 30-day default window'));
-  assert.equal(dashboard.includes('title="Invoices vs expenses"'), false, 'Overview must not duplicate Analytics financial movement.');
-  assert.equal(dashboard.includes('data-ams-slug="dashboard-finance-chart-legend"'), false);
   const start = dashboard.indexOf("{view === 'overview' ? (");
   const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  assert.ok(start >= 0 && end > start);
   const overview = dashboard.slice(start, end);
-  assert.ok(overview.includes('Creative & IT workstreams'));
-  assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
-  assert.ok(overview.includes('Assigned work & logged time'));
-  assert.ok(overview.includes('Finance control'));
+  const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const projects = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
+  const progress = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"');
+  assert.ok(finance >= 0 && projects > finance && progress > projects);
+  assert.match(overview, /min-\[1100px\]:col-span-7/);
+  assert.match(overview, /min-\[1100px\]:col-span-5/);
+  assert.ok(overview.includes('Financial movement'));
+  assert.ok(overview.includes('primaryLabel="Issued invoices"'));
+  assert.ok(overview.includes('secondaryLabel="Recorded expenses"'));
+  assert.ok(overview.includes('<DonutChart'));
+  assert.ok(overview.includes('Creative & IT workload'));
+  assert.equal(overview.includes('Priority 01'), false);
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false);
+  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false);
+  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(dashboard.includes('Recent 30-day default window'));
+  assert.equal(overview.includes('title="Invoices vs expenses"'), false);
   assert.equal(overview.includes('title="Active projects"'), false);
   assert.equal(overview.includes('title="Team capacity"'), false);
-  assert.equal(overview.includes('data-ams-feature-slug="dashboard-supporting-metrics"'), false);
 });
 
 test('Time Tracking scopes precede the canonical register and supporting summaries follow it', async () => {
@@ -624,7 +630,7 @@ test('CMS editor headers share the same spacing ownership', async () => {
 test('Dashboard header context follows the selected Overview, Performance, or Analytics workspace', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /eyebrow=\{view === 'overview' \? 'Overview' : view === 'performance' \? 'Performance' : 'Analytics'\}/);
-  assert.match(dashboard, /Coordinate creative and IT delivery, urgent work, client commitments, and current Finance exceptions/);
+  assert.match(dashboard, /Finance position, project progress, and delivery priorities in one operational overview/);
   assert.match(dashboard, /Review delivery progress, bottlenecks, and recorded team effort for the selected reporting period/);
   assert.match(dashboard, /Explore source-backed financial movement, inquiry demand, receivables, and portfolio status/);
 });
