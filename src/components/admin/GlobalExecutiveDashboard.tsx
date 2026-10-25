@@ -1194,7 +1194,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </section>
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description={'Invoice values use issue date and expenses use recorded date for ' + financialTrendScopeLabel + '. The difference is not posted profit.'}>
+        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description={'Issued invoice value and recorded expenses for ' + financialTrendScopeLabel + '. Invoice values use issue date and expenses use recorded date. The difference is not a posted profit figure.'}>
           {revenueData.length >= 2 ? (
             <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + financialTrendScopeLabel + '.'} />
           ) : (
