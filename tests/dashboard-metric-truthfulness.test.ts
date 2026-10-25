@@ -15,8 +15,7 @@ test('Dashboard priority exceptions distinguish the source-backed queue, genuine
   assert.ok(dashboard.includes("const safeDestination = /^\\/admin\\/[a-z0-9/_-]+$/i.test(destination) ? destination : null;"));
 });
 
-test('Dashboard Overview active project register excludes completed and archived records before applying view filters', async () => {
-  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+test('Dashboard Overview active project register excludes completed and archived records before applying view filters', () => {
   assert.match(dashboard, /health: String\(project\.health \|\| ''\)/);
   assert.match(dashboard, /const activeDashboardProjects = useMemo\([\s\S]*?!isFinishedWork\(project\.status\) && !isFinishedWork\(project\.health\)/);
   assert.match(dashboard, /\(\) => activeDashboardProjects\.filter\(\(project\) =>[\s\S]*matchesInterval\(project\.startDate, project\.targetEndDate, project\.createdAt\)/);
