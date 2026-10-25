@@ -747,3 +747,15 @@ This closes a source/test discrepancy in the earlier checkpoint: the implementat
 - Source/test commit: [72f6702777aefa5264f9de15dbcb72f8c674b9c1](https://github.com/Kapitech-Agency/kapitech-ams/commit/72f6702777aefa5264f9de15dbcb72f8c674b9c1). The register now distinguishes recorded and missing optional retainer terms; usage/remaining hours only display with a valid commitment and used-hour source.
 - Aggregate KPI coverage is explicit; the duplicated lower burn/near-cap/average-overage grid was removed. No API/business logic changes.
 - Exact-SHA CI is not yet verified. Stage 5 browser review also remains outstanding.
+
+
+## Dashboard Performance · Shared reporting-period scope · 25 October 2026
+
+**Status:** Source/test verified; Stage 5 runtime review outstanding.
+
+- **Before:** Performance task/project snapshots did not consume the global reporting-period Filter. Tracked time used a fixed current-week window.
+- **After:** report scope and exact boundaries lead the work area. The primary surfaces are scoped task status and prioritized project exceptions, followed by scoped time and supporting indicators. Existing overdue-first, due-date ordering and eight-project preview are preserved.
+- **Source semantics:** task due date, project schedule overlap, and logged time are the primary date dimensions, with documented fallbacks. The context retains rows without usable dates. Current-state snapshots are not reported as period-over-period completion trends because status-transition history is not present in the current sources.
+- **Evidence:** source commit [c8e0bea4](https://github.com/Kapitech-Agency/kapitech-ams/commit/c8e0bea4aafc39e78005c87049769261164d3da0), test assertion alignment [e662d6a1](https://github.com/Kapitech-Agency/kapitech-ams/commit/e662d6a1a2d3915ef8f066bc6443c4db8b9b7c91); Quality Gate [40164451181 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40164451181). AMS CI [40164451257](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40164451257) is blocked by the existing high dependency audit advisory after required type, regression, migration and PostgreSQL integration checks passed.
+- **Browser/runtime:** authenticated data, each role, route direct-entry, responsive viewport matrix, focus/keyboard, screen-reader and contrast are **NOT VERIFIED**. Stage 5 is still required.
+- **Next:** Dashboard Overview, then Analytics. Do not move to Inbox until the entire Dashboard module is source/test-reviewed against all three view contracts.

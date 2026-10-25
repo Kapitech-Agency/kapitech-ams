@@ -2162,3 +2162,16 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - **Validation:** Exact-SHA Quality Gate [40079373731 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40079373731): typecheck, regression tests and production build. AMS CI [40079373714 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40079373714); migrations, security regression and PostgreSQL integration passed.
 - **Not verified:** authenticated Admin vs non-Admin visual display, responsive geometry, direct URL/back-forward, keyboard/focus and assistive technology. Stage 5 remains mandatory.
 - **Next:** audit Project → Finance context using existing project-finance state only.
+
+## Stage 4 structural slice — Dashboard · Performance · Shared reporting-period scope · 25 October 2026
+
+- **Requirement:** `VIEW-DASH-PERFORMANCE`; canonical target is `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §4.1, refined by the role presentation matrix.
+- **Primary task:** inspect the current delivery/task status for the selected reporting scope and identify project exceptions, while understanding exactly which period and source timestamps govern the view.
+- **Before:** task-status distribution and project exception rows were presented without the shared reporting-period context; logged time was fixed to the current week, even when the global period Filter selected another interval.
+- **After:** a reporting-scope definition appears before the primary task/project analysis. Tasks use due date with creation-date fallback; projects use schedule overlap with creation-date fallback; time entries use their logged date with creation-timestamp fallback. Records without usable dates remain visible as required by `ReportingPeriodContext`.
+- **Content integrity:** the current dashboard inputs do not include historical task/project status transitions. The view explicitly labels current-state counts and does not claim they represent completed work or status changes within the selected period.
+- **Changed paths:** `src/components/admin/GlobalExecutiveDashboard.tsx`, `tests/ams-dashboard-overview-hierarchy.test.ts`, `tests/frontend-functional-regression.test.ts`, `tests/admin-pages-jsx-regression.test.ts`.
+- **Commits:** source [c8e0bea4](https://github.com/Kapitech-Agency/kapitech-ams/commit/c8e0bea4aafc39e78005c87049769261164d3da0); regression assertion alignment [e662d6a1](https://github.com/Kapitech-Agency/kapitech-ams/commit/e662d6a1a2d3915ef8f066bc6443c4db8b9b7c91).
+- **Validation:** Quality Gate [40164451181 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40164451181). AMS CI [40164451257 failed only at existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40164451257); typecheck, migrations, security regression and PostgreSQL integration passed.
+- **Still open:** authenticated browser/role and Stage 5 viewport, keyboard/focus, contrast and assistive-technology checks. Trend metrics requiring canonical event history remain unavailable.
+- **Next in module order:** Dashboard Overview, followed by Dashboard Analytics. The module is not complete, and work must not advance to Inbox until both remaining views are reviewed and tested.

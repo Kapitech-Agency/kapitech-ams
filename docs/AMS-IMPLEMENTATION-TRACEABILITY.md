@@ -1229,3 +1229,19 @@ The Admin-only shortcut passes the canonical project ID to the existing Document
 Exact-SHA Quality Gate [40079373731 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40079373731): typecheck, regression tests and production build. AMS CI [40079373714 failed only at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40079373714); PostgreSQL migrations, security regression and PostgreSQL integration passed. Existing high `body-parser@1.20.6` advisory unchanged. **Browser role visibility, responsive layout, keyboard/focus and assistive technology: NOT VERIFIED.**
 
 **Next:** Project → Finance context audit. Inspect whether the existing Project Finance view supports an exact project-ID query before adding any shortcut; preserve the existing route permission model.
+
+### VIEW-DASH-PERFORMANCE: Apply the shared reporting-period scope to operational performance · 25 October 2026
+
+**Current source/test SHA:** [e662d6a1](https://github.com/Kapitech-Agency/kapitech-ams/commit/e662d6a1a2d3915ef8f066bc6443c4db8b9b7c91). Source implementation [c8e0bea4](https://github.com/Kapitech-Agency/kapitech-ams/commit/c8e0bea4aafc39e78005c87049769261164d3da0).
+
+Dashboard Performance now consumes the already-existing `ReportingPeriodContext`. It shows the selected reporting period and exact date boundaries before the task-status and project-exception surfaces. Task records are scoped by due date (creation timestamp as fallback), projects by overlap of their recorded schedule (creation timestamp as fallback), and time entries by recorded log date (creation timestamp as fallback). The shared context's existing policy keeps records with no usable date visible. The work surface preserves the overdue-first, due-date and deterministic-name sorting for risk-flagged projects and the existing eight-row limit.
+
+The existing source contract does not include historical task/project status transitions. UI copy therefore identifies the values as current-state snapshots rather than period-specific completions or status-change trends. No route, API/backend, database/schema, permission, authentication, or Finance formula/business logic changed.
+
+**Changed files:** `src/components/admin/GlobalExecutiveDashboard.tsx`, `tests/ams-dashboard-overview-hierarchy.test.ts`, `tests/frontend-functional-regression.test.ts`, `tests/admin-pages-jsx-regression.test.ts`. The latter two regression files were updated because assertions still expected the previous prop-free JSX call. The new performance hierarchy/scope test and existing project-priority test both passed.
+
+**Validation:** Quality Gate [40164451181 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40164451181): typecheck, all regression tests, production build. AMS CI [40164451257 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40164451257); typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed. The existing high `body-parser@1.20.6` advisory is not a frontend-scope fix and no dependency change was made.
+
+**Browser/accessibility:** NOT VERIFIED. Stage 5 still requires an authenticated browser, role coverage, canonical viewport matrix, keyboard/focus and assistive-technology review.
+
+**Next:** Dashboard Overview, then Analytics; Dashboard remains the active module until its three views have been reviewed and source/test-verified.
