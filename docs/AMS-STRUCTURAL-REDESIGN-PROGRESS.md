@@ -2328,3 +2328,15 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Stage 5 status:** Authenticated browser screenshots, role-specific rendering, viewport sweep, keyboard/focus, touch, contrast and assistive-technology checks remain NOT VERIFIED; explicit user sign-off is pending.
 - **Next:** finish remaining Overview source/empty/error-state and Recent Activity contract review, then Dashboard Analytics. Do not move to Inbox.
 
+## Stage 4 structural slice — Dashboard Analytics · Source-backed Inquiry pipeline report · 25 October 2026
+
+- Requirement: VIEW-DASH-ANALYTICS, Main-Content Restructuring Specification §4.1, report-first Analytics composition.
+- Purpose: aggregate current inbound sales inquiry status and requested Creative/IT service demand without duplicating Inbox messages or inventing CRM analytics.
+- Report: adds Inquiry pipeline alongside Financial movement, Receivables and Project status. It groups canonical inquiry records by current status, displays inquiry/open/client-linked counts and the requested service categories. Duplicate categories on one inquiry count once.
+- Source/authorization: uses the existing Dashboard snapshot of Inbox submissions. Only records with type inquiry are included; Careers, vendor and newsletter records are excluded. The option and report content follow existing Inbox route access, and selection resets if access is no longer available.
+- Semantic boundary: client linkage requires saved convertedClientId. Free-text budgets are not summed. No conversion rate, booked revenue or historical funnel is inferred. Missing source differs from a valid empty source.
+- Changed paths: src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts.
+- Evidence: report [da6b523e](https://github.com/Kapitech-Agency/kapitech-ams/commit/da6b523e99e68c4cbfdc6b8ed17d22b2c92e8433), typed reducer correction [35282a57](https://github.com/Kapitech-Agency/kapitech-ams/commit/35282a57586a5964fcb5e7d5d27fb1a351ce0a0e), final regression correction [8824ffa1](https://github.com/Kapitech-Agency/kapitech-ams/commit/8824ffa1618914409d565095e7cd58c385940609).
+- Validation: Quality Gate [40194509887](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40194509887) passed on exact source/test SHA 8824ffa1618914409d565095e7cd58c385940609, including TypeScript, regression suite and production build. AMS CI [40194509771](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40194509771) failed at the existing dependency audit for high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Type check, PostgreSQL migrations, security regression and PostgreSQL integration passed; downstream build/package/HTTP smoke steps were skipped.
+- Still unverified: authenticated role/data review, rendered values, viewport sweep, keyboard/focus, touch, contrast and assistive technology. Stage 5 remains NOT VERIFIED.
+- Next: finish Overview source/empty/error-state and Recent Activity acceptance; then complete the remaining Analytics review. Do not move to Inbox.
