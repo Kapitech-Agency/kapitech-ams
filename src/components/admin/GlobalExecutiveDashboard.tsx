@@ -1557,14 +1557,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     ? 'warning'
                     : 'info';
                 const category = String(item.category || 'Operations');
-                const knownDestination: Record<string, string> = {
-                  att_invoices_overdue: '/admin/finance?tab=accounts-receivable',
-                  att_projects_risk: '/admin/projects?projects=all',
-                  att_tasks_overdue: '/admin/tasks?taskscope=due',
-                  att_leads_new: '/admin/inbox'
+                const knownDestinationCandidates: Record<string, string[]> = {
+                  att_invoices_overdue: ['/admin/finance?tab=accounts-receivable'],
+                  att_projects_risk: ['/admin/projects?projects=all', '/admin/projects?projects=planning-delivery', '/admin/projects?projects=sprint'],
+                  att_tasks_overdue: ['/admin/tasks?taskscope=due', '/admin/projects?projects=planning-delivery', '/admin/projects?projects=sprint'],
+                  att_leads_new: ['/admin/inbox?view=messages']
                 };
-                const destination = knownDestination[String(item.id || '')] || String(item.linkUrl || '');
-                const safeDestination = destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null;
+                const candidates = knownDestinationCandidates[String(item.id || '')] || [String(item.linkUrl || '')];
+                const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;
                 const linkLabel = category === 'Finance'
                   ? 'Open receivables'
                   : category === 'Sales'

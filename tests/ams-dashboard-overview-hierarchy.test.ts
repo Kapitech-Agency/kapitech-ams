@@ -351,6 +351,19 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
 });
 
 
+test('Dashboard priority exception drill-downs select the first route allowed for the current role', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-inbox-triage"', start);
+  assert.ok(start >= 0 && end > start);
+  const exceptions = dashboard.slice(start, end);
+  assert.ok(exceptions.includes("att_projects_risk: ['/admin/projects?projects=all', '/admin/projects?projects=planning-delivery', '/admin/projects?projects=sprint']"));
+  assert.ok(exceptions.includes("att_tasks_overdue: ['/admin/tasks?taskscope=due', '/admin/projects?projects=planning-delivery', '/admin/projects?projects=sprint']"));
+  assert.ok(exceptions.includes("candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate))"));
+  assert.equal(exceptions.includes("const destination = knownDestination[String(item.id || '')] || String(item.linkUrl || '')"), false,
+    'A single fixed destination can disable a valid workspace for another role.');
+});
+
 test('Dashboard Overview adds a permission-gated Inbox triage work surface from the canonical lead source', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const inboxTriage = await read('src/lib/inboxTriage.ts');
