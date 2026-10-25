@@ -1056,6 +1056,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
+      <section
+        className="space-y-2 rounded-card border border-line bg-panel px-4 py-3 sm:px-5"
+        data-ams-feature-slug="dashboard-overview-reporting-scope"
+        aria-label="Overview reporting scope"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-fg">Reporting scope</p>
+            <p className="mt-1 text-xs text-muted">{financialTrendScopeLabel}</p>
+          </div>
+          <p className="max-w-3xl text-xs leading-5 text-muted">
+            {reportPeriodEnabled
+              ? 'The invoice/expense trend and active project register follow this period. Priority exceptions, KPI summaries, delivery pacing, team capacity, and recent activity are current snapshots or work queues, not historical results for this period.'
+              : 'The invoice/expense trend uses this recent 30-day default window. The active project register covers all dates. Priority exceptions, KPI summaries, delivery pacing, team capacity, and recent activity are current snapshots or work queues.'}
+          </p>
+        </div>
+      </section>
+
       <section data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
         <AdminPanel
           title="Priority exceptions"

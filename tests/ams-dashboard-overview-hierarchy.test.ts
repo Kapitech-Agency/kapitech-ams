@@ -21,7 +21,11 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   const capacityStart = overview.indexOf('title="Team capacity"');
   const supportMetricsStart = overview.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"');
   const priorityExceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
+  const reportingScopeStart = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
 
+  assert.ok(reportingScopeStart >= 0 && reportingScopeStart < priorityExceptionsStart, 'Reporting scope must be visible before exception review.');
+  assert.ok(overview.includes('not historical results for this period'));
+  assert.ok(overview.includes('active project register covers all dates'));
   assert.ok(priorityExceptionsStart >= 0 && priorityExceptionsStart < metricStart, 'Priority exceptions should appear before decision KPIs');
   assert.ok(metricStart >= 0 && actionsStart > metricStart, 'Executive metrics should appear before the quick-action row');
   assert.ok(chartStart > actionsStart, 'The primary analysis should follow KPIs and quick actions');
