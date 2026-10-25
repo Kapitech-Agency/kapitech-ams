@@ -626,14 +626,14 @@ const AnalyticsView: React.FC<{
   const inquiryRecords = inquiryRows.filter((record) => record.type === 'inquiry');
   const openInquiryCount = inquiryRecords.filter((record) => record.status !== 'closed').length;
   const linkedInquiryCount = inquiryRecords.filter((record) => Boolean(String(record.convertedClientId || '').trim())).length;
-  const inquiryStatusGroups = inquiryRecords.reduce<Array<{ status: string; count: number }>>((groups, record) => {
+  const inquiryStatusGroups: Array<{ status: string; count: number }> = inquiryRecords.reduce((groups: Array<{ status: string; count: number }>, record: ContactSubmission) => {
     const status = String(record.status || 'Not set');
     const existing = groups.find((item) => item.status === status);
     if (existing) existing.count += 1;
     else groups.push({ status, count: 1 });
     return groups;
-  }, []).sort((a, b) => b.count - a.count || a.status.localeCompare(b.status));
-  const inquiryServiceGroups = inquiryRecords.reduce<Array<{ service: string; count: number }>>((groups, record) => {
+  }, [] as Array<{ status: string; count: number }>).sort((a, b) => b.count - a.count || a.status.localeCompare(b.status));
+  const inquiryServiceGroups: Array<{ service: string; count: number }> = inquiryRecords.reduce((groups: Array<{ service: string; count: number }>, record: ContactSubmission) => {
     const services = Array.isArray(record.services)
       ? Array.from(new Set(record.services.map((service) => String(service || '').trim()).filter(Boolean)))
       : [];
@@ -643,7 +643,7 @@ const AnalyticsView: React.FC<{
       else groups.push({ service, count: 1 });
     });
     return groups;
-  }, []).sort((a, b) => b.count - a.count || a.service.localeCompare(b.service));
+  }, [] as Array<{ service: string; count: number }>).sort((a, b) => b.count - a.count || a.service.localeCompare(b.service));
 
   const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
   const financialSourceRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0;
