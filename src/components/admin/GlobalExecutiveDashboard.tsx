@@ -583,6 +583,10 @@ const AnalyticsView: React.FC<{
               <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
             ) : !financialRecordsReturned ? (
               <DashboardUnavailable title="No financial records returned" description="The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source." />
+            ) : invoiceRows.length === 0 ? (
+              <DashboardUnavailable title="Invoice history unavailable" description="The invoice source returned no records. A zero-value invoice series is not inferred from an empty source." />
+            ) : expenseRows.length === 0 ? (
+              <DashboardUnavailable title="Expense history unavailable" description="The expense source returned no records. A zero-value expense series is not inferred from an empty source." />
             ) : trend.length < 2 ? (
               <DashboardUnavailable title="Financial trend unavailable" description="The selected sources did not return a usable period series. Values are not estimated." />
             ) : (
@@ -959,6 +963,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const onSchedulePercent = totalDelivery > 0 ? Math.round((Math.max(0, onScheduleValue) / totalDelivery) * 100) : 0;
   const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
   const financeSourcesAvailable = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null;
+  const invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.length);
+  const expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.length);
   const revenueData = useMemo(() => {
     if (!financeSourcesAvailable) return [];
     const invoices = (operationalSnapshot.invoices || []).filter((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency);
@@ -1195,7 +1201,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
         <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description={'Issued invoice value and recorded expenses for ' + financialTrendScopeLabel + '. Invoice values use issue date and expenses use recorded date. The difference is not a posted profit figure.'}>
-          {revenueData.length >= 2 ? (
+          {!financeSourcesAvailable ? (
+            <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
+          ) : !invoiceHistoryReturned && !expenseHistoryReturned ? (
+            <DashboardUnavailable title="No financial records returned" description="The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source." />
+          ) : !invoiceHistoryReturned ? (
+            <DashboardUnavailable title="Invoice history unavailable" description="The invoice source returned no records. A zero-value invoice series is not inferred from an empty source." />
+          ) : !expenseHistoryReturned ? (
+            <DashboardUnavailable title="Expense history unavailable" description="The expense source returned no records. A zero-value expense series is not inferred from an empty source." />
+          ) : revenueData.length >= 2 ? (
             <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + financialTrendScopeLabel + '.'} />
           ) : (
             <div className="flex min-h-[220px] flex-col items-center justify-center rounded-control border border-line bg-bg px-5 py-8 text-center" role="status">

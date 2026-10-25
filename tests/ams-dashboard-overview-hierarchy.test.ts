@@ -104,6 +104,23 @@ test('Dashboard Overview and Analytics share the topbar reporting period without
 });
 
 
+test('Dashboard Overview does not infer a zero financial trend from empty invoice or expense sources', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  assert.match(dashboard, /const invoiceHistoryReturned = Boolean\(operationalSnapshot\.invoices\?\.length\)/);
+  assert.match(dashboard, /const expenseHistoryReturned = Boolean\(operationalSnapshot\.expenses\?\.length\)/);
+  const chartStart = dashboard.indexOf('title="Invoices vs expenses"');
+  const chartEnd = dashboard.indexOf('</AdminPanel>', chartStart);
+  assert.ok(chartStart >= 0 && chartEnd > chartStart, 'Overview financial chart should have a bounded panel section');
+  const chart = dashboard.slice(chartStart, chartEnd);
+  assert.ok(chart.includes('!financeSourcesAvailable'), 'Failed source reads must remain unavailable.');
+  assert.ok(chart.includes('!invoiceHistoryReturned && !expenseHistoryReturned'), 'Two empty sources must remain an explicit no-record state.');
+  assert.ok(chart.includes('!invoiceHistoryReturned'), 'An empty invoice source must not become a zero invoice trend.');
+  assert.ok(chart.includes('!expenseHistoryReturned'), 'An empty expense source must not become a zero expense trend.');
+  assert.ok(chart.includes('A zero-value trend is not inferred from an empty source.'));
+  assert.ok(chart.includes('A zero-value invoice series is not inferred from an empty source.'));
+  assert.ok(chart.includes('A zero-value expense series is not inferred from an empty source.'));
+});
+
 test('Dashboard Performance scopes source-backed delivery records to the shared reporting period', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('const PerformanceView: React.FC');
