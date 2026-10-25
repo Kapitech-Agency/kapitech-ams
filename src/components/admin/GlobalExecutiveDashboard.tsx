@@ -1,15 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
+  Code2,
   CircleDollarSign,
   Clock3,
   FolderKanban,
   FileText,
+  Eye,
   RefreshCw,
+  Palette,
   Plus,
   ReceiptText,
   Users,
