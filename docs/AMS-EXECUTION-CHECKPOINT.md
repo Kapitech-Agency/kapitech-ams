@@ -10,7 +10,7 @@
 
 ## 1. Latest application/test snapshot
 
-Snapshot reconciled on **26 October 2026**.
+Snapshot reconciled on **25 October 2026**.
 
 | Item | Evidence |
 |---|---|
