@@ -6,6 +6,8 @@ import {
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Code2,
   CircleDollarSign,
   Clock3,
@@ -24,7 +26,7 @@ import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
-import { getReportingPeriodRange, type ReportingPeriodMode } from '../../lib/reportingPeriods';
+import { formatReportingPeriodLabel, getReportingPeriodRange, getReportingYearOptions, type ReportingPeriodMode } from '../../lib/reportingPeriods';
 import { getInvoiceDate, getInvoiceOutstanding, getPaymentRows, isIssuedInvoice } from '../../lib/financeWorkbook';
 import { isInboxActionable, isInboxHighPriority, isInboxUnassigned } from '../../lib/inboxTriage';
 import { normalizeContactSubmission, type ContactSubmission } from '../../lib/submissions';
@@ -33,6 +35,8 @@ const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as co
 type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
 type DashboardTone = 'success' | 'warning' | 'danger' | 'info';
 type DashboardTaskFilter = 'action' | 'review' | 'overdue' | 'blocked' | 'unassigned';
+type DashboardProjectFilter = 'all' | 'creative' | 'technology';
+type DashboardDeadlineFilter = 'all' | 'overdue' | 'next7' | 'days8to30';
 
 type DashboardWorkTask = {
   id: string;
@@ -178,6 +182,23 @@ const getDashboardProjectHref = (project: any): string | null => {
   if (slug) return '/admin/projects?projects=sprint&project=' + encodeURIComponent(slug);
   if (id) return '/admin/projects?projects=all&project=' + encodeURIComponent(id);
   return null;
+};
+
+const getAdjacentReportingPeriodValue = (value: string, mode: ReportingPeriodMode, offset: number): string => {
+  const range = getReportingPeriodRange(value, mode);
+  if (!range || !Number.isInteger(offset)) return value;
+  if (mode === 'year') return String(range.year + offset);
+  if (mode === 'month') {
+    const [year, month] = range.startMonth.split('-').map(Number);
+    const next = new Date(year, month - 1 + offset, 1);
+    return String(next.getFullYear()) + '-' + String(next.getMonth() + 1).padStart(2, '0');
+  }
+  const match = /^(\d{4})-Q([1-4])$/.exec(value);
+  if (!match) return value;
+  const absoluteQuarter = Number(match[1]) * 4 + Number(match[2]) - 1 + offset;
+  const year = Math.floor(absoluteQuarter / 4);
+  const quarter = ((absoluteQuarter % 4) + 4) % 4 + 1;
+  return String(year) + '-Q' + quarter;
 };
 
 const getDashboardSavedProgress = (project: any): number | null => {
@@ -1364,12 +1385,48 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       navigate('/admin/dashboard', { replace: true });
     }
   }, [hasViewParameter, navigate, requestedView]);
-  const { matchesDate, matchesInterval, value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled } = useReportingPeriod();
+  const {
+    matchesDate,
+    matchesInterval,
+    value: reportPeriodValue,
+    mode: reportPeriodMode,
+    enabled: reportPeriodEnabled,
+    setMode: setReportingPeriodMode,
+    setValue: setReportingPeriodValue,
+    clearFilter: clearReportingPeriodFilter
+  } = useReportingPeriod();
   const selectedReportingRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, 'en-GB');
   const reportPeriodLabel = reportPeriodEnabled && selectedReportingRange
     ? selectedReportingRange.label + ' (' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate + ')'
     : 'All dates';
+  const reportingPeriodOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = getReportingYearOptions(currentYear, [], selectedReportingRange?.year ?? currentYear);
+    return years.flatMap((year) => {
+      if (reportPeriodMode === 'year') {
+        const value = String(year);
+        return [{ value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') }];
+      }
+      if (reportPeriodMode === 'quarter') {
+        return [1, 2, 3, 4].map((quarter) => {
+          const value = String(year) + '-Q' + quarter;
+          return { value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') };
+        });
+      }
+      return Array.from({ length: 12 }, (_, index) => {
+        const value = String(year) + '-' + String(index + 1).padStart(2, '0');
+        return { value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') };
+      });
+    }).sort((left, right) => right.value.localeCompare(left.value));
+  }, [reportPeriodMode, selectedReportingRange?.year]);
+  const previousReportingPeriodValue = getAdjacentReportingPeriodValue(reportPeriodValue, reportPeriodMode, -1);
+  const nextReportingPeriodValue = getAdjacentReportingPeriodValue(reportPeriodValue, reportPeriodMode, 1);
+  const canMoveToPreviousPeriod = reportPeriodEnabled && reportingPeriodOptions.some((option) => option.value === previousReportingPeriodValue);
+  const canMoveToNextPeriod = reportPeriodEnabled && reportingPeriodOptions.some((option) => option.value === nextReportingPeriodValue);
+  const overviewPeriodDisplay = reportPeriodEnabled && selectedReportingRange ? selectedReportingRange.label : 'Recent 30 days';
   const [overviewTaskFilter, setOverviewTaskFilter] = useState<DashboardTaskFilter>('action');
+  const [overviewProjectFilter, setOverviewProjectFilter] = useState<DashboardProjectFilter>('all');
+  const [overviewDeadlineFilter, setOverviewDeadlineFilter] = useState<DashboardDeadlineFilter>('all');
   const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; attentionItems?: DashboardAttentionItem[]; attentionItemsDataAvailable?: boolean; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
     loading: true, projects: null, clients: null, inboxLeads: null, tasks: null, timeLogs: null, invoices: null, expenses: null
@@ -1871,7 +1928,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       .slice(0, 5);
   }, [activeDashboardTasks, activeProjectRows, allUpcomingCommitments, canOpenClientDirectory, canOpenProjects, canOpenTasks, clientDirectoryById, currentDayKey, operationalSnapshot.projects, operationalSnapshot.tasks]);
 
-  const upcomingCommitments = allUpcomingCommitments.slice(0, 8);
+  const upcomingCommitments = allUpcomingCommitments.filter((item) => {
+    if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey;
+    if (overviewDeadlineFilter === 'next7') return item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey;
+    if (overviewDeadlineFilter === 'days8to30') return item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey;
+    return true;
+  }).slice(0, 8);
   const commitmentHorizonTotal = allUpcomingCommitments.length;
   const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length;
   const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
@@ -1954,7 +2016,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const projectRiskBreakdown: DonutPoint[] = operationalSnapshot.projects === null
     ? []
     : buildProjectDeliveryBreakdown(rawProjectRows).map((item) => ({ label: item.label, value: item.value, tone: item.tone }));
-  const featuredDashboardProjects = activeProjectRows.slice().sort((left, right) => {
+  const orderedActiveDashboardProjects = activeProjectRows.slice().sort((left, right) => {
     const leftDue = dateKey(left.targetEndDate || left.endDate || left.dueDate || left.deadline);
     const rightDue = dateKey(right.targetEndDate || right.endDate || right.dueDate || right.deadline);
     const leftOverdue = isValidDashboardDate(leftDue) && leftDue < currentDayKey;
@@ -1967,19 +2029,27 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     if (isValidDashboardDate(leftDue)) return -1;
     if (isValidDashboardDate(rightDue)) return 1;
     return String(left.name || left.title || '').localeCompare(String(right.name || right.title || ''));
-  }).slice(0, 4);
+  });
+  const activeDashboardProjectFilterCounts = {
+    all: orderedActiveDashboardProjects.length,
+    creative: orderedActiveDashboardProjects.filter((project) => getDashboardServiceLine(project) === 'creative').length,
+    technology: orderedActiveDashboardProjects.filter((project) => getDashboardServiceLine(project) === 'technology').length
+  };
+  const featuredDashboardProjects = orderedActiveDashboardProjects
+    .filter((project) => overviewProjectFilter === 'all' || getDashboardServiceLine(project) === overviewProjectFilter)
+    .slice(0, 4);
 
   return (
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
       <AdminModuleHeader slug="dashboard-header"
         className="mb-0"
-        eyebrow={view === 'overview' ? 'Overview' : view === 'performance' ? 'Performance' : 'Analytics'}
+        eyebrow="Agency operations"
         title="Dashboard"
         description={view === 'overview'
-          ? 'A clear view of financial movement, project health, and delivery.'
+          ? 'Finance, project delivery, deadlines, and team workload in one operational view.'
           : view === 'performance'
-            ? 'Review delivery progress, bottlenecks, and recorded team effort for the selected reporting period.'
-            : 'Explore source-backed financial movement, inquiry demand, receivables, and portfolio status.'}
+            ? 'Compare delivery progress, bottlenecks, and recorded team effort over the selected period.'
+            : 'Explore supported trends across financial movement, inquiry demand, and portfolio status.'}
         actions={(
           <>
             <button
@@ -2005,6 +2075,60 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         )}
       />
 
+      <section className="ams-dashboard-toolbar flex min-w-0 flex-col gap-3 border-b border-line/70 pb-4 xl:flex-row xl:items-center xl:justify-between" data-ams-feature-slug="dashboard-view-and-reporting-controls" aria-label="Dashboard view and reporting controls">
+        <nav className="ams-dashboard-view-tabs flex min-w-0 items-center gap-1 overflow-x-auto" aria-label="Dashboard views">
+          {([
+            { key: 'overview', label: 'Overview' },
+            { key: 'performance', label: 'Performance' },
+            { key: 'analytics', label: 'Analytics' }
+          ] as Array<{ key: DashboardWorkspaceView; label: string }>).map((tab) => (
+            <Link
+              key={tab.key}
+              to={tab.key === 'overview' ? '/admin/dashboard' : '/admin/dashboard?view=' + tab.key}
+              aria-current={view === tab.key ? 'page' : undefined}
+              className={[
+                'ams-dashboard-view-tab inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                view === tab.key ? 'is-active border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:border-line hover:bg-panel hover:text-fg'
+              ].join(' ')}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="ams-dashboard-period-controls flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end" aria-label="Reporting period filters">
+          <label className="ams-dashboard-period-field flex min-w-0 flex-col gap-1">
+            <span className="text-[10px] font-medium text-muted">Group by</span>
+            <select aria-label="Reporting period type" value={reportPeriodMode} onChange={(event) => setReportingPeriodMode(event.target.value as ReportingPeriodMode)} className="ams-dashboard-period-select min-h-10 w-full rounded-full border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[120px]">
+              <option value="month">Month</option>
+              <option value="quarter">Quarter</option>
+              <option value="year">Year</option>
+            </select>
+          </label>
+          <label className="ams-dashboard-period-field flex min-w-0 flex-col gap-1">
+            <span className="text-[10px] font-medium text-muted">Date range</span>
+            <select aria-label="Reporting date range" value={reportPeriodEnabled ? reportPeriodValue : '__recent_30_days__'} onChange={(event) => {
+              if (event.target.value === '__recent_30_days__') clearReportingPeriodFilter();
+              else setReportingPeriodValue(event.target.value);
+            }} className="ams-dashboard-period-select min-h-10 w-full rounded-full border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[190px]">
+              <option value="__recent_30_days__">Recent 30 days · default</option>
+              {reportingPeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <div className="flex items-center gap-1.5">
+            <button type="button" aria-label="Previous reporting period" title="Previous period" disabled={!canMoveToPreviousPeriod} onClick={() => setReportingPeriodValue(previousReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
+              <ChevronLeft size={15} aria-hidden="true" />
+            </button>
+            <button type="button" aria-label="Next reporting period" title="Next period" disabled={!canMoveToNextPeriod} onClick={() => setReportingPeriodValue(nextReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
+              <ChevronRight size={15} aria-hidden="true" />
+            </button>
+          </div>
+          {reportPeriodEnabled ? (
+            <button type="button" onClick={clearReportingPeriodFilter} className="ams-dashboard-clear-period inline-flex min-h-10 items-center justify-center rounded-full border border-line px-3 text-xs font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Clear period</button>
+          ) : null}
+        </div>
+      </section>
+
       {isRefreshing && !dashboardOverview.loading && !operationalSnapshot.loading ? (
         <p className="rounded-control border border-line bg-panel px-3 py-2 text-xs text-muted" role="status" data-ams-feature-slug="dashboard-refreshing-status">
           Refreshing dashboard sources. Previously loaded values remain visible.
@@ -2029,12 +2153,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             aria-label="Overview reporting scope"
           >
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-fg">{reportPeriodEnabled ? reportPeriodLabel : 'Current operations'}</p>
-              <p className="mt-0.5 text-[11px] text-muted">Financial trends use the selected period or recent 30 days. Project, task and invoice balances reflect their current saved state.</p>
+              <p className="text-xs font-semibold text-fg">{reportPeriodEnabled && selectedReportingRange ? selectedReportingRange.label + ' · ' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate : 'Recent 30 days · default period'}</p>
+              <p className="mt-0.5 text-[11px] text-muted">The selected period controls financial movement and recorded-time summaries. Project health, open tasks, receivables, and deadlines show current operational state.</p>
             </div>
             <div className="flex min-w-0 flex-wrap gap-2">
               <span className="ams-overview-scope__chip inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
-                <CircleDollarSign size={13} aria-hidden="true" /> Finance: current month + receivables
+                <CircleDollarSign size={13} aria-hidden="true" /> Finance trend: {overviewPeriodDisplay}
               </span>
               <span className="ams-overview-scope__chip inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
                 <CalendarDays size={13} aria-hidden="true" /> Deadlines: overdue + next 30 days
@@ -2268,20 +2392,38 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
                   actions={(
-                    <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                      Project registry <ArrowUpRight size={13} aria-hidden="true" />
-                    </Link>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <div className="ams-dashboard-segmented-filter flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-line bg-bg p-1" role="group" aria-label="Filter projects by service line">
+                        {([
+                          { key: 'all', label: 'All', count: activeDashboardProjectFilterCounts.all },
+                          { key: 'creative', label: 'Creative', count: activeDashboardProjectFilterCounts.creative },
+                          { key: 'technology', label: 'IT', count: activeDashboardProjectFilterCounts.technology }
+                        ] as Array<{ key: DashboardProjectFilter; label: string; count: number }>).map((filter) => (
+                          <button key={filter.key} type="button" aria-pressed={overviewProjectFilter === filter.key} onClick={() => setOverviewProjectFilter(filter.key)} className={[
+                            'inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                            overviewProjectFilter === filter.key ? 'bg-panel text-fg shadow-sm' : 'text-muted hover:bg-panel/70 hover:text-fg'
+                          ].join(' ')}>
+                            {filter.label}
+                            <span className="text-[10px] tabular-nums text-muted">{filter.count}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                        Project registry <ArrowUpRight size={13} aria-hidden="true" />
+                      </Link>
+                    </div>
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
                     <div className="p-4"><DashboardUnavailable title="Project progress unavailable" description="The Projects source did not return current records." /></div>
                   ) : featuredDashboardProjects.length === 0 ? (
                     <div className="px-4 py-8 text-center" role="status">
-                      <p className="text-xs font-medium text-fg">No active projects</p>
-                      <p className="mt-1 text-[11px] text-muted">Saved active project records will appear here.</p>
+                      <p className="text-xs font-medium text-fg">{activeProjectRows.length === 0 ? 'No active projects' : 'No active projects match this service-line filter.'}</p>
+                      <p className="mt-1 text-[11px] text-muted">Change the service-line filter to inspect another part of the portfolio.</p>
                     </div>
                   ) : (
                     <div className="divide-y divide-line">
+                      <p className="px-4 pb-2 pt-3 text-[10px] text-muted">Showing {featuredDashboardProjects.length} of {activeDashboardProjectFilterCounts[overviewProjectFilter]} matching active projects</p>
                       {featuredDashboardProjects.map((project) => {
                         const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
                         const overdue = isValidDashboardDate(due) && due < currentDayKey;
@@ -2571,16 +2713,20 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             {nextSevenDayCommitmentCount > 0 ? <span className="h-full bg-warning" style={{ width: nextSevenDayCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
                             {daysEightToThirtyCommitmentCount > 0 ? <span className="h-full bg-info" style={{ width: daysEightToThirtyCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
                           </div>
-                          <div className="grid grid-cols-3 gap-3">
-                            {[
-                              { label: 'Overdue', count: overdueHorizonCount, tone: 'text-danger' },
-                              { label: 'Today–7 days', count: nextSevenDayCommitmentCount, tone: 'text-warning' },
-                              { label: 'Days 8–30', count: daysEightToThirtyCommitmentCount, tone: 'text-muted' }
-                            ].map((item) => (
-                              <div key={item.label} className="min-w-0 border-l border-line pl-2.5">
-                                <p className="text-[10px] leading-4 text-muted">{item.label}</p>
-                                <p className={['mt-0.5 text-base font-semibold tabular-nums', item.tone].join(' ')}>{item.count}</p>
-                              </div>
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Filter deadlines">
+                            {([
+                              { key: 'all', label: 'All', count: commitmentHorizonTotal, tone: 'text-fg' },
+                              { key: 'overdue', label: 'Overdue', count: overdueHorizonCount, tone: 'text-danger' },
+                              { key: 'next7', label: 'Today–7 days', count: nextSevenDayCommitmentCount, tone: 'text-warning' },
+                              { key: 'days8to30', label: 'Days 8–30', count: daysEightToThirtyCommitmentCount, tone: 'text-muted' }
+                            ] as Array<{ key: DashboardDeadlineFilter; label: string; count: number; tone: string }>).map((item) => (
+                              <button key={item.key} type="button" aria-pressed={overviewDeadlineFilter === item.key} onClick={() => setOverviewDeadlineFilter(item.key)} className={[
+                                'ams-dashboard-deadline-filter flex min-w-0 flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                                overviewDeadlineFilter === item.key ? 'is-active border-accent/25 bg-accent/5' : 'border-transparent bg-panel/70 hover:border-line hover:bg-panel'
+                              ].join(' ')}>
+                                <span className={['text-[10px] leading-4', item.tone].join(' ')}>{item.label}</span>
+                                <span className="text-base font-semibold tabular-nums text-fg">{item.count}</span>
+                              </button>
                             ))}
                           </div>
                         </>
@@ -2589,7 +2735,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       )}
                     </div>
                     {upcomingCommitments.length === 0 ? (
-                      <p className="px-4 py-5 text-xs text-muted" role="status">No dated commitments due in the next 30 days.</p>
+                      <p className="px-4 py-5 text-xs text-muted" role="status">{overviewDeadlineFilter === 'overdue' ? 'No overdue commitments in this window.' : overviewDeadlineFilter === 'next7' ? 'No commitments due in the next 7 days.' : overviewDeadlineFilter === 'days8to30' ? 'No commitments due in days 8–30.' : 'No dated commitments due in the next 30 days.'}</p>
                     ) : (
                       <div className="divide-y divide-line">
                         {upcomingCommitments.slice(0, 4).map((item) => {
