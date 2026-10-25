@@ -102,6 +102,13 @@ type DashboardAttentionItem = {
   linkUrl?: string;
 };
 
+const dashboardAttentionSeverityRank = (severity: unknown) => {
+  const normalized = String(severity || 'info').toLowerCase();
+  if (normalized === 'danger' || normalized === 'critical') return 0;
+  if (normalized === 'warning') return 1;
+  return 2;
+};
+
 
 const toneClasses: Record<DashboardTone, string> = {
   success: 'border-success/25 bg-success/10 text-success',
@@ -1519,9 +1526,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     const items = dashboardOverview.attentionItems || [];
     // The server's Sales exception uses open-lead volume as a proxy for unassigned records.
     // Inbox is the source of truth for assignment and priority, so avoid duplicating or mislabelling it.
-    return canOpenInbox
+    // Keep the exception API as the source of truth, but order the visible queue by severity.
+    // Stable sort preserves server ordering among items with the same severity.
+    const allowedItems = canOpenInbox
       ? items.filter((item) => String(item.category || '').toLowerCase() !== 'sales' && item.id !== 'att_leads_new')
       : items;
+    return [...allowedItems].sort((left, right) =>
+      dashboardAttentionSeverityRank(left.severity) - dashboardAttentionSeverityRank(right.severity)
+    );
   }, [canOpenInbox, dashboardOverview.attentionItems]);
 
   const attentionSeveritySummary = useMemo(() => {
@@ -2011,8 +2023,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       <section className="space-y-3" data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-fg">Needs attention</h2>
-          <p className="mt-1 text-xs text-muted">Priority exceptions and inquiries that need action.</p>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-danger">Priority 01</span>
+            <h2 className="text-sm font-semibold text-fg">Needs attention</h2>
+          </div>
+          <p className="mt-1 text-xs text-muted">Urgent exceptions and actionable inquiries first.</p>
         </div>
         <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
           <section className={['h-full min-w-0', canOpenInbox ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
@@ -2025,9 +2040,22 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   { label: 'Attention', count: attentionSeveritySummary.attention, color: 'text-warning' },
                   { label: 'Other', count: attentionSeveritySummary.other, color: 'text-muted' },
                   { label: 'Total', count: attentionSeveritySummary.total, color: 'text-fg' }
-                ].map((metric) => (
-                  <div key={metric.label} className="min-w-0 rounded-control border border-line bg-panel px-2.5 py-2 sm:px-3"><p className="text-[10px] text-muted">{metric.label}</p><p className={['mt-0.5 text-lg font-semibold tabular-nums', metric.color].join(' ')}>{metric.count}</p></div>
-                ))}
+                ].map((metric) => {
+                  const urgent = metric.label === 'Urgent' && metric.count > 0;
+                  const attention = metric.label === 'Attention' && metric.count > 0;
+                  return (
+                    <div
+                      key={metric.label}
+                      className={[
+                        'min-w-0 rounded-control border px-2.5 py-2 sm:px-3',
+                        urgent ? 'border-danger/25 bg-danger/5' : attention ? 'border-warning/25 bg-warning/5' : 'border-line bg-panel'
+                      ].join(' ')}
+                    >
+                      <p className="text-[10px] text-muted">{metric.label}</p>
+                      <p className={['mt-0.5 font-semibold tabular-nums', metric.label === 'Urgent' ? 'text-2xl' : 'text-lg', metric.color].join(' ')}>{metric.count}</p>
+                    </div>
+                  );
+                })}
               </div>
               <div className="flex h-1.5 overflow-hidden rounded-full bg-line" role="img" aria-label={'Priority exception mix: ' + attentionSeveritySummary.urgent + ' urgent, ' + attentionSeveritySummary.attention + ' attention, ' + attentionSeveritySummary.other + ' other.'}>
                 {attentionSeveritySummary.urgent > 0 ? <span className="h-full bg-danger" style={{ width: (attentionSeveritySummary.urgent / attentionSeveritySummary.total) * 100 + '%' }} aria-hidden="true" /> : null}
@@ -2201,61 +2229,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </div>
       </section>
 
-      <section className="space-y-3" data-ams-feature-slug="dashboard-agency-operating-indicators" aria-label="Agency operating indicators">
-        <AdminMetricStrip
-          slug="dashboard-agency-operating-kpis"
-          className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5"
-          metrics={[
-            {
-              id: 'active-projects', label: 'Projects in delivery',
-              value: canOpenProjects && activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
-              context: !canOpenProjects ? 'Not available to this role' : projectSourceAvailable ? 'Open canonical project records' : dashboardOverview.metrics?.activeProjects != null ? 'Dashboard summary · source detail unavailable' : 'Project source unavailable',
-              sourceLabel: 'Projects',
-              href: projectKpiRoute || undefined,
-              linkLabel: projectKpiRoute ? 'Open project workspace' : undefined,
-              icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-active-projects'
-            },
-            {
-              id: 'open-tasks', label: 'Open tasks',
-              value: canOpenTasks && activeTaskCount != null ? String(activeTaskCount) : '—',
-              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Tasks not yet completed' : 'Task source unavailable',
-              sourceLabel: 'Tasks & Execution',
-              href: taskKpiRoute || undefined,
-              linkLabel: taskKpiRoute ? 'Open task queue' : undefined,
-              icon: <CheckCircle2 size={15} />, toneClassName: 'text-fg', slug: 'dashboard-open-tasks'
-            },
-            {
-              id: 'overdue-tasks', label: 'Overdue tasks',
-              value: canOpenTasks && overdueTaskCount != null ? String(overdueTaskCount) : '—',
-              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Open tasks past due date' : 'Task source unavailable',
-              sourceLabel: 'Tasks & Execution',
-              href: canOpenTasks ? '/admin/tasks?taskscope=due' : undefined,
-              linkLabel: canOpenTasks ? 'Review due work' : undefined,
-              icon: <AlertTriangle size={15} />, toneClassName: overdueTaskCount ? 'text-danger' : 'text-fg', slug: 'dashboard-overdue-tasks'
-            },
-            {
-              id: 'review-queue', label: 'Tasks in review',
-              value: canOpenTasks && reviewTaskCount != null ? String(reviewTaskCount) : '—',
-              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Waiting in the review status' : 'Task source unavailable',
-              sourceLabel: 'Tasks & Execution',
-              href: canOpenTasks ? '/admin/tasks?taskscope=review' : undefined,
-              linkLabel: canOpenTasks ? 'Open review queue' : undefined,
-              icon: <Eye size={15} />, toneClassName: reviewTaskCount ? 'text-warning' : 'text-fg', slug: 'dashboard-review-queue'
-            },
-            {
-              id: 'delivery-dates', label: 'Delivery dates · next 7 days',
-              value: canOpenProjects && operationalSnapshot.projects !== null ? String(nextSevenDayCommitmentCount) : '—',
-              context: !canOpenProjects ? 'Not available to this role' : operationalSnapshot.projects !== null ? 'Open milestones and project targets' : 'Milestone source unavailable',
-              sourceLabel: 'Projects · milestones',
-              href: canOpenProjects ? '/admin/projects?projects=planning-delivery&planningView=milestones' : undefined,
-              linkLabel: canOpenProjects ? 'Review milestones' : undefined,
-              icon: <CalendarDays size={15} />, toneClassName: nextSevenDayCommitmentCount ? 'text-warning' : 'text-fg', slug: 'dashboard-delivery-dates'
-            }
-          ]}
-        />
-      </section>
-
       <section className="space-y-3" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Agency delivery desk">
+        <h2 className="text-sm font-semibold text-fg">Active delivery</h2>
         <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
           <AdminPanel
             className="min-w-0 min-[1100px]:col-span-8"
@@ -2455,6 +2430,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </section>
 
       <section className="space-y-3" data-ams-feature-slug="dashboard-delivery-commitments" aria-label="Delivery commitments and resource load">
+        <h2 className="text-sm font-semibold text-fg">Deadlines &amp; team load</h2>
         <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
           <AdminPanel
             className="min-w-0 min-[1100px]:col-span-7"
@@ -2615,6 +2591,64 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </div>
           </AdminPanel>
         </div>
+      </section>
+
+      <section className="space-y-3" data-ams-feature-slug="dashboard-agency-operating-indicators" aria-label="Agency operating indicators">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold text-fg">Operating snapshot</h2>
+          <p className="text-[10px] text-muted">Current counts, after delivery actions.</p>
+        </div>
+        <AdminMetricStrip
+          slug="dashboard-agency-operating-kpis"
+          className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5"
+          metrics={[
+            {
+              id: 'active-projects', label: 'Projects in delivery',
+              value: canOpenProjects && activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
+              context: !canOpenProjects ? 'Not available to this role' : projectSourceAvailable ? 'Open canonical project records' : dashboardOverview.metrics?.activeProjects != null ? 'Dashboard summary · source detail unavailable' : 'Project source unavailable',
+              sourceLabel: 'Projects',
+              href: projectKpiRoute || undefined,
+              linkLabel: projectKpiRoute ? 'Open project workspace' : undefined,
+              icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-active-projects'
+            },
+            {
+              id: 'open-tasks', label: 'Open tasks',
+              value: canOpenTasks && activeTaskCount != null ? String(activeTaskCount) : '—',
+              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Tasks not yet completed' : 'Task source unavailable',
+              sourceLabel: 'Tasks & Execution',
+              href: taskKpiRoute || undefined,
+              linkLabel: taskKpiRoute ? 'Open task queue' : undefined,
+              icon: <CheckCircle2 size={15} />, toneClassName: 'text-fg', slug: 'dashboard-open-tasks'
+            },
+            {
+              id: 'overdue-tasks', label: 'Overdue tasks',
+              value: canOpenTasks && overdueTaskCount != null ? String(overdueTaskCount) : '—',
+              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Open tasks past due date' : 'Task source unavailable',
+              sourceLabel: 'Tasks & Execution',
+              href: canOpenTasks ? '/admin/tasks?taskscope=due' : undefined,
+              linkLabel: canOpenTasks ? 'Review due work' : undefined,
+              icon: <AlertTriangle size={15} />, toneClassName: overdueTaskCount ? 'text-danger' : 'text-fg', slug: 'dashboard-overdue-tasks'
+            },
+            {
+              id: 'review-queue', label: 'Tasks in review',
+              value: canOpenTasks && reviewTaskCount != null ? String(reviewTaskCount) : '—',
+              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Waiting in the review status' : 'Task source unavailable',
+              sourceLabel: 'Tasks & Execution',
+              href: canOpenTasks ? '/admin/tasks?taskscope=review' : undefined,
+              linkLabel: canOpenTasks ? 'Open review queue' : undefined,
+              icon: <Eye size={15} />, toneClassName: reviewTaskCount ? 'text-warning' : 'text-fg', slug: 'dashboard-review-queue'
+            },
+            {
+              id: 'delivery-dates', label: 'Delivery dates · next 7 days',
+              value: canOpenProjects && operationalSnapshot.projects !== null ? String(nextSevenDayCommitmentCount) : '—',
+              context: !canOpenProjects ? 'Not available to this role' : operationalSnapshot.projects !== null ? 'Open milestones and project targets' : 'Milestone source unavailable',
+              sourceLabel: 'Projects · milestones',
+              href: canOpenProjects ? '/admin/projects?projects=planning-delivery&planningView=milestones' : undefined,
+              linkLabel: canOpenProjects ? 'Review milestones' : undefined,
+              icon: <CalendarDays size={15} />, toneClassName: nextSevenDayCommitmentCount ? 'text-warning' : 'text-fg', slug: 'dashboard-delivery-dates'
+            }
+          ]}
+        />
       </section>
 
       <section data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
