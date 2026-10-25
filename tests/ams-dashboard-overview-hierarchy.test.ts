@@ -185,7 +185,8 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(analytics.includes('buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)'));
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(analytics.includes("ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. Exact values are listed in the table below.'}"));
-  assert.ok(analytics.includes('Recent 30-day default window'));
+  assert.ok(dashboard.includes('Recent 30-day default window'));
+  assert.ok(analytics.includes('recent 30-day default window'));
   assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
   assert.ok(overview.includes('Task ownership, review queues, delivery commitments and Finance balances show current operational state.'));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false, 'Overview must not duplicate Analytics financial trends.');

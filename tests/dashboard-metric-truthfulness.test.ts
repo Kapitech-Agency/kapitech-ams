@@ -10,7 +10,7 @@ test('Dashboard priority exceptions distinguish the source-backed queue, genuine
   assert.ok(dashboard.includes('attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
   assert.ok(dashboard.includes('No exceptions returned by the Dashboard service'));
-  assert.ok(dashboard.includes('Priority exception data unavailable'));
+  assert.ok(dashboard.includes('Cross-module exception data unavailable'));
   assert.ok(dashboard.includes('The interface does not infer that there are no exceptions.'));
   assert.ok(dashboard.includes("const safeDestination = destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null;"));
 });
