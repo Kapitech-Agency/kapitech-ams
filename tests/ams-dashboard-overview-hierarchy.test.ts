@@ -81,7 +81,8 @@ test('Dashboard overview keeps operational data and financial labels source-back
   }
   assert.ok(dashboard.includes('Live data unavailable'), 'Missing live sources must remain explicit');
   assert.ok(dashboard.includes('not a posted profit figure'), 'Difference must not be relabeled as posted profit');
-  assert.ok(dashboard.includes('The dashboard service has not provided a live historical revenue series for this period.'));
+  assert.ok(dashboard.includes('A usable issued-invoice and recorded-expense trend could not be built for this reporting window. Missing values are not estimated.'));
+  assert.ok(dashboard.includes('Financial trend unavailable'));
 });
 
 test('Dashboard project creation action opens the existing create drawer only for permitted roles', async () => {

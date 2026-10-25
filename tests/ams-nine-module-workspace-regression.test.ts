@@ -103,7 +103,7 @@ test('Dashboard prioritizes operational KPIs and the primary workspace before su
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overview = dashboard.indexOf('data-ams-feature-slug="dashboard-overview"');
   const primaryKpis = dashboard.indexOf("id: 'active-projects'", overview);
-  const fourthPrimaryKpi = dashboard.indexOf("id: 'revenue'", primaryKpis);
+  const fourthPrimaryKpi = dashboard.indexOf("id: 'cash-collected'", primaryKpis);
   const chart = dashboard.indexOf('title="Invoices vs expenses"', fourthPrimaryKpi);
   const supportingMetrics = dashboard.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"', chart);
   const projects = dashboard.indexOf('title="Active projects"', chart);

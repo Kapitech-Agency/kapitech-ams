@@ -1195,12 +1195,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
             },
             {
-              id: 'revenue', label: 'Cash collected this month',
+              id: 'cash-collected', label: 'Cash collected this month',
               value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
               context: dashboardOverview.financials?.cashCollected != null || liveCashCollected !== null ? 'Invoice payments recorded this month' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
               sourceLabel: 'Finance · invoice payment records',
               ...getDashboardMetricDrilldown('/admin/finance?tab=accounts-receivable', 'Open invoice payments'),
-              icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
+              icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-cash-collected'
             },
             {
               id: 'outstanding', label: 'Outstanding invoices',
@@ -1250,8 +1250,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           ) : (
             <div className="flex min-h-[220px] flex-col items-center justify-center rounded-control border border-line bg-bg px-5 py-8 text-center" role="status">
               <CircleDollarSign size={20} className="text-muted" aria-hidden="true" />
-              <p className="mt-3 text-xs font-semibold text-fg">Revenue history is unavailable</p>
-              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">The dashboard service has not provided a live historical revenue series for this period.</p>
+              <p className="mt-3 text-xs font-semibold text-fg">Financial trend unavailable</p>
+              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">A usable issued-invoice and recorded-expense trend could not be built for this reporting window. Missing values are not estimated.</p>
             </div>
           )}
         </AdminPanel>
