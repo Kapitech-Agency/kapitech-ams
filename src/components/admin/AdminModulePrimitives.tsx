@@ -383,6 +383,9 @@ export interface AdminMetric {
   sparklineLabel?: string;
   icon?: React.ReactNode;
   toneClassName?: string;
+  sourceLabel?: React.ReactNode;
+  href?: string;
+  linkLabel?: string;
 }
 
 export interface AdminMetricStripProps {
@@ -465,7 +468,7 @@ const MetricSparkline: React.FC<{ values?: number[]; label: React.ReactNode; ton
 };
 
 export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = ({
-  label, value, context, change, changeToneClassName = 'text-muted', sparkline, icon, toneClassName = 'text-fg', slug, id, className
+  label, value, context, change, changeToneClassName = 'text-muted', sparkline, icon, toneClassName = 'text-fg', slug, id, sourceLabel, linkLabel, className
 }) => (
   <article data-ams-slug={slug || (id ? 'metric-' + String(id).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() : undefined)} className={cn('ams-dashboard-card rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover', className)}>
     <div className="flex items-start justify-between gap-3">
@@ -484,6 +487,8 @@ export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = (
         {context !== undefined && <span className="min-w-0 truncate text-[11px] leading-4 text-muted">{context}</span>}
       </div>
     )}
+    {sourceLabel !== undefined && <p className="mt-2 text-[10px] leading-4 text-muted">Source: {sourceLabel}</p>}
+    {linkLabel && <p className="mt-3 border-t border-line pt-2 text-[10px] font-medium text-muted">{linkLabel}</p>}
   </article>
 );
 
@@ -496,7 +501,21 @@ const getAdminMetricStripGridClassName = (metricCount: number): string => {
 
 export const AdminMetricStrip: React.FC<AdminMetricStripProps> = ({ metrics, className, itemClassName, slug }) => (
   <div data-ams-feature-slug={slug} data-ams-slug={slug} className={cn('grid gap-3', getAdminMetricStripGridClassName(metrics.length), className)}>
-    {metrics.map((metric) => <AdminMetricCard key={metric.id || String(metric.label)} {...metric} className={itemClassName} />)}
+    {metrics.map((metric) => {
+      const { href, linkLabel, ...cardMetric } = metric;
+      const key = metric.id || String(metric.label);
+      if (!href) return <AdminMetricCard key={key} {...cardMetric} className={itemClassName} />;
+      return (
+        <NavLink
+          key={key}
+          to={href}
+          aria-label={linkLabel || 'Open ' + String(metric.label)}
+          className="block h-full min-w-0 rounded-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          <AdminMetricCard {...cardMetric} linkLabel={linkLabel || 'Open details'} className={cn(itemClassName, 'h-full')} />
+        </NavLink>
+      );
+    })}
   </div>
 );
 

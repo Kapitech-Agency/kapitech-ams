@@ -77,6 +77,25 @@ test('Dashboard financial trends do not treat records in another currency as a z
   assert.ok(dashboard.includes('const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? liveCashCollected;'));
 });
 
+test('Dashboard Overview decision KPIs show their canonical source and only authorized drill-downs', () => {
+  const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
+  assert.ok(dashboard.includes("const getDashboardMetricDrilldown = (href: string, linkLabel: string): { href?: string; linkLabel?: string } =>"));
+  assert.ok(dashboard.includes("...getDashboardMetricDrilldown('/admin/projects?projects=all', 'Open Projects registry')"));
+  assert.ok(dashboard.includes("...getDashboardMetricDrilldown('/admin/finance?tab=accounts-receivable', 'Open invoice payments')"));
+  assert.ok(dashboard.includes("...getDashboardMetricDrilldown('/admin/finance?tab=accounts-receivable', 'Open receivables register')"));
+  assert.ok(dashboard.includes("...getDashboardMetricDrilldown('/admin/team', 'Open Team & Capacity')"));
+  for (const source of ["sourceLabel: 'Projects'", "sourceLabel: 'Finance · invoice payment records'", "sourceLabel: 'Finance · issued invoice balances'", "sourceLabel: 'Team & Resources'"]) {
+    assert.ok(dashboard.includes(source), 'Missing KPI source metadata: ' + source);
+  }
+  assert.ok(primitives.includes('sourceLabel?: React.ReactNode;'));
+  assert.ok(primitives.includes('href?: string;'));
+  assert.ok(primitives.includes('linkLabel?: string;'));
+  assert.ok(primitives.includes('if (!href) return <AdminMetricCard key={key} {...cardMetric} className={itemClassName} />;'));
+  assert.ok(primitives.includes('<NavLink key={key}') === false, 'The role-aware link wrapper is authored with a multiline NavLink element.');
+  assert.ok(primitives.includes('to={href}') && primitives.includes('aria-label={linkLabel ||'));
+  assert.ok(primitives.includes('Source: {sourceLabel}') && primitives.includes('{linkLabel &&'));
+});
+
 test('Dashboard distinguishes an empty portfolio from an unavailable project source', () => {
   assert.ok(dashboard.includes('projectDataAvailable'));
   assert.ok(dashboard.includes('No active projects to assess'));

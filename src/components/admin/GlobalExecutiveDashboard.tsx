@@ -755,6 +755,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     const target = new URL(destination, 'https://ams.kapitech.local');
     return canAccessAmsRoute(currentNavigationRole, target.pathname, target.search);
   };
+  const getDashboardMetricDrilldown = (href: string, linkLabel: string): { href?: string; linkLabel?: string } =>
+    canOpenDashboardRoute(href) ? { href, linkLabel } : {};
   const canCreateProject = canManageProjects && canOpenDashboardRoute('/admin/projects?create=1');
   const canOpenProjects = canOpenDashboardRoute('/admin/projects');
   const canViewAuditLogs = hasAdminPermission('canViewSecurityAuditLogs');
@@ -1188,24 +1190,32 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               id: 'active-projects', label: 'Active projects now',
               value: activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
               context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Current open project records' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              sourceLabel: 'Projects',
+              ...getDashboardMetricDrilldown('/admin/projects?projects=all', 'Open Projects registry'),
               icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
             },
             {
               id: 'revenue', label: 'Cash collected this month',
               value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
               context: dashboardOverview.financials?.cashCollected != null || liveCashCollected !== null ? 'Invoice payments recorded this month' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              sourceLabel: 'Finance · invoice payment records',
+              ...getDashboardMetricDrilldown('/admin/finance?tab=accounts-receivable', 'Open invoice payments'),
               icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
             },
             {
               id: 'outstanding', label: 'Outstanding invoices',
               value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
               context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Current open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              sourceLabel: 'Finance · issued invoice balances',
+              ...getDashboardMetricDrilldown('/admin/finance?tab=accounts-receivable', 'Open receivables register'),
               icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
             },
             {
               id: 'utilization', label: 'Team utilization',
               value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : '—',
               context: dashboardOverview.metrics?.teamUtilization != null ? 'Current team utilization' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
+              sourceLabel: 'Team & Resources',
+              ...getDashboardMetricDrilldown('/admin/team', 'Open Team & Capacity'),
               icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
             }
           ]}
