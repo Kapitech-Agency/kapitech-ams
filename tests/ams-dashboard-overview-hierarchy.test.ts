@@ -566,21 +566,28 @@ test('Dashboard Needs attention panels use balanced source-backed visual summari
   assert.match(attention, /min-h-\[68px\]/);
 });
 
-test('Dashboard Overview places the canonical exception queue before agency indicators and delivery work', async () => {
+test('Dashboard Overview prioritizes attention and delivery actions before the supporting operating snapshot', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const branchStart = dashboard.indexOf("{view === 'overview' ? (");
   const branchEnd = dashboard.indexOf(") : view === 'performance' ? (", branchStart);
   assert.ok(branchStart >= 0 && branchEnd > branchStart);
   const overview = dashboard.slice(branchStart, branchEnd);
   const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
-  const priority = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
-  const indicators = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  const priority = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
   const deliveryDesk = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const commitments = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const indicators = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
   const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
-  assert.ok(scope >= 0 && priority > scope && indicators > priority && deliveryDesk > indicators && commitments > deliveryDesk);
-  assert.ok(finance > commitments && shortcuts > finance);
+  const recentActivity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  assert.ok(scope >= 0 && priority > scope && deliveryDesk > priority && commitments > deliveryDesk);
+  assert.ok(indicators > commitments && clientFocus > indicators && finance > clientFocus);
+  assert.ok(shortcuts > finance && recentActivity > shortcuts);
+  assert.ok(overview.includes('Priority 01'));
+  assert.ok(overview.includes('>Active delivery</h2>'));
+  assert.ok(overview.includes('>Deadlines &amp; team load</h2>'));
+  assert.ok(overview.includes('>Operating snapshot</h2>'));
   assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
   assert.ok(overview.includes('Cross-module exception data unavailable'));
@@ -594,6 +601,21 @@ test('Dashboard Overview places the canonical exception queue before agency indi
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-overview"'), false);
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-quick-actions"'), false);
 });
+
+
+test('Dashboard priority exceptions sort urgent items before warning and informational items', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  assert.match(dashboard, /const dashboardAttentionSeverityRank = \(severity: unknown\) =>/);
+  assert.match(dashboard, /if \(normalized === 'danger' \|\| normalized === 'critical'\) return 0;/);
+  assert.match(dashboard, /if \(normalized === 'warning'\) return 1;/);
+  assert.match(dashboard, /return \[\.\.\.allowedItems\]\.sort\(\(left, right\) =>\s*dashboardAttentionSeverityRank\(left\.severity\) - dashboardAttentionSeverityRank\(right\.severity\)/);
+  const dashboardAttentionStart = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"');
+  const dashboardAttentionEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"', dashboardAttentionStart);
+  const attention = dashboard.slice(dashboardAttentionStart, dashboardAttentionEnd);
+  assert.ok(attention.indexOf("metric.label === 'Urgent' ? 'text-2xl'") >= 0);
+  assert.ok(attention.includes("urgent ? 'border-danger/25 bg-danger/5'"));
+});
+
 
 test('Dashboard Overview visualizes the full delivery-deadline horizon separately from its eight-row preview', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
