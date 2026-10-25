@@ -2466,12 +2466,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       <span className={client.overdueCommitmentCount > 0 ? 'font-medium text-danger' : 'text-muted'}>{client.overdueCommitmentCount} overdue commitments</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 min-[900px]:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2 min-[600px]:grid-cols-3 min-[1100px]:grid-cols-5">
                     {[
-                      { label: 'Open tasks', value: client.openTaskCount },
-                      { label: 'Tasks in review', value: client.reviewTaskCount },
+                      { label: 'Overdue tasks', value: client.overdueTaskCount },
                       { label: 'Blocked tasks', value: client.blockedTaskCount },
-                      { label: 'Overdue tasks', value: client.overdueTaskCount }
+                      { label: 'Unassigned tasks', value: client.unassignedTaskCount },
+                      { label: 'Tasks in review', value: client.reviewTaskCount },
+                      { label: 'Open tasks', value: client.openTaskCount }
                     ].map((metric) => (
                       <div key={metric.label} className="rounded-control border border-line bg-bg px-3 py-2">
                         <p className="text-[10px] leading-4 text-muted">{metric.label}</p>

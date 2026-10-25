@@ -126,6 +126,17 @@ test('Dashboard Client Delivery Focus prioritizes agency delivery risk before po
   assert.ok(panel.includes('Rows prioritize overdue commitments, overdue tasks, blocked work, unassigned tasks and pending review'));
   assert.ok(panel.includes('Unavailable task metrics remain unavailable, not zero.'));
   assert.ok(panel.includes('not a client health, contract or SLA score'));
+  const metricGridStart = panel.indexOf('grid-cols-2 gap-2 min-[600px]:grid-cols-3 min-[1100px]:grid-cols-5');
+  const metricGridEnd = panel.indexOf('.map((metric) => (', metricGridStart);
+  assert.ok(metricGridStart >= 0 && metricGridEnd > metricGridStart, 'Client task indicators must use the responsive priority-first grid.');
+  const metricGrid = panel.slice(metricGridStart, metricGridEnd);
+  const metricOrder = ['Overdue tasks', 'Blocked tasks', 'Unassigned tasks', 'Tasks in review', 'Open tasks'];
+  let previousMetricPosition = -1;
+  for (const label of metricOrder) {
+    const position = metricGrid.indexOf("label: '" + label + "'");
+    assert.ok(position > previousMetricPosition, 'Client risk indicators must be presented in priority order: ' + label);
+    previousMetricPosition = position;
+  }
 });
 
 test('Dashboard Overview client delivery focus groups saved client relationships and preserves source boundaries', async () => {
