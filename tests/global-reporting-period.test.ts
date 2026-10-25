@@ -153,13 +153,19 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.doesNotMatch(documents, /useReportingPeriod\(\)/, 'Document Library is excluded from implicit global-period scoping.');
   assert.doesNotMatch(documents, /matchesDate\(doc\.updatedAt/, 'Document date metadata is not a hidden list filter without a visible date control.');
   assert.ok(teams.includes('matchesDate(log.date)'));
-  assert.ok(dashboard.includes('value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled'));
+  assert.ok(dashboard.includes('value: reportPeriodValue,'));
+  assert.ok(dashboard.includes('mode: reportPeriodMode,'));
+  assert.ok(dashboard.includes('enabled: reportPeriodEnabled,'));
+  assert.ok(dashboard.includes('setMode: setReportingPeriodMode'));
+  assert.ok(dashboard.includes('setValue: setReportingPeriodValue'));
+  assert.ok(dashboard.includes('clearFilter: clearReportingPeriodFilter'));
+  assert.ok(dashboard.includes('aria-label="Reporting date range"'));
   assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(dashboard.includes('matchesDate(item.date)'));
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
-  assert.ok(overview.includes('Financial trends use the selected period or recent 30 days. Project, task and invoice balances reflect their current saved state.'));
+  assert.ok(overview.includes('The selected period controls financial movement and recorded-time summaries. Project health, open tasks, receivables, and deadlines show current operational state.'));
   assert.ok(dashboard.includes('const visibleOverviewTasks = useMemo(() =>'));
   assert.doesNotMatch(overview, /matchesInterval\(task\.dueDate/,
     'The action queue shows current open work. The selected global period is not an invisible task filter.');

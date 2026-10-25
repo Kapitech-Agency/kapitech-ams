@@ -61,7 +61,7 @@ test('Dashboard Overview leads with Finance and Projects cards and groups agency
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');
-  const modelEnd = dashboard.indexOf('const upcomingCommitments = allUpcomingCommitments.slice(0, 8);', modelStart);
+  const modelEnd = dashboard.indexOf('const upcomingCommitments = allUpcomingCommitments.filter((item) => {', modelStart);
   assert.ok(modelStart >= 0 && modelEnd > modelStart);
   const model = dashboard.slice(modelStart, modelEnd);
   const signals = [
@@ -181,7 +181,9 @@ test('Dashboard work queue and service-line summaries come from canonical task/p
   assert.ok(dashboard.includes("label: 'Web & IT Development'"));
   assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
   assert.ok(dashboard.includes("const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
-  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.slice(0, 8)"));
+  assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.filter((item) => {"));
+  assert.ok(dashboard.includes("}).slice(0, 8);"));
+  assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey"));
   assert.ok(dashboard.includes("const taskLoadByAssignee = useMemo(() =>"));
   assert.ok(dashboard.includes("const periodTimeRows = useMemo(() =>"));
   assert.ok(dashboard.includes("const activeTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.length"));
@@ -258,13 +260,19 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   const analyticsStart = dashboard.indexOf('const AnalyticsView:');
   const analyticsEnd = dashboard.indexOf('export const GlobalExecutiveDashboard', analyticsStart);
   const analytics = dashboard.slice(analyticsStart, analyticsEnd);
-  assert.match(dashboard, /const \{ matchesDate, matchesInterval, value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled \} = useReportingPeriod\(\)/);
+  assert.ok(dashboard.includes('matchesDate,'));
+  assert.ok(dashboard.includes('matchesInterval,'));
+  assert.ok(dashboard.includes('value: reportPeriodValue,'));
+  assert.ok(dashboard.includes('mode: reportPeriodMode,'));
+  assert.ok(dashboard.includes('enabled: reportPeriodEnabled,'));
+  assert.ok(dashboard.includes('setValue: setReportingPeriodValue'));
+  assert.ok(dashboard.includes('useReportingPeriod()'));
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(analytics.includes('buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)'));
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(dashboard.includes('Recent 30-day default window'));
   assert.ok(analytics.includes('All dates defaults to the recent 30 days.'));
-  assert.ok(overview.includes('Financial trends use the selected period or recent 30 days. Project, task and invoice balances reflect their current saved state.'));
+  assert.ok(overview.includes('The selected period controls financial movement and recorded-time summaries. Project health, open tasks, receivables, and deadlines show current operational state.'));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false);
   assert.equal(overview.includes('title="Active projects"'), false);
   assert.equal(dashboard.includes('DashboardTrendRangePicker'), false);
