@@ -1,7 +1,7 @@
 # Kapitech AMS Structural UX/UI Redesign Progress
 
 Progress evidence last recorded: 25 October 2026  
-Documentation cross-reference updated: 25 October 2026 (Client Delivery Focus row ranking and responsive risk-metric order documented; no browser verification implied)
+Documentation cross-reference updated: 25 October 2026 (Dashboard Overview, Performance and Analytics visual hierarchy recorded on exact source/test SHA; browser verification not implied)
 Repository: `Kapitech-Agency/kapitech-ams`
 Required delivery branch: `main`
 
@@ -2420,3 +2420,14 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Evidence:** [commit 703dc5f1](https://github.com/Kapitech-Agency/kapitech-ams/commit/703dc5f1b245ccb7000a40161c351baff804be6c) updates visible metric order and adds responsive priority-order regression assertions.
 - **Validation:** Quality Gate [40197784861 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197784861). AMS CI [40197785384](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197785384) passed type check, migrations, security regression and PostgreSQL integration before the existing `body-parser@1.20.6` audit advisory failed; downstream build/package/HTTP smoke were skipped.
 - **Still NOT VERIFIED:** authenticated browser and role review, real-data reconciliation, viewport/reflow, keyboard/focus, contrast, touch and assistive technology. Stage 5 remains pending.
+
+
+## Stage 4 visual-first slice — Dashboard Overview, Performance and Analytics · 25 October 2026
+
+- **Reference interpretation:** applied the Maven case study's clear information hierarchy, focused report selection, legible comparisons and inspectable values to Kapitech’s existing dark-first AMS design system. This is an adaptation of product principles, not a copy of another brand’s styling.
+- **Overview:** retains scope and Needs attention first, then operating indicators, service-line task-load comparisons, delivery-deadline horizon, resource/logged-time context, risk-ranked Client Delivery Focus, Finance controls, shortcuts and recent activity.
+- **Performance:** moved decision KPIs ahead of detailed panels; changed the detail distribution to avoid repeating the completion rate; added a total-time and entry-count summary plus proportional bars for the highest recorded-time contributors. Bar meaning explicitly excludes capacity, utilization and billable conclusions.
+- **Analytics:** made the report selector consistent and responsive, with icons and a short purpose description per report. Project status now presents active projects, total project records, status-group count and proportional status bars with visible exact counts/percentages. Existing financial movement and inquiry reports retain their source and time-scope disclosures.
+- **Guardrails:** shared reporting-period behavior, current-versus-period distinction, current financial semantics, canonical-source access and missing/unavailable states remain intact. No backend, API, database, permission, route, Finance formula or posting behavior changed.
+- **Exact evidence:** source/test commit [e33d811e](https://github.com/Kapitech-Agency/kapitech-ams/commit/e33d811e77fb759e8268ec7c4df6a60ed5774159); Quality Gate [40200940679 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40200940679); AMS CI [40200940728](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40200940728) failed only at the existing dependency audit after earlier database/security checks passed.
+- **Pending acceptance:** authenticated real-data/browser verification, role-boundary review, breakpoint/reflow checks, keyboard/focus/touch, contrast and assistive technology. Dashboard remains the only active module until these visual review items are completed.

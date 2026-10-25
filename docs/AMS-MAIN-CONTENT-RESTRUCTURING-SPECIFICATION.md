@@ -141,8 +141,18 @@ Possible indicators include active projects, overdue tasks, risky milestones, ac
 ### Performance
 Period/comparison controls → trends grouped by delivery/client-service/commercial-financial/resource load where valid → exact values or data table → source drill-down. Metrics may include on-time delivery, task throughput, revision/quality trend, renewals, valid Finance trends and resource utilization. Definitions and time windows must be comparable; handle zero/missing baselines honestly.
 
+**Performance main-content order:** reporting-period scope and date/source caveat → decision-grade KPI strip (task completion, overdue tasks, blocked tasks, active projects) → primary task-status distribution and at-risk project queue → recorded-time summary and ranked contributor comparison → concise source/measurement notes. Task/project analysis must appear before time/resource context. The same completion rate must not be repeated as an oversized duplicate in the detail panel. Recorded time is not capacity, utilization or billable time unless a valid source contract supports that meaning.
+
 ### Analytics
 Period and supported grouping/filter → reports grouped by business question → exact values, source, units and definitions → drill-down. Possible topics: inquiry outcomes where compatible records exist, delivery trend, renewals/retainers, AR aging and Finance-derived project profitability. Never rebuild Finance formulas in Dashboard.
+
+**Analytics main-content order:** shared reporting scope and source/time semantics → consistent responsive selector for supported reports → one focused report surface → exact values/definitions and authorized source links. Do not mix metrics from a period-scoped report with current-snapshot KPIs outside that report.
+
+- **Financial movement:** compare issued-invoice values by issue date with eligible expenses by recorded date; show the source trend and exact period values/table. Label the difference as arithmetic comparison, not posted profit or cash flow.
+- **Receivables:** show current open balances from issued invoices and available source records; do not imply the reporting-period filter changes this current snapshot.
+- **Inquiry pipeline:** when the current role may access Inbox, show canonical inquiry counts, saved-date volume, current status grouping and requested-service demand. Exclude Careers applicants/vendors/newsletters; do not infer conversion rates, booked revenue or numeric budget from free text.
+- **Project status:** show source-backed active/total project context and group counts by saved current status with legible proportional bars plus exact counts/percentages. Do not present current states as historical period trends.
+- Each visual must have a readable label, definition, source and date/currency/unit context where applicable; important values must remain inspectable without depending on color alone.
 
 **Acceptance:** No fake metrics; every chart answers a real question; sources, period and units are clear; drill-down obeys authorization; important values remain inspectable without relying only on color/chart.
 
