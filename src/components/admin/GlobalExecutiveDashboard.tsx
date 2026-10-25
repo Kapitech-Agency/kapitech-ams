@@ -23,6 +23,7 @@ import { ProfileIdentity } from './ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
+import { getReportingPeriodRange } from '../../lib/reportingPeriods';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
@@ -219,10 +220,33 @@ const DashboardTrendRangePicker: React.FC<{
   </div>
 );
 
-const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({ snapshot }) => {
-  const tasks = snapshot.tasks || [];
-  const projectRows = snapshot.projects || [];
-  const activeProjects = projectRows.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
+const PerformanceView: React.FC<{
+  snapshot: DashboardOperationalSnapshot;
+  matchesDate: (value: unknown) => boolean;
+  matchesInterval: (startValue: unknown, endValue?: unknown, fallbackValue?: unknown) => boolean;
+  reportPeriodLabel: string;
+  reportPeriodEnabled: boolean;
+}> = ({ snapshot, matchesDate, matchesInterval, reportPeriodLabel, reportPeriodEnabled }) => {
+  const allTasks = snapshot.tasks || [];
+  const allProjects = snapshot.projects || [];
+  const allTimeLogs = snapshot.timeLogs || [];
+
+  // Shared reporting period scopes operational records by their meaningful dates.
+  // Missing usable dates remain visible through the shared context's fallback behavior.
+  const tasks = allTasks.filter((task: any) => {
+    const dueDate = task.dueDate || task.deadline;
+    return matchesInterval(dueDate, dueDate, task.createdAt);
+  });
+  const scopedProjects = allProjects.filter((project: any) =>
+    matchesInterval(
+      project.startDate || project.start,
+      project.targetEndDate || project.endDate || project.dueDate || project.deadline,
+      project.createdAt
+    )
+  );
+  const scopedTimeLogs = allTimeLogs.filter((log: any) => matchesDate(log.date || log.createdAt));
+
+  const activeProjects = scopedProjects.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
   const completedTasks = tasks.filter((task) => isFinishedWork(task.status)).length;
   const blockedTasks = tasks.filter((task) =>
     !isFinishedWork(task.status) && String(task.status || '').toLowerCase().includes('block')
@@ -238,20 +262,16 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
   const overdueValue = snapshot.tasks !== null ? String(overdueTasks) : '—';
   const activeProjectValue = snapshot.projects !== null ? String(activeProjects.length) : '—';
 
-  const current = new Date();
-  const monday = new Date(current);
-  const day = current.getDay();
-  monday.setDate(current.getDate() + (day === 0 ? -6 : 1 - day));
-  monday.setHours(0, 0, 0, 0);
-  const mondayKey = localDateKey(monday);
-  const memberTime = (snapshot.timeLogs || []).reduce((map: Map<string, number>, log: any) => {
-    const date = dateKey(log.date || log.createdAt);
-    if (!date || date < mondayKey || date > today) return map;
+  const memberTime = scopedTimeLogs.reduce((map: Map<string, number>, log: any) => {
     const identity = String(log.user || log.userName || log.assignee || log.userId || 'Unassigned');
     map.set(identity, (map.get(identity) || 0) + (Number(log.durationMinutes ?? log.minutes ?? 0) || 0));
     return map;
   }, new Map<string, number>());
-  const workload = Array.from(memberTime.entries()).map(([name, minutes]) => ({ name, minutes })).sort((a, b) => b.minutes - a.minutes).slice(0, 8);
+  const workload = Array.from(memberTime.entries())
+    .map(([name, minutes]) => ({ name, minutes }))
+    .sort((a, b) => b.minutes - a.minutes)
+    .slice(0, 8);
+
   const projectAttentionSignals = (project: any) => {
     const state = [project.health, project.status].filter(Boolean).join(' ').toLowerCase();
     const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
@@ -289,10 +309,29 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
 
   return (
     <div className="space-y-4" data-ams-feature-slug="dashboard-performance-workspace">
+      <section
+        className="space-y-2 rounded-card border border-line bg-panel p-4 sm:p-5"
+        data-ams-feature-slug="dashboard-performance-scope"
+        aria-label="Performance reporting scope"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-fg">Performance snapshot</p>
+            <p className="mt-1 text-xs text-muted">Reporting period: {reportPeriodLabel}</p>
+          </div>
+          <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-bg px-2.5 text-[11px] text-muted">
+            {reportPeriodEnabled ? 'Period filter active' : 'All dates'}
+          </span>
+        </div>
+        <p className="text-xs leading-5 text-muted">
+          Tasks use due date, with creation date as a fallback. Projects use recorded schedule overlap, with creation date as a fallback. Time entries use their logged date, with creation timestamp as a fallback. Records without usable dates remain visible. The current sources do not provide status-transition history, so these are current status snapshots, not historical status-transition trends.
+        </p>
+      </section>
+
       <section className="grid gap-4 min-[1100px]:grid-cols-2" data-ams-feature-slug="dashboard-performance-primary">
         <AdminPanel
-          title="Task completion"
-          description="Task status distribution from the current task register. The status counts below account for all returned tasks."
+          title="Task status in scope"
+          description="Current status distribution for task records selected by the shared reporting period. This does not mean a task changed status during that period."
           actions={(
             <Link to="/admin/tasks" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
               Open Tasks <ArrowUpRight size={13} />
@@ -301,13 +340,16 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
           bodyClassName="p-4 sm:p-5"
         >
           {snapshot.tasks === null ? <DashboardUnavailable title="Task status unavailable" description="The task service did not return data for the current role." /> : tasks.length === 0 ? (
-            <p className="py-8 text-center text-xs text-muted">No task records found for this workspace.</p>
+            <div className="py-8 text-center" role="status">
+              <p className="text-xs font-medium text-fg">{allTasks.length === 0 ? 'No task records returned' : 'No task records match the selected reporting scope'}</p>
+              <p className="mt-1 text-xs text-muted">{allTasks.length === 0 ? 'The task source returned no records.' : 'Change the shared reporting period to inspect another date scope. Rows without usable dates remain visible.'}</p>
+            </div>
           ) : (
             <div className="space-y-4">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <p className="text-3xl font-semibold tabular-nums text-fg">{completionValue}</p>
-                  <p className="mt-1 text-xs text-muted">{completedTasks} of {tasks.length} tasks completed</p>
+                  <p className="mt-1 text-xs text-muted">{completedTasks} of {tasks.length} in-scope tasks are currently completed</p>
                 </div>
                 <AdminStatusBadge tone={completedTasks === tasks.length ? 'success' : 'info'}>
                   {completedTasks === tasks.length ? 'Complete' : 'In progress'}
@@ -329,17 +371,25 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
                   );
                 })}
               </div>
+              <p className="text-xs leading-5 text-muted">Source: current canonical task records. Counts use current task status and the shared reporting-period date scope.</p>
             </div>
           )}
         </AdminPanel>
 
         <AdminPanel
           title="Projects needing attention"
-          description="Active projects with an explicit risk flag or a target date before today."
+          description="Active projects with an explicit risk flag or target dates before today, limited to projects in the selected reporting scope."
           bodyClassName="p-0"
+          actions={(
+            <Link to="/admin/projects" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
+              Open Projects <ArrowUpRight size={13} />
+            </Link>
+          )}
         >
-          {snapshot.projects === null ? <div className="p-4"><DashboardUnavailable title="Project status unavailable" description="Project risk cannot be calculated because live project records were not returned." /></div> : needsAttention.length === 0 ? (
-            <p className="px-4 py-8 text-center text-xs text-muted">No project risk flags or overdue target dates were found.</p>
+          {snapshot.projects === null ? <div className="p-4"><DashboardUnavailable title="Project status unavailable" description="Project risk cannot be assessed because live project records were not returned." /></div> : scopedProjects.length === 0 ? (
+            <p className="px-4 py-8 text-center text-xs text-muted" role="status">{allProjects.length === 0 ? 'No project records returned' : 'No projects match the selected reporting scope.'}</p>
+          ) : needsAttention.length === 0 ? (
+            <p className="px-4 py-8 text-center text-xs text-muted" role="status">No explicit project risk flags or overdue target dates were found in this scope.</p>
           ) : (
             <div className="divide-y divide-line">
               {needsAttention.map((project: any) => {
@@ -356,19 +406,19 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
                   </div>
                 );
               })}
-              {attentionProjects.length > needsAttention.length && <div className="px-4 py-3 text-[10px] text-muted">Showing 8 of {attentionProjects.length} projects with attention signals.</div>}
+              {attentionProjects.length > needsAttention.length && <div className="px-4 py-3 text-[10px] text-muted">Showing 8 of {attentionProjects.length} projects with attention signals in this scope.</div>}
             </div>
           )}
         </AdminPanel>
       </section>
 
       <AdminPanel
-        title="Tracked time this week"
-        description={`Recorded time from ${mondayKey} through ${today}. Logged time is not a forecast of remaining capacity.`}
+        title="Tracked time in scope"
+        description={reportPeriodEnabled ? 'Recorded time during ' + reportPeriodLabel + '. Logged time is not a forecast of remaining capacity.' : 'Recorded time across all available dates. Logged time is not a forecast of remaining capacity.'}
         bodyClassName="p-4 sm:p-5"
       >
         {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking service did not return records for the current role." /> : workload.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted">No time entries recorded during this week so far.</p>
+          <p className="py-8 text-center text-xs text-muted" role="status">{scopedTimeLogs.length === 0 && allTimeLogs.length > 0 ? 'No time entries match the selected reporting scope.' : 'No time entries recorded in this scope.'}</p>
         ) : (
           <div className="space-y-3">
             {workload.map((member) => (
@@ -383,10 +433,10 @@ const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({
 
       <section data-ams-feature-slug="dashboard-performance-supporting-metrics" aria-label="Performance summary metrics">
         <AdminMetricStrip slug="dashboard-performance-kpis" metrics={[
-          { id: 'performance-projects', label: 'Active projects', value: activeProjectValue, icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : 'Live source unavailable' },
-          { id: 'performance-tasks', label: 'Tasks tracked', value: taskCount === null ? '—' : String(taskCount), icon: <CheckCircle2 size={15} />, context: snapshot.tasks !== null ? 'Current task records' : 'Live source unavailable' },
-          { id: 'performance-overdue', label: 'Overdue tasks', value: overdueValue, icon: <CalendarDays size={15} />, toneClassName: 'text-warning', context: snapshot.tasks !== null ? 'Open tasks past due date' : 'Not available' },
-          { id: 'performance-blocked', label: 'Blocked tasks', value: blockedValue, icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', context: snapshot.tasks !== null ? 'Open tasks with a blocked status' : 'Not available' },
+          { id: 'performance-projects', label: 'Active projects in scope', value: activeProjectValue, icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records in scope' : 'Live source unavailable' },
+          { id: 'performance-tasks', label: 'Tasks in scope', value: taskCount === null ? '—' : String(taskCount), icon: <CheckCircle2 size={15} />, context: snapshot.tasks !== null ? 'Current task records in scope' : 'Live source unavailable' },
+          { id: 'performance-overdue', label: 'Open overdue tasks in scope', value: overdueValue, icon: <CalendarDays size={15} />, toneClassName: 'text-warning', context: snapshot.tasks !== null ? 'Current tasks past due date' : 'Not available' },
+          { id: 'performance-blocked', label: 'Blocked tasks in scope', value: blockedValue, icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', context: snapshot.tasks !== null ? 'Open tasks with a blocked status' : 'Not available' },
         ]} />
       </section>
     </div>
@@ -690,7 +740,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       navigate('/admin/dashboard', { replace: true });
     }
   }, [hasViewParameter, navigate, requestedView]);
-  const { matchesInterval, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
+  const { matchesDate, matchesInterval, value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled } = useReportingPeriod();
+  const selectedReportingRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, 'en-GB');
+  const reportPeriodLabel = reportPeriodEnabled && selectedReportingRange
+    ? selectedReportingRange.label + ' (' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate + ')'
+    : 'All dates';
   const [range, setRange] = useState<RangeKey>('30D');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
@@ -1474,7 +1528,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
         </>
       ) : view === 'performance' ? (
-        <PerformanceView snapshot={operationalSnapshot} />
+        <PerformanceView
+          snapshot={operationalSnapshot}
+          matchesDate={matchesDate}
+          matchesInterval={matchesInterval}
+          reportPeriodLabel={reportPeriodLabel}
+          reportPeriodEnabled={reportPeriodEnabled}
+        />
       ) : (
         <AnalyticsView snapshot={operationalSnapshot} range={range} onRangeChange={setRange} />
       )}

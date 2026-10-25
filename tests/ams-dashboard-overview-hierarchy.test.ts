@@ -109,28 +109,31 @@ test('Dashboard trend range is selectable in Overview and Analytics without a du
 });
 
 
-test('Dashboard Performance prioritizes task/project analysis before supporting metrics', async () => {
+test('Dashboard Performance scopes source-backed delivery records to the shared reporting period', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('const PerformanceView: React.FC');
-  const end = dashboard.indexOf('const AnalyticsView: React.FC', start);
+  const end = dashboard.indexOf('type DashboardAnalyticsReport', start);
   assert.ok(start >= 0 && end > start, 'Performance workspace should have a bounded source section');
   const performance = dashboard.slice(start, end);
+  const scope = performance.indexOf('data-ams-feature-slug="dashboard-performance-scope"');
   const primary = performance.indexOf('data-ams-feature-slug="dashboard-performance-primary"');
-  const taskAnalysis = performance.indexOf('title="Task completion"', primary);
-  const projectExceptions = performance.indexOf('title="Projects needing attention"', taskAnalysis);
-  const weeklyTime = performance.indexOf('title="Tracked time this week"', projectExceptions);
-  const supportingMetrics = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"', weeklyTime);
-  assert.ok(primary >= 0 && taskAnalysis > primary && projectExceptions > taskAnalysis && weeklyTime > projectExceptions && supportingMetrics > weeklyTime,
-    'Task completion and project exceptions should lead, followed by time context and supporting metrics.');
+  const taskStatus = performance.indexOf('title="Task status in scope"', primary);
+  const projectExceptions = performance.indexOf('title="Projects needing attention"', taskStatus);
+  const trackedTime = performance.indexOf('title="Tracked time in scope"', projectExceptions);
+  const supportingMetrics = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"', trackedTime);
+  assert.ok(scope >= 0 && primary > scope && taskStatus > primary && projectExceptions > taskStatus && trackedTime > projectExceptions && supportingMetrics > trackedTime,
+    'Reporting scope and primary delivery analysis should lead, followed by time context and supporting metrics.');
+  assert.match(performance, /matchesInterval\(dueDate, dueDate, task\.createdAt\)/);
+  assert.match(performance, /matchesInterval\([\s\S]*project\.startDate \|\| project\.start[\s\S]*project\.createdAt[\s\S]*\)/);
+  assert.match(performance, /matchesDate\(log\.date \|\| log\.createdAt\)/);
+  assert.match(performance, /Records without usable dates remain visible/);
+  assert.match(performance, /current status snapshots, not historical status-transition trends/);
+  assert.match(performance, /No task records match the selected reporting scope/);
+  assert.match(performance, /current task status and the shared reporting-period date scope/);
   assert.match(performance, /Other open tasks/);
   assert.match(performance, /status\.count \/ tasks\.length \* 100/);
-  assert.match(performance, /date < mondayKey \|\| date > today/);
-  assert.match(performance, /Recorded time from \$\{mondayKey\} through \$\{today\}/);
-  assert.match(performance, /Open Tasks/);
-  assert.match(performance, /Open tasks with a blocked status/);
-  assert.match(performance, /const attentionProjects = activeProjects[\s\S]*?\.filter\(\(project\) => \{/);
-  assert.match(performance, /attentionProjects\.slice\(0, 8\)/);
-  assert.match(performance, /Showing 8 of \{attentionProjects\.length\} projects with attention signals/);
+  assert.match(performance, /Active projects in scope/);
+  assert.match(performance, /Tasks in scope/);
 });
 
 test('Dashboard Analytics exposes report-first hierarchy and a single focused work surface', async () => {
