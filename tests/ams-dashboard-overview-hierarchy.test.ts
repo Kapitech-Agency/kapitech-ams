@@ -57,6 +57,17 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   }
 });
 
+test('Dashboard Overview financial trend drills down to the existing Finance registers only when authorized', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  assert.ok(dashboard.includes("const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable')"));
+  assert.ok(dashboard.includes("const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses')"));
+  assert.ok(dashboard.includes('actions={canOpenInvoiceRegister || canOpenExpenseRegister ? ('));
+  assert.ok(dashboard.includes('to="/admin/finance?tab=accounts-receivable"'));
+  assert.ok(dashboard.includes('to="/admin/finance?tab=expenses"'));
+  assert.ok(dashboard.includes('View invoices'));
+  assert.ok(dashboard.includes('View expenses'));
+});
+
 test('Dashboard Overview financial-history availability respects the selected currency', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.ok(dashboard.includes("invoiceSourceHasRows = Boolean(operationalSnapshot.invoices?.length)"));

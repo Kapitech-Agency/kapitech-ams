@@ -757,6 +757,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   };
   const getDashboardMetricDrilldown = (href: string, linkLabel: string): { href?: string; linkLabel?: string } =>
     canOpenDashboardRoute(href) ? { href, linkLabel } : {};
+  const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable');
+  const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses');
   const canCreateProject = canManageProjects && canOpenDashboardRoute('/admin/projects?create=1');
   const canOpenProjects = canOpenDashboardRoute('/admin/projects');
   const canViewAuditLogs = hasAdminPermission('canViewSecurityAuditLogs');
@@ -1225,7 +1227,32 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description={'Issued invoice value and recorded expenses for ' + financialTrendScopeLabel + '. Invoice values use issue date and expenses use recorded date. The difference is not a posted profit figure.'}>
+        <AdminPanel
+          className="min-[1100px]:col-span-8"
+          bodyClassName="p-4 sm:p-5"
+          title="Invoices vs expenses"
+          description={'Issued invoice value and recorded expenses for ' + financialTrendScopeLabel + '. Invoice values use issue date and expenses use recorded date. The difference is not a posted profit figure.'}
+          actions={canOpenInvoiceRegister || canOpenExpenseRegister ? (
+            <div className="flex flex-wrap gap-2">
+              {canOpenInvoiceRegister && (
+                <Link
+                  to="/admin/finance?tab=accounts-receivable"
+                  className="inline-flex min-h-8 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  View invoices
+                </Link>
+              )}
+              {canOpenExpenseRegister && (
+                <Link
+                  to="/admin/finance?tab=expenses"
+                  className="inline-flex min-h-8 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  View expenses
+                </Link>
+              )}
+            </div>
+          ) : undefined}
+        >
           {!financeSourcesAvailable ? (
             <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
           ) : !invoiceHistoryReturned && !expenseHistoryReturned ? (
