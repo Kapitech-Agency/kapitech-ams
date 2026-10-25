@@ -3,7 +3,7 @@
 **Product:** Kapitech Agency Management System (AMS)  
 **Primary stage:** Stage 4 — Main-content hierarchy across all nine modules  
 **Status:** Mandatory target specification; implementation must be proven with source, test and runtime evidence  
-**Last updated:** 22 October 2026  
+**Last updated:** 25 October 2026  
 **Authority:** Master Structure and Navigation IA define product ownership and approved navigation; this document defines the target main-content composition and relative region order for each workspace; the Role-Based Content Blueprint and Worksheet Role Presentation Matrix refine role-aware content; AMS-DESIGN-SYSTEM.md defines visual tokens/geometry; the End-to-End Delivery Roadmap defines stage order. The Feature & Content Gap Register records verified implementation status, not a competing target.
 
 > **This is a structural overhaul, not a cosmetic revision.** Re-derive each page from Kapitech's real agency tasks, canonical records, user decisions and role needs. Rebuild the content hierarchy and main working area if the current structure is wrong. Do not preserve an unsuitable layout simply because it already exists. Preserve correct data sources, routes, supported business behavior, permissions, accounting logic and security boundaries.
@@ -145,6 +145,10 @@ Period/comparison controls → trends grouped by delivery/client-service/commerc
 Period and supported grouping/filter → reports grouped by business question → exact values, source, units and definitions → drill-down. Possible topics: inquiry outcomes where compatible records exist, delivery trend, renewals/retainers, AR aging and Finance-derived project profitability. Never rebuild Finance formulas in Dashboard.
 
 **Acceptance:** No fake metrics; every chart answers a real question; sources, period and units are clear; drill-down obeys authorization; important values remain inspectable without relying only on color/chart.
+
+**Overview content order:** operating scope → Needs attention → agency operating indicators → delivery queue and Creative/IT workstreams → delivery deadlines and assigned-work/logged-time context → Client Delivery Focus → Finance control → workspace shortcuts → recent audit activity. Keep urgent action surfaces ahead of secondary context and retain this relative order in regression coverage.
+
+**Client Delivery Focus ordering:** sort canonical client groups by overdue commitments, overdue tasks, blocked tasks, unassigned tasks, tasks in review, nearest upcoming commitment, open-task load, project count and then saved client name. Apply task-signal ranking only where the task source is accessible and available; missing metrics remain unavailable, not zero. This is a delivery-prioritization view, not a client health, contract or SLA score.
 
 ## 4.2 Inbox
 
