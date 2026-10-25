@@ -12,7 +12,7 @@ test('Dashboard priority exceptions distinguish the source-backed queue, genuine
   assert.ok(dashboard.includes('No priority exceptions returned'));
   assert.ok(dashboard.includes('Priority exception data unavailable'));
   assert.ok(dashboard.includes('The interface does not infer that there are no exceptions.'));
-  assert.ok(dashboard.includes("const safeDestination = /^\\/admin\\/[a-z0-9/_-]+$/i.test(destination) && canOpenDashboardRoute(destination) ? destination : null;"));
+  assert.ok(dashboard.includes("const safeDestination = destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null;"));
 });
 
 test('Dashboard Overview active project register excludes completed and archived records before applying view filters', () => {
