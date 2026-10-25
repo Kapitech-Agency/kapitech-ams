@@ -2292,7 +2292,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <h3 className="text-xs font-semibold text-fg">Deadline horizon</h3>
-                      <p className="mt-1 text-[10px] leading-4 text-muted">All {commitmentHorizonTotal} dated commitments in the current 30-day window</p>
+                      <p className="mt-1 text-[10px] leading-4 text-muted">All {commitmentHorizonTotal} overdue or upcoming commitments through the next 30 days</p>
                     </div>
                     <p className="text-[10px] leading-4 text-muted">The list below shows up to 8 highest-priority deadlines.</p>
                   </div>

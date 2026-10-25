@@ -499,7 +499,7 @@ test('Dashboard Overview visualizes the full delivery-deadline horizon separatel
   const visual = commitments.indexOf('data-ams-feature-slug="dashboard-delivery-horizon-visualization"');
   const list = commitments.indexOf('upcomingCommitments.map((item) => {');
   assert.ok(visual >= 0 && list > visual, 'The visual deadline overview must precede the detailed commitment list.');
-  assert.ok(commitments.includes('All {commitmentHorizonTotal} dated commitments in the current 30-day window'));
+  assert.ok(commitments.includes('All {commitmentHorizonTotal} overdue or upcoming commitments through the next 30 days'));
   assert.ok(commitments.includes('The list below shows up to 8 highest-priority deadlines.'));
   assert.ok(commitments.includes('role="img"'));
   assert.ok(commitments.includes("aria-label={'Deadline distribution: ' + overdueHorizonCount"));
