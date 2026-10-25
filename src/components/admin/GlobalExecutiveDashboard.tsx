@@ -179,6 +179,14 @@ const getDashboardProjectHref = (project: any): string | null => {
   return null;
 };
 
+const getDashboardSavedProgress = (project: any): number | null => {
+  const rawValue = project?.progressPercent;
+  if (rawValue === null || rawValue === undefined || (typeof rawValue === 'string' && !rawValue.trim())) return null;
+  const normalized = typeof rawValue === 'string' ? rawValue.trim().replace(/%$/, '') : rawValue;
+  const value = Number(normalized);
+  return Number.isFinite(value) && value >= 0 && value <= 100 ? Math.round(value) : null;
+};
+
 const resolveDashboardClientName = (clientId: unknown, clientDirectoryById: Map<string, any>, ...fallbackNames: unknown[]) => {
   const id = String(clientId || '').trim();
   const client = id ? clientDirectoryById.get(id) : null;
@@ -1935,6 +1943,31 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const cashValueAvailable = operationalSnapshot.invoices !== null && issuedInvoicesInSelectedCurrency.length > 0;
   const outstandingValueAvailable = operationalSnapshot.invoices !== null && issuedInvoicesInSelectedCurrency.length > 0;
   const expensesValueAvailable = operationalSnapshot.expenses !== null && financeExpenseRows.length > 0;
+  const canOpenFinanceOverview = canOpenInvoiceRegister || canOpenExpenseRegister;
+  const overviewFinanceTrendRows = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null
+    ? reportPeriodEnabled
+      ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, issuedInvoicesInSelectedCurrency, financeExpenseRows)
+      : buildRecentFinancialTrend(issuedInvoicesInSelectedCurrency, financeExpenseRows)
+    : [];
+  const overviewFinanceTrendHasRecords = issuedInvoicesInSelectedCurrency.length > 0 || financeExpenseRows.length > 0;
+  const projectRiskBreakdown: DonutPoint[] = operationalSnapshot.projects === null
+    ? []
+    : buildProjectDeliveryBreakdown(rawProjectRows).map((item) => ({ label: item.label, value: item.value, tone: item.tone }));
+  const workstreamProjectMaximum = Math.max(1, ...serviceLineSummaries.map((line) => line.projectCount));
+  const featuredDashboardProjects = activeProjectRows.slice().sort((left, right) => {
+    const leftDue = dateKey(left.targetEndDate || left.endDate || left.dueDate || left.deadline);
+    const rightDue = dateKey(right.targetEndDate || right.endDate || right.dueDate || right.deadline);
+    const leftOverdue = isValidDashboardDate(leftDue) && leftDue < currentDayKey;
+    const rightOverdue = isValidDashboardDate(rightDue) && rightDue < currentDayKey;
+    if (leftOverdue !== rightOverdue) return leftOverdue ? -1 : 1;
+    const leftRisk = /risk|delay|blocked|hold|issue/.test(String(left.health || left.status || '').toLowerCase());
+    const rightRisk = /risk|delay|blocked|hold|issue/.test(String(right.health || right.status || '').toLowerCase());
+    if (leftRisk !== rightRisk) return leftRisk ? -1 : 1;
+    if (isValidDashboardDate(leftDue) && isValidDashboardDate(rightDue) && leftDue !== rightDue) return leftDue.localeCompare(rightDue);
+    if (isValidDashboardDate(leftDue)) return -1;
+    if (isValidDashboardDate(rightDue)) return 1;
+    return String(left.name || left.title || '').localeCompare(String(right.name || right.title || ''));
+  }).slice(0, 4);
 
   return (
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
@@ -1943,7 +1976,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         eyebrow={view === 'overview' ? 'Overview' : view === 'performance' ? 'Performance' : 'Analytics'}
         title="Dashboard"
         description={view === 'overview'
-          ? 'Coordinate creative and IT delivery, urgent work, client commitments, and current Finance exceptions.'
+          ? 'Finance position, project progress, and delivery priorities in one operational overview.'
           : view === 'performance'
             ? 'Review delivery progress, bottlenecks, and recorded team effort for the selected reporting period.'
             : 'Explore source-backed financial movement, inquiry demand, receivables, and portfolio status.'}
@@ -1990,878 +2023,786 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
-      <section
-        className="space-y-3 rounded-card border border-line bg-panel px-4 py-3 sm:px-5"
-        data-ams-feature-slug="dashboard-overview-reporting-scope"
-        aria-label="Overview reporting scope"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-fg">Operating scope</p>
-            <p className="mt-0.5 text-xs text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</p>
-          </div>
-          <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">{reportPeriodEnabled ? 'Selected period' : 'Current operations'}</span>
-        </div>
-        <div className="flex flex-col gap-3 border-t border-line pt-3 min-[900px]:flex-row min-[900px]:items-center min-[900px]:justify-between">
-          <div className="flex min-w-0 flex-wrap gap-2" aria-label="Dashboard source scope">
-            <span className="inline-flex min-h-8 items-center gap-2 rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">
-              <FolderKanban size={13} className="shrink-0" aria-hidden="true" />
-              Current operational queues
-            </span>
-            <span className="inline-flex min-h-8 items-center gap-2 rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">
-              <CalendarDays size={13} className="shrink-0" aria-hidden="true" />
-              Deadlines: overdue + next 30 days
-            </span>
-            <span className="inline-flex min-h-8 items-center gap-2 rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">
-              <CircleDollarSign size={13} className="shrink-0" aria-hidden="true" />
-              Finance: current month + receivables
-            </span>
-          </div>
-          <p className="text-[10px] leading-4 text-muted min-[900px]:max-w-[230px]">Trends follow the selected period; task queues and project states show current records.</p>
-        </div>
-      </section>
-
-      <section className="space-y-3" data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-danger">Priority 01</span>
-            <h2 className="text-sm font-semibold text-fg">Needs attention</h2>
-          </div>
-          <p className="mt-1 text-xs text-muted">Urgent exceptions and actionable inquiries first.</p>
-        </div>
-        <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
-          <section className={['h-full min-w-0', canOpenInbox ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
-        <AdminPanel className="flex h-full flex-col" title="Priority exceptions" bodyClassName="flex min-h-0 flex-1 flex-col p-0">
-          {dashboardOverview.attentionItemsDataAvailable && attentionSeveritySummary.total > 0 ? (
-            <div className="space-y-2.5 border-b border-line bg-bg/50 px-4 py-3">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {[
-                  { label: 'Urgent', count: attentionSeveritySummary.urgent, color: attentionSeveritySummary.urgent > 0 ? 'text-danger' : 'text-muted' },
-                  { label: 'Attention', count: attentionSeveritySummary.attention, color: attentionSeveritySummary.attention > 0 ? 'text-warning' : 'text-muted' },
-                  { label: 'Other', count: attentionSeveritySummary.other, color: 'text-muted' },
-                  { label: 'Total', count: attentionSeveritySummary.total, color: 'text-fg' }
-                ].map((metric) => {
-                  const urgent = metric.label === 'Urgent' && metric.count > 0;
-                  const attention = metric.label === 'Attention' && metric.count > 0;
-                  return (
-                    <div
-                      key={metric.label}
-                      className={[
-                        'min-w-0 border-l px-2.5 py-1 sm:px-3',
-                        urgent ? 'border-danger pl-3' : attention ? 'border-warning pl-3' : 'border-line pl-3'
-                      ].join(' ')}
-                    >
-                      <p className="text-[10px] text-muted">{metric.label}</p>
-                      <p className={['mt-0.5 font-semibold tabular-nums', metric.label === 'Urgent' && metric.count > 0 ? 'text-2xl' : metric.label === 'Total' ? 'text-xl' : 'text-base', metric.color].join(' ')}>{metric.count}</p>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex h-1.5 overflow-hidden rounded-full bg-line" role="img" aria-label={'Priority exception mix: ' + attentionSeveritySummary.urgent + ' urgent, ' + attentionSeveritySummary.attention + ' attention, ' + attentionSeveritySummary.other + ' other.'}>
-                {attentionSeveritySummary.urgent > 0 ? <span className="h-full bg-danger" style={{ width: (attentionSeveritySummary.urgent / attentionSeveritySummary.total) * 100 + '%' }} aria-hidden="true" /> : null}
-                {attentionSeveritySummary.attention > 0 ? <span className="h-full bg-warning" style={{ width: (attentionSeveritySummary.attention / attentionSeveritySummary.total) * 100 + '%' }} aria-hidden="true" /> : null}
-                {attentionSeveritySummary.other > 0 ? <span className="h-full bg-info" style={{ width: (attentionSeveritySummary.other / attentionSeveritySummary.total) * 100 + '%' }} aria-hidden="true" /> : null}
-              </div>
-            </div>
-          ) : null}
-          {!dashboardOverview.attentionItemsDataAvailable ? (
-            <div className="px-4 py-5" role="status">
-              <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Cross-module exception data unavailable'}</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">The Dashboard service did not return a usable exception list. This is not interpreted as a clean operational state.</p>
-            </div>
-          ) : overviewAttentionItems.length === 0 ? (
-            <div className="px-4 py-5" role="status">
-              <p className="text-xs font-medium text-fg">{canOpenInbox ? 'No other cross-module exceptions returned' : 'No exceptions returned by the Dashboard service'}</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">{canOpenInbox ? 'Inbound records are reviewed separately below using the canonical Inbox source.' : 'Task and milestone queues below are still calculated from their own current source records.'}</p>
-            </div>
-          ) : (
-            <div className="flex-1 divide-y divide-line">
-              {overviewAttentionItems.slice(0, 5).map((item, index) => {
-                const severity = String(item.severity || 'info').toLowerCase();
-                const tone: DashboardTone = severity === 'danger' || severity === 'critical'
-                  ? 'danger'
-                  : severity === 'warning'
-                    ? 'warning'
-                    : 'info';
-                const category = String(item.category || 'Operations');
-                const knownDestinationCandidates: Record<string, string[]> = {
-                  att_invoices_overdue: ['/admin/finance?tab=accounts-receivable'],
-                  att_projects_risk: ['/admin/projects?projects=all', '/admin/projects?projects=planning-delivery', '/admin/projects?projects=sprint'],
-                  att_tasks_overdue: ['/admin/tasks?taskscope=due', '/admin/projects?projects=planning-delivery', '/admin/projects?projects=sprint'],
-                  att_leads_new: ['/admin/inbox?view=messages']
-                };
-                const candidates = knownDestinationCandidates[String(item.id || '')] || [String(item.linkUrl || '')];
-                const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;
-                const linkLabel = category === 'Finance'
-                  ? 'Receivables'
-                  : category === 'Sales'
-                    ? 'Inbox'
-                    : category === 'Delivery'
-                      ? 'Delivery'
-                      : 'Review';
-                const severityLabel = tone === 'danger' ? 'Urgent' : tone === 'warning' ? 'Attention' : 'Informational';
-                const AttentionIcon = tone === 'danger'
-                  ? AlertTriangle
-                  : category === 'Delivery'
-                    ? CalendarDays
-                    : category === 'Finance'
-                      ? CircleDollarSign
-                      : category === 'Sales'
-                        ? Users
-                        : Clock3;
-                return (
-                  <article key={String(item.id || category + '-' + item.title || index)} className="flex min-h-[68px] min-w-0 flex-col justify-center gap-2 px-3 py-2.5 min-[900px]:flex-row min-[900px]:items-center">
-                    <span className={['flex h-9 w-9 shrink-0 items-center justify-center rounded-control border', toneClasses[tone]].join(' ')}>
-                      <AttentionIcon size={15} aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="line-clamp-2 break-words text-xs font-semibold leading-4 text-fg">{item.title || 'Attention item'}</p>
-                        <span className={['inline-flex items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[tone]].join(' ')}>{severityLabel}</span>
-                        <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{category}</span>
-                      </div>
-                      {item.description ? <p className="mt-1 line-clamp-2 break-words text-[11px] leading-4 text-muted">{item.description}</p> : null}
-                    </div>
-                    {safeDestination ? (
-                      <Link to={safeDestination} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                        {linkLabel} <ArrowUpRight size={13} aria-hidden="true" />
-                      </Link>
-                    ) : (
-                      <span className="inline-flex min-h-8 shrink-0 items-center text-[10px] text-muted">No mapped destination</span>
-                    )}
-                  </article>
-                );
-              })}
-              {overviewAttentionItems.length > 5 ? <div className="border-t border-line px-4 py-2 text-[10px] text-muted">Showing 5 of {overviewAttentionItems.length} exceptions</div> : null}
-            </div>
-          )}
-        </AdminPanel>
-      </section>
-
-      {canOpenInbox ? (
-        <section className="h-full min-w-0 min-[1100px]:col-span-6" data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
-          <AdminPanel
-            className="flex h-full flex-col"
-            title="Inbound triage"
-            actions={(
-              <Link to="/admin/inbox?view=messages" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                Open Inbox <ArrowUpRight size={13} aria-hidden="true" />
-              </Link>
-            )}
-            bodyClassName="flex min-h-0 flex-1 flex-col p-0"
+          <section
+            className="flex min-w-0 flex-col gap-3 rounded-card border border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            data-ams-feature-slug="dashboard-overview-reporting-scope"
+            aria-label="Overview reporting scope"
           >
-            {inboxTriageSummary.state === 'loading' ? (
-              <div className="px-4 py-5" role="status">
-                <p className="text-xs font-medium text-fg">Loading inbound records</p>
-                <p className="mt-1 text-[11px] leading-4 text-muted">Loading the canonical Inbox source.</p>
-              </div>
-            ) : inboxTriageSummary.state === 'unavailable' ? (
-              <div className="px-4 py-5" role="status">
-                <p className="text-xs font-medium text-fg">Inbound triage unavailable</p>
-                <p className="mt-1 text-[11px] leading-4 text-muted">Inbox data unavailable; triage counts are not inferred.</p>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-px border-b border-line bg-line sm:grid-cols-4">
-                  {[
-                    { label: 'Open records', value: inboxTriageSummary.openCount },
-                    { label: 'New', value: inboxTriageSummary.newCount },
-                    { label: 'Unassigned', value: inboxTriageSummary.unassignedCount },
-                    { label: 'High priority', value: inboxTriageSummary.highPriorityCount }
-                  ].map((metric) => (
-                    <div key={metric.label} className="min-w-0 bg-panel px-3 py-3 sm:px-4">
-                      <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
-                      <p className="mt-1 text-base font-semibold tabular-nums text-fg">{metric.value}</p>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-fg">{reportPeriodEnabled ? reportPeriodLabel : 'Current operations'}</p>
+              <p className="mt-0.5 text-[11px] text-muted">Financial trends use the selected period or recent 30 days. Project, task and invoice balances reflect their current saved state.</p>
+            </div>
+            <div className="flex min-w-0 flex-wrap gap-2">
+              <span className="inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
+                <CircleDollarSign size={13} aria-hidden="true" /> Finance: current month + receivables
+              </span>
+              <span className="inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
+                <CalendarDays size={13} aria-hidden="true" /> Deadlines: overdue + next 30 days
+              </span>
+            </div>
+          </section>
+
+          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Finance and project overview">
+            {canOpenFinanceOverview ? (
+              <section
+                className={['min-w-0', canOpenProjects ? 'min-[1100px]:col-span-7' : 'min-[1100px]:col-span-12'].join(' ')}
+                data-ams-feature-slug="dashboard-finance-overview"
+                aria-label="Finance overview"
+              >
+                <AdminPanel
+                  title="Finance"
+                  description="Receivables and financial movement"
+                  className="h-full"
+                  bodyClassName="p-4 sm:p-5"
+                  actions={(
+                    <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      Open Finance <ArrowUpRight size={13} aria-hidden="true" />
+                    </Link>
+                  )}
+                >
+                  <div className="grid min-w-0 gap-5 min-[900px]:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
+                    <div className="flex min-w-0 flex-col justify-between gap-5">
+                      <div>
+                        <p className="text-xs font-medium text-muted">{canOpenInvoiceRegister ? 'Outstanding receivables' : 'Recorded expenses this month'}</p>
+                        <p className="mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">
+                          {canOpenInvoiceRegister
+                            ? outstandingValueAvailable && liveOutstanding !== null ? formatLiveMoney(liveOutstanding, financeCurrency) : '—'
+                            : expensesValueAvailable && liveMonthlyExpenses !== null ? formatLiveMoney(liveMonthlyExpenses, financeCurrency) : '—'}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-4 text-muted">
+                          {canOpenInvoiceRegister
+                            ? operationalSnapshot.invoices === null
+                              ? 'Invoice source unavailable.'
+                              : outstandingValueAvailable
+                                ? 'Current open balances on issued invoices.'
+                                : 'No issued invoice records are available to confirm an open balance.'
+                            : operationalSnapshot.expenses === null
+                              ? 'Expense source unavailable.'
+                              : expensesValueAvailable
+                                ? 'Eligible expenses recorded this month.'
+                                : 'No eligible expense records are available to confirm a monthly total.'}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 border-t border-line pt-4 sm:grid-cols-2">
+                        {canOpenInvoiceRegister ? (
+                          <div className="min-w-0 border-l-2 border-series-3 pl-3">
+                            <p className="text-[10px] leading-4 text-muted">Cash received this month</p>
+                            <p className="mt-1 break-words text-base font-semibold tabular-nums text-fg">
+                              {cashValueAvailable && liveCashCollected !== null ? formatLiveMoney(liveCashCollected, financeCurrency) : '—'}
+                            </p>
+                          </div>
+                        ) : null}
+                        {canOpenExpenseRegister && canOpenInvoiceRegister ? (
+                          <div className="min-w-0 border-l-2 border-danger pl-3">
+                            <p className="text-[10px] leading-4 text-muted">Recorded expenses this month</p>
+                            <p className="mt-1 break-words text-base font-semibold tabular-nums text-fg">
+                              {expensesValueAvailable && liveMonthlyExpenses !== null ? formatLiveMoney(liveMonthlyExpenses, financeCurrency) : '—'}
+                            </p>
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div data-ams-feature-slug="dashboard-finance-control" className="space-y-2 border-t border-line pt-3">
+                        <p className="text-[10px] leading-4 text-muted">Finance owns posted accounting truth; Dashboard summarizes canonical records.</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                          {canOpenInvoiceRegister ? (
+                            <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                              Accounts receivable <ArrowUpRight size={12} aria-hidden="true" />
+                            </Link>
+                          ) : null}
+                          {canOpenExpenseRegister ? (
+                            <Link to="/admin/finance?tab=expenses" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                              Expenses <ArrowUpRight size={12} aria-hidden="true" />
+                            </Link>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-                <div className="border-b border-line bg-bg/50 px-4 py-2.5">
-                  <div className="mb-1.5 flex items-center justify-between gap-3">
-                    <span className="text-[10px] font-medium text-muted">New inquiries</span>
-                    <span className="text-[10px] tabular-nums text-fg">{inboxTriageSummary.newCount} / {inboxTriageSummary.openCount} open</span>
+
+                    <div className="min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0">
+                      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                        <h3 className="text-xs font-semibold text-fg">Financial movement</h3>
+                        <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Recent 30 days'}</span>
+                      </div>
+                      {operationalSnapshot.invoices === null || operationalSnapshot.expenses === null ? (
+                        <div className="flex min-h-[220px] flex-col justify-center rounded-control border border-line bg-bg px-4 py-5" role="status">
+                          <p className="text-xs font-medium text-fg">Financial movement unavailable</p>
+                          <p className="mt-1 text-[11px] leading-4 text-muted">Invoice and expense sources are not both available to this role or service.</p>
+                        </div>
+                      ) : !overviewFinanceTrendHasRecords ? (
+                        <div className="flex min-h-[220px] flex-col justify-center rounded-control border border-line bg-bg px-4 py-5" role="status">
+                          <p className="text-xs font-medium text-fg">No eligible financial records</p>
+                          <p className="mt-1 text-[11px] leading-4 text-muted">Issued invoices and eligible expenses will appear here when recorded.</p>
+                        </div>
+                      ) : overviewFinanceTrendRows.length ? (
+                        <>
+                          <TrendChart
+                            data={overviewFinanceTrendRows}
+                            primaryLabel="Issued invoices"
+                            secondaryLabel="Recorded expenses"
+                            tertiaryLabel=""
+                            primaryFormat={(value) => formatLiveMoney(value, financeCurrency)}
+                            ariaLabel={'Issued-invoice totals by invoice date and eligible expenses by recorded date. Scope: ' + describeFinancialTrendScope(overviewFinanceTrendRows, reportPeriodEnabled, reportPeriodLabel) + '. This comparison is not posted profit or cash flow.'}
+                          />
+                          <p className="mt-2 text-[10px] leading-4 text-muted">Invoice values use issue dates; expenses use recorded dates. This comparison is not posted profit or cash flow.</p>
+                        </>
+                      ) : (
+                        <p className="py-8 text-center text-xs text-muted" role="status">No trend buckets are available for this period.</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-line" role="img" aria-label={'New inquiries: ' + inboxTriageSummary.newCount + ' out of ' + inboxTriageSummary.openCount + ' open records.'}>
-                    <div className="h-full rounded-full bg-warning" style={{ width: (inboxTriageSummary.openCount ? inboxTriageSummary.newCount / inboxTriageSummary.openCount * 100 : 0) + '%' }} />
+                </AdminPanel>
+              </section>
+            ) : null}
+
+            {canOpenProjects ? (
+              <section
+                className={['min-w-0', canOpenFinanceOverview ? 'min-[1100px]:col-span-5' : 'min-[1100px]:col-span-12'].join(' ')}
+                data-ams-feature-slug="dashboard-project-portfolio"
+                aria-label="Project portfolio"
+              >
+                <AdminPanel
+                  title="Projects"
+                  description="Current delivery state across Creative and IT"
+                  className="h-full"
+                  bodyClassName="p-4 sm:p-5"
+                  actions={(
+                    <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      Open Projects <ArrowUpRight size={13} aria-hidden="true" />
+                    </Link>
+                  )}
+                >
+                  {operationalSnapshot.projects === null ? (
+                    <DashboardUnavailable title="Project portfolio unavailable" description="The canonical Projects source did not return current records." />
+                  ) : rawProjectRows.length === 0 ? (
+                    <div className="flex min-h-[250px] flex-col items-center justify-center text-center" role="status">
+                      <FolderKanban size={23} className="text-muted" aria-hidden="true" />
+                      <p className="mt-3 text-xs font-semibold text-fg">No project records returned</p>
+                      <p className="mt-1 text-[11px] leading-4 text-muted">The portfolio will fill from saved project records.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
+                        <div>
+                          <p className="text-[11px] text-muted">Active projects</p>
+                          <p className="mt-1 text-2xl font-semibold tabular-nums text-fg">{activeProjectRows.length}</p>
+                        </div>
+                        <div className="flex gap-5">
+                          <div className="border-l-2 border-danger pl-3">
+                            <p className="text-[10px] leading-4 text-muted">Overdue commitments</p>
+                            <p className={['mt-1 text-lg font-semibold tabular-nums', overdueCommitmentCount ? 'text-danger' : 'text-fg'].join(' ')}>{overdueCommitmentCount ?? '—'}</p>
+                          </div>
+                          <div className="border-l-2 border-series-3 pl-3">
+                            <p className="text-[10px] leading-4 text-muted">Open tasks</p>
+                            <p className="mt-1 text-lg font-semibold tabular-nums text-fg">{activeTaskCount ?? '—'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {activeProjectRows.length === 0 ? (
+                        <p className="py-4 text-xs text-muted" role="status">No active projects are currently returned.</p>
+                      ) : (
+                        <>
+                          <div className="grid min-w-0 gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
+                            {projectRiskBreakdown.reduce((sum, item) => sum + item.value, 0) > 0 ? (
+                              <DonutChart data={projectRiskBreakdown} ariaLabel="Active projects grouped by saved risk and deadline signals" showLegend={false} centerLabel="Active" />
+                            ) : (
+                              <div className="flex min-h-[150px] items-center justify-center rounded-control border border-line bg-bg px-3 text-center text-[11px] text-muted" role="status">No risk or deadline distribution to chart.</div>
+                            )}
+                            <div className="min-w-0 space-y-2">
+                              {projectRiskBreakdown.map((item) => {
+                                const toneClass = item.tone === 'danger' ? 'bg-danger' : item.tone === 'warning' ? 'bg-warning' : 'bg-success';
+                                return (
+                                  <div key={item.label} className="flex items-center justify-between gap-3 border-b border-line py-1.5 last:border-b-0">
+                                    <span className="flex min-w-0 items-center gap-2 text-[11px] text-muted">
+                                      <span className={['h-2 w-2 shrink-0 rounded-full', toneClass].join(' ')} aria-hidden="true" />
+                                      <span className="break-words">{item.label}</span>
+                                    </span>
+                                    <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{item.value}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="border-t border-line pt-3">
+                            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                              <h3 className="text-xs font-semibold text-fg">Creative & IT workload</h3>
+                              <span className="text-[10px] text-muted">Saved service line · open task load</span>
+                            </div>
+                            <div className="space-y-3">
+                              {serviceLineSummaries.map((line) => (
+                                <div key={line.key} className="min-w-0 space-y-1.5" data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}>
+                                  <div className="flex items-baseline justify-between gap-3">
+                                    <span className="min-w-0 text-xs font-medium text-fg">{line.label}</span>
+                                    <span className="shrink-0 text-[10px] tabular-nums text-muted">{line.projectCount} projects{canOpenTasks && operationalSnapshot.tasks !== null ? ' · ' + line.openTaskCount + ' open tasks' : ''}</span>
+                                  </div>
+                                  {canOpenTasks && operationalSnapshot.tasks !== null ? (
+                                    <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Open task load for ' + line.label + ': ' + line.openTaskCount + ' tasks.'}>
+                                      <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: (workstreamOpenTaskMaximum > 0 ? line.openTaskCount / workstreamOpenTaskMaximum * 100 : 0) + '%' }} />
+                                    </div>
+                                  ) : (
+                                    <p className="text-[10px] text-muted" role="status">Task queue unavailable for this role or source.</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </AdminPanel>
+              </section>
+            ) : null}
+          </section>
+
+          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
+            {canOpenProjects ? (
+              <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-project-progress" aria-label="Projects in progress">
+                <AdminPanel
+                  title="Projects in progress"
+                  className="h-full"
+                  bodyClassName="p-0"
+                  actions={(
+                    <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      Project registry <ArrowUpRight size={13} aria-hidden="true" />
+                    </Link>
+                  )}
+                >
+                  {operationalSnapshot.projects === null ? (
+                    <div className="p-4"><DashboardUnavailable title="Project progress unavailable" description="The Projects source did not return current records." /></div>
+                  ) : featuredDashboardProjects.length === 0 ? (
+                    <div className="px-4 py-8 text-center" role="status">
+                      <p className="text-xs font-medium text-fg">No active projects</p>
+                      <p className="mt-1 text-[11px] text-muted">Saved active project records will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-line">
+                      {featuredDashboardProjects.map((project) => {
+                        const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
+                        const overdue = isValidDashboardDate(due) && due < currentDayKey;
+                        const statusText = String(project.status || project.health || 'Status not set');
+                        const progress = getDashboardSavedProgress(project);
+                        const projectHref = getDashboardProjectHref(project);
+                        const projectRouteAvailable = Boolean(projectHref && canOpenDashboardRoute(projectHref));
+                        return (
+                          <article key={String(project.id || project.slug || project.name)} className="space-y-2.5 px-4 py-3.5 sm:px-5">
+                            <div className="flex min-w-0 items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                {projectRouteAvailable && projectHref ? (
+                                  <Link to={projectHref} className="break-words text-xs font-semibold text-fg hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{project.name || project.title || 'Untitled project'} <ArrowUpRight size={11} className="inline" aria-hidden="true" /></Link>
+                                ) : (
+                                  <p className="break-words text-xs font-semibold text-fg">{project.name || project.title || 'Untitled project'}</p>
+                                )}
+                                <p className="mt-1 break-words text-[11px] text-muted">{project.clientName || project.clientCompany || project.client || 'Client not linked'}</p>
+                              </div>
+                              <span className={['shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium', toneClasses[overdue ? 'danger' : /risk|delay|blocked|hold|issue/i.test(statusText) ? 'warning' : 'info']].join(' ')}>{statusText}</span>
+                            </div>
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="min-w-0 flex-1">
+                                {progress !== null ? (
+                                  <>
+                                    <div className="mb-1.5 flex items-center justify-between gap-3 text-[10px] text-muted">
+                                      <span>Saved progress</span><span className="font-semibold tabular-nums text-fg">{progress}%</span>
+                                    </div>
+                                    <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={String(project.name || project.title || 'Project') + ' saved progress: ' + progress + ' percent'}>
+                                      <div className="h-full rounded-full bg-accent" style={{ width: progress + '%' }} />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <p className="text-[10px] leading-4 text-muted">Progress not recorded</p>
+                                )}
+                              </div>
+                              <div className="shrink-0 text-right">
+                                <p className={['text-[10px] tabular-nums', overdue ? 'font-semibold text-danger' : 'text-muted'].join(' ')}>{due && isValidDashboardDate(due) ? formatDashboardDate(due) : 'No target date'}</p>
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )}
+                </AdminPanel>
+              </section>
+            ) : null}
+
+            <section className={['min-w-0', canOpenProjects ? 'min-[1100px]:col-span-5' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
+              <AdminPanel
+                title="Needs attention"
+                className="h-full"
+                bodyClassName="p-0"
+                actions={dashboardOverview.attentionItemsDataAvailable ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {attentionSeveritySummary.urgent > 0 ? <span className="rounded-badge border border-danger/25 bg-danger/10 px-2 py-1 text-[10px] font-medium text-danger">{attentionSeveritySummary.urgent} urgent</span> : null}
+                    {attentionSeveritySummary.attention > 0 ? <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">{attentionSeveritySummary.attention} attention</span> : null}
+                    {attentionSeveritySummary.total === 0 ? <span className="text-[10px] text-muted">No active exceptions</span> : null}
+                  </div>
+                ) : undefined}
+              >
+                <div data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
+                  {!dashboardOverview.attentionItemsDataAvailable ? (
+                    <div className="px-4 py-5" role="status">
+                      <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Exception data unavailable'}</p>
+                      <p className="mt-1 text-[11px] leading-4 text-muted">The Dashboard service did not return a usable exception list. Unavailable data is not treated as a clean state.</p>
+                    </div>
+                  ) : overviewAttentionItems.length === 0 ? (
+                    <div className="px-4 py-5" role="status">
+                      <p className="text-xs font-medium text-fg">No cross-module exceptions returned</p>
+                      <p className="mt-1 text-[11px] leading-4 text-muted">Delivery queues and deadlines below still use their canonical records.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-line">
+                      {overviewAttentionItems.slice(0, 4).map((item, index) => {
+                        const severity = String(item.severity || 'info').toLowerCase();
+                        const tone: DashboardTone = severity === 'danger' || severity === 'critical' ? 'danger' : severity === 'warning' ? 'warning' : 'info';
+                        const category = String(item.category || 'Operations');
+                        const knownDestinationCandidates: Record<string, string[]> = {
+                          att_invoices_overdue: ['/admin/finance?tab=accounts-receivable'],
+                          att_projects_risk: ['/admin/projects?projects=all', '/admin/projects?projects=planning-delivery', '/admin/projects?projects=sprint'],
+                          att_tasks_overdue: ['/admin/tasks?taskscope=due', '/admin/projects?projects=planning-delivery', '/admin/projects?projects=sprint'],
+                          att_leads_new: ['/admin/inbox?view=messages']
+                        };
+                        const candidates = knownDestinationCandidates[String(item.id || '')] || [String(item.linkUrl || '')];
+                        const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;
+                        const severityLabel = tone === 'danger' ? 'Urgent' : tone === 'warning' ? 'Attention' : 'Info';
+                        return (
+                          <article key={String(item.id || category + '-' + item.title || index)} className="flex min-w-0 items-start gap-3 px-4 py-3">
+                            <span className={['mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full', tone === 'danger' ? 'bg-danger' : tone === 'warning' ? 'bg-warning' : 'bg-info'].join(' ')} aria-hidden="true" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="break-words text-xs font-semibold text-fg">{item.title || 'Attention item'}</p>
+                                <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[tone]].join(' ')}>{severityLabel}</span>
+                              </div>
+                              {item.description ? <p className="mt-1 line-clamp-2 break-words text-[11px] leading-4 text-muted">{item.description}</p> : null}
+                              {safeDestination ? <Link to={safeDestination} className="mt-1.5 inline-flex min-h-7 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{category === 'Finance' ? 'Receivables' : category === 'Delivery' ? 'Delivery' : category === 'Sales' ? 'Inbox' : 'Review'} <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                            </div>
+                          </article>
+                        );
+                      })}
+                      {overviewAttentionItems.length > 4 ? <p className="border-t border-line px-4 py-2 text-[10px] text-muted">Showing 4 of {overviewAttentionItems.length} exceptions.</p> : null}
+                    </div>
+                  )}
+                </div>
+
+                {canOpenInbox ? (
+                  <div className="border-t border-line" data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
+                    <div className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div>
+                        <h3 className="text-xs font-semibold text-fg">Inbox</h3>
+                        <p className="mt-0.5 text-[10px] text-muted">New and actionable requests</p>
+                      </div>
+                      <Link to="/admin/inbox?view=messages" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Inbox <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                    </div>
+                    {inboxTriageSummary.state === 'loading' ? (
+                      <p className="px-4 pb-4 text-[11px] text-muted" role="status">Loading inbound records.</p>
+                    ) : inboxTriageSummary.state === 'unavailable' ? (
+                      <p className="px-4 pb-4 text-[11px] text-muted" role="status">Inbox data unavailable; triage counts are not inferred.</p>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-3 gap-3 border-y border-line bg-bg/60 px-4 py-3">
+                          {[
+                            { label: 'New', value: inboxTriageSummary.newCount },
+                            { label: 'Unassigned', value: inboxTriageSummary.unassignedCount },
+                            { label: 'High priority', value: inboxTriageSummary.highPriorityCount }
+                          ].map((metric) => (
+                            <div key={metric.label} className="min-w-0 border-l border-line pl-2.5">
+                              <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
+                              <p className="mt-0.5 text-base font-semibold tabular-nums text-fg">{metric.value}</p>
+                            </div>
+                          ))}
+                        </div>
+                        {inboxTriageSummary.actionable.length ? (
+                          <div className="divide-y divide-line">
+                            {inboxTriageSummary.actionable.slice(0, 2).map((lead) => (
+                              <article key={lead.id} className="flex min-w-0 items-center justify-between gap-3 px-4 py-2.5">
+                                <div className="min-w-0">
+                                  <p className="truncate text-xs font-medium text-fg">{lead.fullName || 'Inbound contact'}</p>
+                                  <p className="mt-0.5 truncate text-[10px] text-muted">{lead.company || 'Company not provided'} · {lead.status || 'Status unavailable'}</p>
+                                </div>
+                                <span className={['shrink-0 text-[10px] font-medium', isInboxUnassigned(lead) ? 'text-warning' : 'text-muted'].join(' ')}>{String(lead.assignedTo || '').trim() || 'Unassigned'}</span>
+                              </article>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="px-4 py-3 text-[11px] text-muted" role="status">No inbound records need immediate triage.</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : null}
+              </AdminPanel>
+            </section>
+          </section>
+
+          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Task queue and delivery deadlines">
+            <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Task delivery queue">
+              <AdminPanel
+                title="Task queue"
+                description="Open work ordered by recorded delivery risk"
+                className="h-full"
+                bodyClassName="p-0"
+                actions={canOpenTasks ? (
+                  <Link to={overviewTaskQueueHref} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    Open Tasks <ArrowUpRight size={13} aria-hidden="true" />
+                  </Link>
+                ) : undefined}
+              >
+                <div className="border-b border-line px-3 py-3 sm:px-4">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Task queue filters">
+                    {([
+                      { key: 'action', label: 'Action needed', count: taskQueueCounts.action },
+                      { key: 'review', label: 'Review', count: taskQueueCounts.review },
+                      { key: 'overdue', label: 'Overdue', count: taskQueueCounts.overdue },
+                      { key: 'blocked', label: 'Blocked', count: taskQueueCounts.blocked },
+                      { key: 'unassigned', label: 'Unassigned', count: taskQueueCounts.unassigned }
+                    ] as Array<{ key: DashboardTaskFilter; label: string; count: number }>).map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        aria-pressed={overviewTaskFilter === tab.key}
+                        disabled={!canOpenTasks}
+                        onClick={() => setOverviewTaskFilter(tab.key)}
+                        className={[
+                          'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
+                          overviewTaskFilter === tab.key ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg'
+                        ].join(' ')}
+                      >
+                        {tab.label}
+                        <span className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
-                {inboxTriageSummary.actionable.length === 0 ? (
-                  <div className="px-4 py-5" role="status">
-                    <p className="text-xs font-medium text-fg">No inbound records need immediate triage</p>
-                    <p className="mt-1 text-[11px] leading-4 text-muted">No open record is new, unassigned or high priority.</p>
+                {!canOpenTasks || operationalSnapshot.tasks === null ? (
+                  <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." /></div>
+                ) : dashboardWorkTasks.length === 0 ? (
+                  <div className="px-4 py-8" role="status">
+                    <p className="text-xs font-semibold text-fg">No task records returned</p>
+                    <p className="mt-1 text-[11px] text-muted">No saved task records were returned by the canonical source.</p>
+                  </div>
+                ) : activeDashboardTasks.length === 0 ? (
+                  <div className="px-4 py-8" role="status">
+                    <p className="text-xs font-semibold text-fg">All returned tasks are complete</p>
+                    <p className="mt-1 text-[11px] text-muted">No open work items remain in the Tasks source.</p>
+                  </div>
+                ) : visibleOverviewTasks.length === 0 ? (
+                  <div className="px-4 py-8" role="status">
+                    <p className="text-xs font-semibold text-fg">No tasks match this queue</p>
+                    <p className="mt-1 text-[11px] text-muted">Choose another queue filter to inspect a different state.</p>
                   </div>
                 ) : (
-                  <div className="flex-1 divide-y divide-line">
-                    {inboxTriageSummary.actionable.slice(0, 5).map((lead) => {
-                      const priority = lead.priority === 'urgent' || lead.priority === 'high';
-                      const assignedTo = String(lead.assignedTo || '').trim();
-                      const services = Array.isArray(lead.services) ? lead.services.filter(Boolean).slice(0, 2).join(' · ') : '';
-                      const received = isValidDashboardDate(dateKey(lead.createdAt)) ? formatDashboardDate(dateKey(lead.createdAt)) : 'Date not recorded';
+                  <div className="divide-y divide-line">
+                    {visibleOverviewTasks.slice(0, 5).map((task) => {
+                      const overdue = dashboardTaskIsOverdue(task, currentDayKey);
+                      const dueSoon = dashboardTaskIsDueSoon(task, currentDayKey, nextSevenDaysKey);
+                      const taskDestination = task.blocked
+                        ? '/admin/tasks?taskscope=blocked'
+                        : task.status === 'review' || task.status === 'in_review'
+                          ? '/admin/tasks?taskscope=review'
+                          : overdue || dueSoon
+                            ? '/admin/tasks?taskscope=due'
+                            : '/admin/tasks';
+                      const dueLabel = !task.dueDate
+                        ? 'No due date'
+                        : overdue
+                          ? 'Overdue · ' + formatDashboardDate(task.dueDate)
+                          : task.dueDate === currentDayKey
+                            ? 'Due today'
+                            : dueSoon
+                              ? 'Due · ' + formatDashboardDate(task.dueDate)
+                              : formatDashboardDate(task.dueDate);
                       return (
-                        <article key={lead.id} className="flex min-h-[68px] min-w-0 flex-col justify-center gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+                        <article key={task.id} className="flex min-w-0 items-start gap-3 px-4 py-3">
+                          <span className={['mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full', toneClasses[overdue ? 'danger' : task.blocked ? 'warning' : dashboardTaskPriorityTone(task.priority)]].join(' ')} aria-hidden="true" />
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="line-clamp-1 break-words text-xs font-semibold text-fg">{lead.fullName || 'Inbound contact'}</p>
-                              <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[lead.status === 'new' ? 'warning' : 'info']].join(' ')}>{lead.status || 'Status unavailable'}</span>
-                              {priority ? <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[lead.priority === 'urgent' ? 'danger' : 'warning']].join(' ')}>{lead.priority === 'urgent' ? 'Urgent' : 'High priority'}</span> : null}
+                            <p className="break-words text-xs font-semibold text-fg">{task.title}</p>
+                            <p className="mt-1 break-words text-[11px] text-muted">{task.projectName}{task.clientName ? ' · ' + task.clientName : ''}</p>
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[dashboardTaskPriorityTone(task.priority)]].join(' ')}>{task.priority.toUpperCase()}</span>
+                              <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{dashboardTaskStatusLabel(task.status)}</span>
+                              {task.blocked ? <span className="rounded-badge border border-danger/25 bg-danger/10 px-2 py-0.5 text-[10px] text-danger">Blocked</span> : null}
+                              {!task.assigned ? <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-0.5 text-[10px] text-warning">Unassigned</span> : null}
                             </div>
-                            <p className="mt-1 line-clamp-1 break-words text-[11px] text-muted">{lead.company || 'Company not provided'}{services ? ' · ' + services : ''}</p>
                           </div>
-                          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
-                            <span className={['text-[11px]', assignedTo ? 'text-muted' : 'font-medium text-warning'].join(' ')}>{assignedTo || 'Unassigned'}</span>
-                            <span className="text-[11px] tabular-nums text-muted">{received}</span>
+                          <div className="shrink-0 text-right">
+                            <p className="text-[10px] font-medium text-fg">{task.assigneeLabel}</p>
+                            <p className={['mt-1 text-[10px] tabular-nums', overdue ? 'font-semibold text-danger' : dueSoon ? 'font-medium text-warning' : 'text-muted'].join(' ')}>{dueLabel}</p>
+                            {canOpenDashboardRoute(taskDestination) ? <Link to={taskDestination} className="mt-1 inline-flex min-h-7 items-center gap-1 text-[10px] font-medium text-muted hover:text-accent-text">Open queue <ArrowUpRight size={10} aria-hidden="true" /></Link> : null}
                           </div>
                         </article>
                       );
                     })}
-                    {inboxTriageSummary.actionable.length > 5 ? (
-                      <div className="px-4 py-3 text-[11px] text-muted">
-                        Showing 5 of {inboxTriageSummary.actionable.length} actionable inquiries.
-                      </div>
-                    ) : null}
-                    <div className="border-t border-line px-4 py-2 text-[10px] text-muted">Triage counts can overlap: one inquiry may match multiple signals.</div>
+                    {activeDashboardTasks.length > 5 ? <p className="border-t border-line px-4 py-2 text-[10px] text-muted">Showing 5 of {activeDashboardTasks.length} open tasks.</p> : null}
                   </div>
                 )}
-              </>
-            )}
-          </AdminPanel>
-        </section>
-      ) : null}
-        </div>
-      </section>
+              </AdminPanel>
+            </section>
 
-      <section className="space-y-3" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Agency delivery desk">
-        <h2 className="text-sm font-semibold text-fg">Active delivery</h2>
-        <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
-          <AdminPanel
-            className="min-w-0 min-[1100px]:col-span-8"
-            title="Delivery queue"
-            description="Live task queue from Tasks & Execution, ordered by delivery risk."
-            bodyClassName="p-0"
-            actions={canOpenTasks ? (
-              <Link
-                to={overviewTaskQueueHref}
-                className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-delivery-commitments" aria-label="Upcoming delivery deadlines">
+              <AdminPanel
+                title="Upcoming deadlines"
+                className="h-full"
+                bodyClassName="p-0"
+                actions={canOpenProjects ? (
+                  <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    Open planning <ArrowUpRight size={13} aria-hidden="true" />
+                  </Link>
+                ) : undefined}
               >
-                Open {overviewTaskFilter === 'review' ? 'review queue' : overviewTaskFilter === 'overdue' ? 'due tasks' : overviewTaskFilter === 'blocked' ? 'blocked tasks' : 'Tasks'} <ArrowUpRight size={13} aria-hidden="true" />
-              </Link>
-            ) : undefined}
-          >
-            <div className="border-b border-line px-3 py-3 sm:px-4">
-              <div className="flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Delivery queue filters">
-                {([
-                  { key: 'action', label: 'Action needed', count: taskQueueCounts.action },
-                  { key: 'review', label: 'Review', count: taskQueueCounts.review },
-                  { key: 'overdue', label: 'Overdue', count: taskQueueCounts.overdue },
-                  { key: 'blocked', label: 'Blocked', count: taskQueueCounts.blocked },
-                  { key: 'unassigned', label: 'Unassigned', count: taskQueueCounts.unassigned }
-                ] as Array<{ key: DashboardTaskFilter; label: string; count: number }>).map((tab) => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    aria-pressed={overviewTaskFilter === tab.key}
-                    disabled={!canOpenTasks}
-                    onClick={() => setOverviewTaskFilter(tab.key)}
-                    className={[
-                      'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
-                      overviewTaskFilter === tab.key ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg'
-                    ].join(' ')}
-                  >
-                    {tab.label}
-                    <span className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            {operationalSnapshot.tasks === null ? (
-              <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical task source did not return data for this role. Queue counts and owner assignments are not inferred." /></div>
-            ) : dashboardWorkTasks.length === 0 ? (
-              <div className="px-4 py-8" role="status">
-                <p className="text-xs font-semibold text-fg">No task records returned</p>
-                <p className="mt-1 text-xs text-muted">No saved task records.</p>
-              </div>
-            ) : activeDashboardTasks.length === 0 ? (
-              <div className="px-4 py-8" role="status">
-                <p className="text-xs font-semibold text-fg">All returned tasks are complete</p>
-                <p className="mt-1 text-xs text-muted">The canonical task register contains no open work items.</p>
-              </div>
-            ) : visibleOverviewTasks.length === 0 ? (
-              <div className="px-4 py-8" role="status">
-                <p className="text-xs font-semibold text-fg">No tasks match this queue</p>
-                <p className="mt-1 text-xs text-muted">Change the queue filter to inspect a different task state.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-line">
-                {visibleOverviewTasks.map((task) => {
-                  const overdue = dashboardTaskIsOverdue(task, currentDayKey);
-                  const dueSoon = dashboardTaskIsDueSoon(task, currentDayKey, nextSevenDaysKey);
-                  const taskQueueDestination = task.blocked
-                    ? '/admin/tasks?taskscope=blocked'
-                    : task.status === 'review' || task.status === 'in_review'
-                      ? '/admin/tasks?taskscope=review'
-                      : overdue || dueSoon
-                        ? '/admin/tasks?taskscope=due'
-                        : '/admin/tasks';
-                  const dueLabel = !task.dueDate
-                    ? 'No due date'
-                    : overdue
-                      ? 'Overdue · ' + formatDashboardDate(task.dueDate)
-                      : task.dueDate === currentDayKey
-                        ? 'Due today'
-                        : dueSoon
-                          ? 'Due · ' + formatDashboardDate(task.dueDate)
-                          : formatDashboardDate(task.dueDate);
-                  return (
-                    <article key={task.id} className="flex min-w-0 flex-col gap-3 px-4 py-3 sm:px-5 min-[900px]:flex-row min-[900px]:items-center" data-ams-task-id={task.id}>
-                      <span className={['mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border', toneClasses[overdue ? 'danger' : task.blocked ? 'warning' : dashboardTaskPriorityTone(task.priority)]].join(' ')}>
-                        {task.blocked || overdue ? <AlertTriangle size={14} aria-hidden="true" /> : task.status === 'review' || task.status === 'in_review' ? <Eye size={14} aria-hidden="true" /> : <CheckCircle2 size={14} aria-hidden="true" />}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="break-words text-xs font-semibold text-fg">{task.title}</p>
-                        <p className="mt-1 break-words text-[11px] leading-5 text-muted">
-                          {task.projectName}{task.clientName ? ' · ' + task.clientName : ''}{task.serviceCategory ? ' · ' + task.serviceCategory : ''}
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                          <span className={['inline-flex items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[dashboardTaskPriorityTone(task.priority)]].join(' ')}>{task.priority.toUpperCase()}</span>
-                          <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{dashboardTaskStatusLabel(task.status)}</span>
-                          {task.blocked ? <span className="inline-flex items-center rounded-badge border border-danger/25 bg-danger/10 px-2 py-0.5 text-[10px] font-medium text-danger">Blocked</span> : null}
-                          {!task.assigned ? <span className="inline-flex items-center rounded-badge border border-warning/25 bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning">Unassigned</span> : null}
-                        </div>
+                {operationalSnapshot.projects === null ? (
+                  <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned. Deadlines are not inferred." /></div>
+                ) : rawProjectRows.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-xs text-muted" role="status">No project records returned.</p>
+                ) : (
+                  <>
+                    <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4">
+                      <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div><p className="text-[11px] text-muted">Overdue and due within 30 days</p><p className="mt-1 text-xl font-semibold tabular-nums text-fg">{commitmentHorizonTotal}</p></div>
+                        <p className="text-[10px] text-muted">Current dated commitments</p>
                       </div>
-                      <div className="flex min-w-0 flex-col gap-1 sm:w-44 sm:shrink-0 sm:items-end">
-                        <span className="text-[11px] font-medium text-fg">{task.assigneeLabel}</span>
-                        <span className={['text-[11px] tabular-nums', overdue ? 'font-semibold text-danger' : dueSoon ? 'font-medium text-warning' : 'text-muted'].join(' ')}>{dueLabel}</span>
-                        {canOpenTasks && canOpenDashboardRoute(taskQueueDestination) ? (
-                          <Link to={taskQueueDestination} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                            Open task queue <ArrowUpRight size={12} aria-hidden="true" />
-                          </Link>
-                        ) : null}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-            {canOpenTasks && activeDashboardTasks.length > visibleOverviewTasks.length && visibleOverviewTasks.length > 0 ? (
-              <div className="border-t border-line px-4 py-3 text-[11px] text-muted">
-                Showing {visibleOverviewTasks.length} highest-priority tasks from {activeDashboardTasks.length} open records in Tasks & Execution.
-              </div>
-            ) : null}
-          </AdminPanel>
-
-          <AdminPanel
-            className="min-w-0 min-[1100px]:col-span-4"
-            title="Creative & IT workstreams"
-            description="Open-task load by saved service line. Risk counts can overlap."
-            bodyClassName="p-0"
-          >
-            {!canOpenProjects ? (
-              <div className="p-4"><DashboardUnavailable title="Workstream data unavailable to this role" description="Project categories and workstream counts are hidden when the current role cannot open Projects." /></div>
-            ) : operationalSnapshot.projects === null ? (
-              <div className="p-4"><DashboardUnavailable title="Workstream data unavailable" description="The canonical project source did not return project categories for this role." /></div>
-            ) : rawProjectRows.length === 0 ? (
-              <div className="px-4 py-8" role="status">
-                <p className="text-xs font-semibold text-fg">No project records returned</p>
-                <p className="mt-1 text-xs text-muted">Workstream counts are not estimated from task titles or placeholder categories.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-line">
-                {serviceLineSummaries.map((line) => (
-                  <div key={line.key} className="px-4 py-4 sm:px-5">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">{line.icon}</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <h3 className="text-xs font-semibold text-fg">{line.label}</h3>
-                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] tabular-nums text-muted">{line.projectCount} projects</span>
-                        </div>
-                        <p className="sr-only">{line.description}</p>
-                        {canOpenTasks && operationalSnapshot.tasks !== null ? (
-                          <div className="mt-3 space-y-1.5" data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[10px] font-medium text-muted">Open task load</span>
-                              <span className="text-xs font-semibold tabular-nums text-fg">{line.openTaskCount}</span>
-                            </div>
-                            <div
-                              className="h-2 overflow-hidden rounded-full bg-line"
-                              role="img"
-                              aria-label={'Open task load for ' + line.label + ': ' + line.openTaskCount + ' tasks. Largest workstream: ' + workstreamOpenTaskMaximum + ' tasks.'}
-                            >
-                              <div
-                                className="h-full rounded-full bg-accent transition-[width] duration-200"
-                                style={{ width: (workstreamOpenTaskMaximum > 0 ? (line.openTaskCount / workstreamOpenTaskMaximum) * 100 : 0) + '%' }}
-                              />
-                            </div>
+                      {commitmentHorizonTotal > 0 ? (
+                        <>
+                          <div className="flex h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Delivery deadlines: ' + overdueHorizonCount + ' overdue, ' + nextSevenDayCommitmentCount + ' due in 7 days, ' + daysEightToThirtyCommitmentCount + ' due in days 8 to 30.'}>
+                            {overdueHorizonCount > 0 ? <span className="h-full bg-danger" style={{ width: overdueHorizonCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
+                            {nextSevenDayCommitmentCount > 0 ? <span className="h-full bg-warning" style={{ width: nextSevenDayCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
+                            {daysEightToThirtyCommitmentCount > 0 ? <span className="h-full bg-info" style={{ width: daysEightToThirtyCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
                           </div>
-                        ) : (
-                          <p className="mt-3 rounded-control border border-line bg-bg px-3 py-2 text-[10px] leading-4 text-muted" role="status">Open task distribution is unavailable for this role or task source.</p>
-                        )}
-                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2" role="group" aria-label={line.label + ' delivery risk signals'}>
-                          {[
-                            { label: 'Tasks in review', compactLabel: 'Review', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.reviewTaskCount : null },
-                            { label: 'Blocked tasks', compactLabel: 'Blocked', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.blockedTaskCount : null },
-                            { label: 'Unassigned tasks', compactLabel: 'Unassigned', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.unassignedTaskCount : null },
-                            { label: 'Overdue tasks', compactLabel: 'Overdue', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.overdueTaskCount : null },
-                            { label: 'Projects with overdue delivery', compactLabel: 'Late delivery', value: operationalSnapshot.projects !== null && canOpenProjects ? line.overdueCommitmentCount : null }
-                          ].map((metric) => (
-                            <div key={metric.label} className="min-w-0 flex-1 basis-[54px]" role="group" aria-label={metric.label + ': ' + (metric.value == null ? 'unavailable' : metric.value)} title={metric.label}>
-                              <p className="text-[10px] leading-4 text-muted">{metric.compactLabel}</p>
-                              <p className={['mt-1 text-sm font-semibold tabular-nums', metric.value == null ? 'text-muted' : metric.label === 'Blocked tasks' && metric.value > 0 || metric.label === 'Overdue tasks' && metric.value > 0 || metric.label === 'Projects with overdue delivery' && metric.value > 0 ? 'text-danger' : 'text-fg'].join(' ')}>{metric.value == null ? '—' : metric.value}</p>
-                            </div>
-                          ))}
-                        </div>
-                        {(!canOpenTasks || operationalSnapshot.tasks === null) ? (
-                          <p className="mt-2 text-[10px] leading-4 text-muted">Task-state breakdown is unavailable for this role or source.</p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {canOpenProjects ? (
-              <div className="border-t border-line px-4 py-3">
-                <Link to="/admin/projects?projects=all" className="inline-flex min-h-8 items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">
-                  Open Project Registry <ArrowUpRight size={13} aria-hidden="true" />
-                </Link>
-              </div>
-            ) : null}
-          </AdminPanel>
-        </div>
-      </section>
-
-      <section className="space-y-3" data-ams-feature-slug="dashboard-delivery-commitments" aria-label="Delivery commitments and resource load">
-        <h2 className="text-sm font-semibold text-fg">Deadlines &amp; team load</h2>
-        <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
-          <AdminPanel
-            className="min-w-0 min-[1100px]:col-span-7"
-            title="Upcoming milestones & delivery deadlines"
-            description="Overdue and upcoming milestones or project targets through 30 days."
-            bodyClassName="p-0"
-            actions={canOpenProjects ? (
-              <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                Open Planning & Delivery <ArrowUpRight size={13} aria-hidden="true" />
-              </Link>
-            ) : undefined}
-          >
-            {operationalSnapshot.projects === null ? (
-              <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned for the current role. Deadlines are not inferred." /></div>
-            ) : rawProjectRows.length === 0 ? (
-              <div className="px-4 py-8" role="status">
-                <p className="text-xs font-semibold text-fg">No project records returned</p>
-                <p className="mt-1 text-xs text-muted">No saved projects to assess.</p>
-              </div>
-            ) : upcomingCommitments.length === 0 ? (
-              <div className="px-4 py-8" role="status">
-                <p className="text-xs font-semibold text-fg">No dated commitments due in the next 30 days</p>
-                <p className="mt-1 text-xs text-muted">No dated open commitments in this window.</p>
-              </div>
-            ) : (
-              <div className="space-y-0">
-                <section
-                  className="space-y-3 border-b border-line bg-bg/50 px-4 py-4 sm:px-5"
-                  data-ams-feature-slug="dashboard-delivery-horizon-visualization"
-                  aria-label="Delivery deadline horizon"
-                >
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <h3 className="text-xs font-semibold text-fg">Deadline horizon</h3>
-                      <p className="mt-1 text-[10px] leading-4 text-muted">All {commitmentHorizonTotal} overdue or upcoming commitments through the next 30 days</p>
-                    </div>
-                    <p className="text-[10px] leading-4 text-muted">The list below shows up to 8 highest-priority deadlines.</p>
-                  </div>
-                  <div
-                    className="flex h-3 overflow-hidden rounded-full bg-line"
-                    role="img"
-                    aria-label={'Deadline distribution: ' + overdueHorizonCount + ' overdue, ' + nextSevenDayCommitmentCount + ' due from today through 7 days, ' + daysEightToThirtyCommitmentCount + ' due in days 8 through 30.'}
-                  >
-                    {overdueHorizonCount > 0 ? <span className="h-full bg-danger" style={{ width: (overdueHorizonCount / commitmentHorizonTotal) * 100 + '%' }} aria-hidden="true" /> : null}
-                    {nextSevenDayCommitmentCount > 0 ? <span className="h-full bg-warning" style={{ width: (nextSevenDayCommitmentCount / commitmentHorizonTotal) * 100 + '%' }} aria-hidden="true" /> : null}
-                    {daysEightToThirtyCommitmentCount > 0 ? <span className="h-full bg-info" style={{ width: (daysEightToThirtyCommitmentCount / commitmentHorizonTotal) * 100 + '%' }} aria-hidden="true" /> : null}
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-3">
-                    {[
-                      { label: 'Overdue', count: overdueHorizonCount, dotClass: 'bg-danger' },
-                      { label: 'Today–7 days', count: nextSevenDayCommitmentCount, dotClass: 'bg-warning' },
-                      { label: 'Days 8–30', count: daysEightToThirtyCommitmentCount, dotClass: 'bg-info' }
-                    ].map((item) => (
-                      <div key={item.label} className="flex min-w-0 items-center justify-between gap-2 rounded-control border border-line bg-panel px-3 py-2">
-                        <span className="flex min-w-0 items-center gap-2 text-[11px] text-muted">
-                          <span className={['h-2 w-2 shrink-0 rounded-full', item.dotClass].join(' ')} aria-hidden="true" />
-                          {item.label}
-                        </span>
-                        <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{item.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-                <div className="divide-y divide-line">
-                {upcomingCommitments.map((item) => {
-                  const overdue = item.dueDate < currentDayKey;
-                  const dueTone: DashboardTone = overdue ? 'danger' : item.dueDate === currentDayKey ? 'warning' : 'info';
-                  const projectHref = item.projectHref;
-                  const projectRouteAvailable = Boolean(projectHref && canOpenProjects && canOpenDashboardRoute(projectHref));
-                  return (
-                    <article key={item.id} className="flex min-w-0 flex-col gap-2 px-4 py-3 sm:px-5 sm:flex-row sm:items-center">
-                      <span className={['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control border', toneClasses[dueTone]].join(' ')}><CalendarDays size={14} aria-hidden="true" /></span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-xs font-semibold text-fg">{item.title}</p>
-                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{item.kind}</span>
-                          <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[dueTone]].join(' ')}>{overdue ? 'Overdue' : item.dueDate === currentDayKey ? 'Due today' : item.dueDate <= nextSevenDaysKey ? 'Due this week' : 'Upcoming'}</span>
-                        </div>
-                        <p className="mt-1 break-words text-[11px] text-muted">{item.projectName}{item.clientName ? ' · ' + item.clientName : ''}{item.serviceCategory ? ' · ' + item.serviceCategory : ''}</p>
-                        <p className="mt-1 text-[11px] text-muted">{item.owner}</p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:gap-1">
-                        <span className={['text-xs tabular-nums', overdue ? 'font-semibold text-danger' : 'font-medium text-fg'].join(' ')}>{formatDashboardDate(item.dueDate)}</span>
-                        {projectRouteAvailable && projectHref ? <Link to={projectHref} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project <ArrowUpRight size={12} aria-hidden="true" /></Link> : null}
-                      </div>
-                    </article>
-                  );
-                })}
-                </div>
-              </div>
-            )}
-            {operationalSnapshot.projects !== null && rawProjectRows.length > 0 && upcomingCommitments.length > 0 && (overdueCommitmentCount || 0) > 0 ? (
-              <div className="border-t border-line px-4 py-3 text-[11px] text-muted">
-                {overdueCommitmentCount} open milestone or project deadline records are past due across active projects.
-              </div>
-            ) : null}
-          </AdminPanel>
-
-          <AdminPanel
-            className="min-w-0 min-[1100px]:col-span-5"
-            title="Assigned work & logged time"
-            description="Open task assignment and recorded time; neither indicates available capacity."
-            bodyClassName="p-4 sm:p-5"
-          >
-            <div className="space-y-4">
-              <div data-ams-feature-slug="dashboard-task-load-by-owner">
-                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
-                  {canOpenTasks ? <Link to="/admin/tasks" className="text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={12} aria-hidden="true" /></Link> : null}
-                </div>
-                {operationalSnapshot.tasks === null ? (
-                  <p className="text-xs text-muted" role="status">Task assignment data unavailable.</p>
-                ) : taskLoadByAssignee.length === 0 ? (
-                  <p className="text-xs text-muted" role="status">No open task assignments in the current source.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {taskLoadByAssignee.map((owner) => (
-                      <div key={owner.label} className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="min-w-0 truncate text-xs font-medium text-fg">{owner.label}</span>
-                          <span className="shrink-0 text-xs tabular-nums text-muted">{owner.total} open</span>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Open task load for ' + owner.label + ': ' + owner.total + ' tasks, compared with the largest visible group of ' + taskLoadByAssigneeMaximum + '.'}>
-                          <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: (owner.total / taskLoadByAssigneeMaximum * 100) + '%' }} />
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{owner.overdue} overdue</span>
-                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{owner.blocked} blocked</span>
-                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{owner.review} in review</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="border-t border-line pt-4" data-ams-feature-slug="dashboard-recorded-time-by-person">
-                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
-                  <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</span>
-                </div>
-                <p className="mb-3 text-[10px] leading-4 text-muted">Recorded hours reflect logged activity.</p>
-                {operationalSnapshot.timeLogs === null ? (
-                  <p className="text-xs text-muted" role="status">Time-log source unavailable.</p>
-                ) : periodTimeRows.length === 0 ? (
-                  <p className="text-xs text-muted" role="status">No time records returned for this reporting scope.</p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {periodTimeRows.map((person) => (
-                      <div key={person.name} className="flex items-center justify-between gap-3">
-                        <span className="min-w-0 truncate text-xs text-fg">{person.name}</span>
-                        <span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(person.minutes / 60)}h {person.minutes % 60}m · {person.entries} entries</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {canOpenTimeLogs ? <Link to="/admin/time-logs" className="mt-3 inline-flex min-h-8 items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={13} aria-hidden="true" /></Link> : null}
-              </div>
-            </div>
-          </AdminPanel>
-        </div>
-      </section>
-
-      <section className="space-y-3" data-ams-feature-slug="dashboard-agency-operating-indicators" aria-label="Agency operating indicators">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-semibold text-fg">Operating snapshot</h2>
-          <p className="text-[10px] text-muted">Current counts, after delivery actions.</p>
-        </div>
-        <AdminMetricStrip
-          slug="dashboard-agency-operating-kpis"
-          className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5"
-          metrics={[
-            {
-              id: 'active-projects', label: 'Projects in delivery',
-              value: canOpenProjects && activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
-              context: !canOpenProjects ? 'Not available to this role' : projectSourceAvailable ? 'Open canonical project records' : dashboardOverview.metrics?.activeProjects != null ? 'Dashboard summary · source detail unavailable' : 'Project source unavailable',
-              sourceLabel: 'Projects',
-              href: projectKpiRoute || undefined,
-              linkLabel: projectKpiRoute ? 'Open project workspace' : undefined,
-              icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-active-projects'
-            },
-            {
-              id: 'open-tasks', label: 'Open tasks',
-              value: canOpenTasks && activeTaskCount != null ? String(activeTaskCount) : '—',
-              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Tasks not yet completed' : 'Task source unavailable',
-              sourceLabel: 'Tasks & Execution',
-              href: taskKpiRoute || undefined,
-              linkLabel: taskKpiRoute ? 'Open task queue' : undefined,
-              icon: <CheckCircle2 size={15} />, toneClassName: 'text-fg', slug: 'dashboard-open-tasks'
-            },
-            {
-              id: 'overdue-tasks', label: 'Overdue tasks',
-              value: canOpenTasks && overdueTaskCount != null ? String(overdueTaskCount) : '—',
-              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Open tasks past due date' : 'Task source unavailable',
-              sourceLabel: 'Tasks & Execution',
-              href: canOpenTasks ? '/admin/tasks?taskscope=due' : undefined,
-              linkLabel: canOpenTasks ? 'Review due work' : undefined,
-              icon: <AlertTriangle size={15} />, toneClassName: overdueTaskCount ? 'text-danger' : 'text-fg', slug: 'dashboard-overdue-tasks'
-            },
-            {
-              id: 'review-queue', label: 'Tasks in review',
-              value: canOpenTasks && reviewTaskCount != null ? String(reviewTaskCount) : '—',
-              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Waiting in the review status' : 'Task source unavailable',
-              sourceLabel: 'Tasks & Execution',
-              href: canOpenTasks ? '/admin/tasks?taskscope=review' : undefined,
-              linkLabel: canOpenTasks ? 'Open review queue' : undefined,
-              icon: <Eye size={15} />, toneClassName: reviewTaskCount ? 'text-warning' : 'text-fg', slug: 'dashboard-review-queue'
-            },
-            {
-              id: 'delivery-dates', label: 'Delivery dates · next 7 days',
-              value: canOpenProjects && operationalSnapshot.projects !== null ? String(nextSevenDayCommitmentCount) : '—',
-              context: !canOpenProjects ? 'Not available to this role' : operationalSnapshot.projects !== null ? 'Open milestones and project targets' : 'Milestone source unavailable',
-              sourceLabel: 'Projects · milestones',
-              href: canOpenProjects ? '/admin/projects?projects=planning-delivery&planningView=milestones' : undefined,
-              linkLabel: canOpenProjects ? 'Review milestones' : undefined,
-              icon: <CalendarDays size={15} />, toneClassName: nextSevenDayCommitmentCount ? 'text-warning' : 'text-fg', slug: 'dashboard-delivery-dates'
-            }
-          ]}
-        />
-      </section>
-
-      <section data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
-        <AdminPanel
-          title="Client delivery focus"
-          description="Ranked by overdue commitments, task risk and next delivery date. Missing task data stays unavailable. Saved company-name grouping is a fallback when a client ID is missing; delivery context only, not a client health, contract or SLA score."
-          bodyClassName="p-0"
-          actions={canOpenProjects ? (
-            <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              Open project delivery <ArrowUpRight size={13} aria-hidden="true" />
-            </Link>
-          ) : undefined}
-        >
-          {!canOpenProjects ? (
-            <div className="p-4"><DashboardUnavailable title="Client-linked delivery unavailable to this role" description="Client-linked project summaries are hidden when the current role cannot open Projects." /></div>
-          ) : operationalSnapshot.projects === null ? (
-            <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The project source did not return records for the current role. Client delivery counts are not inferred." /></div>
-          ) : clientDeliveryFocus.length === 0 ? (
-            <div className="px-4 py-8" role="status">
-              <p className="text-xs font-semibold text-fg">No client-linked delivery records</p>
-              <p className="mt-1 text-xs text-muted">No active project or open task has a saved client link.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-line">
-              {clientDeliveryFocus.map((client) => (
-                <article key={client.key} className="min-w-0 space-y-3 px-4 py-4 sm:px-5">
-                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      {client.clientRecordAvailable && canOpenClientDirectory && client.clientId ? (
-                        <Link to={'/admin/clients/all-clients?client=' + encodeURIComponent(client.clientId)} className="inline-flex items-center gap-1 break-words text-xs font-semibold text-fg hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                          {client.name} <ArrowUpRight size={12} aria-hidden="true" />
-                        </Link>
+                          <div className="grid grid-cols-3 gap-3">
+                            {[
+                              { label: 'Overdue', count: overdueHorizonCount, tone: 'text-danger' },
+                              { label: 'Today–7 days', count: nextSevenDayCommitmentCount, tone: 'text-warning' },
+                              { label: 'Days 8–30', count: daysEightToThirtyCommitmentCount, tone: 'text-muted' }
+                            ].map((item) => (
+                              <div key={item.label} className="min-w-0 border-l border-line pl-2.5">
+                                <p className="text-[10px] leading-4 text-muted">{item.label}</p>
+                                <p className={['mt-0.5 text-base font-semibold tabular-nums', item.tone].join(' ')}>{item.count}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </>
                       ) : (
-                        <h3 className="break-words text-xs font-semibold text-fg">{client.name}</h3>
+                        <p className="text-[11px] text-muted">No dated open commitments in this window.</p>
                       )}
-                      <p className="mt-1 text-[10px] text-muted">{client.clientIdentityLabel}</p>
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {client.serviceLines.map((line) => (
-                          <span key={line} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{line}</span>
-                        ))}
+                    </div>
+                    {upcomingCommitments.length === 0 ? (
+                      <p className="px-4 py-5 text-xs text-muted" role="status">No dated commitments due in the next 30 days.</p>
+                    ) : (
+                      <div className="divide-y divide-line">
+                        {upcomingCommitments.slice(0, 4).map((item) => {
+                          const overdue = item.dueDate < currentDayKey;
+                          const dueTone: DashboardTone = overdue ? 'danger' : item.dueDate === currentDayKey ? 'warning' : 'info';
+                          const projectHref = item.projectHref;
+                          const projectRouteAvailable = Boolean(projectHref && canOpenProjects && canOpenDashboardRoute(projectHref));
+                          return (
+                            <article key={item.id} className="flex min-w-0 items-start gap-3 px-4 py-3">
+                              <span className={['mt-1 h-2.5 w-2.5 shrink-0 rounded-full', dueTone === 'danger' ? 'bg-danger' : dueTone === 'warning' ? 'bg-warning' : 'bg-info'].join(' ')} aria-hidden="true" />
+                              <div className="min-w-0 flex-1">
+                                <p className="break-words text-xs font-semibold text-fg">{item.projectName}</p>
+                                <p className="mt-0.5 break-words text-[10px] text-muted">{item.title} · {item.kind}</p>
+                                <p className="mt-1 text-[10px] text-muted">{item.owner}</p>
+                              </div>
+                              <div className="shrink-0 text-right">
+                                <p className={['text-[10px] tabular-nums', overdue ? 'font-semibold text-danger' : 'text-muted'].join(' ')}>{formatDashboardDate(item.dueDate)}</p>
+                                {projectRouteAvailable && projectHref ? <Link to={projectHref} className="mt-1 inline-flex min-h-7 items-center gap-1 text-[10px] font-medium text-muted hover:text-accent-text">Open <ArrowUpRight size={10} aria-hidden="true" /></Link> : null}
+                              </div>
+                            </article>
+                          );
+                        })}
                       </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
-                      <span className="text-muted">{client.projectCount} active projects</span>
-                      <span className={client.overdueCommitmentCount > 0 ? 'font-medium text-danger' : 'text-muted'}>{client.overdueCommitmentCount} overdue commitments</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 min-[600px]:grid-cols-3 min-[1100px]:grid-cols-5">
-                    {[
-                      { label: 'Overdue tasks', value: client.overdueTaskCount },
-                      { label: 'Blocked tasks', value: client.blockedTaskCount },
-                      { label: 'Unassigned tasks', value: client.unassignedTaskCount },
-                      { label: 'Tasks in review', value: client.reviewTaskCount },
-                      { label: 'Open tasks', value: client.openTaskCount }
-                    ].map((metric) => (
-                      <div key={metric.label} className="rounded-control border border-line bg-bg px-3 py-2">
-                        <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
-                        <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{metric.value == null ? '—' : metric.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex flex-wrap gap-x-3 gap-y-1">
-                      {client.projects.slice(0, 3).map((project, index) => project.href && canOpenDashboardRoute(project.href) ? (
-                        <Link key={project.href} to={project.href} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                          {project.name} <ArrowUpRight size={11} aria-hidden="true" />
-                        </Link>
-                      ) : (
-                        <span key={project.href || project.name + '-' + index} className="inline-flex min-h-8 items-center text-[11px] text-muted">{project.name}</span>
-                      ))}
-                      {client.projects.length > 3 ? <span className="inline-flex min-h-8 items-center text-[11px] text-muted">+{client.projects.length - 3} more projects</span> : null}
-                    </div>
-                    <p className="shrink-0 text-[11px] text-muted">
-                      {client.nextCommitmentDate
-                        ? 'Next due ' + formatDashboardDate(client.nextCommitmentDate)
-                        : client.overdueCommitmentCount > 0
-                          ? 'No future date · overdue work remains'
-                          : 'No dated commitment in the next 30 days'}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </AdminPanel>
-      </section>
+                    )}
+                  </>
+                )}
+              </AdminPanel>
+            </section>
+          </section>
 
-      {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
-        <section data-ams-feature-slug="dashboard-finance-control" aria-label="Finance control summary">
-          <AdminPanel
-            title="Finance control"
-            description={'Current financial snapshot · ' + currentMonthKey + ' · ' + financeCurrency + '. Finance owns posted accounting truth; Dashboard summarizes canonical records.'}
-            bodyClassName="p-4 sm:p-5"
-          >
-            <div className="grid gap-3 min-[900px]:grid-cols-3">
-              {canOpenInvoiceRegister ? (
-                <div className="min-w-0 rounded-control border border-line bg-bg p-4">
-                  <p className="text-xs font-medium text-muted">Cash received this month</p>
-                  <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{cashValueAvailable && liveCashCollected !== null ? formatLiveMoney(liveCashCollected, financeCurrency) : '—'}</p>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">{operationalSnapshot.invoices === null ? 'Invoice/payment source unavailable.' : cashValueAvailable ? 'Payments recorded against issued invoices in the current month.' : 'No issued invoice records are available to confirm a cash total.'}</p>
-                  <Link to="/admin/finance?tab=accounts-receivable" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Accounts Receivable <ArrowUpRight size={12} aria-hidden="true" /></Link>
-                </div>
-              ) : null}
-              {canOpenInvoiceRegister ? (
-                <div className="min-w-0 rounded-control border border-line bg-bg p-4">
-                  <p className="text-xs font-medium text-muted">Outstanding receivables</p>
-                  <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{outstandingValueAvailable && liveOutstanding !== null ? formatLiveMoney(liveOutstanding, financeCurrency) : '—'}</p>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">{operationalSnapshot.invoices === null ? 'Invoice source unavailable.' : outstandingValueAvailable ? 'Current balances on issued invoices; not filtered by reporting period.' : 'No issued invoice records are available to confirm an open balance.'}</p>
-                  <Link to="/admin/finance?tab=accounts-receivable" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open receivables <ArrowUpRight size={12} aria-hidden="true" /></Link>
-                </div>
-              ) : null}
-              {canOpenExpenseRegister ? (
-                <div className="min-w-0 rounded-control border border-line bg-bg p-4">
-                  <p className="text-xs font-medium text-muted">Recorded expenses this month</p>
-                  <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{expensesValueAvailable && liveMonthlyExpenses !== null ? formatLiveMoney(liveMonthlyExpenses, financeCurrency) : '—'}</p>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">{operationalSnapshot.expenses === null ? 'Expense source unavailable.' : expensesValueAvailable ? 'Eligible expenses by recorded date in the current month.' : 'No eligible expense records are available to confirm a monthly total.'}</p>
-                  <Link to="/admin/finance?tab=expenses" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open expenses <ArrowUpRight size={12} aria-hidden="true" /></Link>
-                </div>
-              ) : null}
-            </div>
-          </AdminPanel>
-        </section>
-      ) : null}
-
-      <section data-ams-feature-slug="dashboard-workspace-shortcuts" aria-label="Workspace shortcuts">
-        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-xs font-semibold text-fg">Continue in a workspace</h2>
-          <p className="text-[11px] text-muted">Open the canonical record surface</p>
-        </div>
-        <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5">
-          {[
-            { label: 'Tasks & Execution', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
-            { label: 'Project Planning', icon: <CalendarDays size={14} />, href: '/admin/projects?projects=planning-delivery' },
-            { label: 'Time Logs', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
-            { label: 'Accounts Receivable', icon: <ReceiptText size={14} />, href: '/admin/finance?tab=accounts-receivable' },
-            { label: 'Documents', icon: <FileText size={14} />, href: '/admin/documents' }
-          ].filter((action) => canOpenDashboardRoute(action.href)).map((action) => (
-            <Link key={action.label} to={action.href} className="flex min-h-10 min-w-0 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              <span className="shrink-0 text-muted">{action.icon}</span>
-              <span className="min-w-0 truncate">{action.label}</span>
-              <ArrowUpRight size={12} className="ml-auto shrink-0 text-muted" aria-hidden="true" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-        {canViewAuditLogs && (
-          <section data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
-            <AdminPanel
-              title="Recent activity"
-              description="Latest server-recorded audit events available to your role."
-              bodyClassName="p-0"
-              actions={(
-                <Link to="/admin/settings?tab=audit" className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-accent-text">
-                  View audit log <ArrowUpRight size={13} aria-hidden="true" />
-                </Link>
-              )}
-            >
-              {!dashboardOverview.recentActivityDataAvailable ? (
-                <div className="flex min-h-[130px] flex-col items-center justify-center px-5 py-8 text-center" role="status">
-                  <Clock3 size={19} className="text-muted" aria-hidden="true" />
-                  <p className="mt-3 text-xs font-semibold text-fg">{dashboardOverview.loading ? 'Loading recent activity' : 'Recent activity unavailable'}</p>
-                  <p className="mt-1 max-w-md text-[11px] leading-5 text-muted">
-                    {dashboardOverview.loading
-                      ? 'Waiting for the dashboard service to return recent audit events.'
-                      : 'The dashboard service did not return a usable recent-activity list.'}
-                  </p>
-                </div>
-              ) : (dashboardOverview.recentActivity || []).length === 0 ? (
-                <div className="flex min-h-[130px] flex-col items-center justify-center px-5 py-8 text-center" role="status">
-                  <Clock3 size={19} className="text-muted" aria-hidden="true" />
-                  <p className="mt-3 text-xs font-semibold text-fg">No recent activity available</p>
-                  <p className="mt-1 max-w-md text-[11px] leading-5 text-muted">The activity source returned no audit events for this account.</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-line">
-                  {dashboardOverview.recentActivity.slice(0, 5).map((activity, index) => {
-                    const severity = String(activity.severity || 'info').toLowerCase();
-                    const severityClasses = severity === 'critical'
-                      ? 'border-danger/20 bg-danger/10 text-danger'
-                      : severity === 'warning'
-                        ? 'border-warning/20 bg-warning/10 text-warning'
-                        : 'border-line bg-bg text-muted';
-                    const severityLabel = severity === 'critical' ? 'Critical' : severity === 'warning' ? 'Warning' : 'Info';
-                    const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
-                    const timestampLabel = timestamp && !Number.isNaN(timestamp.getTime())
-                      ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(timestamp) + ' UTC'
-                      : 'Time not recorded';
-                    return (
-                      <article key={String(activity.id || activity.timestamp || index)} className="flex min-w-0 flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
-                            <Clock3 size={14} aria-hidden="true" />
-                          </span>
-                          <div className="min-w-0">
-                            <p className="break-words text-xs font-medium text-fg">{activity.action || 'Recorded audit event'}</p>
-                            <p className="mt-1 break-words text-[11px] leading-5 text-muted">
-                              {activity.actor ? 'By ' + activity.actor : 'By system'} · {timestampLabel}
-                            </p>
+          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Team and client delivery">
+            <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-team-workload" aria-label="Team workload">
+              <AdminPanel title="Team workload" className="h-full" bodyClassName="p-4 sm:p-5">
+                <section data-ams-feature-slug="dashboard-task-load-by-owner" aria-label="Open tasks by owner">
+                  <div className="mb-3 flex items-baseline justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
+                    {canOpenTasks ? <Link to="/admin/tasks" className="text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                  </div>
+                  {!canOpenTasks || operationalSnapshot.tasks === null ? (
+                    <p className="text-[11px] text-muted" role="status">Task assignment data unavailable.</p>
+                  ) : taskLoadByAssignee.length === 0 ? (
+                    <p className="text-[11px] text-muted" role="status">No open task assignments in the current source.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {taskLoadByAssignee.slice(0, 4).map((owner) => (
+                        <div key={owner.label} className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="min-w-0 truncate text-xs font-medium text-fg">{owner.label}</span>
+                            <span className="shrink-0 text-[11px] tabular-nums text-muted">{owner.total} tasks</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Open task load for ' + owner.label + ': ' + owner.total + ' tasks.'}>
+                            <div className="h-full rounded-full bg-accent" style={{ width: owner.total / taskLoadByAssigneeMaximum * 100 + '%' }} />
+                          </div>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted">
+                            <span>{owner.overdue} overdue</span><span>{owner.blocked} blocked</span><span>{owner.review} in review</span>
                           </div>
                         </div>
-                        <span className={'ml-11 inline-flex w-fit shrink-0 items-center rounded-badge border px-2 py-1 text-[10px] font-medium sm:ml-0 ' + severityClasses}>
-                          {severityLabel}
-                        </span>
-                      </article>
-                    );
-                  })}
-                </div>
-              )}
-            </AdminPanel>
-          </section>
-        )}
+                      ))}
+                    </div>
+                  )}
+                </section>
 
+                <section className="mt-5 border-t border-line pt-4" data-ams-feature-slug="dashboard-recorded-time-by-person" aria-label="Recorded time by person">
+                  <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
+                    <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</span>
+                  </div>
+                  <p className="mb-3 text-[10px] leading-4 text-muted">Recorded hours are activity history, not available capacity.</p>
+                  {!canOpenTimeLogs || operationalSnapshot.timeLogs === null ? (
+                    <p className="text-[11px] text-muted" role="status">Time-log source unavailable.</p>
+                  ) : periodTimeRows.length === 0 ? (
+                    <p className="text-[11px] text-muted" role="status">No time records returned for this reporting scope.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {periodTimeRows.slice(0, 4).map((person) => (
+                        <div key={person.name} className="flex items-center justify-between gap-3 border-b border-line pb-2 last:border-b-0">
+                          <span className="min-w-0 truncate text-xs text-fg">{person.name}</span>
+                          <span className="shrink-0 text-[11px] tabular-nums text-muted">{Math.floor(person.minutes / 60)}h {person.minutes % 60}m</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {canOpenTimeLogs ? <Link to="/admin/time-logs" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                </section>
+              </AdminPanel>
+            </section>
+
+            {canOpenProjects ? (
+              <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
+                <AdminPanel
+                  title="Client delivery focus"
+                  className="h-full"
+                  bodyClassName="p-0"
+                  actions={(
+                    <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project delivery <ArrowUpRight size={13} aria-hidden="true" /></Link>
+                  )}
+                >
+                  {operationalSnapshot.projects === null ? (
+                    <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The Projects source did not return records. Client delivery counts are not inferred." /></div>
+                  ) : clientDeliveryFocus.length === 0 ? (
+                    <p className="px-4 py-8 text-center text-xs text-muted" role="status">No client-linked delivery records.</p>
+                  ) : (
+                    <div className="divide-y divide-line">
+                      {clientDeliveryFocus.slice(0, 4).map((client) => (
+                        <article key={client.key} className="space-y-2.5 px-4 py-3.5 sm:px-5">
+                          <div className="flex min-w-0 items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              {client.clientRecordAvailable && canOpenClientDirectory && client.clientId ? (
+                                <Link to={'/admin/clients/all-clients?client=' + encodeURIComponent(client.clientId)} className="break-words text-xs font-semibold text-fg hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{client.name} <ArrowUpRight size={11} aria-hidden="true" /></Link>
+                              ) : (
+                                <p className="break-words text-xs font-semibold text-fg">{client.name}</p>
+                              )}
+                              <p className="mt-0.5 text-[10px] text-muted">{client.serviceLines.join(' · ') || client.clientIdentityLabel}</p>
+                            </div>
+                            <span className="shrink-0 text-[10px] text-muted">{client.projectCount} active projects</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 min-[600px]:grid-cols-5">
+                            {[
+                              { label: 'Overdue tasks', value: client.overdueTaskCount },
+                              { label: 'Blocked tasks', value: client.blockedTaskCount },
+                              { label: 'Unassigned tasks', value: client.unassignedTaskCount },
+                              { label: 'Tasks in review', value: client.reviewTaskCount },
+                              { label: 'Open tasks', value: client.openTaskCount }
+                            ].map((metric) => (
+                              <div key={metric.label} className="min-w-0 border-l border-line pl-2">
+                                <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
+                                <p className={['mt-0.5 text-sm font-semibold tabular-nums', metric.value == null ? 'text-muted' : (metric.label === 'Overdue tasks' || metric.label === 'Blocked tasks') && metric.value > 0 ? 'text-danger' : 'text-fg'].join(' ')}>{metric.value == null ? '—' : metric.value}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                            <div className="flex min-w-0 flex-wrap gap-x-3 gap-y-1">
+                              {client.projects.slice(0, 2).map((project, index) => project.href && canOpenDashboardRoute(project.href) ? (
+                                <Link key={project.href} to={project.href} className="inline-flex min-h-7 items-center gap-1 text-[10px] font-medium text-muted hover:text-accent-text">{project.name} <ArrowUpRight size={10} aria-hidden="true" /></Link>
+                              ) : (
+                                <span key={project.href || project.name + '-' + index} className="inline-flex min-h-7 items-center text-[10px] text-muted">{project.name}</span>
+                              ))}
+                            </div>
+                            <span className="text-[10px] tabular-nums text-muted">{client.nextCommitmentDate ? 'Next due ' + formatDashboardDate(client.nextCommitmentDate) : client.overdueCommitmentCount > 0 ? 'Overdue commitments remain' : 'No dated commitment in 30 days'}</span>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </AdminPanel>
+              </section>
+            ) : null}
+          </section>
+
+          <section className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12" aria-label="Recent activity and shortcuts">
+            {canViewAuditLogs ? (
+              <section className="min-w-0 min-[1100px]:col-span-8" data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
+                <AdminPanel
+                  title="Recent activity"
+                  className="h-full"
+                  bodyClassName="p-0"
+                  actions={(
+                    <Link to="/admin/settings?tab=audit" className="inline-flex min-h-9 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                  )}
+                >
+                  {!dashboardOverview.recentActivityDataAvailable ? (
+                    <p className="px-4 py-5 text-[11px] text-muted" role="status">{dashboardOverview.loading ? 'Loading recent activity.' : 'Recent activity unavailable.'}</p>
+                  ) : (dashboardOverview.recentActivity || []).length === 0 ? (
+                    <p className="px-4 py-5 text-[11px] text-muted" role="status">No recent audit activity was returned.</p>
+                  ) : (
+                    <div className="divide-y divide-line">
+                      {dashboardOverview.recentActivity.slice(0, 5).map((activity, index) => {
+                        const severity = String(activity.severity || 'info').toLowerCase();
+                        const severityClasses = severity === 'critical'
+                          ? 'border-danger/20 bg-danger/10 text-danger'
+                          : severity === 'warning'
+                            ? 'border-warning/20 bg-warning/10 text-warning'
+                            : 'border-line bg-bg text-muted';
+                        const severityLabel = severity === 'critical' ? 'Critical' : severity === 'warning' ? 'Warning' : 'Info';
+                        const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
+                        const timestampLabel = timestamp && !Number.isNaN(timestamp.getTime())
+                          ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(timestamp) + ' UTC'
+                          : 'Time not recorded';
+                        return (
+                          <article key={String(activity.id || activity.timestamp || index)} className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted"><Clock3 size={14} aria-hidden="true" /></span>
+                              <div className="min-w-0">
+                                <p className="break-words text-xs font-medium text-fg">{activity.action || 'Recorded audit event'}</p>
+                                <p className="mt-0.5 break-words text-[10px] text-muted">{activity.actor ? 'By ' + activity.actor : 'By system'} · {timestampLabel}</p>
+                              </div>
+                            </div>
+                            <span className={'shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium ' + severityClasses}>{severityLabel}</span>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )}
+                </AdminPanel>
+              </section>
+            ) : null}
+
+            <section className={['min-w-0', canViewAuditLogs ? 'min-[1100px]:col-span-4' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-workspace-shortcuts" aria-label="Workspace shortcuts">
+              <AdminPanel title="Workspaces" className="h-full" bodyClassName="p-4">
+                <div className="space-y-1.5">
+                  {[
+                    { label: 'Finance', icon: <CircleDollarSign size={14} />, href: '/admin/finance?tab=accounts-receivable' },
+                    { label: 'Projects', icon: <FolderKanban size={14} />, href: '/admin/projects?projects=all' },
+                    { label: 'Tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
+                    { label: 'Clients', icon: <Users size={14} />, href: '/admin/clients/all-clients' },
+                    { label: 'Documents', icon: <FileText size={14} />, href: '/admin/documents' }
+                  ].filter((action) => canOpenDashboardRoute(action.href)).map((action) => (
+                    <Link key={action.label} to={action.href} className="flex min-h-9 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      <span className="shrink-0 text-muted">{action.icon}</span><span>{action.label}</span><ArrowUpRight size={11} className="ml-auto text-muted" aria-hidden="true" />
+                    </Link>
+                  ))}
+                </div>
+              </AdminPanel>
+            </section>
+          </section>
         </>
       ) : view === 'performance' ? (
         <PerformanceView

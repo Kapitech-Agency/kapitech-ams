@@ -105,27 +105,29 @@ test('Client exports use one scope-aware CSV handler and preserve missing billed
   assert.match(exportHandler, /showToast\(statusScope === 'lead'/);
 });
 
-test('Dashboard agency workboard places delivery decisions before secondary navigation', async () => {
+test('Dashboard Overview prioritizes Finance and Projects as distinct cards', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("{view === 'overview' ? (");
   const end = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, end);
   const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
-  const exceptions = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
-  const delivery = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const projects = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
+  const progress = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"');
+  const attention = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
+  const taskQueue = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const commitments = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
-  const indicators = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  const team = overview.indexOf('data-ams-feature-slug="dashboard-team-workload"');
   const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
-  const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
-  assert.ok(scope >= 0 && exceptions > scope && delivery > exceptions && commitments > delivery);
-  assert.ok(indicators > commitments && clientFocus > indicators && finance > clientFocus && shortcuts > finance);
-  assert.ok(activity > shortcuts);
-  assert.ok(overview.includes("id: 'open-tasks', label: 'Open tasks'"));
-  assert.ok(overview.includes("id: 'overdue-tasks', label: 'Overdue tasks'"));
-  assert.ok(overview.includes("id: 'review-queue', label: 'Tasks in review'"));
-  assert.ok(overview.includes("label: 'Delivery dates · next 7 days'"));
+  const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
+  assert.ok(scope >= 0 && finance > scope && projects > finance);
+  assert.ok(progress > projects && attention > progress);
+  assert.ok(taskQueue > attention && commitments > taskQueue);
+  assert.ok(team > commitments && clientFocus > team && activity > clientFocus && shortcuts > activity);
+  assert.equal(overview.includes('Priority 01'), false);
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false);
+  assert.ok(overview.includes('<TrendChart') && overview.includes('<DonutChart'));
   assert.ok(overview.includes('Cash received this month'));
   assert.ok(overview.includes('Outstanding receivables'));
 });

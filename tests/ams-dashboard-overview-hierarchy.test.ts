@@ -7,101 +7,53 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Dashboard Overview is an agency delivery workboard with canonical task, service-line, milestone, resource and Finance surfaces', async () => {
+test('Dashboard Overview leads with Finance and Projects cards and groups agency operations visually', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const performanceStart = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   assert.ok(overviewStart >= 0 && performanceStart > overviewStart, 'Dashboard overview branch should be identifiable');
   const overview = dashboard.slice(overviewStart, performanceStart);
 
-  const scopeStart = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
-  const attentionCenterStart = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
-  const exceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
-  const inboxTriageStart = overview.indexOf('data-ams-feature-slug="dashboard-inbox-triage"');
-  const indicatorsStart = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
-  const deliveryDeskStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
-  const commitmentsStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
-  const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
-  const clientFocusStart = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const shortcutsStart = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
-  const activityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
+  const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const portfolio = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
+  const projectProgress = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"');
+  const attention = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
+  const taskQueue = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const deadlines = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const team = overview.indexOf('data-ams-feature-slug="dashboard-team-workload"');
+  const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
+  const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
 
-  assert.ok(scopeStart >= 0 && attentionCenterStart > scopeStart, 'The page must define reporting semantics before the attention queue.');
-  assert.ok(exceptionsStart > attentionCenterStart, 'Cross-module exceptions sit inside the Needs attention workspace.');
-  assert.ok(inboxTriageStart > exceptionsStart && deliveryDeskStart > inboxTriageStart, 'Incoming triage stays in Needs attention before the active-delivery region.');
-  const attentionCenter = overview.slice(attentionCenterStart, deliveryDeskStart);
-  assert.ok(attentionCenter.includes('Needs attention'));
-  assert.ok(attentionCenter.includes("min-[1100px]:col-span-6"));
-  assert.ok(attentionCenter.includes("min-[1100px]:col-span-12"), 'Exception queue uses full width when Inbox is not available to the role.');
-  assert.ok(attentionCenter.includes('dashboard-priority-exceptions'));
-  assert.ok(attentionCenter.includes('dashboard-inbox-triage'));
-  assert.ok(overview.includes('Current operational queues'));
-  assert.ok(overview.includes('Dashboard source scope'));
-  assert.equal(overview.includes('grid grid-cols-1 gap-2 border-t border-line pt-3 sm:grid-cols-2 min-[1100px]:grid-cols-4'), false, 'Reporting scope should not be rendered as four nested text cards.');
-  assert.ok(overview.includes('Deadlines: overdue + next 30 days'));
-  assert.ok(overview.includes('Finance: current month + receivables'));
-  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.ok(commitmentsStart > deliveryDeskStart, 'Project milestone/deadline and resource views follow the primary task queue.');
-  assert.ok(indicatorsStart > commitmentsStart, 'The supporting operating snapshot follows the actionable delivery and deadline regions.');
-  assert.ok(clientFocusStart > commitmentsStart, 'Client delivery focus follows delivery commitments and resource context.');
-  assert.ok(financeStart > clientFocusStart, 'Client delivery context precedes the canonical Finance summary.');
-  assert.ok(shortcutsStart > financeStart, 'Workspace shortcuts follow actionable source summaries.');
-  assert.ok(activityStart > shortcutsStart, 'Recent audit activity remains the final overview section.');
+  assert.ok(scope >= 0 && finance > scope && portfolio > finance, 'Finance and Projects must be the first main cards after scope.');
+  assert.ok(projectProgress > portfolio && attention > projectProgress, 'Project progress precedes the compact exception card.');
+  assert.ok(taskQueue > attention && deadlines > taskQueue, 'Task execution and deadlines follow the Finance/Project lead cards.');
+  assert.ok(team > deadlines && clientFocus > team, 'Team and client delivery context remain secondary.');
+  assert.ok(activity > clientFocus && shortcuts > activity, 'Audit activity and shortcuts stay at the bottom of the overview.');
+  assert.equal(overview.includes('Priority 01'), false, 'The visual hierarchy must not use invented rank numbering.');
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false, 'Remove the redundant generic KPI strip.');
 
-  for (const slug of [
-    'dashboard-open-tasks', 'dashboard-overdue-tasks', 'dashboard-review-queue',
-    'dashboard-delivery-dates', 'dashboard-task-load-by-owner',
-    'dashboard-recorded-time-by-person', 'dashboard-workspace-shortcuts'
-  ]) assert.ok(overview.includes(slug), 'Missing agency operating surface: ' + slug);
-
-  assert.ok(overview.includes('Creative & IT workstreams'));
-  assert.ok(overview.includes('serviceCategory'));
-  assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
-  assert.ok(dashboard.includes("reviewTaskCount: lineTasks.filter((task) => task.status === 'review' || task.status === 'in_review').length"));
-  assert.ok(dashboard.includes("blockedTaskCount: lineTasks.filter((task) => task.blocked).length"));
-  assert.ok(dashboard.includes("unassignedTaskCount: lineTasks.filter((task) => !task.assigned).length"));
-  assert.ok(dashboard.includes("overdueTaskCount: lineTasks.filter((task) => dashboardTaskIsOverdue(task, currentDayKey)).length"));
-  assert.ok(overview.includes("label: 'Tasks in review'"));
-  assert.ok(overview.includes("label: 'Blocked tasks'"));
-  assert.ok(overview.includes("label: 'Unassigned tasks'"));
-  assert.ok(overview.includes("label: 'Overdue tasks'"));
-  assert.ok(overview.includes("!canOpenProjects ? ("));
-  assert.ok(overview.includes("operationalSnapshot.tasks !== null && canOpenTasks ? line.reviewTaskCount : null"));
-  assert.ok(overview.includes('Task-state breakdown is unavailable for this role or source.'));
-  assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
-  assert.ok(overview.includes('Client delivery focus'));
-  assert.ok(overview.includes('Saved company-name grouping is a fallback'));
-  assert.ok(overview.includes('not a client health, contract or SLA score'));
-  assert.ok(overview.includes('No client-linked delivery records'));
-  assert.ok(overview.includes('Open tasks by owner'));
-  assert.ok(overview.includes('Recorded time'));
-  assert.ok(overview.includes('Finance control'));
+  assert.ok(overview.includes('<TrendChart'), 'Finance must use a source-backed financial trend.');
+  assert.ok(overview.includes('primaryLabel="Issued invoices"'));
+  assert.ok(overview.includes('secondaryLabel="Recorded expenses"'));
+  assert.ok(overview.includes('<DonutChart'), 'Projects must visualize the current portfolio state.');
+  assert.ok(overview.includes('Creative & IT workload'));
+  assert.ok(dashboard.includes('const getDashboardSavedProgress'));
+  assert.ok(overview.includes('getDashboardSavedProgress(project)'), 'Project bars must use only saved progress data.');
+  assert.ok(overview.includes('Progress not recorded'), 'Missing progress must not be fabricated.');
   assert.ok(overview.includes('Cash received this month'));
   assert.ok(overview.includes('Outstanding receivables'));
-  assert.ok(overview.includes('Task source unavailable'));
-  assert.ok(overview.includes('Milestone source unavailable'));
-  assert.ok(overview.includes('No mapped destination'));
-  assert.ok(overview.includes('attentionSeveritySummary'));
-  assert.ok(overview.includes("overviewAttentionItems.slice(0, 5).map"));
-  assert.ok(overview.includes('Showing 5 of {overviewAttentionItems.length} exceptions'));
-  assert.ok(overview.includes('grid grid-cols-2 gap-2 sm:grid-cols-4'));
-  assert.ok(overview.includes("label: 'Total', count: attentionSeveritySummary.total"));
-  assert.ok(overview.includes("aria-label={'New inquiries: ' + inboxTriageSummary.newCount + ' out of ' + inboxTriageSummary.openCount + ' open records.'}"));
-  assert.ok(overview.includes('min-h-[68px]'));
-
-  assert.equal(overview.includes('title="Invoices vs expenses"'), false,
-    'Overview should not repeat the financial trend that belongs in Analytics.');
-  assert.equal(overview.includes('title="Delivery & pacing"'), false,
-    'A generic no-risk portfolio ratio is not a substitute for task and milestone operations.');
-  assert.equal(overview.includes('title="Team capacity"'), false,
-    'Do not show a hardcoded unavailable placeholder when task and time sources are available.');
-  assert.equal(overview.includes('title="Active projects"'), false,
-    'Dashboard should summarize upcoming commitments instead of duplicating the full Project Registry.');
-
-  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.ok(overview.includes('neither indicates available capacity.'));
-  assert.ok(dashboard.includes("const cashCollectedMetric = liveCashCollected") || dashboard.includes("const liveCashCollected = operationalSnapshot.invoices === null"));
+  assert.ok(overview.includes('Recorded expenses this month'));
+  assert.ok(overview.includes('Task queue unavailable'));
+  assert.ok(overview.includes('Time-log source unavailable'));
+  assert.ok(overview.includes('dashboard-task-load-by-owner'));
+  assert.ok(overview.includes('dashboard-recorded-time-by-person'));
+  assert.ok(overview.includes('dashboard-inbox-triage'));
+  assert.ok(overview.includes('dashboard-priority-exceptions'));
+  assert.ok(dashboard.includes('api.tasks.getAll()'));
+  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.doesNotMatch(overview, /sampleProjects|demoProject|fakeFinance|const fake/i);
 });
 
 
@@ -606,17 +558,22 @@ test('Dashboard Overview prioritizes attention and delivery actions before the s
 });
 
 
-test('Dashboard priority exceptions sort urgent items before warning and informational items', async () => {
+test('Dashboard exceptions sort by severity without artificial priority numbering', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /const dashboardAttentionSeverityRank = \(severity: unknown\) =>/);
   assert.match(dashboard, /if \(normalized === 'danger' \|\| normalized === 'critical'\) return 0;/);
   assert.match(dashboard, /if \(normalized === 'warning'\) return 1;/);
   assert.match(dashboard, /return \[\.\.\.allowedItems\]\.sort\(\(left, right\) =>\s*dashboardAttentionSeverityRank\(left\.severity\) - dashboardAttentionSeverityRank\(right\.severity\)/);
-  const dashboardAttentionStart = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"');
-  const dashboardAttentionEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"', dashboardAttentionStart);
-  const attention = dashboard.slice(dashboardAttentionStart, dashboardAttentionEnd);
-  assert.ok(attention.indexOf("metric.label === 'Urgent' && metric.count > 0 ? 'text-2xl'") >= 0);
-  assert.ok(attention.includes("urgent ? 'border-danger pl-3'"));
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const attentionStart = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
+  const attentionEnd = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"', attentionStart);
+  const attention = overview.slice(attentionStart, attentionEnd);
+  assert.ok(attentionStart >= 0 && attentionEnd > attentionStart);
+  assert.ok(attention.includes('attentionSeveritySummary.urgent > 0'));
+  assert.ok(attention.includes('border-danger/25 bg-danger/10'));
+  assert.equal(overview.includes('Priority 01'), false);
 });
 
 
