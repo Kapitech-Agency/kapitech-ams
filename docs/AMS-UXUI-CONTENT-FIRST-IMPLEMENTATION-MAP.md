@@ -968,3 +968,13 @@ Status: Source/test verified on exact SHA [8824ffa1](https://github.com/Kapitech
 - **Evidence:** implementation [127c4e20](https://github.com/Kapitech-Agency/kapitech-ams/commit/127c4e2076e2b3aab1f443f8d8846c9ed058fa0e); regression correction [d283674f](https://github.com/Kapitech-Agency/kapitech-ams/commit/d283674f8b027f4fec7b973ed8345b8a967e6946).
 - **Validation:** Quality Gate [40196509952](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40196509952) passed on exact source/test SHA `d283674f8b027f4fec7b973ed8345b8a967e6946`, including TypeScript, regression suite and production build. AMS CI [40196510099](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40196510099) failed at the existing high `body-parser@1.20.6` dependency audit advisory GHSA-27r3-jxmh-p828 after type check, PostgreSQL migrations, security regression and PostgreSQL integration passed. Downstream build/package/HTTP smoke steps were skipped.
 - **Next:** continue visual-first refinement of Client Delivery Focus, then user-review the Dashboard before deeper workflow work. Stage 5 visual and accessibility checks remain pending.
+
+## Dashboard Overview · Deadline-horizon label scope correction · 25 October 2026
+
+**Status:** Source/test verified on exact SHA [58ce42bb](https://github.com/Kapitech-Agency/kapitech-ams/commit/58ce42bb69d06b9d0242b403558c8ce6a015b7de). Browser/Stage 5 review remains NOT VERIFIED.
+
+- The overdue bucket includes all past-due commitments, not merely those overdue within the last 30 days. Future buckets include today through day 7 and days 8–30.
+- Updated scope label: “All overdue or upcoming commitments through the next 30 days.” The bar aggregates the full source-derived set; the record preview remains capped at eight.
+- Evidence: deadline graphic [127c4e20](https://github.com/Kapitech-Agency/kapitech-ams/commit/127c4e2076e2b3aab1f443f8d8846c9ed058fa0e), label/test correction [58ce42bb](https://github.com/Kapitech-Agency/kapitech-ams/commit/58ce42bb69d06b9d0242b403558c8ce6a015b7de).
+- Validation: Quality Gate [40196767458](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40196767458) passed on exact source/test SHA `58ce42bb69d06b9d0242b403558c8ce6a015b7de`, including TypeScript, regression suite and production build. AMS CI [40196767409](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40196767409) failed at the existing high `body-parser@1.20.6` dependency audit advisory GHSA-27r3-jxmh-p828 after type check, PostgreSQL migrations, security regression and PostgreSQL integration passed. Downstream build/package/HTTP smoke steps were skipped.
+- Next: continue visual-first refinement of Client Delivery Focus before deeper workflow work.
