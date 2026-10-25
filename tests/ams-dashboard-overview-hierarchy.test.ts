@@ -563,7 +563,7 @@ test('Dashboard Needs attention panels use balanced source-backed visual summari
   assert.match(attention, /attentionSeveritySummary/);
   assert.match(attention, /New inquiries/);
   assert.match(attention, /inboxTriageSummary\.openCount/);
-  assert.match(attention, /min-h-\[78px\]/);
+  assert.match(attention, /min-h-\[68px\]/);
 });
 
 test('Dashboard Overview places the canonical exception queue before agency indicators and delivery work', async () => {
