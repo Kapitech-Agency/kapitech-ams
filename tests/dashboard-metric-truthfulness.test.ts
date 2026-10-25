@@ -25,7 +25,10 @@ test('Dashboard Overview active project register excludes completed and archived
 });
 
 test('Dashboard does not substitute monthly revenue for cash collected', () => {
-  assert.ok(dashboard.includes('const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? liveCashCollected;'));
+  assert.ok(dashboard.includes('const cashCollectedMetric = liveCashCollected;'));
+  assert.ok(dashboard.includes("context: liveCashCollected !== null ? 'Invoice payments recorded this month' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',"));
+  assert.doesNotMatch(dashboard, /cashCollectedMetric = dashboardOverview\.financials\?\.cashCollected/);
+  assert.ok(dashboard.includes('financials.cashCollected to monthly revenue'), 'The API cash alias must not be treated as a true payment total.');
   const start = dashboard.indexOf("id: 'cash-collected', label: 'Cash collected this month'");
   const end = dashboard.indexOf("id: 'outstanding', label: 'Outstanding invoices'", start);
   assert.ok(start >= 0 && end > start, 'Cash KPI should be separate from receivables.');
@@ -76,7 +79,10 @@ test('Dashboard financial trends do not treat records in another currency as a z
   assert.ok(dashboard.includes("const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0"));
   assert.ok(dashboard.includes("financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0"));
   assert.ok(dashboard.includes('A zero-value trend is not inferred from another currency.'));
-  assert.ok(dashboard.includes('const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? liveCashCollected;'));
+  assert.ok(dashboard.includes('const cashCollectedMetric = liveCashCollected;'));
+  assert.ok(dashboard.includes("context: liveCashCollected !== null ? 'Invoice payments recorded this month' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',"));
+  assert.doesNotMatch(dashboard, /cashCollectedMetric = dashboardOverview\.financials\?\.cashCollected/);
+  assert.ok(dashboard.includes('financials.cashCollected to monthly revenue'), 'The API cash alias must not be treated as a true payment total.');
 });
 
 test('Dashboard Overview decision KPIs show their canonical source and only authorized drill-downs', () => {
