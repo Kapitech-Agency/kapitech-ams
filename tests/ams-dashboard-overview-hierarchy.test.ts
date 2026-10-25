@@ -20,6 +20,7 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   const deliveryDeskStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const commitmentsStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
   const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
+  const clientFocusStart = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
   const shortcutsStart = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
   const activityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
 
@@ -27,7 +28,8 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(indicatorsStart > exceptionsStart, 'Agency work indicators follow the exception queue.');
   assert.ok(deliveryDeskStart > indicatorsStart, 'Task-level delivery work follows the decision indicators.');
   assert.ok(commitmentsStart > deliveryDeskStart, 'Project milestone/deadline and resource views follow the primary task queue.');
-  assert.ok(financeStart > commitmentsStart, 'Finance control remains a separate canonical summary.');
+  assert.ok(clientFocusStart > commitmentsStart, 'Client delivery focus follows delivery commitments and resource context.');
+  assert.ok(financeStart > clientFocusStart, 'Client delivery context precedes the canonical Finance summary.');
   assert.ok(shortcutsStart > financeStart, 'Workspace shortcuts follow actionable source summaries.');
   assert.ok(activityStart > shortcutsStart, 'Recent audit activity remains the final overview section.');
 
@@ -52,6 +54,10 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes("operationalSnapshot.tasks !== null && canOpenTasks ? line.reviewTaskCount : null"));
   assert.ok(overview.includes('Task-state breakdown is unavailable for this role or source.'));
   assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
+  assert.ok(overview.includes('Client delivery focus'));
+  assert.ok(overview.includes('grouped by saved client name'));
+  assert.ok(overview.includes('not a client health, contract or SLA score'));
+  assert.ok(overview.includes('No client-linked delivery records'));
   assert.ok(overview.includes('Open tasks by owner'));
   assert.ok(overview.includes('Recorded time'));
   assert.ok(overview.includes('Finance control'));
@@ -75,6 +81,26 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(dashboard.includes("const cashCollectedMetric = liveCashCollected") || dashboard.includes("const liveCashCollected = operationalSnapshot.invoices === null"));
 });
 
+
+test('Dashboard Overview client delivery focus groups saved client relationships and preserves source boundaries', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
+  const end = dashboard.indexOf('{(canOpenInvoiceRegister || canOpenExpenseRegister) ? (', start);
+  assert.ok(start >= 0 && end > start, 'Client delivery focus should be a separate bounded source summary.');
+  const clientFocus = dashboard.slice(start, end);
+  assert.ok(dashboard.includes('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>'));
+  assert.ok(dashboard.includes("project.clientCompany || project.clientName || project.client || ''"));
+  assert.ok(dashboard.includes("task.clientName || projectClientById.get(task.projectId) || ''"));
+  assert.ok(clientFocus.includes('active projects'));
+  assert.ok(clientFocus.includes('overdue commitments'));
+  assert.ok(clientFocus.includes('Tasks in review'));
+  assert.ok(clientFocus.includes('Blocked tasks'));
+  assert.ok(clientFocus.includes('Overdue tasks'));
+  assert.ok(clientFocus.includes('canOpenDashboardRoute(project.href)'));
+  assert.ok(clientFocus.includes('not a client health, contract or SLA score'));
+  assert.ok(clientFocus.includes('No future date · overdue work remains'));
+  assert.ok(clientFocus.includes('No dated commitment in the next 30 days'));
+});
 
 test('Dashboard Overview Finance controls link to canonical ledgers only when route access allows them', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');

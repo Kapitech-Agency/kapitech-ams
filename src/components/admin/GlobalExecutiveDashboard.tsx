@@ -62,6 +62,21 @@ type DashboardCommitment = {
   owner: string;
 };
 
+type DashboardClientDeliveryFocus = {
+  key: string;
+  name: string;
+  projectCount: number;
+  projects: Array<{ name: string; href: string }>;
+  serviceLines: string[];
+  openTaskCount: number | null;
+  reviewTaskCount: number | null;
+  blockedTaskCount: number | null;
+  unassignedTaskCount: number | null;
+  overdueTaskCount: number | null;
+  overdueCommitmentCount: number;
+  nextCommitmentDate: string | null;
+};
+
 type DashboardRecentActivity = {
   id?: string;
   timestamp?: string;
@@ -1135,6 +1150,120 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     });
   }, [activeProjectRows, currentDayKey, nextThirtyDaysKey, operationalSnapshot.projects]);
 
+  const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() => {
+    if (!canOpenProjects || operationalSnapshot.projects === null) return [];
+    const taskMetricsAvailable = canOpenTasks && operationalSnapshot.tasks !== null;
+    type ClientAccumulator = DashboardClientDeliveryFocus & {
+      projectIds: Set<string>;
+      projectHrefs: Set<string>;
+      serviceLineKeys: Set<string>;
+    };
+    const groups = new Map<string, ClientAccumulator>();
+    const projectClientById = new Map<string, string>();
+
+    const ensureClient = (rawName: unknown): ClientAccumulator | null => {
+      const name = String(rawName || '').trim();
+      if (!name) return null;
+      const key = name.toLocaleLowerCase();
+      const current = groups.get(key);
+      if (current) return current;
+      const created: ClientAccumulator = {
+        key,
+        name,
+        projectCount: 0,
+        projects: [],
+        serviceLines: [],
+        openTaskCount: taskMetricsAvailable ? 0 : null,
+        reviewTaskCount: taskMetricsAvailable ? 0 : null,
+        blockedTaskCount: taskMetricsAvailable ? 0 : null,
+        unassignedTaskCount: taskMetricsAvailable ? 0 : null,
+        overdueTaskCount: taskMetricsAvailable ? 0 : null,
+        overdueCommitmentCount: 0,
+        nextCommitmentDate: null,
+        projectIds: new Set<string>(),
+        projectHrefs: new Set<string>(),
+        serviceLineKeys: new Set<string>()
+      };
+      groups.set(key, created);
+      return created;
+    };
+
+    const serviceLineLabel = (line: string) => line === 'creative'
+      ? 'Creative & Content'
+      : line === 'technology'
+        ? 'Web & IT Development'
+        : 'Other / Unclassified';
+
+    for (const project of activeProjectRows) {
+      const clientName = String(project.clientCompany || project.clientName || project.client || '').trim();
+      const group = ensureClient(clientName);
+      if (!group) continue;
+
+      const projectId = String(project.id || '');
+      const projectName = String(project.name || project.title || 'Untitled project');
+      const projectSlug = String(project.slug || projectName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''));
+      if (projectId) {
+        group.projectIds.add(projectId);
+        projectClientById.set(projectId, group.name);
+      }
+      group.projectCount = group.projectIds.size;
+      const href = '/admin/projects?projects=sprint&project=' + encodeURIComponent(projectSlug);
+      if (!group.projectHrefs.has(href)) {
+        group.projectHrefs.add(href);
+        group.projects.push({ name: projectName, href });
+      }
+      group.serviceLineKeys.add(serviceLineLabel(getDashboardServiceLine(project)));
+    }
+
+    if (taskMetricsAvailable) {
+      for (const task of activeDashboardTasks) {
+        const clientName = String(task.clientName || projectClientById.get(task.projectId) || '').trim();
+        const group = ensureClient(clientName);
+        if (!group) continue;
+        group.openTaskCount = (group.openTaskCount ?? 0) + 1;
+        group.reviewTaskCount = (group.reviewTaskCount ?? 0) + (task.status === 'review' || task.status === 'in_review' ? 1 : 0);
+        group.blockedTaskCount = (group.blockedTaskCount ?? 0) + (task.blocked ? 1 : 0);
+        group.unassignedTaskCount = (group.unassignedTaskCount ?? 0) + (!task.assigned ? 1 : 0);
+        group.overdueTaskCount = (group.overdueTaskCount ?? 0) + (dashboardTaskIsOverdue(task, currentDayKey) ? 1 : 0);
+        group.serviceLineKeys.add(serviceLineLabel(task.serviceLine));
+      }
+    }
+
+    for (const commitment of allUpcomingCommitments) {
+      const group = ensureClient(commitment.clientName);
+      if (!group) continue;
+      if (commitment.dueDate < currentDayKey) {
+        group.overdueCommitmentCount += 1;
+      } else if (!group.nextCommitmentDate || commitment.dueDate < group.nextCommitmentDate) {
+        group.nextCommitmentDate = commitment.dueDate;
+      }
+    }
+
+    return Array.from(groups.values())
+      .map((group) => ({
+        key: group.key,
+        name: group.name,
+        projectCount: group.projectCount,
+        projects: group.projects,
+        serviceLines: Array.from(group.serviceLineKeys),
+        openTaskCount: group.openTaskCount,
+        reviewTaskCount: group.reviewTaskCount,
+        blockedTaskCount: group.blockedTaskCount,
+        unassignedTaskCount: group.unassignedTaskCount,
+        overdueTaskCount: group.overdueTaskCount,
+        overdueCommitmentCount: group.overdueCommitmentCount,
+        nextCommitmentDate: group.nextCommitmentDate
+      }))
+      .sort((left, right) =>
+        right.overdueCommitmentCount - left.overdueCommitmentCount ||
+        (right.overdueTaskCount ?? -1) - (left.overdueTaskCount ?? -1) ||
+        (right.blockedTaskCount ?? -1) - (left.blockedTaskCount ?? -1) ||
+        right.projectCount - left.projectCount ||
+        left.name.localeCompare(right.name)
+      )
+      .slice(0, 5);
+  }, [activeDashboardTasks, activeProjectRows, allUpcomingCommitments, canOpenProjects, canOpenTasks, currentDayKey, operationalSnapshot.projects, operationalSnapshot.tasks]);
+
   const upcomingCommitments = allUpcomingCommitments.slice(0, 8);
   const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
   const overdueCommitmentCount = operationalSnapshot.projects === null ? null : activeProjectRows.reduce((total: number, project: any) => {
@@ -1708,6 +1837,81 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </div>
           </AdminPanel>
         </div>
+      </section>
+
+      <section data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
+        <AdminPanel
+          title="Client delivery focus"
+          description="Current project and task workload grouped by saved client name. This is delivery context, not a client health, contract or SLA score."
+          bodyClassName="p-0"
+          actions={canOpenProjects ? (
+            <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+              Open project delivery <ArrowUpRight size={13} aria-hidden="true" />
+            </Link>
+          ) : undefined}
+        >
+          {!canOpenProjects ? (
+            <div className="p-4"><DashboardUnavailable title="Client-linked delivery unavailable to this role" description="Client-linked project summaries are hidden when the current role cannot open Projects." /></div>
+          ) : operationalSnapshot.projects === null ? (
+            <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The project source did not return records for the current role. Client delivery counts are not inferred." /></div>
+          ) : clientDeliveryFocus.length === 0 ? (
+            <div className="px-4 py-8" role="status">
+              <p className="text-xs font-semibold text-fg">No client-linked delivery records</p>
+              <p className="mt-1 text-xs text-muted">No active project or open task contains a saved client name. This does not indicate client health or service status.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-line">
+              {clientDeliveryFocus.map((client) => (
+                <article key={client.key} className="min-w-0 space-y-3 px-4 py-4 sm:px-5">
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="break-words text-xs font-semibold text-fg">{client.name}</h3>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {client.serviceLines.map((line) => (
+                          <span key={line} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{line}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+                      <span className="text-muted">{client.projectCount} active projects</span>
+                      <span className={client.overdueCommitmentCount > 0 ? 'font-medium text-danger' : 'text-muted'}>{client.overdueCommitmentCount} overdue commitments</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 min-[900px]:grid-cols-4">
+                    {[
+                      { label: 'Open tasks', value: client.openTaskCount },
+                      { label: 'Tasks in review', value: client.reviewTaskCount },
+                      { label: 'Blocked tasks', value: client.blockedTaskCount },
+                      { label: 'Overdue tasks', value: client.overdueTaskCount }
+                    ].map((metric) => (
+                      <div key={metric.label} className="rounded-control border border-line bg-bg px-3 py-2">
+                        <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{metric.value == null ? '—' : metric.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1">
+                      {client.projects.slice(0, 3).map((project) => canOpenDashboardRoute(project.href) ? (
+                        <Link key={project.href} to={project.href} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                          {project.name} <ArrowUpRight size={11} aria-hidden="true" />
+                        </Link>
+                      ) : null)}
+                      {client.projects.length > 3 ? <span className="inline-flex min-h-8 items-center text-[11px] text-muted">+{client.projects.length - 3} more projects</span> : null}
+                    </div>
+                    <p className="shrink-0 text-[11px] text-muted">
+                      {client.nextCommitmentDate
+                        ? 'Next due ' + formatDashboardDate(client.nextCommitmentDate)
+                        : client.overdueCommitmentCount > 0
+                          ? 'No future date · overdue work remains'
+                          : 'No dated commitment in the next 30 days'}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </AdminPanel>
       </section>
 
       {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
