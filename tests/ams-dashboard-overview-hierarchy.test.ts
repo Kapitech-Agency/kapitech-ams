@@ -7,55 +7,63 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Dashboard overview gives KPIs full width and keeps quick actions compact and distinct', async () => {
+test('Dashboard Overview is an agency delivery workboard with canonical task, service-line, milestone, resource and Finance surfaces', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const performanceStart = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   assert.ok(overviewStart >= 0 && performanceStart > overviewStart, 'Dashboard overview branch should be identifiable');
-
   const overview = dashboard.slice(overviewStart, performanceStart);
-  const metricStart = overview.indexOf('data-ams-feature-slug="dashboard-overview"');
-  const actionsStart = overview.indexOf('data-ams-feature-slug="dashboard-quick-actions"');
-  const chartStart = overview.indexOf('title="Invoices vs expenses"');
-  const projectsStart = overview.indexOf('title="Active projects"');
-  const capacityStart = overview.indexOf('title="Team capacity"');
-  const supportMetricsStart = overview.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"');
-  const overviewMetricsEnd = overview.indexOf('<div className="grid gap-3 min-[1100px]:grid-cols-12">', metricStart);
-  const priorityExceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
-  const reportingScopeStart = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
 
-  assert.ok(reportingScopeStart >= 0 && reportingScopeStart < priorityExceptionsStart, 'Reporting scope must be visible before exception review.');
-  assert.ok(overview.includes('not historical results for this period'));
-  assert.ok(overview.includes('active project register covers all dates'));
-  assert.ok(priorityExceptionsStart >= 0 && priorityExceptionsStart < metricStart, 'Priority exceptions should appear before decision KPIs');
-  assert.ok(metricStart >= 0 && overviewMetricsEnd > metricStart, 'Executive KPI area should be identifiable before primary analysis');
-  assert.ok(chartStart > metricStart && chartStart < projectsStart, 'Primary analysis should follow executive KPIs and precede project detail');
-  assert.ok(projectsStart > chartStart, 'The active project register should follow the analysis row');
-  assert.ok(capacityStart > projectsStart, 'Team capacity should remain alongside the primary project workspace');
-  assert.ok(supportMetricsStart > capacityStart, 'Secondary indicators should remain below primary work areas');
-  assert.ok(actionsStart > supportMetricsStart, 'Quick actions must follow the grouped operational summaries and supporting metrics.');
-  const recentActivityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
-  assert.ok(recentActivityStart > actionsStart, 'Recent activity should follow primary summaries and quick actions.');
+  const scopeStart = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
+  const exceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
+  const indicatorsStart = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  const deliveryDeskStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const commitmentsStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
+  const shortcutsStart = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
+  const activityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
 
-  const overviewMetrics = overview.slice(metricStart, overviewMetricsEnd);
-  assert.ok(overviewMetrics.includes('className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"'), 'Dashboard KPI columns must change only at canonical design-system breakpoints.');
-  assert.equal(overviewMetrics.includes('min-[390px]'), false, 'Dashboard KPIs must not introduce a 390px breakpoint.');
-  assert.equal(overviewMetrics.includes('min-[760px]'), false, 'Dashboard KPIs must not introduce a 760px breakpoint.');
-  assert.doesNotMatch(overviewMetrics, /min-\[1100px\]:col-span-9/, 'KPI cards should not be squeezed by an adjacent action panel');
+  assert.ok(scopeStart >= 0 && exceptionsStart > scopeStart, 'The page must explain scope before cross-module exceptions.');
+  assert.ok(indicatorsStart > exceptionsStart, 'Agency work indicators follow the exception queue.');
+  assert.ok(deliveryDeskStart > indicatorsStart, 'Task-level delivery work follows the decision indicators.');
+  assert.ok(commitmentsStart > deliveryDeskStart, 'Project milestone/deadline and resource views follow the primary task queue.');
+  assert.ok(financeStart > commitmentsStart, 'Finance control remains a separate canonical summary.');
+  assert.ok(shortcutsStart > financeStart, 'Workspace shortcuts follow actionable source summaries.');
+  assert.ok(activityStart > shortcutsStart, 'Recent audit activity remains the final overview section.');
 
-  const quickActions = overview.slice(actionsStart, recentActivityStart);
-  assert.ok(quickActions.includes('min-[600px]:grid-cols-2'));
-  assert.ok(quickActions.includes('min-[900px]:grid-cols-3'));
-  assert.ok(quickActions.includes('min-[1100px]:grid-cols-5'));
-  assert.equal(quickActions.includes('min-[390px]'), false, 'Quick actions must not introduce a 390px breakpoint.');
-  assert.equal(quickActions.includes('min-[760px]'), false, 'Quick actions must not introduce a 760px breakpoint.');
-  assert.doesNotMatch(quickActions, /label:\s*'New project'/, 'New project already belongs in the page header, so it must not be duplicated');
-  assert.ok(overview.includes('financialTrendScopeLabel'), 'The invoice/expense chart must describe the single global reporting scope.');
+  for (const slug of [
+    'dashboard-open-tasks', 'dashboard-overdue-tasks', 'dashboard-review-queue',
+    'dashboard-delivery-dates', 'dashboard-task-load-by-owner',
+    'dashboard-recorded-time-by-person', 'dashboard-workspace-shortcuts'
+  ]) assert.ok(overview.includes(slug), 'Missing agency operating surface: ' + slug);
 
-  for (const label of ['Review tasks', 'Log time', 'View invoices', 'View clients', 'View documents']) {
-    assert.ok(quickActions.includes("label: '" + label + "'"), 'Missing quick action: ' + label);
-  }
+  assert.ok(overview.includes('Creative & IT workstreams'));
+  assert.ok(overview.includes('serviceCategory'));
+  assert.ok(overview.includes('Other / Unclassified'));
+  assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
+  assert.ok(overview.includes('Open tasks by owner'));
+  assert.ok(overview.includes('Recorded time'));
+  assert.ok(overview.includes('Finance control'));
+  assert.ok(overview.includes('Cash received this month'));
+  assert.ok(overview.includes('Outstanding receivables'));
+  assert.ok(overview.includes('Task source unavailable'));
+  assert.ok(overview.includes('Milestone source unavailable'));
+  assert.ok(overview.includes('Destination not mapped to an authorized workspace'));
+
+  assert.equal(overview.includes('title="Invoices vs expenses"'), false,
+    'Overview should not repeat the financial trend that belongs in Analytics.');
+  assert.equal(overview.includes('title="Delivery & pacing"'), false,
+    'A generic no-risk portfolio ratio is not a substitute for task and milestone operations.');
+  assert.equal(overview.includes('title="Team capacity"'), false,
+    'Do not show a hardcoded unavailable placeholder when task and time sources are available.');
+  assert.equal(overview.includes('title="Active projects"'), false,
+    'Dashboard should summarize upcoming commitments instead of duplicating the full Project Registry.');
+
+  assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
+  assert.ok(overview.includes('Neither is a forecast of available capacity.'));
+  assert.ok(dashboard.includes("const cashCollectedMetric = liveCashCollected") || dashboard.includes("const liveCashCollected = operationalSnapshot.invoices === null"));
 });
+
 
 test('Dashboard Overview financial trend drills down to the existing Finance registers only when authorized', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
@@ -66,6 +74,25 @@ test('Dashboard Overview financial trend drills down to the existing Finance reg
   assert.ok(dashboard.includes('to="/admin/finance?tab=expenses"'));
   assert.ok(dashboard.includes('View invoices'));
   assert.ok(dashboard.includes('View expenses'));
+});
+
+test('Dashboard work queue and service-line summaries come from canonical task/project records', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  assert.ok(dashboard.includes("api.tasks.getAll()"));
+  assert.ok(dashboard.includes("const dashboardWorkTasks = useMemo<DashboardWorkTask[]>(() =>"));
+  assert.ok(dashboard.includes("const projectId = String(task?.projectId || task?.project_id || '')"));
+  assert.ok(dashboard.includes("const serviceCategory = String(project?.serviceCategory || task?.serviceCategory || task?.service || '')"));
+  assert.ok(dashboard.includes("const serviceLineConfiguration = ["));
+  assert.ok(dashboard.includes("label: 'Creative & Content'"));
+  assert.ok(dashboard.includes("label: 'Web & IT Development'"));
+  assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
+  assert.ok(dashboard.includes("const upcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
+  assert.ok(dashboard.includes("const taskLoadByAssignee = useMemo(() =>"));
+  assert.ok(dashboard.includes("const periodTimeRows = useMemo(() =>"));
+  assert.ok(dashboard.includes("const activeTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.length"));
+  assert.ok(dashboard.includes("if (operationalSnapshot.tasks === null)"));
+  assert.ok(dashboard.includes("if (operationalSnapshot.projects === null)"));
+  assert.doesNotMatch(dashboard, /const taskCount\s*=\s*0/);
 });
 
 test('Dashboard Overview financial-history availability respects the selected currency', async () => {

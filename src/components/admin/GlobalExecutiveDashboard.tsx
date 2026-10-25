@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -10,16 +10,12 @@ import {
   FolderKanban,
   FileText,
   RefreshCw,
-  MoreHorizontal,
   Plus,
   ReceiptText,
   Users,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge, AdminTablePagination } from './AdminModulePrimitives';
-import { CustomSelect } from '../ui/CustomSelect';
-import { Modal } from '../ui/Modal';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge } from './AdminModulePrimitives';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
-import { ProfileIdentity } from './ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
@@ -27,9 +23,41 @@ import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { getReportingPeriodRange, type ReportingPeriodMode } from '../../lib/reportingPeriods';
 import { getInvoiceDate, getInvoiceOutstanding, getPaymentRows, isIssuedInvoice } from '../../lib/financeWorkbook';
 
-type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
 const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const;
 type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
+type DashboardTone = 'success' | 'warning' | 'danger' | 'info';
+type DashboardTaskFilter = 'action' | 'review' | 'overdue' | 'blocked' | 'unassigned';
+
+type DashboardWorkTask = {
+  id: string;
+  title: string;
+  projectId: string;
+  projectSlug: string;
+  projectName: string;
+  clientName: string;
+  serviceCategory: string;
+  serviceLine: 'creative' | 'technology' | 'other';
+  status: string;
+  priority: 'urgent' | 'high' | 'medium' | 'low';
+  dueDate: string;
+  assigneeLabel: string;
+  assigned: boolean;
+  blocked: boolean;
+};
+
+type DashboardCommitment = {
+  id: string;
+  projectId: string;
+  projectSlug: string;
+  projectName: string;
+  clientName: string;
+  serviceCategory: string;
+  serviceLine: 'creative' | 'technology' | 'other';
+  title: string;
+  kind: 'Milestone' | 'Project deadline';
+  dueDate: string;
+  owner: string;
+};
 
 type DashboardRecentActivity = {
   id?: string;
@@ -48,23 +76,8 @@ type DashboardAttentionItem = {
   linkUrl?: string;
 };
 
-interface DashboardProject {
-  id: string;
-  name: string;
-  client: string;
-  type: Exclude<ProjectFilter, 'All'>;
-  status: string;
-  health?: string;
-  statusTone: 'success' | 'warning' | 'danger' | 'info';
-  progress: number | null;
-  lead: string;
-  budget: string;
-  startDate?: string;
-  targetEndDate?: string;
-  createdAt?: string;
-}
 
-const toneClasses = {
+const toneClasses: Record<DashboardTone, string> = {
   success: 'border-success/25 bg-success/10 text-success',
   warning: 'border-warning/25 bg-warning/10 text-warning',
   danger: 'border-danger/25 bg-danger/10 text-danger',
@@ -94,6 +107,76 @@ type DashboardOperationalSnapshot = {
 };
 
 const isFinishedWork = (value: unknown) => /^(done|complete|completed|closed|archived)$/i.test(String(value || '').trim());
+
+const isValidDashboardDate = (value: unknown) => {
+  const key = dateKey(value);
+  if (!key) return false;
+  const parsed = new Date(key + 'T00:00:00');
+  return Number.isFinite(parsed.getTime()) && localDateKey(parsed) === key;
+};
+
+const shiftDashboardDate = (value: string, days: number) => {
+  if (!isValidDashboardDate(value)) return '';
+  const parsed = new Date(value + 'T00:00:00');
+  parsed.setDate(parsed.getDate() + days);
+  return localDateKey(parsed);
+};
+
+const formatDashboardDate = (value: string) => {
+  if (!isValidDashboardDate(value)) return 'Date not set';
+  return new Date(value + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const getDashboardServiceLine = (project: any): DashboardWorkTask['serviceLine'] => {
+  const category = String(project?.serviceCategory || project?.service || '').trim().toLowerCase();
+  const stack = Array.isArray(project?.techStack) ? project.techStack.filter(Boolean) : [];
+  if (/creative|content|video|motion|design|brand|graphic|social|campaign|marketing|photograph|animation|ui\/?ux|ux\/?ui/.test(category)) return 'creative';
+  if (/web|website|development|software|application|\bit\b|support|data|e-commerce|ecommerce|integration|automation|technical|hosting|cms|api/.test(category)) return 'technology';
+  if (!category && stack.length > 0) return 'technology';
+  return 'other';
+};
+
+const isDashboardTaskBlocked = (task: any) =>
+  Boolean(task?.blocked) ||
+  (Array.isArray(task?.tags) && task.tags.some((tag: unknown) =>
+    ['blocked', 'blocker', 'blocked-by', 'waiting'].includes(String(tag).trim().toLowerCase())
+  ));
+
+const dashboardTaskPriorityWeight: Record<DashboardWorkTask['priority'], number> = {
+  urgent: 4,
+  high: 3,
+  medium: 2,
+  low: 1
+};
+
+const dashboardTaskPriorityTone = (priority: DashboardWorkTask['priority']): DashboardTone =>
+  priority === 'urgent' ? 'danger' : priority === 'high' ? 'warning' : priority === 'medium' ? 'info' : 'success';
+
+const dashboardTaskStatusLabel = (status: string) => {
+  if (status === 'todo') return 'To do';
+  if (status === 'in_progress' || status === 'in-progress') return 'In progress';
+  if (status === 'review' || status === 'in_review') return 'Review';
+  if (isFinishedWork(status)) return 'Completed';
+  return status.replace(/[_-]+/g, ' ').replace(/^./, (letter) => letter.toUpperCase()) || 'Status unavailable';
+};
+
+const dashboardTaskIsOpen = (task: DashboardWorkTask) => !isFinishedWork(task.status);
+
+const dashboardTaskIsOverdue = (task: DashboardWorkTask, today: string) =>
+  dashboardTaskIsOpen(task) && Boolean(task.dueDate && task.dueDate < today);
+
+const dashboardTaskIsDueSoon = (task: DashboardWorkTask, today: string, throughDate: string) =>
+  dashboardTaskIsOpen(task) && Boolean(task.dueDate && task.dueDate >= today && task.dueDate <= throughDate);
+
+const dashboardTaskNeedsAction = (task: DashboardWorkTask, today: string, throughDate: string) =>
+  dashboardTaskIsOverdue(task, today) ||
+  task.blocked ||
+  task.priority === 'urgent' ||
+  task.priority === 'high' ||
+  task.status === 'review' ||
+  !task.assigned ||
+  dashboardTaskIsDueSoon(task, today, throughDate);
+
 
 const dateKey = (value: unknown) => {
   const text = String(value || '').slice(0, 10);
@@ -755,12 +838,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     const target = new URL(destination, 'https://ams.kapitech.local');
     return canAccessAmsRoute(currentNavigationRole, target.pathname, target.search);
   };
-  const getDashboardMetricDrilldown = (href: string, linkLabel: string): { href?: string; linkLabel?: string } =>
-    canOpenDashboardRoute(href) ? { href, linkLabel } : {};
   const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable');
   const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses');
   const canCreateProject = canManageProjects && canOpenDashboardRoute('/admin/projects?create=1');
   const canOpenProjects = canOpenDashboardRoute('/admin/projects');
+  const canOpenTasks = canOpenDashboardRoute('/admin/tasks');
+  const canOpenTimeLogs = canOpenDashboardRoute('/admin/time-logs');
+  const canOpenDocuments = canOpenDashboardRoute('/admin/documents');
   const canViewAuditLogs = hasAdminPermission('canViewSecurityAuditLogs');
   const requestedView = searchParams.get('view');
   const hasViewParameter = searchParams.has('view');
@@ -778,12 +862,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const reportPeriodLabel = reportPeriodEnabled && selectedReportingRange
     ? selectedReportingRange.label + ' (' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate + ')'
     : 'All dates';
-  const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
-  const [projectActionId, setProjectActionId] = useState<string | null>(null);
-  const [projectActionPosition, setProjectActionPosition] = useState<{ top: number; left: number } | null>(null);
-  const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
-  const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
-  const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
+  const [overviewTaskFilter, setOverviewTaskFilter] = useState<DashboardTaskFilter>('action');
   const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; attentionItems?: DashboardAttentionItem[]; attentionItemsDataAvailable?: boolean; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
     loading: true, projects: null, tasks: null, timeLogs: null, invoices: null, expenses: null
@@ -874,144 +953,230 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     return () => { active = false; };
   }, [refreshRequest]);
 
-  useEffect(() => {
-    if (!projectActionId) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('[data-dashboard-project-actions]')) return;
-      setProjectActionId(null);
-      setProjectActionPosition(null);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setProjectActionId(null);
-        setProjectActionPosition(null);
-      }
-    };
-
-    const handleScroll = () => {
-      setProjectActionId(null);
-      setProjectActionPosition(null);
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown, true);
-    document.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('scroll', handleScroll, true);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown, true);
-      document.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('scroll', handleScroll, true);
-    };
-  }, [projectActionId]);
-
-
-  const dashboardProjectDataAvailable = operationalSnapshot.projects !== null || dashboardOverview.projectDataAvailable === true;
-  const dashboardProjects = useMemo<DashboardProject[]>(() => {
-    const projectSource = operationalSnapshot.projects ?? (dashboardOverview.projectDataAvailable ? dashboardOverview.projects : undefined);
-    const serverProjects = Array.isArray(projectSource)
-      ? projectSource.map((project: any, index: number) => {
-          const rawType = String(project.type || project.projectType || project.billingType || 'Fixed-fee').toLowerCase();
-          const type: Exclude<ProjectFilter, 'All'> = rawType.includes('retainer')
-            ? 'Retainer'
-            : rawType.includes('enterprise')
-              ? 'Enterprise'
-              : 'Fixed-fee';
-          const rawStatus = String(project.status || project.health || '').trim();
-          const health = rawStatus.toLowerCase();
-          const statusTone: DashboardProject['statusTone'] =
-            /delay|blocked|overdue|hold|cancel|failed|issue/.test(health) ? 'danger'
-              : /risk|watch|concern/.test(health) ? 'warning'
-                : /review|pending|planning|draft|not started/.test(health) ? 'info'
-                  : /active|progress|complete|done|closed|on track/.test(health) ? 'success'
-                    : 'info';
-          const rawProgress = project.progress ?? project.progressPercent;
-          const parsedProgress = rawProgress === null || rawProgress === undefined || rawProgress === '' ? null : Number(rawProgress);
-          const rawBudget = project.budget ?? project.totalBudget;
-          const parsedBudget = rawBudget === null || rawBudget === undefined || rawBudget === '' ? null : Number(rawBudget);
-          const dashboardCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
-          return {
-            id: String(project.id || project.slug || 'server-project-' + index),
-            name: String(project.name || project.title || project.projectName || 'Untitled project'),
-            client: String(project.clientName || project.client || 'Unassigned client'),
-            type,
-            status: rawStatus || 'Status unavailable',
-            health: String(project.health || ''),
-            statusTone,
-            progress: parsedProgress !== null && Number.isFinite(parsedProgress) ? Math.max(0, Math.min(100, parsedProgress)) : null,
-            lead: String(project.teamLead || project.ownerName || project.lead || 'Unassigned'),
-            budget: parsedBudget !== null && Number.isFinite(parsedBudget) ? formatLiveMoney(parsedBudget, dashboardCurrency) : '—',
-            startDate: String(project.startDate || project.start || ''),
-            targetEndDate: String(project.targetEndDate || project.endDate || project.dueDate || ''),
-            createdAt: String(project.createdAt || project.updatedAt || '')
-          };
-        })
-      : [];
-    return serverProjects;
-  }, [dashboardOverview.financials?.currency, dashboardOverview.metrics?.currency, dashboardOverview.projectDataAvailable, dashboardOverview.projects, operationalSnapshot.projects]);
-
-  const activeDashboardProjects = useMemo(
-    () => dashboardProjects.filter((project) =>
-      !isFinishedWork(project.status) && !isFinishedWork(project.health)
-    ),
-    [dashboardProjects],
-  );
-
-  const filteredProjects = useMemo(
-    () => activeDashboardProjects.filter((project) =>
-      matchesInterval(project.startDate, project.targetEndDate, project.createdAt)
-      && (projectFilter === 'All' || project.type === projectFilter)
-    ),
-    [activeDashboardProjects, projectFilter, matchesInterval],
-  );
-
-  const dashboardProjectPageCount = Math.max(1, Math.ceil(filteredProjects.length / dashboardProjectPageSize));
-  const pagedDashboardProjects = filteredProjects.slice(
-    (dashboardProjectPage - 1) * dashboardProjectPageSize,
-    dashboardProjectPage * dashboardProjectPageSize,
-  );
-
-  useEffect(() => {
-    setDashboardProjectPage(1);
-  }, [reportPeriodValue, reportPeriodEnabled]);
-  useEffect(() => {
-    setDashboardProjectPage((current) => Math.min(current, dashboardProjectPageCount));
-  }, [dashboardProjectPageCount]);
-
-  const deliveryProjects = operationalSnapshot.projects;
-  const deliveryBreakdown = useMemo(
-    () => deliveryProjects === null ? [] : buildProjectDeliveryBreakdown(deliveryProjects),
-    [deliveryProjects]
-  );
-  const totalDelivery = deliveryBreakdown.reduce((total, item) => total + Math.max(0, item.value), 0);
-  const onScheduleValue = deliveryBreakdown.find((item) => item.label === 'No risk flag')?.value ?? 0;
-  const onSchedulePercent = totalDelivery > 0 ? Math.round((Math.max(0, onScheduleValue) / totalDelivery) * 100) : 0;
   const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
-  const financeSourcesAvailable = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null;
-  const invoiceSourceHasRows = Boolean(operationalSnapshot.invoices?.length);
-  const expenseSourceHasRows = Boolean(operationalSnapshot.expenses?.length);
-  const invoiceSourceHasSelectedCurrencyRows = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency));
-  const expenseSourceHasSelectedCurrencyRows = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency));
-  const invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)));
-  const expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency && isDashboardExpenseEligible(expense)));
-  const revenueData = useMemo(() => {
-    if (!financeSourcesAvailable) return [];
-    const invoices = (operationalSnapshot.invoices || []).filter((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency);
-    const expenses = (operationalSnapshot.expenses || []).filter((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency);
-    return reportPeriodEnabled
-      ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, invoices, expenses)
-      : buildRecentFinancialTrend(invoices, expenses);
-  }, [financeSourcesAvailable, operationalSnapshot.invoices, operationalSnapshot.expenses, financeCurrency, reportPeriodEnabled, reportPeriodMode, reportPeriodValue]);
-  const financialTrendScopeLabel = describeFinancialTrendScope(revenueData, reportPeriodEnabled, reportPeriodLabel);
+  const currentDayKey = localDateKey(new Date());
+  const currentMonthKey = currentDayKey.slice(0, 7);
+  const nextThreeDaysKey = shiftDashboardDate(currentDayKey, 3);
+  const nextSevenDaysKey = shiftDashboardDate(currentDayKey, 7);
+  const nextThirtyDaysKey = shiftDashboardDate(currentDayKey, 30);
 
-  const currentMonthKey = localDateKey(new Date()).slice(0, 7);
-  const liveProjectRows = operationalSnapshot.projects || [];
-  const activeProjectRows = liveProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
-  const activeProjectBudgets = activeProjectRows.map((project: any) => Number(project.budget ?? project.totalBudget ?? 0)).filter((value: number) => Number.isFinite(value) && value > 0);
-  const averageActiveBudget = activeProjectBudgets.length
-    ? activeProjectBudgets.reduce((sum: number, value: number) => sum + value, 0) / activeProjectBudgets.length
-    : null;
+  const projectSourceAvailable = operationalSnapshot.projects !== null;
+  const rawProjectRows = operationalSnapshot.projects || [];
+  const activeProjectRows = rawProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
+  const openProjectCount = projectSourceAvailable ? activeProjectRows.length : null;
+
+  const dashboardWorkTasks = useMemo<DashboardWorkTask[]>(() => {
+    if (!Array.isArray(operationalSnapshot.tasks)) return [];
+    const projectById = new Map<string, any>((operationalSnapshot.projects || []).map((project: any) => [String(project.id || ''), project]));
+    return operationalSnapshot.tasks.map((task: any): DashboardWorkTask => {
+      const id = String(task?.id || task?.slug || '');
+      const projectId = String(task?.projectId || task?.project_id || '');
+      const project = projectById.get(projectId);
+      const projectName = String(task?.projectName || task?.project_name || project?.name || project?.title || 'Unlinked project');
+      const serviceCategory = String(project?.serviceCategory || task?.serviceCategory || task?.service || '');
+      const rawStatus = String(task?.status || 'todo').toLowerCase();
+      const rawPriority = String(task?.priority || 'medium').toLowerCase();
+      const assigneeId = String(task?.assigneeUserId || task?.assigneeId || '');
+      const assigneeName = String(task?.assigneeName || task?.assignee || task?.assignedTo || '').trim();
+      const assigned = Boolean(assigneeId || assigneeName);
+      const dueCandidate = dateKey(task?.dueDate || task?.due_date || task?.deadline);
+      const dueDate = isValidDashboardDate(dueCandidate) ? dueCandidate : '';
+      return {
+        id,
+        title: String(task?.title || task?.name || 'Untitled task'),
+        projectId,
+        projectSlug: String(project?.slug || projectName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ''),
+        projectName,
+        clientName: String(task?.clientName || task?.clientCompany || project?.clientCompany || project?.clientName || project?.client || ''),
+        serviceCategory,
+        serviceLine: getDashboardServiceLine(project || { serviceCategory, techStack: task?.techStack }),
+        status: rawStatus,
+        priority: (['urgent', 'high', 'medium', 'low'].includes(rawPriority) ? rawPriority : 'medium') as DashboardWorkTask['priority'],
+        dueDate,
+        assigneeLabel: assigneeName || (assigneeId ? 'Assigned · name unavailable' : 'Unassigned'),
+        assigned,
+        blocked: isDashboardTaskBlocked(task)
+      };
+    }).filter((task: DashboardWorkTask) => Boolean(task.id));
+  }, [operationalSnapshot.projects, operationalSnapshot.tasks]);
+
+  const activeDashboardTasks = dashboardWorkTasks.filter(dashboardTaskIsOpen);
+  const taskQueueCounts = useMemo(() => ({
+    action: activeDashboardTasks.filter((task) => dashboardTaskNeedsAction(task, currentDayKey, nextThreeDaysKey)).length,
+    review: activeDashboardTasks.filter((task) => task.status === 'review' || task.status === 'in_review').length,
+    overdue: activeDashboardTasks.filter((task) => dashboardTaskIsOverdue(task, currentDayKey)).length,
+    blocked: activeDashboardTasks.filter((task) => task.blocked).length,
+    unassigned: activeDashboardTasks.filter((task) => !task.assigned).length
+  }), [activeDashboardTasks, currentDayKey, nextThreeDaysKey]);
+
+  const visibleOverviewTasks = useMemo(() => {
+    const filtered = activeDashboardTasks.filter((task) => {
+      if (overviewTaskFilter === 'review') return task.status === 'review' || task.status === 'in_review';
+      if (overviewTaskFilter === 'overdue') return dashboardTaskIsOverdue(task, currentDayKey);
+      if (overviewTaskFilter === 'blocked') return task.blocked;
+      if (overviewTaskFilter === 'unassigned') return !task.assigned;
+      return dashboardTaskNeedsAction(task, currentDayKey, nextThreeDaysKey);
+    });
+    return filtered.sort((left, right) => {
+      const leftUrgency = (dashboardTaskIsOverdue(left, currentDayKey) ? 100 : 0) +
+        (left.blocked ? 80 : 0) +
+        (left.priority === 'urgent' ? 60 : left.priority === 'high' ? 40 : 0) +
+        (left.status === 'review' || left.status === 'in_review' ? 30 : 0) +
+        (!left.assigned ? 15 : 0);
+      const rightUrgency = (dashboardTaskIsOverdue(right, currentDayKey) ? 100 : 0) +
+        (right.blocked ? 80 : 0) +
+        (right.priority === 'urgent' ? 60 : right.priority === 'high' ? 40 : 0) +
+        (right.status === 'review' || right.status === 'in_review' ? 30 : 0) +
+        (!right.assigned ? 15 : 0);
+      if (leftUrgency !== rightUrgency) return rightUrgency - leftUrgency;
+      if (left.dueDate && right.dueDate) return left.dueDate.localeCompare(right.dueDate);
+      if (left.dueDate) return -1;
+      if (right.dueDate) return 1;
+      return left.title.localeCompare(right.title);
+    }).slice(0, 7);
+  }, [activeDashboardTasks, currentDayKey, nextThreeDaysKey, overviewTaskFilter]);
+
+  const overviewTaskQueueHref = overviewTaskFilter === 'review'
+    ? '/admin/tasks?taskscope=review'
+    : overviewTaskFilter === 'overdue'
+      ? '/admin/tasks?taskscope=due'
+      : overviewTaskFilter === 'blocked'
+        ? '/admin/tasks?taskscope=blocked'
+        : '/admin/tasks';
+
+  const serviceLineConfiguration = [
+    { key: 'creative' as const, label: 'Creative & Content', description: 'Brand, design, video, social and campaign delivery', icon: <Palette size={17} aria-hidden="true" /> },
+    { key: 'technology' as const, label: 'Web & IT Development', description: 'Websites, applications, data and technical delivery', icon: <Code2 size={17} aria-hidden="true" /> },
+    { key: 'other' as const, label: 'Other / Unclassified', description: 'Projects without a recognized saved service category', icon: <FolderKanban size={17} aria-hidden="true" /> }
+  ];
+
+  const serviceLineSummaries = useMemo(() => serviceLineConfiguration.map((line) => {
+    const lineProjects = activeProjectRows.filter((project: any) => getDashboardServiceLine(project) === line.key);
+    const projectIds = new Set(lineProjects.map((project: any) => String(project.id || '')));
+    const lineTasks = activeDashboardTasks.filter((task) => projectIds.has(task.projectId) || (task.serviceLine === line.key && !task.projectId));
+    const lineCommitments = lineProjects.reduce((count: number, project: any) => {
+      const milestones = Array.isArray(project.milestones) ? project.milestones : [];
+      const hasOverdueMilestone = milestones.some((milestone: any) => milestone?.completed !== true && !isFinishedWork(milestone?.status) &&
+        isValidDashboardDate(milestone?.dueDate) && String(milestone.dueDate).slice(0, 10) < currentDayKey);
+      const targetDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
+      const projectOverdue = isValidDashboardDate(targetDate) && targetDate < currentDayKey;
+      return count + (hasOverdueMilestone || projectOverdue ? 1 : 0);
+    }, 0);
+    return {
+      ...line,
+      projectCount: lineProjects.length,
+      openTaskCount: lineTasks.length,
+      overdueCommitmentCount: lineCommitments
+    };
+  }), [activeDashboardTasks, activeProjectRows, currentDayKey]);
+
+  const upcomingCommitments = useMemo<DashboardCommitment[]>(() => {
+    if (operationalSnapshot.projects === null) return [];
+    const commitments: DashboardCommitment[] = [];
+    for (const project of activeProjectRows) {
+      const projectId = String(project.id || '');
+      const projectName = String(project.name || project.title || 'Untitled project');
+      const projectSlug = String(project.slug || projectName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''));
+      const clientName = String(project.clientCompany || project.clientName || project.client || '');
+      const serviceCategory = String(project.serviceCategory || '');
+      const serviceLine = getDashboardServiceLine(project);
+      const milestones = Array.isArray(project.milestones) ? project.milestones : [];
+      const datedMilestoneKeys = new Set<string>();
+      for (const milestone of milestones) {
+        if (milestone?.completed === true || isFinishedWork(milestone?.status)) continue;
+        const dueDate = dateKey(milestone?.dueDate || milestone?.targetDate);
+        if (!isValidDashboardDate(dueDate) || dueDate > nextThirtyDaysKey) continue;
+        datedMilestoneKeys.add(dueDate);
+        commitments.push({
+          id: 'milestone-' + String(milestone.id || milestone.slug || milestone.title || projectId + '-' + dueDate),
+          projectId,
+          projectSlug,
+          projectName,
+          clientName,
+          serviceCategory,
+          serviceLine,
+          title: String(milestone.title || milestone.name || 'Untitled milestone'),
+          kind: 'Milestone',
+          dueDate,
+          owner: String(project.teamLead || project.ownerName || project.lead || 'Owner not assigned')
+        });
+      }
+      const projectDueDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
+      if (isValidDashboardDate(projectDueDate) && projectDueDate <= nextThirtyDaysKey && !datedMilestoneKeys.has(projectDueDate)) {
+        commitments.push({
+          id: 'project-deadline-' + projectId,
+          projectId,
+          projectSlug,
+          projectName,
+          clientName,
+          serviceCategory,
+          serviceLine,
+          title: 'Project delivery deadline',
+          kind: 'Project deadline',
+          dueDate: projectDueDate,
+          owner: String(project.teamLead || project.ownerName || project.lead || 'Owner not assigned')
+        });
+      }
+    }
+    return commitments.sort((left, right) => {
+      const leftOverdue = left.dueDate < currentDayKey;
+      const rightOverdue = right.dueDate < currentDayKey;
+      if (leftOverdue !== rightOverdue) return leftOverdue ? -1 : 1;
+      return left.dueDate.localeCompare(right.dueDate);
+    }).slice(0, 8);
+  }, [activeProjectRows, currentDayKey, nextThirtyDaysKey, operationalSnapshot.projects]);
+
+  const nextSevenDayCommitmentCount = upcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
+  const overdueCommitmentCount = operationalSnapshot.projects === null ? null : activeProjectRows.reduce((total: number, project: any) => {
+    const targetDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
+    const dueProjectIsOverdue = isValidDashboardDate(targetDate) && targetDate < currentDayKey;
+    const overdueMilestones = (Array.isArray(project.milestones) ? project.milestones : []).filter((milestone: any) =>
+      milestone?.completed !== true && !isFinishedWork(milestone?.status) &&
+      isValidDashboardDate(milestone?.dueDate) && String(milestone.dueDate).slice(0, 10) < currentDayKey
+    ).length;
+    return total + overdueMilestones + (dueProjectIsOverdue ? 1 : 0);
+  }, 0);
+
+  const taskLoadByAssignee = useMemo(() => {
+    const groups = new Map<string, { label: string; total: number; overdue: number; blocked: number; review: number }>();
+    for (const task of activeDashboardTasks) {
+      const key = task.assigned ? task.assigneeLabel : 'Unassigned';
+      const item = groups.get(key) || { label: key, total: 0, overdue: 0, blocked: 0, review: 0 };
+      item.total += 1;
+      item.overdue += dashboardTaskIsOverdue(task, currentDayKey) ? 1 : 0;
+      item.blocked += task.blocked ? 1 : 0;
+      item.review += task.status === 'review' || task.status === 'in_review' ? 1 : 0;
+      groups.set(key, item);
+    }
+    return Array.from(groups.values()).sort((left, right) => right.overdue - left.overdue || right.blocked - left.blocked || right.total - left.total || left.label.localeCompare(right.label)).slice(0, 5);
+  }, [activeDashboardTasks, currentDayKey]);
+
+  const periodTimeRows = useMemo(() => {
+    if (operationalSnapshot.timeLogs === null) return [];
+    const groups = new Map<string, { name: string; minutes: number; entries: number }>();
+    for (const log of operationalSnapshot.timeLogs.filter((item: any) => matchesDate(item.date))) {
+      const key = String(log.userId || log.user || 'unassigned');
+      const name = String(log.user || '').trim() || (log.userId ? 'Assigned team member' : 'Unassigned / general');
+      const group = groups.get(key) || { name, minutes: 0, entries: 0 };
+      group.minutes += Math.max(0, Number(log.durationMinutes || 0) || 0);
+      group.entries += 1;
+      groups.set(key, group);
+    }
+    return Array.from(groups.values()).sort((left, right) => right.minutes - left.minutes || left.name.localeCompare(right.name)).slice(0, 5);
+  }, [matchesDate, operationalSnapshot.timeLogs]);
+
+  const activeTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.length;
+  const overdueTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.filter((task) => dashboardTaskIsOverdue(task, currentDayKey)).length;
+  const reviewTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.filter((task) => task.status === 'review' || task.status === 'in_review').length;
+  const activeProjectsMetric = openProjectCount ?? (canOpenProjects ? dashboardOverview.metrics?.activeProjects ?? null : null);
+  const taskKpiRoute = canOpenTasks ? '/admin/tasks' : '';
+  const projectKpiRoute = canOpenProjects ? '/admin/projects?projects=all' : '';
+  const currentMonthIssuedInvoices = (operationalSnapshot.invoices || []).filter((invoice: any) =>
+    String(invoice.currency || 'IDR').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)
+  );
+  const financeExpenseRows = (operationalSnapshot.expenses || []).filter((expense: any) =>
+    String(expense.currency || 'IDR').toUpperCase() === financeCurrency && isDashboardExpenseEligible(expense)
+  );
   const liveCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
     if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency || !isIssuedInvoice(invoice)) return sum;
     return sum + getPaymentRows(invoice)
@@ -1023,15 +1188,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     return sum + getInvoiceOutstanding(invoice);
   }, 0);
   const liveMonthlyExpenses = operationalSnapshot.expenses === null ? null : operationalSnapshot.expenses.reduce((sum: number, expense: any) => {
-    if (String(expense.currency || 'IDR').toUpperCase() !== financeCurrency || String(expense.date || '').slice(0, 7) !== currentMonthKey || ['voided', 'cancelled', 'canceled', 'deleted'].includes(String(expense.status || '').toLowerCase())) return sum;
+    if (String(expense.currency || 'IDR').toUpperCase() !== financeCurrency || String(expense.date || '').slice(0, 7) !== currentMonthKey || !isDashboardExpenseEligible(expense)) return sum;
     return sum + Math.max(0, Number(expense.amount) || 0);
   }, 0);
-  const liveCashDifference = liveCashCollected !== null && liveMonthlyExpenses !== null ? liveCashCollected - liveMonthlyExpenses : null;
-  const activeProjectsMetric = dashboardOverview.metrics?.activeProjects ?? (operationalSnapshot.projects !== null ? activeProjectRows.length : null);
-  // The current dashboard API maps financials.cashCollected to monthly revenue. Only use payment rows for a cash-collected KPI.
-  const cashCollectedMetric = liveCashCollected;
-  const outstandingMetric = dashboardOverview.financials?.outstandingReceivables ?? liveOutstanding;
-  const cashDifferenceMetric = liveCashDifference;
+  const cashValueAvailable = operationalSnapshot.invoices !== null && currentMonthIssuedInvoices.length > 0;
+  const outstandingValueAvailable = operationalSnapshot.invoices !== null && currentMonthIssuedInvoices.length > 0;
+  const expensesValueAvailable = operationalSnapshot.expenses !== null && financeExpenseRows.length > 0;
 
   return (
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
@@ -1040,7 +1202,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         eyebrow={view === 'overview' ? 'Overview' : view === 'performance' ? 'Performance' : 'Analytics'}
         title="Dashboard"
         description={view === 'overview'
-          ? 'Monitor agency delivery, financial movement, team capacity, and operational exceptions.'
+          ? 'Coordinate creative production, web and IT delivery, task ownership, delivery dates, and current Finance control.'
           : view === 'performance'
             ? 'Track project delivery, task completion, overdue work, and recorded team time.'
             : 'Choose a report to inspect financial movement, outstanding receivables, or current project status.'}
@@ -1094,13 +1256,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-fg">Reporting scope</p>
-            <p className="mt-1 text-xs text-muted">{financialTrendScopeLabel}</p>
+            <p className="text-xs font-semibold text-fg">Operating scope</p>
+            <p className="mt-1 text-xs text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Current agency workload · all recorded dates'}</p>
           </div>
           <p className="max-w-3xl text-xs leading-5 text-muted">
-            {reportPeriodEnabled
-              ? 'The invoice/expense trend and active project register follow this period. Priority exceptions, KPI summaries, delivery pacing, team capacity, and recent activity are current snapshots or work queues, not historical results for this period.'
-              : 'The invoice/expense trend uses this recent 30-day default window. The active project register covers all dates. Priority exceptions, KPI summaries, delivery pacing, team capacity, and recent activity are current snapshots or work queues.'}
+            Task ownership, review queues, delivery commitments and Finance balances show current operational state. The shared reporting period applies to Performance and Analytics trends. No capacity, approval or client SLA is inferred when its source is unavailable.
           </p>
         </div>
       </section>
@@ -1108,38 +1268,44 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <section data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
         <AdminPanel
           title="Priority exceptions"
-          description="Actionable cross-module items returned by the Dashboard service for your authorized scope."
+          description="Cross-module issues returned by the authorized Dashboard service. Use the owning workspace for the underlying record."
           bodyClassName="p-0"
         >
           {!dashboardOverview.attentionItemsDataAvailable ? (
             <div className="px-4 py-5" role="status">
-              <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading priority exceptions' : 'Priority exception data unavailable'}</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">The Dashboard service did not return a usable attention list. The interface does not infer that there are no exceptions.</p>
+              <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Cross-module exception data unavailable'}</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">The Dashboard service did not return a usable exception list. This is not interpreted as a clean operational state.</p>
             </div>
           ) : (dashboardOverview.attentionItems || []).length === 0 ? (
             <div className="px-4 py-5" role="status">
-              <p className="text-xs font-medium text-fg">No priority exceptions returned</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">The Dashboard service reports no actionable exceptions for this authorized scope.</p>
+              <p className="text-xs font-medium text-fg">No exceptions returned by the Dashboard service</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">Task and milestone queues below are still calculated from their own current source records.</p>
             </div>
           ) : (
             <div className="divide-y divide-line">
               {(dashboardOverview.attentionItems || []).map((item, index) => {
                 const severity = String(item.severity || 'info').toLowerCase();
-                const tone: DashboardProject['statusTone'] = severity === 'danger' || severity === 'critical'
+                const tone: DashboardTone = severity === 'danger' || severity === 'critical'
                   ? 'danger'
                   : severity === 'warning'
                     ? 'warning'
                     : 'info';
                 const category = String(item.category || 'Operations');
-                const destination = String(item.linkUrl || '');
+                const knownDestination: Record<string, string> = {
+                  att_invoices_overdue: '/admin/finance?tab=accounts-receivable',
+                  att_projects_risk: '/admin/projects?projects=all',
+                  att_tasks_overdue: '/admin/tasks?taskscope=due',
+                  att_leads_new: '/admin/inbox'
+                };
+                const destination = knownDestination[String(item.id || '')] || String(item.linkUrl || '');
                 const safeDestination = destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null;
                 const linkLabel = category === 'Finance'
-                  ? 'Open Finance'
+                  ? 'Open receivables'
                   : category === 'Sales'
                     ? 'Open Inbox'
                     : category === 'Delivery'
-                      ? 'Open Projects'
-                      : 'Review operations';
+                      ? 'Open delivery work'
+                      : 'Review workspace';
                 const severityLabel = tone === 'danger' ? 'Urgent' : tone === 'warning' ? 'Attention' : 'Informational';
                 const AttentionIcon = tone === 'danger'
                   ? AlertTriangle
@@ -1150,7 +1316,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       : category === 'Sales'
                         ? Users
                         : Clock3;
-
                 return (
                   <article key={String(item.id || category + '-' + item.title || index)} className="flex min-w-0 flex-col gap-3 px-4 py-3 min-[900px]:flex-row min-[900px]:items-center">
                     <span className={['flex h-9 w-9 shrink-0 items-center justify-center rounded-control border', toneClasses[tone]].join(' ')}>
@@ -1169,7 +1334,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         {linkLabel} <ArrowUpRight size={13} aria-hidden="true" />
                       </Link>
                     ) : (
-                      <span className="inline-flex min-h-9 shrink-0 items-center text-[11px] text-muted">Destination unavailable</span>
+                      <span className="inline-flex min-h-9 shrink-0 items-center text-[11px] text-muted">Destination not mapped to an authorized workspace</span>
                     )}
                   </article>
                 );
@@ -1179,432 +1344,405 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </AdminPanel>
       </section>
 
-      <section
-        data-ams-feature-slug="dashboard-overview"
-        data-ams-slug="dashboard-overview"
-        className="space-y-3"
-        aria-label="Executive overview metrics"
-      >
+      <section className="space-y-3" data-ams-feature-slug="dashboard-agency-operating-indicators" aria-label="Agency operating indicators">
         <AdminMetricStrip
-          slug="dashboard-overview-kpis"
-          className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"
+          slug="dashboard-agency-operating-kpis"
+          className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5"
           metrics={[
             {
-              id: 'active-projects', label: 'Active projects now',
-              value: activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
-              context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Current open project records' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+              id: 'active-projects', label: 'Projects in delivery',
+              value: canOpenProjects && activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
+              context: !canOpenProjects ? 'Not available to this role' : projectSourceAvailable ? 'Open canonical project records' : dashboardOverview.metrics?.activeProjects != null ? 'Dashboard summary · source detail unavailable' : 'Project source unavailable',
               sourceLabel: 'Projects',
-              ...getDashboardMetricDrilldown('/admin/projects?projects=all', 'Open Projects registry'),
-              icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
+              href: projectKpiRoute || undefined,
+              linkLabel: projectKpiRoute ? 'Open project workspace' : undefined,
+              icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-active-projects'
             },
             {
-              id: 'cash-collected', label: 'Cash collected this month',
-              value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : '—',
-              context: liveCashCollected !== null ? 'Invoice payments recorded this month' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-              sourceLabel: 'Finance · invoice payment records',
-              ...getDashboardMetricDrilldown('/admin/finance?tab=accounts-receivable', 'Open invoice payments'),
-              icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-cash-collected'
+              id: 'open-tasks', label: 'Open tasks',
+              value: canOpenTasks && activeTaskCount != null ? String(activeTaskCount) : '—',
+              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Tasks not yet completed' : 'Task source unavailable',
+              sourceLabel: 'Tasks & Execution',
+              href: taskKpiRoute || undefined,
+              linkLabel: taskKpiRoute ? 'Open task queue' : undefined,
+              icon: <CheckCircle2 size={15} />, toneClassName: 'text-fg', slug: 'dashboard-open-tasks'
             },
             {
-              id: 'outstanding', label: 'Outstanding invoices',
-              value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
-              context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Current open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
-              sourceLabel: 'Finance · issued invoice balances',
-              ...getDashboardMetricDrilldown('/admin/finance?tab=accounts-receivable', 'Open receivables register'),
-              icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
+              id: 'overdue-tasks', label: 'Overdue tasks',
+              value: canOpenTasks && overdueTaskCount != null ? String(overdueTaskCount) : '—',
+              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Open tasks past due date' : 'Task source unavailable',
+              sourceLabel: 'Tasks & Execution',
+              href: canOpenTasks ? '/admin/tasks?taskscope=due' : undefined,
+              linkLabel: canOpenTasks ? 'Review due work' : undefined,
+              icon: <AlertTriangle size={15} />, toneClassName: overdueTaskCount ? 'text-danger' : 'text-fg', slug: 'dashboard-overdue-tasks'
             },
             {
-              id: 'utilization', label: 'Team utilization',
-              value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : '—',
-              context: dashboardOverview.metrics?.teamUtilization != null ? 'Current team utilization' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-              sourceLabel: 'Team & Resources',
-              ...getDashboardMetricDrilldown('/admin/team', 'Open Team & Capacity'),
-              icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
+              id: 'review-queue', label: 'Tasks in review',
+              value: canOpenTasks && reviewTaskCount != null ? String(reviewTaskCount) : '—',
+              context: !canOpenTasks ? 'Not available to this role' : operationalSnapshot.tasks !== null ? 'Waiting in the review status' : 'Task source unavailable',
+              sourceLabel: 'Tasks & Execution',
+              href: canOpenTasks ? '/admin/tasks?taskscope=review' : undefined,
+              linkLabel: canOpenTasks ? 'Open review queue' : undefined,
+              icon: <Eye size={15} />, toneClassName: reviewTaskCount ? 'text-warning' : 'text-fg', slug: 'dashboard-review-queue'
+            },
+            {
+              id: 'delivery-dates', label: 'Delivery dates · next 7 days',
+              value: canOpenProjects && operationalSnapshot.projects !== null ? String(nextSevenDayCommitmentCount) : '—',
+              context: !canOpenProjects ? 'Not available to this role' : operationalSnapshot.projects !== null ? 'Open milestones and project targets' : 'Milestone source unavailable',
+              sourceLabel: 'Projects · milestones',
+              href: canOpenProjects ? '/admin/projects?projects=planning-delivery&planningView=milestones' : undefined,
+              linkLabel: canOpenProjects ? 'Review milestones' : undefined,
+              icon: <CalendarDays size={15} />, toneClassName: nextSevenDayCommitmentCount ? 'text-warning' : 'text-fg', slug: 'dashboard-delivery-dates'
             }
           ]}
         />
       </section>
 
-
-
-      <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel
-          className="min-[1100px]:col-span-8"
-          bodyClassName="p-4 sm:p-5"
-          title="Invoices vs expenses"
-          description={'Issued invoice value and recorded expenses for ' + financialTrendScopeLabel + '. Invoice values use issue date and expenses use recorded date. The difference is not a posted profit figure.'}
-          actions={canOpenInvoiceRegister || canOpenExpenseRegister ? (
-            <div className="flex flex-wrap gap-2">
-              {canOpenInvoiceRegister && (
-                <Link
-                  to="/admin/finance?tab=accounts-receivable"
-                  className="inline-flex min-h-8 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                  View invoices
-                </Link>
-              )}
-              {canOpenExpenseRegister && (
-                <Link
-                  to="/admin/finance?tab=expenses"
-                  className="inline-flex min-h-8 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                  View expenses
-                </Link>
-              )}
-            </div>
-          ) : undefined}
-        >
-          {!financeSourcesAvailable ? (
-            <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
-          ) : !invoiceHistoryReturned && !expenseHistoryReturned ? (
-            <DashboardUnavailable
-              title={invoiceSourceHasRows || expenseSourceHasRows
-                ? invoiceSourceHasSelectedCurrencyRows || expenseSourceHasSelectedCurrencyRows
-                  ? 'No usable financial records in selected currency'
-                  : 'No financial records in selected currency'
-                : 'No financial records returned'}
-              description={invoiceSourceHasRows || expenseSourceHasRows
-                ? invoiceSourceHasSelectedCurrencyRows || expenseSourceHasSelectedCurrencyRows
-                  ? 'Records match ' + financeCurrency + ', but none are issued invoices or eligible expenses. Quotations and cancelled, voided, or deleted expenses do not form a financial trend.'
-                  : 'The invoice and expense sources returned records, but none match ' + financeCurrency + '. A zero-value trend is not inferred from another currency.'
-                : 'The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source.'}
-            />
-          ) : !invoiceHistoryReturned ? (
-            <DashboardUnavailable title="Invoice history unavailable" description={'The invoice source returned no usable records in ' + financeCurrency + '. A zero-value invoice series is not inferred.'} />
-          ) : !expenseHistoryReturned ? (
-            <DashboardUnavailable title="Expense history unavailable" description={'The expense source returned no usable records in ' + financeCurrency + '. A zero-value expense series is not inferred.'} />
-          ) : revenueData.length >= 2 ? (
-            <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + financialTrendScopeLabel + '.'} />
-          ) : (
-            <div className="flex min-h-[220px] flex-col items-center justify-center rounded-control border border-line bg-bg px-5 py-8 text-center" role="status">
-              <CircleDollarSign size={20} className="text-muted" aria-hidden="true" />
-              <p className="mt-3 text-xs font-semibold text-fg">Financial trend unavailable</p>
-              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">A usable issued-invoice and recorded-expense trend could not be built for this reporting window. Missing values are not estimated.</p>
-            </div>
-          )}
-        </AdminPanel>
-
-        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Current active portfolio snapshot. This is not historical status-transition data.">
-          {deliveryProjects !== null ? totalDelivery === 0 ? (
-            <div className="flex min-h-[180px] flex-col items-center justify-center px-4 py-8 text-center" role="status">
-              <FolderKanban size={20} className="text-muted" aria-hidden="true" />
-              <p className="mt-3 text-xs font-semibold text-fg">No active projects to assess</p>
-              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">The live project source returned no active projects for delivery-risk assessment.</p>
-              {canOpenProjects ? <Link to="/admin/projects" className="mt-3 inline-flex min-h-8 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">Open Projects</Link> : null}
-            </div>
-          ) : (
-          <div className="space-y-4">
-            <div className="rounded-control border border-line bg-bg/45 p-4">
-              <div className="flex items-end justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-xs font-medium text-muted">No risk flag</div>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <span className="text-3xl font-semibold tracking-[-0.03em] tabular-nums text-fg">{onSchedulePercent}%</span>
-                    <span className="text-[11px] text-muted">{onScheduleValue} of {totalDelivery} projects</span>
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-medium text-success">Unflagged</span>
+      <section className="space-y-3" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Agency delivery desk">
+        <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
+          <AdminPanel
+            className="min-w-0 min-[1100px]:col-span-8"
+            title="Delivery queue"
+            description="Live tasks from Tasks & Execution, ordered by overdue state, blockers, priority, review status, ownership and due date. This is a working queue, not a second task store."
+            bodyClassName="p-0"
+            actions={canOpenTasks ? (
+              <Link
+                to={overviewTaskQueueHref}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                Open {overviewTaskFilter === 'review' ? 'review queue' : overviewTaskFilter === 'overdue' ? 'due tasks' : overviewTaskFilter === 'blocked' ? 'blocked tasks' : 'Tasks'} <ArrowUpRight size={13} aria-hidden="true" />
+              </Link>
+            ) : undefined}
+          >
+            <div className="border-b border-line px-3 py-3 sm:px-4">
+              <div className="flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Delivery queue filters">
+                {([
+                  { key: 'action', label: 'Action needed', count: taskQueueCounts.action },
+                  { key: 'review', label: 'Review', count: taskQueueCounts.review },
+                  { key: 'overdue', label: 'Overdue', count: taskQueueCounts.overdue },
+                  { key: 'blocked', label: 'Blocked', count: taskQueueCounts.blocked },
+                  { key: 'unassigned', label: 'Unassigned', count: taskQueueCounts.unassigned }
+                ] as Array<{ key: DashboardTaskFilter; label: string; count: number }>).map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    aria-pressed={overviewTaskFilter === tab.key}
+                    disabled={!canOpenTasks}
+                    onClick={() => setOverviewTaskFilter(tab.key)}
+                    className={[
+                      'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
+                      overviewTaskFilter === tab.key ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg'
+                    ].join(' ')}
+                  >
+                    {tab.label}
+                    <span className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
+                  </button>
+                ))}
               </div>
-              <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-line" aria-label="Delivery pacing breakdown">
-                {deliveryBreakdown.map((item) => {
-                  const percent = totalDelivery > 0 ? (Math.max(0, item.value) / totalDelivery) * 100 : 0;
+            </div>
+            {operationalSnapshot.tasks === null ? (
+              <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical task source did not return data for this role. Queue counts and owner assignments are not inferred." /></div>
+            ) : dashboardWorkTasks.length === 0 ? (
+              <div className="px-4 py-8" role="status">
+                <p className="text-xs font-semibold text-fg">No task records returned</p>
+                <p className="mt-1 text-xs text-muted">Tasks & Execution returned an empty task register. Create or import work from the canonical Tasks workspace when appropriate.</p>
+              </div>
+            ) : activeDashboardTasks.length === 0 ? (
+              <div className="px-4 py-8" role="status">
+                <p className="text-xs font-semibold text-fg">All returned tasks are complete</p>
+                <p className="mt-1 text-xs text-muted">The canonical task register contains no open work items.</p>
+              </div>
+            ) : visibleOverviewTasks.length === 0 ? (
+              <div className="px-4 py-8" role="status">
+                <p className="text-xs font-semibold text-fg">No tasks match this queue</p>
+                <p className="mt-1 text-xs text-muted">Change the queue filter to inspect a different task state.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-line">
+                {visibleOverviewTasks.map((task) => {
+                  const overdue = dashboardTaskIsOverdue(task, currentDayKey);
+                  const dueSoon = dashboardTaskIsDueSoon(task, currentDayKey, nextSevenDaysKey);
+                  const taskQueueDestination = task.blocked
+                    ? '/admin/tasks?taskscope=blocked'
+                    : task.status === 'review' || task.status === 'in_review'
+                      ? '/admin/tasks?taskscope=review'
+                      : overdue || dueSoon
+                        ? '/admin/tasks?taskscope=due'
+                        : '/admin/tasks';
+                  const dueLabel = !task.dueDate
+                    ? 'No due date'
+                    : overdue
+                      ? 'Overdue · ' + formatDashboardDate(task.dueDate)
+                      : task.dueDate === currentDayKey
+                        ? 'Due today'
+                        : dueSoon
+                          ? 'Due · ' + formatDashboardDate(task.dueDate)
+                          : formatDashboardDate(task.dueDate);
                   return (
-                    <div
-                      key={item.label}
-                      className={['h-full first:rounded-l-full last:rounded-r-full', progressClasses[item.tone]].join(' ')}
-                      style={{ width: percent + '%' }}
-                      title={item.label + ': ' + Math.round(percent) + '%'}
-                    />
+                    <article key={task.id} className="flex min-w-0 flex-col gap-3 px-4 py-3 sm:px-5 min-[900px]:flex-row min-[900px]:items-center" data-ams-task-id={task.id}>
+                      <span className={['mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border', toneClasses[overdue ? 'danger' : task.blocked ? 'warning' : dashboardTaskPriorityTone(task.priority)]].join(' ')}>
+                        {task.blocked || overdue ? <AlertTriangle size={14} aria-hidden="true" /> : task.status === 'review' || task.status === 'in_review' ? <Eye size={14} aria-hidden="true" /> : <CheckCircle2 size={14} aria-hidden="true" />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-xs font-semibold text-fg">{task.title}</p>
+                        <p className="mt-1 break-words text-[11px] leading-5 text-muted">
+                          {task.projectName}{task.clientName ? ' · ' + task.clientName : ''}{task.serviceCategory ? ' · ' + task.serviceCategory : ''}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <span className={['inline-flex items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[dashboardTaskPriorityTone(task.priority)]].join(' ')}>{task.priority.toUpperCase()}</span>
+                          <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{dashboardTaskStatusLabel(task.status)}</span>
+                          {task.blocked ? <span className="inline-flex items-center rounded-badge border border-danger/25 bg-danger/10 px-2 py-0.5 text-[10px] font-medium text-danger">Blocked</span> : null}
+                          {!task.assigned ? <span className="inline-flex items-center rounded-badge border border-warning/25 bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning">Unassigned</span> : null}
+                        </div>
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-1 sm:w-44 sm:shrink-0 sm:items-end">
+                        <span className="text-[11px] font-medium text-fg">{task.assigneeLabel}</span>
+                        <span className={['text-[11px] tabular-nums', overdue ? 'font-semibold text-danger' : dueSoon ? 'font-medium text-warning' : 'text-muted'].join(' ')}>{dueLabel}</span>
+                        {canOpenTasks && canOpenDashboardRoute(taskQueueDestination) ? (
+                          <Link to={taskQueueDestination} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                            Open task queue <ArrowUpRight size={12} aria-hidden="true" />
+                          </Link>
+                        ) : null}
+                      </div>
+                    </article>
                   );
                 })}
               </div>
-            </div>
+            )}
+            {canOpenTasks && activeDashboardTasks.length > visibleOverviewTasks.length && visibleOverviewTasks.length > 0 ? (
+              <div className="border-t border-line px-4 py-3 text-[11px] text-muted">
+                Showing {visibleOverviewTasks.length} highest-priority tasks from {activeDashboardTasks.length} open records in Tasks & Execution.
+              </div>
+            ) : null}
+          </AdminPanel>
 
-            <div className="grid grid-cols-3 gap-2">
-              {deliveryBreakdown.map((item) => {
-                const safeValue = Math.max(0, item.value);
-                const percent = totalDelivery > 0 ? Math.round((safeValue / totalDelivery) * 100) : 0;
-                return (
-                  <div key={item.label} className="min-w-0 rounded-control border border-line bg-bg p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <i className={['h-2 w-2 shrink-0 rounded-full', progressClasses[item.tone]].join(' ')} />
-                        <span className="whitespace-nowrap text-[10px] font-medium text-muted">{item.label}</span>
-                      </div>
-                      <span className={['shrink-0 rounded-badge border px-1.5 py-0.5 text-[10px] font-medium', toneClasses[item.tone]].join(' ')}>
-                        {item.tone === 'success' ? 'Healthy' : item.tone === 'warning' ? 'Monitor' : 'Action'}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-end justify-between gap-2">
-                      <div>
-                        <div className="text-lg font-semibold tabular-nums text-fg">{safeValue}</div>
-                        <div className="mt-0.5 text-[10px] text-muted">{safeValue === 1 ? 'project' : 'projects'}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold tabular-nums text-fg">{percent}%</div>
-                        <div className="mt-0.5 text-[10px] text-muted">of portfolio</div>
-                      </div>
-                    </div>
-                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-line" aria-hidden="true">
-                      <div className={['h-full rounded-full', progressClasses[item.tone]].join(' ')} style={{ width: percent + '%' }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          ) : (
-            <div className="flex min-h-[180px] flex-col items-center justify-center px-4 py-8 text-center" role="status">
-              <AlertTriangle size={20} className="text-muted" aria-hidden="true" />
-              <p className="mt-3 text-xs font-semibold text-fg">Delivery distribution is unavailable</p>
-              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">Live project pacing metrics are not connected to the dashboard service yet.</p>
-            </div>
-          )}
-        </AdminPanel>
-      </div>
-
-      <div className="mt-3 grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-0" title="Active projects" description={reportPeriodEnabled ? 'Active projects overlapping ' + reportPeriodLabel + '.' : 'Active projects across all dates.'} actions={canOpenProjects ? (
-          <Link to="/admin/projects" className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-accent-text">View all <ArrowUpRight size={13} /></Link>
-        ) : undefined}>
-          <div className="border-b border-line px-4 pt-3 sm:px-5">
-            <div className="flex gap-1.5 overflow-x-auto pb-3 custom-scrollbar">
-              {(['All', 'Enterprise', 'Retainer', 'Fixed-fee'] as ProjectFilter[]).map((filter) => (
-                <button key={filter} type="button" aria-pressed={projectFilter === filter} onClick={() => { setProjectFilter(filter); setDashboardProjectPage(1); }} className={['shrink-0 rounded-chip border px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'].join(' ')}>{filter}</button>
-              ))}
-            </div>
-          </div>
-          {filteredProjects.length === 0 ? (
-            <div className="flex min-h-[200px] flex-col items-center justify-center px-5 py-10 text-center" role="status">
-              <FolderKanban size={22} className="text-muted" aria-hidden="true" />
-              <p className="mt-3 text-sm font-semibold text-fg">
-                {dashboardOverview.loading || operationalSnapshot.loading
-                  ? 'Loading live projects…'
-                  : !dashboardProjectDataAvailable
-                    ? 'Live project data unavailable'
-                    : dashboardProjects.length === 0
-                      ? 'No projects recorded'
-                      : activeDashboardProjects.length === 0
-                        ? 'No active projects recorded'
-                        : 'No active projects match the selected reporting scope and type'}
-              </p>
-              <p className="mt-1 max-w-md text-xs leading-5 text-muted">
-                {dashboardOverview.loading || operationalSnapshot.loading
-                  ? 'Waiting for the live dashboard and project services to return their records.'
-                  : !dashboardProjectDataAvailable
-                    ? (canOpenProjects ? 'The dashboard and project services did not return project records. Open Projects to retry from the canonical workspace.' : 'The dashboard and project services did not return project records available to this role.')
-                    : dashboardProjects.length === 0
-                      ? 'The canonical project source returned no records.'
-                      : activeDashboardProjects.length === 0
-                        ? (canOpenProjects ? 'The returned project records are completed or archived. Open Projects to review the wider history.' : 'The returned project records are completed or archived.')
-                        : (canOpenProjects ? 'No current project matches the selected reporting period and type. Adjust the scope or open Projects.' : 'No current project matches the selected reporting period and type. Adjust the scope or type filter.')}
-              </p>
-              {canOpenProjects ? <Link to="/admin/projects" className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Projects</Link> : null}
-            </div>
-          ) : (
-            <>
-          <div className="min-[900px]:hidden divide-y divide-line">
-            {pagedDashboardProjects.map((project) => (
-              <article key={project.id} className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate text-xs font-semibold text-fg">{project.name}</h3>
-                    <p className="mt-1 truncate text-[11px] text-muted">{project.client}</p>
-                  </div>
-                  <span className={['shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium', toneClasses[project.statusTone]].join(' ')}>
-                    {project.status}
-                  </span>
-                </div>
-                <div className="mt-4">
-                  <div className="flex items-center justify-between gap-3 text-[10px] text-muted">
-                    <span>{project.type}</span>
-                    <span className="tabular-nums">{project.progress == null ? '—' : project.progress + '%'}</span>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
-                    <div
-                      className={['h-full rounded-full', progressClasses[project.statusTone]].join(' ')}
-                      style={{ width: (project.progress ?? 0) + '%' }}
-                    />
-                  </div>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <div className="rounded-control border border-line bg-bg p-2.5">
-                    <div className="text-[10px] text-muted">Lead</div>
-                    <div className="mt-1 truncate text-[11px] font-medium text-fg">{project.lead}</div>
-                  </div>
-                  <div className="rounded-control border border-line bg-bg p-2.5">
-                    <div className="text-[10px] text-muted">Budget</div>
-                    <div className="mt-1 truncate text-[11px] font-medium text-fg">{project.budget}</div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setProjectDetails(project)}
-                  className="mt-3 flex min-h-9 w-full items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                  View project
-                </button>
-              </article>
-            ))}
-          </div>
-
-          <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable active project register" data-ams-slug="dashboard-projects-scroll">
-            <table className="w-full min-w-[760px] border-collapse text-left">
-              <thead><tr>
-                <th className="px-4 py-3 text-xs font-medium text-muted sm:px-5">Project / client</th>
-                <th className="px-3 py-3 text-xs font-medium text-muted">Status</th>
-                <th className="px-3 py-3 text-xs font-medium text-muted">Pacing</th>
-                <th className="px-3 py-3 text-xs font-medium text-muted">Lead</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted">Budget</th>
-                <th className="w-10 px-2 py-3" />
-              </tr></thead>
-              <tbody>
-                {pagedDashboardProjects.map((project) => (
-                  <tr key={project.id} className="border-t border-line transition-colors hover:bg-panel-hover">
-                    <td className="px-4 py-3 sm:px-5"><div className="font-medium text-xs text-fg">{project.name}</div><div className="mt-0.5 text-[11px] text-muted">{project.client}</div></td>
-                    <td className="px-3 py-3"><span className={['inline-flex items-center rounded-badge border px-2 py-1 text-[11px] font-medium', toneClasses[project.statusTone]].join(' ')}>{project.status}</span></td>
-                    <td className="px-3 py-3"><div className="flex min-w-[150px] items-center gap-2"><div className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')} style={{ width: (project.progress ?? 0) + '%' }} /></div><span className="w-8 text-right text-[11px] tabular-nums text-muted">{project.progress == null ? '—' : project.progress + '%'}</span></div></td>
-                    <td className="px-3 py-3"><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold text-fg">{project.lead.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><span className="text-xs text-muted">{project.lead}</span></div></td>
-                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{project.budget}</td>
-                    <td className="relative px-2 py-3 text-right" data-dashboard-project-actions>
-                      <button
-                        type="button"
-                        aria-label={'More actions for ' + project.name}
-                        aria-haspopup="menu"
-                        aria-expanded={projectActionId === project.id}
-                        onClick={(event) => {
-                          const rect = event.currentTarget.getBoundingClientRect();
-                          setProjectActionPosition({
-                            top: Math.min(window.innerHeight - 104, rect.bottom + 4),
-                            left: Math.max(8, Math.min(window.innerWidth - 200, rect.right - 192)),
-                          });
-                          setProjectActionId(current => current === project.id ? null : project.id);
-                        }}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
-                      >
-                        <MoreHorizontal size={15} />
-                      </button>
-                      {projectActionId === project.id && (
-                        <div
-                          role="menu"
-                          aria-label={'Actions for ' + project.name}
-                          className="fixed z-[70] w-48 overflow-hidden rounded-card border border-line bg-panel p-1 text-left shadow-none"
-                          style={{ top: projectActionPosition?.top, left: projectActionPosition?.left }}
-                          data-dashboard-project-actions
-                        >
-                          <button
-                            type="button"
-                            role="menuitem"
-                            className="flex min-h-9 w-full items-center rounded-control px-3 text-xs text-muted hover:bg-bg hover:text-fg"
-                            onClick={() => {
-                              setProjectDetails(project);
-                              setProjectActionId(null);
-                              setProjectActionPosition(null);
-                            }}
-                          >
-                            View project details
-                          </button>
-{canOpenProjects && (
-                          <button
-                            type="button"
-                            role="menuitem"
-                            className="flex min-h-9 w-full items-center rounded-control px-3 text-xs text-muted hover:bg-bg hover:text-fg"
-                            onClick={() => {
-                              navigate('/admin/projects');
-                              setProjectActionId(null);
-                              setProjectActionPosition(null);
-                            }}
-                          >
-                            Open project workspace
-                          </button>
-                          )}
+          <AdminPanel
+            className="min-w-0 min-[1100px]:col-span-4"
+            title="Creative & IT workstreams"
+            description="Project groupings use each saved service category. Unrecognized or missing categories stay visible under Other / Unclassified."
+            bodyClassName="p-0"
+          >
+            {operationalSnapshot.projects === null ? (
+              <div className="p-4"><DashboardUnavailable title="Workstream data unavailable" description="The canonical project source did not return project categories for this role." /></div>
+            ) : rawProjectRows.length === 0 ? (
+              <div className="px-4 py-8" role="status">
+                <p className="text-xs font-semibold text-fg">No project records returned</p>
+                <p className="mt-1 text-xs text-muted">Workstream counts are not estimated from task titles or placeholder categories.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-line">
+                {serviceLineSummaries.map((line) => (
+                  <div key={line.key} className="px-4 py-4 sm:px-5">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">{line.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h3 className="text-xs font-semibold text-fg">{line.label}</h3>
+                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] tabular-nums text-muted">{line.projectCount} projects</span>
                         </div>
-                      )}
-                    </td>
-                  </tr>
+                        <p className="mt-1 text-[11px] leading-5 text-muted">{line.description}</p>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-control border border-line bg-bg px-3 py-2">
+                            <p className="text-[10px] text-muted">Open tasks</p>
+                            <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{operationalSnapshot.tasks === null ? '—' : line.openTaskCount}</p>
+                          </div>
+                          <div className="rounded-control border border-line bg-bg px-3 py-2">
+                            <p className="text-[10px] text-muted">Overdue delivery items</p>
+                            <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{line.overdueCommitmentCount}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-
-            </>
-          )}
-          {filteredProjects.length > 0 && <AdminTablePagination
-            total={filteredProjects.length}
-            page={dashboardProjectPage}
-            pageSize={dashboardProjectPageSize}
-            onPageChange={setDashboardProjectPage}
-            onPageSizeChange={setDashboardProjectPageSize}
-            itemLabel="projects"
-            slug="dashboard-projects-pagination"
-          />}
-        </AdminPanel>
-
-        <AdminPanel
-          className="min-[1100px]:col-span-4"
-          bodyClassName="p-4 sm:p-5"
-          title="Team capacity"
-          description="Current workload distribution from persisted team and time records."
-        >
-          <div className="flex min-h-[180px] flex-col items-center justify-center px-3 py-8 text-center" role="status">
-            <Users size={20} className="text-muted" aria-hidden="true" />
-            <p className="mt-3 text-xs font-semibold text-fg">Team workload data is unavailable</p>
-            <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">Live assignments and utilization are not available from the dashboard service yet.</p>
-            {canOpenDashboardRoute('/admin/time-logs') ? <Link to="/admin/time-logs" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={13} /></Link> : null}
-          </div>
-        </AdminPanel>
-      </div>
-
-        <div className="mt-3 min-w-0" data-ams-feature-slug="dashboard-supporting-metrics">
-          <AdminMetricStrip slug="dashboard-supporting-kpis" metrics={[
-            {
-              id: 'avg-project-value', label: 'Avg. active project budget now',
-              value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : '—',
-              context: averageActiveBudget != null ? 'Average of current active project budgets' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
-              icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
-            },
-            {
-              id: 'cash-expense-difference', label: 'Payments less recorded expenses this month',
-              value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : '—',
-              context: liveCashDifference !== null ? 'Invoice payments recorded this month less expenses recorded this month; not posted profit' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
-              icon: <CircleDollarSign size={15} />,
-              toneClassName: liveCashDifference != null
-                ? liveCashDifference >= 0 ? 'text-success' : 'text-danger'
-                : 'text-fg',
-              slug: 'dashboard-cash-expense-difference'
-            }
-          ]} />
+              </div>
+            )}
+            {canOpenProjects ? (
+              <div className="border-t border-line px-4 py-3">
+                <Link to="/admin/projects?projects=all" className="inline-flex min-h-8 items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">
+                  Open Project Registry <ArrowUpRight size={13} aria-hidden="true" />
+                </Link>
+              </div>
+            ) : null}
+          </AdminPanel>
         </div>
+      </section>
 
+      <section className="space-y-3" data-ams-feature-slug="dashboard-delivery-commitments" aria-label="Delivery commitments and resource load">
+        <div className="grid min-w-0 gap-3 min-[1100px]:grid-cols-12">
+          <AdminPanel
+            className="min-w-0 min-[1100px]:col-span-7"
+            title="Upcoming milestones & delivery deadlines"
+            description="Open milestone and project target dates due today, overdue, or within the next 30 days. Project records remain owned by Projects."
+            bodyClassName="p-0"
+            actions={canOpenProjects ? (
+              <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                Open Planning & Delivery <ArrowUpRight size={13} aria-hidden="true" />
+              </Link>
+            ) : undefined}
+          >
+            {operationalSnapshot.projects === null ? (
+              <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned for the current role. Deadlines are not inferred." /></div>
+            ) : rawProjectRows.length === 0 ? (
+              <div className="px-4 py-8" role="status">
+                <p className="text-xs font-semibold text-fg">No project records returned</p>
+                <p className="mt-1 text-xs text-muted">No milestones or delivery commitments can be derived from an empty project source.</p>
+              </div>
+            ) : upcomingCommitments.length === 0 ? (
+              <div className="px-4 py-8" role="status">
+                <p className="text-xs font-semibold text-fg">No dated commitments due in the next 30 days</p>
+                <p className="mt-1 text-xs text-muted">No open milestone or project target dates were returned within this window. Missing dates are not estimated.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-line">
+                {upcomingCommitments.map((item) => {
+                  const overdue = item.dueDate < currentDayKey;
+                  const dueTone: DashboardTone = overdue ? 'danger' : item.dueDate === currentDayKey ? 'warning' : 'info';
+                  const projectHref = '/admin/projects?projects=sprint&project=' + encodeURIComponent(item.projectSlug);
+                  const projectRouteAvailable = canOpenProjects && canOpenDashboardRoute(projectHref);
+                  return (
+                    <article key={item.id} className="flex min-w-0 flex-col gap-2 px-4 py-3 sm:px-5 sm:flex-row sm:items-center">
+                      <span className={['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control border', toneClasses[dueTone]].join(' ')}><CalendarDays size={14} aria-hidden="true" /></span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs font-semibold text-fg">{item.title}</p>
+                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{item.kind}</span>
+                          <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[dueTone]].join(' ')}>{overdue ? 'Overdue' : item.dueDate === currentDayKey ? 'Due today' : item.dueDate <= nextSevenDaysKey ? 'Due this week' : 'Upcoming'}</span>
+                        </div>
+                        <p className="mt-1 break-words text-[11px] text-muted">{item.projectName}{item.clientName ? ' · ' + item.clientName : ''}{item.serviceCategory ? ' · ' + item.serviceCategory : ''}</p>
+                        <p className="mt-1 text-[11px] text-muted">{item.owner}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:gap-1">
+                        <span className={['text-xs tabular-nums', overdue ? 'font-semibold text-danger' : 'font-medium text-fg'].join(' ')}>{formatDashboardDate(item.dueDate)}</span>
+                        {projectRouteAvailable ? <Link to={projectHref} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project <ArrowUpRight size={12} aria-hidden="true" /></Link> : null}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+            {operationalSnapshot.projects !== null && rawProjectRows.length > 0 && upcomingCommitments.length > 0 && (overdueCommitmentCount || 0) > 0 ? (
+              <div className="border-t border-line px-4 py-3 text-[11px] text-muted">
+                {overdueCommitmentCount} open milestone or project deadline records are past due across active projects.
+              </div>
+            ) : null}
+          </AdminPanel>
 
+          <AdminPanel
+            className="min-w-0 min-[1100px]:col-span-5"
+            title="Assigned work & logged time"
+            description="Task counts show assignment load; logged hours show recorded activity. Neither is a forecast of available capacity."
+            bodyClassName="p-4 sm:p-5"
+          >
+            <div className="space-y-4">
+              <div data-ams-feature-slug="dashboard-task-load-by-owner">
+                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
+                  {canOpenTasks ? <Link to="/admin/tasks" className="text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={12} aria-hidden="true" /></Link> : null}
+                </div>
+                {operationalSnapshot.tasks === null ? (
+                  <p className="text-xs text-muted" role="status">Task assignment data unavailable.</p>
+                ) : taskLoadByAssignee.length === 0 ? (
+                  <p className="text-xs text-muted" role="status">No open task assignments in the current source.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {taskLoadByAssignee.map((owner) => (
+                      <div key={owner.label} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="min-w-0 truncate text-xs font-medium text-fg">{owner.label}</span>
+                          <span className="shrink-0 text-xs tabular-nums text-muted">{owner.total} open</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{owner.overdue} overdue</span>
+                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{owner.blocked} blocked</span>
+                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{owner.review} in review</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="border-t border-line pt-4" data-ams-feature-slug="dashboard-recorded-time-by-person">
+                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
+                  <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</span>
+                </div>
+                <p className="mb-3 text-[11px] leading-5 text-muted">Logged time is actual recorded activity, not remaining capacity or billable revenue.</p>
+                {operationalSnapshot.timeLogs === null ? (
+                  <p className="text-xs text-muted" role="status">Time-log source unavailable.</p>
+                ) : periodTimeRows.length === 0 ? (
+                  <p className="text-xs text-muted" role="status">No time records returned for this reporting scope.</p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {periodTimeRows.map((person) => (
+                      <div key={person.name} className="flex items-center justify-between gap-3">
+                        <span className="min-w-0 truncate text-xs text-fg">{person.name}</span>
+                        <span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(person.minutes / 60)}h {person.minutes % 60}m · {person.entries} entries</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {canOpenTimeLogs ? <Link to="/admin/time-logs" className="mt-3 inline-flex min-h-8 items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={13} aria-hidden="true" /></Link> : null}
+              </div>
+            </div>
+          </AdminPanel>
+        </div>
+      </section>
 
-      <section
-        className="space-y-2"
-        data-ams-feature-slug="dashboard-quick-actions"
-        data-ams-slug="dashboard-quick-actions"
-        aria-label="Quick actions"
-      >
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-semibold text-fg">Quick actions</h2>
-          <p className="text-[11px] text-muted">Common workspaces</p>
+      {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
+        <section data-ams-feature-slug="dashboard-finance-control" aria-label="Finance control summary">
+          <AdminPanel
+            title="Finance control"
+            description={'Current financial snapshot · ' + currentMonthKey + ' · ' + financeCurrency + '. Finance owns posted accounting truth; Dashboard summarizes canonical records.'}
+            bodyClassName="p-4 sm:p-5"
+          >
+            <div className="grid gap-3 min-[900px]:grid-cols-3">
+              {canOpenInvoiceRegister ? (
+                <div className="min-w-0 rounded-control border border-line bg-bg p-4">
+                  <p className="text-xs font-medium text-muted">Cash received this month</p>
+                  <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{cashValueAvailable && liveCashCollected !== null ? formatLiveMoney(liveCashCollected, financeCurrency) : '—'}</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">{operationalSnapshot.invoices === null ? 'Invoice/payment source unavailable.' : cashValueAvailable ? 'Payments recorded against issued invoices in the current month.' : 'No issued invoice records are available to confirm a cash total.'}</p>
+                  <Link to="/admin/finance?tab=accounts-receivable" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Accounts Receivable <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                </div>
+              ) : null}
+              {canOpenInvoiceRegister ? (
+                <div className="min-w-0 rounded-control border border-line bg-bg p-4">
+                  <p className="text-xs font-medium text-muted">Outstanding receivables</p>
+                  <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{outstandingValueAvailable && liveOutstanding !== null ? formatLiveMoney(liveOutstanding, financeCurrency) : '—'}</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">{operationalSnapshot.invoices === null ? 'Invoice source unavailable.' : outstandingValueAvailable ? 'Current balances on issued invoices; not filtered by reporting period.' : 'No issued invoice records are available to confirm an open balance.'}</p>
+                  <Link to="/admin/finance?tab=accounts-receivable" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open receivables <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                </div>
+              ) : null}
+              {canOpenExpenseRegister ? (
+                <div className="min-w-0 rounded-control border border-line bg-bg p-4">
+                  <p className="text-xs font-medium text-muted">Recorded expenses this month</p>
+                  <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{expensesValueAvailable && liveMonthlyExpenses !== null ? formatLiveMoney(liveMonthlyExpenses, financeCurrency) : '—'}</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">{operationalSnapshot.expenses === null ? 'Expense source unavailable.' : expensesValueAvailable ? 'Eligible expenses by recorded date in the current month.' : 'No eligible expense records are available to confirm a monthly total.'}</p>
+                  <Link to="/admin/finance?tab=expenses" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open expenses <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                </div>
+              ) : null}
+            </div>
+          </AdminPanel>
+        </section>
+      ) : null}
+
+      <section data-ams-feature-slug="dashboard-workspace-shortcuts" aria-label="Workspace shortcuts">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-xs font-semibold text-fg">Continue in a workspace</h2>
+          <p className="text-[11px] text-muted">Open the canonical record surface</p>
         </div>
         <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5">
           {[
-            { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
-            { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
-            { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/finance?tab=accounts-receivable' },
-            { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
-            { label: 'View documents', icon: <FileText size={14} />, href: '/admin/documents' }
+            { label: 'Tasks & Execution', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
+            { label: 'Project Planning', icon: <CalendarDays size={14} />, href: '/admin/projects?projects=planning-delivery' },
+            { label: 'Time Logs', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
+            { label: 'Accounts Receivable', icon: <ReceiptText size={14} />, href: '/admin/finance?tab=accounts-receivable' },
+            { label: 'Documents', icon: <FileText size={14} />, href: '/admin/documents' }
           ].filter((action) => canOpenDashboardRoute(action.href)).map((action) => (
-            <Link
-              key={action.label}
-              to={action.href}
-              className="flex min-h-10 min-w-0 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
+            <Link key={action.label} to={action.href} className="flex min-h-10 min-w-0 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
               <span className="shrink-0 text-muted">{action.icon}</span>
               <span className="min-w-0 truncate">{action.label}</span>
-              <ArrowUpRight size={12} className="ml-auto shrink-0 text-muted" />
+              <ArrowUpRight size={12} className="ml-auto shrink-0 text-muted" aria-hidden="true" />
             </Link>
           ))}
         </div>
@@ -1696,71 +1834,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           currency={financeCurrency}
         />
       )}
-      <Modal
-        open={Boolean(projectDetails)}
-        onClose={() => setProjectDetails(null)}
-        size="md"
-        title={projectDetails?.name || 'Project details'}
-        description={projectDetails ? projectDetails.client : undefined}
-        footer={(
-          <>
-            <button
-              type="button"
-              className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
-              onClick={() => setProjectDetails(null)}
-            >
-              Close
-            </button>
-{canOpenProjects && (
-            <button
-              type="button"
-              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
-              onClick={() => {
-                setProjectDetails(null);
-                navigate('/admin/projects');
-              }}
-            >
-              Open workspace
-            </button>
-            )}
-          </>
-        )}
-      >
-        {projectDetails && (
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-xs font-medium text-muted">Status</div>
-                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.status}</div>
-              </div>
-              <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-xs font-medium text-muted">Progress</div>
-                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.progress == null ? '—' : projectDetails.progress + '%'}</div>
-              </div>
-              <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-xs font-medium text-muted">Project lead</div>
-                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.lead}</div>
-              </div>
-              <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-xs font-medium text-muted">Budget</div>
-                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.budget}</div>
-              </div>
-            </div>
-            <div className="rounded-control border border-line bg-bg p-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs text-muted">Delivery pacing</span>
-                <span className="text-xs font-semibold text-fg">{projectDetails.progress == null ? 'Progress unavailable' : projectDetails.progress + '% complete'}</span>
-              </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-sm bg-line">
-                <div
-                  className={['h-full rounded-sm', progressClasses[projectDetails.statusTone]].join(' ')}
-                  style={{ width: (projectDetails.progress ?? 0) + '%' }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
     </AdminPageShell>
   );
 };
