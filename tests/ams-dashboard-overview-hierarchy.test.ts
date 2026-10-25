@@ -57,13 +57,14 @@ test('Dashboard Overview leads with Finance and Projects cards and groups agency
 });
 
 
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');
   const modelEnd = dashboard.indexOf('const upcomingCommitments = allUpcomingCommitments.slice(0, 8);', modelStart);
-  assert.ok(modelStart >= 0 && modelEnd > modelStart, 'Client delivery priority must be derived inside the canonical-source summary.');
+  assert.ok(modelStart >= 0 && modelEnd > modelStart);
   const model = dashboard.slice(modelStart, modelEnd);
-  const prioritySignals = [
+  const signals = [
     'right.overdueCommitmentCount - left.overdueCommitmentCount',
     '(right.overdueTaskCount ?? -1) - (left.overdueTaskCount ?? -1)',
     '(right.blockedTaskCount ?? -1) - (left.blockedTaskCount ?? -1)',
@@ -74,59 +75,56 @@ test('Dashboard Client Delivery Focus prioritizes agency delivery risk before po
     'right.projectCount - left.projectCount',
     'left.name.localeCompare(right.name)'
   ];
-  let previousPosition = -1;
-  for (const signal of prioritySignals) {
+  let last = -1;
+  for (const signal of signals) {
     const position = model.indexOf(signal);
-    assert.ok(position > previousPosition, 'Client rows must sort by delivery urgency before less urgent tie-breakers: ' + signal);
-    previousPosition = position;
+    assert.ok(position > last, 'Delivery risk must sort before portfolio size: ' + signal);
+    last = position;
   }
-  const panelStart = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const panelEnd = dashboard.indexOf('{(canOpenInvoiceRegister || canOpenExpenseRegister) ? (', panelStart);
-  const panel = dashboard.slice(panelStart, panelEnd);
-  assert.ok(panel.includes('Ranked by overdue commitments, task risk and next delivery date.'));
-  assert.ok(panel.includes('Missing task data stays unavailable.'));
-  assert.ok(panel.includes('not a client health, contract or SLA score'));
-  const metricGridStart = panel.indexOf('grid-cols-2 gap-2 min-[600px]:grid-cols-3 min-[1100px]:grid-cols-5');
-  const metricGridEnd = panel.indexOf('.map((metric) => (', metricGridStart);
-  assert.ok(metricGridStart >= 0 && metricGridEnd > metricGridStart, 'Client task indicators must use the responsive priority-first grid.');
-  const metricGrid = panel.slice(metricGridStart, metricGridEnd);
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
+  const end = dashboard.indexOf('aria-label="Recent activity and shortcuts"', start);
+  assert.ok(start >= 0 && end > start);
+  const panel = dashboard.slice(start, end);
   const metricOrder = ['Overdue tasks', 'Blocked tasks', 'Unassigned tasks', 'Tasks in review', 'Open tasks'];
-  let previousMetricPosition = -1;
+  let previous = -1;
   for (const label of metricOrder) {
-    const position = metricGrid.indexOf("label: '" + label + "'");
-    assert.ok(position > previousMetricPosition, 'Client risk indicators must be presented in priority order: ' + label);
-    previousMetricPosition = position;
+    const position = panel.indexOf("label: '" + label + "'");
+    assert.ok(position > previous, 'Client risk indicators must remain ordered: ' + label);
+    previous = position;
   }
+  assert.ok(panel.includes('clientDeliveryFocus.slice(0, 4).map((client) => ('));
+  assert.ok(panel.includes('Overdue commitments remain'));
+  assert.ok(panel.includes('No dated commitment in 30 days'));
 });
+
 
 test('Dashboard Overview client delivery focus groups saved client relationships and preserves source boundaries', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const end = dashboard.indexOf('{(canOpenInvoiceRegister || canOpenExpenseRegister) ? (', start);
-  assert.ok(start >= 0 && end > start, 'Client delivery focus should be a separate bounded source summary.');
-  const clientFocus = dashboard.slice(start, end);
+  const end = dashboard.indexOf('aria-label="Recent activity and shortcuts"', start);
+  assert.ok(start >= 0 && end > start);
+  const panel = dashboard.slice(start, end);
   assert.ok(dashboard.includes('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>'));
   assert.ok(dashboard.includes("resolveDashboardClientName(clientId, clientDirectoryById, project.clientCompany, project.client, project.clientName)"));
   assert.ok(dashboard.includes('const projectIdentity = projectClientById.get(task.projectId)'));
   assert.ok(dashboard.includes('ensureClient(task.clientId, task.clientName)'));
-  assert.ok(clientFocus.includes('active projects'));
-  assert.ok(clientFocus.includes('overdue commitments'));
-  assert.ok(clientFocus.includes('Tasks in review'));
-  assert.ok(clientFocus.includes('Blocked tasks'));
-  assert.ok(clientFocus.includes('Overdue tasks'));
-  assert.ok(clientFocus.includes('canOpenDashboardRoute(project.href)'));
-  assert.ok(clientFocus.includes('not a client health, contract or SLA score'));
-  assert.ok(clientFocus.includes('No future date · overdue work remains'));
-  assert.ok(clientFocus.includes('No dated commitment in the next 30 days'));
+  assert.ok(panel.includes('active projects'));
+  assert.ok(panel.includes('Overdue tasks'));
+  assert.ok(panel.includes('Blocked tasks'));
+  assert.ok(panel.includes('client.overdueTaskCount'));
+  assert.ok(panel.includes('client.nextCommitmentDate'));
+  assert.ok(panel.includes('project.href && canOpenDashboardRoute(project.href)'));
+  assert.ok(panel.includes('Overdue commitments remain'));
+  assert.ok(panel.includes('No dated commitment in 30 days'));
 });
+
 
 test('Dashboard client delivery focus resolves canonical client IDs and never invents project slugs for drill-downs', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const end = dashboard.indexOf('{(canOpenInvoiceRegister || canOpenExpenseRegister) ? (', start);
+  const end = dashboard.indexOf('aria-label="Recent activity and shortcuts"', start);
   assert.ok(start >= 0 && end > start);
-  const clientFocus = dashboard.slice(start, end);
-
+  const panel = dashboard.slice(start, end);
   assert.ok(dashboard.includes("const canOpenClientDirectory = canOpenDashboardRoute('/admin/clients/all-clients')"));
   assert.ok(dashboard.includes("canOpenClientDirectory ? api.clients.getAll() : Promise.resolve"));
   assert.ok(dashboard.includes("const clientId = String(project.clientId || project.client_id || '').trim()"));
@@ -136,25 +134,24 @@ test('Dashboard client delivery focus resolves canonical client IDs and never in
   assert.ok(dashboard.includes('Saved client ID · master record not resolved'));
   assert.ok(dashboard.includes('Grouped by saved company name'));
   assert.ok(dashboard.includes("'/admin/clients/all-clients?client=' + encodeURIComponent(client.clientId)"));
-  assert.ok(clientFocus.includes('client.clientRecordAvailable && canOpenClientDirectory && client.clientId'));
+  assert.ok(panel.includes('client.clientRecordAvailable && canOpenClientDirectory && client.clientId'));
   assert.ok(dashboard.includes("if (slug) return '/admin/projects?projects=sprint&project=' + encodeURIComponent(slug)"));
   assert.ok(dashboard.includes("if (id) return '/admin/projects?projects=all&project=' + encodeURIComponent(id)"));
-  assert.ok(dashboard.includes('getDashboardProjectHref(project)'));
-  assert.ok(dashboard.includes('const projectHref = item.projectHref'));
-  assert.equal(dashboard.includes("'/admin/projects?projects=sprint&project=' + encodeURIComponent(projectSlug)"), false,
-    'A generated slug must not be treated as a canonical project route.');
-  assert.ok(clientFocus.includes('project.href && canOpenDashboardRoute(project.href)'));
+  assert.ok(dashboard.includes('const projectHref = getDashboardProjectHref(project)'));
+  assert.equal(dashboard.includes("'/admin/projects?projects=sprint&project=' + encodeURIComponent(projectSlug)"), false);
+  assert.ok(panel.includes('project.href && canOpenDashboardRoute(project.href)'));
 });
+
 
 test('Dashboard Overview Finance controls link to canonical ledgers only when route access allows them', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-finance-control"');
-  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"', start);
-  assert.ok(start >= 0 && end > start, 'Finance control summary must remain a bounded Overview section.');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', start);
+  assert.ok(start >= 0 && end > start);
   const finance = dashboard.slice(start, end);
-
   assert.ok(dashboard.includes("const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable')"));
   assert.ok(dashboard.includes("const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses')"));
+  assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-control"'));
   assert.ok(finance.includes('{canOpenInvoiceRegister ? ('));
   assert.ok(finance.includes('{canOpenExpenseRegister ? ('));
   assert.ok(finance.includes('Cash received this month'));
@@ -163,7 +160,10 @@ test('Dashboard Overview Finance controls link to canonical ledgers only when ro
   assert.ok(finance.includes('to="/admin/finance?tab=accounts-receivable"'));
   assert.ok(finance.includes('to="/admin/finance?tab=expenses"'));
   assert.ok(finance.includes('Finance owns posted accounting truth'));
-  assert.doesNotMatch(finance, /revenueThisMonth|netOperatingProfit/, 'Current cash control must not substitute revenue or an unposted profit estimate.');
+  assert.ok(finance.includes('<TrendChart'));
+  assert.ok(finance.includes('primaryLabel="Issued invoices"'));
+  assert.ok(finance.includes('secondaryLabel="Recorded expenses"'));
+  assert.doesNotMatch(finance, /revenueThisMonth|netOperatingProfit/);
 });
 
 test('Dashboard work queue and service-line summaries come from canonical task/project records', async () => {
@@ -188,7 +188,7 @@ test('Dashboard work queue and service-line summaries come from canonical task/p
   assert.ok(dashboard.includes("operationalSnapshot.tasks === null ? ("));
   assert.ok(dashboard.includes("operationalSnapshot.projects === null ? ("));
   assert.ok(dashboard.includes('Task queue unavailable'));
-  assert.ok(dashboard.includes('Workstream data unavailable'));
+  assert.ok(dashboard.includes('Task queue unavailable for this role or source.'));
   assert.doesNotMatch(dashboard, /const taskCount\s*=\s*0/);
 });
 
@@ -211,31 +211,23 @@ test('Dashboard Analytics financial-history availability respects currency and i
   assert.ok(analytics.includes('No usable financial records in selected currency'));
 });
 
-test('Dashboard overview keeps its operational queues source-backed and preserves financial source states in Analytics', async () => {
+
+test('Dashboard overview keeps its operational cards source-backed and preserves financial source states in Analytics', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  for (const sourceCall of [
-    'api.dashboard.getOverview()',
-    'api.projects.getAll()',
-    'api.tasks.getAll()',
-    'api.timeLogs.getAll()',
-    'api.finance.getInvoices()',
-    'api.finance.getExpenses()',
-  ]) {
-    assert.ok(dashboard.includes(sourceCall), 'Dashboard data source missing: ' + sourceCall);
+  for (const sourceCall of ['api.dashboard.getOverview()', 'api.projects.getAll()', 'api.tasks.getAll()', 'api.timeLogs.getAll()', 'api.finance.getInvoices()', 'api.finance.getExpenses()']) {
+    assert.ok(dashboard.includes(sourceCall), 'Dashboard source missing: ' + sourceCall);
   }
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
-  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, stop);
   const analyticsStart = dashboard.indexOf('const AnalyticsView:');
   const analyticsEnd = dashboard.indexOf('export const GlobalExecutiveDashboard', analyticsStart);
   const analytics = dashboard.slice(analyticsStart, analyticsEnd);
-
-  assert.ok(overview.includes('Task queue unavailable'), 'Missing task sources must remain explicit.');
-  assert.ok(overview.includes('Workstream data unavailable'), 'Missing project sources must remain explicit.');
-  assert.ok(overview.includes('Time-log source unavailable'), 'Missing time sources must remain explicit.');
-  assert.ok(overview.includes('Invoice/payment source unavailable.'), 'Missing Finance sources must remain explicit.');
+  for (const text of ['Task queue unavailable', 'Project portfolio unavailable', 'Delivery schedule unavailable', 'Time-log source unavailable.', 'Invoice source unavailable.', 'Financial movement unavailable']) {
+    assert.ok(overview.includes(text), 'Overview must disclose source unavailability: ' + text);
+  }
   assert.ok(analytics.includes('Financial trend unavailable'));
-  assert.ok(analytics.includes('not posted profit'), 'Difference must not be relabeled as posted profit.');
+  assert.ok(analytics.includes('not posted profit'));
   assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
   assert.doesNotMatch(dashboard, /Preview data only|sampleProjects|sampleTeam|sampleRevenueByRange|isSlugFixtureMode|fixtureMode/);
 });
@@ -256,30 +248,28 @@ test('Dashboard project creation action opens the existing create drawer only fo
 });
 
 
+
 test('Dashboard Overview separates current operations from period-scoped Analytics without a duplicate chart filter', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const charts = await read('src/components/charts/DashboardCharts.tsx');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
-  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, stop);
   const analyticsStart = dashboard.indexOf('const AnalyticsView:');
   const analyticsEnd = dashboard.indexOf('export const GlobalExecutiveDashboard', analyticsStart);
   const analytics = dashboard.slice(analyticsStart, analyticsEnd);
-
   assert.match(dashboard, /const \{ matchesDate, matchesInterval, value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled \} = useReportingPeriod\(\)/);
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(analytics.includes('buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)'));
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
-  assert.ok(analytics.includes("ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. Exact values are listed in the table below.'}"));
   assert.ok(dashboard.includes('Recent 30-day default window'));
   assert.ok(analytics.includes('All dates defaults to the recent 30 days.'));
-  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.equal(overview.includes('title="Invoices vs expenses"'), false, 'Overview must not duplicate Analytics financial trends.');
-  assert.equal(overview.includes('title="Active projects"'), false, 'Overview must not duplicate Project Registry.');
-  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false, 'The global reporting Filter is the only chart-period selector.');
-  assert.equal(dashboard.includes('RangeKey'), false, 'Dashboard-local range state must not compete with global reporting scope.');
-  assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'), 'The chart must provide a keyboard-focusable exact-value table.');
+  assert.ok(overview.includes('Financial trends use the selected period or recent 30 days. Project, task and invoice balances reflect their current saved state.'));
+  assert.equal(overview.includes('title="Invoices vs expenses"'), false);
+  assert.equal(overview.includes('title="Active projects"'), false);
+  assert.equal(dashboard.includes('DashboardTrendRangePicker'), false);
+  assert.equal(dashboard.includes('RangeKey'), false);
+  assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'));
   assert.ok(charts.includes('<div className="relative min-w-0" role="img" aria-label={ariaLabel}>'));
   assert.ok(charts.includes('<span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>'));
   assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'));
@@ -465,98 +455,100 @@ test('Dashboard priority exception drill-downs select the first route allowed fo
     'A single fixed destination can disable a valid workspace for another role.');
 });
 
-test('Dashboard Overview adds a permission-gated Inbox triage work surface from the canonical lead source', async () => {
+
+test('Dashboard Overview adds a permission-gated Inbox triage card from the canonical lead source', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const inboxTriage = await read('src/lib/inboxTriage.ts');
   const inboxPage = await read('src/pages/admin/AdminInbox.tsx');
-  const branchStart = dashboard.indexOf("{view === 'overview' ? (");
-  const branchEnd = dashboard.indexOf(") : view === 'performance' ? (", branchStart);
-  assert.ok(branchStart >= 0 && branchEnd > branchStart);
-  const overview = dashboard.slice(branchStart, branchEnd);
-  const exceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
-  const triageStart = overview.indexOf('data-ams-feature-slug="dashboard-inbox-triage"');
-  const indicatorsStart = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
-  const deliveryStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
-  const commitmentsStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
-  assert.ok(exceptionsStart >= 0 && triageStart > exceptionsStart && deliveryStart > triageStart && commitmentsStart > deliveryStart && indicatorsStart > commitmentsStart,
-    'Inbox triage remains in Needs attention; delivery and deadline work precede the operating snapshot.');
-
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, stop);
+  const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const projects = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
+  const progress = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"');
+  const exceptions = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
+  const triage = overview.indexOf('data-ams-feature-slug="dashboard-inbox-triage"');
+  const queue = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const deadlines = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  assert.ok(finance >= 0 && projects > finance && progress > projects && exceptions > progress);
+  assert.ok(triage > exceptions && queue > triage && deadlines > queue);
   assert.ok(dashboard.includes("const canOpenInbox = canOpenDashboardRoute('/admin/inbox')"));
   assert.ok(dashboard.includes("canOpenInbox ? api.leads.getAll() : Promise.resolve"));
   assert.ok(dashboard.includes("inboxLeadRows.map((lead) => normalizeContactSubmission(lead as ContactSubmission)).filter((lead) => lead.type !== 'career')"));
   assert.ok(dashboard.includes("import { isInboxActionable, isInboxHighPriority, isInboxUnassigned } from '../../lib/inboxTriage'"));
   assert.ok(dashboard.includes("import { normalizeContactSubmission, type ContactSubmission } from '../../lib/submissions'"));
-  assert.ok(dashboard.includes('const openRecords = operationalSnapshot.inboxLeads.filter((lead) => lead.status !== \'closed\')'));
+  assert.ok(dashboard.includes("const openRecords = operationalSnapshot.inboxLeads.filter((lead) => lead.status !== 'closed')"));
   assert.ok(dashboard.includes('.filter(isInboxActionable)'));
   assert.ok(dashboard.includes('.filter(isInboxUnassigned)'));
   assert.ok(dashboard.includes('.filter(isInboxHighPriority)'));
-  assert.ok(dashboard.includes('Inbox source did not return records'));
-  assert.ok(dashboard.includes('No dated time entries in this chart window'));
-  assert.ok(dashboard.includes('Triage counts can overlap: one inquiry may match multiple signals.'));
-  assert.ok(dashboard.includes('No inbound records need immediate triage'));
-  assert.ok(dashboard.includes("const openRecords = operationalSnapshot.inboxLeads.filter((lead) => lead.status !== 'closed')"));
-  assert.ok(dashboard.includes(".filter((lead) => lead.type !== 'career')"));
+  assert.ok(dashboard.includes('Inbox data unavailable; triage counts are not inferred.'));
+  assert.ok(dashboard.includes('No inbound records need immediate triage.'));
   assert.match(dashboard, /const allowedItems = canOpenInbox\s+\? items\.filter\(\(item\) => String\(item\.category \|\| ''\)\.toLowerCase\(\) !== 'sales' && item\.id !== 'att_leads_new'\)/);
   assert.match(dashboard, /return \[\.\.\.allowedItems\]\.sort\(\(left, right\) =>\s*dashboardAttentionSeverityRank\(left\.severity\) - dashboardAttentionSeverityRank\(right\.severity\)/);
   assert.ok(inboxTriage.includes("item.status === 'new'"));
   assert.ok(inboxTriage.includes('isInboxUnassigned(item)'));
   assert.ok(inboxPage.includes(".filter((item) => item.type !== 'career')"));
   assert.ok(inboxPage.includes('isInboxActionable(item)'));
-  assert.ok(dashboard.includes('inboxTriageSummary.state === \'unavailable\''));
 });
 
-test('Dashboard Needs attention panels use balanced source-backed visual summaries', async () => {
+
+test('Dashboard Needs attention card shows severity and authorised Inbox triage without artificial numbering', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"');
   const end = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"', start);
   assert.ok(start >= 0 && end > start);
   const attention = dashboard.slice(start, end);
-  assert.match(attention, /min-\[1100px\]:grid-cols-12/);
-  assert.match(attention, /min-\[1100px\]:col-span-6/);
-  assert.match(attention, /className="flex h-full flex-col" title="Priority exceptions"/);
-  assert.match(attention, /className="flex h-full flex-col"\s+title="Inbound triage"/);
-  assert.match(attention, /attentionSeveritySummary/);
-  assert.match(attention, /New inquiries/);
-  assert.match(attention, /inboxTriageSummary\.openCount/);
-  assert.match(attention, /min-h-\[68px\]/);
+  assert.ok(attention.includes('title="Needs attention"'));
+  assert.ok(attention.includes('attentionSeveritySummary.urgent > 0'));
+  assert.ok(attention.includes('attentionSeveritySummary.attention > 0'));
+  assert.ok(attention.includes('overviewAttentionItems.slice(0, 4).map((item, index) => {'));
+  assert.ok(attention.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
+  assert.ok(attention.includes('data-ams-feature-slug="dashboard-inbox-triage"'));
+  assert.ok(attention.includes("label: 'New', value: inboxTriageSummary.newCount"));
+  assert.ok(attention.includes("label: 'Unassigned', value: inboxTriageSummary.unassignedCount"));
+  assert.ok(attention.includes("label: 'High priority', value: inboxTriageSummary.highPriorityCount"));
+  assert.equal(attention.includes('Priority 01'), false);
 });
 
-test('Dashboard Overview prioritizes attention and delivery actions before the supporting operating snapshot', async () => {
+
+test('Dashboard Overview orders Finance and Projects first, followed by action-oriented module cards', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const branchStart = dashboard.indexOf("{view === 'overview' ? (");
-  const branchEnd = dashboard.indexOf(") : view === 'performance' ? (", branchStart);
-  assert.ok(branchStart >= 0 && branchEnd > branchStart);
-  const overview = dashboard.slice(branchStart, branchEnd);
-  const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
-  const priority = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
-  const deliveryDesk = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
-  const commitments = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
-  const indicators = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
-  const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
-  const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
-  const recentActivity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
-  assert.ok(scope >= 0 && priority > scope && deliveryDesk > priority && commitments > deliveryDesk);
-  assert.ok(indicators > commitments && clientFocus > indicators && finance > clientFocus);
-  assert.ok(shortcuts > finance && recentActivity > shortcuts);
-  assert.ok(overview.includes('Priority 01'));
-  assert.ok(overview.includes('>Active delivery</h2>'));
-  assert.ok(overview.includes('>Deadlines &amp; team load</h2>'));
-  assert.ok(overview.includes('>Operating snapshot</h2>'));
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  assert.ok(start >= 0 && stop > start);
+  const overview = dashboard.slice(start, stop);
+  const order = [
+    'dashboard-overview-reporting-scope',
+    'dashboard-finance-overview',
+    'dashboard-project-portfolio',
+    'dashboard-project-progress',
+    'dashboard-attention-center',
+    'dashboard-delivery-desk',
+    'dashboard-delivery-commitments',
+    'dashboard-team-workload',
+    'dashboard-client-delivery-focus',
+    'dashboard-recent-activity',
+    'dashboard-workspace-shortcuts'
+  ];
+  let previous = -1;
+  for (const slug of order) {
+    const position = overview.indexOf('data-ams-feature-slug="' + slug + '"');
+    assert.ok(position > previous, 'Overview priority/order must be clear: ' + slug);
+    previous = position;
+  }
+  assert.equal(overview.includes('Priority 01'), false);
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false);
+  for (const label of ['Financial movement','Projects in progress','Creative & IT workload','Needs attention','Task queue','Upcoming deadlines','Team workload','Client delivery focus','Recent activity','Workspaces']) {
+    assert.ok(overview.includes(label), 'Missing overview card: ' + label);
+  }
   assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
-  assert.ok(overview.includes('Cross-module exception data unavailable'));
-  assert.ok(overview.includes('No exceptions returned by the Dashboard service'));
-  assert.ok(overview.includes('This is not interpreted as a clean operational state.'));
-  assert.ok(overview.includes('No mapped destination'));
+  assert.ok(overview.includes('Exception data unavailable'));
+  assert.ok(overview.includes('No cross-module exceptions returned'));
   assert.ok(overview.includes("candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate))"));
-  assert.ok(overview.includes("id: 'open-tasks', label: 'Open tasks'"));
-  assert.ok(overview.includes("id: 'overdue-tasks', label: 'Overdue tasks'"));
-  assert.ok(overview.includes("id: 'review-queue', label: 'Tasks in review'"));
-  assert.equal(overview.includes('data-ams-feature-slug="dashboard-overview"'), false);
-  assert.equal(overview.includes('data-ams-feature-slug="dashboard-quick-actions"'), false);
+  assert.equal(overview.includes('title="Invoices vs expenses"'), false);
+  assert.equal(overview.includes('title="Team capacity"'), false);
 });
-
 
 test('Dashboard exceptions sort by severity without artificial priority numbering', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
@@ -577,118 +569,108 @@ test('Dashboard exceptions sort by severity without artificial priority numberin
 });
 
 
-test('Dashboard Overview visualizes the full delivery-deadline horizon separately from its eight-row preview', async () => {
+
+test('Dashboard Overview visualizes all dated commitments and keeps the deadline preview compact', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
-  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"', start);
-  assert.ok(start >= 0 && end > start, 'Delivery commitments workspace should be bounded.');
-  const commitments = dashboard.slice(start, end);
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-team-workload"', start);
+  assert.ok(start >= 0 && end > start);
+  const deadlines = dashboard.slice(start, end);
   assert.ok(dashboard.includes('const commitmentHorizonTotal = allUpcomingCommitments.length'));
   assert.ok(dashboard.includes("const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length"));
   assert.ok(dashboard.includes('const daysEightToThirtyCommitmentCount'));
-  const visual = commitments.indexOf('data-ams-feature-slug="dashboard-delivery-horizon-visualization"');
-  const list = commitments.indexOf('upcomingCommitments.map((item) => {');
-  assert.ok(visual >= 0 && list > visual, 'The visual deadline overview must precede the detailed commitment list.');
-  assert.ok(commitments.includes('All {commitmentHorizonTotal} overdue or upcoming commitments through the next 30 days'));
-  assert.ok(commitments.includes('The list below shows up to 8 highest-priority deadlines.'));
-  assert.ok(commitments.includes('role="img"'));
-  assert.ok(commitments.includes("aria-label={'Deadline distribution: ' + overdueHorizonCount"));
-  assert.ok(commitments.includes("label: 'Overdue'"));
-  assert.ok(commitments.includes("label: 'Today–7 days'"));
-  assert.ok(commitments.includes("label: 'Days 8–30'"));
-  assert.ok(commitments.includes("overdueHorizonCount / commitmentHorizonTotal"));
-  assert.ok(commitments.includes("nextSevenDayCommitmentCount / commitmentHorizonTotal"));
-  assert.ok(commitments.includes("daysEightToThirtyCommitmentCount / commitmentHorizonTotal"));
+  assert.ok(deadlines.includes('Overdue and due within 30 days'));
+  assert.ok(deadlines.includes("aria-label={'Delivery deadlines: ' + overdueHorizonCount"));
+  assert.ok(deadlines.includes('upcomingCommitments.slice(0, 4).map((item) => {'));
+  assert.ok(deadlines.includes("label: 'Overdue'"));
+  assert.ok(deadlines.includes("label: 'Today–7 days'"));
+  assert.ok(deadlines.includes("label: 'Days 8–30'"));
+  assert.ok(deadlines.includes('overdueHorizonCount / commitmentHorizonTotal'));
+  assert.ok(deadlines.includes('nextSevenDayCommitmentCount / commitmentHorizonTotal'));
+  assert.ok(deadlines.includes('daysEightToThirtyCommitmentCount / commitmentHorizonTotal'));
 });
 
 
-
-test('Dashboard Overview visualizes Creative and IT open-task load from canonical service-line counts', async () => {
+test('Dashboard Projects card visualizes Creative and IT workload from canonical service-line counts', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
-  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart);
-  const overview = dashboard.slice(overviewStart, overviewEnd);
-  const workstreamsStart = overview.indexOf('title="Creative & IT workstreams"');
-  const workstreamsEnd = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', workstreamsStart);
-  assert.ok(workstreamsStart >= 0 && workstreamsEnd > workstreamsStart);
-  const workstreams = overview.slice(workstreamsStart, workstreamsEnd);
-  assert.ok(dashboard.includes('const workstreamOpenTaskMaximum'), 'Service-line chart scale must derive from current source counts.');
-  assert.ok(workstreams.includes('Open task load'));
-  assert.ok(workstreams.includes("data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}"));
-  assert.ok(workstreams.includes("canOpenTasks && operationalSnapshot.tasks !== null"));
-  assert.ok(workstreams.includes('workstreamOpenTaskMaximum > 0 ? (line.openTaskCount / workstreamOpenTaskMaximum) * 100 : 0'));
-  assert.ok(workstreams.includes('Largest workstream:'));
-  assert.ok(workstreams.includes('Risk counts can overlap.'));
-  assert.ok(workstreams.includes("label: 'Tasks in review'"));
-  assert.ok(workstreams.includes("label: 'Projects with overdue delivery'"));
-  assert.ok(workstreams.includes('Open task distribution is unavailable'));
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-project-progress"', start);
+  assert.ok(start >= 0 && end > start);
+  const projects = dashboard.slice(start, end);
+  assert.ok(dashboard.includes('const workstreamOpenTaskMaximum'));
+  assert.ok(projects.includes('Creative & IT workload'));
+  assert.ok(projects.includes("data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}"));
+  assert.ok(projects.includes('canOpenTasks && operationalSnapshot.tasks !== null'));
+  assert.ok(projects.includes('workstreamOpenTaskMaximum > 0 ? line.openTaskCount / workstreamOpenTaskMaximum * 100 : 0'));
+  assert.ok(projects.includes('{line.projectCount} projects'));
+  assert.ok(projects.includes('Task queue unavailable for this role or source.'));
+  assert.ok(projects.includes('<DonutChart'));
+  assert.ok(projects.includes('projectRiskBreakdown.map((item) => {'));
 });
 
 
-
-test('Dashboard agency delivery panels use responsive task cards and do not duplicate the project registry', async () => {
+test('Dashboard task queue and deadline cards remain compact, responsive and source-backed', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
-  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, stop);
   const queueStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
-  const commitmentStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
-  assert.ok(queueStart >= 0 && commitmentStart > queueStart);
-  const queue = overview.slice(queueStart, commitmentStart);
-  assert.ok(queue.includes('visibleOverviewTasks.map((task) => {'));
-  assert.ok(queue.includes('min-[900px]:flex-row'));
-  assert.ok(queue.includes('role="group" aria-label="Delivery queue filters"'));
+  const deadlineStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  assert.ok(queueStart >= 0 && deadlineStart > queueStart);
+  const queue = overview.slice(queueStart, deadlineStart);
+  assert.ok(queue.includes('visibleOverviewTasks.slice(0, 5).map((task) => {'));
+  assert.ok(queue.includes('role="group" aria-label="Task queue filters"'));
   assert.ok(queue.includes('aria-pressed={overviewTaskFilter === tab.key}'));
-  assert.ok(queue.includes('Showing {visibleOverviewTasks.length} highest-priority tasks'));
+  assert.ok(queue.includes('canOpenDashboardRoute(taskDestination)'));
   assert.ok(dashboard.includes('const taskLoadByAssigneeMaximum = Math.max(1, ...taskLoadByAssignee.map((owner) => owner.total))'));
   assert.ok(overview.includes("aria-label={'Open task load for ' + owner.label"));
-  assert.ok(overview.includes("style={{ width: (owner.total / taskLoadByAssigneeMaximum * 100) + '%' }}"));
-  assert.equal(overview.includes('pagedDashboardProjects'), false, 'Overview must not duplicate the paginated Project Registry.');
-  assert.equal(overview.includes('AdminTablePagination'), false, 'Task cards must not borrow registry pagination.');
+  assert.ok(overview.includes("style={{ width: owner.total / taskLoadByAssigneeMaximum * 100 + '%' }}"));
+  assert.equal(overview.includes('pagedDashboardProjects'), false);
+  assert.equal(overview.includes('AdminTablePagination'), false);
   assert.equal(overview.includes('title="Active projects"'), false);
 });
 
-test('Dashboard Overview gates task, project, time and Finance links through the existing route-access policy', async () => {
+
+test('Dashboard Overview gates module links through the existing route-access policy', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
-  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, stop);
   assert.ok(dashboard.includes("const canOpenProjects = canOpenDashboardRoute('/admin/projects')"));
   assert.ok(dashboard.includes("const canOpenTasks = canOpenDashboardRoute('/admin/tasks')"));
   assert.ok(dashboard.includes("const canOpenTimeLogs = canOpenDashboardRoute('/admin/time-logs')"));
   assert.ok(dashboard.includes("const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable')"));
   assert.ok(dashboard.includes("const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses')"));
-  assert.ok(overview.includes('.filter((action) => canOpenDashboardRoute(action.href)).map((action) => ('));
-  assert.ok(overview.includes('canOpenTasks && canOpenDashboardRoute(taskQueueDestination)'));
+  assert.ok(overview.includes(".filter((action) => canOpenDashboardRoute(action.href)).map((action) => ("));
+  assert.ok(overview.includes('disabled={!canOpenTasks}'));
+  assert.ok(overview.includes('canOpenDashboardRoute(taskDestination)'));
   assert.ok(overview.includes('canOpenProjects && canOpenDashboardRoute(projectHref)'));
   assert.ok(overview.includes('{canOpenTimeLogs ? <Link to="/admin/time-logs"'));
   assert.ok(overview.includes('{canOpenInvoiceRegister ? ('));
   assert.ok(overview.includes('{canOpenExpenseRegister ? ('));
-  assert.ok(overview.includes('candidates.find((candidate) => candidate.startsWith(\'/admin/\') && canOpenDashboardRoute(candidate))'), 'Exception links must choose a destination allowed for the current role.');
+  assert.ok(overview.includes("candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate))"));
 });
+
 
 test('Dashboard Overview displays canonical recent audit activity only for permitted roles', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
-  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, stop);
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
-
-  assert.ok(activity >= 0, 'Overview needs a source-backed recent activity surface.');
+  assert.ok(activity >= 0);
   assert.match(dashboard, /hasAdminPermission\('canViewSecurityAuditLogs'\)/);
   assert.match(dashboard, /const activityDataReturned = Array\.isArray\(data\.recentActivity\)/);
   assert.match(dashboard, /recentActivity: activityDataReturned \? data\.recentActivity as DashboardRecentActivity\[\] : previous\.recentActivity \?\? \[\]/);
-  assert.ok(overview.includes('{canViewAuditLogs && ('), 'Audit events must remain hidden from roles without audit-log permission.');
-  assert.ok(overview.includes('No recent activity available'));
+  assert.ok(overview.includes('{canViewAuditLogs ? ('), 'Audit records must remain hidden without audit-log permission.');
   assert.ok(overview.includes('Recent activity unavailable'));
+  assert.ok(overview.includes('No recent audit activity was returned.'));
   assert.ok(overview.includes('/admin/settings?tab=audit'));
   const panel = overview.slice(activity);
   assert.match(panel, /activity\.action/);
   assert.match(panel, /activity\.actor/);
   assert.match(panel, /activity\.timestamp/);
-  assert.doesNotMatch(panel, /activity\.(?:ip|userAgent|details|hash|prevHash|metadata)/,
-    'Dashboard must not expose IPs, free-form audit details or chain metadata in the summary feed.');
+  assert.doesNotMatch(panel, /activity\.(?:ip|userAgent|details|hash|prevHash|metadata)/);
 });
 
 test('Dashboard Performance prioritizes overdue and risk-flagged projects before truncating the attention list', async () => {
