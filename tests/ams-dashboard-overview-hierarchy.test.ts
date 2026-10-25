@@ -129,6 +129,10 @@ test('Dashboard work queue and service-line summaries come from canonical task/p
   assert.ok(dashboard.includes("const projectId = String(task?.projectId || task?.project_id || '')"));
   assert.ok(dashboard.includes("const serviceCategory = String(project?.serviceCategory || task?.serviceCategory || task?.service || '')"));
   assert.ok(dashboard.includes("const serviceLineConfiguration = ["));
+  assert.ok(dashboard.includes("const projectIds = new Set(lineProjects.map((project: any) => String(project.id || '')).filter(Boolean));"));
+  assert.ok(dashboard.includes("(Boolean(task.projectId) && projectIds.has(task.projectId)) || (task.serviceLine === line.key && !task.projectId)"));
+  assert.ok(dashboard.includes("group.projectIds.add(projectId ? 'id:' + projectId : 'href:' + href);"));
+  assert.ok(dashboard.includes("group.projectCount = group.projectIds.size;"));
   assert.ok(dashboard.includes("label: 'Creative & Content'"));
   assert.ok(dashboard.includes("label: 'Web & IT Development'"));
   assert.ok(dashboard.includes("label: 'Other / Unclassified'"));

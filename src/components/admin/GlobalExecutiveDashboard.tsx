@@ -1070,9 +1070,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
   const serviceLineSummaries = useMemo(() => serviceLineConfiguration.map((line) => {
     const lineProjects = activeProjectRows.filter((project: any) => getDashboardServiceLine(project) === line.key);
-    const projectIds = new Set(lineProjects.map((project: any) => String(project.id || '')));
+    const projectIds = new Set(lineProjects.map((project: any) => String(project.id || '')).filter(Boolean));
     const lineTasks = canOpenTasks
-      ? activeDashboardTasks.filter((task) => projectIds.has(task.projectId) || (task.serviceLine === line.key && !task.projectId))
+      ? activeDashboardTasks.filter((task) => (Boolean(task.projectId) && projectIds.has(task.projectId)) || (task.serviceLine === line.key && !task.projectId))
       : [];
     const lineCommitments = lineProjects.reduce((count: number, project: any) => {
       const milestones = Array.isArray(project.milestones) ? project.milestones : [];
@@ -1202,12 +1202,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       const projectId = String(project.id || '');
       const projectName = String(project.name || project.title || 'Untitled project');
       const projectSlug = String(project.slug || projectName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''));
-      if (projectId) {
-        group.projectIds.add(projectId);
-        projectClientById.set(projectId, group.name);
-      }
-      group.projectCount = group.projectIds.size;
       const href = '/admin/projects?projects=sprint&project=' + encodeURIComponent(projectSlug);
+      group.projectIds.add(projectId ? 'id:' + projectId : 'href:' + href);
+      group.projectCount = group.projectIds.size;
+      if (projectId) projectClientById.set(projectId, group.name);
       if (!group.projectHrefs.has(href)) {
         group.projectHrefs.add(href);
         group.projects.push({ name: projectName, href });
