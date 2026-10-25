@@ -89,6 +89,7 @@ test('Dashboard Overview and Analytics share the topbar reporting period without
   assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(dashboard.includes('buildRecentFinancialTrend(invoices, expenses)'));
   assert.ok(dashboard.includes('Recent 30-day default window'));
+  assert.ok(dashboard.includes("ariaLabel={'Issued invoices, recorded expenses, and difference for ' + financialTrendScopeLabel + '.'}"), 'Chart accessible name must follow the same period label as its content.');
   assert.ok(dashboard.includes('Active projects overlapping '));
   assert.ok(dashboard.includes('Active projects across all dates.'));
   assert.ok(dashboard.includes('Active projects now'));

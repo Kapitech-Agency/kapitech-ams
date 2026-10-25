@@ -1196,7 +1196,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
         <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description={'Invoice values use issue date and expenses use recorded date for ' + financialTrendScopeLabel + '. The difference is not posted profit.'}>
           {revenueData.length >= 2 ? (
-            <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + range + '.'} />
+            <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + financialTrendScopeLabel + '.'} />
           ) : (
             <div className="flex min-h-[220px] flex-col items-center justify-center rounded-control border border-line bg-bg px-5 py-8 text-center" role="status">
               <CircleDollarSign size={20} className="text-muted" aria-hidden="true" />
