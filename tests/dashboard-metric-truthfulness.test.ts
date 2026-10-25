@@ -26,7 +26,7 @@ test('Dashboard Overview groups active canonical projects for service and delive
   assert.ok(dashboard.includes("for (const project of activeProjectRows)"));
   assert.ok(overview.includes('Upcoming milestones & delivery deadlines'));
   assert.ok(overview.includes('Creative & IT workstreams'));
-  assert.ok(overview.includes('Other / Unclassified'));
+  assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
   assert.equal(overview.includes('pagedDashboardProjects'), false);
   assert.equal(overview.includes('progressPercent'), false);
   assert.equal(overview.includes('project.budget'), false);
