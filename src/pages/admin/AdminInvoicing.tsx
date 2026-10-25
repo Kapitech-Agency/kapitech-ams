@@ -592,6 +592,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedClientId = String(searchParams.get('clientId') || '').trim();
   const hasClientContextParameter = searchParams.has('clientId');
+  const requestedInvoiceAction = searchParams.get('action');
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const isProposalWorkspace = embeddedView === 'quotations';
@@ -684,6 +685,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [expensePageSize, setExpensePageSize] = useState(10);
 
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const createInvoiceActionHandled = React.useRef(false);
   const [invoiceTemplateKey, setInvoiceTemplateKey] = useState('blank');
   const [editingInvoice, setEditingInvoice] = useState<AgencyInvoice | null>(null);
   const [savingInvoice, setSavingInvoice] = useState(false);
@@ -1432,6 +1434,26 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     resetInvoiceForm();
     setInvoiceModalOpen(true);
   };
+
+  useEffect(() => {
+    if (requestedInvoiceAction !== 'create-invoice') {
+      createInvoiceActionHandled.current = false;
+      return;
+    }
+    if (
+      createInvoiceActionHandled.current
+      || embeddedView !== 'receivables'
+      || !canManageInvoices
+      || loading
+      || refreshing
+    ) return;
+
+    createInvoiceActionHandled.current = true;
+    openCreateInvoice();
+    const next = new URLSearchParams(searchParams);
+    next.delete('action');
+    setSearchParams(next, { replace: true });
+  }, [requestedInvoiceAction, embeddedView, canManageInvoices, loading, refreshing, openCreateInvoice, searchParams, setSearchParams]);
 
   const applyInvoiceTemplate = () => {
     const template = FINANCE_INVOICE_TEMPLATES.find((item) => item.key === invoiceTemplateKey);

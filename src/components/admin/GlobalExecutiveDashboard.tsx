@@ -1371,6 +1371,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const canOpenInbox = canOpenDashboardRoute('/admin/inbox');
   const canOpenClientDirectory = canOpenDashboardRoute('/admin/clients/all-clients');
   const canOpenTasks = canOpenDashboardRoute('/admin/tasks');
+  const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister;
+  const canCreateTask = hasAdminPermission('canManageKanbanTasks') && canOpenTasks && canOpenDashboardRoute('/admin/tasks?create=1');
   const canOpenTimeLogs = canOpenDashboardRoute('/admin/time-logs');
   const canOpenDocuments = canOpenDashboardRoute('/admin/documents');
   const canViewAuditLogs = hasAdminPermission('canViewSecurityAuditLogs');
@@ -2051,27 +2053,58 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ? 'Compare delivery progress, bottlenecks, and recorded team effort over the selected period.'
             : 'Explore supported trends across financial movement, inquiry demand, and portfolio status.'}
         actions={(
-          <>
+          <div
+            className="ams-dashboard-header-actions flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end"
+            data-ams-feature-slug="dashboard-quick-actions"
+            aria-label="Dashboard quick actions"
+          >
+            {canOpenInvoiceRegister ? (
+              <Link
+                to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}
+                className={[
+                  'inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-4 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                  canCreateInvoice
+                    ? 'bg-accent text-white shadow-sm hover:-translate-y-px hover:bg-accent-hover'
+                    : 'border border-line bg-panel text-fg hover:border-accent/30 hover:bg-panel-hover'
+                ].join(' ')}
+                aria-label={canCreateInvoice ? 'Create invoice' : 'Open invoices'}
+              >
+                <ReceiptText size={15} aria-hidden="true" />
+                {canCreateInvoice ? 'Create invoice' : 'Invoices'}
+              </Link>
+            ) : null}
+            {canOpenTasks ? (
+              <Link
+                to={canCreateTask ? '/admin/tasks?create=1' : '/admin/tasks'}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                aria-label={canCreateTask ? 'Create task' : 'Open tasks'}
+              >
+                <CheckCircle2 size={14} aria-hidden="true" />
+                {canCreateTask ? 'New task' : 'Tasks'}
+              </Link>
+            ) : null}
+            {canOpenProjects ? (
+              <Link
+                to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                aria-label={canCreateProject ? 'Create project' : 'Open projects'}
+              >
+                <FolderKanban size={14} aria-hidden="true" />
+                {canCreateProject ? 'New project' : 'Projects'}
+              </Link>
+            ) : null}
             <button
               type="button"
               onClick={() => setRefreshRequest((current) => current + 1)}
               disabled={isRefreshing}
               aria-label="Refresh dashboard data"
-              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-9 sm:w-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              title="Refresh dashboard data"
+              className="inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
-              {isRefreshing ? 'Refreshing…' : 'Refresh data'}
+              <span className="hidden min-[440px]:inline">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
             </button>
-            {canCreateProject || canOpenProjects ? (
-              <Link
-                to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
-                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium sm:min-h-9 sm:w-auto text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
-                <Plus size={14} />
-                {canCreateProject ? 'New project' : 'Open Projects'}
-              </Link>
-            ) : null}
-          </>
+          </div>
         )}
       />
 

@@ -486,3 +486,47 @@
     transform: none;
   }
 }
+
+
+/* Dashboard header actions: the first is the primary commercial action; all retain equal control height. */
+.ams-shell .ams-dashboard .ams-dashboard-header-actions {
+  align-items: center;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > button {
+  white-space: nowrap;
+  border-radius: 999px;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > a:focus-visible,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > a:first-child {
+  font-weight: 600;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions > button {
+    min-width: 0;
+    width: 100%;
+    padding-inline: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions > button {
+    transition-duration: 0.01ms;
+  }
+}

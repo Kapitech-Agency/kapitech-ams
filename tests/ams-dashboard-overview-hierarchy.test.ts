@@ -759,3 +759,36 @@ test('Dashboard Overview exposes complete header navigation, reporting controls,
   assert.ok(overview.includes('aria-label="Task queue filters"'));
   assert.equal(overview.includes('Priority 01'), false);
 });
+
+
+test('Dashboard header provides permission-aware invoice, task and project quick actions', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const tasks = await read('src/components/admin/TasksWorkspace.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const headerStart = dashboard.indexOf('<AdminModuleHeader slug="dashboard-header"');
+  const headerEnd = dashboard.indexOf('<section className="ams-dashboard-toolbar', headerStart);
+  assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Dashboard header must be a bounded region.');
+  const header = dashboard.slice(headerStart, headerEnd);
+  assert.ok(header.includes('data-ams-feature-slug="dashboard-quick-actions"'));
+  assert.ok(header.includes("const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister"));
+  assert.ok(header.includes("const canCreateTask = hasAdminPermission('canManageKanbanTasks') && canOpenTasks"));
+  assert.ok(header.includes("'/admin/finance?tab=accounts-receivable&action=create-invoice'"));
+  assert.ok(header.includes("'/admin/tasks?create=1'"));
+  assert.ok(header.includes("'/admin/projects?create=1'"));
+  assert.ok(header.includes("canCreateInvoice ? 'Create invoice' : 'Invoices'"));
+  assert.ok(header.includes("canCreateTask ? 'New task' : 'Tasks'"));
+  assert.ok(header.includes("canCreateProject ? 'New project' : 'Projects'"));
+  assert.ok(header.includes('aria-label="Refresh dashboard data"'));
+
+  assert.ok(invoicing.includes("const requestedInvoiceAction = searchParams.get('action')"));
+  assert.ok(invoicing.includes("requestedInvoiceAction !== 'create-invoice'"));
+  assert.ok(invoicing.includes("embeddedView !== 'receivables'"));
+  assert.ok(invoicing.includes('createInvoiceActionHandled.current = true'));
+  assert.ok(invoicing.includes('openCreateInvoice();'));
+  assert.ok(tasks.includes("const requestedCreate = searchParams.get('create') === '1'"));
+  assert.ok(tasks.includes('createTaskRequestHandled.current = true'));
+  assert.ok(tasks.includes('if (canManageTasks) openNewTask();'));
+  assert.ok(styles.includes('.ams-dashboard-header-actions > a:hover') === false || styles.includes('transition: background-color 150ms ease'));
+  assert.ok(styles.includes('prefers-reduced-motion: reduce'));
+});

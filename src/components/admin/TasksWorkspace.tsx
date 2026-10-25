@@ -231,6 +231,7 @@ export const TasksWorkspace: React.FC = () => {
   const [dragOverBoardStatus, setDragOverBoardStatus] = useState<TaskStatus | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
+  const createTaskRequestHandled = React.useRef(false);
   const [savingTask, setSavingTask] = useState(false);
   const [savingEditTask, setSavingEditTask] = useState(false);
   const [taskForm, setTaskForm] = useState({
@@ -798,6 +799,21 @@ export const TasksWorkspace: React.FC = () => {
     });
     setTaskFormOpen(true);
   };
+
+  useEffect(() => {
+    const requestedCreate = searchParams.get('create') === '1';
+    if (!requestedCreate) {
+      createTaskRequestHandled.current = false;
+      return;
+    }
+    if (createTaskRequestHandled.current || loading) return;
+
+    createTaskRequestHandled.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete('create');
+    setSearchParams(next, { replace: true });
+    if (canManageTasks) openNewTask();
+  }, [searchParams, setSearchParams, canManageTasks, loading, projectOptions]);
 
   const openEditTask = (task: TaskRecord) => {
     if (!canManageTasks) return;
