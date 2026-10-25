@@ -378,7 +378,7 @@ test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox
   assert.ok(inquiryStart >= 0 && projectsStart > inquiryStart, 'Inquiry analysis should be a distinct selectable report before project status.');
   const inquiry = analytics.slice(inquiryStart, projectsStart);
 
-  assert.ok(analytics.includes("{ value: 'inquiry-pipeline', label: 'Inquiry pipeline' }"));
+  assert.ok(dashboard.includes("{ value: 'inquiry-pipeline', label: 'Inquiry pipeline' }"));
   assert.ok(analytics.includes("option.value !== 'inquiry-pipeline' || canOpenInbox"));
   assert.ok(analytics.includes("if (!canOpenInbox && report === 'inquiry-pipeline') setReport('financial-movement')"));
   assert.ok(analytics.includes("record.type === 'inquiry'"));
