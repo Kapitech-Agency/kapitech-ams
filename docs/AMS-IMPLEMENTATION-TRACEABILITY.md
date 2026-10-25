@@ -1303,3 +1303,20 @@ Quotation/non-issued invoice records do not count as invoice history. Currency m
 **Unverified:** authenticated data, roles/direct URLs, responsive/zoom viewports, keyboard/focus, contrast, touch and assistive technology. Stage 5 approval remains pending.
 
 **Next:** finish Dashboard Overview region by region, then close Analytics acceptance. Do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW / VIEW-DASH-ANALYTICS: Match expense history availability to eligible chart records · 25 October 2026
+
+**Current source/test SHA:** [a36c8571](https://github.com/Kapitech-Agency/kapitech-ams/commit/a36c85718f822b8bf025c7e92533c11ecff4117b). Overview content order [6f02b28d](https://github.com/Kapitech-Agency/kapitech-ams/commit/6f02b28d2da8e7515f2986c6c8ce33a09827fe50); shared expense predicate and empty-state correction [4728df13](https://github.com/Kapitech-Agency/kapitech-ams/commit/4728df13c0656ba072bcd504be60a3121aecdb05); final regression alignment [a36c8571](https://github.com/Kapitech-Agency/kapitech-ams/commit/a36c85718f822b8bf025c7e92533c11ecff4117b).
+
+The financial trend's eligible expenses and the status check that declares expense history available now share the same predicate. Cancelled, canceled, voided and deleted expense rows cannot create a false zero-valued trend. Source states separately identify no records, records in another currency, and selected-currency rows that are only quotations/non-issued invoices or invalidated expense rows. Receivables has a specific no-issued-invoice empty state.
+
+The Overview region order now puts Quick actions after financial/delivery summaries, the active project register, Team capacity and supporting indicators, while retaining source-backed priority exceptions near the top and Recent Activity at the end.
+
+**Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-dashboard-analytics-structure.test.ts; tests/dashboard-metric-truthfulness.test.ts. No Finance formulas, APIs, database/schema, authentication or permission policy changed.
+
+**Validation:** exact-SHA Quality Gate [40169134063 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169134063), including typecheck, regression tests and production build. AMS CI [40169134058 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169134058) due to existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; dependent production build/package/HTTP smoke were skipped.
+
+**Unverified:** authenticated live data and roles, direct routes, responsive/zoom matrix, keyboard/focus, contrast, touch and assistive technology. Stage 5 sign-off remains pending.
+
+**Next:** complete Dashboard Overview §4.1/§4.10 content acceptance, then complete Analytics review. Do not move to Inbox.

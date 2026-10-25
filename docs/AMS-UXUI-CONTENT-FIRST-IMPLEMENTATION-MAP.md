@@ -804,3 +804,15 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - **AMS CI:** [40167743171](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40167743171) failed at the existing high body-parser@1.20.6 audit advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; dependent build/package/HTTP smoke steps were skipped.
 - **Still unverified:** authenticated roles/direct URLs, live values, responsive/zoom matrix, keyboard/focus, contrast, touch, screen reader and Stage 5 sign-off.
 - **Next:** complete Dashboard Overview §4.1/§4.10 acceptance, then finish Analytics view-by-view. Do not start Inbox.
+
+
+## Dashboard · Overview order and expense eligibility source-state parity · 25 October 2026
+
+**Current source/test SHA:** [a36c8571](https://github.com/Kapitech-Agency/kapitech-ams/commit/a36c85718f822b8bf025c7e92533c11ecff4117b). Exact-SHA Quality Gate [40169134063 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169134063).
+
+- Quick actions were moved after the financial/delivery summaries, Active projects, Team capacity and supporting indicators, while preserving the source-owned priority queue near the top and recent activity at the end. This aligns Overview with the relative order in §4.10.1. Code/test slice [6f02b28d](https://github.com/Kapitech-Agency/kapitech-ams/commit/6f02b28d2da8e7515f2986c6c8ce33a09827fe50).
+- Overview and Analytics share one expense eligibility predicate between series aggregation and source availability. Cancelled/canceled/voided/deleted rows do not count as a valid expense history. Empty-state copy distinguishes rows in the chosen currency that are ineligible from rows available only in another currency. Receivables no longer treat quotation-only sources as a usable invoice register.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-dashboard-analytics-structure.test.ts; tests/dashboard-metric-truthfulness.test.ts. Eligibility implementation [4728df13](https://github.com/Kapitech-Agency/kapitech-ams/commit/4728df13c0656ba072bcd504be60a3121aecdb05); regression correction [a36c8571](https://github.com/Kapitech-Agency/kapitech-ams/commit/a36c85718f822b8bf025c7e92533c11ecff4117b).
+- **AMS CI:** [40169134058](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169134058) failed at the existing high body-parser@1.20.6 dependency advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; downstream build/package/HTTP smoke checks were skipped.
+- **Still unverified:** authenticated data/roles, direct URLs, responsive and zoom viewports, keyboard/focus, contrast, touch and screen reader. Stage 5 sign-off remains pending.
+- **Next:** finish Overview acceptance region-by-region against §4.1/§4.10, then complete Analytics. Do not start Inbox.
