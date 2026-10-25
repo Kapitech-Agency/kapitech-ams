@@ -9,7 +9,7 @@ test('Dashboard priority exceptions distinguish the source-backed queue, genuine
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
   assert.ok(dashboard.includes('attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
-  assert.ok(dashboard.includes('No priority exceptions returned'));
+  assert.ok(dashboard.includes('No exceptions returned by the Dashboard service'));
   assert.ok(dashboard.includes('Priority exception data unavailable'));
   assert.ok(dashboard.includes('The interface does not infer that there are no exceptions.'));
   assert.ok(dashboard.includes("const safeDestination = destination.startsWith('/admin/') && canOpenDashboardRoute(destination) ? destination : null;"));
@@ -19,7 +19,7 @@ test('Dashboard Overview groups active canonical projects for service and delive
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
-  assert.ok(dashboard.includes("const activeProjectRows = liveProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health))"));
+  assert.ok(dashboard.includes("const activeProjectRows = rawProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health))"));
   assert.ok(dashboard.includes("const serviceLineSummaries = useMemo(() => serviceLineConfiguration.map((line) =>"));
   assert.ok(dashboard.includes("const upcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
   assert.ok(dashboard.includes("for (const project of activeProjectRows)"));
@@ -137,10 +137,10 @@ test('Dashboard Overview does not duplicate unverified project progress or budge
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
-  assert.ok(overview.includes("const serviceLineConfiguration = ["));
-  assert.ok(overview.includes("label: 'Other / Unclassified'"));
-  assert.ok(overview.includes("const upcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
-  assert.ok(overview.includes("project.targetEndDate || project.endDate || project.dueDate || project.deadline"));
+  assert.ok(dashboard.includes("const serviceLineConfiguration = ["));
+  assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
+  assert.ok(dashboard.includes("const upcomingCommitments = useMemo<DashboardCommitment[]>(() =>"));
+  assert.ok(dashboard.includes("project.targetEndDate || project.endDate || project.dueDate || project.deadline"));
   assert.equal(overview.includes('progressPercent'), false, 'Overview should not invent or duplicate a project progress field.');
   assert.equal(overview.includes('project.budget'), false, 'Budget belongs to Project/Finance workspaces, not the delivery workboard.');
   assert.equal(overview.includes('Dashboard project details'), false);

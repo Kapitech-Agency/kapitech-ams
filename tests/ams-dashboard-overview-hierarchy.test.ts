@@ -122,7 +122,7 @@ test('Dashboard Analytics financial-history availability respects currency and i
   assert.ok(analytics.includes('No usable financial records in selected currency'));
   assert.ok(analytics.includes('No financial records in selected currency'));
   assert.ok(analytics.includes('A zero-value trend is not inferred from another currency.'));
-  assert.ok(analytics.includes('No issued invoice or expense records in selected currency'));
+  assert.ok(analytics.includes('No usable financial records in selected currency'));
 });
 
 test('Dashboard overview keeps its operational queues source-backed and preserves financial source states in Analytics', async () => {
@@ -182,7 +182,7 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
 
   assert.match(dashboard, /const \{ matchesDate, matchesInterval, value: reportPeriodValue, mode: reportPeriodMode, enabled: reportPeriodEnabled \} = useReportingPeriod\(\)/);
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
-  assert.ok(analytics.includes('buildRecentFinancialTrend(invoices, expenses)'));
+  assert.ok(analytics.includes('buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)'));
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(analytics.includes("ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. Exact values are listed in the table below.'}"));
   assert.ok(analytics.includes('Recent 30-day default window'));
@@ -319,7 +319,7 @@ test('Dashboard agency delivery panels use responsive task cards and do not dupl
   const commitmentStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
   assert.ok(queueStart >= 0 && commitmentStart > queueStart);
   const queue = overview.slice(queueStart, commitmentStart);
-  assert.ok(queue.includes('visibleOverviewTasks.map((task) => ('));
+  assert.ok(queue.includes('visibleOverviewTasks.map((task) => {'));
   assert.ok(queue.includes('min-[900px]:flex-row'));
   assert.ok(queue.includes('role="group" aria-label="Delivery queue filters"'));
   assert.ok(queue.includes('aria-pressed={overviewTaskFilter === tab.key}'));

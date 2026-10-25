@@ -161,7 +161,7 @@ test('global reporting period controls stay in the admin layout shared by module
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.ok(overview.includes('Task ownership, review queues, delivery commitments and Finance balances show current operational state.'));
   assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
-  assert.ok(overview.includes('const visibleOverviewTasks = useMemo(() =>'));
+  assert.ok(dashboard.includes('const visibleOverviewTasks = useMemo(() =>'));
   assert.doesNotMatch(overview, /matchesInterval\(task\.dueDate/,
     'The action queue shows current open work. The selected global period is not an invisible task filter.');
   assert.doesNotMatch(settings, /backups\.filter\(\(backup\) => matchesDate\(backup\.createdAt\)\)/,

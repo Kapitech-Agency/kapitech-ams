@@ -266,7 +266,7 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(dashboard.includes('Time-log source unavailable'));
   assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(dashboard.includes('buildRecentFinancialTrend(invoices, expenses)'));
-  assert.ok(dashboard.includes('not a posted profit figure'));
+  assert.ok(dashboard.includes('The difference is an arithmetic comparison, not posted profit.'));
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
