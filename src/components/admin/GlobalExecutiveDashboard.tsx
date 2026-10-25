@@ -1878,6 +1878,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     }
     return Array.from(groups.values()).sort((left, right) => right.overdue - left.overdue || right.blocked - left.blocked || right.total - left.total || left.label.localeCompare(right.label)).slice(0, 5);
   }, [activeDashboardTasks, currentDayKey]);
+  const taskLoadByAssigneeMaximum = Math.max(1, ...taskLoadByAssignee.map((owner) => owner.total));
 
   const periodTimeRows = useMemo(() => {
     if (operationalSnapshot.timeLogs === null) return [];
@@ -2008,13 +2009,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <AdminPanel className="flex h-full flex-col" title="Priority exceptions" bodyClassName="flex min-h-0 flex-1 flex-col p-0">
           {dashboardOverview.attentionItemsDataAvailable && attentionSeveritySummary.total > 0 ? (
             <div className="space-y-2.5 border-b border-line bg-bg/50 px-4 py-3">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {[
                   { label: 'Urgent', count: attentionSeveritySummary.urgent, color: 'text-danger' },
                   { label: 'Attention', count: attentionSeveritySummary.attention, color: 'text-warning' },
-                  { label: 'Other', count: attentionSeveritySummary.other, color: 'text-muted' }
+                  { label: 'Other', count: attentionSeveritySummary.other, color: 'text-muted' },
+                  { label: 'Total', count: attentionSeveritySummary.total, color: 'text-fg' }
                 ].map((metric) => (
-                  <div key={metric.label} className="min-w-0 rounded-control border border-line bg-panel px-3 py-2"><p className="text-[10px] text-muted">{metric.label}</p><p className={['mt-0.5 text-lg font-semibold tabular-nums', metric.color].join(' ')}>{metric.count}</p></div>
+                  <div key={metric.label} className="min-w-0 rounded-control border border-line bg-panel px-2.5 py-2 sm:px-3"><p className="text-[10px] text-muted">{metric.label}</p><p className={['mt-0.5 text-lg font-semibold tabular-nums', metric.color].join(' ')}>{metric.count}</p></div>
                 ))}
               </div>
               <div className="flex h-1.5 overflow-hidden rounded-full bg-line" role="img" aria-label={'Priority exception mix: ' + attentionSeveritySummary.urgent + ' urgent, ' + attentionSeveritySummary.attention + ' attention, ' + attentionSeveritySummary.other + ' other.'}>
@@ -2113,12 +2115,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             {inboxTriageSummary.state === 'loading' ? (
               <div className="px-4 py-5" role="status">
                 <p className="text-xs font-medium text-fg">Loading inbound records</p>
-                <p className="mt-1 text-[11px] leading-5 text-muted">Waiting for the same server-backed lead source used by Inbox. No queue total is inferred while it loads.</p>
+                <p className="mt-1 text-[11px] leading-4 text-muted">Loading the canonical Inbox source.</p>
               </div>
             ) : inboxTriageSummary.state === 'unavailable' ? (
               <div className="px-4 py-5" role="status">
                 <p className="text-xs font-medium text-fg">Inbound triage unavailable</p>
-                <p className="mt-1 text-[11px] leading-5 text-muted">The Inbox source did not return records. Assignment, priority and empty state cannot be verified from the dashboard summary alone.</p>
+                <p className="mt-1 text-[11px] leading-4 text-muted">Inbox data unavailable; triage counts are not inferred.</p>
               </div>
             ) : (
               <>
@@ -2135,10 +2137,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                <div className="border-b border-line bg-bg/50 px-4 py-2.5">
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <span className="text-[10px] font-medium text-muted">New inquiries</span>
+                    <span className="text-[10px] tabular-nums text-fg">{inboxTriageSummary.newCount} / {inboxTriageSummary.openCount} open</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-line" role="img" aria-label={'New inquiries: ' + inboxTriageSummary.newCount + ' out of ' + inboxTriageSummary.openCount + ' open records.'}>
+                    <div className="h-full rounded-full bg-warning" style={{ width: (inboxTriageSummary.openCount ? inboxTriageSummary.newCount / inboxTriageSummary.openCount * 100 : 0) + '%' }} />
+                  </div>
+                </div>
                 {inboxTriageSummary.actionable.length === 0 ? (
                   <div className="px-4 py-5" role="status">
                     <p className="text-xs font-medium text-fg">No inbound records need immediate triage</p>
-                    <p className="mt-1 text-[11px] leading-5 text-muted">No open record is new, unassigned or high priority. Closed records and Careers applicants are excluded. The counts above come from the current Inbox source.</p>
+                    <p className="mt-1 text-[11px] leading-4 text-muted">No open record is new, unassigned or high priority.</p>
                   </div>
                 ) : (
                   <div className="flex-1 divide-y divide-line">
@@ -2239,7 +2250,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminPanel
             className="min-w-0 min-[1100px]:col-span-8"
             title="Delivery queue"
-            description="Live tasks from Tasks & Execution, ordered by overdue state, blockers, priority, review status, ownership and due date. This is a working queue, not a second task store."
+            description="Live task queue from Tasks & Execution, ordered by delivery risk."
             bodyClassName="p-0"
             actions={canOpenTasks ? (
               <Link
@@ -2281,7 +2292,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ) : dashboardWorkTasks.length === 0 ? (
               <div className="px-4 py-8" role="status">
                 <p className="text-xs font-semibold text-fg">No task records returned</p>
-                <p className="mt-1 text-xs text-muted">Tasks & Execution returned an empty task register. Create or import work from the canonical Tasks workspace when appropriate.</p>
+                <p className="mt-1 text-xs text-muted">No saved task records.</p>
               </div>
             ) : activeDashboardTasks.length === 0 ? (
               <div className="px-4 py-8" role="status">
@@ -2355,7 +2366,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminPanel
             className="min-w-0 min-[1100px]:col-span-4"
             title="Creative & IT workstreams"
-            description="Bars compare open task volume across saved service lines. Other / Unclassified remains visible when a saved service category is missing. Review, blocked, unassigned and overdue task flags can overlap; they are not stacked as parts of a total."
+            description="Open-task load by saved service line. Risk counts can overlap."
             bodyClassName="p-0"
           >
             {!canOpenProjects ? (
@@ -2438,7 +2449,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminPanel
             className="min-w-0 min-[1100px]:col-span-7"
             title="Upcoming milestones & delivery deadlines"
-            description="Open milestone and project target dates due today, overdue, or within the next 30 days. Project records remain owned by Projects."
+            description="Overdue and upcoming milestones or project targets through 30 days."
             bodyClassName="p-0"
             actions={canOpenProjects ? (
               <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2451,12 +2462,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ) : rawProjectRows.length === 0 ? (
               <div className="px-4 py-8" role="status">
                 <p className="text-xs font-semibold text-fg">No project records returned</p>
-                <p className="mt-1 text-xs text-muted">No milestones or delivery commitments can be derived from an empty project source.</p>
+                <p className="mt-1 text-xs text-muted">No saved projects to assess.</p>
               </div>
             ) : upcomingCommitments.length === 0 ? (
               <div className="px-4 py-8" role="status">
                 <p className="text-xs font-semibold text-fg">No dated commitments due in the next 30 days</p>
-                <p className="mt-1 text-xs text-muted">No open milestone or project target dates were returned within this window. Missing dates are not estimated.</p>
+                <p className="mt-1 text-xs text-muted">No dated open commitments in this window.</p>
               </div>
             ) : (
               <div className="space-y-0">
@@ -2535,7 +2546,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminPanel
             className="min-w-0 min-[1100px]:col-span-5"
             title="Assigned work & logged time"
-            description="Task counts show assignment load; logged hours show recorded activity. Neither is a forecast of available capacity."
+            description="Open task assignment and recorded time; neither indicates available capacity."
             bodyClassName="p-4 sm:p-5"
           >
             <div className="space-y-4">
@@ -2556,6 +2567,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <span className="min-w-0 truncate text-xs font-medium text-fg">{owner.label}</span>
                           <span className="shrink-0 text-xs tabular-nums text-muted">{owner.total} open</span>
                         </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Open task load for ' + owner.label + ': ' + owner.total + ' tasks, compared with the largest visible group of ' + taskLoadByAssigneeMaximum + '.'}>
+                          <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: (owner.total / taskLoadByAssigneeMaximum * 100) + '%' }} />
+                        </div>
                         <div className="flex flex-wrap gap-1.5">
                           <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{owner.overdue} overdue</span>
                           <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">{owner.blocked} blocked</span>
@@ -2571,7 +2585,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
                   <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</span>
                 </div>
-                <p className="mb-3 text-[11px] leading-5 text-muted">Logged time is actual recorded activity, not remaining capacity or billable revenue.</p>
+                <p className="mb-3 text-[10px] leading-4 text-muted">Recorded hours reflect logged activity.</p>
                 {operationalSnapshot.timeLogs === null ? (
                   <p className="text-xs text-muted" role="status">Time-log source unavailable.</p>
                 ) : periodTimeRows.length === 0 ? (
@@ -2596,7 +2610,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <section data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
         <AdminPanel
           title="Client delivery focus"
-          description="Current delivery workload grouped by Client Directory ID when linked. Rows prioritize overdue commitments, overdue tasks, blocked work, unassigned tasks and pending review, then the nearest dated commitment and open workload. Unavailable task metrics remain unavailable, not zero. Saved company-name grouping is a fallback for legacy records without a client ID. This is delivery context, not a client health, contract or SLA score."
+          description="Ranked by overdue commitments, task risk and next delivery date. Missing task data stays unavailable."
           bodyClassName="p-0"
           actions={canOpenProjects ? (
             <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2611,7 +2625,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           ) : clientDeliveryFocus.length === 0 ? (
             <div className="px-4 py-8" role="status">
               <p className="text-xs font-semibold text-fg">No client-linked delivery records</p>
-              <p className="mt-1 text-xs text-muted">No active project or open task contains a saved client name. This does not indicate client health or service status.</p>
+              <p className="mt-1 text-xs text-muted">No active project or open task has a saved client link.</p>
             </div>
           ) : (
             <div className="divide-y divide-line">

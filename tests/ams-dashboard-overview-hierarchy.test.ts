@@ -84,6 +84,9 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes('attentionSeveritySummary'));
   assert.ok(overview.includes("overviewAttentionItems.slice(0, 5).map"));
   assert.ok(overview.includes('Showing 5 of {overviewAttentionItems.length} exceptions'));
+  assert.ok(overview.includes('grid grid-cols-2 gap-2 sm:grid-cols-4'));
+  assert.ok(overview.includes("label: 'Total', count: attentionSeveritySummary.total"));
+  assert.ok(overview.includes("aria-label={'New inquiries: ' + inboxTriageSummary.newCount + ' out of ' + inboxTriageSummary.openCount + ' open records.'}"));
   assert.ok(overview.includes('min-h-[78px]'));
 
   assert.equal(overview.includes('title="Invoices vs expenses"'), false,
@@ -545,6 +548,22 @@ test('Dashboard Overview adds a permission-gated Inbox triage work surface from 
   assert.ok(dashboard.includes('inboxTriageSummary.state === \'unavailable\''));
 });
 
+test('Dashboard Needs attention panels use balanced source-backed visual summaries', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"', start);
+  assert.ok(start >= 0 && end > start);
+  const attention = dashboard.slice(start, end);
+  assert.match(attention, /min-\[1100px\]:grid-cols-12/);
+  assert.match(attention, /min-\[1100px\]:col-span-6/);
+  assert.match(attention, /className="flex h-full flex-col" title="Priority exceptions"/);
+  assert.match(attention, /className="flex h-full flex-col"\s+title="Inbound triage"/);
+  assert.match(attention, /attentionSeveritySummary/);
+  assert.match(attention, /New inquiries/);
+  assert.match(attention, /taskLoadByAssigneeMaximum/);
+  assert.match(attention, /min-h-\[78px\]/);
+});
+
 test('Dashboard Overview places the canonical exception queue before agency indicators and delivery work', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const branchStart = dashboard.indexOf("{view === 'overview' ? (");
@@ -638,6 +657,9 @@ test('Dashboard agency delivery panels use responsive task cards and do not dupl
   assert.ok(queue.includes('role="group" aria-label="Delivery queue filters"'));
   assert.ok(queue.includes('aria-pressed={overviewTaskFilter === tab.key}'));
   assert.ok(queue.includes('Showing {visibleOverviewTasks.length} highest-priority tasks'));
+  assert.ok(overview.includes('const taskLoadByAssigneeMaximum = Math.max(1, ...taskLoadByAssignee.map((owner) => owner.total))'));
+  assert.ok(overview.includes("aria-label={'Open task load for ' + owner.label"));
+  assert.ok(overview.includes("style={{ width: (owner.total / taskLoadByAssigneeMaximum * 100) + '%' }}"));
   assert.equal(overview.includes('pagedDashboardProjects'), false, 'Overview must not duplicate the paginated Project Registry.');
   assert.equal(overview.includes('AdminTablePagination'), false, 'Task cards must not borrow registry pagination.');
   assert.equal(overview.includes('title="Active projects"'), false);
