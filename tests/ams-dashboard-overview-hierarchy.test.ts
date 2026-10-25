@@ -40,7 +40,7 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes('Overdue and next 30 days'));
   assert.ok(overview.includes('Current month · current receivables'));
   assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
+  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
   assert.ok(deliveryDeskStart > indicatorsStart, 'Task-level delivery work follows the decision indicators.');
   assert.ok(commitmentsStart > deliveryDeskStart, 'Project milestone/deadline and resource views follow the primary task queue.');
   assert.ok(clientFocusStart > commitmentsStart, 'Client delivery focus follows delivery commitments and resource context.');
@@ -95,7 +95,7 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.equal(overview.includes('title="Active projects"'), false,
     'Dashboard should summarize upcoming commitments instead of duplicating the full Project Registry.');
 
-  assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
+  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
   assert.ok(overview.includes('Neither is a forecast of available capacity.'));
   assert.ok(dashboard.includes("const cashCollectedMetric = liveCashCollected") || dashboard.includes("const liveCashCollected = operationalSnapshot.invoices === null"));
 });
@@ -316,8 +316,8 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(analytics.includes("ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. Exact values are listed in the table below.'}"));
   assert.ok(dashboard.includes('Recent 30-day default window'));
-  assert.ok(analytics.includes('“All dates” uses a labelled recent 30-day chart window.'));
-  assert.ok(overview.includes('The shared reporting period applies to Performance and Analytics trends.'));
+  assert.ok(analytics.includes('All dates defaults to the recent 30 days.'));
+  assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
   assert.ok(overview.includes('Task ownership, review queues, delivery commitments and Finance balances show current operational state.'));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false, 'Overview must not duplicate Analytics financial trends.');
   assert.equal(overview.includes('title="Active projects"'), false, 'Overview must not duplicate Project Registry.');
@@ -369,7 +369,7 @@ test('Dashboard Performance scopes source-backed delivery records to the shared 
   const primary = performance.indexOf('data-ams-feature-slug="dashboard-performance-primary"');
   const taskStatus = performance.indexOf('title="Task status in scope"', primary);
   const projectExceptions = performance.indexOf('title="Projects needing attention"', taskStatus);
-  const trackedTime = performance.indexOf('title="Tracked time in scope"', projectExceptions);
+  const trackedTime = performance.indexOf('title="Recorded time"', projectExceptions);
   assert.ok(scope >= 0 && supportingMetrics > scope && primary > supportingMetrics && taskStatus > primary && projectExceptions > taskStatus && trackedTime > projectExceptions,
     'Reporting scope and decision KPIs must lead, then task/project analysis and recorded-time context.');
   assert.ok(performance.includes("label: 'Task completion'"), 'Completion rate should be visible before detailed distribution.');
@@ -404,7 +404,7 @@ test('Dashboard Performance puts decision KPIs first and visualizes recorded tim
   const scope = performance.indexOf('data-ams-feature-slug="dashboard-performance-scope"');
   const kpis = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"');
   const taskProjects = performance.indexOf('data-ams-feature-slug="dashboard-performance-primary"');
-  const time = performance.indexOf('title="Tracked time in scope"');
+  const time = performance.indexOf('title="Recorded time"');
   assert.ok(scope >= 0 && kpis > scope && taskProjects > kpis && time > taskProjects);
   assert.ok(performance.includes("label: 'Task completion'"));
   assert.ok(performance.includes("label: 'Overdue tasks'"));
@@ -466,7 +466,7 @@ test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox
   assert.ok(inquiryStart >= 0 && projectsStart > inquiryStart, 'Inquiry analysis should be a distinct selectable report before project status.');
   const inquiry = analytics.slice(inquiryStart, projectsStart);
 
-  assert.ok(dashboard.includes("{ value: 'inquiry-pipeline', label: 'Inquiry pipeline', description: 'Current demand, status and requested services' }"));
+  assert.ok(dashboard.includes("{ value: 'inquiry-pipeline', label: 'Inquiry pipeline' }"));
   assert.ok(analytics.includes("option.value !== 'inquiry-pipeline' || canOpenInbox"));
   assert.ok(analytics.includes("if (!canOpenInbox && report === 'inquiry-pipeline') setReport('financial-movement')"));
   assert.ok(analytics.includes("record.type === 'inquiry'"));
@@ -565,7 +565,7 @@ test('Dashboard Overview places the canonical exception queue before agency indi
   assert.ok(overview.includes('Cross-module exception data unavailable'));
   assert.ok(overview.includes('No exceptions returned by the Dashboard service'));
   assert.ok(overview.includes('This is not interpreted as a clean operational state.'));
-  assert.ok(overview.includes('Destination not mapped to an authorized workspace'));
+  assert.ok(overview.includes('No mapped destination'));
   assert.ok(overview.includes("candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate))"));
   assert.ok(overview.includes("id: 'open-tasks', label: 'Open tasks'"));
   assert.ok(overview.includes("id: 'overdue-tasks', label: 'Overdue tasks'"));

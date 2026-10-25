@@ -967,7 +967,7 @@ const AnalyticsView: React.FC<{
             </div>
           )}
         </div>
-        <p className="mt-3 border-t border-line pt-3 text-[10px] leading-4 text-muted">Trend charts follow the reporting period; receivables and status views show current records.</p>
+        <p className="mt-3 border-t border-line pt-3 text-[10px] leading-4 text-muted">Trend charts follow the reporting period; All dates defaults to the recent 30 days. Receivables and status remain current.</p>
       </section>
 
       {report === 'financial-movement' ? (
@@ -1064,7 +1064,7 @@ const AnalyticsView: React.FC<{
                   </div>
                 </div>
                 <p className="mt-4 text-xs leading-5 text-muted">
-                  Invoice buckets use issue date. Expense buckets use recorded date. The difference is not revenue recognition, cash flow, or posted profit.
+                  Invoice date vs recorded expense date. The difference is an arithmetic comparison, not posted profit.
                 </p>
               </>
             )}
