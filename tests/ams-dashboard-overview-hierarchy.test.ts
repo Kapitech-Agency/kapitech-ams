@@ -553,7 +553,7 @@ test('Dashboard Overview adds a permission-gated Inbox triage work surface from 
 test('Dashboard Needs attention panels use balanced source-backed visual summaries', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"');
-  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"', start);
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"', start);
   assert.ok(start >= 0 && end > start);
   const attention = dashboard.slice(start, end);
   assert.match(attention, /min-\[1100px\]:grid-cols-12/);
@@ -610,7 +610,7 @@ test('Dashboard priority exceptions sort urgent items before warning and informa
   assert.match(dashboard, /if \(normalized === 'warning'\) return 1;/);
   assert.match(dashboard, /return \[\.\.\.allowedItems\]\.sort\(\(left, right\) =>\s*dashboardAttentionSeverityRank\(left\.severity\) - dashboardAttentionSeverityRank\(right\.severity\)/);
   const dashboardAttentionStart = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"');
-  const dashboardAttentionEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"', dashboardAttentionStart);
+  const dashboardAttentionEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"', dashboardAttentionStart);
   const attention = dashboard.slice(dashboardAttentionStart, dashboardAttentionEnd);
   assert.ok(attention.indexOf("metric.label === 'Urgent' ? 'text-2xl'") >= 0);
   assert.ok(attention.includes("urgent ? 'border-danger/25 bg-danger/5'"));
