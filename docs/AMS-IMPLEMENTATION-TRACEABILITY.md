@@ -1335,3 +1335,18 @@ Dashboard Overview's four decision KPIs identify their canonical source: active 
 **Unverified:** authenticated role matrix, actual route resolution in browser, keyboard/focus, responsive/zoom, contrast, touch and assistive technology. Stage 5 acceptance remains pending.
 
 **Next:** finish Dashboard Overview §4.1/§4.10 review, then finish Analytics. Do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW: Keep cash and invoice trend terminology accurate and add authorized Finance drill-downs · 25 October 2026
+
+**Current source/test SHA:** [2e5eeba4](https://github.com/Kapitech-Agency/kapitech-ams/commit/2e5eeba444531976ef8d9327d7ccb49588b73833). Exact-SHA Quality Gate [40169966035 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966035).
+
+The cash-collected KPI now uses a cash-specific ID/slug instead of a revenue identity. The Overview financial trend's unavailable state describes the issued-invoice/recorded-expense series rather than claiming a revenue-history series. Two chart actions link to the existing invoice and expense registers when the active role passes the existing route-access helper; unauthorized routes are not rendered. No route, permission policy, API, schema or Finance calculation changed.
+
+**Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-nine-module-workspace-regression.test.ts; tests/dashboard-metric-truthfulness.test.ts.
+
+**Validation:** exact-SHA Quality Gate [40169966035 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966035), including typecheck, regression tests and production build. AMS CI [40169966026 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966026) because of the existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; downstream build/package/HTTP smoke were skipped.
+
+**Unverified:** authenticated role matrix, actual browser navigation, keyboard/focus, responsive/zoom, contrast, touch and assistive technology. Stage 5 remains pending.
+
+**Next:** finish Overview §4.1/§4.10 acceptance, then finish Analytics. Do not move to Inbox.

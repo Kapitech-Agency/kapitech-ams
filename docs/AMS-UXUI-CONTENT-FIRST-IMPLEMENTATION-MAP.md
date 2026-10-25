@@ -829,3 +829,16 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - **AMS CI:** [40169527417](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527417) failed at the existing high body-parser@1.20.6 audit advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; production build/package/HTTP smoke were skipped. The independent Quality Gate passed.
 - **Still unverified:** actual link visibility under authenticated roles, route resolution in browser, keyboard/focus order, 320–1440 px sweep, reflow/zoom, contrast, touch and screen-reader behavior.
 - **Next:** finish Overview acceptance region-by-region, then Analytics. Stage 5 remains mandatory.
+
+
+## Dashboard · Accurate cash identity and authorized chart source links · 25 October 2026
+
+**Current source/test SHA:** [2e5eeba4](https://github.com/Kapitech-Agency/kapitech-ams/commit/2e5eeba444531976ef8d9327d7ccb49588b73833). Exact-SHA Quality Gate [40169966035 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966035).
+
+- The cash-collected KPI uses ID/slug cash-collected, not the old revenue identity.
+- The Overview chart fallback now says Financial trend unavailable and describes the invoice-issued/expense-recorded series instead of calling it a revenue history.
+- The chart panel links directly to the existing accounts-receivable register and expense register when the current role can access those destinations. Both links pass through the existing route policy; no route or permission change was made.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-nine-module-workspace-regression.test.ts; tests/dashboard-metric-truthfulness.test.ts.
+- **AMS CI:** [40169966026](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966026) failed at the existing high body-parser@1.20.6 audit advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; downstream build/package/HTTP smoke were skipped.
+- **Still unverified:** authenticated role visibility, real target resolution, focus sequence, prescribed viewport sweep, contrast, touch and assistive technology.
+- **Next:** finish Overview source/content acceptance, then Analytics. Stage 5 remains mandatory.

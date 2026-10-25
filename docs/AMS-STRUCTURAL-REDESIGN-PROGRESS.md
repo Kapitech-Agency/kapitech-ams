@@ -2244,3 +2244,14 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Validation:** Quality Gate [40169527384 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527384): typecheck, regression suite and production build. AMS CI [40169527417 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527417), after typecheck, migrations, security regression and PostgreSQL integration passed. Existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828 blocked downstream build/package/HTTP smoke checks.
 - **Open:** authenticated role visibility, rendered link/focus order, canonical viewport sweep, keyboard/focus, contrast, touch and assistive-technology checks remain NOT VERIFIED.
 - **Next:** finish Overview source/content acceptance against §4.1/§4.10, then complete Analytics. Do not start Inbox.
+
+
+## Stage 4 structural slice — Dashboard financial terminology and chart drill-downs · 25 October 2026
+
+- **Requirement:** VIEW-DASH-OVERVIEW, Main-Content Restructuring Specification §4.1. Financial source concepts must be explicit and charts must support an authorized source-record path.
+- **Change:** The cash-collected KPI now has the semantic ID/slug cash-collected instead of the legacy revenue identity. The chart fallback is titled Financial trend unavailable and describes the issued-invoice/recorded-expense series accurately. The Overview chart offers View invoices and View expenses actions for existing Finance registers only when the current role passes canOpenDashboardRoute.
+- **Scope:** Frontend and regression tests only. No new route, API, Finance calculation, schema or permission policy was introduced.
+- **Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-nine-module-workspace-regression.test.ts; tests/dashboard-metric-truthfulness.test.ts.
+- **Validation:** Quality Gate [40169966035 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966035): typecheck, regression suite and production build. AMS CI [40169966026 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169966026); typecheck, migrations, security regression and PostgreSQL integration passed. Existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828 blocked downstream build/package/HTTP smoke checks.
+- **Open:** verify chart action visibility, route resolution and focus order under authenticated roles at the canonical viewport/keyboard/accessibility sweep. Stage 5 remains NOT VERIFIED.
+- **Next:** close remaining Overview §4.1/§4.10 source/content review, then finish Analytics. Stay within Dashboard.
