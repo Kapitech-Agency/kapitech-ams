@@ -630,7 +630,7 @@ test('CMS editor headers share the same spacing ownership', async () => {
 test('Dashboard header context follows the selected Overview, Performance, or Analytics workspace', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /eyebrow=\{view === 'overview' \? 'Overview' : view === 'performance' \? 'Performance' : 'Analytics'\}/);
-  assert.match(dashboard, /Finance position, project progress, and delivery priorities in one operational overview/);
+  assert.match(dashboard, /A clear view of financial movement, project health, and delivery/);
   assert.match(dashboard, /Review delivery progress, bottlenecks, and recorded team effort for the selected reporting period/);
   assert.match(dashboard, /Explore source-backed financial movement, inquiry demand, receivables, and portfolio status/);
 });

@@ -27,6 +27,8 @@
   --crimson-700: #a10c2b;
   --accent-hover: var(--crimson-600);
   --accent-pressed: var(--crimson-700);
+  --radius-dashboard-card: 16px;
+  --radius-dashboard-plot: 12px;
 }
 
 :root[data-theme="dark"] {

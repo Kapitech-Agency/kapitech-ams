@@ -270,8 +270,9 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.equal(dashboard.includes('DashboardTrendRangePicker'), false);
   assert.equal(dashboard.includes('RangeKey'), false);
   assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'));
-  assert.ok(charts.includes('<div className="relative min-w-0" role="img" aria-label={ariaLabel}>'));
-  assert.ok(charts.includes('<span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>'));
+  assert.ok(charts.includes("role={isMavenPresentation ? 'group' : 'img'} aria-label={ariaLabel}"));
+  assert.ok(charts.includes('ams-trend-chart__legend'));
+  assert.ok(charts.includes('style={{ backgroundColor: primaryLineColor }}'));
   assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'));
 });
 
