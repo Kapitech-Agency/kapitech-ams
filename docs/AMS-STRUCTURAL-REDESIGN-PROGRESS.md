@@ -1200,7 +1200,7 @@ On 135033ec0bec5b9defcea68de134a6159c8487ba, test 330 still failed because a dup
 - Validation on this exact source SHA: [AMS CI 39239473226 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39239473226); [AMS Quality Gate 39239473547 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39239473547). The existing regression test remains enabled; it was not weakened.
 - Scope review: frontend presentation only. No API, database, backend, backup infrastructure, auth, permission or business-rule changes.
 - Remaining acceptance: Stage 5 still requires authenticated permission, error/retry, responsive viewport, keyboard/focus and visual review. No authenticated browser evidence was captured in this source-only environment.
-- Next action: continue Stage 4 in the documented module order from the earliest unfinished Dashboard view; first reconcile the current Dashboard source/test slice against its gap-register acceptance criteria. Keep the Stage 5 user sign-off gate intact.
+- Next action: continue Stage 4 within Dashboard. The shared topbar Filter now governs Overview and Analytics financial charts. Review every Overview region against the canonical §4.1/§4.10 contract, then complete Analytics. Keep authenticated browser/accessibility Stage 5 and its user sign-off gate intact.
 
 
 ## Stage 4 source/test checkpoint · Dashboard money availability · 19 October 2026
@@ -2188,3 +2188,15 @@ Exact source/test SHA: [efa9d4adb8da82a603b1250ab32847e8bbae5277](https://github
 - **Validation:** exact-SHA Quality Gate [40165080061 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40165080061), including typecheck, regression tests and production build. AMS CI [40165080058 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40165080058) after typecheck, migrations, security regression and PostgreSQL integration passed.
 - **Still open:** report scope visibility in Overview, chart range consistency with the global period control, authenticated browser/role/viewport/keyboard/assistive-technology review, and Recent Activity per-record links (the source currently returns no structured record destination).
 - **Next:** continue Dashboard Overview to reconcile scope semantics before completing Analytics. Do not switch modules.
+
+
+## Stage 4 structural slice — Dashboard · Remove duplicate chart-period controls and share the topbar Filter · 25 October 2026
+
+- Requirement: VIEW-DASH-OVERVIEW and VIEW-DASH-ANALYTICS.
+- Before: Overview and Analytics had a local 30 days / Q2 / YTD / 12 months range selector while the topbar exposed Month / Quarter / Year / All dates.
+- After: the Dashboard-local picker and state were removed. Both financial trend views use the existing reporting-period context and shared period value. Month uses weekly buckets; Quarter and Year use monthly buckets with inclusive date windows. All dates uses a labelled recent 30-day default window. The exact-value table remains in Analytics.
+- Content integrity: Analytics uses the selected Dashboard currency. Issued invoice values, recorded expenses, current receivables and current project status stay distinct. The arithmetic difference is not posted profit. Current-state indicators are described separately from period-filtered financial movement.
+- Changed paths: src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/ams-dashboard-analytics-structure.test.ts; tests/admin-pages-jsx-regression.test.ts; tests/frontend-functional-regression.test.ts; tests/ams-nine-module-workspace-regression.test.ts.
+- Validation: Quality Gate [40166216286 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216286), including typecheck, regression tests and production build. AMS CI [40166216296 failed at existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216296) after typecheck, migrations, security regression and PostgreSQL integration passed. No dependency or server/domain files changed.
+- Still open: authenticated browser/role checks, prescribed viewport sweep, 200% text resize, keyboard/focus, contrast and assistive-technology review. Full Overview content review and Analytics acceptance review remain open.
+- Next: continue Dashboard Overview region-by-region, then complete Analytics. Do not move to Inbox.

@@ -1262,3 +1262,20 @@ The Active projects register now carries the separate source health field and ex
 **Unverified:** authenticated source values, role/direct-route and browser behavior, viewport/reflow, keyboard/focus, contrast and assistive technology. Recent Activity per-record destinations are not provided by the current source contract.
 
 **Next:** continue within Dashboard Overview to reconcile the visible reporting scope with chart-specific range control and clarify current-state KPI scope. Then complete Analytics; do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW / VIEW-DASH-ANALYTICS: Use the shared global reporting period across financial trend charts · 25 October 2026
+
+Current source/test SHA: [5ab84f82](https://github.com/Kapitech-Agency/kapitech-ams/commit/5ab84f82d0566c66cba770823964fa5b2be73b36). Period implementation [12ad8c83](https://github.com/Kapitech-Agency/kapitech-ams/commit/12ad8c83ebacd7f36d24d7ed151de605d1f4317e); accessible-name fix [3d90a4a3](https://github.com/Kapitech-Agency/kapitech-ams/commit/3d90a4a3cb9546d195a709c4359d63bf3799baa7).
+
+The local Dashboard trend picker/state has been removed. Overview and Analytics use the existing ReportingPeriodContext and global topbar Filter. Selected months are grouped into weekly date buckets; selected quarters and years are grouped into months. All dates uses a labelled recent 30-day window and displays its actual dates. Analytics retains the exact-value table.
+
+Analytics uses the selected Dashboard currency for filtering and displayed units. Financial movement separates issued invoice values by issue date from expenses by recorded date. The arithmetic difference is not posted profit. Current receivables/project-status snapshots and current-state KPIs are not presented as historical period totals. The monthly invoice-payment/expense difference is explicitly described as this month’s difference, not net operating profit. No backend/API/schema, Finance formula/posting, authorization, route or dependency changes occurred.
+
+Changed paths: src/components/admin/GlobalExecutiveDashboard.tsx, tests/ams-dashboard-overview-hierarchy.test.ts, tests/ams-dashboard-analytics-structure.test.ts, tests/admin-pages-jsx-regression.test.ts, tests/frontend-functional-regression.test.ts, tests/ams-nine-module-workspace-regression.test.ts.
+
+Validation: Quality Gate [40166216286 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216286), including typecheck, regression tests and production build. AMS CI [40166216296 failed at the pre-existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216296). Its typecheck, PostgreSQL migrations, security regression and PostgreSQL integration stages passed; dependent package/build/smoke stages were skipped.
+
+Unverified: authenticated browser values, role/direct-route behavior, all prescribed viewports and 200% text resize, keyboard/focus, contrast, touch and screen-reader use. Stage 5 and explicit user sign-off remain mandatory.
+
+Next: finish Dashboard Overview region-by-region against §4.1/§4.10, then complete Analytics. Do not move to Inbox.

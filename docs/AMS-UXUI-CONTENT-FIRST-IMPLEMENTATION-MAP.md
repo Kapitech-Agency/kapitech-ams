@@ -771,3 +771,15 @@ This closes a source/test discrepancy in the earlier checkpoint: the implementat
 - **CI limitation:** AMS CI [40165080058](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40165080058) failed at the pre-existing high dependency audit finding; typecheck, migrations, security regression and PostgreSQL integration passed. No dependency changed.
 - **Remaining:** clarify in-view period scope versus chart-specific period, current-state KPI definitions, and Stage 5 authenticated browser/role/viewport/keyboard/accessibility evidence. Recent Activity per-record links remain unavailable in the current source response.
 - **Next:** remain in Dashboard Overview until period semantics are clear, then finish Analytics. Do not move to Inbox.
+
+
+## Dashboard Overview and Analytics · Shared global reporting period · 25 October 2026
+
+Status: Source/test verified for global period alignment. View-by-view content review remains open, and Stage 5 runtime review is NOT VERIFIED.
+
+- Before: both views had a local trend-period picker that could disagree with the AMS topbar Filter and project period.
+- After: the shared global period selector is the only period control. Month uses weekly buckets; Quarter/Year use monthly buckets. All dates has a labelled recent 30-day chart window with exact dates.
+- Financial labels and currency: Analytics uses the Dashboard-selected currency. The chart states invoice issue date, expense recorded date, and that the difference is not posted profit. Current-state indicators, receivables balances, and project-status snapshots are not represented as historical period totals.
+- Evidence: period source [12ad8c83](https://github.com/Kapitech-Agency/kapitech-ams/commit/12ad8c83ebacd7f36d24d7ed151de605d1f4317e), accessible name [3d90a4a3](https://github.com/Kapitech-Agency/kapitech-ams/commit/3d90a4a3cb9546d195a709c4359d63bf3799baa7), regression alignment [5ab84f82](https://github.com/Kapitech-Agency/kapitech-ams/commit/5ab84f82d0566c66cba770823964fa5b2be73b36). Quality Gate [40166216286 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216286).
+- CI limitation: AMS CI [40166216296](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40166216296) failed at the existing dependency audit; typecheck, migrations, security regression and PostgreSQL integration passed.
+- Remaining: complete Overview §4.1/§4.10 acceptance and the Analytics view audit. Browser role/data, viewport sweep, keyboard/focus and accessibility remain unverified. Do not advance to Inbox.
