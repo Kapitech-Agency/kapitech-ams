@@ -429,10 +429,10 @@ const buildInquiryVolumeTrend = (
 };
 
 const formatInquiryStatusLabel = (status: string) =>
-  status.replace(/[-_]/g, ' ').replace(/\\b\\w/g, (character) => character.toUpperCase());
+  status.replace(/[-_]/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 
 const getInquiryStatusTone = (status: string): DonutPoint['tone'] => {
-  const normalized = status.trim().toLowerCase().replace(/[_\\s]+/g, '-');
+  const normalized = status.trim().toLowerCase().replace(/[_\s]+/g, '-');
   if (normalized === 'new') return 'accent';
   if (['in-review', 'contacted', 'screening', 'shortlisted', 'interview'].includes(normalized)) return 'info';
   if (normalized === 'hired') return 'success';
@@ -1076,7 +1076,7 @@ const AnalyticsView: React.FC<{
                         <h3 className="text-sm font-semibold text-fg">Requested services</h3>
                         <p className="mt-1 text-[11px] text-muted">Inquiry count by service category</p>
                       </div>
-                      <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">Top {Math.min(8, inquiryServiceGroups.length)}</span>
+                      <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">{inquiryServiceGroups.length ? 'Top ' + Math.min(8, inquiryServiceGroups.length) : 'No categories'}</span>
                     </div>
                     <p className="text-[11px] leading-5 text-muted">One inquiry may request multiple services, so service counts can overlap.</p>
                     {inquiryServiceGroups.length > 0 ? (

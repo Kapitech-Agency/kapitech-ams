@@ -396,7 +396,7 @@ test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox
   assert.ok(inquiry.includes('Client linkage requires a saved Client Directory ID.'));
   assert.ok(inquiry.includes('No conversion rate or booked revenue is inferred.'));
   assert.ok(inquiry.includes('to="/admin/inbox"'));
-  assert.ok(inquiry.includes('buildInquiryVolumeTrend('));
+  assert.ok(dashboard.includes('const buildInquiryVolumeTrend ='));
   assert.ok(inquiry.includes('data-ams-feature-slug="dashboard-analytics-inquiry-volume-trend"'));
   assert.ok(inquiry.includes('data-ams-feature-slug="dashboard-analytics-inquiry-status-visualization"'));
   assert.ok(inquiry.includes('<TrendChart'));
