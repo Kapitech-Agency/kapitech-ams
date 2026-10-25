@@ -351,6 +351,40 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
 });
 
 
+test('Dashboard Overview adds a permission-gated Inbox triage work surface from the canonical lead source', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const inboxTriage = await read('src/lib/inboxTriage.ts');
+  const inboxPage = await read('src/pages/admin/AdminInbox.tsx');
+  const branchStart = dashboard.indexOf("{view === 'overview' ? (");
+  const branchEnd = dashboard.indexOf(") : view === 'performance' ? (", branchStart);
+  assert.ok(branchStart >= 0 && branchEnd > branchStart);
+  const overview = dashboard.slice(branchStart, branchEnd);
+  const exceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
+  const triageStart = overview.indexOf('data-ams-feature-slug="dashboard-inbox-triage"');
+  const indicatorsStart = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  assert.ok(exceptionsStart >= 0 && triageStart > exceptionsStart && indicatorsStart > triageStart,
+    'Inbox triage belongs between cross-module exceptions and the agency operating indicators.');
+
+  assert.ok(dashboard.includes("const canOpenInbox = canOpenDashboardRoute('/admin/inbox')"));
+  assert.ok(dashboard.includes("canOpenInbox ? api.leads.getAll() : Promise.resolve"));
+  assert.ok(dashboard.includes("inboxLeadRows.map((lead) => normalizeContactSubmission(lead as ContactSubmission)).filter((lead) => lead.type !== 'career')"));
+  assert.ok(dashboard.includes("import { isInboxActionable, isInboxHighPriority, isInboxUnassigned } from '../../lib/inboxTriage'"));
+  assert.ok(dashboard.includes("import { normalizeContactSubmission, type ContactSubmission } from '../../lib/submissions'"));
+  assert.ok(dashboard.includes('const openRecords = operationalSnapshot.inboxLeads.filter((lead) => lead.status !== \'closed\')'));
+  assert.ok(dashboard.includes('.filter(isInboxActionable)'));
+  assert.ok(dashboard.includes('.filter(isInboxUnassigned)'));
+  assert.ok(dashboard.includes('.filter(isInboxHighPriority)'));
+  assert.ok(dashboard.includes('Inbox source did not return records'));
+  assert.ok(dashboard.includes('No inbound records need immediate triage'));
+  assert.ok(dashboard.includes('Closed records and Careers applicants are excluded.'));
+  assert.ok(dashboard.includes('canOpenInbox ? items.filter((item) => String(item.category || \'\').toLowerCase() !== \'sales\' && item.id !== \'att_leads_new\')'));
+  assert.ok(inboxTriage.includes("item.status === 'new'"));
+  assert.ok(inboxTriage.includes('isInboxUnassigned(item)'));
+  assert.ok(inboxPage.includes(".filter((item) => item.type !== 'career')"));
+  assert.ok(inboxPage.includes('isInboxActionable(item)'));
+  assert.ok(dashboard.includes('inboxTriageSummary.state === \'unavailable\''));
+});
+
 test('Dashboard Overview places the canonical exception queue before agency indicators and delivery work', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const branchStart = dashboard.indexOf("{view === 'overview' ? (");

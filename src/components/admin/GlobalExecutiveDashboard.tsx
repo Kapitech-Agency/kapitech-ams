@@ -25,6 +25,8 @@ import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { getReportingPeriodRange, type ReportingPeriodMode } from '../../lib/reportingPeriods';
 import { getInvoiceDate, getInvoiceOutstanding, getPaymentRows, isIssuedInvoice } from '../../lib/financeWorkbook';
+import { isInboxActionable, isInboxHighPriority, isInboxUnassigned } from '../../lib/inboxTriage';
+import { normalizeContactSubmission, type ContactSubmission } from '../../lib/submissions';
 
 const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const;
 type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
@@ -125,6 +127,7 @@ type DashboardOperationalSnapshot = {
   loading: boolean;
   projects: any[] | null;
   clients: any[] | null;
+  inboxLeads: ContactSubmission[] | null;
   tasks: any[] | null;
   timeLogs: any[] | null;
   invoices: any[] | null;
@@ -883,6 +886,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses');
   const canCreateProject = canManageProjects && canOpenDashboardRoute('/admin/projects?create=1');
   const canOpenProjects = canOpenDashboardRoute('/admin/projects');
+  const canOpenInbox = canOpenDashboardRoute('/admin/inbox');
   const canOpenClientDirectory = canOpenDashboardRoute('/admin/clients/all-clients');
   const canOpenTasks = canOpenDashboardRoute('/admin/tasks');
   const canOpenTimeLogs = canOpenDashboardRoute('/admin/time-logs');
@@ -907,7 +911,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [overviewTaskFilter, setOverviewTaskFilter] = useState<DashboardTaskFilter>('action');
   const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; attentionItems?: DashboardAttentionItem[]; attentionItemsDataAvailable?: boolean; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
-    loading: true, projects: null, clients: null, tasks: null, timeLogs: null, invoices: null, expenses: null
+    loading: true, projects: null, clients: null, inboxLeads: null, tasks: null, timeLogs: null, invoices: null, expenses: null
   });
   const [refreshRequest, setRefreshRequest] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -924,7 +928,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       api.timeLogs.getAll(),
       api.finance.getInvoices(),
       api.finance.getExpenses(),
-      canOpenClientDirectory ? api.clients.getAll() : Promise.resolve({ success: true, data: { clients: [] } })
+      canOpenClientDirectory ? api.clients.getAll() : Promise.resolve({ success: true, data: { clients: [] } }),
+      canOpenInbox ? api.leads.getAll() : Promise.resolve({ success: true, data: { leads: [] } })
     ];
 
     const readRows = (result: PromiseSettledResult<any>, field: string): any[] | null => {
@@ -966,6 +971,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       const invoices = readRows(results[4], 'invoices');
       const expenses = readRows(results[5], 'expenses');
       const clients = canOpenClientDirectory ? readRows(results[6], 'clients') : null;
+      const inboxLeadRows = canOpenInbox ? readRows(results[7], 'leads') : null;
+      const inboxLeads = inboxLeadRows === null
+        ? null
+        : inboxLeadRows.map((lead) => normalizeContactSubmission(lead as ContactSubmission)).filter((lead) => lead.type !== 'career');
 
       if (projects === null) failedSources.push('projects');
       if (tasks === null) failedSources.push('tasks');
@@ -973,11 +982,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       if (invoices === null) failedSources.push('invoices');
       if (expenses === null) failedSources.push('expenses');
       if (canOpenClientDirectory && clients === null) failedSources.push('client directory');
+      if (canOpenInbox && inboxLeads === null) failedSources.push('inbox leads');
 
       setOperationalSnapshot((previous) => ({
         loading: false,
         projects: projects ?? previous.projects,
         clients: canOpenClientDirectory ? clients ?? previous.clients : null,
+        inboxLeads: canOpenInbox ? inboxLeads ?? previous.inboxLeads : null,
         tasks: tasks ?? previous.tasks,
         timeLogs: timeLogs ?? previous.timeLogs,
         invoices: invoices ?? previous.invoices,
@@ -997,7 +1008,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     });
 
     return () => { active = false; };
-  }, [refreshRequest, canOpenClientDirectory]);
+  }, [refreshRequest, canOpenClientDirectory, canOpenInbox]);
 
   const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
   const currentDayKey = localDateKey(new Date());
@@ -1019,6 +1030,55 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     ),
     [canOpenClientDirectory, operationalSnapshot.clients]
   );
+
+  const inboxTriageSummary = useMemo(() => {
+    if (!canOpenInbox) return { state: 'restricted' as const, openCount: 0, newCount: 0, unassignedCount: 0, highPriorityCount: 0, actionable: [] as ContactSubmission[] };
+    if (operationalSnapshot.inboxLeads === null) {
+      return {
+        state: operationalSnapshot.loading ? 'loading' as const : 'unavailable' as const,
+        openCount: null,
+        newCount: null,
+        unassignedCount: null,
+        highPriorityCount: null,
+        actionable: [] as ContactSubmission[]
+      };
+    }
+
+    const openRecords = operationalSnapshot.inboxLeads.filter((lead) => lead.status !== 'closed');
+    const actionable = openRecords
+      .filter(isInboxActionable)
+      .sort((left, right) => {
+        const priorityRank = (value: unknown) => value === 'urgent' ? 0 : value === 'high' ? 1 : value === 'normal' ? 2 : 3;
+        const priorityDifference = priorityRank(left.priority) - priorityRank(right.priority);
+        if (priorityDifference !== 0) return priorityDifference;
+        const stateRank = (lead: ContactSubmission) => lead.status === 'new' ? 0 : isInboxUnassigned(lead) ? 1 : 2;
+        const stateDifference = stateRank(left) - stateRank(right);
+        if (stateDifference !== 0) return stateDifference;
+        const leftDate = Date.parse(left.createdAt || '');
+        const rightDate = Date.parse(right.createdAt || '');
+        if (Number.isFinite(leftDate) && Number.isFinite(rightDate) && leftDate !== rightDate) return leftDate - rightDate;
+        return String(left.id || '').localeCompare(String(right.id || ''));
+      });
+
+    return {
+      state: 'ready' as const,
+      openCount: openRecords.length,
+      newCount: openRecords.filter((lead) => lead.status === 'new').length,
+      unassignedCount: openRecords.filter(isInboxUnassigned).length,
+      highPriorityCount: openRecords.filter(isInboxHighPriority).length,
+      actionable
+    };
+  }, [canOpenInbox, operationalSnapshot.inboxLeads, operationalSnapshot.loading]);
+
+  const overviewAttentionItems = useMemo(() => {
+    const items = dashboardOverview.attentionItems || [];
+    // The server's Sales exception uses open-lead volume as a proxy for unassigned records.
+    // Inbox is the source of truth for assignment and priority, so avoid duplicating or mislabelling it.
+    return canOpenInbox
+      ? items.filter((item) => String(item.category || '').toLowerCase() !== 'sales' && item.id !== 'att_leads_new')
+      : items;
+  }, [canOpenInbox, dashboardOverview.attentionItems]);
+
 
 
   const dashboardWorkTasks = useMemo<DashboardWorkTask[]>(() => {
@@ -1484,12 +1544,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </div>
           ) : (dashboardOverview.attentionItems || []).length === 0 ? (
             <div className="px-4 py-5" role="status">
-              <p className="text-xs font-medium text-fg">No exceptions returned by the Dashboard service</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">Task and milestone queues below are still calculated from their own current source records.</p>
+              <p className="text-xs font-medium text-fg">{canOpenInbox ? 'No other cross-module exceptions returned' : 'No exceptions returned by the Dashboard service'}</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">{canOpenInbox ? 'Inbound records are reviewed separately below using the canonical Inbox source.' : 'Task and milestone queues below are still calculated from their own current source records.'}</p>
             </div>
           ) : (
             <div className="divide-y divide-line">
-              {(dashboardOverview.attentionItems || []).map((item, index) => {
+              {overviewAttentionItems.map((item, index) => {
                 const severity = String(item.severity || 'info').toLowerCase();
                 const tone: DashboardTone = severity === 'danger' || severity === 'critical'
                   ? 'danger'
@@ -1549,6 +1609,88 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           )}
         </AdminPanel>
       </section>
+
+      {canOpenInbox ? (
+        <section data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
+          <AdminPanel
+            title="Inbound triage"
+            description="Open website and client inquiries that are new, unassigned or high priority. Careers applicants are kept in the Careers workspace."
+            bodyClassName="p-0"
+            actions={(
+              <Link to="/admin/inbox?view=messages" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                Open Inbox <ArrowUpRight size={13} aria-hidden="true" />
+              </Link>
+            )}
+          >
+            {inboxTriageSummary.state === 'loading' ? (
+              <div className="px-4 py-5" role="status">
+                <p className="text-xs font-medium text-fg">Loading inbound records</p>
+                <p className="mt-1 text-[11px] leading-5 text-muted">Waiting for the same server-backed lead source used by Inbox. No queue total is inferred while it loads.</p>
+              </div>
+            ) : inboxTriageSummary.state === 'unavailable' ? (
+              <div className="px-4 py-5" role="status">
+                <p className="text-xs font-medium text-fg">Inbound triage unavailable</p>
+                <p className="mt-1 text-[11px] leading-5 text-muted">The Inbox source did not return records. Assignment, priority and empty state cannot be verified from the dashboard summary alone.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-px border-b border-line bg-line sm:grid-cols-4">
+                  {[
+                    { label: 'Open records', value: inboxTriageSummary.openCount },
+                    { label: 'New', value: inboxTriageSummary.newCount },
+                    { label: 'Unassigned', value: inboxTriageSummary.unassignedCount },
+                    { label: 'High priority', value: inboxTriageSummary.highPriorityCount }
+                  ].map((metric) => (
+                    <div key={metric.label} className="min-w-0 bg-panel px-3 py-3 sm:px-4">
+                      <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
+                      <p className="mt-1 text-base font-semibold tabular-nums text-fg">{metric.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {inboxTriageSummary.actionable.length === 0 ? (
+                  <div className="px-4 py-5" role="status">
+                    <p className="text-xs font-medium text-fg">No inbound records need immediate triage</p>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">No open record is new, unassigned or high priority. Closed records and Careers applicants are excluded. The counts above come from the current Inbox source.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-line">
+                    {inboxTriageSummary.actionable.slice(0, 5).map((lead) => {
+                      const priority = lead.priority === 'urgent' || lead.priority === 'high';
+                      const assignedTo = String(lead.assignedTo || '').trim();
+                      const services = Array.isArray(lead.services) ? lead.services.filter(Boolean).slice(0, 2).join(' · ') : '';
+                      const received = isValidDashboardDate(dateKey(lead.createdAt)) ? formatDashboardDate(dateKey(lead.createdAt)) : 'Date not recorded';
+                      return (
+                        <article key={lead.id} className="flex min-w-0 flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="break-words text-xs font-semibold text-fg">{lead.fullName || 'Inbound contact'}</p>
+                              <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[lead.status === 'new' ? 'warning' : 'info']].join(' ')}>{lead.status || 'Status unavailable'}</span>
+                              {priority ? <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[lead.priority === 'urgent' ? 'danger' : 'warning']].join(' ')}>{lead.priority === 'urgent' ? 'Urgent' : 'High priority'}</span> : null}
+                            </div>
+                            <p className="mt-1 break-words text-[11px] text-muted">{lead.company || 'Company not provided'}{services ? ' · ' + services : ''}</p>
+                          </div>
+                          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+                            <span className={['text-[11px]', assignedTo ? 'text-muted' : 'font-medium text-warning'].join(' ')}>{assignedTo || 'Unassigned'}</span>
+                            <span className="text-[11px] tabular-nums text-muted">{received}</span>
+                          </div>
+                        </article>
+                      );
+                    })}
+                    {inboxTriageSummary.actionable.length > 5 ? (
+                      <div className="px-4 py-3 text-[11px] text-muted">
+                        Showing 5 of {inboxTriageSummary.actionable.length} actionable inbound records, ordered by priority and age.
+                      </div>
+                    ) : null}
+                    <div className="border-t border-line px-4 py-3 text-[10px] leading-5 text-muted">
+                      Status counts can overlap. Records are shown from the live Inbox source; this panel is a triage summary, not a second record store.
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </AdminPanel>
+        </section>
+      ) : null}
 
       <section className="space-y-3" data-ams-feature-slug="dashboard-agency-operating-indicators" aria-label="Agency operating indicators">
         <AdminMetricStrip
