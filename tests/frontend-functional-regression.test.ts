@@ -270,9 +270,15 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
-  assert.ok(overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"') < overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"'));
-  assert.ok(overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"') < overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"'));
-  assert.ok(overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"') < overview.indexOf('data-ams-feature-slug="dashboard-finance-control"'));
+  const overviewAttention = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
+  const deliveryDesk = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const deliveryCommitments = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const operatingSnapshot = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
+  const financeControl = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
+  assert.ok(overviewAttention >= 0 && deliveryDesk > overviewAttention);
+  assert.ok(deliveryDesk < deliveryCommitments && deliveryCommitments < operatingSnapshot);
+  assert.ok(operatingSnapshot < clientFocus && clientFocus < financeControl);
   assert.equal(overview.includes('title="Invoices vs expenses"'), false);
   assert.equal(overview.includes('title="Team capacity"'), false);
   assert.doesNotMatch(dashboard, /const deliveryBreakdown = \[/);
