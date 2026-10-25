@@ -53,6 +53,7 @@ interface DashboardProject {
   client: string;
   type: Exclude<ProjectFilter, 'All'>;
   status: string;
+  health?: string;
   statusTone: 'success' | 'warning' | 'danger' | 'info';
   progress: number | null;
   lead: string;
@@ -914,6 +915,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             client: String(project.clientName || project.client || 'Unassigned client'),
             type,
             status: rawStatus || 'Status unavailable',
+            health: String(project.health || ''),
             statusTone,
             progress: parsedProgress !== null && Number.isFinite(parsedProgress) ? Math.max(0, Math.min(100, parsedProgress)) : null,
             lead: String(project.teamLead || project.ownerName || project.lead || 'Unassigned'),
@@ -927,12 +929,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     return serverProjects;
   }, [dashboardOverview.financials?.currency, dashboardOverview.metrics?.currency, dashboardOverview.projectDataAvailable, dashboardOverview.projects, operationalSnapshot.projects]);
 
-  const filteredProjects = useMemo(
+  const activeDashboardProjects = useMemo(
     () => dashboardProjects.filter((project) =>
+      !isFinishedWork(project.status) && !isFinishedWork(project.health)
+    ),
+    [dashboardProjects],
+  );
+
+  const filteredProjects = useMemo(
+    () => activeDashboardProjects.filter((project) =>
       matchesInterval(project.startDate, project.targetEndDate, project.createdAt)
       && (projectFilter === 'All' || project.type === projectFilter)
     ),
-    [dashboardProjects, projectFilter, matchesInterval],
+    [activeDashboardProjects, projectFilter, matchesInterval],
   );
 
   const dashboardProjectPageCount = Math.max(1, Math.ceil(filteredProjects.length / dashboardProjectPageSize));
@@ -1299,16 +1308,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <p className="mt-3 text-sm font-semibold text-fg">
                 {dashboardOverview.loading || operationalSnapshot.loading
                   ? 'Loading live projects…'
-                  : dashboardProjectDataAvailable
-                    ? 'No projects recorded'
-                    : 'Live project data unavailable'}
+                  : !dashboardProjectDataAvailable
+                    ? 'Live project data unavailable'
+                    : dashboardProjects.length === 0
+                      ? 'No projects recorded'
+                      : activeDashboardProjects.length === 0
+                        ? 'No active projects recorded'
+                        : 'No active projects match the selected reporting scope and type'}
               </p>
               <p className="mt-1 max-w-md text-xs leading-5 text-muted">
                 {dashboardOverview.loading || operationalSnapshot.loading
                   ? 'Waiting for the live dashboard and project services to return their records.'
-                  : dashboardProjectDataAvailable
-                    ? 'The live project source returned no projects matching this reporting period and type. Adjust the view or open Projects.'
-                    : 'The dashboard and project services did not return project records. Open Projects to retry from the canonical workspace.'}
+                  : !dashboardProjectDataAvailable
+                    ? 'The dashboard and project services did not return project records. Open Projects to retry from the canonical workspace.'
+                    : dashboardProjects.length === 0
+                      ? 'The canonical project source returned no records.'
+                      : activeDashboardProjects.length === 0
+                        ? 'The returned project records are completed or archived. Open Projects to review the wider history.'
+                        : 'No current project matches the selected reporting period and type. Adjust the scope or open Projects.'}
               </p>
               <Link to="/admin/projects" className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Projects</Link>
             </div>

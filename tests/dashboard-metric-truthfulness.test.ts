@@ -15,6 +15,16 @@ test('Dashboard priority exceptions distinguish the source-backed queue, genuine
   assert.ok(dashboard.includes("const safeDestination = /^\\/admin\\/[a-z0-9/_-]+$/i.test(destination) ? destination : null;"));
 });
 
+test('Dashboard Overview active project register excludes completed and archived records before applying view filters', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  assert.match(dashboard, /health: String\(project\.health \|\| ''\)/);
+  assert.match(dashboard, /const activeDashboardProjects = useMemo\([\s\S]*?!isFinishedWork\(project\.status\) && !isFinishedWork\(project\.health\)/);
+  assert.match(dashboard, /\(\) => activeDashboardProjects\.filter\(\(project\) =>[\s\S]*matchesInterval\(project\.startDate, project\.targetEndDate, project\.createdAt\)/);
+  assert.ok(dashboard.includes('No active projects recorded'));
+  assert.ok(dashboard.includes('No active projects match the selected reporting scope and type'));
+  assert.ok(dashboard.includes('The returned project records are completed or archived.'));
+});
+
 test('Dashboard distinguishes an empty portfolio from an unavailable project source', () => {
   assert.ok(dashboard.includes('projectDataAvailable'));
   assert.ok(dashboard.includes('No active projects to assess'));
