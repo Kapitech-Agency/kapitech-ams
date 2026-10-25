@@ -377,7 +377,7 @@ test('Dashboard Overview adds a permission-gated Inbox triage work surface from 
   assert.ok(dashboard.includes('Inbox source did not return records'));
   assert.ok(dashboard.includes('No inbound records need immediate triage'));
   assert.ok(dashboard.includes('Closed records and Careers applicants are excluded.'));
-  assert.ok(dashboard.includes('canOpenInbox ? items.filter((item) => String(item.category || \'\').toLowerCase() !== \'sales\' && item.id !== \'att_leads_new\')'));
+  assert.match(dashboard, /return canOpenInbox\s+\? items\.filter\(\(item\) => String\(item\.category \|\| ''\)\.toLowerCase\(\) !== 'sales' && item\.id !== 'att_leads_new'\)/);
   assert.ok(inboxTriage.includes("item.status === 'new'"));
   assert.ok(inboxTriage.includes('isInboxUnassigned(item)'));
   assert.ok(inboxPage.includes(".filter((item) => item.type !== 'career')"));
