@@ -992,3 +992,16 @@ Status: Source/test verified on exact SHA [8824ffa1](https://github.com/Kapitech
 - **Validation:** Quality Gate [40197510745 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197510745) on exact source/test SHA, including TypeScript, regressions and production build. AMS CI [40197510751](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197510751) passed type check, PostgreSQL migrations, security regression and PostgreSQL integration, then failed at the existing high `body-parser@1.20.6` dependency audit; downstream build/package/HTTP smoke steps were skipped.
 - **Pending:** authenticated browser/role rendering, real-data comparison, viewport/reflow, keyboard/focus, contrast, touch, assistive technology and explicit user sign-off.
 - **Next:** inspect actual Overview and Analytics rendering under an authenticated session; do not claim visual acceptance from CI alone.
+
+
+## Dashboard Overview · Client Delivery Focus risk-first metric hierarchy · 25 October 2026
+
+**Source/test SHA:** [703dc5f1](https://github.com/Kapitech-Agency/kapitech-ams/commit/703dc5f1b245ccb7000a40161c351baff804be6c). Browser/Stage 5 review remains NOT VERIFIED.
+
+- **Visible metric order:** Overdue tasks → Blocked tasks → Unassigned tasks → Tasks in review → Open tasks. Previously the panel led with open tasks and omitted the unassigned count.
+- **Responsive behavior:** two columns on narrow screens, three from 600px and five from 1100px. The order stays consistent as the grid reflows.
+- **Client-group sort:** overdue commitments → overdue tasks → blocked tasks → unassigned work → tasks in review → nearest upcoming commitment → open-task count → project count → client name.
+- **Main-content placement:** Operating scope → Needs attention → operating indicators → delivery queue/workstreams → deadline and assigned-work/logged-time context → client delivery focus → Finance → shortcuts → recent audit activity. This matches the authoritative Dashboard content contract.
+- **Changed paths:** `src/components/admin/GlobalExecutiveDashboard.tsx`; `tests/ams-dashboard-overview-hierarchy.test.ts`. No API/backend/schema, route, permission, workflow or Finance logic changed.
+- **Validation:** Quality Gate [40197784861 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197784861) on exact source/test SHA, including TypeScript, regression tests and production build. AMS CI [40197785384](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197785384) passed type check, migrations, security regression and PostgreSQL integration, then failed at the existing high `body-parser@1.20.6` advisory; later build/package/HTTP smoke steps were skipped.
+- **Pending:** authenticated browser/role rendering, real-data comparison, viewport/reflow, keyboard/focus, contrast, touch, assistive technology and explicit user sign-off.

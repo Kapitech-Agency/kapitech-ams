@@ -150,6 +150,8 @@ Period and supported grouping/filter → reports grouped by business question �
 
 **Client Delivery Focus ordering:** sort canonical client groups by overdue commitments, overdue tasks, blocked tasks, unassigned tasks, tasks in review, nearest upcoming commitment, open-task load, project count and then saved client name. Apply task-signal ranking only where the task source is accessible and available; missing metrics remain unavailable, not zero. This is a delivery-prioritization view, not a client health, contract or SLA score.
 
+**Visible metric order inside each client row:** Overdue tasks → Blocked tasks → Unassigned tasks → Tasks in review → Open tasks. On small screens use two columns; expand to three columns from 600px and five from 1100px. Keep the most urgent status measures first, do not omit the unassigned-work signal when task records are available, and preserve unavailable values as unavailable rather than zero.
+
 ## 4.2 Inbox
 
 **Question:** Which incoming conversation needs triage, assignment, response, follow-up or resolution?  

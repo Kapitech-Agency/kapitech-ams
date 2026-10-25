@@ -1,7 +1,7 @@
 # Kapitech AMS Structural UX/UI Redesign Progress
 
 Progress evidence last recorded: 25 October 2026  
-Documentation cross-reference updated: 25 October 2026 (Dashboard Client Delivery Focus priority order and source/test evidence recorded; browser verification not implied)
+Documentation cross-reference updated: 25 October 2026 (Client Delivery Focus row ranking and responsive risk-metric order documented; no browser verification implied)
 Repository: `Kapitech-Agency/kapitech-ams`
 Required delivery branch: `main`
 
@@ -2409,3 +2409,14 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Validation:** Quality Gate [40197510745 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197510745) on exact code/test SHA, including TypeScript, regressions and production build. AMS CI [40197510751](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197510751) passed type checking, PostgreSQL migrations, security regression and PostgreSQL integration, then failed on existing high `body-parser@1.20.6` advisory GHSA-27r3-jxmh-p828. Downstream build/package/HTTP smoke steps were skipped.
 - **Still NOT VERIFIED:** authenticated rendered browser, role visibility, direct click-through, viewport/reflow, keyboard/focus, contrast, touch and assistive-technology acceptance. Stage 5 sign-off remains pending.
 - **Next:** authenticated visual review of Overview/Analytics before broader workflow scope.
+
+
+## Stage 4 visual-first slice — Client Delivery Focus risk-first metric layout · 25 October 2026
+
+- **Finding:** Client groups now sort by real delivery exceptions, but the metric strip inside each row previously displayed open tasks first and omitted the unassigned-task count. This hid a relevant action signal and did not match the row-ranking rationale.
+- **Change:** the row displays Overdue tasks → Blocked tasks → Unassigned tasks → Tasks in review → Open tasks. The grid adapts from two to three to five columns at the established responsive breakpoints. Group sort is overdue commitments → overdue tasks → blocked tasks → unassigned work → review workload → nearest next commitment → open workload → project count → client name.
+- **Whole-page order:** operating scope → Needs attention → agency operating indicators → delivery queue/workstreams → deadline and resource/time context → Client Delivery Focus → Finance control → workspace shortcuts → recent audit activity. This sequence stays consistent with the mandatory Dashboard content specification.
+- **Changed paths:** `src/components/admin/GlobalExecutiveDashboard.tsx`; `tests/ams-dashboard-overview-hierarchy.test.ts`.
+- **Evidence:** [commit 703dc5f1](https://github.com/Kapitech-Agency/kapitech-ams/commit/703dc5f1b245ccb7000a40161c351baff804be6c) updates visible metric order and adds responsive priority-order regression assertions.
+- **Validation:** Quality Gate [40197784861 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197784861). AMS CI [40197785384](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40197785384) passed type check, migrations, security regression and PostgreSQL integration before the existing `body-parser@1.20.6` audit advisory failed; downstream build/package/HTTP smoke were skipped.
+- **Still NOT VERIFIED:** authenticated browser and role review, real-data reconciliation, viewport/reflow, keyboard/focus, contrast, touch and assistive technology. Stage 5 remains pending.
