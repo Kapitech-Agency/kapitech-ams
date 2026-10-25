@@ -112,14 +112,15 @@ test('Dashboard agency workboard places delivery decisions before secondary navi
   const overview = dashboard.slice(start, end);
   const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
   const exceptions = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
-  const indicators = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
   const delivery = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const commitments = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const indicators = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
+  const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-control"');
   const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
-  assert.ok(scope >= 0 && exceptions > scope && indicators > exceptions && delivery > indicators);
-  assert.ok(commitments > delivery && finance > commitments && shortcuts > finance);
+  assert.ok(scope >= 0 && exceptions > scope && delivery > exceptions && commitments > delivery);
+  assert.ok(indicators > commitments && clientFocus > indicators && finance > clientFocus && shortcuts > finance);
   assert.ok(activity > shortcuts);
   assert.ok(overview.includes("id: 'open-tasks', label: 'Open tasks'"));
   assert.ok(overview.includes("id: 'overdue-tasks', label: 'Overdue tasks'"));
