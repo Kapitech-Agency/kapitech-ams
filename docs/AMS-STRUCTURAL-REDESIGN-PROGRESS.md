@@ -2233,3 +2233,14 @@ Exact code/test SHA: [34abbb1f](https://github.com/Kapitech-Agency/kapitech-ams/
 - **Validation:** Quality Gate [40169134063 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169134063): typecheck, regression suite and production build. AMS CI [40169134058 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169134058); typecheck, migrations, security regression and PostgreSQL integration passed. Existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828 blocked downstream build/package/HTTP smoke checks.
 - **Open:** authenticated browser/data, role/direct-route, canonical viewport, keyboard/focus, contrast, touch and assistive-technology verification remain NOT VERIFIED. Stage 5 sign-off is pending.
 - **Next:** finish Overview region-by-region against §4.1/§4.10, then finish Analytics review. Stay within Dashboard.
+
+
+## Stage 4 structural slice — Dashboard decision KPI sources and permission-aware drill-downs · 25 October 2026
+
+- **Requirement:** VIEW-DASH-OVERVIEW, Main-Content Restructuring Specification §4.1. Every decision-grade indicator needs definition, period/unit, source and authorized drill-down.
+- **Change:** AdminMetricStrip supports optional source metadata and links while existing static metric cards remain unchanged. Dashboard identifies Projects as active-project source; Finance invoice-payment rows as cash-collected source; Finance issued-invoice balances as outstanding source; and Team & Resources as team-utilization source.
+- **Access boundary:** Each link is supplied only when canOpenDashboardRoute authorizes the existing destination for the active role. No route or permission policy changed.
+- **Changed paths:** src/components/admin/AdminModulePrimitives.tsx; src/components/admin/GlobalExecutiveDashboard.tsx; tests/dashboard-metric-truthfulness.test.ts.
+- **Validation:** Quality Gate [40169527384 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527384): typecheck, regression suite and production build. AMS CI [40169527417 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527417), after typecheck, migrations, security regression and PostgreSQL integration passed. Existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828 blocked downstream build/package/HTTP smoke checks.
+- **Open:** authenticated role visibility, rendered link/focus order, canonical viewport sweep, keyboard/focus, contrast, touch and assistive-technology checks remain NOT VERIFIED.
+- **Next:** finish Overview source/content acceptance against §4.1/§4.10, then complete Analytics. Do not start Inbox.

@@ -1320,3 +1320,18 @@ The Overview region order now puts Quick actions after financial/delivery summar
 **Unverified:** authenticated live data and roles, direct routes, responsive/zoom matrix, keyboard/focus, contrast, touch and assistive technology. Stage 5 sign-off remains pending.
 
 **Next:** complete Dashboard Overview §4.1/§4.10 content acceptance, then complete Analytics review. Do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW: Label decision KPI sources and enable permission-aware record drill-downs · 25 October 2026
+
+**Current source/test SHA:** [a3bf94d8](https://github.com/Kapitech-Agency/kapitech-ams/commit/a3bf94d8b95d4947ace3343379c702cb84734391). Exact-SHA Quality Gate [40169527384 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527384).
+
+Dashboard Overview's four decision KPIs identify their canonical source: active projects from Projects, cash collected from Finance invoice-payment records, outstanding balances from Finance issued-invoice balances, and utilization from Team & Resources. Each KPI links to an existing owning-module record view only when the current role passes the existing route-access helper. Otherwise the card stays static and retains source metadata. The implementation introduces no route or authorization changes.
+
+**Changed paths:** src/components/admin/AdminModulePrimitives.tsx; src/components/admin/GlobalExecutiveDashboard.tsx; tests/dashboard-metric-truthfulness.test.ts.
+
+**Validation:** exact-SHA Quality Gate [40169527384 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527384) for typecheck, regression tests and production build. AMS CI [40169527417 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527417) because of existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; downstream build/package/HTTP smoke were skipped.
+
+**Unverified:** authenticated role matrix, actual route resolution in browser, keyboard/focus, responsive/zoom, contrast, touch and assistive technology. Stage 5 acceptance remains pending.
+
+**Next:** finish Dashboard Overview §4.1/§4.10 review, then finish Analytics. Do not move to Inbox.

@@ -816,3 +816,16 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - **AMS CI:** [40169134058](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169134058) failed at the existing high body-parser@1.20.6 dependency advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; downstream build/package/HTTP smoke checks were skipped.
 - **Still unverified:** authenticated data/roles, direct URLs, responsive and zoom viewports, keyboard/focus, contrast, touch and screen reader. Stage 5 sign-off remains pending.
 - **Next:** finish Overview acceptance region-by-region against §4.1/§4.10, then complete Analytics. Do not start Inbox.
+
+
+## Dashboard · Decision KPI sources and authorized drill-downs · 25 October 2026
+
+**Current source/test SHA:** [a3bf94d8](https://github.com/Kapitech-Agency/kapitech-ams/commit/a3bf94d8b95d4947ace3343379c702cb84734391). Exact-SHA Quality Gate [40169527384 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527384).
+
+- All four Overview decision KPIs now display their source: Projects, Finance invoice-payment records, Finance issued-invoice balances, and Team & Resources.
+- Each KPI links to an existing owning-module view only when the current role passes the existing route-access helper. Blocked destinations remain non-linked cards with source metadata. No new routes or permissions were added.
+- Shared metric primitives implement the behavior as optional props, so static cards elsewhere keep their previous behavior.
+- **Changed paths:** src/components/admin/AdminModulePrimitives.tsx; src/components/admin/GlobalExecutiveDashboard.tsx; tests/dashboard-metric-truthfulness.test.ts.
+- **AMS CI:** [40169527417](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40169527417) failed at the existing high body-parser@1.20.6 audit advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed; production build/package/HTTP smoke were skipped. The independent Quality Gate passed.
+- **Still unverified:** actual link visibility under authenticated roles, route resolution in browser, keyboard/focus order, 320–1440 px sweep, reflow/zoom, contrast, touch and screen-reader behavior.
+- **Next:** finish Overview acceptance region-by-region, then Analytics. Stage 5 remains mandatory.
