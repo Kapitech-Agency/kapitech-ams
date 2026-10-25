@@ -348,8 +348,9 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
   const controls = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-controls"');
   const financial = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-financial-report"');
   const receivables = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-receivables-report"');
+  const inquiry = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
   const projects = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
-  assert.ok(controls >= 0 && financial > controls && receivables > controls && projects > controls,
+  assert.ok(controls >= 0 && financial > controls && receivables > controls && inquiry > controls && projects > controls,
     'Report and scope controls must precede each selectable report surface.');
   assert.ok(analytics.includes('reportPeriodMode: ReportingPeriodMode'));
   assert.ok(analytics.includes('reportPeriodValue: string'));
@@ -365,6 +366,37 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
   assert.match(analytics, /Current project register/);
 });
 
+
+test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox access is allowed', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('const AnalyticsView:');
+  const end = dashboard.indexOf('export const GlobalExecutiveDashboard', start);
+  assert.ok(start >= 0 && end > start, 'Analytics workspace should be bounded.');
+  const analytics = dashboard.slice(start, end);
+  const inquiryStart = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
+  const projectsStart = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"', inquiryStart);
+  assert.ok(inquiryStart >= 0 && projectsStart > inquiryStart, 'Inquiry analysis should be a distinct selectable report before project status.');
+  const inquiry = analytics.slice(inquiryStart, projectsStart);
+
+  assert.ok(analytics.includes("{ value: 'inquiry-pipeline', label: 'Inquiry pipeline' }"));
+  assert.ok(analytics.includes("option.value !== 'inquiry-pipeline' || canOpenInbox"));
+  assert.ok(analytics.includes("if (!canOpenInbox && report === 'inquiry-pipeline') setReport('financial-movement')"));
+  assert.ok(analytics.includes("record.type === 'inquiry'"));
+  assert.ok(analytics.includes("record.status !== 'closed'"));
+  assert.ok(analytics.includes("Boolean(String(record.convertedClientId || '').trim())"));
+  assert.ok(analytics.includes('record.services'));
+  assert.ok(analytics.includes('canOpenInbox={canOpenInbox}'));
+  assert.ok(inquiry.includes('snapshot.inboxLeads === null'));
+  assert.ok(inquiry.includes('No sales inquiry records returned'));
+  assert.ok(inquiry.includes('Current status distribution'));
+  assert.ok(inquiry.includes('Requested services'));
+  assert.ok(inquiry.includes('One inquiry may request multiple services'));
+  assert.ok(inquiry.includes('type “inquiry”'));
+  assert.ok(inquiry.includes('Client linkage requires a saved Client Directory ID.'));
+  assert.ok(inquiry.includes('No conversion rate or booked revenue is inferred.'));
+  assert.ok(inquiry.includes('to="/admin/inbox"'));
+  assert.equal(inquiry.includes('budget'), false, 'Budget strings must not be aggregated as currency without a canonical numeric model.');
+});
 
 test('Dashboard priority exception drill-downs select the first route allowed for the current role', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');

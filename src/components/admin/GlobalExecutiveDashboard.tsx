@@ -574,11 +574,12 @@ const PerformanceView: React.FC<{
   );
 };
 
-type DashboardAnalyticsReport = 'financial-movement' | 'receivables' | 'project-status';
+type DashboardAnalyticsReport = 'financial-movement' | 'receivables' | 'inquiry-pipeline' | 'project-status';
 
 const DASHBOARD_ANALYTICS_REPORT_OPTIONS: Array<{ value: DashboardAnalyticsReport; label: string }> = [
   { value: 'financial-movement', label: 'Financial movement' },
   { value: 'receivables', label: 'Receivables' },
+  { value: 'inquiry-pipeline', label: 'Inquiry pipeline' },
   { value: 'project-status', label: 'Project status' },
 ];
 
@@ -589,8 +590,13 @@ const AnalyticsView: React.FC<{
   reportPeriodLabel: string;
   reportPeriodEnabled: boolean;
   currency: string;
-}> = ({ snapshot, reportPeriodMode, reportPeriodValue, reportPeriodLabel, reportPeriodEnabled, currency }) => {
+  canOpenInbox: boolean;
+}> = ({ snapshot, reportPeriodMode, reportPeriodValue, reportPeriodLabel, reportPeriodEnabled, currency, canOpenInbox }) => {
   const [report, setReport] = useState<DashboardAnalyticsReport>('financial-movement');
+  useEffect(() => {
+    if (!canOpenInbox && report === 'inquiry-pipeline') setReport('financial-movement');
+  }, [canOpenInbox, report]);
+
   const invoiceRows = snapshot.invoices || [];
   const expenseRows = snapshot.expenses || [];
   const inCurrencyInvoices = invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
@@ -615,6 +621,30 @@ const AnalyticsView: React.FC<{
     else groups.push({ status, count: 1 });
     return groups;
   }, []).sort((a, b) => b.count - a.count);
+
+  const inquiryRows = snapshot.inboxLeads || [];
+  const inquiryRecords = inquiryRows.filter((record) => record.type === 'inquiry');
+  const openInquiryCount = inquiryRecords.filter((record) => record.status !== 'closed').length;
+  const linkedInquiryCount = inquiryRecords.filter((record) => Boolean(String(record.convertedClientId || '').trim())).length;
+  const inquiryStatusGroups = inquiryRecords.reduce<Array<{ status: string; count: number }>>((groups, record) => {
+    const status = String(record.status || 'Not set');
+    const existing = groups.find((item) => item.status === status);
+    if (existing) existing.count += 1;
+    else groups.push({ status, count: 1 });
+    return groups;
+  }, []).sort((a, b) => b.count - a.count || a.status.localeCompare(b.status));
+  const inquiryServiceGroups = inquiryRecords.reduce<Array<{ service: string; count: number }>>((groups, record) => {
+    const services = Array.isArray(record.services)
+      ? Array.from(new Set(record.services.map((service) => String(service || '').trim()).filter(Boolean)))
+      : [];
+    services.forEach((service) => {
+      const existing = groups.find((item) => item.service === service);
+      if (existing) existing.count += 1;
+      else groups.push({ service, count: 1 });
+    });
+    return groups;
+  }, []).sort((a, b) => b.count - a.count || a.service.localeCompare(b.service));
+
   const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
   const financialSourceRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0;
   const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0;
@@ -652,7 +682,7 @@ const AnalyticsView: React.FC<{
           <div className="min-w-0 space-y-2">
             <p className="text-xs font-medium text-muted">Report</p>
             <div role="group" aria-label="Analytics report" className="flex min-w-0 flex-wrap gap-2">
-              {DASHBOARD_ANALYTICS_REPORT_OPTIONS.map((option) => {
+              {DASHBOARD_ANALYTICS_REPORT_OPTIONS.filter((option) => option.value !== 'inquiry-pipeline' || canOpenInbox).map((option) => {
                 const active = report === option.value;
                 return (
                   <button
@@ -679,12 +709,12 @@ const AnalyticsView: React.FC<{
           ) : (
             <div className="min-w-0">
               <p className="text-xs font-medium text-muted">Scope</p>
-              <p className="mt-1 text-xs text-fg">{report === 'receivables' ? 'Current invoice balances' : 'Current project register'}</p>
+              <p className="mt-1 text-xs text-fg">{report === 'receivables' ? 'Current invoice balances' : report === 'inquiry-pipeline' ? 'Current inquiry pipeline' : 'Current project register'}</p>
             </div>
           )}
         </div>
         <p className="mt-3 text-xs leading-5 text-muted">
-          Financial movement uses the shared Filter selection. When it is set to All dates, this chart uses the recent 30-day default window. Receivables and project status are current snapshots.
+          Financial movement uses the shared Filter selection. When it is set to All dates, this chart uses the recent 30-day default window. Receivables and project status are current snapshots. Inquiry pipeline summarizes current canonical inquiry status and requested services, not historic conversion performance or booked revenue.
         </p>
       </section>
 
@@ -822,6 +852,81 @@ const AnalyticsView: React.FC<{
                     Source: current AMS invoice records. The balance excludes paid, draft, cancelled, and voided statuses, and uses available balance fields with the existing invoice amount and paid amount fallback. This current snapshot is not filtered by the selected financial trend period.
                   </p>
                 </div>
+              </div>
+            )}
+          </AdminPanel>
+        </section>
+      ) : report === 'inquiry-pipeline' ? (
+        <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report" aria-label="Inquiry pipeline report">
+          <AdminPanel
+            title="Inquiry pipeline"
+            description="Current status distribution and requested service demand from canonical Inbox inquiry records. This report does not infer historical conversion performance or booked revenue."
+            actions={canOpenInbox ? (
+              <Link to="/admin/inbox" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
+                Open Inbox <ArrowUpRight size={13} />
+              </Link>
+            ) : undefined}
+            bodyClassName="p-4 sm:p-5"
+          >
+            {!canOpenInbox ? (
+              <DashboardUnavailable title="Inquiry analytics restricted" description="This report requires existing permission to open Inbox." />
+            ) : snapshot.inboxLeads === null ? (
+              <DashboardUnavailable title="Inquiry pipeline unavailable" description="The Inbox source did not return records for the current role. An unavailable source is not interpreted as an empty pipeline." />
+            ) : inquiryRecords.length === 0 ? (
+              <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
+                <p className="text-xs font-medium text-fg">No sales inquiry records returned</p>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  {inquiryRows.length > 0
+                    ? 'The source returned submissions, but none has the canonical inquiry type. Other submission types are not counted in this report.'
+                    : 'The Inbox source returned no inquiry submissions.'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-3">
+                  {[
+                    { label: 'Inquiry records', value: inquiryRecords.length },
+                    { label: 'Open inquiries', value: openInquiryCount },
+                    { label: 'Linked to a client', value: linkedInquiryCount }
+                  ].map((metric) => (
+                    <div key={metric.label} className="min-w-0 rounded-control border border-line bg-bg px-3 py-3">
+                      <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
+                      <p className="mt-1 text-lg font-semibold tabular-nums text-fg">{metric.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 gap-4 min-[900px]:grid-cols-2">
+                  <section className="min-w-0 space-y-2" aria-label="Inquiry status distribution">
+                    <h3 className="text-xs font-semibold text-fg">Current status distribution</h3>
+                    <div className="divide-y divide-line">
+                      {inquiryStatusGroups.map((group) => (
+                        <div key={group.status} className="flex items-center justify-between gap-3 py-2.5">
+                          <span className="text-xs text-fg">{group.status.replace(/[-_]/g, ' ')}</span>
+                          <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{group.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                  <section className="min-w-0 space-y-2" aria-label="Requested services">
+                    <h3 className="text-xs font-semibold text-fg">Requested services</h3>
+                    <p className="text-[11px] leading-5 text-muted">One inquiry may request multiple services, so service counts can overlap.</p>
+                    {inquiryServiceGroups.length > 0 ? (
+                      <div className="divide-y divide-line">
+                        {inquiryServiceGroups.slice(0, 8).map((group) => (
+                          <div key={group.service} className="flex items-center justify-between gap-3 py-2.5">
+                            <span className="break-words text-xs text-fg">{group.service}</span>
+                            <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{group.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="rounded-control border border-line bg-bg px-3 py-3 text-xs text-muted" role="status">No requested service categories were recorded for these inquiries.</p>
+                    )}
+                  </section>
+                </div>
+                <p className="border-t border-line pt-3 text-[11px] leading-5 text-muted">
+                  Source: canonical AMS Inbox submissions. Only records with type “inquiry” are included; Careers applicants, vendors and newsletter subscriptions are excluded. Status is the current record status. Client linkage requires a saved Client Directory ID. No conversion rate or booked revenue is inferred.
+                </p>
               </div>
             )}
           </AdminPanel>
@@ -2301,6 +2406,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           reportPeriodLabel={reportPeriodLabel}
           reportPeriodEnabled={reportPeriodEnabled}
           currency={financeCurrency}
+          canOpenInbox={canOpenInbox}
         />
       )}
     </AdminPageShell>
