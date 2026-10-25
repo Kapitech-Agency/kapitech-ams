@@ -69,7 +69,9 @@ test('Dashboard reuses canonical Finance invoice, issue-date, and payment helper
 
 test('Dashboard financial trends do not treat records in another currency as a zero-value series', () => {
   assert.ok(dashboard.includes("invoiceHistoryReturned = Boolean(operationalSnapshot.invoices?.some((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency && isIssuedInvoice(invoice)))"));
-  assert.ok(dashboard.includes("expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency))"));
+  assert.ok(dashboard.includes("expenseHistoryReturned = Boolean(operationalSnapshot.expenses?.some((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency && isDashboardExpenseEligible(expense)))"));
+  assert.ok(dashboard.includes("const inCurrencyExpenses = inCurrencyExpenseRows.filter(isDashboardExpenseEligible)"));
+  assert.ok(dashboard.includes("const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0"));
   assert.ok(dashboard.includes("financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0"));
   assert.ok(dashboard.includes('A zero-value trend is not inferred from another currency.'));
   assert.ok(dashboard.includes('const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? liveCashCollected;'));
