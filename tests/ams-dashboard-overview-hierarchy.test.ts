@@ -28,8 +28,8 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
 
   assert.ok(scopeStart >= 0 && attentionCenterStart > scopeStart, 'The page must define reporting semantics before the attention queue.');
   assert.ok(exceptionsStart > attentionCenterStart, 'Cross-module exceptions sit inside the Needs attention workspace.');
-  assert.ok(inboxTriageStart > exceptionsStart && indicatorsStart > inboxTriageStart, 'Incoming triage is grouped with cross-module exceptions before operating indicators.');
-  const attentionCenter = overview.slice(attentionCenterStart, indicatorsStart);
+  assert.ok(inboxTriageStart > exceptionsStart && deliveryDeskStart > inboxTriageStart, 'Incoming triage stays in Needs attention before the active-delivery region.');
+  const attentionCenter = overview.slice(attentionCenterStart, deliveryDeskStart);
   assert.ok(attentionCenter.includes('Needs attention'));
   assert.ok(attentionCenter.includes("min-[1100px]:col-span-6"));
   assert.ok(attentionCenter.includes("min-[1100px]:col-span-12"), 'Exception queue uses full width when Inbox is not available to the role.');
@@ -42,8 +42,8 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
   assert.ok(overview.includes('Finance: current month + receivables'));
   assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
   assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.ok(deliveryDeskStart > indicatorsStart, 'Task-level delivery work follows the decision indicators.');
   assert.ok(commitmentsStart > deliveryDeskStart, 'Project milestone/deadline and resource views follow the primary task queue.');
+  assert.ok(indicatorsStart > commitmentsStart, 'The supporting operating snapshot follows the actionable delivery and deadline regions.');
   assert.ok(clientFocusStart > commitmentsStart, 'Client delivery focus follows delivery commitments and resource context.');
   assert.ok(financeStart > clientFocusStart, 'Client delivery context precedes the canonical Finance summary.');
   assert.ok(shortcutsStart > financeStart, 'Workspace shortcuts follow actionable source summaries.');
@@ -524,8 +524,10 @@ test('Dashboard Overview adds a permission-gated Inbox triage work surface from 
   const exceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
   const triageStart = overview.indexOf('data-ams-feature-slug="dashboard-inbox-triage"');
   const indicatorsStart = overview.indexOf('data-ams-feature-slug="dashboard-agency-operating-indicators"');
-  assert.ok(exceptionsStart >= 0 && triageStart > exceptionsStart && indicatorsStart > triageStart,
-    'Inbox triage belongs between cross-module exceptions and the agency operating indicators.');
+  const deliveryStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const commitmentsStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  assert.ok(exceptionsStart >= 0 && triageStart > exceptionsStart && deliveryStart > triageStart && commitmentsStart > deliveryStart && indicatorsStart > commitmentsStart,
+    'Inbox triage remains in Needs attention; delivery and deadline work precede the operating snapshot.');
 
   assert.ok(dashboard.includes("const canOpenInbox = canOpenDashboardRoute('/admin/inbox')"));
   assert.ok(dashboard.includes("canOpenInbox ? api.leads.getAll() : Promise.resolve"));
@@ -542,7 +544,8 @@ test('Dashboard Overview adds a permission-gated Inbox triage work surface from 
   assert.ok(dashboard.includes('No inbound records need immediate triage'));
   assert.ok(dashboard.includes("const openRecords = operationalSnapshot.inboxLeads.filter((lead) => lead.status !== 'closed')"));
   assert.ok(dashboard.includes(".filter((lead) => lead.type !== 'career')"));
-  assert.match(dashboard, /return canOpenInbox\s+\? items\.filter\(\(item\) => String\(item\.category \|\| ''\)\.toLowerCase\(\) !== 'sales' && item\.id !== 'att_leads_new'\)/);
+  assert.match(dashboard, /const allowedItems = canOpenInbox\s+\? items\.filter\(\(item\) => String\(item\.category \|\| ''\)\.toLowerCase\(\) !== 'sales' && item\.id !== 'att_leads_new'\)/);
+  assert.match(dashboard, /return \[\.\.\.allowedItems\]\.sort\(\(left, right\) =>\s*dashboardAttentionSeverityRank\(left\.severity\) - dashboardAttentionSeverityRank\(right\.severity\)/);
   assert.ok(inboxTriage.includes("item.status === 'new'"));
   assert.ok(inboxTriage.includes('isInboxUnassigned(item)'));
   assert.ok(inboxPage.includes(".filter((item) => item.type !== 'career')"));
