@@ -500,6 +500,12 @@ const PerformanceView: React.FC<{
     .map(([name, minutes]) => ({ name, minutes }))
     .sort((a, b) => b.minutes - a.minutes)
     .slice(0, 8);
+  const maxMemberTimeMinutes = Math.max(1, ...workload.map((member) => member.minutes));
+  const totalTrackedMinutes = scopedTimeLogs.reduce(
+    (total: number, log: any) => total + Math.max(0, Number(log.durationMinutes ?? log.minutes ?? 0) || 0),
+    0
+  );
+  const trackedTimeEntryCount = scopedTimeLogs.length;
 
   const projectAttentionSignals = (project: any) => {
     const state = [project.health, project.status].filter(Boolean).join(' ').toLowerCase();
@@ -557,6 +563,42 @@ const PerformanceView: React.FC<{
         </p>
       </section>
 
+      <section data-ams-feature-slug="dashboard-performance-supporting-metrics" aria-label="Performance summary metrics">
+        <AdminMetricStrip slug="dashboard-performance-kpis" metrics={[
+          {
+            id: 'performance-completion',
+            label: 'Task completion',
+            value: completionValue,
+            icon: <CheckCircle2 size={15} />,
+            toneClassName: completedTasks > 0 && completedTasks === tasks.length ? 'text-success' : undefined,
+            context: snapshot.tasks === null ? 'Task source unavailable' : tasks.length ? completedTasks + ' of ' + tasks.length + ' in-scope tasks completed' : 'No task records in scope'
+          },
+          {
+            id: 'performance-overdue',
+            label: 'Overdue tasks',
+            value: overdueValue,
+            icon: <CalendarDays size={15} />,
+            toneClassName: 'text-danger',
+            context: snapshot.tasks !== null ? 'Open tasks past their due date' : 'Task source unavailable'
+          },
+          {
+            id: 'performance-blocked',
+            label: 'Blocked tasks',
+            value: blockedValue,
+            icon: <AlertTriangle size={15} />,
+            toneClassName: 'text-warning',
+            context: snapshot.tasks !== null ? 'Current blocked status in scope' : 'Task source unavailable'
+          },
+          {
+            id: 'performance-projects',
+            label: 'Active projects',
+            value: activeProjectValue,
+            icon: <FolderKanban size={15} />,
+            context: snapshot.projects !== null ? 'Current projects overlapping the period' : 'Project source unavailable'
+          },
+        ]} />
+      </section>
+
       <section className="grid gap-4 min-[1100px]:grid-cols-2" data-ams-feature-slug="dashboard-performance-primary">
         <AdminPanel
           title="Task status in scope"
@@ -577,12 +619,12 @@ const PerformanceView: React.FC<{
             <div className="space-y-4">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <p className="text-3xl font-semibold tabular-nums text-fg">{completionValue}</p>
-                  <p className="mt-1 text-xs text-muted">{completedTasks} of {tasks.length} in-scope tasks are currently completed</p>
+                  <p className="text-xs font-semibold text-fg">Current task distribution</p>
+                  <p className="mt-1 text-[11px] text-muted">{tasks.length} task records in the selected scope</p>
                 </div>
-                <AdminStatusBadge tone={completedTasks === tasks.length ? 'success' : 'info'}>
-                  {completedTasks === tasks.length ? 'Complete' : 'In progress'}
-                </AdminStatusBadge>
+                <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">
+                  Current status · not status history
+                </span>
               </div>
               <div className="space-y-3" aria-label="Task status distribution">
                 {taskStatusBreakdown.map((status) => {
@@ -649,36 +691,50 @@ const PerformanceView: React.FC<{
         {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking service did not return records for the current role." /> : workload.length === 0 ? (
           <p className="py-8 text-center text-xs text-muted" role="status">{scopedTimeLogs.length === 0 && allTimeLogs.length > 0 ? 'No time entries match the selected reporting scope.' : 'No time entries recorded in this scope.'}</p>
         ) : (
-          <div className="space-y-3">
-            {workload.map((member) => (
-              <div key={member.name} className="flex min-w-0 items-center justify-between gap-3">
-                <span className="min-w-0 break-words text-xs font-medium text-fg">{member.name}</span>
-                <span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 rounded-control border border-line bg-bg p-3 min-[600px]:grid-cols-2">
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted">Total recorded time</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{Math.floor(totalTrackedMinutes / 60)}h {totalTrackedMinutes % 60}m</p>
               </div>
-            ))}
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted">Time entries in scope</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{trackedTimeEntryCount}</p>
+              </div>
+            </div>
+            <div className="space-y-4" aria-label="Recorded time by team member">
+              {workload.map((member) => {
+                const shareWidth = Math.max(0, Math.min(100, (member.minutes / maxMemberTimeMinutes) * 100));
+                return (
+                  <div key={member.name} className="min-w-0 space-y-1.5">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <span className="min-w-0 break-words text-xs font-medium text-fg">{member.name}</span>
+                      <span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={member.name + ': ' + Math.floor(member.minutes / 60) + ' hours and ' + member.minutes % 60 + ' minutes recorded'}>
+                      <div className="h-full rounded-full bg-series-3 transition-[width]" style={{ width: shareWidth + '%' }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[11px] leading-5 text-muted">Showing up to eight contributors by recorded time. Bars compare logged effort within this list; they do not represent capacity, utilization or billable time.</p>
           </div>
         )}
       </AdminPanel>
 
-      <section data-ams-feature-slug="dashboard-performance-supporting-metrics" aria-label="Performance summary metrics">
-        <AdminMetricStrip slug="dashboard-performance-kpis" metrics={[
-          { id: 'performance-projects', label: 'Active projects in scope', value: activeProjectValue, icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records in scope' : 'Live source unavailable' },
-          { id: 'performance-tasks', label: 'Tasks in scope', value: taskCount === null ? '—' : String(taskCount), icon: <CheckCircle2 size={15} />, context: snapshot.tasks !== null ? 'Current task records in scope' : 'Live source unavailable' },
-          { id: 'performance-overdue', label: 'Open overdue tasks in scope', value: overdueValue, icon: <CalendarDays size={15} />, toneClassName: 'text-warning', context: snapshot.tasks !== null ? 'Current tasks past due date' : 'Not available' },
-          { id: 'performance-blocked', label: 'Blocked tasks in scope', value: blockedValue, icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', context: snapshot.tasks !== null ? 'Open tasks with a blocked status' : 'Not available' },
-        ]} />
-      </section>
+
     </div>
   );
 };
 
 type DashboardAnalyticsReport = 'financial-movement' | 'receivables' | 'inquiry-pipeline' | 'project-status';
 
-const DASHBOARD_ANALYTICS_REPORT_OPTIONS: Array<{ value: DashboardAnalyticsReport; label: string }> = [
-  { value: 'financial-movement', label: 'Financial movement' },
-  { value: 'receivables', label: 'Receivables' },
-  { value: 'inquiry-pipeline', label: 'Inquiry pipeline' },
-  { value: 'project-status', label: 'Project status' },
+const DASHBOARD_ANALYTICS_REPORT_OPTIONS: Array<{ value: DashboardAnalyticsReport; label: string; description: string }> = [
+  { value: 'financial-movement', label: 'Financial movement', description: 'Issued invoices compared with recorded expenses' },
+  { value: 'receivables', label: 'Receivables', description: 'Open balances from issued invoices' },
+  { value: 'inquiry-pipeline', label: 'Inquiry pipeline', description: 'Current demand, status and requested services' },
+  { value: 'project-status', label: 'Project status', description: 'Current portfolio grouped by saved status' },
 ];
 
 const AnalyticsView: React.FC<{
@@ -719,6 +775,8 @@ const AnalyticsView: React.FC<{
     else groups.push({ status, count: 1 });
     return groups;
   }, []).sort((a, b) => b.count - a.count);
+  const projectStatusMaximum = Math.max(1, ...projectStatusGroups.map((group) => group.count));
+  const projectStatusTotal = snapshot.projects?.length ?? 0;
 
   const inquiryRows = snapshot.inboxLeads || [];
   const inquiryRecords = inquiryRows.filter((record) => record.type === 'inquiry');
@@ -792,11 +850,21 @@ const AnalyticsView: React.FC<{
         aria-label="Analytics report controls"
       >
         <div className="flex flex-col gap-4 min-[900px]:flex-row min-[900px]:items-end min-[900px]:justify-between">
-          <div className="min-w-0 space-y-2">
-            <p className="text-xs font-medium text-muted">Report</p>
-            <div role="group" aria-label="Analytics report" className="flex min-w-0 flex-wrap gap-2">
+          <div className="min-w-0 flex-1 space-y-3">
+            <div>
+              <p className="text-xs font-semibold text-fg">Reports</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">Choose one report. Each view keeps its source, time scope and definition visible.</p>
+            </div>
+            <div role="group" aria-label="Analytics report" className="grid min-w-0 grid-cols-2 gap-2 min-[900px]:grid-cols-4">
               {DASHBOARD_ANALYTICS_REPORT_OPTIONS.filter((option) => option.value !== 'inquiry-pipeline' || canOpenInbox).map((option) => {
                 const active = report === option.value;
+                const ReportIcon = option.value === 'financial-movement'
+                  ? CircleDollarSign
+                  : option.value === 'receivables'
+                    ? ReceiptText
+                    : option.value === 'inquiry-pipeline'
+                      ? Users
+                      : FolderKanban;
                 return (
                   <button
                     key={option.value}
@@ -804,11 +872,20 @@ const AnalyticsView: React.FC<{
                     aria-pressed={active}
                     onClick={() => setReport(option.value)}
                     className={[
-                      'inline-flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                      active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg',
+                      'flex min-h-[84px] min-w-0 items-start gap-2.5 rounded-control border p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                      active ? 'border-accent/35 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg',
                     ].join(' ')}
                   >
-                    {option.label}
+                    <span className={[
+                      'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border',
+                      active ? 'border-accent/25 bg-accent/10 text-accent-text' : 'border-line bg-panel text-muted',
+                    ].join(' ')}>
+                      <ReportIcon size={15} aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block break-words text-xs font-semibold leading-4">{option.label}</span>
+                      <span className="mt-1.5 block break-words text-[10px] leading-4 text-muted">{option.description}</span>
+                    </span>
                   </button>
                 );
               })}
@@ -826,9 +903,10 @@ const AnalyticsView: React.FC<{
             </div>
           )}
         </div>
-        <p className="mt-3 text-xs leading-5 text-muted">
-          Financial movement uses the shared Filter selection. When set to All dates, its chart uses the recent 30-day default window. Inquiry volume also follows the shared Filter and uses the same default window. Receivables and project status are current snapshots; inquiry status and service demand are current-state groupings. No historic conversion performance or booked revenue is inferred.
-        </p>
+        <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 text-[11px] leading-5 text-muted sm:flex-row sm:items-start sm:justify-between">
+          <p className="min-w-0">Financial movement and inquiry volume follow the shared reporting filter. “All dates” uses a labelled recent 30-day chart window.</p>
+          <p className="min-w-0 sm:max-w-[42%]">Receivables, inquiry status and project status are current snapshots, not historical trends. No conversion rate or booked revenue is inferred.</p>
+        </div>
       </section>
 
       {report === 'financial-movement' ? (
@@ -1129,21 +1207,45 @@ const AnalyticsView: React.FC<{
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-control border border-line bg-bg p-4">
-                  <p className="text-xs text-muted">Active projects</p>
-                  <p className="mt-2 text-2xl font-semibold tabular-nums text-fg">{activeProjects}</p>
-                  <p className="mt-1 text-xs text-muted">Current portfolio snapshot</p>
+                <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-3">
+                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] leading-4 text-muted">Active projects</p>
+                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{activeProjects}</p>
+                    <p className="mt-1 text-[10px] text-muted">Current portfolio</p>
+                  </div>
+                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] leading-4 text-muted">Project records</p>
+                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{projectStatusTotal}</p>
+                    <p className="mt-1 text-[10px] text-muted">All saved states</p>
+                  </div>
+                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] leading-4 text-muted">Status groups</p>
+                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{projectStatusGroups.length}</p>
+                    <p className="mt-1 text-[10px] text-muted">Current labels</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-xs font-medium text-fg">Projects by current status</h3>
-                  {projectStatusGroups.map((group) => (
-                    <div key={group.status} className="flex items-center justify-between gap-3 border-b border-line py-3 last:border-0">
-                      <span className="text-xs text-fg">{group.status}</span>
-                      <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{group.count}</span>
-                    </div>
-                  ))}
+                <div className="space-y-3" aria-label="Project distribution by current status">
+                  <div>
+                    <h3 className="text-sm font-semibold text-fg">Projects by current status</h3>
+                    <p className="mt-1 text-[11px] text-muted">Each project appears in one saved status group.</p>
+                  </div>
+                  {projectStatusGroups.map((group) => {
+                    const percentage = projectStatusTotal > 0 ? Math.round((group.count / projectStatusTotal) * 100) : 0;
+                    const width = Math.max(0, Math.min(100, (group.count / projectStatusMaximum) * 100));
+                    return (
+                      <div key={group.status} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="min-w-0 break-words text-xs font-medium text-fg">{group.status}</span>
+                          <span className="shrink-0 text-xs tabular-nums text-muted">{group.count} <span className="text-[10px]">· {percentage}%</span></span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={group.status + ': ' + group.count + ' projects, ' + percentage + ' percent of current project records'}>
+                          <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: width + '%' }} />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <p className="text-xs leading-5 text-muted">
+                <p className="border-t border-line pt-3 text-[11px] leading-5 text-muted">
                   Source: current project records. Status counts are current-state groupings, not trends for the selected financial period. Records without a status use the existing health field, then “Not set”.
                 </p>
               </div>
@@ -1758,10 +1860,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         eyebrow={view === 'overview' ? 'Overview' : view === 'performance' ? 'Performance' : 'Analytics'}
         title="Dashboard"
         description={view === 'overview'
-          ? 'Coordinate creative production, web and IT delivery, task ownership, delivery dates, and current Finance control.'
+          ? 'Coordinate creative and IT delivery, urgent work, client commitments, and current Finance exceptions.'
           : view === 'performance'
-            ? 'Track project delivery, task completion, overdue work, and recorded team time.'
-            : 'Choose a report to inspect financial movement, outstanding receivables, or current project status.'}
+            ? 'Review delivery progress, bottlenecks, and recorded team effort for the selected reporting period.'
+            : 'Explore source-backed financial movement, inquiry demand, receivables, and portfolio status.'}
         actions={(
           <>
             <button

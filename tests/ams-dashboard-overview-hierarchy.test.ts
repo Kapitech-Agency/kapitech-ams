@@ -361,13 +361,18 @@ test('Dashboard Performance scopes source-backed delivery records to the shared 
   assert.ok(start >= 0 && end > start, 'Performance workspace should have a bounded source section');
   const performance = dashboard.slice(start, end);
   const scope = performance.indexOf('data-ams-feature-slug="dashboard-performance-scope"');
+  const supportingMetrics = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"');
   const primary = performance.indexOf('data-ams-feature-slug="dashboard-performance-primary"');
   const taskStatus = performance.indexOf('title="Task status in scope"', primary);
   const projectExceptions = performance.indexOf('title="Projects needing attention"', taskStatus);
   const trackedTime = performance.indexOf('title="Tracked time in scope"', projectExceptions);
-  const supportingMetrics = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"', trackedTime);
-  assert.ok(scope >= 0 && primary > scope && taskStatus > primary && projectExceptions > taskStatus && trackedTime > projectExceptions && supportingMetrics > trackedTime,
-    'Reporting scope and primary delivery analysis should lead, followed by time context and supporting metrics.');
+  assert.ok(scope >= 0 && supportingMetrics > scope && primary > supportingMetrics && taskStatus > primary && projectExceptions > taskStatus && trackedTime > projectExceptions,
+    'Reporting scope and decision KPIs must lead, then task/project analysis and recorded-time context.');
+  assert.ok(performance.includes("label: 'Task completion'"), 'Completion rate should be visible before detailed distribution.');
+  assert.ok(performance.includes('const maxMemberTimeMinutes = Math.max(1, ...workload.map((member) => member.minutes))'));
+  assert.ok(performance.includes('const totalTrackedMinutes = scopedTimeLogs.reduce'));
+  assert.ok(performance.includes('data-ams-feature-slug="dashboard-performance-supporting-metrics"'));
+  assert.ok(performance.includes('role="img" aria-label={member.name +'));
   assert.match(performance, /matchesInterval\(dueDate, dueDate, task\.createdAt\)/);
   assert.match(performance, /matchesInterval\([\s\S]*project\.startDate \|\| project\.start[\s\S]*project\.createdAt[\s\S]*\)/);
   assert.match(performance, /matchesDate\(log\.date \|\| log\.createdAt\)/);
@@ -379,6 +384,26 @@ test('Dashboard Performance scopes source-backed delivery records to the shared 
   assert.match(performance, /status\.count \/ tasks\.length \* 100/);
   assert.match(performance, /Active projects in scope/);
   assert.match(performance, /Tasks in scope/);
+});
+
+test('Dashboard Performance puts decision KPIs first and visualizes recorded time as a comparison', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('const PerformanceView: React.FC');
+  const end = dashboard.indexOf('type DashboardAnalyticsReport', start);
+  const performance = dashboard.slice(start, end);
+  const scope = performance.indexOf('data-ams-feature-slug="dashboard-performance-scope"');
+  const kpis = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"');
+  const taskProjects = performance.indexOf('data-ams-feature-slug="dashboard-performance-primary"');
+  const time = performance.indexOf('title="Tracked time in scope"');
+  assert.ok(scope >= 0 && kpis > scope && taskProjects > kpis && time > taskProjects);
+  assert.ok(performance.includes("label: 'Task completion'"));
+  assert.ok(performance.includes("label: 'Overdue tasks'"));
+  assert.ok(performance.includes("label: 'Blocked tasks'"));
+  assert.ok(performance.includes('Total recorded time'));
+  assert.ok(performance.includes('Time entries in scope'));
+  assert.ok(performance.includes('const maxMemberTimeMinutes = Math.max(1, ...workload.map((member) => member.minutes))'));
+  assert.ok(performance.includes('Bars compare logged effort within this list; they do not represent capacity, utilization or billable time.'));
+  assert.ok(performance.includes("style={{ width: shareWidth + '%' }}"));
 });
 
 test('Dashboard Analytics exposes report-first hierarchy and a single focused work surface', async () => {
@@ -406,6 +431,14 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
   assert.match(analytics, /A zero-value trend is not inferred from an empty source/);
   assert.match(analytics, /Current invoice balances/);
   assert.match(analytics, /Current project register/);
+  assert.ok(analytics.includes('Choose one report. Each view keeps its source, time scope and definition visible.'));
+  assert.ok(analytics.includes('min-[900px]:grid-cols-4'), 'Report choices should have a consistent responsive grid.');
+  assert.ok(analytics.includes('option.description'), 'Each report choice should explain its business question.');
+  assert.ok(analytics.includes('const projectStatusMaximum = Math.max(1, ...projectStatusGroups.map((group) => group.count))'));
+  assert.ok(analytics.includes('data-ams-feature-slug="dashboard-analytics-project-status-report"'));
+  assert.ok(analytics.includes('Projects by current status'));
+  assert.ok(analytics.includes('role="img" aria-label={group.status +'));
+  assert.ok(analytics.includes('Current labels'), 'Project status summary should remain current-state and source-backed.');
 });
 
 
