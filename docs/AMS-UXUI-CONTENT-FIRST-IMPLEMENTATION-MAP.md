@@ -854,3 +854,16 @@ Status: Current source/test SHA [34abbb1f](https://github.com/Kapitech-Agency/ka
 - **No backend/API or Finance formula changes.** The incorrect API summary must be corrected later in a separately authorized backend slice.
 - **AMS CI:** [40170368655](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40170368655) failed at existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, migration, security regression and PostgreSQL integration passed; dependent steps were skipped.
 - **Next:** continue Overview §4.1/§4.10 review. Track the server summary correction as a later backend dependency; do not expand current frontend scope.
+
+
+## Dashboard Overview · Pagination and route-authorized navigation · 25 October 2026
+
+**Current code/test SHA:** [94369702](https://github.com/Kapitech-Agency/kapitech-ams/commit/94369702fa841df3378460e5b973fb5c53d4e09c). Exact-SHA Quality Gate [40173353104 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40173353104).
+
+- The project register shares `pagedDashboardProjects` between mobile cards and the desktop table, so page size and page selection have the same effect at both viewport classes.
+- Project “View all”, project empty-state actions, delivery empty-state links, Time Logs, and project-workspace navigation are now gated with the current `canOpenDashboardRoute` policy. No route permissions were changed.
+- Priority exception URLs allow internal `/admin/` destinations with valid query parameters, but render a drill-down only if the current role passes the existing route-access check.
+- **Changed files:** src/components/admin/GlobalExecutiveDashboard.tsx; tests/ams-dashboard-overview-hierarchy.test.ts; tests/dashboard-metric-truthfulness.test.ts.
+- **CI:** [AMS CI 40173353081](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40173353081) failed at the existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, migrations, security regression and PostgreSQL integration passed.
+- **Still unverified:** authenticated browser/role sessions, real data, the prescribed viewport sweep, keyboard/focus, contrast, touch and assistive technology. Recent Activity still lacks per-record destination URLs; the current server cash summary still maps revenue to cash, so the frontend deliberately ignores it.
+- **Next:** finish Dashboard Overview acceptance against §4.1/§4.10, then finish Analytics. Do not start Inbox.

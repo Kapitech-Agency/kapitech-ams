@@ -1367,3 +1367,18 @@ The cash-collected KPI now uses a cash-specific ID/slug instead of a revenue ide
 **Still unverified:** authenticated browser data/roles, actual route resolution, responsive/zoom, keyboard/focus, contrast, touch and assistive technology. Stage 5 remains pending.
 
 **Next:** finish Dashboard Overview source/content acceptance, then Analytics. Do not move to Inbox.
+
+
+### VIEW-DASH-OVERVIEW: Match pagination and drill-down availability to the active role · 25 October 2026
+
+**Current source/test SHA:** [94369702](https://github.com/Kapitech-Agency/kapitech-ams/commit/94369702fa841df3378460e5b973fb5c53d4e09c). Pagination parity [5e63ac03](https://github.com/Kapitech-Agency/kapitech-ams/commit/5e63ac03515cb71452cd24cea1df45b1e127fd5c), route gating [e5923b3c](https://github.com/Kapitech-Agency/kapitech-ams/commit/e5923b3c3007f55e4643277ed9ce3c514c8fa090), query-aware exception links [aa68b3c4](https://github.com/Kapitech-Agency/kapitech-ams/commit/aa68b3c477f2353c5fbf463810ac51d0c04d543a), final regression assertions [94369702](https://github.com/Kapitech-Agency/kapitech-ams/commit/94369702fa841df3378460e5b973fb5c53d4e09c).
+
+Mobile and desktop project views both map the pagination slice. The project register’s View all and empty-state links, delivery empty-state link, Time Logs link, project menu and detail-modal workspace button follow the existing frontend route-access helper. Priority exception links preserve allowed query parameters but require an internal `/admin/` destination and current route authorization. This does not change backend/RBAC policy.
+
+**Changed paths:** src/components/admin/GlobalExecutiveDashboard.tsx, tests/ams-dashboard-overview-hierarchy.test.ts, tests/dashboard-metric-truthfulness.test.ts.
+
+**Validation:** Quality Gate [40173353104 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40173353104): typecheck, full regression suite and production build. AMS CI [40173353081 failed at dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40173353081) because of the existing high body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828. Typecheck, PostgreSQL migrations, security regression and PostgreSQL integration passed; dependent production build/package/HTTP smoke checks were skipped.
+
+**Unverified:** authenticated real data and role behavior, direct routes, responsive browser screenshots/viewport sweep, keyboard/focus, contrast, touch and assistive technology. Stage 5 sign-off is pending.
+
+**Next:** complete Dashboard Overview source/content acceptance against §4.1/§4.10, then close Analytics. Do not move to Inbox.
