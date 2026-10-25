@@ -20,6 +20,7 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   const projectsStart = overview.indexOf('title="Active projects"');
   const capacityStart = overview.indexOf('title="Team capacity"');
   const supportMetricsStart = overview.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"');
+  const overviewMetricsEnd = overview.indexOf('<div className="grid gap-3 min-[1100px]:grid-cols-12">', metricStart);
   const priorityExceptionsStart = overview.indexOf('data-ams-feature-slug="dashboard-priority-exceptions"');
   const reportingScopeStart = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
 
@@ -27,21 +28,22 @@ test('Dashboard overview gives KPIs full width and keeps quick actions compact a
   assert.ok(overview.includes('not historical results for this period'));
   assert.ok(overview.includes('active project register covers all dates'));
   assert.ok(priorityExceptionsStart >= 0 && priorityExceptionsStart < metricStart, 'Priority exceptions should appear before decision KPIs');
-  assert.ok(metricStart >= 0 && actionsStart > metricStart, 'Executive metrics should appear before the quick-action row');
-  assert.ok(chartStart > actionsStart, 'The primary analysis should follow KPIs and quick actions');
+  assert.ok(metricStart >= 0 && overviewMetricsEnd > metricStart, 'Executive KPI area should be identifiable before primary analysis');
+  assert.ok(chartStart > metricStart && chartStart < projectsStart, 'Primary analysis should follow executive KPIs and precede project detail');
   assert.ok(projectsStart > chartStart, 'The active project register should follow the analysis row');
   assert.ok(capacityStart > projectsStart, 'Team capacity should remain alongside the primary project workspace');
   assert.ok(supportMetricsStart > capacityStart, 'Secondary indicators should remain below primary work areas');
+  assert.ok(actionsStart > supportMetricsStart, 'Quick actions must follow the grouped operational summaries and supporting metrics.');
   const recentActivityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
-  assert.ok(recentActivityStart > supportMetricsStart, 'Recent activity should follow the main summaries and supporting metrics.');
+  assert.ok(recentActivityStart > actionsStart, 'Recent activity should follow primary summaries and quick actions.');
 
-  const overviewMetrics = overview.slice(metricStart, actionsStart);
+  const overviewMetrics = overview.slice(metricStart, overviewMetricsEnd);
   assert.ok(overviewMetrics.includes('className="grid-cols-1 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-4"'), 'Dashboard KPI columns must change only at canonical design-system breakpoints.');
   assert.equal(overviewMetrics.includes('min-[390px]'), false, 'Dashboard KPIs must not introduce a 390px breakpoint.');
   assert.equal(overviewMetrics.includes('min-[760px]'), false, 'Dashboard KPIs must not introduce a 760px breakpoint.');
   assert.doesNotMatch(overviewMetrics, /min-\[1100px\]:col-span-9/, 'KPI cards should not be squeezed by an adjacent action panel');
 
-  const quickActions = overview.slice(actionsStart, chartStart);
+  const quickActions = overview.slice(actionsStart, recentActivityStart);
   assert.ok(quickActions.includes('min-[600px]:grid-cols-2'));
   assert.ok(quickActions.includes('min-[900px]:grid-cols-3'));
   assert.ok(quickActions.includes('min-[1100px]:grid-cols-5'));
@@ -221,7 +223,10 @@ test('Dashboard Overview shows the source-owned cross-module attention queue bef
   assert.ok(overview.includes('The interface does not infer that there are no exceptions.'));
   assert.ok(overview.includes('Destination unavailable'));
   assert.ok(overview.includes('/^\\/admin\\/[a-z0-9/_-]+$/i.test(destination)'));
-  const metricArea = overview.slice(kpis, actions);
+  const kpiEnd = overview.indexOf('<div className="grid gap-3 min-[1100px]:grid-cols-12">', kpis);
+  assert.ok(kpiEnd > kpis, 'KPI strip should end before the grouped analysis row.');
+  assert.ok(actions > overview.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"'), 'Quick Actions should not interrupt summary analysis.');
+  const metricArea = overview.slice(kpis, kpiEnd);
   assert.match(metricArea, /id: 'outstanding'/);
   assert.match(metricArea, /id: 'utilization'/);
   assert.doesNotMatch(metricArea, /id: 'tasks-due'|id: 'overdue'/);

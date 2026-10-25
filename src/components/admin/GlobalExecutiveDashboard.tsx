@@ -1207,36 +1207,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         />
       </section>
 
-      <section
-        className="space-y-2"
-        data-ams-feature-slug="dashboard-quick-actions"
-        data-ams-slug="dashboard-quick-actions"
-        aria-label="Quick actions"
-      >
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-semibold text-fg">Quick actions</h2>
-          <p className="text-[11px] text-muted">Common workspaces</p>
-        </div>
-        <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5">
-          {[
-            { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
-            { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
-            { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/finance?tab=accounts-receivable' },
-            { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
-            { label: 'View documents', icon: <FileText size={14} />, href: '/admin/documents' }
-          ].filter((action) => canOpenDashboardRoute(action.href)).map((action) => (
-            <Link
-              key={action.label}
-              to={action.href}
-              className="flex min-h-10 min-w-0 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              <span className="shrink-0 text-muted">{action.icon}</span>
-              <span className="min-w-0 truncate">{action.label}</span>
-              <ArrowUpRight size={12} className="ml-auto shrink-0 text-muted" />
-            </Link>
-          ))}
-        </div>
-      </section>
+
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
         <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description={'Issued invoice value and recorded expenses for ' + financialTrendScopeLabel + '. Invoice values use issue date and expenses use recorded date. The difference is not a posted profit figure.'}>
@@ -1556,6 +1527,37 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </div>
 
 
+
+      <section
+        className="space-y-2"
+        data-ams-feature-slug="dashboard-quick-actions"
+        data-ams-slug="dashboard-quick-actions"
+        aria-label="Quick actions"
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold text-fg">Quick actions</h2>
+          <p className="text-[11px] text-muted">Common workspaces</p>
+        </div>
+        <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-5">
+          {[
+            { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
+            { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
+            { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/finance?tab=accounts-receivable' },
+            { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
+            { label: 'View documents', icon: <FileText size={14} />, href: '/admin/documents' }
+          ].filter((action) => canOpenDashboardRoute(action.href)).map((action) => (
+            <Link
+              key={action.label}
+              to={action.href}
+              className="flex min-h-10 min-w-0 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <span className="shrink-0 text-muted">{action.icon}</span>
+              <span className="min-w-0 truncate">{action.label}</span>
+              <ArrowUpRight size={12} className="ml-auto shrink-0 text-muted" />
+            </Link>
+          ))}
+        </div>
+      </section>
 
         {canViewAuditLogs && (
           <section data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
