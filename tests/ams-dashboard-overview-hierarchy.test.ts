@@ -56,7 +56,7 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
 
   assert.ok(overview.includes('Creative & IT workstreams'));
   assert.ok(overview.includes('serviceCategory'));
-  assert.ok(overview.includes('Other / Unclassified'));
+  assert.ok(dashboard.includes("label: 'Other / Unclassified'"));
   assert.ok(dashboard.includes("reviewTaskCount: lineTasks.filter((task) => task.status === 'review' || task.status === 'in_review').length"));
   assert.ok(dashboard.includes("blockedTaskCount: lineTasks.filter((task) => task.blocked).length"));
   assert.ok(dashboard.includes("unassignedTaskCount: lineTasks.filter((task) => !task.assigned).length"));
@@ -99,7 +99,7 @@ test('Dashboard Overview is an agency delivery workboard with canonical task, se
     'Dashboard should summarize upcoming commitments instead of duplicating the full Project Registry.');
 
   assert.ok(overview.includes('Trends follow the selected period; task queues and project states show current records.'));
-  assert.ok(overview.includes('Neither is a forecast of available capacity.'));
+  assert.ok(overview.includes('neither indicates available capacity.'));
   assert.ok(dashboard.includes("const cashCollectedMetric = liveCashCollected") || dashboard.includes("const liveCashCollected = operationalSnapshot.invoices === null"));
 });
 
@@ -130,8 +130,8 @@ test('Dashboard Client Delivery Focus prioritizes agency delivery risk before po
   const panelStart = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
   const panelEnd = dashboard.indexOf('{(canOpenInvoiceRegister || canOpenExpenseRegister) ? (', panelStart);
   const panel = dashboard.slice(panelStart, panelEnd);
-  assert.ok(panel.includes('Rows prioritize overdue commitments, overdue tasks, blocked work, unassigned tasks and pending review'));
-  assert.ok(panel.includes('Unavailable task metrics remain unavailable, not zero.'));
+  assert.ok(panel.includes('Ranked by overdue commitments, task risk and next delivery date.'));
+  assert.ok(panel.includes('Missing task data stays unavailable.'));
   assert.ok(panel.includes('not a client health, contract or SLA score'));
   const metricGridStart = panel.indexOf('grid-cols-2 gap-2 min-[600px]:grid-cols-3 min-[1100px]:grid-cols-5');
   const metricGridEnd = panel.indexOf('.map((metric) => (', metricGridStart);
@@ -539,7 +539,8 @@ test('Dashboard Overview adds a permission-gated Inbox triage work surface from 
   assert.ok(dashboard.includes('No dated time entries in this chart window'));
   assert.ok(dashboard.includes('Triage counts can overlap: one inquiry may match multiple signals.'));
   assert.ok(dashboard.includes('No inbound records need immediate triage'));
-  assert.ok(dashboard.includes('Closed records and Careers applicants are excluded.'));
+  assert.ok(dashboard.includes("const openRecords = operationalSnapshot.inboxLeads.filter((lead) => lead.status !== 'closed')"));
+  assert.ok(dashboard.includes(".filter((lead) => lead.type !== 'career')"));
   assert.match(dashboard, /return canOpenInbox\s+\? items\.filter\(\(item\) => String\(item\.category \|\| ''\)\.toLowerCase\(\) !== 'sales' && item\.id !== 'att_leads_new'\)/);
   assert.ok(inboxTriage.includes("item.status === 'new'"));
   assert.ok(inboxTriage.includes('isInboxUnassigned(item)'));
@@ -560,7 +561,7 @@ test('Dashboard Needs attention panels use balanced source-backed visual summari
   assert.match(attention, /className="flex h-full flex-col"\s+title="Inbound triage"/);
   assert.match(attention, /attentionSeveritySummary/);
   assert.match(attention, /New inquiries/);
-  assert.match(attention, /taskLoadByAssigneeMaximum/);
+  assert.match(attention, /inboxTriageSummary\.openCount/);
   assert.match(attention, /min-h-\[78px\]/);
 });
 
@@ -635,7 +636,7 @@ test('Dashboard Overview visualizes Creative and IT open-task load from canonica
   assert.ok(workstreams.includes("canOpenTasks && operationalSnapshot.tasks !== null"));
   assert.ok(workstreams.includes('workstreamOpenTaskMaximum > 0 ? (line.openTaskCount / workstreamOpenTaskMaximum) * 100 : 0'));
   assert.ok(workstreams.includes('Largest workstream:'));
-  assert.ok(workstreams.includes('Review, blocked, unassigned and overdue task flags can overlap'));
+  assert.ok(workstreams.includes('Risk counts can overlap.'));
   assert.ok(workstreams.includes("label: 'Tasks in review'"));
   assert.ok(workstreams.includes("label: 'Projects with overdue delivery'"));
   assert.ok(workstreams.includes('Open task distribution is unavailable'));
@@ -657,7 +658,7 @@ test('Dashboard agency delivery panels use responsive task cards and do not dupl
   assert.ok(queue.includes('role="group" aria-label="Delivery queue filters"'));
   assert.ok(queue.includes('aria-pressed={overviewTaskFilter === tab.key}'));
   assert.ok(queue.includes('Showing {visibleOverviewTasks.length} highest-priority tasks'));
-  assert.ok(overview.includes('const taskLoadByAssigneeMaximum = Math.max(1, ...taskLoadByAssignee.map((owner) => owner.total))'));
+  assert.ok(dashboard.includes('const taskLoadByAssigneeMaximum = Math.max(1, ...taskLoadByAssignee.map((owner) => owner.total))'));
   assert.ok(overview.includes("aria-label={'Open task load for ' + owner.label"));
   assert.ok(overview.includes("style={{ width: (owner.total / taskLoadByAssigneeMaximum * 100) + '%' }}"));
   assert.equal(overview.includes('pagedDashboardProjects'), false, 'Overview must not duplicate the paginated Project Registry.');

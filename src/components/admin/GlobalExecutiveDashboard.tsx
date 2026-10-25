@@ -2610,7 +2610,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <section data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
         <AdminPanel
           title="Client delivery focus"
-          description="Ranked by overdue commitments, task risk and next delivery date. Missing task data stays unavailable."
+          description="Ranked by overdue commitments, task risk and next delivery date. Missing task data stays unavailable. Saved company-name grouping is a fallback when a client ID is missing; delivery context only, not a client health, contract or SLA score."
           bodyClassName="p-0"
           actions={canOpenProjects ? (
             <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
