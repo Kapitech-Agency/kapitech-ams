@@ -130,11 +130,14 @@ General requirements:
 
 ### Overview
 Content order:
-1. Title and reporting scope where applicable.
-2. Source-backed priority exceptions: overdue tasks, at-risk milestones, unassigned/overdue Inbox items, configured SLA exceptions and verified integration issues.
-3. Focused decision-grade indicators with definition, period, unit/currency, source and drill-down.
-4. Delivery/client/Finance/resource summaries grouped by meaning.
-5. Relevant, source-backed recent activity linked to the owning record.
+1. Dashboard title and compact reporting/source scope.
+2. Needs attention: source-backed priority exceptions first, with urgent/critical items ahead of warnings and informational items. Keep authorized Inbox triage alongside the exception list without mixing or duplicating their canonical records.
+3. Active delivery: primary task queue and Creative/IT workstream load visualization. Delivery actions must appear before the supporting KPI strip.
+4. Deadlines and team load: overdue/upcoming commitments, open tasks by owner, and recorded time where sources are available.
+5. Operating snapshot: a restrained set of decision-grade indicators with clear definition, period, unit/currency, source and authorized drill-down. This is secondary context, not the primary work surface.
+6. Client Delivery Focus, ranked by source-backed delivery risk rather than portfolio size.
+7. Finance control context, followed by workspace shortcuts.
+8. Relevant recent audit activity linked to an owning record where the current source provides that destination. Do not invent a record link when event metadata does not include one.
 
 Possible indicators include active projects, overdue tasks, risky milestones, active clients, requests requiring action, quotation value, issued invoices/receivables, overdue receivables, recorded expenses, cash position and supported capacity. Revenue, issued invoice, cash received, expenses, cash balance and posted profit are separate concepts. Never convert unavailable data into zero.
 
@@ -156,7 +159,7 @@ Period and supported grouping/filter → reports grouped by business question �
 
 **Acceptance:** No fake metrics; every chart answers a real question; sources, period and units are clear; drill-down obeys authorization; important values remain inspectable without relying only on color/chart.
 
-**Overview content order:** operating scope → Needs attention → agency operating indicators → delivery queue and Creative/IT workstreams → delivery deadlines and assigned-work/logged-time context → Client Delivery Focus → Finance control → workspace shortcuts → recent audit activity. Keep urgent action surfaces ahead of secondary context and retain this relative order in regression coverage.
+**Overview content order:** compact operating scope → Needs attention (severity-ranked) → Active delivery (task queue and Creative/IT workstreams) → Deadlines & team load (commitments, owner-load visualization and recorded time) → Operating snapshot (supporting KPIs) → Client Delivery Focus → Finance control → workspace shortcuts → recent audit activity. Keep actionable work ahead of generic KPIs. Within Needs attention, show urgent/critical exceptions before warnings and informational items while preserving source order within each severity.
 
 **Client Delivery Focus ordering:** sort canonical client groups by overdue commitments, overdue tasks, blocked tasks, unassigned tasks, tasks in review, nearest upcoming commitment, open-task load, project count and then saved client name. Apply task-signal ranking only where the task source is accessible and available; missing metrics remain unavailable, not zero. This is a delivery-prioritization view, not a client health, contract or SLA score.
 
@@ -414,7 +417,7 @@ This matrix does **not** add primary modules, routes, persistent navigation tier
 
 | Module / workspace | Required main-content order | Primary working surface and acceptance focus |
 |---|---|---|
-| Dashboard / Overview | Header and valid reporting scope → source-backed priority exceptions → a restrained set of decision-grade indicators → grouped delivery/client/Finance/resource summaries → recent source-linked activity where useful | Cross-module exception list and drill-downs. Dashboard is an aggregation, not a record master. |
+| Dashboard / Overview | Header and compact valid reporting scope → severity-ranked Needs attention → Active delivery task queue and Creative/IT workstream visuals → deadlines and team-load context → supporting operating snapshot/KPIs → Client Delivery Focus → Finance control → shortcuts → recent source-linked activity where useful | Action-first overview. Urgent exceptions and delivery work precede generic KPI summaries. The Dashboard is an aggregation, not a record master; unavailable source fields and unsupported activity destinations remain explicit. |
 | Dashboard / Performance | Period and comparison controls → meaningful performance trends grouped by business question → exact values or accessible table → definitions, source, unit and authorized drill-down | Analysis area. Every metric has a comparable period and a defensible definition. |
 | Dashboard / Analytics | Report/business-question selection → supported scope and filters → report/table or justified chart → metric definitions, source and period → source-record drill-down | Analytical report. Do not duplicate Overview or reimplement Finance calculations. |
 | Inbox / Overview | Actionable incoming queue → source-backed counts as links to filtered work → due/urgent/unassigned items → recent activity if it adds context | Queue first. Do not render a second full Messages register or fabricate follow-ups. |
