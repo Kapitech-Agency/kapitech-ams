@@ -375,6 +375,8 @@ test('Dashboard Overview adds a permission-gated Inbox triage work surface from 
   assert.ok(dashboard.includes('.filter(isInboxUnassigned)'));
   assert.ok(dashboard.includes('.filter(isInboxHighPriority)'));
   assert.ok(dashboard.includes('Inbox source did not return records'));
+  assert.ok(dashboard.includes('Open inbound records that are new, unassigned or high priority. Careers applicants are kept in the Careers workspace.'));
+  assert.ok(dashboard.includes('Triage counts can overlap: a record can be new, unassigned and high priority at once.'));
   assert.ok(dashboard.includes('No inbound records need immediate triage'));
   assert.ok(dashboard.includes('Closed records and Careers applicants are excluded.'));
   assert.match(dashboard, /return canOpenInbox\s+\? items\.filter\(\(item\) => String\(item\.category \|\| ''\)\.toLowerCase\(\) !== 'sales' && item\.id !== 'att_leads_new'\)/);

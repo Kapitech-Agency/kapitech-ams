@@ -1614,7 +1614,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <section data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
           <AdminPanel
             title="Inbound triage"
-            description="Open website and client inquiries that are new, unassigned or high priority. Careers applicants are kept in the Careers workspace."
+            description="Open inbound records that are new, unassigned or high priority. Careers applicants are kept in the Careers workspace."
             bodyClassName="p-0"
             actions={(
               <Link to="/admin/inbox?view=messages" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -1682,7 +1682,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
                     ) : null}
                     <div className="border-t border-line px-4 py-3 text-[10px] leading-5 text-muted">
-                      Status counts can overlap. Records are shown from the live Inbox source; this panel is a triage summary, not a second record store.
+                      Triage counts can overlap: a record can be new, unassigned and high priority at once. These are source-backed indicators, not mutually exclusive totals or a second record store.
                     </div>
                   </div>
                 )}
