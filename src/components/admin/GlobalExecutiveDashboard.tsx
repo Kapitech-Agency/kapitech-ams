@@ -584,15 +584,15 @@ const AnalyticsView: React.FC<{
               <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
             ) : !financialRecordsReturned ? (
               <DashboardUnavailable
-                title={invoiceSourceHasRows || expenseSourceHasRows ? 'No financial records in selected currency' : 'No financial records returned'}
-                description={invoiceSourceHasRows || expenseSourceHasRows
-                  ? 'The invoice and expense sources returned records, but none match ' + financeCurrency + '. A zero-value trend is not inferred from another currency.'
+                title={financialSourceRecordsReturned ? 'No financial records in selected currency' : 'No financial records returned'}
+                description={financialSourceRecordsReturned
+                  ? 'The invoice and expense sources returned records, but none match ' + currency + '. A zero-value trend is not inferred from another currency.'
                   : 'The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source.'}
               />
             ) : inCurrencyInvoices.length === 0 ? (
-              <DashboardUnavailable title="Invoice history unavailable" description={'The invoice source returned no usable records in ' + financeCurrency + '. A zero-value invoice series is not inferred.'} />
+              <DashboardUnavailable title="Invoice history unavailable" description={'The invoice source returned no usable records in ' + currency + '. A zero-value invoice series is not inferred.'} />
             ) : inCurrencyExpenses.length === 0 ? (
-              <DashboardUnavailable title="Expense history unavailable" description={'The expense source returned no usable records in ' + financeCurrency + '. A zero-value expense series is not inferred.'} />
+              <DashboardUnavailable title="Expense history unavailable" description={'The expense source returned no usable records in ' + currency + '. A zero-value expense series is not inferred.'} />
             ) : trend.length < 2 ? (
               <DashboardUnavailable title="Financial trend unavailable" description="The selected sources did not return a usable period series. Values are not estimated." />
             ) : (
@@ -1241,11 +1241,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           {!financeSourcesAvailable ? (
             <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
           ) : !invoiceHistoryReturned && !expenseHistoryReturned ? (
-            <DashboardUnavailable title="No financial records returned" description="The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source." />
+            <DashboardUnavailable
+              title={invoiceSourceHasRows || expenseSourceHasRows ? 'No financial records in selected currency' : 'No financial records returned'}
+              description={invoiceSourceHasRows || expenseSourceHasRows
+                ? 'The invoice and expense sources returned records, but none match ' + financeCurrency + '. A zero-value trend is not inferred from another currency.'
+                : 'The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source.'}
+            />
           ) : !invoiceHistoryReturned ? (
-            <DashboardUnavailable title="Invoice history unavailable" description="The invoice source returned no records. A zero-value invoice series is not inferred from an empty source." />
+            <DashboardUnavailable title="Invoice history unavailable" description={'The invoice source returned no usable records in ' + financeCurrency + '. A zero-value invoice series is not inferred.'} />
           ) : !expenseHistoryReturned ? (
-            <DashboardUnavailable title="Expense history unavailable" description="The expense source returned no records. A zero-value expense series is not inferred from an empty source." />
+            <DashboardUnavailable title="Expense history unavailable" description={'The expense source returned no usable records in ' + financeCurrency + '. A zero-value expense series is not inferred.'} />
           ) : revenueData.length >= 2 ? (
             <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={(value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + financialTrendScopeLabel + '.'} />
           ) : (
