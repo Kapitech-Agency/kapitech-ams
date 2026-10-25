@@ -487,6 +487,30 @@ test('Dashboard Overview places the canonical exception queue before agency indi
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-quick-actions"'), false);
 });
 
+test('Dashboard Overview visualizes Creative and IT open-task load from canonical service-line counts', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const workstreamsStart = overview.indexOf('title="Creative & IT workstreams"');
+  const workstreamsEnd = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', workstreamsStart);
+  assert.ok(workstreamsStart >= 0 && workstreamsEnd > workstreamsStart);
+  const workstreams = overview.slice(workstreamsStart, workstreamsEnd);
+  assert.ok(workstreams.includes('const workstreamOpenTaskMaximum'), 'Service-line chart scale must derive from current source counts.');
+  assert.ok(workstreams.includes('Open task load'));
+  assert.ok(workstreams.includes("data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}"));
+  assert.ok(workstreams.includes("canOpenTasks && operationalSnapshot.tasks !== null"));
+  assert.ok(workstreams.includes('workstreamOpenTaskMaximum > 0 ? (line.openTaskCount / workstreamOpenTaskMaximum) * 100 : 0'));
+  assert.ok(workstreams.includes('Largest workstream:'));
+  assert.ok(workstreams.includes('Review, blocked, unassigned and overdue task flags can overlap'));
+  assert.ok(workstreams.includes("label: 'Tasks in review'"));
+  assert.ok(workstreams.includes("label: 'Projects with overdue delivery'"));
+  assert.ok(workstreams.includes('Open task distribution is unavailable'));
+});
+
+
+
 test('Dashboard agency delivery panels use responsive task cards and do not duplicate the project registry', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");

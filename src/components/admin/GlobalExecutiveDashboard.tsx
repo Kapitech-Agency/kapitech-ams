@@ -1476,6 +1476,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       overdueCommitmentCount: lineCommitments
     };
   }), [activeDashboardTasks, activeProjectRows, canOpenTasks, currentDayKey]);
+  const workstreamOpenTaskMaximum = Math.max(0, ...serviceLineSummaries.map((line) => line.openTaskCount));
 
   const allUpcomingCommitments = useMemo<DashboardCommitment[]>(() => {
     if (operationalSnapshot.projects === null) return [];
@@ -2175,7 +2176,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminPanel
             className="min-w-0 min-[1100px]:col-span-4"
             title="Creative & IT workstreams"
-            description="Project groupings use each saved service category. Unrecognized or missing categories stay visible under Other / Unclassified."
+            description="Bars compare open task volume across saved service lines. Review, blocked, unassigned and overdue task flags can overlap; they are not stacked as parts of a total."
             bodyClassName="p-0"
           >
             {!canOpenProjects ? (
@@ -2199,10 +2200,28 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] tabular-nums text-muted">{line.projectCount} projects</span>
                         </div>
                         <p className="mt-1 text-[11px] leading-5 text-muted">{line.description}</p>
-                        <div className="mt-3 grid grid-cols-2 gap-2 min-[900px]:grid-cols-3">
+                        {canOpenTasks && operationalSnapshot.tasks !== null ? (
+                          <div className="mt-3 space-y-1.5" data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-[10px] font-medium text-muted">Open task load</span>
+                              <span className="text-xs font-semibold tabular-nums text-fg">{line.openTaskCount}</span>
+                            </div>
+                            <div
+                              className="h-2 overflow-hidden rounded-full bg-line"
+                              role="img"
+                              aria-label={'Open task load for ' + line.label + ': ' + line.openTaskCount + ' tasks. Largest workstream: ' + workstreamOpenTaskMaximum + ' tasks.'}
+                            >
+                              <div
+                                className="h-full rounded-full bg-accent transition-[width] duration-200"
+                                style={{ width: (workstreamOpenTaskMaximum > 0 ? (line.openTaskCount / workstreamOpenTaskMaximum) * 100 : 0) + '%' }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="mt-3 rounded-control border border-line bg-bg px-3 py-2 text-[10px] leading-4 text-muted" role="status">Open task distribution is unavailable for this role or task source.</p>
+                        )}
+                        <div className="mt-3 grid grid-cols-2 gap-2">
                           {[
-                            { label: 'Active projects', value: operationalSnapshot.projects !== null && canOpenProjects ? line.projectCount : null },
-                            { label: 'Open tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.openTaskCount : null },
                             { label: 'Tasks in review', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.reviewTaskCount : null },
                             { label: 'Blocked tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.blockedTaskCount : null },
                             { label: 'Unassigned tasks', value: operationalSnapshot.tasks !== null && canOpenTasks ? line.unassignedTaskCount : null },
