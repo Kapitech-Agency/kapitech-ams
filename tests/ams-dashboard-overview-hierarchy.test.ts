@@ -263,7 +263,7 @@ test('Project registry sits beside compact service-line filters in the Project P
   assert.equal(dashboard.slice(headerStart, headerEnd).includes('Project registry'), false, 'Registry should not crowd the global quick-action group.');
   assert.ok(projectProgress >= 0 && projectRegistry > projectProgress && projectRegistry < projectProgressEnd, 'Project registry and filters should share the Project Progress header row.');
   assert.ok(dashboard.includes('actions={(\n                    <div className="ams-project-progress-header-actions"'), 'Project filters belong in the card header.');
-  assert.ok(dashboard.slice(projectProgress, projectProgressEnd).includes('ams-dashboard-project-filter'));
+  assert.ok(dashboard.slice(projectProgress, projectProgressEnd).includes('<DashboardFilterGroup'));
   assert.ok(dashboard.slice(portfolioStart, portfolioEnd).includes('bodyClassName="ams-dashboard-projects-body p-4 sm:p-5"'), 'Projects must use the flex-fill body.');
   assert.ok(styles.includes('.ams-dashboard-projects-body > .ams-project-portfolio-body'));
   assert.ok(styles.includes('.ams-project-registry-action'));
@@ -281,19 +281,20 @@ test('Dashboard Project and Task filters share one segmented background and inte
   const marker = styles.lastIndexOf('/* Dashboard unified segmented filter contract - 2026-10-27. */');
   assert.ok(projectStart >= 0 && attentionStart > projectStart);
   assert.ok(taskStart >= 0 && deadlinesStart > taskStart);
-  assert.ok(project.includes('className="ams-dashboard-segmented-filter ams-dashboard-filter-group"'));
-  assert.ok(queue.includes('className="ams-dashboard-filter-pills ams-dashboard-filter-group"'));
-  assert.ok(project.includes('ams-dashboard-project-filter ams-dashboard-filter-option'));
-  assert.ok(queue.includes('ams-dashboard-filter-pill ams-dashboard-filter-option'));
-  assert.ok(project.includes('ams-dashboard-filter-count'));
-  assert.ok(queue.includes('ams-dashboard-filter-count'));
+  assert.ok(dashboard.includes("import { DashboardFilterGroup } from './DashboardControls';"));
+  assert.ok(project.includes('<DashboardFilterGroup'));
+  assert.ok(queue.includes('<DashboardFilterGroup'));
+  assert.ok(project.includes('value={overviewProjectFilter}'));
+  assert.ok(queue.includes('value={overviewTaskFilter}'));
+  assert.ok(dashboard.includes('ariaLabel="Filter deadlines"'));
+  assert.ok(dashboard.includes('ariaLabel="Filter quotations by stage"'));
   assert.ok(marker >= 0);
   const finalFilters = styles.slice(marker);
   assert.ok(finalFilters.includes('.ams-dashboard-filter-group'));
-  assert.ok(finalFilters.includes('.ams-dashboard-filter-option:hover:not(:disabled):not([aria-pressed="true"])'));
-  assert.ok(finalFilters.includes('.ams-dashboard-filter-option[aria-pressed="true"]'));
-  assert.ok(finalFilters.includes('.ams-dashboard-filter-count'));
-  assert.ok(finalFilters.includes('background: color-mix(in srgb, var(--accent) 15%, var(--panel));'));
+  assert.ok(finalFilters.includes('.ams-dashboard-control--filter:hover:not(:disabled)'));
+  assert.ok(finalFilters.includes('.ams-dashboard-control--filter[aria-pressed="true"]'));
+  assert.ok(finalFilters.includes('.ams-dashboard-control__count'));
+  assert.ok(finalFilters.includes('background:var(--dashboard-control-selected)'));
   assert.ok(finalFilters.includes('.ams-dashboard-projects-panel {'));
 });
 
@@ -372,14 +373,13 @@ test('Dashboard controls align internally without changing card gutters; Recent 
   assert.match(styles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
   assert.match(finalContract, /\.ams-dashboard-header-actions \.ams-dashboard-header-action,[\s\S]*?height: 36px;\s*min-height: 36px/s);
   assert.match(finalContract, /\.ams-project-progress-header-actions \.ams-dashboard-segmented-filter button,[\s\S]*?height: 28px;\s*min-height: 28px/s);
-  const filterContractStart = styles.lastIndexOf('/* Dashboard unified segmented filter contract - 2026-10-27. */');
-  assert.ok(filterContractStart >= 0, 'The unified project/task filter contract must be the final style layer.');
+  const filterContractStart = styles.lastIndexOf('/* Dashboard button consistency contract - 2026-10-27. Shared filter component layer. */');
+  assert.ok(filterContractStart >= 0, 'Shared controls must be the final Dashboard style layer.');
   const filterContract = styles.slice(filterContractStart);
-  assert.match(filterContract, /\.ams-dashboard-filter-group \{[^}]*min-height: 30px;[^}]*border: 1px solid var\(--dashboard-control-border, var\(--line\)\);[^}]*background:/s);
-  assert.match(filterContract, /\.ams-dashboard-filter-group \.ams-dashboard-filter-option \{[^}]*height: 28px;[^}]*border: 1px solid transparent;[^}]*background: transparent/s);
-  assert.match(filterContract, /\.ams-dashboard-filter-option:hover:not\(:disabled\):not\(\[aria-pressed="true"\]\)/);
-  assert.match(filterContract, /\.ams-dashboard-filter-option\[aria-pressed="true"\][\s\S]*?background: color-mix\(in srgb, var\(--accent\) 15%, var\(--panel\)\)/);
-  assert.match(filterContract, /\.ams-project-progress-header-actions \.ams-project-registry-action \{[^}]*height: 30px;[^}]*min-height: 30px;/s);
+  assert.match(filterContract, /\.ams-dashboard-filter-group--compact \{[^}]*min-height: var\(--dashboard-control-height\);/s);
+  assert.match(filterContract, /\.ams-dashboard-filter-group--comfortable \{[^}]*min-height: 40px;/s);
+  assert.match(filterContract, /\.ams-dashboard-control--filter:hover:not\(:disabled\)/);
+  assert.match(filterContract, /\.ams-dashboard-control--filter\[aria-pressed="true"\][\s\S]*?background:var\(--dashboard-control-selected\)/s);
   assert.ok(finalContract.includes('overflow-x: visible;'));
   assert.ok(dashboard.includes('const exportFilteredDashboardActivity = () => {'));
   assert.ok(dashboard.includes('aria-label="Export filtered recent activity as CSV"'));
@@ -431,6 +431,17 @@ test('Dashboard card actions, Recorded time controls, calendar navigation and Ac
   assert.ok(overview.includes('View audit log'));
 });
 
+test('Dashboard segmented filters use one reusable neutral-state component', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const shared = await read('src/components/admin/DashboardControls.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  assert.ok(dashboard.includes("import { DashboardFilterGroup } from './DashboardControls';"));
+  for (const label of ['Filter projects by service line','Task queue filters','Filter deadlines','Filter quotations by stage','Activity date presets','Reporting period grouping']) assert.ok(dashboard.includes('ariaLabel="' + label + '"'));
+  assert.ok(shared.includes('export const DashboardFilterOptionButton'));
+  assert.ok(shared.includes('export const DashboardFilterGroup'));
+  assert.ok(styles.includes('background:var(--dashboard-control-selected)'));
+  assert.ok(styles.includes('color-mix(in srgb,var(--text) 7%,var(--panel))'));
+});
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');

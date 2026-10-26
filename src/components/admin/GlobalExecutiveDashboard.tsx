@@ -25,6 +25,7 @@ import {
   Users,
 } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge } from './AdminModulePrimitives';
+import { DashboardFilterGroup } from './DashboardControls';
 import { CustomSelect } from '../ui/CustomSelect';
 import { DropdownPortal } from '../ui/DropdownPortal';
 import { DonutChart, TrendChart, type DonutPoint, type TrendPoint } from '../charts/DashboardCharts';
@@ -1608,15 +1609,9 @@ const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps
             <div><p>Choose reporting period</p><span>{periodLabel}</span></div>
             <button type="button" aria-label="Close calendar filter" onClick={() => setOpen(false)}><span>Done</span></button>
           </div>
-          <div className="ams-calendar-period-filter__group" role="group" aria-label="Reporting period grouping">
-            {([
-              { value: 'month', label: 'Month' },
-              { value: 'quarter', label: 'Quarter' },
-              { value: 'year', label: 'Year' }
-            ] as Array<{ value: ReportingPeriodMode; label: string }>).map((group) => (
-              <button key={group.value} type="button" aria-pressed={mode === group.value} onClick={() => changeMode(group.value)}>{group.label}</button>
-            ))}
-          </div>
+          <DashboardFilterGroup ariaLabel="Reporting period grouping" value={mode} onChange={(value)=>changeMode(value as ReportingPeriodMode)} density="compact" className="ams-calendar-period-filter__group" options={[
+            {value:'month',label:'Month'},{value:'quarter',label:'Quarter'},{value:'year',label:'Year'}
+          ]} />
           {mode !== 'year' ? (
             <div className="ams-calendar-period-filter__year">
               <button type="button" disabled={!previousYear} aria-label="Previous calendar year" onClick={() => previousYear && setVisibleYear(Number(previousYear))}><ChevronLeft size={14} aria-hidden="true" /></button>
@@ -2647,27 +2642,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   bodyClassName="p-0"
                   actions={(
                     <div className="ams-project-progress-header-actions" data-ams-feature-slug="dashboard-project-filters" aria-label="Project delivery filters">
-                      <div className="ams-dashboard-segmented-filter ams-dashboard-filter-group" role="group" aria-label="Filter projects by service line">
-                        {([
-                          { key: 'all', label: 'All', count: activeDashboardProjectFilterCounts.all },
-                          { key: 'creative', label: 'Creative', count: activeDashboardProjectFilterCounts.creative },
-                          { key: 'technology', label: 'IT', count: activeDashboardProjectFilterCounts.technology }
-                        ] as Array<{ key: DashboardProjectFilter; label: string; count: number }>).map((filter) => (
-                          <button
-                            key={filter.key}
-                            type="button"
-                            aria-pressed={overviewProjectFilter === filter.key}
-                            onClick={() => setOverviewProjectFilter(filter.key)}
-                            className={[
-                              'ams-dashboard-project-filter ams-dashboard-filter-option transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                              overviewProjectFilter === filter.key ? 'is-active' : ''
-                            ].join(' ')}
-                          >
-                            {filter.label}
-                            <span className="ams-dashboard-filter-pill__count ams-dashboard-filter-count">{filter.count}</span>
-                          </button>
-                        ))}
-                      </div>
+                      <DashboardFilterGroup ariaLabel="Filter projects by service line" value={overviewProjectFilter} onChange={(value)=>setOverviewProjectFilter(value as DashboardProjectFilter)} density="compact" className="ams-dashboard-project-service-filter" options={[
+                        {value:'all',label:'All',count:activeDashboardProjectFilterCounts.all},
+                        {value:'creative',label:'Creative',count:activeDashboardProjectFilterCounts.creative},
+                        {value:'technology',label:'IT',count:activeDashboardProjectFilterCounts.technology}
+                      ]} />
                       <Link
                         to="/admin/projects?projects=all"
                         className="ams-project-registry-action inline-flex items-center justify-center gap-1.5 rounded-control px-3 text-[11px] font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -2878,30 +2857,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 ) : undefined}
               >
                 <div className="border-b border-line px-3 py-3 sm:px-4">
-                  <div className="ams-dashboard-filter-pills ams-dashboard-filter-group" role="group" aria-label="Task queue filters">
-                    {([
-                      { key: 'action', label: 'Action needed', count: taskQueueCounts.action },
-                      { key: 'review', label: 'Review', count: taskQueueCounts.review },
-                      { key: 'overdue', label: 'Overdue', count: taskQueueCounts.overdue },
-                      { key: 'blocked', label: 'Blocked', count: taskQueueCounts.blocked },
-                      { key: 'unassigned', label: 'Unassigned', count: taskQueueCounts.unassigned }
-                    ] as Array<{ key: DashboardTaskFilter; label: string; count: number }>).map((tab) => (
-                      <button
-                        key={tab.key}
-                        type="button"
-                        aria-pressed={overviewTaskFilter === tab.key}
-                        disabled={!canOpenTasks}
-                        onClick={() => setOverviewTaskFilter(tab.key)}
-                        className={[
-                          'ams-dashboard-filter-pill ams-dashboard-filter-option transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
-                          overviewTaskFilter === tab.key ? 'is-active' : ''
-                        ].join(' ')}
-                      >
-                        {tab.label}
-                        <span className="ams-dashboard-filter-pill__count ams-dashboard-filter-count">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <DashboardFilterGroup ariaLabel="Task queue filters" value={overviewTaskFilter} onChange={(value)=>setOverviewTaskFilter(value as DashboardTaskFilter)} density="comfortable" disabled={!canOpenTasks} className="ams-dashboard-task-queue-filter" options={[
+                    {value:'action',label:'Action needed',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.action:'—'},
+                    {value:'review',label:'Review',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.review:'—'},
+                    {value:'overdue',label:'Overdue',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.overdue:'—'},
+                    {value:'blocked',label:'Blocked',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.blocked:'—'},
+                    {value:'unassigned',label:'Unassigned',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.unassigned:'—'}
+                  ]} />
                 </div>
                 {!canOpenTasks || operationalSnapshot.tasks === null ? (
                   <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." compact /></div>
@@ -2990,22 +2952,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             {nextSevenDayCommitmentCount > 0 ? <span className="h-full bg-warning" style={{ width: nextSevenDayCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
                             {daysEightToThirtyCommitmentCount > 0 ? <span className="h-full bg-info" style={{ width: daysEightToThirtyCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
                           </div>
-                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Filter deadlines">
-                            {([
-                              { key: 'all', label: 'All', count: commitmentHorizonTotal, tone: 'text-fg' },
-                              { key: 'overdue', label: 'Overdue', count: overdueHorizonCount, tone: 'text-danger' },
-                              { key: 'next7', label: 'Today–7 days', count: nextSevenDayCommitmentCount, tone: 'text-warning' },
-                              { key: 'days8to30', label: 'Days 8–30', count: daysEightToThirtyCommitmentCount, tone: 'text-muted' }
-                            ] as Array<{ key: DashboardDeadlineFilter; label: string; count: number; tone: string }>).map((item) => (
-                              <button key={item.key} type="button" aria-pressed={overviewDeadlineFilter === item.key} onClick={() => setOverviewDeadlineFilter(item.key)} className={[
-                                'ams-dashboard-deadline-filter flex min-w-0 flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                                overviewDeadlineFilter === item.key ? 'is-active border-accent/25 bg-accent/5' : 'border-transparent bg-panel/70 hover:border-line hover:bg-panel'
-                              ].join(' ')}>
-                                <span className={['text-[10px] leading-4', item.tone].join(' ')}>{item.label}</span>
-                                <span className="text-base font-semibold tabular-nums text-fg">{item.count}</span>
-                              </button>
-                            ))}
-                          </div>
+                          <DashboardFilterGroup ariaLabel="Filter deadlines" value={overviewDeadlineFilter} onChange={(value)=>setOverviewDeadlineFilter(value as DashboardDeadlineFilter)} density="metric" layout="grid" className="ams-dashboard-deadline-filter-group" options={[
+                            {value:'all',label:'All',metric:commitmentHorizonTotal},
+                            {value:'overdue',label:'Overdue',metric:overdueHorizonCount},
+                            {value:'next7',label:'Today–7 days',metric:nextSevenDayCommitmentCount},
+                            {value:'days8to30',label:'Days 8–30',metric:daysEightToThirtyCommitmentCount}
+                          ]} />
                         </>
                       ) : (
                         <DashboardEmptyState eyebrow="DELIVERY HORIZON" tone="success" icon={<CalendarDays size={16} aria-hidden="true" />} title="No upcoming commitments" description="No dated open commitments fall within the next 30 days." compact />
@@ -3267,31 +3219,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION FOLLOW-UP" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No quotations need follow-up" description={overviewQuotationFilter === 'all' ? 'No active quotations currently meet the follow-up criteria.' : 'No active quotations match the selected stage.'} compact /></div>
                       ) : (
                         <>
-                          <div className="ams-dashboard-filter-pills mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter quotations by stage">
-                            {([
-                              { key: 'all', label: 'All active', count: dashboardQuotationFilterCounts.all },
-                              { key: 'review', label: 'Review', count: dashboardQuotationFilterCounts.review },
-                              { key: 'approved', label: 'Approved', count: dashboardQuotationFilterCounts.approved },
-                              { key: 'sent', label: 'Sent', count: dashboardQuotationFilterCounts.sent },
-                              { key: 'draft', label: 'Draft', count: dashboardQuotationFilterCounts.draft }
-                            ] as Array<{ key: DashboardQuotationFilter; label: string; count: number }>).map((filter) => (
-                              <button
-                                key={filter.key}
-                                type="button"
-                                aria-pressed={overviewQuotationFilter === filter.key}
-                                onClick={() => setOverviewQuotationFilter(filter.key)}
-                                className={[
-                                  'ams-dashboard-filter-pill inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                                  overviewQuotationFilter === filter.key
-                                    ? 'border-accent/25 bg-accent/10 text-fg'
-                                    : 'border-line bg-bg text-muted hover:border-line hover:bg-panel-hover hover:text-fg'
-                                ].join(' ')}
-                              >
-                                {filter.label}
-                                <span className="ams-dashboard-filter-pill__count rounded-full border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{filter.count}</span>
-                              </button>
-                            ))}
-                          </div>
+                          <DashboardFilterGroup ariaLabel="Filter quotations by stage" value={overviewQuotationFilter} onChange={(value)=>setOverviewQuotationFilter(value as DashboardQuotationFilter)} density="comfortable" className="ams-dashboard-quotation-filter mt-3" options={[
+                            {value:'all',label:'All active',count:dashboardQuotationFilterCounts.all},
+                            {value:'review',label:'Review',count:dashboardQuotationFilterCounts.review},
+                            {value:'approved',label:'Approved',count:dashboardQuotationFilterCounts.approved},
+                            {value:'sent',label:'Sent',count:dashboardQuotationFilterCounts.sent},
+                            {value:'draft',label:'Draft',count:dashboardQuotationFilterCounts.draft}
+                          ]} />
 
                           {visibleDashboardQuotations.length === 0 ? (
                             <div className="mt-2 rounded-xl border border-line bg-bg px-3 py-4" role="status">
@@ -3661,11 +3595,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                                         <div><p>Time window</p><span>Choose a quick range or set exact dates</span></div>
                                                         <button type="button" aria-label="Close activity calendar" onClick={() => setActivityCalendarOpen(false)}><span>Done</span></button>
                                                       </div>
-                                                      <div className="ams-dashboard-activity-calendar-presets" role="group" aria-label="Activity date presets">
-                                                        {([{ value: '7', label: '7 days' }, { value: '30', label: '30 days' }, { value: '90', label: '90 days' }, { value: 'custom', label: 'Custom' }, { value: 'all', label: 'All dates' }] as Array<{ value: DashboardActivityTimeFilter; label: string }>).map((preset) => (
-                                                          <button key={preset.value} type="button" aria-pressed={activityTimeFilter === preset.value} onClick={() => { setActivityTimeFilter(preset.value); setActivityPage(1); setActivityCalendarOpen(preset.value === 'custom'); }}>{preset.label}</button>
-                                                        ))}
-                                                      </div>
+                                                      <DashboardFilterGroup ariaLabel="Activity date presets" value={activityTimeFilter} density="compact" className="ams-dashboard-activity-calendar-presets" onChange={(value)=>{const next=value as DashboardActivityTimeFilter;setActivityTimeFilter(next);setActivityPage(1);setActivityCalendarOpen(next==='custom');}} options={[
+                                                        {value:'7',label:'7 days'},{value:'30',label:'30 days'},{value:'90',label:'90 days'},{value:'custom',label:'Custom'},{value:'all',label:'All dates'}
+                                                      ]} />
                                                       {activityTimeFilter === 'custom' ? (
                                                         <div className="ams-dashboard-activity-date-range" role="group" aria-label="Custom activity date range">
                                                           <label className="ams-dashboard-activity-date"><span>From</span><input type="date" aria-label="Recent activity start date" value={activityStartDate} max={activityEndDate || undefined} onChange={(event) => { setActivityStartDate(event.target.value); setActivityPage(1); }} /></label>
