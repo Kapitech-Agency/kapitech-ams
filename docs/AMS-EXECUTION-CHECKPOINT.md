@@ -451,3 +451,13 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Header actions, reporting-period state, permissions, routes and Finance formulas are unchanged. No API/backend/schema or demo-data changes.
 - Quality Gate [40297817157 passed](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40297817157). AMS CI [40297818288 failed only at the pre-existing dependency audit](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/40297818288) for the body-parser@1.20.6 advisory GHSA-27r3-jxmh-p828; type, migrations, security and PostgreSQL integration passed.
 - Authenticated browser rendering, actual role output, responsive/keyboard/accessibility acceptance remain NOT VERIFIED. Do not start Inbox before Dashboard sign-off.
+
+
+## Latest Dashboard Overview main-content gap — commercial quotation follow-up · 26 October 2026
+
+- New daily-use surface: **Quotation follow-up** inside the main Finance card, linking the commercial pipeline to the invoice workflow used by Kapitech.
+- Data/route contract: canonical `api.proposals.getAll()`, route-gated by `canOpenDashboardRoute('/admin/finance?tab=quotations')`; visible route `/admin/finance?tab=quotations`.
+- Actionable current stages are Draft, Internal review, Approved without linked invoice, and Sent to client. The status filter changes the displayed shortlist. Expired/near-validity records appear first when their saved dates are valid.
+- Source-only semantics: no quotation values become invoice/receivable numbers, no fake record or amount is created, and quote-stage status is treated as current state rather than selected-period history.
+- Regression coverage: assert source gating, data contract, current-stage predicates, functional filter state, route, and honest missing/empty/filtered-empty states.
+- Exact-SHA Quality Gate and AMS CI results for this new slice must be checked after the commit. Browser-authenticated rendering and Stage 5 responsive/accessibility checks remain **NOT VERIFIED**. Dashboard remains the only active module; do not begin Inbox before explicit user sign-off.

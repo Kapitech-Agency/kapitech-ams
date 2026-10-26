@@ -875,3 +875,35 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
   assert.ok(styles.includes('.ams-overview-scope__meta'));
   assert.equal(overview.includes('Priority 01'), false);
 });
+
+
+test('Dashboard Overview exposes canonical quotation follow-up and functional commercial stage filters', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const projectsStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
+  const financeCard = overview.slice(financeStart, projectsStart);
+
+  assert.ok(dashboard.includes("const canOpenQuotationRegister = canOpenDashboardRoute('/admin/finance?tab=quotations')"));
+  assert.ok(dashboard.includes("canOpenQuotationRegister ? api.proposals.getAll() : Promise.resolve({ success: true, data: { proposals: [] } })"));
+  assert.ok(dashboard.includes("const quotations = canOpenQuotationRegister ? readRows(results[8], 'proposals') : null"));
+  assert.ok(dashboard.includes('quotations: canOpenQuotationRegister ? quotations ?? previous.quotations : null'));
+  assert.ok(financeCard.includes('data-ams-feature-slug="dashboard-commercial-quotation-pipeline"'));
+  assert.ok(financeCard.includes('aria-label="Filter quotations by stage"'));
+  assert.ok(financeCard.includes('aria-pressed={overviewQuotationFilter === filter.key}'));
+  assert.ok(financeCard.includes("onClick={() => setOverviewQuotationFilter(filter.key)}"));
+  assert.ok(financeCard.includes("quotation.status === 'approved' && !quotation.invoiceId"));
+  assert.ok(financeCard.includes("['draft', 'review', 'sent'].includes(quotation.status)"));
+  assert.ok(financeCard.includes('No quotations match this stage'));
+  assert.ok(financeCard.includes('Quotation data unavailable'));
+  assert.ok(financeCard.includes('No quotation records in {financeCurrency}'));
+  assert.ok(financeCard.includes('Validity not recorded'));
+  assert.ok(financeCard.includes('Amount not recorded'));
+  assert.ok(financeCard.includes('to="/admin/finance?tab=quotations"'));
+  assert.equal(financeCard.includes('fakeQuotation'), false);
+  assert.equal(financeCard.includes('sampleQuotation'), false);
+});
+
+

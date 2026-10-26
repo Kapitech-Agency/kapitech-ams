@@ -37,6 +37,23 @@ type DashboardTone = 'success' | 'warning' | 'danger' | 'info';
 type DashboardTaskFilter = 'action' | 'review' | 'overdue' | 'blocked' | 'unassigned';
 type DashboardProjectFilter = 'all' | 'creative' | 'technology';
 type DashboardDeadlineFilter = 'all' | 'overdue' | 'next7' | 'days8to30';
+type DashboardQuotationStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
+type DashboardQuotationFilter = 'all' | 'review' | 'approved' | 'sent' | 'draft';
+
+type DashboardQuotation = {
+  id: string;
+  quotationNumber: string;
+  title: string;
+  clientName: string;
+  clientCompany: string;
+  total: number | null;
+  currency: string;
+  status: DashboardQuotationStatus;
+  validUntil: string;
+  createdAt: string;
+  owner: string;
+  invoiceId: string;
+};
 
 type DashboardWorkTask = {
   id: string;
@@ -107,6 +124,53 @@ type DashboardAttentionItem = {
   linkUrl?: string;
 };
 
+const normalizeDashboardQuotationStatus = (value: unknown): DashboardQuotationStatus => {
+  switch (String(value || '').trim().toLowerCase()) {
+    case 'review':
+    case 'internal review':
+    case 'internal_review':
+      return 'review';
+    case 'approved':
+      return 'approved';
+    case 'sent':
+      return 'sent';
+    case 'accepted':
+      return 'accepted';
+    case 'rejected':
+      return 'rejected';
+    default:
+      return 'draft';
+  }
+};
+
+const normalizeDashboardQuotation = (raw: any): DashboardQuotation => {
+  const rawTotal = raw?.total ?? raw?.subtotal;
+  const parsedTotal = rawTotal === null || rawTotal === undefined || rawTotal === '' ? Number.NaN : Number(rawTotal);
+  return {
+    id: String(raw?.id || ''),
+    quotationNumber: String(raw?.proposalNumber || raw?.quotationNumber || ''),
+    title: String(raw?.title || 'Untitled quotation'),
+    clientName: String(raw?.clientName || raw?.name || ''),
+    clientCompany: String(raw?.clientCompany || raw?.company || ''),
+    total: Number.isFinite(parsedTotal) ? parsedTotal : null,
+    currency: String(raw?.currency || 'IDR').toUpperCase() === 'USD' ? 'USD' : 'IDR',
+    status: normalizeDashboardQuotationStatus(raw?.status),
+    validUntil: String(raw?.validUntil || raw?.validityPeriod || '').slice(0, 10),
+    createdAt: String(raw?.createdAt || raw?.createdDate || ''),
+    owner: String(raw?.owner || 'Finance'),
+    invoiceId: String(raw?.invoiceId || raw?.invoice?.id || '').trim()
+  };
+};
+
+const dashboardQuotationStatusLabel = (status: DashboardQuotationStatus) => ({
+  draft: 'Draft',
+  review: 'Internal review',
+  approved: 'Approved · ready for invoice',
+  sent: 'Sent to client',
+  accepted: 'Accepted',
+  rejected: 'Rejected'
+}[status]);
+
 const dashboardAttentionSeverityRank = (severity: unknown) => {
   const normalized = String(severity || 'info').toLowerCase();
   if (normalized === 'danger' || normalized === 'critical') return 0;
@@ -144,6 +208,7 @@ type DashboardOperationalSnapshot = {
   timeLogs: any[] | null;
   invoices: any[] | null;
   expenses: any[] | null;
+  quotations: any[] | null;
 };
 
 const isFinishedWork = (value: unknown) => /^(done|complete|completed|closed|archived)$/i.test(String(value || '').trim());
@@ -1366,6 +1431,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   };
   const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable');
   const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses');
+  const canOpenQuotationRegister = canOpenDashboardRoute('/admin/finance?tab=quotations');
   const canCreateProject = canManageProjects && canOpenDashboardRoute('/admin/projects?create=1');
   const canOpenProjects = canOpenDashboardRoute('/admin/projects');
   const canOpenInbox = canOpenDashboardRoute('/admin/inbox');
@@ -1428,9 +1494,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [overviewTaskFilter, setOverviewTaskFilter] = useState<DashboardTaskFilter>('action');
   const [overviewProjectFilter, setOverviewProjectFilter] = useState<DashboardProjectFilter>('all');
   const [overviewDeadlineFilter, setOverviewDeadlineFilter] = useState<DashboardDeadlineFilter>('all');
+  const [overviewQuotationFilter, setOverviewQuotationFilter] = useState<DashboardQuotationFilter>('all');
   const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; attentionItems?: DashboardAttentionItem[]; attentionItemsDataAvailable?: boolean; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
-    loading: true, projects: null, clients: null, inboxLeads: null, tasks: null, timeLogs: null, invoices: null, expenses: null
+    loading: true, projects: null, clients: null, inboxLeads: null, tasks: null, timeLogs: null, invoices: null, expenses: null, quotations: null
   });
   const [refreshRequest, setRefreshRequest] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -1448,7 +1515,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       api.finance.getInvoices(),
       api.finance.getExpenses(),
       canOpenClientDirectory ? api.clients.getAll() : Promise.resolve({ success: true, data: { clients: [] } }),
-      canOpenInbox ? api.leads.getAll() : Promise.resolve({ success: true, data: { leads: [] } })
+      canOpenInbox ? api.leads.getAll() : Promise.resolve({ success: true, data: { leads: [] } }),
+      canOpenQuotationRegister ? api.proposals.getAll() : Promise.resolve({ success: true, data: { proposals: [] } })
     ];
 
     const readRows = (result: PromiseSettledResult<any>, field: string): any[] | null => {
@@ -1494,6 +1562,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       const inboxLeads = inboxLeadRows === null
         ? null
         : inboxLeadRows.map((lead) => normalizeContactSubmission(lead as ContactSubmission)).filter((lead) => lead.type !== 'career');
+      const quotations = canOpenQuotationRegister ? readRows(results[8], 'proposals') : null;
 
       if (projects === null) failedSources.push('projects');
       if (tasks === null) failedSources.push('tasks');
@@ -1502,6 +1571,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       if (expenses === null) failedSources.push('expenses');
       if (canOpenClientDirectory && clients === null) failedSources.push('client directory');
       if (canOpenInbox && inboxLeads === null) failedSources.push('inbox leads');
+      if (canOpenQuotationRegister && quotations === null) failedSources.push('quotations');
 
       setOperationalSnapshot((previous) => ({
         loading: false,
@@ -1511,7 +1581,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         tasks: tasks ?? previous.tasks,
         timeLogs: timeLogs ?? previous.timeLogs,
         invoices: invoices ?? previous.invoices,
-        expenses: expenses ?? previous.expenses
+        expenses: expenses ?? previous.expenses,
+        quotations: canOpenQuotationRegister ? quotations ?? previous.quotations : null
       }));
 
       setRefreshNotice(failedSources.length
@@ -1527,7 +1598,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     });
 
     return () => { active = false; };
-  }, [refreshRequest, canOpenClientDirectory, canOpenInbox]);
+  }, [refreshRequest, canOpenClientDirectory, canOpenInbox, canOpenQuotationRegister]);
 
   const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
   const currentDayKey = localDateKey(new Date());
@@ -1549,6 +1620,53 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const rawProjectRows = operationalSnapshot.projects || [];
   const activeProjectRows = rawProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
   const openProjectCount = projectSourceAvailable ? activeProjectRows.length : null;
+
+  const dashboardQuotationRows = useMemo<DashboardQuotation[]>(() => {
+    if (!Array.isArray(operationalSnapshot.quotations)) return [];
+    return operationalSnapshot.quotations
+      .map(normalizeDashboardQuotation)
+      .filter((quotation) => quotation.currency === financeCurrency && Boolean(quotation.id));
+  }, [operationalSnapshot.quotations, financeCurrency]);
+
+  const activeDashboardQuotations = useMemo(
+    () => dashboardQuotationRows.filter((quotation) =>
+      ['draft', 'review', 'sent'].includes(quotation.status) ||
+      (quotation.status === 'approved' && !quotation.invoiceId)
+    ),
+    [dashboardQuotationRows]
+  );
+
+  const dashboardQuotationFilterCounts = {
+    all: activeDashboardQuotations.length,
+    review: activeDashboardQuotations.filter((quotation) => quotation.status === 'review').length,
+    approved: activeDashboardQuotations.filter((quotation) => quotation.status === 'approved' && !quotation.invoiceId).length,
+    sent: activeDashboardQuotations.filter((quotation) => quotation.status === 'sent').length,
+    draft: activeDashboardQuotations.filter((quotation) => quotation.status === 'draft').length
+  };
+
+  const filteredDashboardQuotations = activeDashboardQuotations
+    .filter((quotation) => overviewQuotationFilter === 'all' || quotation.status === overviewQuotationFilter)
+    .slice()
+    .sort((left, right) => {
+      const validityRank = (quotation: DashboardQuotation) => {
+        if (!isValidDashboardDate(quotation.validUntil)) return 3;
+        if (quotation.validUntil < currentDayKey) return 0;
+        if (quotation.validUntil <= nextSevenDaysKey) return 1;
+        return 2;
+      };
+      const validityDifference = validityRank(left) - validityRank(right);
+      if (validityDifference !== 0) return validityDifference;
+      const leftValidity = isValidDashboardDate(left.validUntil) ? left.validUntil : '9999-12-31';
+      const rightValidity = isValidDashboardDate(right.validUntil) ? right.validUntil : '9999-12-31';
+      const validityDateDifference = leftValidity.localeCompare(rightValidity);
+      if (validityDateDifference !== 0) return validityDateDifference;
+      const statusRank = (status: DashboardQuotationStatus) => status === 'review' ? 0 : status === 'approved' ? 1 : status === 'sent' ? 2 : 3;
+      return statusRank(left.status) - statusRank(right.status) ||
+        left.clientCompany.localeCompare(right.clientCompany) ||
+        left.title.localeCompare(right.title);
+    });
+
+  const visibleDashboardQuotations = filteredDashboardQuotations.slice(0, 3);
 
   const clientDirectoryById = useMemo(
     () => new Map<string, any>(
@@ -2378,6 +2496,135 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                         ) : null}
                       </div>
+                    </section>
+                  ) : null}
+
+                  {canOpenQuotationRegister ? (
+                    <section
+                      className="ams-quotation-follow-up mt-4 border-t border-line pt-4"
+                      data-ams-feature-slug="dashboard-commercial-quotation-pipeline"
+                      aria-label="Quotation follow-up"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-sm font-semibold text-fg">Quotation follow-up</h3>
+                            <span className="rounded-full border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">
+                              {dashboardQuotationFilterCounts.all} active
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[11px] leading-4 text-muted">Commercial handoff before delivery and invoicing</p>
+                        </div>
+                        <Link
+                          to="/admin/finance?tab=quotations"
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                        >
+                          Open quotation ledger <ArrowUpRight size={12} aria-hidden="true" />
+                        </Link>
+                      </div>
+
+                      {operationalSnapshot.quotations === null ? (
+                        <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
+                          <p className="text-xs font-medium text-fg">{operationalSnapshot.loading ? 'Loading quotation records' : 'Quotation data unavailable'}</p>
+                          <p className="mt-1 text-[11px] leading-4 text-muted">Quotation follow-up is hidden when the source is unavailable; the Finance ledger remains the source of truth.</p>
+                        </div>
+                      ) : dashboardQuotationRows.length === 0 ? (
+                        <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
+                          <p className="text-xs font-medium text-fg">No quotation records in {financeCurrency}</p>
+                          <p className="mt-1 text-[11px] leading-4 text-muted">The commercial pipeline uses saved quotation records in the current currency.</p>
+                        </div>
+                      ) : activeDashboardQuotations.length === 0 ? (
+                        <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
+                          <p className="text-xs font-medium text-fg">No quotations need follow-up</p>
+                          <p className="mt-1 text-[11px] leading-4 text-muted">No draft, review, sent, or approved quotation awaiting invoice conversion was returned.</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Filter quotations by stage">
+                            {([
+                              { key: 'all', label: 'All active', count: dashboardQuotationFilterCounts.all },
+                              { key: 'review', label: 'Review', count: dashboardQuotationFilterCounts.review },
+                              { key: 'approved', label: 'Approved', count: dashboardQuotationFilterCounts.approved },
+                              { key: 'sent', label: 'Sent', count: dashboardQuotationFilterCounts.sent },
+                              { key: 'draft', label: 'Draft', count: dashboardQuotationFilterCounts.draft }
+                            ] as Array<{ key: DashboardQuotationFilter; label: string; count: number }>).map((filter) => (
+                              <button
+                                key={filter.key}
+                                type="button"
+                                aria-pressed={overviewQuotationFilter === filter.key}
+                                onClick={() => setOverviewQuotationFilter(filter.key)}
+                                className={[
+                                  'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                                  overviewQuotationFilter === filter.key
+                                    ? 'border-accent/25 bg-accent/10 text-fg'
+                                    : 'border-line bg-bg text-muted hover:border-line hover:bg-panel-hover hover:text-fg'
+                                ].join(' ')}
+                              >
+                                {filter.label}
+                                <span className="rounded-full border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{filter.count}</span>
+                              </button>
+                            ))}
+                          </div>
+
+                          {visibleDashboardQuotations.length === 0 ? (
+                            <div className="mt-2 rounded-xl border border-line bg-bg px-3 py-4" role="status">
+                              <p className="text-xs font-medium text-fg">No quotations match this stage</p>
+                              <p className="mt-1 text-[11px] leading-4 text-muted">Choose another stage to inspect the active quotation pipeline.</p>
+                              <button
+                                type="button"
+                                onClick={() => setOverviewQuotationFilter('all')}
+                                className="mt-2 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-3 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                              >
+                                Clear stage filter
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="mt-2 divide-y divide-line">
+                              {visibleDashboardQuotations.map((quotation) => {
+                                const expired = isValidDashboardDate(quotation.validUntil) && quotation.validUntil < currentDayKey;
+                                const expiringSoon = isValidDashboardDate(quotation.validUntil) && quotation.validUntil >= currentDayKey && quotation.validUntil <= nextSevenDaysKey;
+                                const statusTone = quotation.status === 'review'
+                                  ? 'border-warning/25 bg-warning/10 text-warning'
+                                  : quotation.status === 'approved'
+                                    ? 'border-success/25 bg-success/10 text-success'
+                                    : quotation.status === 'sent'
+                                      ? 'border-info/25 bg-info/10 text-info'
+                                      : 'border-line bg-bg text-muted';
+                                const validityTone = expired ? 'text-danger' : expiringSoon ? 'text-warning' : 'text-muted';
+                                const validityLabel = !isValidDashboardDate(quotation.validUntil)
+                                  ? 'Validity not recorded'
+                                  : expired
+                                    ? 'Expired · ' + formatDashboardDate(quotation.validUntil)
+                                    : 'Valid until ' + formatDashboardDate(quotation.validUntil);
+                                return (
+                                  <article key={quotation.id} className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <p className="break-words text-xs font-semibold text-fg">{quotation.quotationNumber || quotation.title}</p>
+                                        <span className={['rounded-full border px-2 py-0.5 text-[10px] font-medium', statusTone].join(' ')}>
+                                          {dashboardQuotationStatusLabel(quotation.status)}
+                                        </span>
+                                      </div>
+                                      {quotation.quotationNumber && quotation.title && quotation.title !== quotation.quotationNumber ? (
+                                        <p className="mt-1 break-words text-[11px] font-medium text-fg">{quotation.title}</p>
+                                      ) : null}
+                                      <p className="mt-1 break-words text-[11px] text-muted">{quotation.clientCompany || quotation.clientName || 'Client not recorded'}{quotation.owner ? ' · ' + quotation.owner : ''}</p>
+                                      <p className={['mt-1 text-[10px] leading-4', validityTone].join(' ')}>{validityLabel}</p>
+                                    </div>
+                                    <div className="shrink-0 sm:text-right">
+                                      <p className="text-xs font-semibold tabular-nums text-fg">{quotation.total === null ? 'Amount not recorded' : formatLiveMoney(quotation.total, quotation.currency)}</p>
+                                      {quotation.invoiceId ? <p className="mt-1 text-[10px] text-muted">Invoice linked</p> : null}
+                                    </div>
+                                  </article>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {filteredDashboardQuotations.length > visibleDashboardQuotations.length ? (
+                            <p className="mt-1 text-[10px] text-muted">Showing {visibleDashboardQuotations.length} of {filteredDashboardQuotations.length} quotations in this stage.</p>
+                          ) : null}
+                        </>
+                      )}
                     </section>
                   ) : null}
 </AdminPanel>
