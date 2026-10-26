@@ -175,6 +175,126 @@ Every important data surface must distinguish:
 
 Actions must be real and permission-safe. No inert controls or false success messages.
 
+
+### 3.8 Mandatory component contracts and anti-invention gate
+
+This section makes the card and feature definitions below implementation contracts, not optional inspiration. It applies to every card, chart, filter, queue, register, editor, detail surface, quick action, and contextual panel across all nine modules.
+
+#### Authority for each decision
+
+Use each document only for the decision it owns:
+
+1. `docs/AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §4.10 defines the required main-content region order for the selected workspace. Do not rearrange it for visual preference.
+2. This Maven-inspired guide defines the intended content of each card, chart, register, detail surface, and the module-level task flow within that order.
+3. `AMS-DESIGN-SYSTEM.md` defines exact colors, typography, spacing, control geometry, card variants, responsive breakpoints, focus states, and motion. Never copy Maven's brand palette or invent new tokens.
+4. The Master Structure, Navigation IA, data dictionary, Finance alignment, workflow state machines, and actual application contracts define canonical record ownership, route availability, state semantics, and protected business behavior.
+5. The Role-Based Content Blueprint and Worksheet Role Presentation Matrix refine the emphasis and default presentation for an authorized persona. They do not remove required fields or grant permission.
+6. The Feature & Content Gap Register plus current source/tests determine whether the target feature and its data source actually exist. Documentation alone is not implementation evidence.
+7. The End-to-End Delivery Roadmap defines execution order and release gates.
+
+If two rules conflict, do not blend them. Preserve the current safe behavior and report the exact conflict. Main-content order comes from §4.10. Field/content definition comes from this guide. Visual styling comes from the Design System. Existing data meaning, authorization and workflow behavior come from current code and domain contracts. Current availability comes from verified source/test evidence.
+
+#### Mandatory component specification record
+
+Before changing a view, write a short implementation record for the selected slice. It must define every existing or planned component in the target composition:
+
+| Required field | Exact requirement |
+|---|---|
+| Component ID and type | Stable local identifier and type: metric, analysis, exception queue, record summary, progress, activity, shortcut, register, editor, or detail panel. |
+| User question | One decision or task the component supports. Do not combine unrelated questions. |
+| Placement | Exact region and sibling relationship from the main-content composition matrix. |
+| Content order | Exact title, primary value/identity, secondary fields, status, owner/deadline, context, then action. Mark any item unsupported rather than silently inventing it. |
+| Canonical source | Existing route/client/data contract and owning module. Dashboard/context panels may read source-backed summaries but must not become a new record store. |
+| Definition | Field meaning, aggregation/denominator, period or snapshot basis, currency/unit, timezone/date semantics, and freshness where material. Reuse existing calculations. |
+| Visual encoding | Table/list/chart/progress/status treatment selected for the task, with exact labels and accessible values. Use existing design-system tokens. |
+| Controls | Filter/search/sort/period controls and the records each control changes. Do not add an inert control. |
+| Interaction | What click/select/submit does, exact canonical destination or supported action, state/URL behavior where already defined, and browser-back/recovery expectation. |
+| Permission | Which existing route/action policy gates the data and action. UI visibility is not authorization. |
+| States | Loading, populated, genuinely empty, filtered-empty, unavailable/not implemented, stale, error, no-access, pending, and confirmed result as applicable. |
+| Responsive/keyboard | Desktop arrangement, stacking/overflow rules, focus target, keyboard alternative, and reduced-motion behavior. |
+| Evidence | Source files, focused regression test, runtime/browser evidence when available, and the current gap-register status. |
+
+Do not start implementation until the selected component record is sufficiently complete to answer these fields. For a genuinely unavailable or undocumented source, record the gap and implement only an honest supported state. Do not fabricate data, fallback routes, inferred business rules, test evidence, UI-only persistence, or a successful outcome.
+
+#### Universal component behavior
+
+**Metric / KPI card**
+- Shows one named measurement, exact value, unit/currency when relevant, and a clear reporting period or “as of” snapshot where needed.
+- Uses a definition and a source link/filter that match the metric.
+- Shows a comparison only when baseline, date basis and population are comparable.
+- If the source cannot provide the value, show unavailable with a short reason or omit the optional card. Never render a fake zero.
+- Does not repeat an equivalent value already prominent in the same viewport unless the second presentation serves a distinct decision.
+
+**Analytical card**
+- Contains the question/title, scope, one justified visualization, legend when needed, exact inspectable values, and source drill-down where supported.
+- Line charts represent comparable time series; bars compare categories or periods; donut/ring shows a meaningful composition; progress represents saved completion or a valid measured target.
+- Never create a trend from current-state snapshots. Do not imply a target, capacity, ROI, profit, cash flow or conversion unless the data contract defines it.
+- Tooltips must follow the existing chart component's supported interaction. Critical information also remains available without hover and without color-only interpretation.
+
+**Exception / actionable queue card**
+- Each row has record identity, client/project context where relevant, actual status, responsible owner when available, valid deadline/SLA, a concrete source-backed reason it is listed, and one canonical record destination.
+- Priority ordering uses the documented source/state rules. Do not add rank numbers, infer urgency from display order, or combine unlike records into one count/amount.
+- Only show an action when the existing source/route/permission contract supports it. Review/detail links remain available even if no mutation is permitted.
+
+**Operational record card or board card**
+- Displays the record's title, owning project/client/campaign as applicable, current state, owner, due date, and only the metadata needed to choose the next step.
+- Long descriptions, full history, extensive metadata and action bars belong in detail surfaces.
+- Board and list presentations represent the same canonical records. Any essential drag action needs a keyboard/list alternative and truthful pending/success/failure feedback.
+
+**Progress / workload card**
+- Names the tracked object, numerator and denominator or explicit unit, and current period/snapshot.
+- Uses only saved progress or a valid capacity denominator. Missing progress is “not recorded”; unavailable capacity is unavailable, not zero.
+- Does not equate task count with project completion, recorded time with utilization, planned allocation with capacity, or time with cost.
+
+**Activity card**
+- Uses a real event: event/action, actor when permitted, affected record, timestamp, outcome and canonical destination when available.
+- Identifies partial source coverage where relevant. Never invents a timeline or implies the list is complete without evidence.
+
+**Workspace shortcut**
+- Names the destination and a brief purpose only when needed.
+- Is navigation, not a decorative KPI. It must use an existing authorized route and must not promise an action.
+- Do not add a shortcut that duplicates a persistent navigation item unless there is a clear, documented frequent-task reason.
+
+**Register / list / selected-record detail**
+- Search and filters precede the records they change. Every row represents one canonical entity and exposes recognizable identity, state, comparison-relevant fields, and only supported actions.
+- Selecting a row opens the existing detail pattern or navigates to the canonical route. Selection does not create or mutate data.
+- A split pane is allowed only where the existing responsive and keyboard patterns remain clear. Small screens need a reliable back-to-list path.
+- Keep formal records in tables/lists when exact comparison or scanning is the main task. Do not turn every register row into a large card.
+
+**Filter / tab / reporting control**
+- Label the scope and selected value clearly. A count, badge or selected style must reflect the same records as the content.
+- Changing it must change the rendered records/report, not just the button highlight. Clear/reset returns to the documented default.
+- Preserve established URL, query and history behavior. Do not invent query parameters or make a reporting period appear to govern metrics that it does not govern.
+- Show a relevant filtered-empty state separately from an empty source.
+
+**Action / form / drawer**
+- The UI invokes an existing supported handler and follows existing validation and permission rules.
+- Show pending state and prevent accidental duplicate submission. Report success only after confirmed completion. On failure, retain safe user input and show a recoverable error.
+- Destructive or sensitive actions use the existing confirmation pattern. Do not invent a new approval, signing, payment, publish, review, or workflow transition.
+
+#### Required end-to-end flows by module
+
+These flow maps define the user journey; they do not assert that every step is currently implemented. Follow the actual supported subset and record missing steps in the Feature & Content Gap Register.
+
+1. **Dashboard:** select view and reporting scope → scan Finance and Projects portfolio → inspect the relevant risk/task/deadline/quotation row → open the canonical owning module and record → return without losing established filter/view state. Current balances and open queues remain snapshot data unless their contract explicitly supports a period filter.
+2. **Inbox:** select a queue/category → filter/sort the canonical message list → open a thread → review conversation and attachments → use an existing assignment, note, reply, follow-up or resolution action if supported → confirm the real result or recover from failure. Do not equate a UI reply draft with a sent message.
+3. **Projects:** select project/workspace → locate the project/task/content record → inspect scope, owner, state, dependency and deadline → perform a supported assignment/review/update → verify saved outcome → navigate to canonical evidence in Documents when present. Project budgets remain Finance-owned.
+4. **Clients:** find the canonical client → inspect Client 360 → open its linked project, agreement, Inbox thread, Finance record or document in the owning module → return to client context. Context panels never become duplicate editable records.
+5. **Finance:** select one of the five approved finance areas → set relevant account/period/status scope → inspect the formal register/report → open the canonical record → perform only an existing authorized action with existing maker-checker/period-lock controls → verify actual outcome. Preserve every accounting formula and money-state distinction.
+6. **Team & Resources:** select the directory, capacity, people, vendor or time-tracking workspace → filter canonical people/allocations/time records → inspect availability, commitment or entry detail → perform a permitted allocation/people/time action → verify saved state. HR and vendor-sensitive fields remain permission restricted.
+7. **Documents:** search/filter the single document library → open document metadata and related-record context → preview or use a secure file action when authorized → distinguish ready, loading, unsupported, missing, failed and access-denied states. Categories do not create separate repositories.
+8. **Website CMS:** select content type → search/filter the canonical register → open the content editor → update supported fields/media → validate → save → report the actual save result → verify public visibility separately when publication/deployment is involved. Applicants stay in Careers; save success is not proof of public deployment.
+9. **Settings:** select the system/user/audit/integration/preference area → inspect actual configuration/status and evidence → perform an authorized, explicitly confirmed change if supported → verify the result and audit trail when available. Configured, connected, sync-success and production-ready are distinct states.
+
+#### Production path and exit gates
+
+This design guide defines the target UI contract. It does not prove that the product is implemented or production-ready. Use `docs/AMS-END-TO-END-DELIVERY-ROADMAP.md` as the single execution sequence:
+- Complete Stage 4 by matching every active view to its main-content composition and component contracts, with focused tests.
+- Stop at Stage 5 for the user's explicit visual/content, responsive and accessibility sign-off. Do not bypass this gate because CI passes.
+- Only after sign-off, continue the roadmap's workflow/data traceability, foundation/security/data integrity, agency vertical workflows, Finance integrity, provider integrations, hardening, regression/UAT, backup/restore proof, release authorization, deployment verification and stabilization (Stages 6–15).
+- Production readiness requires evidence for the actual release gates, not completion of this document, a screenshot, a green build, or the presence of target-state cards.
+
+
 ---
 
 # 4. Module 01: Dashboard

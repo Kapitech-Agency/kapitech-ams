@@ -119,7 +119,7 @@ Sentence case everywhere. No all-caps labels, no tracked-out eyebrows.
 
 ### 2.6 Dashboard reference-led visual variant
 
-The Dashboard Overview may use a dedicated, scoped visual variant inspired by the Maven / Orbix reference. This is an intentional exception for the Overview work surface only; do not apply the variant to every module.
+The user-selected Maven / Orbix reference informs information hierarchy, concise card content, meaningful data visualization, clear records and low-friction interaction patterns across all nine AMS modules, as detailed in `docs/AMS-MAVEN-INSPIRED-OPERATIONAL-WORKSPACE-IMPLEMENTATION-GUIDE.md`. It does not mean that every workspace should use the same dashboard layout. The dedicated visual variant in this section, including 16px Dashboard card geometry, specialized financial chart styling, project-ring interaction and Dashboard tab treatment, is scoped to Dashboard Overview only. Other modules retain canonical 12px card geometry and use task-specific compositions from the Main-Content Restructuring Specification.
 
 - **Card geometry:** `--radius-dashboard-card: 16px`; chart plot radius uses `--radius-dashboard-plot: 12px`. Other modules continue to use the canonical 12px `--radius-card`.
 - **Surface treatment:** maintain a quiet one-pixel outline, low-contrast secondary surfaces and one consistent header/body rhythm. Light mode may use a very subtle card shadow; dark mode remains shadow-free.

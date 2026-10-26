@@ -25,7 +25,8 @@ Read in full:
 7. docs/AMS-UX-INTERACTION-STANDARDS.md
 8. docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md
 9. docs/AMS-AI-PHASED-IMPLEMENTATION-WORKFLOW.md
-10. Relevant Drawer, Modal, Kanban, Finance, navigation architecture, and regression guides for touched views.
+10. [Maven-Inspired Operational Workspace Implementation Guide](AMS-MAVEN-INSPIRED-OPERATIONAL-WORKSPACE-IMPLEMENTATION-GUIDE.md) for the exact card, chart, register, action, state and module-flow contract. Do not invent additional UI components or feature behavior.
+11. Relevant Drawer, Modal, Kanban, Finance, navigation architecture, and regression guides for touched views.
 
 Use actual code and tests as evidence. A target-state guide or route does not prove the feature is implemented.
 
@@ -59,7 +60,7 @@ Use the user-provided Dashboard screenshot as a structural reference for:
 - useful information density and clear action hierarchy;
 - restrained dark AMS styling.
 
-Do not copy example names/values or force every module to use the same KPI count or card layout. Keep each primary working area dominant. External admin starters are pattern references only; apply the adoption gate in `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1 and do not transplant their app structure or dependencies.
+Do not copy example names/values or force every module to use the same KPI count or card layout. Keep each primary working area dominant. Maven / Orbix is the selected reference for concise card anatomy, data visualization and interaction patterns, not for Kapitech colors or product architecture. The Main-Content Restructuring Specification §4.10 owns exact region order; the Maven-Inspired Operational Workspace Guide owns exact component contents and interactions. External admin starters remain historical comparative inputs and must not override the latest selected reference. Apply the adoption gate in `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §2.1 and do not transplant their app structure or dependencies.
 
 Follow AMS-DESIGN-SYSTEM.md for exact tokens, type scale, spacing, components, themes and motion. Reuse existing AdminPageShell, AdminModuleHeader, contextual navigation primitives, panels, tables, status badges, buttons, Skeleton, charts, Drawer, Modal and ConfirmDialog.
 
