@@ -125,7 +125,7 @@ The Dashboard Overview may use a dedicated, scoped visual variant inspired by th
 - **Surface treatment:** maintain a quiet one-pixel outline, low-contrast secondary surfaces and one consistent header/body rhythm. Light mode may use a very subtle card shadow; dark mode remains shadow-free.
 - **Trend chart:** use restrained blue and teal lines for the two financial series, a soft grid, concise axis values, smooth curves and a small floating detail surface on hover. Hover follows the nearest data point, not the raw pointer position. On the Overview Finance trend, canonical data remains issued invoices and eligible expenses; visual colors must not imply that one series is profit or cash flow.
 - **Project ring:** hover/focus emphasizes one segment and updates the center to the corresponding saved count and share. Underlying risk/deadline calculations stay unchanged.
-- **Interactions:** links and header actions use rounded pill surfaces, quiet hover/focus borders and short transitions. Lists and workload bars get a restrained hover response. Honor `prefers-reduced-motion`; preserve visible keyboard focus.
+- **Interactions:** header actions and date selectors use restrained 8–10px control corners; Overview/Performance/Analytics uses a light underline tab pattern, while leading cards retain their dedicated 16px radius. Keep quiet hover/focus borders and short transitions. Lists and workload bars get a restrained hover response. Honor `prefers-reduced-motion`; preserve visible keyboard focus.
 - **Scope boundary:** CSS and chart presentation props are scoped to Dashboard Overview. Do not modify the global theme, navigation, API, permission policy, source records or Finance formulas to imitate the reference.
 
 ### 2.7 Tailwind v4 setup (copy-paste)

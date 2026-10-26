@@ -805,7 +805,24 @@ test('Dashboard header provides permission-aware invoice, project and refresh ac
   assert.ok(invoicing.includes("embeddedView !== 'receivables'"));
   assert.ok(invoicing.includes('createInvoiceActionHandled.current = true'));
   assert.ok(invoicing.includes('openCreateInvoice();'));
+  assert.ok(header.includes('className="mb-0 ams-dashboard-page-header"'));
   assert.ok(styles.includes('.ams-dashboard-header-actions > a,'));
   assert.ok(styles.includes('.ams-dashboard-header-actions > a:focus-visible'));
+  assert.ok(styles.includes('.ams-dashboard-page-header h1'));
+  assert.ok(styles.includes('border-radius: 10px'));
+  assert.ok(styles.includes('border-bottom-color: var(--accent)'));
+  assert.ok(styles.includes('.ams-dashboard-date-select__input'));
   assert.ok(styles.includes('prefers-reduced-motion: reduce'));
+
+  const toolbarStart = dashboard.indexOf('<section className="ams-dashboard-toolbar');
+  const toolbarEnd = dashboard.indexOf('{isRefreshing &&', toolbarStart);
+  const toolbar = dashboard.slice(toolbarStart, toolbarEnd);
+  assert.ok(toolbar.includes('aria-label="Dashboard views"'));
+  assert.ok(toolbar.includes('aria-label="Reporting period filters"'));
+  assert.ok(toolbar.includes('aria-label="Reporting date range"'));
+  assert.ok(toolbar.includes('<CalendarDays size={14}'));
+  assert.ok(toolbar.includes('aria-label="Previous reporting period"'));
+  assert.ok(toolbar.includes('aria-label="Next reporting period"'));
+  assert.ok(toolbar.includes('clearReportingPeriodFilter'));
+  assert.ok(toolbar.includes("view === tab.key ? 'is-active border-accent bg-transparent text-fg'"));
 });

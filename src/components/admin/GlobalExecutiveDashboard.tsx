@@ -2072,7 +2072,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   return (
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
       <AdminModuleHeader slug="dashboard-header"
-        className="mb-0"
+        className="mb-0 ams-dashboard-page-header"
         eyebrow="Agency operations"
         title="Dashboard"
         description={view === 'overview'
@@ -2090,7 +2090,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <Link
                 to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}
                 className={[
-                  'ams-dashboard-header-action ams-dashboard-header-action--invoice inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-4 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                  'ams-dashboard-header-action ams-dashboard-header-action--invoice inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                   canCreateInvoice
                     ? 'bg-accent text-white hover:-translate-y-px hover:bg-accent-hover'
                     : 'border border-line bg-panel text-fg hover:border-accent/30 hover:bg-panel-hover'
@@ -2104,7 +2104,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             {canOpenProjects ? (
               <Link
                 to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
-                className="ams-dashboard-header-action ams-dashboard-header-action--project inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="ams-dashboard-header-action ams-dashboard-header-action--project inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 aria-label={canCreateProject ? 'Create project' : 'Open projects'}
               >
                 <FolderKanban size={14} aria-hidden="true" />
@@ -2117,7 +2117,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               disabled={isRefreshing}
               aria-label="Refresh dashboard data"
               title="Refresh dashboard data"
-              className="ams-dashboard-header-action ams-dashboard-header-action--refresh inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="ams-dashboard-header-action ams-dashboard-header-action--refresh inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
               <span className="hidden min-[440px]:inline">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
@@ -2138,8 +2138,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               to={tab.key === 'overview' ? '/admin/dashboard' : '/admin/dashboard?view=' + tab.key}
               aria-current={view === tab.key ? 'page' : undefined}
               className={[
-                'ams-dashboard-view-tab inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                view === tab.key ? 'is-active border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:border-line hover:bg-panel hover:text-fg'
+                'ams-dashboard-view-tab inline-flex min-h-10 shrink-0 items-center border-b-2 border-x-0 border-t-0 px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                view === tab.key ? 'is-active border-accent bg-transparent text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-transparent hover:text-fg'
               ].join(' ')}
             >
               {tab.label}
@@ -2150,32 +2150,35 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <div className="ams-dashboard-period-controls flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end" aria-label="Reporting period filters">
           <label className="ams-dashboard-period-field flex min-w-0 flex-col gap-1">
             <span className="text-[10px] font-medium text-muted">Group by</span>
-            <select aria-label="Reporting period type" value={reportPeriodMode} onChange={(event) => setReportingPeriodMode(event.target.value as ReportingPeriodMode)} className="ams-dashboard-period-select min-h-10 w-full rounded-full border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[120px]">
+            <select aria-label="Reporting period type" value={reportPeriodMode} onChange={(event) => setReportingPeriodMode(event.target.value as ReportingPeriodMode)} className="ams-dashboard-period-select min-h-10 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[120px]">
               <option value="month">Month</option>
               <option value="quarter">Quarter</option>
               <option value="year">Year</option>
             </select>
           </label>
           <label className="ams-dashboard-period-field flex min-w-0 flex-col gap-1">
-            <span className="text-[10px] font-medium text-muted">Date range</span>
-            <select aria-label="Reporting date range" value={reportPeriodEnabled ? reportPeriodValue : '__recent_30_days__'} onChange={(event) => {
-              if (event.target.value === '__recent_30_days__') clearReportingPeriodFilter();
-              else setReportingPeriodValue(event.target.value);
-            }} className="ams-dashboard-period-select min-h-10 w-full rounded-full border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[190px]">
-              <option value="__recent_30_days__">Recent 30 days · default</option>
-              {reportingPeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            <span className="text-[11px] font-medium text-muted">Date range</span>
+            <span className="ams-dashboard-date-select relative block min-w-0">
+              <CalendarDays size={14} className="ams-dashboard-date-select__icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
+              <select aria-label="Reporting date range" value={reportPeriodEnabled ? reportPeriodValue : '__recent_30_days__'} onChange={(event) => {
+                if (event.target.value === '__recent_30_days__') clearReportingPeriodFilter();
+                else setReportingPeriodValue(event.target.value);
+              }} className="ams-dashboard-period-select ams-dashboard-date-select__input min-h-10 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[190px]">
+                <option value="__recent_30_days__">Recent 30 days · default</option>
+                {reportingPeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </span>
           </label>
           <div className="flex items-center gap-1.5">
-            <button type="button" aria-label="Previous reporting period" title="Previous period" disabled={!canMoveToPreviousPeriod} onClick={() => setReportingPeriodValue(previousReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
+            <button type="button" aria-label="Previous reporting period" title="Previous period" disabled={!canMoveToPreviousPeriod} onClick={() => setReportingPeriodValue(previousReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
               <ChevronLeft size={15} aria-hidden="true" />
             </button>
-            <button type="button" aria-label="Next reporting period" title="Next period" disabled={!canMoveToNextPeriod} onClick={() => setReportingPeriodValue(nextReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
+            <button type="button" aria-label="Next reporting period" title="Next period" disabled={!canMoveToNextPeriod} onClick={() => setReportingPeriodValue(nextReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
               <ChevronRight size={15} aria-hidden="true" />
             </button>
           </div>
           {reportPeriodEnabled ? (
-            <button type="button" onClick={clearReportingPeriodFilter} className="ams-dashboard-clear-period inline-flex min-h-10 items-center justify-center rounded-full border border-line px-3 text-xs font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Clear period</button>
+            <button type="button" onClick={clearReportingPeriodFilter} className="ams-dashboard-clear-period inline-flex min-h-10 items-center justify-center rounded-control border border-line px-3 text-xs font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Clear period</button>
           ) : null}
         </div>
       </section>

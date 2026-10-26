@@ -354,10 +354,12 @@
 .ams-shell .ams-dashboard .ams-dashboard-view-tabs {
   width: fit-content;
   max-width: 100%;
-  padding: 4px;
-  border: 1px solid var(--dashboard-card-border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--bg) 70%, var(--panel));
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--dashboard-card-border);
+  border-radius: 0;
+  background: transparent;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-view-tab {
@@ -365,11 +367,29 @@
   transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-view-tab.is-active {
-  border-color: var(--dashboard-card-border);
-  background: var(--panel);
+.ams-shell .ams-dashboard .ams-dashboard-view-tab {
+  min-height: 42px;
+  padding-inline: 12px;
+  border-radius: 0;
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-view-tab:hover {
   color: var(--text);
-  box-shadow: var(--dashboard-card-shadow);
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-view-tab.is-active {
+  border-color: transparent;
+  border-bottom-color: var(--accent);
+  background: transparent;
+  color: var(--text);
+  box-shadow: none;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-period-controls {
@@ -382,14 +402,34 @@
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-period-field > span {
-  padding-left: 10px;
+  padding-left: 3px;
+  font-size: 11px;
+  line-height: 14px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-period-select {
   min-width: 0;
+  min-height: 40px;
+  padding-inline: 12px;
   border-color: var(--dashboard-card-border);
+  border-radius: 10px;
   background-color: var(--panel);
   transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-date-select {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-date-select__icon {
+  z-index: 1;
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-date-select__input {
+  padding-left: 34px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-period-select:hover {
@@ -495,8 +535,9 @@
 
 .ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
 .ams-shell .ams-dashboard .ams-dashboard-header-actions > button {
+  min-height: 42px;
   white-space: nowrap;
-  border-radius: 999px;
+  border-radius: 10px;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
@@ -684,5 +725,105 @@
   .ams-shell .ams-dashboard .ams-finance-movement-card .ams-money-movement-sparkbar {
     transition-duration: 0.01ms;
     transform: none;
+  }
+}
+
+
+/* Dashboard header layout: one clear title, one primary commercial action, compact secondary actions. */
+.ams-shell .ams-dashboard .ams-dashboard-page-header {
+  align-items: center;
+  gap: 22px;
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child {
+  max-width: min(100%, 760px);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header h1 {
+  font-size: 26px;
+  line-height: 32px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header h1 + p {
+  max-width: 58ch;
+  margin-top: 5px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions {
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-action {
+  min-height: 42px;
+  border-radius: 10px;
+  padding-inline: 14px;
+  font-size: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-action--invoice {
+  min-width: 132px;
+  padding-inline: 16px;
+  border-color: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-action--project {
+  min-width: 124px;
+  font-weight: 500;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-action--refresh {
+  min-width: 42px;
+  padding-inline: 11px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-action--invoice:hover,
+.ams-shell .ams-dashboard .ams-dashboard-header-action--project:hover,
+.ams-shell .ams-dashboard .ams-dashboard-header-action--refresh:hover {
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header .text-muted {
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header {
+    align-items: center;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    width: auto;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header {
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header h1 {
+    font-size: 23px;
+    line-height: 29px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    gap: 8px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-action--invoice {
+    min-width: 0;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-action--project {
+    min-width: 0;
   }
 }
