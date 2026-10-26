@@ -770,7 +770,10 @@ test('Dashboard Overview exposes complete header navigation, reporting controls,
   assert.ok(dashboard.includes("orderedActiveDashboardProjects\n    .filter((project) => overviewProjectFilter === 'all' || getDashboardServiceLine(project) === overviewProjectFilter)"));
   assert.ok(overview.includes('aria-label="Filter projects by service line"'));
   assert.ok(overview.includes("aria-pressed={overviewProjectFilter === filter.key}"));
-  assert.ok(overview.includes('activeDashboardProjectFilterCounts[overviewProjectFilter]'));
+  assert.ok(overview.includes('count: activeDashboardProjectFilterCounts.all'));
+  assert.ok(overview.includes('count: activeDashboardProjectFilterCounts.creative'));
+  assert.ok(overview.includes('count: activeDashboardProjectFilterCounts.technology'));
+  assert.ok(overview.includes('{filter.count}'));
 
   assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.filter((item) => {"));
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey"));
