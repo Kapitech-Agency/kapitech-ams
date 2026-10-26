@@ -74,13 +74,15 @@ test('Dashboard Overview empty states are contextual, action-aware and distinct 
   assert.ok(styles.includes('.ams-dashboard-empty--success .ams-dashboard-empty__icon'));
   for (const label of [
     'PROJECT DELIVERY', 'OPERATIONS CLEAR', 'INBOX TRIAGE', 'TASK QUEUE',
-    'DELIVERY TIMELINE', 'DELIVERY HORIZON', 'FINANCIAL MOVEMENT',
+    'DELIVERY TIMELINE', 'DELIVERY HORIZON',
     'QUOTATION FOLLOW-UP', 'PROJECT PORTFOLIO', 'RISK DISTRIBUTION',
     'TEAM WORKLOAD', 'RECORDED TIME', 'CLIENT DELIVERY', 'AUDIT ACTIVITY'
   ]) assert.ok(overview.includes('eyebrow="' + label + '"'), 'Missing contextual empty-state heading: ' + label);
   assert.ok(overview.includes('title="No active exceptions"'));
   assert.ok(overview.includes("'No recorded activity yet'"));
   assert.ok(overview.includes('title="No task records yet"'));
+  assert.ok(overview.includes('ams-finance-chart-empty-state'));
+  assert.ok(overview.includes('No eligible financial records'));
   assert.doesNotMatch(overview, /Nothing to show/);
   assert.ok(overview.includes('DashboardUnavailable'), 'Unavailable-source states must stay distinct from genuine empty states.');
 });

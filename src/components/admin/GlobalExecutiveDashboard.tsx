@@ -3440,7 +3440,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-time-period-controls">
                       <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
                     </div>
-                    <Link to="/admin/time-logs" className="ams-dashboard-card-action inline-flex items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Time Logs <ArrowUpRight size={12} aria-hidden="true" /></Link>
                   </div>
                 ) : undefined}
               >
@@ -3514,7 +3513,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       ))}
                     </div>
                   )}
-                  
+                  {canOpenTimeLogs ? <Link to="/admin/time-logs" className="ams-dashboard-card-action mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                 </section>
               </AdminPanel>
             </section>

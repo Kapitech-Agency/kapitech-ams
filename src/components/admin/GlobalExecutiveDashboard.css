@@ -5229,7 +5229,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   justify-self: end;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-header-actions {
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions {
   display: flex;
   width: auto;
   max-width: 100%;
