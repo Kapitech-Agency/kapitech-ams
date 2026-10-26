@@ -651,3 +651,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Removed Finance content separators and made the inner layout rely on spacing and subdued surfaces. Project Portfolio is explicitly stretched to the same desktop row height as Finance; compact project service-line controls align to the registry action.
 - Refined the Dashboard header/shortcuts, removed horizontal tab overflow, unified quick-action heights, and tightened Team Workload plus Recent Activity responsive controls. Recent Activity retains its canonical search, actor/severity filters, date window, sort order and pagination.
 - Source data, permissions, routes, business calculations and backend/API/database code are unchanged. Validate Quality Gate on this exact SHA and continue to treat production visual inspection as a separate acceptance step.
+
+
+## 0.5 Dashboard controls and Finance visual cleanup — 27 October 2026
+
+- Finance's Invoices vs expenses trend and Cash & expense movement use clearer inner spacing and consistent sub-surfaces while sharing the Finance-card-local reporting period.
+- Recent Activity search is compact and beside its filters. Actor filter width follows the longest loaded option and remains stable while another actor is selected; controls reflow on narrow screens.
+- Recorded-time period control and Open Time Logs sit beside the Recorded time heading. Open Finance, View audit log and Project registry use the standardized action height.
+- Corrected the calendar year matcher so year navigation can identify four-digit year options. Presentation-only; no backend, API, database, permission or calculation changes.

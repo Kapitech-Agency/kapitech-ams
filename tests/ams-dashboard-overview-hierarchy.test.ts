@@ -255,8 +255,14 @@ test('Dashboard card-local calendars sit in card headers, dropdown widths are st
   assert.ok(finance.includes('ams-finance-chart-empty-state'));
   assert.ok(dashboard.includes('const overviewFinanceChartRows = overviewFinanceTrendRows.length'));
   assert.ok(dashboard.includes('primary: 0, secondary: 0, tertiary: 0'));
-  assert.ok(team.indexOf('dashboard-time-period-controls') < team.indexOf('data-ams-feature-slug="dashboard-recorded-time-by-person"'));
-  assert.ok(team.includes('ams-dashboard-team-header-actions'));
+  const recordedTimeStart = team.indexOf('data-ams-feature-slug="dashboard-recorded-time-by-person"');
+  const recordedTimeEnd = team.indexOf('!canOpenTimeLogs', recordedTimeStart);
+  const recordedTimeHeader = team.slice(recordedTimeStart, recordedTimeEnd);
+  assert.ok(recordedTimeStart >= 0 && team.indexOf('dashboard-time-period-controls') > recordedTimeStart);
+  assert.ok(recordedTimeHeader.includes('ams-dashboard-team-time__header-actions'));
+  assert.ok(recordedTimeHeader.includes('Open Time Logs'));
+  assert.ok(recordedTimeHeader.includes('ariaLabel="Recorded time reporting period"'));
+  assert.equal(team.includes('ams-dashboard-team-header-actions'), false, 'Recorded-time controls belong beside their own heading.');
   assert.ok(activity.indexOf('Filter activity by time window') < activity.indexOf('ams-dashboard-activity-tools'));
   assert.ok(activity.includes('ams-dashboard-activity-header-actions'));
   assert.ok(styles.includes('.ams-calendar-period-filter {'));
@@ -267,6 +273,41 @@ test('Dashboard card-local calendars sit in card headers, dropdown widths are st
   assert.ok(styles.includes('align-items: stretch;'));
   assert.ok(styles.includes('.ams-dashboard-toolbar > .ams-dashboard-view-tabs::-webkit-scrollbar'));
   assert.ok(styles.includes('.ams-project-progress-header-actions .ams-project-registry-action'));
+});
+
+test('Dashboard card actions, Recorded time controls, calendar navigation and Activity filter widths stay aligned', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+
+  assert.ok(dashboard.includes('filter((year) => /^\d{4}$/.test(year))'), 'Calendar year navigation should match four-digit years.');
+  assert.ok(dashboard.includes('dashboardActivityActorFilterWidth'));
+  assert.ok(dashboard.includes('longestLabel * 6.8 + 44'));
+  assert.ok(dashboard.includes("style={{ '--activity-actor-filter-width': dashboardActivityActorFilterWidth } as React.CSSProperties}"));
+  assert.ok(dashboard.includes('ams-dashboard-activity-filter--actor'));
+  assert.ok(dashboard.includes('ams-dashboard-activity-filter--severity'));
+  assert.ok(dashboard.includes('ams-dashboard-activity-filter--order'));
+
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+  const activityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  const activity = overview.slice(activityStart);
+  assert.ok(activity.includes('Search recent activity'));
+  assert.ok(activity.includes('Filter activity by actor'));
+  assert.ok(activity.includes("className=\"ams-dashboard-activity-filter ams-dashboard-activity-filter--actor\" style={{ width: dashboardActivityActorFilterWidth, maxWidth: '100%' }}"));
+
+  for (const selector of [
+    '.ams-overview-panel .ams-dashboard-card-header-actions .ams-dashboard-card-action',
+    '.ams-project-progress-header-actions .ams-project-registry-action',
+    '.ams-dashboard-team-time__header-actions',
+    '.ams-dashboard-finance-panel .ams-dashboard-finance-trend-region',
+    '.ams-dashboard-finance-panel .ams-finance-movement-card',
+    '.ams-dashboard-activity-tools'
+  ]) assert.ok(styles.includes(selector), 'Missing focused Dashboard style: ' + selector);
+  assert.match(styles, /grid-template-columns:\s*minmax\(160px, 190px\) 132px var\(--activity-actor-filter-width, 190px\) 142px auto/);
+  assert.ok(overview.includes('Open Time Logs'));
+  assert.ok(overview.includes('Open Finance'));
+  assert.ok(overview.includes('View audit log'));
 });
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {

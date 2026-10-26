@@ -1528,7 +1528,7 @@ const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps
   const selectedYear = Number(value.slice(0, 4)) || new Date().getFullYear();
   const [visibleYear, setVisibleYear] = useState(selectedYear);
   const years: string[] = Array.from(new Set<string>(options.map((option) => option.value.slice(0, 4))))
-    .filter((year) => /^\\d{4}$/.test(year))
+    .filter((year) => /^\d{4}$/.test(year))
     .sort((left, right) => Number(right) - Number(left));
   const availableValues = new Set(options.map((option) => option.value));
 
@@ -1967,6 +1967,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     ],
     [dashboardActivityActors]
   );
+  const dashboardActivityActorFilterWidth = useMemo(() => {
+    const longestLabel = dashboardActivityActorOptions.reduce(
+      (longest, option) => Math.max(longest, String(option.label || option.value).length),
+      'All actors'.length
+    );
+    return Math.min(260, Math.max(168, Math.ceil(longestLabel * 6.8 + 44))) + 'px';
+  }, [dashboardActivityActorOptions]);
 
   const isActivityCustomRangeInvalid = Boolean(activityStartDate && activityEndDate && activityStartDate > activityEndDate);
   const isActivityCustomRangeUnselected = activityTimeFilter === 'custom' && !activityStartDate && !activityEndDate;
@@ -3435,13 +3442,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 title="Team workload"
                 className="h-full ams-overview-panel ams-dashboard-team-panel"
                 bodyClassName="p-4 sm:p-5 ams-dashboard-team-body"
-                actions={canOpenTimeLogs ? (
-                  <div className="ams-dashboard-card-header-actions ams-dashboard-team-header-actions">
-                    <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-time-period-controls">
-                      <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
-                    </div>
-                  </div>
-                ) : undefined}
               >
                 <section className="ams-dashboard-team-tasks" data-ams-feature-slug="dashboard-task-load-by-owner" aria-label="Open tasks by owner">
                   <div className="mb-3 flex items-baseline justify-between gap-2">
@@ -3486,7 +3486,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
                       <p className="mt-1 text-[10px] leading-4 text-muted">Logged hours · not capacity</p>
                     </div>
-
+                    {canOpenTimeLogs ? (
+                      <div className="ams-dashboard-team-time__header-actions">
+                        <div className="ams-card-period-controls ams-card-period-controls--time" data-ams-feature-slug="dashboard-time-period-controls">
+                          <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
+                        </div>
+                        <Link to="/admin/time-logs" className="ams-dashboard-card-action ams-dashboard-team-time__action inline-flex items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Time Logs <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                      </div>
+                    ) : null}
                   </div>
                   {!canOpenTimeLogs || operationalSnapshot.timeLogs === null ? (
                     <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
@@ -3513,7 +3520,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       ))}
                     </div>
                   )}
-                  {canOpenTimeLogs ? <Link to="/admin/time-logs" className="ams-dashboard-card-action mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                 </section>
               </AdminPanel>
             </section>
@@ -3655,7 +3661,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="ams-dashboard-activity-tools" role="search" aria-label="Filter recent activity">
+                      <div className="ams-dashboard-activity-tools" style={{ '--activity-actor-filter-width': dashboardActivityActorFilterWidth } as React.CSSProperties} role="search" aria-label="Filter recent activity">
                         <label className="ams-dashboard-activity-search">
                           <span className="sr-only">Search event or actor</span>
                           <Search size={14} aria-hidden="true" />
@@ -3667,16 +3673,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             placeholder="Search event or actor"
                           />
                         </label>
-                        <label className="ams-dashboard-activity-filter">
+                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--severity">
                           <span>Severity</span>
 <CustomSelect aria-label="Filter activity by severity" value={activitySeverityFilter} onChange={(value) => { setActivitySeverityFilter(value as DashboardActivitySeverityFilter); setActivityPage(1); }} options={[{ value: 'all', label: 'All levels' }, { value: 'critical', label: 'Critical' }, { value: 'warning', label: 'Warning' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[126px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
-                        <label className="ams-dashboard-activity-filter">
+                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor" style={{ width: dashboardActivityActorFilterWidth, maxWidth: '100%' }}>
                           <span>Actor</span>
-                          <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[150px]" menuClassName="ams-dashboard-dropdown-menu" />
+                          <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
                         
-                        <label className="ams-dashboard-activity-filter">
+                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--order">
                           <span>Order</span>
                           <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
