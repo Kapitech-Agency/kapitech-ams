@@ -599,3 +599,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Active state matches the root AMS design system: Overview/Performance/Analytics uses the light underline tab, segmented filters use the neutral `--line` surface, calendar selections and custom dropdown selections use a restrained accent tint, and pagination remains a distinct page indicator.
 - Header controls are standardized at 36px. Source records, authorization, routes, financial formulas and backend/API/database logic remain unchanged.
 - Regression tests cover card-header placement, project registry ownership, dropdown portal wiring and active-state styling. Check CI/Quality Gate for the exact commit before marking this work validated.
+
+
+## 0.5 Dashboard-wide button consistency — 27 October 2026
+
+- Added a final scoped button/control contract to GlobalExecutiveDashboard.css. Header actions and shortcuts use the same 36px geometry, card actions and pagination use 32px, Project service-line segments remain 28px inside a 36px group, and date/select triggers use the same 36px baseline. Larger deadline choice tiles retain their content-driven size but share the same border, radius and selected-state system.
+- Standardized border radius, typography, horizontal padding, hover behavior, disabled opacity, and visible keyboard focus. Navigation tabs retain their semantic underline; primary invoice creation retains the brand action treatment; selected filters use the same neutral surface. Calendar popup controls receive matching rules in their portal, outside the Dashboard DOM.
+- The work is limited to Dashboard presentation and regression coverage; no route, permissions, data, filter logic or backend behavior changed.

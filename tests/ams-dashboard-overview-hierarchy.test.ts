@@ -1211,3 +1211,41 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
   assert.match(styles, /background:\s*var\(--line\)/);
   assert.ok(styles.includes('.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"]'));
 });
+
+
+test('All Dashboard buttons use a shared size, shape, state, and keyboard-focus contract', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const marker = '/* Dashboard button consistency contract - 2026-10-27. */';
+  const contractStart = styles.lastIndexOf(marker);
+  assert.ok(contractStart >= 0, 'The canonical Dashboard button contract should be the final style layer.');
+  const controls = styles.slice(contractStart);
+
+  for (const selector of [
+    '.ams-dashboard-header-action',
+    '.ams-dashboard-header-shortcut',
+    '.ams-dashboard-view-tab',
+    '.ams-dashboard-card-action',
+    '.ams-dashboard-filter-pill',
+    '.ams-dashboard-project-filter',
+    '.ams-dashboard-deadline-filter',
+    '.ams-dashboard-select-trigger',
+    '.ams-calendar-period-filter__trigger',
+    '.ams-dashboard-activity-calendar-trigger',
+    '.ams-dashboard-activity-reset',
+    '.ams-dashboard-page-step',
+    '.ams-dashboard-activity-page-buttons button',
+    '.ams-portal-root .ams-calendar-period-filter__panel button'
+  ]) assert.ok(controls.includes(selector), 'Missing standardized Dashboard control: ' + selector);
+
+  assert.ok(controls.includes('--dashboard-control-height: 36px;'));
+  assert.ok(controls.includes('--dashboard-control-compact-height: 32px;'));
+  assert.ok(controls.includes('--dashboard-control-radius: 8px;'));
+  assert.ok(controls.includes('height: var(--dashboard-control-height);'));
+  assert.ok(controls.includes('height: var(--dashboard-control-compact-height);'));
+  assert.ok(controls.includes('height: 28px;'), 'Nested service-line filters retain compact inner controls inside a 36px group.');
+  assert.ok(controls.includes('outline: 2px solid var(--accent);'));
+  assert.ok(controls.includes('button:disabled'));
+  assert.ok(controls.includes('.ams-dashboard-toolbar > .ams-dashboard-view-tabs'));
+  assert.ok(controls.includes('overflow: visible;'), 'View tabs and filter groups must not become horizontal scroll strips.');
+  assert.doesNotMatch(controls, /!important/);
+});

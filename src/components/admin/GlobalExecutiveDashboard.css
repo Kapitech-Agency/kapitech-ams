@@ -3615,3 +3615,509 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   .ams-portal-root .ams-calendar-period-filter__panel *,
   .ams-portal-root .ams-dashboard-activity-calendar-panel * { transition-duration:.01ms; }
 }
+
+
+/* Dashboard button consistency contract - 2026-10-27.
+   Control variants share one border, radius, typography, hover and focus system.
+   Height varies only by role: primary actions, compact actions, and nested segments. */
+.ams-shell .ams-dashboard {
+  --dashboard-control-height: 36px;
+  --dashboard-control-compact-height: 32px;
+  --dashboard-control-radius: 8px;
+  --dashboard-control-border: var(--dashboard-card-border);
+  --dashboard-control-surface: var(--panel);
+  --dashboard-control-hover: var(--dashboard-hover-surface);
+  --dashboard-control-selected: var(--line);
+}
+
+.ams-shell .ams-dashboard button,
+.ams-shell .ams-dashboard a,
+.ams-portal-root .ams-calendar-period-filter__panel button,
+.ams-portal-root .ams-dashboard-activity-calendar-panel button {
+  box-sizing: border-box;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ams-shell .ams-dashboard button:hover:not(:disabled),
+.ams-shell .ams-dashboard a:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-shortcut,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > button,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--registry {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-height);
+  min-height: var(--dashboard-control-height);
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  border-radius: var(--dashboard-control-radius);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 550;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--refresh {
+  min-width: var(--dashboard-control-height);
+  padding-inline: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--invoice.bg-accent,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--invoice.bg-accent:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--invoice.bg-accent:hover {
+  background: var(--accent-hover);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--project,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--registry,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-shortcut,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--refresh {
+  border-color: var(--dashboard-control-border);
+  background: var(--dashboard-control-surface);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--project:hover,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--registry:hover,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-shortcut:hover,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--refresh:hover {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--dashboard-control-hover);
+  color: var(--text);
+}
+
+/* Navigation tabs are a distinct variant, but use the same control height and type scale. */
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  overflow: visible;
+  scrollbar-width: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-height);
+  min-height: var(--dashboard-control-height);
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab:hover {
+  border-color: transparent;
+  border-bottom-color: var(--line);
+  background: transparent;
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
+  border-color: transparent;
+  border-bottom: 2px solid var(--accent);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] * {
+  color: var(--text);
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    gap: 4px;
+    overflow: visible;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 4px;
+    font-size: 10px;
+  }
+}
+
+/* Primary card actions, quick filters and selects share consistent geometry by role. */
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action,
+.ams-shell .ams-dashboard .ams-dashboard-activity-reset,
+.ams-shell .ams-dashboard .ams-dashboard-page-step,
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-compact-height);
+  min-height: var(--dashboard-control-compact-height);
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--dashboard-control-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--dashboard-control-surface);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 550;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action:hover,
+.ams-shell .ams-dashboard .ams-dashboard-activity-reset:hover,
+.ams-shell .ams-dashboard .ams-dashboard-page-step:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--dashboard-control-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-card-action svg,
+.ams-shell .ams-dashboard .ams-dashboard-activity-reset svg,
+.ams-shell .ams-dashboard .ams-dashboard-page-step svg {
+  flex: 0 0 auto;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button {
+  min-width: var(--dashboard-control-compact-height);
+  padding-inline: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button[aria-current="page"] {
+  border-color: var(--accent);
+  background: var(--dashboard-control-selected);
+  color: var(--text);
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button[aria-current="page"] * {
+  color: var(--text);
+}
+
+/* Project filter segments stay 28px inside a 36px control, matching registry/action height. */
+.ams-shell .ams-dashboard .ams-project-progress-header-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-segmented-filter {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  height: var(--dashboard-control-height);
+  min-height: var(--dashboard-control-height);
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  overflow: visible;
+  border: 1px solid var(--dashboard-control-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--bg);
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-segmented-filter button,
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button,
+.ams-shell .ams-dashboard button.ams-dashboard-project-filter {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 28px;
+  min-height: 28px;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button:hover:not(:disabled),
+.ams-shell .ams-dashboard button.ams-dashboard-project-filter:hover:not(:disabled) {
+  border-color: var(--dashboard-control-border);
+  background: var(--dashboard-control-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-filter-pills {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  overflow: visible;
+}
+
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-compact-height);
+  min-height: var(--dashboard-control-compact-height);
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--dashboard-control-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--dashboard-control-surface);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--dashboard-control-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard button.ams-dashboard-deadline-filter {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 70px;
+  padding: 11px 12px;
+  border: 1px solid var(--dashboard-control-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--dashboard-control-surface);
+  color: var(--text);
+  text-align: left;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard button.ams-dashboard-deadline-filter:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--dashboard-control-hover);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger,
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger {
+  box-sizing: border-box;
+  height: var(--dashboard-control-height);
+  min-height: var(--dashboard-control-height);
+  min-width: 0;
+  align-items: center;
+  border: 1px solid var(--dashboard-control-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--dashboard-control-surface);
+  color: var(--text);
+  font-size: 11px;
+  line-height: 14px;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger {
+  padding: 0 10px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger:hover,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger:hover {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--dashboard-control-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"],
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]:hover,
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger[aria-expanded="true"],
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"] svg {
+  color: var(--text);
+}
+
+/* The custom calendar lives in a portal, so it receives the same control geometry separately. */
+.ams-portal-root .ams-calendar-period-filter__panel-heading > button,
+.ams-portal-root .ams-dashboard-activity-calendar-panel__heading > button,
+.ams-portal-root .ams-calendar-period-filter__group button,
+.ams-portal-root .ams-dashboard-activity-calendar-presets button,
+.ams-portal-root .ams-calendar-period-filter__year button {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-compact-height);
+  min-height: var(--dashboard-control-compact-height);
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ams-portal-root .ams-calendar-period-filter__year button {
+  width: var(--dashboard-control-compact-height);
+  padding: 0;
+}
+
+.ams-portal-root .ams-calendar-period-filter__group button,
+.ams-portal-root .ams-dashboard-activity-calendar-presets button {
+  flex: 1 1 auto;
+  border-color: transparent;
+  background: transparent;
+}
+
+.ams-portal-root .ams-calendar-period-filter__grid button {
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: 5px 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 500;
+}
+
+.ams-portal-root .ams-calendar-period-filter__grid button:hover:not(:disabled),
+.ams-portal-root .ams-calendar-period-filter__year button:hover:not(:disabled),
+.ams-portal-root .ams-calendar-period-filter__panel-heading > button:hover:not(:disabled),
+.ams-portal-root .ams-dashboard-activity-calendar-panel__heading > button:hover:not(:disabled),
+.ams-portal-root .ams-calendar-period-filter__group button:hover:not(:disabled),
+.ams-portal-root .ams-dashboard-activity-calendar-presets button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.ams-portal-root .ams-calendar-period-filter__group button[aria-pressed="true"],
+.ams-portal-root .ams-dashboard-activity-calendar-presets button[aria-pressed="true"],
+.ams-portal-root .ams-calendar-period-filter__grid button[aria-pressed="true"] {
+  border-color: var(--line);
+  background: var(--line);
+  color: var(--text);
+  font-weight: 650;
+}
+
+.ams-portal-root .ams-calendar-period-filter__grid button[aria-pressed="true"] small {
+  color: var(--muted);
+}
+
+/* One selection language for filters; tabs and primary actions keep their semantic variants. */
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"] {
+  border-color: var(--line);
+  background: var(--dashboard-control-selected);
+  color: var(--text);
+  font-weight: 650;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] *,
+.ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"] *,
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"] *,
+.ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"] * {
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count,
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] .ams-dashboard-filter-pill__count {
+  border-color: color-mix(in srgb, var(--line) 70%, var(--muted));
+  background: color-mix(in srgb, var(--line) 75%, var(--panel));
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger.has-custom-range,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-filter.has-custom-range .ams-dashboard-activity-calendar-trigger {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+}
+
+/* Keyboard focus is never removed: controls share the same visible accent ring. */
+.ams-shell .ams-dashboard button:focus-visible,
+.ams-shell .ams-dashboard a:focus-visible,
+.ams-shell .ams-dashboard input:focus-visible,
+.ams-shell .ams-dashboard select:focus-visible,
+.ams-shell .ams-dashboard textarea:focus-visible,
+.ams-shell .ams-dashboard [role="button"]:focus-visible,
+.ams-portal-root .ams-calendar-period-filter__panel button:focus-visible,
+.ams-portal-root .ams-dashboard-activity-calendar-panel button:focus-visible,
+.ams-portal-root .ams-calendar-period-filter__panel input:focus-visible,
+.ams-portal-root .ams-dashboard-activity-calendar-panel input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard button:disabled,
+.ams-shell .ams-dashboard [aria-disabled="true"],
+.ams-portal-root .ams-calendar-period-filter__panel button:disabled,
+.ams-portal-root .ams-dashboard-activity-calendar-panel button:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard button,
+  .ams-shell .ams-dashboard a,
+  .ams-portal-root .ams-calendar-period-filter__panel *,
+  .ams-portal-root .ams-dashboard-activity-calendar-panel * {
+    transition-duration: .01ms;
+    animation-duration: .01ms;
+    animation-iteration-count: 1;
+  }
+}
