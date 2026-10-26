@@ -85,6 +85,13 @@ A contextual summary may show source-backed fields from another module. Editing 
 
 A page header normally contains a clear title, a short description only when useful, contextual breadcrumbs for deep records, and relevant controls such as date range, scope selector, or a supported primary action. Do not duplicate the title across the shell, tabs, and main content. Do not place unrelated KPIs in the header.
 
+For the Dashboard Overview specifically, keep the global header action set small and grounded in the documented daily workflow:
+- **Create invoice** is primary only when `canManageInvoices` and the receivables route are both available; otherwise show **Invoices** only when the register is readable.
+- **New project** appears only when project creation is permitted; when only read access is available, use **Projects** as a workspace shortcut.
+- **Refresh** remains a compact secondary action with visible loading/disabled feedback.
+- Do not put a generic **New task** action in this global header. Task creation stays in the task workspace; the Overview Task queue remains the context-specific path for reviewing operational work.
+- Each action uses an existing canonical route/handler and route permission checks. No decorative actions, duplicate title, unrelated KPIs, new routes or implied permissions. Use equal control heights, compact icon/label alignment, quiet rounded surfaces, clear primary emphasis, visible keyboard focus, reduced-motion support, and responsive action placement without stranded controls.
+
 ### 3.2 Card anatomy
 
 A card must serve a distinct user question. Include only the applicable fields from this contract:
