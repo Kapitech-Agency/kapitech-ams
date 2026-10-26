@@ -307,20 +307,20 @@ Retain Overview, Performance, and Analytics. Complete all three before proceedin
 
 ## 4.2 Overview composition
 
-Follow the production-ready dashboard reference supplied by the user as the layout pattern. Adapt its large financial/chart card, compact portfolio companion, concise metric groups and short row lists to Kapitech data. Do not copy bank-specific labels, sample data or unsupported financial assumptions.
+Use the user's [Fynix AI Finance Management dashboard reference](https://www.behance.net/gallery/234937291/AI-Finance-Management-SaaS-UX-UI-DashboardDesign) for information design: one dominant value, compact related metrics, a readable trend, proportional distribution charts, and concise record lists. Its personal-wallet domain, sample amounts, colors and AI assistant are not part of AMS scope. The AMS dark-first Design System remains authoritative.
 
-Use the header for the selected date period, view navigation and permission-aware quick actions. **Do not render a second reporting-period/scope card in the Overview.** Once the toolbar ends, begin directly with this card order:
-1. **Finance + Projects portfolio** as the primary card row. Finance leads with outstanding receivables and a source-backed issued-invoice/expense line trend; cash received and expenses are compact in-card bar visuals. Keep the functional quotation stage filter and short follow-up queue inside Finance. Projects pairs Finance with active-project totals, a risk/deadline donut and Creative/IT workload bars.
-2. **Projects in progress + Needs attention.** Show saved project-progress bars only when valid progressPercent is present; otherwise show “Progress not recorded”. Needs attention is a compact secondary exception card, severity-sorted and visually distinct from canonical Inbox triage.
-3. **Task queue + Upcoming deadlines.** Keep task filters, status, owner and due date in a clear queue; pair it with the source-backed deadline visualization and concise commitment rows.
-4. **Team workload + Client delivery focus.** Use proportional task-load bars, factual recorded-time values and source-backed client delivery signals.
-5. **Recent activity + Workspace shortcuts** at the bottom.
+Use the header for view navigation, one reporting-period control, permission-aware invoice/project actions, Refresh, and visible authorized Tasks/Clients/Documents shortcuts. **Do not render a second reporting-period/scope card or a bottom Workspace Shortcuts card.** After the toolbar, follow operational urgency:
+1. **Project delivery + Needs attention.** Short active-project list with client, status, saved progress only when recorded, due date, and functional All/Creative/IT filters. Pair with severity-sorted cross-module exceptions and separately sourced Inbox triage.
+2. **Task queue + Upcoming deadlines.** Actionable task rows with project/client, owner, status and due date; functional Action needed/Review/Overdue/Blocked/Unassigned filters; and a deadline horizon with a proportional summary plus All/Overdue/Today–7 days/Days 8–30 filters.
+3. **Finance + Projects portfolio.** Finance uses outstanding receivables as its headline value, an issued-invoice-versus-eligible-expense line trend, compact cash-received/expense movement bars, and canonical quotation follow-up with a functional stage filter. Project Portfolio has Active/Overdue/Open tasks metrics, a donut only for actual current risk/deadline groups, and comparative Creative/IT open-task bars.
+4. **Team workload + Client delivery focus.** Use proportional task-load bars and actual recorded hours, not inferred utilization. Sort client groups by actual overdue commitments/tasks, blocked and unassigned work, review items, and nearest commitment.
+5. **Recent activity** as a compact full-width audit list at the bottom with recorded event, actor, timestamp and severity/outcome where available. Links require an authorized, supported destination.
 
-**Copy-density rule:** follow Maven’s visual-first composition. Use short card titles, numeric values, legends, sparklines, bars, filter chips and concise record rows. Remove repeated explanatory paragraphs and scope labels already visible in the header or chart. Keep only microcopy that prevents a real operational misunderstanding; unavailable/error states should distinguish unavailable from empty, without repeating the same fact twice.
+**Pattern-to-card mapping:** headline balance/summary tiles map to receivables and current project metrics; cashflow visuals map to canonical invoice/expense movement; category distribution maps to current project risk/deadline signals; horizontal comparisons map to service-line task load; recent transactions map to quotations and audit events, kept distinct by source and meaning. Do not add AI recommendations, unsupported fields or demo values.
 
-Let the financial trend and project risk visualization establish the primary visual anchors. Use balanced card proportions, compact counters, bars and concise rows. Preserve AMS design tokens and responsive behavior. Do not invent values, create inferred project progress, repeat a generic KPI strip or bury Finance and Projects beneath exception lists.
+**Empty-state rule:** display a contextual card label, clear title, one concise explanation and an authorized next action where useful. Apply success styling only when returned records confirm a clear/complete state. Empty, filtered-empty, loading, stale and unavailable states must remain distinct. Avoid generic “Nothing to show”, zeroes for unavailable data, duplicate empty messages and placeholder charts.
 
-**Current main-content composition detail (26 October 2026):** reporting-period selection, previous/next controls and clearing to Recent 30 days stay in the header toolbar. The Overview body starts directly with Finance and Projects; do not repeat the period in another scope row or chips. Inside Finance, the receivable balance and invoice-versus-expense line chart are the primary surface; Cash received and Expenses recorded appear as two compact sparkbar cards directly below, still inside Finance. Add a compact **Quotation follow-up** queue in the same Finance card using the canonical proposals API and a functional stage filter for All active, Review, Approved awaiting invoice conversion, Sent, and Draft. Prioritize expired/near-validity records, show client/title, recorded amount, stage and valid-until context, and link to the Finance Quotation Ledger. These are current pipeline records, not a trend for the selected financial period. In Projects, use three equal metric tiles (Active, Overdue, Open tasks) before the ring breakdown and the matched Creative/IT open-task bars. Put each filter's count inside its filter control rather than repeating a second “showing X of Y” line. Prefer visual marks and exact values; keep explanatory text for date-basis, source-unavailable, genuinely empty, and financial-semantics context only. Existing reporting-period, project, deadline, task and quotation-stage filters must change the records shown.
+**Copy density:** favor metric values, chart marks, legends, compact bars, functional filters and concise rows. Remove explanations and period labels already covered by the header or chart. Keep microcopy for source, period, currency, date basis, availability and real semantic distinctions only.
 
 ### Header, reporting and filter behavior
 
@@ -332,7 +332,7 @@ Let the financial trend and project risk visualization establish the primary vis
 
 ### Card group A: Needs Attention
 
-This is a compact secondary exception card below the Finance and Projects cards. Sort danger/critical items before warnings and informational items, preserve source order inside each severity, and keep authorized Inbox triage in its own source-backed subsection. Do not manufacture hierarchy with rank numbering; use card placement, relative visual weight and actual source-backed urgency.
+Place this card near the top because it contains work that may need immediate action. Sort danger/critical items before warnings and informational items, preserve source order inside each severity, and keep authorized Inbox triage in its own source-backed subsection. Do not manufacture hierarchy with rank numbering; use card placement, relative visual weight and actual source-backed urgency.
 
 **A1. Delivery Risks**
 - Project name and client.
@@ -609,12 +609,12 @@ Show service demand or campaign outcomes only when sourced. Include objective, p
 
 ### Dashboard acceptance
 - Overview, Performance, and Analytics have distinct purposes.
-- Finance and Projects are the first and most prominent Overview cards; hierarchy does not rely on artificial priority numbering.
+- Overview row order prioritizes project delivery/needs-attention, then task queue/deadlines, then Finance/Project Portfolio, team/client context, and recent activity; no artificial priority numbering.
 - Finance trend values come from canonical issued-invoice and eligible-expense records, with source and period semantics clear; no arithmetic difference is described as posted profit or cash flow.
 - The Overview quotation-follow-up queue reads canonical quotation records, filters by current stage, identifies approved quotes without linked invoices, and never treats quotation totals as receivables or issued invoice revenue.
 - Project visuals use current saved project/deadline/task records. Project progress bars appear only when valid saved progressPercent exists.
-- Needs attention follows the Finance/Projects row; exceptions are severity-ranked and not mixed into the Inbox source.
-- Task queue, deadlines, team workload, client delivery focus, audit activity and shortcuts are arranged in balanced responsive card rows.
+- Needs attention sits near the top; exceptions are severity-ranked and kept separate from canonical Inbox triage.
+- Task queue, deadlines, Finance, Project Portfolio, team workload, client delivery focus and Recent Activity use balanced responsive card rows; shortcuts remain in the header.
 - No fake values, unsupported trends, sub-10px operational text or duplicated metrics without a reason.
 - Every visual has exact readable values and a defined scope.
 - Drill-down opens the canonical source.

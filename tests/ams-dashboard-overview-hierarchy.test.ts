@@ -9,7 +9,7 @@ const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
 test('Dashboard Overview prioritizes urgent delivery actions, deadlines, and header shortcuts before reporting context', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overviewStart = dashboard.indexOf("      {view === 'overview' ? (");
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const performanceStart = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   assert.ok(overviewStart >= 0 && performanceStart > overviewStart, 'Dashboard overview branch should be identifiable');
   const overview = dashboard.slice(overviewStart, performanceStart);
@@ -61,6 +61,29 @@ test('Dashboard Overview prioritizes urgent delivery actions, deadlines, and hea
 });
 
 
+
+test('Dashboard Overview empty states are contextual, action-aware and distinct from unavailable sources', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+  assert.ok(dashboard.includes('type DashboardEmptyStateProps = {'));
+  assert.ok(dashboard.includes('eyebrow: string;'));
+  assert.ok(dashboard.includes("tone?: 'neutral' | 'success';"));
+  assert.ok(styles.includes('.ams-dashboard-empty--success .ams-dashboard-empty__icon'));
+  for (const label of [
+    'PROJECT DELIVERY', 'OPERATIONS CLEAR', 'INBOX TRIAGE', 'TASK QUEUE',
+    'DELIVERY TIMELINE', 'DELIVERY HORIZON', 'FINANCIAL MOVEMENT',
+    'QUOTATION FOLLOW-UP', 'PROJECT PORTFOLIO', 'RISK DISTRIBUTION',
+    'TEAM WORKLOAD', 'RECORDED TIME', 'CLIENT DELIVERY', 'AUDIT ACTIVITY'
+  ]) assert.ok(overview.includes('eyebrow="' + label + '"'), 'Missing contextual empty-state heading: ' + label);
+  assert.ok(overview.includes('title="No active exceptions"'));
+  assert.ok(overview.includes('title="No recent activity"'));
+  assert.ok(overview.includes('title="No task records yet"'));
+  assert.doesNotMatch(overview, /Nothing to show/);
+  assert.ok(overview.includes('DashboardUnavailable'), 'Unavailable-source states must stay distinct from genuine empty states.');
+});
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
@@ -300,7 +323,9 @@ test('Dashboard quick actions and project-header links respect route access', as
   assert.ok(dashboard.includes('const currentNavigationRole = getAmsRole(getAdminSession()?.user)'));
   assert.ok(dashboard.includes('return canAccessAmsRoute(currentNavigationRole, target.pathname, target.search)'));
   assert.ok(dashboard.includes('.filter((action) => canOpenDashboardRoute(action.href)).map((action) => ('));
-  assert.ok(dashboard.includes("href: '/admin/finance?tab=accounts-receivable'"));
+  assert.ok(dashboard.includes("href: '/admin/tasks'"));
+  assert.ok(dashboard.includes("href: '/admin/clients/all-clients'"));
+  assert.ok(dashboard.includes("href: '/admin/documents'"));
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-quick-actions"'));
   assert.ok(dashboard.includes("const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister"));
   assert.equal(dashboard.includes("const canCreateTask ="), false);
@@ -507,7 +532,7 @@ test('Dashboard Overview adds a permission-gated Inbox triage card from the cano
   assert.ok(dashboard.includes('.filter(isInboxUnassigned)'));
   assert.ok(dashboard.includes('.filter(isInboxHighPriority)'));
   assert.ok(dashboard.includes('Inbox data unavailable; triage counts are not inferred.'));
-  assert.ok(dashboard.includes('No inbound records need immediate triage.'));
+  assert.ok(dashboard.includes('title="Inbox is clear"'));
   assert.match(dashboard, /const allowedItems = canOpenInbox\s+\? items\.filter\(\(item\) => String\(item\.category \|\| ''\)\.toLowerCase\(\) !== 'sales' && item\.id !== 'att_leads_new'\)/);
   assert.match(dashboard, /return \[\.\.\.allowedItems\]\.sort\(\(left, right\) =>\s*dashboardAttentionSeverityRank\(left\.severity\) - dashboardAttentionSeverityRank\(right\.severity\)/);
   assert.ok(inboxTriage.includes("item.status === 'new'"));
@@ -579,7 +604,7 @@ test('Dashboard Overview orders urgent delivery actions before finance and portf
   assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
   assert.ok(overview.includes('Exception data unavailable'));
-  assert.ok(overview.includes('No cross-module exceptions returned'));
+  assert.ok(overview.includes('title="No active exceptions"'));
   assert.ok(overview.includes("candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate))"));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false);
   assert.equal(overview.includes('title="Team capacity"'), false);
@@ -629,7 +654,7 @@ test('Dashboard Overview visualizes all dated commitments and keeps the deadline
 test('Dashboard Projects card visualizes Creative and IT workload from canonical service-line counts', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
-  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-project-progress"', start);
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-team-workload"', start);
   assert.ok(start >= 0 && end > start);
   const projects = dashboard.slice(start, end);
   assert.ok(dashboard.includes('const workstreamOpenTaskMaximum'));
@@ -676,7 +701,7 @@ test('Dashboard Overview gates module links through the existing route-access po
   assert.ok(dashboard.includes("const canOpenTimeLogs = canOpenDashboardRoute('/admin/time-logs')"));
   assert.ok(dashboard.includes("const canOpenInvoiceRegister = canOpenDashboardRoute('/admin/finance?tab=accounts-receivable')"));
   assert.ok(dashboard.includes("const canOpenExpenseRegister = canOpenDashboardRoute('/admin/finance?tab=expenses')"));
-  assert.ok(overview.includes(".filter((action) => canOpenDashboardRoute(action.href)).map((action) => ("));
+  assert.ok(dashboard.includes(".filter((action) => canOpenDashboardRoute(action.href)).map((action) => ("));
   assert.ok(overview.includes('disabled={!canOpenTasks}'));
   assert.ok(overview.includes('canOpenDashboardRoute(taskDestination)'));
   assert.ok(overview.includes('canOpenProjects && canOpenDashboardRoute(projectHref)'));
@@ -699,7 +724,7 @@ test('Dashboard Overview displays canonical recent audit activity only for permi
   assert.match(dashboard, /recentActivity: activityDataReturned \? data\.recentActivity as DashboardRecentActivity\[\] : previous\.recentActivity \?\? \[\]/);
   assert.ok(overview.includes('{canViewAuditLogs ? ('), 'Audit records must remain hidden without audit-log permission.');
   assert.ok(overview.includes('Recent activity unavailable'));
-  assert.ok(overview.includes('No recent audit activity was returned.'));
+  assert.ok(overview.includes('title="No recent activity"'));
   assert.ok(overview.includes('/admin/settings?tab=audit'));
   const panel = overview.slice(activity);
   assert.match(panel, /activity\.action/);

@@ -1249,3 +1249,10 @@
     transition-duration: 0.01ms;
   }
 }
+
+
+.ams-shell .ams-dashboard .ams-dashboard-empty--success .ams-dashboard-empty__icon {
+  border-color: color-mix(in srgb, var(--success) 22%, var(--line));
+  background: color-mix(in srgb, var(--success) 7%, var(--panel));
+  color: var(--success);
+}

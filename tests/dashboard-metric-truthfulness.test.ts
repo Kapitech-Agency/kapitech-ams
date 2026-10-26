@@ -160,7 +160,7 @@ test('Dashboard Finance and delivery cards distinguish unavailable sources from 
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.ok(overview.includes('Task queue unavailable'));
-  assert.ok(overview.includes('No task records returned'));
+  assert.ok(overview.includes('title="No task records yet"'));
   assert.ok(overview.includes('Project portfolio unavailable'));
   assert.ok(overview.includes('No project records returned'));
   assert.ok(overview.includes('Delivery schedule unavailable'));
