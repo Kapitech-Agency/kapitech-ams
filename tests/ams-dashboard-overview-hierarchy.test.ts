@@ -1126,7 +1126,7 @@ test('Dashboard calendar filters are dropdowns with card-local periods and acces
   assert.ok(overview.includes('aria-label="Recent activity end date"'));
   assert.ok(styles.includes('.ams-calendar-period-filter__panel'));
   assert.match(styles, /background:\s*var\(--line\);/);
-  assert.ok(styles.includes('border-bottom: 2px solid var(--accent);'));
+  assert.match(styles, /border-bottom:\s*2px solid var\(--accent\)/);
   assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
   assert.ok(styles.includes('.ams-portal-root .ams-calendar-period-filter__panel'));
   assert.ok(styles.includes('.ams-portal-root .ams-dashboard-activity-calendar-panel'));
