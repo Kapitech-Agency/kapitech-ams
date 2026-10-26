@@ -269,6 +269,34 @@ test('Project registry sits beside compact service-line filters in the Project P
   assert.ok(styles.includes('.ams-project-registry-action'));
 });
 
+test('Dashboard Project and Task filters share one segmented background and interaction contract', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const projectStart = dashboard.indexOf('data-ams-feature-slug="dashboard-project-progress"');
+  const attentionStart = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"', projectStart);
+  const taskStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const deadlinesStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskStart);
+  const project = dashboard.slice(projectStart, attentionStart);
+  const queue = dashboard.slice(taskStart, deadlinesStart);
+  const marker = styles.lastIndexOf('/* Dashboard unified segmented filter contract - 2026-10-27. */');
+  assert.ok(projectStart >= 0 && attentionStart > projectStart);
+  assert.ok(taskStart >= 0 && deadlinesStart > taskStart);
+  assert.ok(project.includes('className="ams-dashboard-segmented-filter ams-dashboard-filter-group"'));
+  assert.ok(queue.includes('className="ams-dashboard-filter-pills ams-dashboard-filter-group"'));
+  assert.ok(project.includes('ams-dashboard-project-filter ams-dashboard-filter-option'));
+  assert.ok(queue.includes('ams-dashboard-filter-pill ams-dashboard-filter-option'));
+  assert.ok(project.includes('ams-dashboard-filter-count'));
+  assert.ok(queue.includes('ams-dashboard-filter-count'));
+  assert.ok(marker >= 0);
+  const finalFilters = styles.slice(marker);
+  assert.ok(finalFilters.includes('.ams-dashboard-filter-group'));
+  assert.ok(finalFilters.includes('.ams-dashboard-filter-option:hover:not(:disabled):not([aria-pressed="true"])'));
+  assert.ok(finalFilters.includes('.ams-dashboard-filter-option[aria-pressed="true"]'));
+  assert.ok(finalFilters.includes('.ams-dashboard-filter-count'));
+  assert.ok(finalFilters.includes('background: color-mix(in srgb, var(--accent) 15%, var(--panel));'));
+  assert.ok(finalFilters.includes('.ams-dashboard-projects-panel {'));
+});
+
 test('Dashboard card-local calendars sit in card headers, dropdown widths are stable, and empty Finance trends preserve their plot', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
@@ -344,7 +372,14 @@ test('Dashboard controls align internally without changing card gutters; Recent 
   assert.match(styles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
   assert.match(finalContract, /\.ams-dashboard-header-actions \.ams-dashboard-header-action,[\s\S]*?height: 36px;\s*min-height: 36px/s);
   assert.match(finalContract, /\.ams-project-progress-header-actions \.ams-dashboard-segmented-filter button,[\s\S]*?height: 28px;\s*min-height: 28px/s);
-  assert.match(finalContract, /\.ams-project-progress-header-actions \.ams-dashboard-segmented-filter \{[^}]*padding: 0;[^}]*border: 0/s);
+  const filterContractStart = styles.lastIndexOf('/* Dashboard unified segmented filter contract - 2026-10-27. */');
+  assert.ok(filterContractStart >= 0, 'The unified project/task filter contract must be the final style layer.');
+  const filterContract = styles.slice(filterContractStart);
+  assert.match(filterContract, /\.ams-dashboard-filter-group \{[^}]*min-height: 30px;[^}]*border: 1px solid var\(--dashboard-control-border, var\(--line\)\);[^}]*background:/s);
+  assert.match(filterContract, /\.ams-dashboard-filter-group \.ams-dashboard-filter-option \{[^}]*height: 28px;[^}]*border: 1px solid transparent;[^}]*background: transparent/s);
+  assert.match(filterContract, /\.ams-dashboard-filter-option:hover:not\(:disabled\):not\(\[aria-pressed="true"\]\)/);
+  assert.match(filterContract, /\.ams-dashboard-filter-option\[aria-pressed="true"\][\s\S]*?background: color-mix\(in srgb, var\(--accent\) 15%, var\(--panel\)\)/);
+  assert.match(filterContract, /\.ams-project-progress-header-actions \.ams-project-registry-action \{[^}]*height: 30px;[^}]*min-height: 30px;/s);
   assert.ok(finalContract.includes('overflow-x: visible;'));
   assert.ok(dashboard.includes('const exportFilteredDashboardActivity = () => {'));
   assert.ok(dashboard.includes('aria-label="Export filtered recent activity as CSV"'));

@@ -2647,7 +2647,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   bodyClassName="p-0"
                   actions={(
                     <div className="ams-project-progress-header-actions" data-ams-feature-slug="dashboard-project-filters" aria-label="Project delivery filters">
-                      <div className="ams-dashboard-segmented-filter" role="group" aria-label="Filter projects by service line">
+                      <div className="ams-dashboard-segmented-filter ams-dashboard-filter-group" role="group" aria-label="Filter projects by service line">
                         {([
                           { key: 'all', label: 'All', count: activeDashboardProjectFilterCounts.all },
                           { key: 'creative', label: 'Creative', count: activeDashboardProjectFilterCounts.creative },
@@ -2659,12 +2659,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             aria-pressed={overviewProjectFilter === filter.key}
                             onClick={() => setOverviewProjectFilter(filter.key)}
                             className={[
-                              'ams-dashboard-project-filter inline-flex min-h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                              overviewProjectFilter === filter.key ? 'font-semibold' : 'text-muted hover:bg-panel/70 hover:text-fg'
+                              'ams-dashboard-project-filter ams-dashboard-filter-option transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                              overviewProjectFilter === filter.key ? 'is-active' : ''
                             ].join(' ')}
                           >
                             {filter.label}
-                            <span className="ams-dashboard-filter-pill__count text-[10px] tabular-nums text-muted">{filter.count}</span>
+                            <span className="ams-dashboard-filter-pill__count ams-dashboard-filter-count">{filter.count}</span>
                           </button>
                         ))}
                       </div>
@@ -2878,7 +2878,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 ) : undefined}
               >
                 <div className="border-b border-line px-3 py-3 sm:px-4">
-                  <div className="ams-dashboard-filter-pills flex flex-wrap gap-1.5" role="group" aria-label="Task queue filters">
+                  <div className="ams-dashboard-filter-pills ams-dashboard-filter-group" role="group" aria-label="Task queue filters">
                     {([
                       { key: 'action', label: 'Action needed', count: taskQueueCounts.action },
                       { key: 'review', label: 'Review', count: taskQueueCounts.review },
@@ -2893,12 +2893,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         disabled={!canOpenTasks}
                         onClick={() => setOverviewTaskFilter(tab.key)}
                         className={[
-                          'ams-dashboard-filter-pill inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
-                          overviewTaskFilter === tab.key ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg'
+                          'ams-dashboard-filter-pill ams-dashboard-filter-option transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
+                          overviewTaskFilter === tab.key ? 'is-active' : ''
                         ].join(' ')}
                       >
                         {tab.label}
-                        <span className="ams-dashboard-filter-pill__count rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
+                        <span className="ams-dashboard-filter-pill__count ams-dashboard-filter-count">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
                       </button>
                     ))}
                   </div>

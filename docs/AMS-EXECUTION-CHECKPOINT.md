@@ -685,3 +685,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 
 
 - Follow-up alignment detail: removed the extra outer padding/border around the All/Creative/IT segmented group so its visible height no longer exceeds the 28px Project registry action. Card-to-card gap remains 12px.
+
+
+## 0.5 Dashboard segmented filter consistency — 27 October 2026
+
+- Project in progress (All/Creative/IT) and Task Queue filters now share one grouped background, compact option height, consistent active/hover/focus states and matching count badges. The group surface is visible as one connected control rather than separate floating pills. Project registry uses the aligned group height.
+- Reinforced the desktop Finance/Projects row stretch contract so the Projects card body can fill to Finance height without changing card gaps; existing per-card date filters, wrapping tabs, header action sizing and Recent Activity table/filter behavior remain intact.
+- Scope remains UI and test assertions only; no data source, API, finance calculation, auth or permission logic changes.
