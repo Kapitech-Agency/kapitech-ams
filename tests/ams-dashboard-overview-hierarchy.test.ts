@@ -149,7 +149,7 @@ test('Overview uses per-card period controls, compact project filters, aligned h
     'Previous activity page', 'Next activity page'
   ]) assert.ok(overview.includes('aria-label="' + label + '"'), 'Missing activity table control: ' + label);
   assert.ok(overview.includes('<table className="ams-dashboard-activity-table">'));
-  assert.ok(overview.includes("{ value: 'custom', label: 'Custom range' }"));
+  assert.ok(overview.includes("{ value: 'custom', label: 'Custom' }"));
   assert.ok(dashboard.includes('activityStartDate && eventDay < activityStartDate'));
   assert.ok(dashboard.includes('activityEndDate && eventDay > activityEndDate'));
   assert.ok(overview.includes('<th scope="col">Actor</th>'));
