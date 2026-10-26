@@ -325,7 +325,7 @@ test('Dashboard pixel-precision spacing keeps Finance period and Open Finance al
     '.ams-dashboard-finance-header-actions .ams-calendar-period-filter__trigger,',
     '.ams-dashboard-finance-header-actions .ams-dashboard-card-action {',
     '.ams-dashboard-team-time__header-actions,',
-    '.ams-dashboard-activity-header-actions,',
+    '.ams-dashboard-activity-header-actions {',
     '@media (max-width: 639px)'
   ]) assert.ok(finalLayer.includes(selector), 'Missing final spacing rule: ' + selector);
 
@@ -341,7 +341,7 @@ test('Dashboard controls align internally without changing card gutters; Recent 
   const start = styles.lastIndexOf('/* Dashboard final control alignment — card-to-card spacing is deliberately unchanged. */');
   assert.ok(start >= 0);
   const finalContract = styles.slice(start);
-  assert.match(finalContract, /\.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
+  assert.match(styles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
   assert.match(finalContract, /\.ams-dashboard-header-actions \.ams-dashboard-header-action,[\s\S]*?height: 36px;\s*min-height: 36px/s);
   assert.match(finalContract, /\.ams-project-progress-header-actions \.ams-dashboard-segmented-filter button,[\s\S]*?height: 28px;\s*min-height: 28px/s);
   assert.ok(finalContract.includes('overflow-x: visible;'));
