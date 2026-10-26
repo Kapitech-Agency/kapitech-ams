@@ -895,7 +895,7 @@ test('Dashboard Overview exposes canonical quotation follow-up and functional co
   assert.ok(financeCard.includes('aria-pressed={overviewQuotationFilter === filter.key}'));
   assert.ok(financeCard.includes("onClick={() => setOverviewQuotationFilter(filter.key)}"));
   assert.ok(dashboard.includes("(quotation.status === 'approved' && !quotation.invoiceId)"), 'Approved quotations without a linked invoice stay in the active follow-up pipeline.');
-  assert.ok(financeCard.includes("['draft', 'review', 'sent'].includes(quotation.status)"));
+  assert.ok(dashboard.includes("['draft', 'review', 'sent'].includes(quotation.status)"), 'Draft, review, and sent quotations remain in the actionable current pipeline.');
   assert.ok(financeCard.includes('No quotations match this stage'));
   assert.ok(financeCard.includes('Quotation data unavailable'));
   assert.ok(financeCard.includes('No quotation records in {financeCurrency}'));
