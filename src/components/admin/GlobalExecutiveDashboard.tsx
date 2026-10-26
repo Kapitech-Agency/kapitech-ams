@@ -2448,6 +2448,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const overviewCashMovementMaximum = Math.max(1, ...overviewMoneyMovementRows.map((bucket) => bucket.cashReceived));
   const overviewExpenseMovementMaximum = Math.max(1, ...overviewMoneyMovementRows.map((bucket) => bucket.recordedExpenses));
   const overviewFinanceTrendHasRecords = overviewFinanceTrendRows.some((bucket) => bucket.primary > 0 || bucket.secondary > 0);
+  const overviewFinanceChartRows = overviewFinanceTrendRows.length
+    ? overviewFinanceTrendRows.map((bucket) => overviewFinanceTrendHasRecords
+      ? bucket
+      : { ...bucket, primary: 0, secondary: 0, tertiary: 0 })
+    : buildRecentFinancialTrend([], []);
   const projectRiskBreakdown: DonutPoint[] = operationalSnapshot.projects === null
     ? []
     : buildProjectDeliveryBreakdown(rawProjectRows).map((item) => ({ label: item.label, value: item.value, tone: item.tone }));
@@ -3029,9 +3034,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--finance ams-dashboard-finance-panel"
                   bodyClassName="ams-dashboard-finance-body p-4 sm:p-5"
                   actions={(
-                    <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                      Open Finance <ArrowUpRight size={13} aria-hidden="true" />
-                    </Link>
+                    <div className="ams-dashboard-card-header-actions ams-dashboard-finance-header-actions">
+                      <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-finance-period-controls">
+                        <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Finance reporting period" mode={overviewFinancePeriodMode} value={overviewFinancePeriodValue} periodLabel={overviewFinancePeriodLabel} options={overviewFinancePeriodOptions} onModeChange={(mode, value) => { setOverviewFinancePeriodMode(mode); setOverviewFinancePeriodValue(value); }} onValueChange={setOverviewFinancePeriodValue} />
+                      </div>
+                      <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="ams-dashboard-card-action inline-flex items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                        Open Finance <ArrowUpRight size={13} aria-hidden="true" />
+                      </Link>
+                    </div>
                   )}
                 >
                   <div className="ams-finance-primary-grid grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
@@ -3061,7 +3071,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </p>
                       </div>
 
-                      <div data-ams-feature-slug="dashboard-finance-control" className="ams-finance-control-links flex flex-wrap gap-2 border-t border-line pt-3">
+                      <div data-ams-feature-slug="dashboard-finance-control" className="ams-finance-control-links flex flex-wrap gap-2">
                         {canOpenInvoiceRegister ? (
                           <Link to="/admin/finance?tab=accounts-receivable" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                             <ReceiptText size={12} aria-hidden="true" /> Receivables <ArrowUpRight size={11} aria-hidden="true" />
@@ -3075,15 +3085,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="ams-finance-trend-region ams-dashboard-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0" data-ams-feature-slug="dashboard-finance-trend">
+                    <div className="ams-finance-trend-region ams-dashboard-finance-trend-region min-w-0" data-ams-feature-slug="dashboard-finance-trend">
                       <div className="ams-finance-trend-heading mb-3 flex flex-wrap items-center justify-between gap-3">
                         <div className="min-w-0">
                           <h3 className="text-xs font-semibold text-fg">Invoices vs expenses</h3>
                           <p className="ams-finance-trend-description mt-1 text-[10px] leading-4 text-muted">Issued invoices by invoice date · expenses by record date</p>
                         </div>
-                        <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-finance-period-controls">
-                          <DashboardCalendarPeriodFilter caption="Finance period" ariaLabel="Finance reporting period" mode={overviewFinancePeriodMode} value={overviewFinancePeriodValue} periodLabel={overviewFinancePeriodLabel} options={overviewFinancePeriodOptions} onModeChange={(mode, value) => { setOverviewFinancePeriodMode(mode); setOverviewFinancePeriodValue(value); }} onValueChange={setOverviewFinancePeriodValue} />
-                        </div>
+
                       </div>
                       {operationalSnapshot.invoices === null || operationalSnapshot.expenses === null ? (
                         <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
@@ -3093,24 +3101,28 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             <p className="mt-1 break-words text-[11px] leading-4 text-muted">Invoice and expense sources are not both available to this role or service.</p>
                           </div>
                         </div>
-                      ) : !overviewFinanceTrendHasRecords ? (
-                        <DashboardEmptyState eyebrow="FINANCIAL MOVEMENT" icon={<CircleDollarSign size={17} aria-hidden="true" />} title="No eligible financial records" description="No issued-invoice or eligible-expense values are available for the selected currency and period." compact />
-                      ) : overviewFinanceTrendRows.length ? (
-                        <>
+                      ) : (
+                        <div className={['ams-finance-chart-stage', overviewFinanceTrendHasRecords ? '' : 'is-empty'].filter(Boolean).join(' ')}>
                           <TrendChart
-                            data={overviewFinanceTrendRows}
+                            data={overviewFinanceChartRows}
                             primaryLabel="Issued invoices"
                             secondaryLabel="Recorded expenses"
                             tertiaryLabel=""
                             primaryFormat={(value) => formatLiveMoney(value, financeCurrency)}
                             axisFormat={(value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: financeCurrency, notation: 'compact', maximumFractionDigits: 1 }).format(value)}
                             presentation="maven"
-                            ariaLabel={'Issued-invoice totals by invoice date and eligible expenses by recorded date. Scope: ' + describeFinancialTrendScope(overviewFinanceTrendRows, Boolean(overviewFinancePeriodRange), overviewFinancePeriodLabel) + '. This comparison is not posted profit or cash flow.'}
+                            ariaLabel={'Issued-invoice totals by invoice date and eligible expenses by recorded date. Scope: ' + describeFinancialTrendScope(overviewFinanceChartRows, Boolean(overviewFinancePeriodRange), overviewFinancePeriodLabel) + '. This comparison is not posted profit or cash flow.'}
                           />
-                          
-                        </>
-                      ) : (
-                        <DashboardEmptyState eyebrow="FINANCIAL MOVEMENT" icon={<CircleDollarSign size={17} aria-hidden="true" />} title="No trend buckets available" description="There are no comparable invoice and expense values for this period." compact />
+                          {!overviewFinanceTrendHasRecords ? (
+                            <div className="ams-finance-chart-empty-state" role="status">
+                              <div className="ams-finance-chart-empty-state__copy">
+                                <CircleDollarSign size={17} aria-hidden="true" />
+                                <p>No eligible financial records</p>
+                                <span>No invoice or eligible expense values were recorded in this period.</span>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -3122,7 +3134,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <h3>Cash &amp; expense movement</h3>
                           <p>Recorded receipts and eligible expenses by period bucket.</p>
                         </div>
-                        <span className="ams-finance-movement__period">{overviewFinancePeriodLabel || 'Selected period'}</span>
+                        
                       </div>
                       <div className={['ams-finance-movement__grid', canOpenInvoiceRegister && canOpenExpenseRegister ? 'is-balanced' : 'is-single'].join(' ')}>
                         {canOpenInvoiceRegister ? (
@@ -3187,7 +3199,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
                   {canOpenQuotationRegister ? (
                     <section
-                      className="ams-quotation-follow-up mt-4 border-t border-line pt-4"
+                      className="ams-quotation-follow-up mt-4"
                       data-ams-feature-slug="dashboard-commercial-quotation-pipeline"
                       aria-label="Quotation follow-up"
                     >
@@ -3419,7 +3431,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
 <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Team and client delivery">
             <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-team-workload" aria-label="Team workload">
-              <AdminPanel title="Team workload" className="h-full ams-overview-panel ams-dashboard-team-panel" bodyClassName="p-4 sm:p-5 ams-dashboard-team-body">
+              <AdminPanel
+                title="Team workload"
+                className="h-full ams-overview-panel ams-dashboard-team-panel"
+                bodyClassName="p-4 sm:p-5 ams-dashboard-team-body"
+                actions={canOpenTimeLogs ? (
+                  <div className="ams-dashboard-card-header-actions ams-dashboard-team-header-actions">
+                    <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-time-period-controls">
+                      <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
+                    </div>
+                    <Link to="/admin/time-logs" className="ams-dashboard-card-action inline-flex items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Time Logs <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                  </div>
+                ) : undefined}
+              >
                 <section className="ams-dashboard-team-tasks" data-ams-feature-slug="dashboard-task-load-by-owner" aria-label="Open tasks by owner">
                   <div className="mb-3 flex items-baseline justify-between gap-2">
                     <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
@@ -3457,15 +3481,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   )}
                 </section>
 
-                <section className="ams-dashboard-team-time mt-5 border-t border-line pt-4" data-ams-feature-slug="dashboard-recorded-time-by-person" aria-label="Recorded time by person">
+                <section className="ams-dashboard-team-time mt-5" data-ams-feature-slug="dashboard-recorded-time-by-person" aria-label="Recorded time by person">
                   <div className="ams-dashboard-team-time__header mb-3 flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
                       <p className="mt-1 text-[10px] leading-4 text-muted">Logged hours · not capacity</p>
                     </div>
-                    <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-time-period-controls">
-                      <DashboardCalendarPeriodFilter caption="Time period" ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
-                    </div>
+
                   </div>
                   {!canOpenTimeLogs || operationalSnapshot.timeLogs === null ? (
                     <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
@@ -3492,7 +3514,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       ))}
                     </div>
                   )}
-                  {canOpenTimeLogs ? <Link to="/admin/time-logs" className="ams-dashboard-card-action mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                  
                 </section>
               </AdminPanel>
             </section>
@@ -3589,7 +3611,43 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--list ams-overview-panel--activity ams-dashboard-activity-panel"
                   bodyClassName="p-0"
                   actions={(
-                    <Link to="/admin/settings?tab=audit" className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                    <div className="ams-dashboard-card-header-actions ams-dashboard-activity-header-actions">
+                      <div className={['ams-dashboard-activity-calendar-filter', activityCalendarOpen ? 'is-open' : '', activityTimeFilter === 'custom' ? 'has-custom-range' : ''].filter(Boolean).join(' ')}>
+                                                <button ref={activityCalendarTriggerRef} type="button" className="ams-dashboard-activity-calendar-trigger" aria-label="Filter activity by time window" aria-expanded={activityCalendarOpen} aria-controls={activityCalendarOpen ? activityCalendarPanelId : undefined} onClick={() => setActivityCalendarOpen((open) => !open)}>
+                                                  <CalendarDays size={14} aria-hidden="true" />
+                                                  <span>{activityTimeFilter === '7' ? 'Last 7 days' : activityTimeFilter === '30' ? 'Last 30 days' : activityTimeFilter === '90' ? 'Last 90 days' : activityTimeFilter === 'custom' ? 'Custom range' : 'All loaded dates'}</span>
+                                                  <ChevronDown size={12} className={activityCalendarOpen ? 'is-open' : ''} aria-hidden="true" />
+                                                </button>
+                                                {activityCalendarOpen ? (
+                                                  <DropdownPortal
+                                                    open={activityCalendarOpen}
+                                                    anchorRef={activityCalendarTriggerRef}
+                                                    onClose={() => setActivityCalendarOpen(false)}
+                                                    align="right"
+                                                    className="ams-popover-surface ams-dashboard-activity-calendar-panel"
+                                                  >
+                                                    <div id={activityCalendarPanelId} className="ams-dashboard-activity-calendar-panel__content" role="group" aria-label="Activity calendar filter options">
+                                                      <div className="ams-dashboard-activity-calendar-panel__heading">
+                                                        <div><p>Time window</p><span>Choose a quick range or set exact dates</span></div>
+                                                        <button type="button" aria-label="Close activity calendar" onClick={() => setActivityCalendarOpen(false)}><span>Done</span></button>
+                                                      </div>
+                                                      <div className="ams-dashboard-activity-calendar-presets" role="group" aria-label="Activity date presets">
+                                                        {([{ value: '7', label: '7 days' }, { value: '30', label: '30 days' }, { value: '90', label: '90 days' }, { value: 'custom', label: 'Custom' }, { value: 'all', label: 'All dates' }] as Array<{ value: DashboardActivityTimeFilter; label: string }>).map((preset) => (
+                                                          <button key={preset.value} type="button" aria-pressed={activityTimeFilter === preset.value} onClick={() => { setActivityTimeFilter(preset.value); setActivityPage(1); setActivityCalendarOpen(preset.value === 'custom'); }}>{preset.label}</button>
+                                                        ))}
+                                                      </div>
+                                                      {activityTimeFilter === 'custom' ? (
+                                                        <div className="ams-dashboard-activity-date-range" role="group" aria-label="Custom activity date range">
+                                                          <label className="ams-dashboard-activity-date"><span>From</span><input type="date" aria-label="Recent activity start date" value={activityStartDate} max={activityEndDate || undefined} onChange={(event) => { setActivityStartDate(event.target.value); setActivityPage(1); }} /></label>
+                                                          <label className="ams-dashboard-activity-date"><span>To</span><input type="date" aria-label="Recent activity end date" value={activityEndDate} min={activityStartDate || undefined} onChange={(event) => { setActivityEndDate(event.target.value); setActivityPage(1); }} /></label>
+                                                        </div>
+                                                      ) : null}
+                                                    </div>
+                                                  </DropdownPortal>
+                                                ) : null}
+                                              </div>
+                      <Link to="/admin/settings?tab=audit" className="ams-dashboard-card-action inline-flex items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                    </div>
                   )}
                 >
                   {!dashboardOverview.recentActivityDataAvailable ? (
@@ -3618,40 +3676,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <span>Actor</span>
                           <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[150px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
-                        <div className={['ams-dashboard-activity-calendar-filter', activityCalendarOpen ? 'is-open' : '', activityTimeFilter === 'custom' ? 'has-custom-range' : ''].filter(Boolean).join(' ')}>
-                          <button ref={activityCalendarTriggerRef} type="button" className="ams-dashboard-activity-calendar-trigger" aria-label="Filter activity by time window" aria-expanded={activityCalendarOpen} aria-controls={activityCalendarOpen ? activityCalendarPanelId : undefined} onClick={() => setActivityCalendarOpen((open) => !open)}>
-                            <CalendarDays size={14} aria-hidden="true" />
-                            <span>{activityTimeFilter === '7' ? 'Last 7 days' : activityTimeFilter === '30' ? 'Last 30 days' : activityTimeFilter === '90' ? 'Last 90 days' : activityTimeFilter === 'custom' ? 'Custom range' : 'All loaded dates'}</span>
-                            <ChevronDown size={12} className={activityCalendarOpen ? 'is-open' : ''} aria-hidden="true" />
-                          </button>
-                          {activityCalendarOpen ? (
-                            <DropdownPortal
-                              open={activityCalendarOpen}
-                              anchorRef={activityCalendarTriggerRef}
-                              onClose={() => setActivityCalendarOpen(false)}
-                              align="right"
-                              className="ams-popover-surface ams-dashboard-activity-calendar-panel"
-                            >
-                              <div id={activityCalendarPanelId} className="ams-dashboard-activity-calendar-panel__content" role="group" aria-label="Activity calendar filter options">
-                                <div className="ams-dashboard-activity-calendar-panel__heading">
-                                  <div><p>Time window</p><span>Choose a quick range or set exact dates</span></div>
-                                  <button type="button" aria-label="Close activity calendar" onClick={() => setActivityCalendarOpen(false)}><span>Done</span></button>
-                                </div>
-                                <div className="ams-dashboard-activity-calendar-presets" role="group" aria-label="Activity date presets">
-                                  {([{ value: '7', label: '7 days' }, { value: '30', label: '30 days' }, { value: '90', label: '90 days' }, { value: 'custom', label: 'Custom' }, { value: 'all', label: 'All dates' }] as Array<{ value: DashboardActivityTimeFilter; label: string }>).map((preset) => (
-                                    <button key={preset.value} type="button" aria-pressed={activityTimeFilter === preset.value} onClick={() => { setActivityTimeFilter(preset.value); setActivityPage(1); setActivityCalendarOpen(preset.value === 'custom'); }}>{preset.label}</button>
-                                  ))}
-                                </div>
-                                {activityTimeFilter === 'custom' ? (
-                                  <div className="ams-dashboard-activity-date-range" role="group" aria-label="Custom activity date range">
-                                    <label className="ams-dashboard-activity-date"><span>From</span><input type="date" aria-label="Recent activity start date" value={activityStartDate} max={activityEndDate || undefined} onChange={(event) => { setActivityStartDate(event.target.value); setActivityPage(1); }} /></label>
-                                    <label className="ams-dashboard-activity-date"><span>To</span><input type="date" aria-label="Recent activity end date" value={activityEndDate} min={activityStartDate || undefined} onChange={(event) => { setActivityEndDate(event.target.value); setActivityPage(1); }} /></label>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </DropdownPortal>
-                          ) : null}
-                        </div>
+                        
                         <label className="ams-dashboard-activity-filter">
                           <span>Order</span>
                           <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />

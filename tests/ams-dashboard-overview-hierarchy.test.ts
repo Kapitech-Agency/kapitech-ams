@@ -233,6 +233,40 @@ test('Project registry sits beside compact service-line filters in the Project P
   assert.ok(styles.includes('.ams-project-registry-action'));
 });
 
+test('Dashboard card-local calendars sit in card headers, dropdown widths are stable, and empty Finance trends preserve their plot', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const portfolioStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
+  const finance = overview.slice(financeStart, portfolioStart);
+  const teamStart = overview.indexOf('data-ams-feature-slug="dashboard-team-workload"');
+  const clientStart = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"', teamStart);
+  const team = overview.slice(teamStart, clientStart);
+  const activityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  const activity = overview.slice(activityStart);
+
+  assert.ok(finance.indexOf('data-ams-feature-slug="dashboard-finance-period-controls"') < finance.indexOf('data-ams-feature-slug="dashboard-finance-trend"'));
+  assert.ok(finance.includes('data={overviewFinanceChartRows}'));
+  assert.ok(finance.includes('ams-finance-chart-empty-state'));
+  assert.ok(dashboard.includes('const overviewFinanceChartRows = overviewFinanceTrendRows.length'));
+  assert.ok(dashboard.includes('primary: 0, secondary: 0, tertiary: 0'));
+  assert.ok(team.indexOf('dashboard-time-period-controls') < team.indexOf('data-ams-feature-slug="dashboard-recorded-time-by-person"'));
+  assert.ok(team.includes('ams-dashboard-team-header-actions'));
+  assert.ok(activity.indexOf('Filter activity by time window') < activity.indexOf('ams-dashboard-activity-tools'));
+  assert.ok(activity.includes('ams-dashboard-activity-header-actions'));
+  assert.ok(styles.includes('.ams-calendar-period-filter {'));
+  assert.ok(styles.includes('width: 232px;'));
+  assert.ok(styles.includes('width: 178px;'));
+  assert.ok(styles.includes('.ams-dashboard-finance-panel .ams-finance-control-links'));
+  assert.ok(styles.includes('.ams-finance-chart-empty-state'));
+  assert.ok(styles.includes('align-items: stretch;'));
+  assert.ok(styles.includes('.ams-dashboard-toolbar > .ams-dashboard-view-tabs::-webkit-scrollbar'));
+  assert.ok(styles.includes('.ams-project-progress-header-actions .ams-project-registry-action'));
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');

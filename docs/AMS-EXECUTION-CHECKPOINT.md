@@ -642,3 +642,12 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Replaced the active tab underline and internal card/list dividers with soft selected surfaces, spacing, row hover states and restrained typography. Major cards keep a subtle outer boundary; internal groups rely on visual rhythm instead of horizontal rules.
 - Finance and Team Workload retain their own per-card date controls. Recent Activity retains search, actor/severity/time filters, custom date range, sort order, page size and pagination; table rows use soft surfaces instead of grid lines.
 - UI, regression tests and execution checkpoint updated together. Verify Quality Gate on the resulting commit. No API, database, authentication, permission, financial calculation or source-record changes.
+
+
+## 0.5 Dashboard per-card filters and Finance chart refinement — 27 October 2026
+
+- Moved the Finance reporting-period selector to the Finance card header, the recorded-time period selector to Team Workload's header, and the Recent Activity date-window picker to the Recent Activity header. Controls have fixed widths so selected labels no longer resize the card toolbar.
+- Finance now keeps its trend plot visible when source data is available but the selected period has no eligible values: both chart series use zero points and a centered empty-state overlay explains the absence of records. Unavailable invoice/expense sources remain a separate unavailable state.
+- Removed Finance content separators and made the inner layout rely on spacing and subdued surfaces. Project Portfolio is explicitly stretched to the same desktop row height as Finance; compact project service-line controls align to the registry action.
+- Refined the Dashboard header/shortcuts, removed horizontal tab overflow, unified quick-action heights, and tightened Team Workload plus Recent Activity responsive controls. Recent Activity retains its canonical search, actor/severity filters, date window, sort order and pagination.
+- Source data, permissions, routes, business calculations and backend/API/database code are unchanged. Validate Quality Gate on this exact SHA and continue to treat production visual inspection as a separate acceptance step.
