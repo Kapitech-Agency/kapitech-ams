@@ -2725,7 +2725,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                         </>
                       ) : (
-                        <DashboardEmptyState eyebrow="DELIVERY HORIZON" tone="success" icon={<CalendarDays size={16} aria-hidden="true"} />} title="No upcoming commitments" description="No dated open commitments fall within the next 30 days." compact />
+                        <DashboardEmptyState eyebrow="DELIVERY HORIZON" tone="success" icon={<CalendarDays size={16} aria-hidden="true" />}} title="No upcoming commitments" description="No dated open commitments fall within the next 30 days." compact />
                       )}
                     </div>
                     {upcomingCommitments.length === 0 ? (
@@ -2840,7 +2840,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                         </div>
                       ) : !overviewFinanceTrendHasRecords ? (
-                        <DashboardEmptyState eyebrow="FINANCIAL MOVEMENT" icon={<CircleDollarSign size={17} aria-hidden="true"} />} title="No eligible financial records" description="No issued-invoice or eligible-expense values are available for the selected currency and period." compact />
+                        <DashboardEmptyState eyebrow="FINANCIAL MOVEMENT" icon={<CircleDollarSign size={17} aria-hidden="true" />}} title="No eligible financial records" description="No issued-invoice or eligible-expense values are available for the selected currency and period." compact />
                       ) : overviewFinanceTrendRows.length ? (
                         <>
                           <TrendChart
