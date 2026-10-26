@@ -7112,14 +7112,13 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   line-height: 14px;
   font-weight: 550;
   white-space: nowrap;
-  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-filter-group .ams-dashboard-filter-option:hover:not(:disabled):not([aria-pressed="true"]) {
   border-color: color-mix(in srgb, var(--accent) 25%, var(--line));
   background: color-mix(in srgb, var(--accent) 7%, var(--panel));
   color: var(--text);
-  transform: translateY(-1px);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-filter-group .ams-dashboard-filter-option[aria-pressed="true"],
@@ -7138,7 +7137,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-filter-group .ams-dashboard-filter-option:active:not(:disabled) {
-  transform: translateY(0);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-filter-group .ams-dashboard-filter-option:focus-visible {
