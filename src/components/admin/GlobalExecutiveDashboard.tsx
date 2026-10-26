@@ -2475,7 +2475,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <section className={['min-w-0', canOpenProjects ? 'min-[1100px]:col-span-5' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
               <AdminPanel
                 title="Needs attention"
-                className="h-full ams-overview-panel ams-overview-panel--attention"
+                className="h-full ams-overview-panel ams-overview-panel--attention ams-dashboard-attention-panel"
                 bodyClassName="p-0"
                 actions={dashboardOverview.attentionItemsDataAvailable ? (
                   <div className="flex flex-wrap items-center gap-2">
@@ -2485,7 +2485,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   </div>
                 ) : undefined}
               >
-                <div data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
+                <div className="ams-dashboard-attention-list" data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
                   {!dashboardOverview.attentionItemsDataAvailable ? (
                     <div className="p-3 sm:p-4" role="status">
                       <div className="ams-dashboard-state ams-dashboard-state--compact">
@@ -2514,29 +2514,29 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;
                         const severityLabel = tone === 'danger' ? 'Urgent' : tone === 'warning' ? 'Attention' : 'Info';
                         return (
-                          <article key={String(item.id || category + '-' + item.title || index)} className="flex min-w-0 items-start gap-3 px-4 py-3">
-                            <span className={['mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full', tone === 'danger' ? 'bg-danger' : tone === 'warning' ? 'bg-warning' : 'bg-info'].join(' ')} aria-hidden="true" />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
+                          <article key={String(item.id || category + '-' + item.title || index)} className="ams-dashboard-attention-item flex min-w-0 items-start gap-3 px-4 py-3">
+                            <span className={['ams-dashboard-attention-item__marker', tone === 'danger' ? 'is-urgent' : tone === 'warning' ? 'is-warning' : 'is-info'].join(' ')} aria-hidden="true" />
+                            <div className="ams-dashboard-attention-item__body min-w-0 flex-1">
+                              <div className="ams-dashboard-attention-item__heading flex flex-wrap items-center gap-2">
                                 <p className="break-words text-xs font-semibold text-fg">{item.title || 'Attention item'}</p>
                                 <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[tone]].join(' ')}>{severityLabel}</span>
                               </div>
-                              {item.description ? <p className="mt-1 line-clamp-1 break-words text-[11px] leading-4 text-muted">{item.description}</p> : null}
-                              {safeDestination ? <Link to={safeDestination} className="mt-1.5 inline-flex min-h-7 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{category === 'Finance' ? 'Receivables' : category === 'Delivery' ? 'Delivery' : category === 'Sales' ? 'Inbox' : 'Review'} <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                              {item.description ? <p className="ams-dashboard-attention-item__description mt-1 line-clamp-2 break-words text-[11px] leading-4 text-muted">{item.description}</p> : null}
+                              {safeDestination ? <Link to={safeDestination} className="ams-dashboard-attention-item__action mt-1.5 inline-flex min-h-7 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{category === 'Finance' ? 'Receivables' : category === 'Delivery' ? 'Delivery' : category === 'Sales' ? 'Inbox' : 'Review'} <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                             </div>
                           </article>
                         );
                       })}
-                      {overviewAttentionItems.length > 4 ? <p className="border-t border-line px-4 py-2 text-[10px] text-muted">Showing 4 of {overviewAttentionItems.length} exceptions.</p> : null}
+                      {overviewAttentionItems.length > 4 ? <p className="ams-dashboard-attention-list__footnote border-t border-line px-4 py-2 text-[10px] text-muted">Showing 4 of {overviewAttentionItems.length} exceptions.</p> : null}
                     </div>
                   )}
                 </div>
 
                 {canOpenInbox ? (
-                  <div className="border-t border-line" data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
-                    <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="ams-dashboard-inbox-triage border-t border-line" data-ams-feature-slug="dashboard-inbox-triage" aria-label="Inbound inquiry triage">
+                    <div className="ams-dashboard-inbox-triage__header flex items-center justify-between gap-3 px-4 py-3">
                       <div>
-                        <h3 className="text-xs font-semibold text-fg">Inbox</h3>
+                        <h3 className="text-xs font-semibold text-fg">Inbox triage</h3>
                         
                       </div>
                       <Link to="/admin/inbox?view=messages" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Inbox <ArrowUpRight size={12} aria-hidden="true" /></Link>
@@ -2547,13 +2547,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       <p className="px-4 pb-4 text-[11px] text-muted" role="status">Inbox data unavailable; triage counts are not inferred.</p>
                     ) : (
                       <>
-                        <div className="grid grid-cols-3 gap-3 border-y border-line bg-bg/60 px-4 py-3">
+                        <div className="ams-dashboard-inbox-metrics grid grid-cols-3 gap-3 border-y border-line bg-bg/60 px-4 py-3">
                           {[
                             { label: 'New', value: inboxTriageSummary.newCount },
                             { label: 'Unassigned', value: inboxTriageSummary.unassignedCount },
                             { label: 'High priority', value: inboxTriageSummary.highPriorityCount }
                           ].map((metric) => (
-                            <div key={metric.label} className="min-w-0 border-l border-line pl-2.5">
+                            <div key={metric.label} className="ams-dashboard-inbox-metric min-w-0 border-l border-line pl-2.5">
                               <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
                               <p className="mt-0.5 text-base font-semibold tabular-nums text-fg">{metric.value}</p>
                             </div>
@@ -2562,7 +2562,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         {inboxTriageSummary.actionable.length ? (
                           <div className="divide-y divide-line">
                             {inboxTriageSummary.actionable.slice(0, 2).map((lead) => (
-                              <article key={lead.id} className="flex min-w-0 items-center justify-between gap-3 px-4 py-2.5">
+                              <article key={lead.id} className="ams-dashboard-inbox-item flex min-w-0 items-center justify-between gap-3 px-4 py-2.5">
                                 <div className="min-w-0">
                                   <p className="truncate text-xs font-medium text-fg">{lead.fullName || 'Inbound contact'}</p>
                                   <p className="mt-0.5 truncate text-[10px] text-muted">{lead.company || 'Company not provided'} · {lead.status || 'Status unavailable'}</p>
@@ -2780,7 +2780,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               >
                 <AdminPanel
                   title="Finance"
-                  className="h-full ams-overview-panel ams-overview-panel--finance"
+                  className="h-full ams-overview-panel ams-overview-panel--finance ams-dashboard-finance-panel"
                   bodyClassName="p-4 sm:p-5"
                   actions={(
                     <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2788,16 +2788,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </Link>
                   )}
                 >
-                  <div className="grid min-w-0 gap-5 min-[900px]:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
-                    <div className="flex min-w-0 flex-col justify-between gap-5">
+                  <div className="ams-finance-primary-grid grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
+                    <div className="ams-finance-primary-metric flex min-w-0 flex-col gap-4">
                       <div>
-                        <p className="text-xs font-medium text-muted">{canOpenInvoiceRegister ? 'Outstanding receivables' : 'Expenses recorded in period'}</p>
-                        <p className="mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">
+                        <div className="ams-finance-primary-metric__label">
+                          <p className="text-xs font-medium text-muted">{canOpenInvoiceRegister ? 'Outstanding receivables' : 'Expenses recorded in period'}</p>
+                          <span className="ams-finance-primary-metric__icon" aria-hidden="true"><CircleDollarSign size={15} /></span>
+                        </div>
+                        <p className="ams-finance-primary-metric__value mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">
                           {canOpenInvoiceRegister
                             ? outstandingValueAvailable && liveOutstanding !== null ? formatLiveMoney(liveOutstanding, financeCurrency) : '—'
                             : expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}
                         </p>
-                        <p className="ams-finance-receivables__context mt-1.5 text-[11px] leading-4 text-muted" role="status">
+                        <p className="ams-finance-primary-metric__context ams-finance-receivables__context mt-1.5 text-[11px] leading-4 text-muted" role="status">
                           {canOpenInvoiceRegister
                             ? operationalSnapshot.invoices === null
                               ? 'Invoice source unavailable.'
@@ -2827,7 +2830,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
 
                     <div className="ams-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0" data-ams-feature-slug="dashboard-finance-trend">
-                      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                      <div className="ams-finance-trend-heading mb-3 flex flex-wrap items-baseline justify-between gap-2">
                         <h3 className="text-xs font-semibold text-fg">Invoices vs expenses</h3>
                         <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Recent 30 days'}</span>
                       </div>
@@ -3021,7 +3024,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                     ? 'Expired · ' + formatDashboardDate(quotation.validUntil)
                                     : 'Valid until ' + formatDashboardDate(quotation.validUntil);
                                 return (
-                                  <article key={quotation.id} className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                                  <article key={quotation.id} className="ams-finance-quotation-row flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                     <div className="min-w-0 flex-1">
                                       <div className="flex flex-wrap items-center gap-2">
                                         <p className="break-words text-xs font-semibold text-fg">{quotation.quotationNumber || quotation.title}</p>
@@ -3061,7 +3064,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               >
                 <AdminPanel
                   title="Projects"
-                  className="h-full ams-overview-panel ams-overview-panel--projects"
+                  className="h-full ams-overview-panel ams-overview-panel--projects ams-dashboard-projects-panel"
                   bodyClassName="p-4 sm:p-5"
                   actions={(
                     <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -3074,7 +3077,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   ) : rawProjectRows.length === 0 ? (
                     <DashboardEmptyState eyebrow="PROJECT PORTFOLIO" icon={<FolderKanban size={17} aria-hidden="true" />} title="No project records yet" description="Portfolio metrics and service-line distribution appear when the Projects register contains records." compact />
                   ) : (
-                    <div className="space-y-4">
+                    <div className="ams-project-portfolio-body space-y-4">
                       <div className="ams-project-summary-grid grid grid-cols-3 gap-2" aria-label="Current project portfolio metrics">
                         <div className="ams-project-summary-item" data-ams-feature-slug="dashboard-active-project-count">
                           <span className="ams-project-summary-item__icon" aria-hidden="true"><FolderKanban size={14} /></span>
@@ -3097,7 +3100,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <DashboardEmptyState eyebrow="PROJECT PORTFOLIO" icon={<FolderKanban size={17} aria-hidden="true" />} title="No active project distribution" description="Portfolio risk and workload visuals appear when active projects are available." compact />
                       ) : (
                         <>
-                          <div className="grid min-w-0 gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
+                          <section className="ams-project-risk-section">
+                            <div className="ams-project-risk-section__heading">
+                              <h3>Portfolio signals</h3>
+                              <span>Current status and deadline mix</span>
+                            </div>
+                            <div className="ams-project-risk-layout grid min-w-0 gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
                             {projectRiskBreakdown.reduce((sum, item) => sum + item.value, 0) > 0 ? (
                               <DonutChart data={projectRiskBreakdown} ariaLabel="Active projects grouped by saved risk and deadline signals" showLegend={false} centerLabel="Active" presentation="maven" />
                             ) : (
@@ -3107,7 +3115,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               {projectRiskBreakdown.map((item) => {
                                 const toneClass = item.tone === 'danger' ? 'bg-danger' : item.tone === 'warning' ? 'bg-warning' : 'bg-success';
                                 return (
-                                  <div key={item.label} className="flex items-center justify-between gap-3 border-b border-line py-1.5 last:border-b-0">
+                                  <div key={item.label} className="ams-project-risk-row flex items-center justify-between gap-3 border-b border-line py-1.5 last:border-b-0">
                                     <span className="flex min-w-0 items-center gap-2 text-[11px] text-muted">
                                       <span className={['h-2 w-2 shrink-0 rounded-full', toneClass].join(' ')} aria-hidden="true" />
                                       <span className="break-words">{item.label}</span>
@@ -3118,15 +3126,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               })}
                             </div>
                           </div>
+                        </section>
 
-                          <div className="border-t border-line pt-3">
-                            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                        <section className="ams-project-workload border-t border-line pt-3">
+                            <div className="ams-project-workload__heading mb-3 flex flex-wrap items-baseline justify-between gap-2">
                               <h3 className="text-xs font-semibold text-fg">Creative & IT workload</h3>
+                              <span>Open tasks by service line</span>
                               
                             </div>
-                            <div className="space-y-3">
+                            <div className="ams-project-workload__rows space-y-3">
                               {serviceLineSummaries.map((line) => (
-                                <div key={line.key} className="min-w-0 space-y-1.5" data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}>
+                                <div key={line.key} className="ams-project-workstream min-w-0 space-y-1.5" data-ams-feature-slug={'dashboard-workstream-open-task-load-' + line.key}>
                                   <div className="flex items-baseline justify-between gap-3">
                                     <span className="min-w-0 text-xs font-medium text-fg">{line.label}</span>
                                     <span className="shrink-0 text-[10px] tabular-nums text-muted">{line.projectCount} projects{canOpenTasks && operationalSnapshot.tasks !== null ? ' · ' + line.openTaskCount + ' open tasks' : ''}</span>
@@ -3141,7 +3151,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 </div>
                               ))}
                             </div>
-                          </div>
+                        </section>
                         </>
                       )}
                     </div>
@@ -3314,7 +3324,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <section className="min-w-0 min-[1100px]:col-span-12" data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
                 <AdminPanel
                   title="Recent activity"
-                  className="h-full ams-overview-panel ams-overview-panel--list"
+                  className="h-full ams-overview-panel ams-overview-panel--list ams-overview-panel--activity ams-dashboard-activity-panel"
                   bodyClassName="p-0"
                   actions={(
                     <Link to="/admin/settings?tab=audit" className="inline-flex min-h-9 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
@@ -3347,15 +3357,18 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(timestamp) + ' UTC'
                           : 'Time not recorded';
                         return (
-                          <article key={String(activity.id || activity.timestamp || index)} className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
-                            <div className="flex min-w-0 items-start gap-3">
-                              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted"><Clock3 size={14} aria-hidden="true" /></span>
-                              <div className="min-w-0">
-                                <p className="break-words text-xs font-medium text-fg">{activity.action || 'Recorded audit event'}</p>
-                                <p className="mt-0.5 break-words text-[10px] text-muted">{activity.actor ? 'By ' + activity.actor : 'By system'} · {timestampLabel}</p>
+                          <article key={String(activity.id || activity.timestamp || index)} className="ams-dashboard-activity-row">
+                            <div className="ams-dashboard-activity-row__event flex min-w-0 items-start gap-3">
+                              <span className="ams-dashboard-activity-row__icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted"><Clock3 size={14} aria-hidden="true" /></span>
+                              <div className="ams-dashboard-activity-row__main min-w-0">
+                                <p className="ams-dashboard-activity-row__action break-words text-xs font-medium text-fg">{activity.action || 'Recorded audit event'}</p>
                               </div>
                             </div>
-                            <span className={'shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium ' + severityClasses}>{severityLabel}</span>
+                            <div className="ams-dashboard-activity-row__meta">
+                              <span className="ams-dashboard-activity-row__actor">{activity.actor ? 'By ' + activity.actor : 'By system'}</span>
+                              <time className="ams-dashboard-activity-row__time" dateTime={timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toISOString() : undefined}>{timestampLabel}</time>
+                            </div>
+                            <span className={'ams-dashboard-activity-row__severity shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium ' + severityClasses}>{severityLabel}</span>
                           </article>
                         );
                       })}

@@ -85,6 +85,44 @@ test('Dashboard Overview empty states are contextual, action-aware and distinct 
   assert.ok(overview.includes('DashboardUnavailable'), 'Unavailable-source states must stay distinct from genuine empty states.');
 });
 
+test('Dashboard Needs Attention, Finance, Projects and Recent Activity use deliberate card hierarchies', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+
+  for (const marker of [
+    'ams-dashboard-attention-panel',
+    'ams-dashboard-attention-item',
+    'ams-dashboard-inbox-metrics',
+    'ams-dashboard-finance-panel',
+    'ams-finance-primary-grid',
+    'ams-finance-primary-metric',
+    'ams-dashboard-projects-panel',
+    'ams-project-risk-section__heading',
+    'ams-project-workload__heading',
+    'ams-dashboard-activity-row',
+    'ams-dashboard-activity-row__meta',
+    'ams-dashboard-activity-row__severity'
+  ]) assert.ok(dashboard.includes(marker), 'Missing redesigned focus-card element: ' + marker);
+
+  for (const selector of [
+    '.ams-dashboard-attention-item__marker.is-urgent',
+    '.ams-dashboard-inbox-metric',
+    '.ams-finance-primary-grid',
+    '.ams-finance-movement-card',
+    '.ams-project-risk-layout',
+    '.ams-project-workstream',
+    '.ams-dashboard-activity-row',
+    '@media (max-width: 759px)'
+  ]) assert.ok(styles.includes(selector), 'Missing focus-card visual rule: ' + selector);
+
+  assert.ok(dashboard.includes('activity.actor'));
+  assert.ok(dashboard.includes('activity.timestamp'));
+  assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
+  assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-finance-trend"'));
+  assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-project-portfolio"'));
+  assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-recent-activity"'));
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');

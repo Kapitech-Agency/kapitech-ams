@@ -1256,3 +1256,647 @@
   background: color-mix(in srgb, var(--success) 7%, var(--panel));
   color: var(--success);
 }
+
+
+/* Focus-card refinement: clearer card headers, predictable internal rhythm, and aligned data columns.
+   All rules are scoped to Dashboard and preserve canonical records, links, and access checks. */
+.ams-shell .ams-dashboard .ams-overview-panel--attention > div:first-child,
+.ams-shell .ams-dashboard .ams-overview-panel--finance > div:first-child,
+.ams-shell .ams-dashboard .ams-overview-panel--projects > div:first-child,
+.ams-shell .ams-dashboard .ams-overview-panel--activity > div:first-child {
+  align-items: center;
+  padding: 15px 18px 14px;
+  border-bottom: 1px solid var(--dashboard-card-border);
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--attention > div:first-child h2,
+.ams-shell .ams-dashboard .ams-overview-panel--finance > div:first-child h2,
+.ams-shell .ams-dashboard .ams-overview-panel--projects > div:first-child h2,
+.ams-shell .ams-dashboard .ams-overview-panel--activity > div:first-child h2 {
+  font-size: 14px;
+  line-height: 19px;
+  letter-spacing: -0.015em;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel--attention > div:first-child > div:last-child,
+.ams-shell .ams-dashboard .ams-overview-panel--finance > div:first-child > div:last-child,
+.ams-shell .ams-dashboard .ams-overview-panel--projects > div:first-child > div:last-child,
+.ams-shell .ams-dashboard .ams-overview-panel--activity > div:first-child > div:last-child {
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-panel {
+  overflow: hidden;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-panel > div:last-child[class~="p-0"] {
+  padding: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-panel .ams-dashboard-attention-item {
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 74%, transparent);
+  transition: background-color 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-panel .ams-dashboard-attention-item:hover {
+  background: var(--dashboard-hover-surface);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__marker {
+  display: block;
+  align-self: stretch;
+  min-height: 36px;
+  border-radius: 999px;
+  background: var(--info);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__marker.is-urgent {
+  background: var(--danger);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__marker.is-warning {
+  background: var(--warning);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__body {
+  display: grid;
+  gap: 3px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__heading {
+  min-width: 0;
+  gap: 7px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__heading > p {
+  flex: 1 1 150px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__heading > span {
+  flex: 0 0 auto;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__description {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 15px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__action {
+  width: fit-content;
+  min-height: 26px;
+  margin-top: 1px;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-list__footnote {
+  background: color-mix(in srgb, var(--bg) 35%, var(--panel));
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage {
+  margin-top: 0;
+  border-top: 1px solid var(--dashboard-card-border);
+  background: color-mix(in srgb, var(--bg) 25%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage__header {
+  min-height: 45px;
+  padding: 12px 16px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage__header h3 {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage__header a {
+  min-height: 29px;
+  border-radius: 8px;
+  padding-inline: 9px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metrics {
+  gap: 8px;
+  padding: 0 14px 12px;
+  border: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel) 72%, var(--bg));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metric > p:first-child {
+  font-size: 10px;
+  line-height: 13px;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metric > p:last-child {
+  margin-top: 0;
+  font-size: 18px;
+  line-height: 22px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-item {
+  min-height: 54px;
+  padding: 10px 16px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-item > div p:first-child {
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-item > span {
+  max-width: 96px;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+/* Finance's headline metric and trend become separate, balanced work surfaces. */
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel > div:last-child:not([class~="p-0"]) {
+  padding: 16px 18px 18px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 15px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric {
+  min-width: 0;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 65%),
+    color-mix(in srgb, var(--bg) 43%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__label > p {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__value {
+  font-size: clamp(22px, 2.1vw, 31px);
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__context {
+  max-width: 40ch;
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-control-links {
+  gap: 7px;
+  padding-top: 12px;
+  border-color: color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-finance-control-links a {
+  min-height: 31px;
+  padding-inline: 10px;
+  border-radius: 9px;
+  font-size: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-region {
+  min-width: 0;
+  padding-top: 15px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-left: 0;
+  padding-left: 0;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-heading {
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-heading h3 {
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-heading > span {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement {
+  margin-top: 16px;
+  padding-top: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement__heading {
+  margin-bottom: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement__heading h3 {
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 9px;
+  padding: 13px;
+  border-radius: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card__copy > p.text-lg {
+  font-size: clamp(17px, 1.35vw, 21px);
+  line-height: 25px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card__chart .ams-money-movement-sparkline {
+  height: 43px;
+  gap: 5px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card__chart .ams-money-movement-sparkbar {
+  max-width: 22px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up {
+  margin-top: 17px;
+  padding-top: 15px;
+  border-color: color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up > div:first-child {
+  align-items: center;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up h3 {
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row {
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row > div:first-child {
+  min-width: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row > div:last-child {
+  flex: 0 0 auto;
+  min-width: 100px;
+}
+
+@media (min-width: 1100px) {
+  .ams-shell .ams-dashboard .ams-finance-primary-grid {
+    grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
+    gap: 17px;
+    align-items: stretch;
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-primary-metric {
+    min-height: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-trend-region {
+    padding-top: 0;
+    padding-left: 17px;
+    border-top: 0;
+    border-left: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  }
+}
+
+/* Project portfolio: grouped metrics first, then a labelled distribution and service-line comparison. */
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel > div:last-child:not([class~="p-0"]) {
+  padding: 16px 16px 18px;
+}
+
+.ams-shell .ams-dashboard .ams-project-portfolio-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-grid {
+  gap: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item {
+  min-height: 76px;
+  padding: 9px;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item__icon {
+  width: 23px;
+  height: 23px;
+  border-radius: 7px;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item p {
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item strong {
+  font-size: 22px;
+  line-height: 26px;
+  letter-spacing: -0.035em;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-section {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-section__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-section__heading h3 {
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-section__heading span {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 13px;
+  text-align: right;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-layout {
+  align-items: center;
+  gap: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-row {
+  gap: 8px;
+  padding: 7px 0;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-row > span:first-child {
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-row > span:last-child {
+  min-width: 22px;
+  text-align: right;
+  font-size: 11px;
+  line-height: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-project-workload {
+  margin-top: 0;
+  padding-top: 14px;
+  border-color: color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-project-workload__heading {
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-project-workload__heading h3 {
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard .ams-project-workload__heading > span {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-project-workstream {
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-project-workstream > div:first-child > span:first-child {
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-project-workstream > div:first-child > span:last-child {
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-project-workstream .h-2 {
+  height: 7px;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-project-risk-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-project-risk-layout > .ams-donut-chart--maven {
+    justify-self: center;
+  }
+
+  .ams-shell .ams-dashboard .ams-project-risk-section__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ams-shell .ams-dashboard .ams-project-risk-section__heading span {
+    text-align: left;
+  }
+
+  .ams-shell .ams-dashboard .ams-project-summary-item {
+    padding: 8px 7px;
+  }
+
+  .ams-shell .ams-dashboard .ams-project-summary-item strong {
+    font-size: 20px;
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-movement-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Recent Activity uses the available width intentionally: event, actor/time and severity align as columns. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-panel > div:last-child[class~="p-0"] {
+  padding: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(180px, .85fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 12px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  transition: background-color 150ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row:last-child {
+  border-bottom: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row:hover {
+  background: var(--dashboard-hover-surface);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__event {
+  gap: 11px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__icon {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+  border-radius: 9px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__action {
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__meta {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__actor,
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__time {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__actor {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__time {
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-row__severity {
+  min-width: 68px;
+  text-align: center;
+}
+
+@media (max-width: 759px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px 12px;
+    padding: 12px 14px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-row__event {
+    grid-column: 1;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-row__meta {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding-left: 41px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-row__severity {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-row__icon {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-attention-item,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-row,
+  .ams-shell .ams-dashboard .ams-finance-movement-card {
+    transition-duration: 0.01ms;
+  }
+}

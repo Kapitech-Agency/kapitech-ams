@@ -520,3 +520,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Contextual empty states use card-specific labels, a clear title, concise explanation and authorized next action when useful; confirmed clear states have restrained success treatment. Empty, filtered-empty and unavailable-source states remain distinct.
 - Validation baseline prior to this correction: Quality Gate on [e55fb6d3](https://github.com/Kapitech-Agency/kapitech-ams/commit/e55fb6d3a4a907c7ed7ee5c5c8756bac8151a44c) passed TypeScript but failed regression assertions that still expected the earlier row order and old empty-state copy. This commit updates those assertions together with the source-of-truth card contract. Verify CI and Quality Gate on the exact new SHA before claiming a pass.
 - No backend/API/database/authentication/permission/Finance formula changes.
+
+
+## 0.4 Dashboard focus-card visual refinement — 26 October 2026
+
+- Focused only on Needs attention, Finance, Projects portfolio and Recent activity. Needs attention now has consistent severity rails, a clearer row hierarchy and a separate Inbox triage sub-workspace with aligned count tiles. Finance separates its headline receivable metric from the trend, stages its movement visuals as supporting cards and keeps quotation follow-up as a distinct source-backed list. Projects has a labelled portfolio-signal distribution, clearer metric tiles and aligned Creative/IT workload bars. Recent Activity uses explicit event, actor/time and severity columns instead of leaving the centre of the full-width panel empty.
+- All changes are presentation-only. Existing canonical records, filters, source states, routes, authorization checks, financial semantics and empty/unavailable behavior remain unchanged. New regression assertions cover the four card structures and scoped CSS.
+- Quality Gate must pass on the exact commit before this slice is considered validated; production visual inspection at desktop/tablet/mobile widths remains a separate acceptance step.
