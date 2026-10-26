@@ -1239,6 +1239,7 @@ test('All Dashboard buttons use a shared size, shape, state, and keyboard-focus 
 
   assert.ok(controls.includes('--dashboard-control-height: 36px;'));
   assert.ok(controls.includes('--dashboard-control-compact-height: 32px;'));
+  assert.ok(controls.includes('.ams-portal-root .ams-calendar-period-filter__panel,\n.ams-portal-root .ams-dashboard-activity-calendar-panel {\n  --dashboard-control-height: 36px;'), 'Calendar portal must define the same tokens outside the Dashboard DOM.');
   assert.ok(controls.includes('--dashboard-control-radius: 8px;'));
   assert.ok(controls.includes('height: var(--dashboard-control-height);'));
   assert.ok(controls.includes('height: var(--dashboard-control-compact-height);'));

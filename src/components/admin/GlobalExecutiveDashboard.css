@@ -3981,7 +3981,14 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   color: var(--text);
 }
 
-/* The custom calendar lives in a portal, so it receives the same control geometry separately. */
+/* The custom calendar lives in a portal and receives the control tokens locally. */
+.ams-portal-root .ams-calendar-period-filter__panel,
+.ams-portal-root .ams-dashboard-activity-calendar-panel {
+  --dashboard-control-height: 36px;
+  --dashboard-control-compact-height: 32px;
+  --dashboard-control-radius: 8px;
+}
+
 .ams-portal-root .ams-calendar-period-filter__panel-heading > button,
 .ams-portal-root .ams-dashboard-activity-calendar-panel__heading > button,
 .ams-portal-root .ams-calendar-period-filter__group button,
