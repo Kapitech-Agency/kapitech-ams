@@ -160,8 +160,8 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.ok(dashboard.includes('setValue: setReportingPeriodValue'));
   assert.ok(dashboard.includes('clearFilter: clearReportingPeriodFilter'));
   assert.ok(dashboard.includes('aria-label="Reporting date range"'));
-  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
-  assert.ok(dashboard.includes('matchesDate(item.date)'));
+  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(overviewFinancePeriodMode, overviewFinancePeriodValue'));
+  assert.ok(dashboard.includes('matchesOverviewTimePeriod(item.date)'));
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);

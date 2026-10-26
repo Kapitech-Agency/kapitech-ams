@@ -79,7 +79,7 @@ test('Dashboard Overview empty states are contextual, action-aware and distinct 
     'TEAM WORKLOAD', 'RECORDED TIME', 'CLIENT DELIVERY', 'AUDIT ACTIVITY'
   ]) assert.ok(overview.includes('eyebrow="' + label + '"'), 'Missing contextual empty-state heading: ' + label);
   assert.ok(overview.includes('title="No active exceptions"'));
-  assert.ok(overview.includes('title="No recent activity"'));
+  assert.ok(overview.includes("'No recorded activity yet'"));
   assert.ok(overview.includes('title="No task records yet"'));
   assert.doesNotMatch(overview, /Nothing to show/);
   assert.ok(overview.includes('DashboardUnavailable'), 'Unavailable-source states must stay distinct from genuine empty states.');
@@ -99,9 +99,10 @@ test('Dashboard Needs Attention, Finance, Projects and Recent Activity use delib
     'ams-dashboard-projects-panel',
     'ams-project-risk-section__heading',
     'ams-project-workload__heading',
-    'ams-dashboard-activity-row',
-    'ams-dashboard-activity-row__meta',
-    'ams-dashboard-activity-row__severity'
+    'ams-dashboard-activity-table',
+    'ams-dashboard-activity-table__actor',
+    'ams-dashboard-activity-table__time',
+    'ams-dashboard-activity-table__severity'
   ]) assert.ok(dashboard.includes(marker), 'Missing redesigned focus-card element: ' + marker);
 
   for (const selector of [
@@ -111,7 +112,8 @@ test('Dashboard Needs Attention, Finance, Projects and Recent Activity use delib
     '.ams-finance-movement-card',
     '.ams-project-risk-layout',
     '.ams-project-workstream',
-    '.ams-dashboard-activity-row',
+    '.ams-dashboard-activity-table',
+    '.ams-dashboard-activity-tools',
     '@media (max-width: 759px)'
   ]) assert.ok(styles.includes(selector), 'Missing focus-card visual rule: ' + selector);
 
@@ -792,7 +794,7 @@ test('Dashboard Overview displays canonical recent audit activity only for permi
   assert.match(dashboard, /recentActivity: activityDataReturned \? data\.recentActivity as DashboardRecentActivity\[\] : previous\.recentActivity \?\? \[\]/);
   assert.ok(overview.includes('{canViewAuditLogs ? ('), 'Audit records must remain hidden without audit-log permission.');
   assert.ok(overview.includes('Recent activity unavailable'));
-  assert.ok(overview.includes('title="No recent activity"'));
+  assert.ok(overview.includes("'No recorded activity yet'"));
   assert.ok(overview.includes('/admin/settings?tab=audit'));
   const panel = overview.slice(activity);
   assert.match(panel, /activity\.action/);

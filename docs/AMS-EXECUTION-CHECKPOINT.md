@@ -537,3 +537,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Team workload receives a stable owner-row layout and its own recorded-time period filter.
 - Recent Activity is a semantic table with search, severity/time-window filters, row-count control, and local pagination, based only on loaded canonical audit records. Permission checks and audit fields remain unchanged.
 - All changes stay in frontend presentation/derived filtering. No backend, API, database, authentication, permission policy or Finance formula changes.
+
+
+## 0.6 Local date scope and test alignment — 26 October 2026
+
+- Overview hides the shared reporting-period controls. Finance period selection independently scopes invoice/expense trend and money movement. Recorded Time independently scopes team time logs. Upcoming Deadlines retains its operational horizon filter and Needs Attention has severity filtering.
+- Regression tests now assert the semantic Recent Activity table and its real filter controls, rather than the previous card/list markup and empty-state wording. Global reporting-period tests preserve shared controls for Performance/Analytics while allowing Recorded Time to use its own card-local scope.
+- Updated the Main-Content Restructuring Specification and Maven-inspired implementation guide so the source documentation no longer requires a global date selector on Overview.
+- TypeScript passed on the previous code SHA; this test/documentation correction must be validated by the next Quality Gate run before marking this slice complete.
