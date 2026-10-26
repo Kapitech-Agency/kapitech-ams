@@ -127,14 +127,17 @@ test('Dashboard Overview prioritizes Finance and Projects as distinct cards', as
   const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
   const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
-  assert.ok(scope >= 0 && finance > scope && projects > finance);
+  const financeMovement = overview.indexOf('data-ams-feature-slug="dashboard-finance-movement"');
+  assert.ok(scope >= 0 && finance > scope && financeMovement > finance && projects > financeMovement);
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-money-movement"'), false);
   assert.ok(progress > projects && attention > progress);
   assert.ok(taskQueue > attention && commitments > taskQueue);
   assert.ok(team > commitments && clientFocus > team && activity > clientFocus && shortcuts > activity);
   assert.equal(overview.includes('Priority 01'), false);
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false);
   assert.ok(overview.includes('<TrendChart') && overview.includes('<DonutChart'));
-  assert.ok(overview.includes('Cash received this month'));
+  assert.ok(overview.includes('Cash received'));
+  assert.ok(overview.includes('Expenses recorded'));
   assert.ok(overview.includes('Outstanding receivables'));
 });
 

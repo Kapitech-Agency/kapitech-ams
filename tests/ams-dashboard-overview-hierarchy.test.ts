@@ -85,13 +85,15 @@ test('Dashboard Client Delivery Focus prioritizes agency delivery risk before po
   const end = dashboard.indexOf('aria-label="Recent activity and shortcuts"', start);
   assert.ok(start >= 0 && end > start);
   const panel = dashboard.slice(start, end);
-  const metricOrder = ['Overdue tasks', 'Blocked tasks', 'Unassigned tasks', 'Tasks in review', 'Open tasks'];
+  const metricOrder = ["label: 'Overdue'", "label: 'Blocked'", "label: 'Unassigned'"];
   let previous = -1;
   for (const label of metricOrder) {
-    const position = panel.indexOf("label: '" + label + "'");
-    assert.ok(position > previous, 'Client risk indicators must remain ordered: ' + label);
+    const position = panel.indexOf(label);
+    assert.ok(position > previous, 'Client delivery signals must remain ordered: ' + label);
     previous = position;
   }
+  assert.ok(panel.indexOf('Open task load') >= 0);
+  assert.ok(panel.indexOf('In review {client.reviewTaskCount') > previous);
   assert.ok(panel.includes('clientDeliveryFocus.slice(0, 4).map((client) => ('));
   assert.ok(panel.includes('Overdue commitments remain'));
   assert.ok(panel.includes('No dated commitment in 30 days'));
@@ -109,8 +111,9 @@ test('Dashboard Overview client delivery focus groups saved client relationships
   assert.ok(dashboard.includes('const projectIdentity = projectClientById.get(task.projectId)'));
   assert.ok(dashboard.includes('ensureClient(task.clientId, task.clientName)'));
   assert.ok(panel.includes('active projects'));
-  assert.ok(panel.includes('Overdue tasks'));
-  assert.ok(panel.includes('Blocked tasks'));
+  assert.ok(panel.includes('Open task load'));
+  assert.ok(panel.includes("label: 'Overdue'"));
+  assert.ok(panel.includes("label: 'Blocked'"));
   assert.ok(panel.includes('client.overdueTaskCount'));
   assert.ok(panel.includes('client.nextCommitmentDate'));
   assert.ok(panel.includes('project.href && canOpenDashboardRoute(project.href)'));
@@ -159,7 +162,8 @@ test('Dashboard Overview Finance controls link to canonical ledgers only when ro
   assert.ok(finance.includes('Expenses recorded'));
   assert.ok(finance.includes('to="/admin/finance?tab=accounts-receivable"'));
   assert.ok(finance.includes('to="/admin/finance?tab=expenses"'));
-  assert.ok(finance.includes('Finance owns posted accounting truth'));
+  assert.ok(finance.includes('Issued invoice values by issue date vs eligible expenses by recorded date'));
+  assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-movement"'));
   assert.ok(finance.includes('<TrendChart'));
   assert.ok(finance.includes('primaryLabel="Issued invoices"'));
   assert.ok(finance.includes('secondaryLabel="Recorded expenses"'));

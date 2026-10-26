@@ -59,22 +59,27 @@ test('Dashboard deadline distribution counts all source commitments rather than 
 });
 
 
-test('Dashboard Finance card uses canonical invoice payments for cash received, never revenue aliases', () => {
+test('Dashboard Finance card uses canonical invoice payments for selected-period cash received, never revenue aliases', () => {
   const financeStart = dashboard.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const financeEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
   assert.ok(financeStart >= 0 && financeEnd > financeStart);
   const finance = dashboard.slice(financeStart, financeEnd);
-  const cashStart = dashboard.indexOf('const liveCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce');
+  const movementStart = finance.indexOf('data-ams-feature-slug="dashboard-finance-movement"');
+  assert.ok(movementStart > 0, 'Money movement should be nested inside the primary Finance card.');
+  assert.equal(dashboard.includes('data-ams-feature-slug="dashboard-money-movement"'), false,
+    'Money movement should not create a separate full-width row.');
+  const cashStart = dashboard.indexOf('const livePeriodCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce');
   const outstandingStart = dashboard.indexOf('const liveOutstanding = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce', cashStart);
   assert.ok(cashStart >= 0 && outstandingStart > cashStart);
   const cashSource = dashboard.slice(cashStart, outstandingStart);
   assert.ok(cashSource.includes('isIssuedInvoice(invoice)'));
   assert.ok(cashSource.includes('getPaymentRows(invoice)'));
-  assert.ok(cashSource.includes('currentMonthKey'));
-  assert.ok(finance.includes('Cash received this month'));
-  assert.ok(finance.includes("cashValueAvailable && liveCashCollected !== null ? formatLiveMoney(liveCashCollected, financeCurrency) : '—'"));
+  assert.ok(cashSource.includes('matchesOverviewFinancialPeriod(payment.date)'));
+  assert.ok(finance.includes('Cash received'));
+  assert.ok(finance.includes('cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : \'—\''));
   assert.ok(finance.includes('Outstanding receivables'));
-  assert.ok(finance.includes('Recorded expenses this month'));
+  assert.ok(finance.includes('Expenses recorded'));
+  assert.ok(finance.includes('livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency)'));
   assert.doesNotMatch(finance, /revenueThisMonth|cashCollectedMetric/);
 });
 
@@ -99,18 +104,22 @@ test('Dashboard reuses canonical Finance invoice, issue-date, and payment helper
   const trendStart = dashboard.indexOf('const aggregateFinancialTrend');
   const trendEnd = dashboard.indexOf('const buildRecentFinancialTrend', trendStart);
   const trend = dashboard.slice(trendStart, trendEnd);
-  const currentCash = dashboard.slice(dashboard.indexOf('const liveCashCollected'), dashboard.indexOf('const liveOutstanding'));
-  const currentOutstanding = dashboard.slice(dashboard.indexOf('const liveOutstanding'), dashboard.indexOf('const liveMonthlyExpenses'));
+  const cashStart = dashboard.indexOf('const livePeriodCashCollected');
+  const outstandingStart = dashboard.indexOf('const liveOutstanding', cashStart);
+  const expensesStart = dashboard.indexOf('const livePeriodExpenses', outstandingStart);
+  const currentCash = dashboard.slice(cashStart, outstandingStart);
+  const currentOutstanding = dashboard.slice(outstandingStart, expensesStart);
   const analyticsStart = dashboard.indexOf('const receivableInvoices = inCurrencyIssuedInvoices;');
   const analyticsEnd = dashboard.indexOf('const activeProjects =', analyticsStart);
   const analytics = dashboard.slice(analyticsStart, analyticsEnd);
   assert.ok(trend.includes('getInvoiceDate(invoice)') && trend.includes('isIssuedInvoice(invoice)'));
   assert.ok(currentCash.includes('getPaymentRows(invoice)') && currentCash.includes('isIssuedInvoice(invoice)'));
+  assert.ok(currentCash.includes('matchesOverviewFinancialPeriod(payment.date)'));
   assert.ok(currentOutstanding.includes('getInvoiceOutstanding(invoice)') && currentOutstanding.includes('isIssuedInvoice(invoice)'));
   assert.ok(dashboard.includes('const inCurrencyIssuedInvoices = inCurrencyInvoices.filter(isIssuedInvoice)'));
   assert.ok(analytics.includes('getInvoiceOutstanding(invoice)'));
-  assert.doesNotMatch(currentOutstanding, /const balance = invoice\.balanceDue/);
-  assert.doesNotMatch(analytics, /const paid = Number\(invoice\.amountPaid/);
+  assert.doesNotMatch(currentOutstanding, /const balance = invoice\\.balanceDue/);
+  assert.doesNotMatch(analytics, /const paid = Number\\(invoice\\.amountPaid/);
 });
 
 test('Dashboard Analytics does not turn currency-mismatched or quotation-only records into zero financial trends', () => {
@@ -157,7 +166,7 @@ test('Dashboard Finance and delivery cards distinguish unavailable sources from 
   assert.ok(overview.includes('Delivery schedule unavailable'));
   assert.ok(overview.includes('Invoice source unavailable.'));
   assert.ok(overview.includes('Expense source unavailable.'));
-  assert.ok(overview.includes('No eligible expense records are available to confirm a monthly total.'));
+  assert.ok(overview.includes('No eligible expense records are available to confirm a selected-period total.'));
 });
 
 test('Dashboard Overview does not duplicate unverified project progress or budget metrics', () => {
