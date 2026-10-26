@@ -764,7 +764,8 @@ test('Dashboard Overview exposes complete header navigation, reporting controls,
   assert.ok(dashboard.includes('onClick={clearReportingPeriodFilter}'));
   assert.ok(overview.includes('Finance & recorded time'));
   assert.ok(overview.includes('ams-overview-scope__meta'));
-  assert.ok(overview.includes('Finance trend: {overviewPeriodDisplay}'));
+  assert.ok(overview.includes('Projects & deadlines: current state'));
+  assert.ok(overview.includes('ams-overview-scope__value'));
 
   assert.ok(dashboard.includes("orderedActiveDashboardProjects\n    .filter((project) => overviewProjectFilter === 'all' || getDashboardServiceLine(project) === overviewProjectFilter)"));
   assert.ok(overview.includes('aria-label="Filter projects by service line"'));

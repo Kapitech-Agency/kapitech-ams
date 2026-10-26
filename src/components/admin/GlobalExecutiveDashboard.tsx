@@ -2253,15 +2253,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <p className="ams-finance-receivables__context mt-1.5 text-[11px] leading-4 text-muted" role="status">
                           {canOpenInvoiceRegister
                             ? operationalSnapshot.invoices === null
-                              ? 'Invoice source unavailable'
+                              ? 'Invoice source unavailable.'
                               : outstandingValueAvailable
                                 ? 'Open issued invoices'
                                 : 'No issued invoice records'
                             : operationalSnapshot.expenses === null
-                              ? 'Expense source unavailable'
+                              ? 'Expense source unavailable.'
                               : expensesValueAvailable
                                 ? 'Eligible expenses · selected period'
-                                : 'No eligible expense records'}
+                                : 'No eligible expense records are available to confirm a selected-period total.'}
                         </p>
                       </div>
 
