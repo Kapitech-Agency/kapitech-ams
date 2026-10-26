@@ -3628,7 +3628,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </div>
                       </div>
                     </>
-                  ) : null}
+                  )}
                 </AdminPanel>
               </section>
             ) : null}
