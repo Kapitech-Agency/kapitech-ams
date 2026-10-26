@@ -1139,7 +1139,7 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
 
   assert.ok(dashboard.includes('ams-dashboard-header-primary-actions'));
   assert.ok(overview.includes('ams-project-progress-toolbar'));
-  assert.ok(overview.includes('className="ams-dashboard-projects-body'));
+  assert.ok(overview.includes('ams-dashboard-projects-body'));
   assert.ok(overview.includes('className="ams-project-portfolio-body space-y-4'));
   assert.doesNotMatch(overview, /overflow-x-auto/, 'Dashboard Overview filters must wrap rather than scroll horizontally.');
 
