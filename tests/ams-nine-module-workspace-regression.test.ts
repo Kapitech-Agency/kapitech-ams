@@ -640,7 +640,12 @@ test('Dashboard header context follows the selected Overview, Performance, or An
   assert.match(dashboard, /Explore supported trends across financial movement, inquiry demand, and portfolio status/);
   assert.match(dashboard, /aria-label="Dashboard views"/);
   assert.match(dashboard, /aria-current=\{view === tab\.key \? 'page' : undefined\}/);
-  assert.match(dashboard, /aria-label="Reporting date range"/);
+  assert.doesNotMatch(dashboard, /aria-label="Reporting date range"/);
+  assert.ok(dashboard.includes('aria-label="Finance chart period"'));
+  assert.ok(dashboard.includes('aria-label="Recorded time period"'));
+  const adminLayout = await read('src/pages/admin/AdminLayout.tsx');
+  assert.ok(adminLayout.includes('const isDashboardOverview ='));
+  assert.ok(adminLayout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
   assert.match(dashboard, /aria-label="Reporting period type"/);
 });
 

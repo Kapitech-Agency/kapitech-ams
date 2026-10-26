@@ -562,3 +562,12 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Projects stretches to match Finance; the Finance line-chart region is taller to align with the receivables panel. Team Workload uses the same outer card/body rhythm as sibling cards.
 - Recent Activity adds actor and sort filters to search/severity/time filters, with numbered pagination, first/previous/next/last and 5/10/20 rows per page. Filters operate on already-loaded audit records only.
 - No API, database, authentication, role/permission, finance calculation or business-logic changes.
+
+
+## 0.5 Dashboard controls and card-level date refinement — 27 October 2026
+
+- Removed the shared reporting-period bar from Dashboard Overview only. It remains available for other workspaces and Dashboard Performance/Analytics; Overview uses Finance grouping/period, Recorded Time grouping/period, deadline/task filters and Recent Activity time-window/custom-range controls independently.
+- Standardized header quick actions, view tabs and Project service-line filters to consistent heights and responsive alignment. View tabs wrap instead of becoming a horizontal scrolling strip.
+- Kept Projects stretched to match the outer height of Finance. Team Workload owner signals and card-local period controls receive consistent alignment.
+- Recent Activity retains search, severity/actor/time-window filters, sorting, page-size and pagination; the new custom From/To range filters the audit records by the visible UTC date.
+- Updated regression assertions to reflect the removal of the Overview-wide date picker while retaining app-wide ReportingPeriodProvider coverage elsewhere. No API, database, access-policy or financial-calculation changes.

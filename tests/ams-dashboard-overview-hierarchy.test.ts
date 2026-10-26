@@ -131,7 +131,10 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const end = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, end);
-  assert.ok(dashboard.includes("{view !== 'overview' ? ("), 'Global reporting period controls must not appear on the Overview tab.');
+  const adminLayout = await read('src/pages/admin/AdminLayout.tsx');
+  assert.ok(adminLayout.includes('const isDashboardOverview ='));
+  assert.ok(adminLayout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
+  assert.equal(overview.includes('aria-label="Reporting date range"'), false, 'Overview should rely on card-local date controls.');
   assert.ok(!dashboard.includes('ams-dashboard-view-tabs flex min-w-0 items-center gap-1 overflow-x-auto'));
   assert.ok(dashboard.includes('className="ams-project-registry-action'));
   assert.ok(dashboard.includes('aria-label="Finance chart grouping"'));
@@ -901,7 +904,7 @@ test('Dashboard Overview keeps reporting controls card-local and operational fil
   assert.equal(dashboard.includes('setValue: setReportingPeriodValue'), false);
   assert.equal(dashboard.includes('clearFilter: clearReportingPeriodFilter'), false);
   assert.equal(dashboard.includes('getReportingYearOptions(currentYear, [], selectedReportingRange?.year ?? currentYear)'), false);
-  assert.ok(dashboard.includes('formatReportingPeriodLabel(value, reportPeriodMode, \'en-GB\')'));
+  assert.ok(dashboard.includes("getReportingPeriodRange(reportPeriodValue, reportPeriodMode, 'en-GB')"));
   assert.equal(dashboard.includes('aria-label="Previous reporting period"'), false);
   assert.equal(dashboard.includes('aria-label="Next reporting period"'), false);
   assert.equal(dashboard.includes('onClick={clearReportingPeriodFilter}'), false);

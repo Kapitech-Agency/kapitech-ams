@@ -44,7 +44,7 @@ type DashboardQuotationStatus = 'draft' | 'review' | 'approved' | 'sent' | 'acce
 type DashboardQuotationFilter = 'all' | 'review' | 'approved' | 'sent' | 'draft';
 type DashboardAttentionSeverityFilter = 'all' | 'urgent' | 'attention' | 'info';
 type DashboardActivitySeverityFilter = 'all' | 'critical' | 'warning' | 'info';
-type DashboardActivityTimeFilter = '7' | '30' | '90' | 'all';
+type DashboardActivityTimeFilter = '7' | '30' | '90' | 'custom' | 'all';
 type DashboardActivitySortOrder = 'newest' | 'oldest';
 
 type DashboardQuotation = {
@@ -1569,6 +1569,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [activitySeverityFilter, setActivitySeverityFilter] = useState<DashboardActivitySeverityFilter>('all');
   const [activityActorFilter, setActivityActorFilter] = useState('__all_actors__');
   const [activityTimeFilter, setActivityTimeFilter] = useState<DashboardActivityTimeFilter>('30');
+  const [activityStartDate, setActivityStartDate] = useState('');
+  const [activityEndDate, setActivityEndDate] = useState('');
   const [activitySortOrder, setActivitySortOrder] = useState<DashboardActivitySortOrder>('newest');
   const [activityPageSize, setActivityPageSize] = useState(5);
   const [activityPage, setActivityPage] = useState(1);
@@ -1830,9 +1832,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     [dashboardActivityActors]
   );
 
+  const isActivityCustomRangeInvalid = Boolean(activityStartDate && activityEndDate && activityStartDate > activityEndDate);
+  const isActivityCustomRangeUnselected = activityTimeFilter === 'custom' && !activityStartDate && !activityEndDate;
   const filteredDashboardRecentActivity = useMemo(() => {
     const query = activitySearch.trim().toLowerCase();
-    const cutoff = activityTimeFilter === 'all' ? null : Date.now() - Number(activityTimeFilter) * 24 * 60 * 60 * 1000;
+    const cutoff = ['7', '30', '90'].includes(activityTimeFilter) ? Date.now() - Number(activityTimeFilter) * 24 * 60 * 60 * 1000 : null;
+    if (isActivityCustomRangeInvalid || isActivityCustomRangeUnselected) return [];
     return (dashboardOverview.recentActivity || [])
       .filter((activity) => {
         const action = String(activity.action || 'Recorded audit event');
@@ -1840,8 +1845,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         if (query && !(action + ' ' + actor).toLowerCase().includes(query)) return false;
         if (activityActorFilter !== '__all_actors__' && actor !== activityActorFilter) return false;
         if (activitySeverityFilter !== 'all' && getDashboardActivitySeverity(activity.severity) !== activitySeverityFilter) return false;
-        if (cutoff !== null) {
-          const timestamp = activity.timestamp ? new Date(activity.timestamp).getTime() : Number.NaN;
+        const timestamp = activity.timestamp ? new Date(activity.timestamp).getTime() : Number.NaN;
+        if (activityTimeFilter === 'custom') {
+          if (!Number.isFinite(timestamp)) return false;
+          const eventDay = new Date(timestamp).toISOString().slice(0, 10);
+          if (activityStartDate && eventDay < activityStartDate) return false;
+          if (activityEndDate && eventDay > activityEndDate) return false;
+        } else if (cutoff !== null) {
           if (!Number.isFinite(timestamp) || timestamp < cutoff) return false;
         }
         return true;
@@ -1855,7 +1865,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         if (!Number.isFinite(rightTime)) return -1;
         return activitySortOrder === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
       });
-  }, [dashboardOverview.recentActivity, activitySearch, activityActorFilter, activitySeverityFilter, activityTimeFilter, activitySortOrder]);
+  }, [dashboardOverview.recentActivity, activitySearch, activityActorFilter, activitySeverityFilter, activityTimeFilter, activityStartDate, activityEndDate, activitySortOrder, isActivityCustomRangeInvalid, isActivityCustomRangeUnselected]);
   const activityPageCount = Math.max(1, Math.ceil(filteredDashboardRecentActivity.length / activityPageSize));
   const currentActivityPage = Math.min(activityPage, activityPageCount);
   const activityPageNumbers = useMemo(() => {
@@ -1863,7 +1873,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     const first = Math.max(1, Math.min(currentActivityPage - 2, activityPageCount - 4));
     return Array.from({ length: 5 }, (_, index) => first + index);
   }, [currentActivityPage, activityPageCount]);
-  const hasActivityFilters = Boolean(activitySearch.trim() || activityActorFilter !== '__all_actors__' || activitySeverityFilter !== 'all' || activityTimeFilter !== '30' || activitySortOrder !== 'newest');
+  const hasActivityFilters = Boolean(activitySearch.trim() || activityActorFilter !== '__all_actors__' || activitySeverityFilter !== 'all' || activityTimeFilter !== '30' || activityStartDate || activityEndDate || activitySortOrder !== 'newest');
   const visibleDashboardRecentActivity = filteredDashboardRecentActivity.slice(
     (currentActivityPage - 1) * activityPageSize,
     currentActivityPage * activityPageSize
@@ -2462,7 +2472,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   bodyClassName="p-0"
                   actions={(
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <div className="ams-dashboard-segmented-filter flex w-fit max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-bg p-[3px]" role="group" aria-label="Filter projects by service line">
+                      <div className="ams-dashboard-segmented-filter flex w-fit max-w-full flex-nowrap items-center gap-1 rounded-control border border-line bg-bg p-[3px]" role="group" aria-label="Filter projects by service line">
                         {([
                           { key: 'all', label: 'All', count: activeDashboardProjectFilterCounts.all },
                           { key: 'creative', label: 'Creative', count: activeDashboardProjectFilterCounts.creative },
@@ -2914,7 +2924,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="ams-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0" data-ams-feature-slug="dashboard-finance-trend">
+                    <div className="ams-finance-trend-region ams-dashboard-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0" data-ams-feature-slug="dashboard-finance-trend">
                       <div className="ams-finance-trend-heading mb-3 flex flex-wrap items-center justify-between gap-3">
                         <div className="min-w-0">
                           <h3 className="text-xs font-semibold text-fg">Invoices vs expenses</h3>
@@ -3468,13 +3478,25 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </label>
                         <label className="ams-dashboard-activity-filter">
                           <span>Time window</span>
-<CustomSelect aria-label="Filter activity by time window" value={activityTimeFilter} onChange={(value) => { setActivityTimeFilter(value as DashboardActivityTimeFilter); setActivityPage(1); }} options={[{ value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' }, { value: '90', label: 'Last 90 days' }, { value: 'all', label: 'All loaded dates' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[142px]" menuClassName="ams-dashboard-dropdown-menu" />
+<CustomSelect aria-label="Filter activity by time window" value={activityTimeFilter} onChange={(value) => { setActivityTimeFilter(value as DashboardActivityTimeFilter); setActivityPage(1); }} options={[{ value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' }, { value: '90', label: 'Last 90 days' }, { value: 'custom', label: 'Custom range' }, { value: 'all', label: 'All loaded dates' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[142px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
+                        {activityTimeFilter === 'custom' ? (
+                          <div className="ams-dashboard-activity-date-range" role="group" aria-label="Custom activity date range">
+                            <label className="ams-dashboard-activity-date">
+                              <span>From</span>
+                              <input type="date" aria-label="Recent activity start date" value={activityStartDate} max={activityEndDate || undefined} onChange={(event) => { setActivityStartDate(event.target.value); setActivityPage(1); }} />
+                            </label>
+                            <label className="ams-dashboard-activity-date">
+                              <span>To</span>
+                              <input type="date" aria-label="Recent activity end date" value={activityEndDate} min={activityStartDate || undefined} onChange={(event) => { setActivityEndDate(event.target.value); setActivityPage(1); }} />
+                            </label>
+                          </div>
+                        ) : null}
                         <label className="ams-dashboard-activity-filter">
                           <span>Order</span>
                           <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
-                        {hasActivityFilters ? <button type="button" className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivitySortOrder('newest'); setActivityPage(1); }}>Reset filters <RefreshCw size={12} aria-hidden="true" /></button> : null}
+                        {hasActivityFilters ? <button type="button" className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityPage(1); }}>Reset filters <RefreshCw size={12} aria-hidden="true" /></button> : null}
                       </div>
 
                       {filteredDashboardRecentActivity.length === 0 ? (
@@ -3482,11 +3504,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <DashboardEmptyState
                             eyebrow="AUDIT ACTIVITY"
                             icon={<Search size={17} aria-hidden="true" />}
-                            title={(dashboardOverview.recentActivity || []).length === 0 ? 'No recorded activity yet' : 'No activity matches these filters'}
-                            description={(dashboardOverview.recentActivity || []).length === 0 ? 'New audit events will appear when workspace actions are recorded.' : 'Adjust the search, actor, severity or time window to inspect other loaded events.'}
+                            title={(dashboardOverview.recentActivity || []).length === 0 ? 'No recorded activity yet' : isActivityCustomRangeUnselected ? 'Choose a custom date range' : isActivityCustomRangeInvalid ? 'Check the selected date range' : 'No activity matches these filters'}
+                            description={(dashboardOverview.recentActivity || []).length === 0 ? 'New audit events will appear when workspace actions are recorded.' : isActivityCustomRangeUnselected ? 'Choose a start date, an end date, or both to filter the loaded audit events.' : isActivityCustomRangeInvalid ? 'The start date must be on or before the end date.' : 'Adjust the search, actor, severity or date range to inspect other loaded events.'}
                             compact
                             action={(dashboardOverview.recentActivity || []).length > 0 ? (
-                              <button type="button" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivitySortOrder('newest'); setActivityPage(1); }} className="ams-dashboard-activity-reset">
+                              <button type="button" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityPage(1); }} className="ams-dashboard-activity-reset">
                                 Reset filters <RefreshCw size={11} aria-hidden="true" />
                               </button>
                             ) : undefined}
