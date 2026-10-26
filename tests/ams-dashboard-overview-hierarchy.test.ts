@@ -800,6 +800,8 @@ test('Dashboard header provides permission-aware invoice, project and refresh ac
   assert.equal(header.includes('/admin/tasks?create=1'), false);
   assert.ok(header.includes("'/admin/projects?create=1'"));
   assert.ok(header.includes('ams-dashboard-header-action--invoice'));
+  assert.ok(header.includes("title={canCreateInvoice ? 'Create a new invoice' : 'Open the invoice register'}"));
+  assert.ok(header.includes("title={canCreateProject ? 'Create a new project' : 'Open the Projects workspace'}"));
   assert.ok(header.includes('ams-dashboard-header-action--project'));
   assert.ok(header.includes('ams-dashboard-header-action--refresh'));
   assert.ok(header.includes("canCreateInvoice ? 'Create invoice' : 'Invoices'"));
@@ -815,6 +817,10 @@ test('Dashboard header provides permission-aware invoice, project and refresh ac
   assert.ok(header.includes('className="mb-0 ams-dashboard-page-header"'));
   assert.ok(styles.includes('.ams-dashboard-header-actions > a,'));
   assert.ok(styles.includes('.ams-dashboard-header-actions > a:focus-visible'));
+  assert.ok(styles.includes('.ams-dashboard-header-action--invoice.bg-accent'));
+  assert.ok(styles.includes('.ams-dashboard-header-action--invoice.border'));
+  assert.ok(styles.includes('grid-template-columns: minmax(0, 1fr) auto'));
+  assert.ok(styles.includes('border-bottom: 0'));
   assert.ok(styles.includes('.ams-dashboard-page-header h1'));
   assert.ok(styles.includes('border-radius: 10px'));
   assert.ok(styles.includes('border-bottom-color: var(--accent)'));

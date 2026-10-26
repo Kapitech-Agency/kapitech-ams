@@ -2096,6 +2096,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     : 'border border-line bg-panel text-fg hover:border-accent/30 hover:bg-panel-hover'
                 ].join(' ')}
                 aria-label={canCreateInvoice ? 'Create invoice' : 'Open invoices'}
+                title={canCreateInvoice ? 'Create a new invoice' : 'Open the invoice register'}
               >
                 <ReceiptText size={15} aria-hidden="true" />
                 {canCreateInvoice ? 'Create invoice' : 'Invoices'}
@@ -2106,6 +2107,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
                 className="ams-dashboard-header-action ams-dashboard-header-action--project inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 aria-label={canCreateProject ? 'Create project' : 'Open projects'}
+                title={canCreateProject ? 'Create a new project' : 'Open the Projects workspace'}
               >
                 <FolderKanban size={14} aria-hidden="true" />
                 {canCreateProject ? 'New project' : 'Projects'}

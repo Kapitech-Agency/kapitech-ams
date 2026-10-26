@@ -731,10 +731,13 @@
 
 /* Dashboard header layout: one clear title, one primary commercial action, compact secondary actions. */
 .ams-shell .ams-dashboard .ams-dashboard-page-header {
-  align-items: center;
-  gap: 22px;
-  padding-bottom: 12px;
-  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child {
@@ -758,6 +761,7 @@
 .ams-shell .ams-dashboard .ams-dashboard-header-actions {
   gap: 8px;
   flex-shrink: 0;
+  align-items: center;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-header-action {
@@ -768,14 +772,32 @@
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-header-action--invoice {
-  min-width: 132px;
+  min-width: 140px;
   padding-inline: 16px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-action--invoice.bg-accent {
   border-color: transparent;
+  background: var(--accent);
+  color: #fff;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-action--invoice.bg-accent:hover {
+  background: var(--accent-hover);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-action--invoice.border {
+  border-color: var(--dashboard-card-border);
+  background: var(--panel);
+  color: var(--text);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-header-action--project {
   min-width: 124px;
   font-weight: 500;
+  border-color: var(--dashboard-card-border);
+  background: var(--panel);
+  color: var(--text);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-header-action--refresh {
@@ -794,12 +816,32 @@
 }
 
 @media (min-width: 640px) {
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    width: auto;
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 1100px) {
   .ams-shell .ams-dashboard .ams-dashboard-page-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+    gap: 24px;
+    padding-bottom: 10px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child {
+    min-width: 0;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header > div:last-child {
+    width: auto;
+    justify-self: end;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-header-actions {
-    width: auto;
+    flex-wrap: nowrap;
     justify-content: flex-end;
   }
 }
@@ -808,6 +850,7 @@
   .ams-shell .ams-dashboard .ams-dashboard-page-header {
     align-items: stretch;
     gap: 14px;
+    padding-bottom: 4px;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-page-header h1 {
@@ -821,6 +864,7 @@
 
   .ams-shell .ams-dashboard .ams-dashboard-header-action--invoice {
     min-width: 0;
+    justify-content: center;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-header-action--project {
