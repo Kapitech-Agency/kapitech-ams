@@ -267,7 +267,7 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(dashboard.includes('buildRecentFinancialTrend(issuedInvoicesInSelectedCurrency, financeExpenseRows)'));
   assert.ok(dashboard.includes('The difference is an arithmetic comparison, not posted profit.'));
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const financeOverview = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
@@ -276,8 +276,8 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   const overviewAttention = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
   const deliveryDesk = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const deliveryCommitments = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
-  assert.ok(financeOverview >= 0 && projectPortfolio > financeOverview && projectProgress > projectPortfolio);
-  assert.ok(overviewAttention > projectProgress && deliveryDesk > overviewAttention && deliveryCommitments > deliveryDesk);
+  assert.ok(projectProgress >= 0 && overviewAttention > projectProgress && deliveryDesk > overviewAttention && deliveryCommitments > deliveryDesk);
+  assert.ok(financeOverview > deliveryCommitments && projectPortfolio > financeOverview);
   assert.equal(overview.includes('Priority 01'), false);
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false);
   assert.equal(overview.includes('title="Invoices vs expenses"'), false);
