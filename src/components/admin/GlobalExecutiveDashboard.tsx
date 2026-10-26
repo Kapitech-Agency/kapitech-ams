@@ -3119,18 +3119,22 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
                     <section className="ams-finance-movement" data-ams-feature-slug="dashboard-finance-movement" aria-label="Money movement">
                       <div className="ams-finance-movement__heading">
-                        <h3>Cash &amp; expense movement</h3>
-                        <span className="ams-finance-movement__period">Same period as the trend above</span>
+                        <div className="ams-finance-movement__title-group">
+                          <h3>Cash &amp; expense movement</h3>
+                          <p>Recorded receipts and eligible expenses by period bucket.</p>
+                        </div>
+                        <span className="ams-finance-movement__period">{overviewFinancePeriodLabel || 'Selected period'}</span>
                       </div>
                       <div className={['ams-finance-movement__grid', canOpenInvoiceRegister && canOpenExpenseRegister ? 'is-balanced' : 'is-single'].join(' ')}>
                         {canOpenInvoiceRegister ? (
-                          <div className="ams-finance-movement-card" data-ams-feature-slug="dashboard-cash-received" aria-label="Cash received">
+                          <div className="ams-finance-movement-card ams-finance-movement-card--cash" data-ams-feature-slug="dashboard-cash-received" aria-label="Cash received">
                             <div className="ams-finance-movement-card__copy min-w-0">
                               <div className="ams-finance-movement-card__label">
                                 <p className="text-[11px] font-medium text-muted">Cash received</p>
                                 <span className="ams-finance-movement-card__icon" aria-hidden="true"><ArrowUpRight size={13} /></span>
                               </div>
                               <p className="ams-finance-movement-card__value mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}</p>
+                              <p className="ams-finance-movement-card__context">Receipts recorded in this period</p>
                               
                             </div>
                             <div className="ams-finance-movement-card__chart">
@@ -3142,10 +3146,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                       return <span key={bucket.startDate} className="ams-money-movement-sparkbar" style={{ height: barHeight + '%' }} title={bucket.label + ': ' + formatLiveMoney(bucket.cashReceived, financeCurrency)} />;
                                     })}
                                   </div>
-                                  <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
+                                  <div className="ams-finance-movement-card__axis-labels mt-2 flex items-center justify-between gap-2 text-[10px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
                                 </>
                               ) : (
-                                <p className="flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.invoices === null ? 'Invoice source unavailable.' : cashValueAvailable ? 'Period trend unavailable.' : 'No issued invoice records are available for this currency.'}</p>
+                                <p className="ams-finance-movement-card__empty flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.invoices === null ? 'Invoice source unavailable.' : cashValueAvailable ? 'Period trend unavailable.' : 'No issued invoice records are available for this currency.'}</p>
                               )}
                             </div>
                           </div>
@@ -3158,6 +3162,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 <span className="ams-finance-movement-card__icon" aria-hidden="true"><ReceiptText size={13} /></span>
                               </div>
                               <p className="ams-finance-movement-card__value mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}</p>
+                              <p className="ams-finance-movement-card__context">Eligible expenses recorded in this period</p>
                               
                             </div>
                             <div className="ams-finance-movement-card__chart">
@@ -3172,7 +3177,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                   <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
                                 </>
                               ) : (
-                                <p className="flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.expenses === null ? 'Expense source unavailable.' : expensesValueAvailable ? 'Period trend unavailable.' : 'No eligible expense records are available for this currency.'}</p>
+                                <p className="ams-finance-movement-card__empty flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.expenses === null ? 'Expense source unavailable.' : expensesValueAvailable ? 'Period trend unavailable.' : 'No eligible expense records are available for this currency.'}</p>
                               )}
                             </div>
                           </div>

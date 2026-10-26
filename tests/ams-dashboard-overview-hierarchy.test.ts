@@ -1056,6 +1056,10 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
   assert.ok(overview.includes('setOverviewTaskFilter'));
   assert.ok(styles.includes('.ams-project-summary-grid'));
   assert.ok(styles.includes('.ams-finance-movement-card__icon'));
+  assert.ok(styles.includes('.ams-finance-movement-card__context'));
+  assert.ok(styles.includes('.ams-finance-movement-card__axis-labels'));
+  assert.ok(styles.includes('align-items: flex-end;'));
+  assert.ok(styles.includes('justify-content: space-between;'));
   assert.ok(styles.includes('.ams-dashboard-period-controls'));
   assert.equal(overview.includes('Priority 01'), false);
 });
@@ -1077,6 +1081,9 @@ test('Dashboard Finance layout follows the card width and keeps its financial se
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-trend"'));
   assert.ok(finance.includes('ariaLabel="Finance reporting period"'));
   assert.ok(finance.includes('ams-finance-movement-card__value'));
+  assert.ok(finance.includes('ams-finance-movement-card__context'));
+  assert.ok(finance.includes('ams-finance-movement-card--cash'));
+  assert.ok(finance.includes('ams-finance-movement__title-group'));
   assert.ok(finance.includes('Cash &amp; expense movement'));
   assert.ok(finance.includes('ams-quotation-follow-up__description'));
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-commercial-quotation-pipeline"'));

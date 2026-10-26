@@ -626,3 +626,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Refined the Finance headline metric, period-filter/chart region, cash/expense movement tiles and quotation follow-up list. Period controls remain local to Finance. The trend subtitle states the distinct invoice and expense date bases; movement values receive consistent type treatment; quotation follow-up includes a concise purpose line.
 - Existing records, filter behavior, routes, permissions, currencies, period calculations, invoice/expense semantics and empty/unavailable states are unchanged. Regression coverage now checks container-aware breakpoints and Finance section hierarchy.
 - Verify Quality Gate on the exact commit; rendered review of Finance at desktop, tablet and mobile widths remains required before visual sign-off.
+
+
+## 0.5 Finance composition and Cash & Expense Movement correction — 27 October 2026
+
+- Replaced the final stack of conflicting Finance CSS overrides with one responsive style contract scoped to the Finance card. The receivable headline and financial trend now read as one top-level analysis group without competing nested surfaces; the chart keeps its own card-local reporting period.
+- Reworked Cash & Expense Movement into two comparable tiles. Each tile places its primary value and contextual label before a full-width, baseline-aligned mini bar chart; cash receipts and eligible expense buckets retain their separate colors and canonical source calculations. The period chip reflects the Finance period selected above.
+- Quotation follow-up remains a distinct, filterable canonical register preview below the movement section. Existing role checks, date range semantics, source-unavailable states, invoice/expense formulas, currencies and routes are unchanged.
+- Regression assertions now cover the Cash & Expense Movement context, date scope, bar chart layout and responsive container variants. Confirm the new Quality Gate result for this exact commit; the unrelated CI dependency audit has historically flagged `body-parser@1.20.6`.

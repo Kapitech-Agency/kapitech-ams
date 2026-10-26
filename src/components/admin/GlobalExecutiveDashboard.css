@@ -3852,38 +3852,63 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 
-/* Finance card polish — one adaptive layout contract scoped to the Finance card.
-   The amount, trend, period movement and quotation queue retain their own data scope. */
+
+/* Finance workspace final visual contract.
+   One primary balance, one trend, two comparable movement tiles, then the quotation queue. */
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel {
   container-name: finance-card;
   container-type: inline-size;
+  display: flex;
   min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel > .ams-dashboard-finance-body {
   display: flex;
   min-width: 0;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 0;
   padding: 16px 18px 18px;
 }
 
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel > div:first-child {
+  align-items: center;
+  padding: 15px 18px 14px;
+  border-bottom: 1px solid var(--dashboard-card-border);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel > div:first-child h2 {
+  font-size: 14px;
+  line-height: 19px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-dashboard-card-action {
+  height: 32px;
+  min-height: 32px;
+  padding-inline: 10px;
+  font-size: 10px;
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-primary-grid {
   display: grid;
-  min-width: 0;
   grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
   gap: 14px;
+  min-width: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-primary-metric {
   display: flex;
   min-width: 0;
-  height: auto;
   min-height: 0;
+  height: auto;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 20px;
+  gap: 19px;
   padding: 16px;
   border: 1px solid var(--dashboard-card-border);
   border-radius: 12px;
@@ -3893,6 +3918,10 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-primary-metric__label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
 }
 
@@ -3904,8 +3933,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-primary-metric__value {
   max-width: 100%;
-  margin-top: 14px;
-  font-size: clamp(24px, 2.2cqi, 34px);
+  margin-top: 13px;
+  font-size: clamp(24px, 2.4cqi, 34px);
   line-height: 1.12;
   letter-spacing: -.045em;
   overflow-wrap: anywhere;
@@ -3920,13 +3949,20 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-primary-metric__icon {
+  display: grid;
   width: 30px;
   height: 30px;
-  flex-basis: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
   border-radius: 9px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  color: var(--muted);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-control-links {
+  display: flex;
+  flex-wrap: wrap;
   gap: 7px;
   margin-top: auto;
   padding-top: 13px;
@@ -3934,39 +3970,48 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-control-links a {
-  height: 31px;
+  display: inline-flex;
   min-height: 31px;
+  height: 31px;
+  align-items: center;
+  gap: 6px;
   padding-inline: 10px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 8px;
   font-size: 10px;
+  line-height: 14px;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-dashboard-finance-trend-region {
   display: flex;
   min-width: 0;
-  height: auto;
   min-height: 0;
+  height: auto;
   flex-direction: column;
   gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--dashboard-card-border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--bg) 36%, var(--panel));
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--dashboard-card-border);
+  border-radius: 0;
+  background: transparent;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-trend-heading {
   display: flex;
-  min-width: 0;
   width: 100%;
+  min-width: 0;
   flex: 0 0 auto;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 10px 14px;
   margin: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-trend-heading > div:first-child {
   min-width: 0;
-  flex: 1 1 140px;
+  flex: 1 1 160px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-trend-heading h3 {
@@ -3997,12 +4042,13 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-calendar-period-filter__trigger {
-  max-width: 220px;
   min-width: 0;
-  height: 36px;
-  min-height: 36px;
-  padding-inline: 9px;
+  max-width: 220px;
+  height: 34px;
+  min-height: 34px;
   gap: 7px;
+  padding-inline: 9px;
+  border-radius: 8px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-calendar-period-filter__trigger-copy {
@@ -4022,19 +4068,23 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-dashboard-finance-trend-region .ams-trend-chart__legend {
+  display: flex;
   flex: 0 0 auto;
   flex-wrap: wrap;
-  gap: 10px 14px;
+  gap: 9px 14px;
   margin-bottom: 8px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-dashboard-finance-trend-region .ams-trend-chart__plot {
+  display: block;
+  width: 100%;
   min-width: 0;
-  min-height: 180px;
+  min-height: 190px;
   height: auto;
   flex: 1 1 auto;
   aspect-ratio: auto;
-  border-radius: 8px;
+  border: 0;
+  border-radius: 9px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement {
@@ -4051,7 +4101,15 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px 12px;
-  margin-bottom: 11px;
+  margin-bottom: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement__title-group {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement__heading h3 {
@@ -4063,15 +4121,24 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   text-transform: none;
 }
 
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement__title-group > p {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement__period {
-  padding: 3px 7px;
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  padding: 4px 8px;
   border: 1px solid var(--dashboard-card-border);
-  border-radius: 6px;
+  border-radius: 7px;
   color: var(--muted);
   background: color-mix(in srgb, var(--bg) 40%, var(--panel));
   font-size: 9px;
   line-height: 12px;
-  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement__grid {
@@ -4082,67 +4149,156 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card {
-  display: grid;
+  display: flex;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: stretch;
-  gap: 10px;
-  padding: 12px 13px;
+  min-height: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid var(--dashboard-card-border);
   border-radius: 11px;
-  background: color-mix(in srgb, var(--bg) 37%, var(--panel));
+  background: color-mix(in srgb, var(--bg) 38%, var(--panel));
   box-shadow: none;
   transition: background-color 120ms ease, border-color 120ms ease;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 17%, var(--line));
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--line));
   background: var(--dashboard-hover-surface);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__copy {
+  display: flex;
   min-width: 0;
+  flex-direction: column;
+  gap: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__label {
+  display: flex;
   min-width: 0;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__label > p {
+  min-width: 0;
+  color: var(--muted);
   font-size: 10px;
   line-height: 14px;
-  font-weight: 550;
+  font-weight: 600;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__icon {
-  width: 26px;
-  height: 26px;
+  display: grid;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  place-items: center;
+  border: 1px solid var(--dashboard-card-border);
   border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 70%, var(--bg));
+  color: var(--series-2);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card--expenses .ams-finance-movement-card__icon {
+  color: var(--series-3);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__value {
-  margin-top: 7px;
-  font-size: clamp(17px, 1.25cqi, 21px);
-  line-height: 25px;
-  letter-spacing: -.025em;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: clamp(19px, 2.2cqi, 25px);
+  line-height: 1.15;
+  font-weight: 650;
+  letter-spacing: -.035em;
+  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__context {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__chart {
   min-width: 0;
+  width: 100%;
+  margin-top: auto;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__chart .ams-money-movement-sparkline {
-  height: 50px;
+  display: flex;
+  height: 58px;
+  min-width: 0;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 5px;
-  padding: 0 2px;
+  padding: 0 2px 2px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-radius: 0;
+  background:
+    linear-gradient(to top,
+      transparent 0,
+      transparent calc(33.333% - 1px),
+      color-mix(in srgb, var(--line) 38%, transparent) 33.333%,
+      transparent calc(33.333% + 1px),
+      transparent calc(66.666% - 1px),
+      color-mix(in srgb, var(--line) 38%, transparent) 66.666%,
+      transparent calc(66.666% + 1px));
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__chart .ams-money-movement-sparkbar {
-  max-width: 24px;
+  display: block;
+  min-width: 4px;
+  max-width: 32px;
+  flex: 1 1 10px;
   border-radius: 4px 4px 1px 1px;
+  background: var(--series-2);
+  opacity: .86;
+  transition: height 150ms ease, opacity 120ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__chart .ams-money-movement-sparkbar:hover {
+  opacity: 1;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-money-movement-sparkline--expenses .ams-money-movement-sparkbar {
+  background: var(--series-3);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__axis-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__axis-labels > span {
+  max-width: 48%;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__axis-labels > span:last-child {
+  text-align: right;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__empty {
+  min-height: 58px;
+  margin: 0;
+  padding: 8px 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up {
@@ -4225,15 +4381,14 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 
 @container finance-card (min-width: 620px) {
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-primary-grid {
-    grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
-    gap: 14px;
+    grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
+    gap: 16px;
     align-items: stretch;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-primary-metric,
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-dashboard-finance-trend-region {
     min-height: 296px;
-    height: auto;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-primary-metric {
@@ -4241,18 +4396,20 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-dashboard-finance-trend-region {
-    padding: 14px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card {
-    grid-template-columns: minmax(0, .9fr) minmax(105px, 1.1fr);
-    align-items: center;
+    padding: 0 0 0 16px;
+    border-top: 0;
+    border-left: 1px solid var(--dashboard-card-border);
   }
 }
 
 @container finance-card (min-width: 720px) {
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card {
+    min-height: 190px;
+    gap: 12px;
   }
 }
 
@@ -4272,19 +4429,13 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-dashboard-finance-trend-region {
-    padding: 13px;
+    padding-top: 14px;
+    border-top: 1px solid var(--dashboard-card-border);
+    border-left: 0;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement__grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card {
-    grid-template-columns: minmax(0, .9fr) minmax(125px, 1.1fr);
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row {
-    grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
   }
 }
 
@@ -4317,10 +4468,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
     max-width: none;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row {
     grid-template-columns: minmax(0, 1fr);
     gap: 7px;
@@ -4337,8 +4484,13 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
     padding: 12px;
   }
 
+  .ams-shell .ams-dashboard .ams-dashboard-finance-panel > div:first-child {
+    padding: 13px 12px 12px;
+  }
+
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card {
-    padding: 11px;
+    padding: 12px;
+    min-height: 0;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row {
@@ -4354,6 +4506,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 
 @media (prefers-reduced-motion: reduce) {
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card,
+  .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement-card__chart .ams-money-movement-sparkbar,
   .ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-control-links a {
     transition-duration: .01ms;
   }
