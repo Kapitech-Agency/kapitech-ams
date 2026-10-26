@@ -962,3 +962,13 @@ test('Dashboard Overview uses compact, consistent source states instead of overs
   assert.ok(styles.includes('.ams-dashboard-state--empty .ams-dashboard-state__icon'));
   assert.ok(styles.includes('@media (max-width: 599px)'));
 });
+
+
+test('Dashboard lead row uses compact gutters and prevents an empty stretched Projects panel', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  assert.match(styles, /\.ams-overview-card-row\s*\{\s*align-items:\s*stretch;\s*gap:\s*12px;/);
+  assert.match(styles, /\.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*\{\s*align-items:\s*start;\s*gap:\s*12px;/);
+  assert.match(styles, /section\[data-ams-feature-slug="dashboard-project-portfolio"\]\s*\{\s*align-self:\s*start;/);
+  assert.match(styles, /\.ams-overview-panel--projects\s*\{\s*height:\s*auto;/);
+  assert.match(styles, /\.ams-overview-panel > div:last-child:not\(\[class~="p-0"\]\)\s*\{\s*padding:\s*16px;/);
+});

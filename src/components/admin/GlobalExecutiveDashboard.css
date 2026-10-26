@@ -19,7 +19,22 @@
 
 .ams-shell .ams-dashboard .ams-overview-card-row {
   align-items: stretch;
-  gap: 16px;
+  gap: 12px;
+}
+
+/* The lead row is intentionally asymmetric: Finance is the analysis workspace;
+   the portfolio card should end with its content instead of stretching into empty space. */
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {
+  align-items: start;
+  gap: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
+  align-self: start;
+}
+
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-overview-panel--projects {
+  height: auto;
 }
 
 .ams-shell .ams-dashboard .ams-overview-scope {
@@ -71,7 +86,7 @@
 
 .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
   gap: 12px;
-  padding: 19px 20px 0;
+  padding: 16px 16px 0;
   border-bottom: 0;
   background: transparent;
 }
@@ -100,7 +115,7 @@
 }
 
 .ams-shell .ams-dashboard .ams-overview-panel > div:last-child:not([class~="p-0"]) {
-  padding: 16px 20px 20px;
+  padding: 16px;
 }
 
 .ams-shell .ams-dashboard .ams-overview-panel > div:last-child[class~="p-0"] {
@@ -321,7 +336,7 @@
   }
 
   .ams-shell .ams-dashboard .ams-overview-panel > div:last-child:not([class~="p-0"]) {
-    padding: 14px 16px 16px;
+    padding: 16px;
   }
 
   .ams-shell .ams-dashboard .ams-overview-panel--finance .ams-finance-trend-region {
