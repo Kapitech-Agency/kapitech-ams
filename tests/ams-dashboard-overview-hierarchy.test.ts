@@ -85,6 +85,19 @@ test('Dashboard Overview empty states are contextual, action-aware and distinct 
   assert.ok(overview.includes('DashboardUnavailable'), 'Unavailable-source states must stay distinct from genuine empty states.');
 });
 
+
+test('Dashboard hover states do not lift controls and exact-selector CSS overrides are consolidated', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  assert.doesNotMatch(dashboard, /hover:-translate-y-[\w-]+/);
+  assert.doesNotMatch(styles, /translateY\s*\(/i);
+  assert.doesNotMatch(styles, /\.ams-shell \.ams-dashboard button:hover:not\(:disabled\),\s*\.ams-shell \.ams-dashboard a:hover\s*\{[^}]*transform\s*:/s);
+  assert.ok(styles.includes('--dashboard-control-height: 36px'));
+  assert.ok(styles.includes('--dashboard-control-compact-height: 32px'));
+  assert.match(styles, /\.ams-dashboard-toolbar[^{}]*\.ams-dashboard-view-tabs|\.ams-dashboard-toolbar\s*>\s*\.ams-dashboard-view-tabs/);
+  const rules = styles.match(/\.ams-shell \.ams-dashboard \.ams-dashboard-header-actions\s*\{/g) || [];
+  assert.equal(rules.length, 1, 'Header action base layout should be defined once in the consolidated cascade.');
+});
 test('Dashboard Needs Attention, Finance, Projects and Recent Activity use deliberate card hierarchies', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');

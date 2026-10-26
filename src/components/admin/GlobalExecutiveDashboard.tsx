@@ -2496,9 +2496,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <Link
                 to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}
                 className={[
-                  'ams-dashboard-header-action ams-dashboard-header-action--invoice inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                  'ams-dashboard-header-action ams-dashboard-header-action--invoice inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-xs font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                   canCreateInvoice
-                    ? 'bg-accent text-white hover:-translate-y-px hover:bg-accent-hover'
+                    ? 'bg-accent text-white hover:bg-accent-hover'
                     : 'border border-line bg-panel text-fg hover:border-accent/30 hover:bg-panel-hover'
                 ].join(' ')}
                 aria-label={canCreateInvoice ? 'Create invoice' : 'Open invoices'}
@@ -2511,7 +2511,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             {canOpenProjects ? (
               <Link
                 to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
-                className="ams-dashboard-header-action ams-dashboard-header-action--project inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="ams-dashboard-header-action ams-dashboard-header-action--project inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-colors duration-150 hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 aria-label={canCreateProject ? 'Create project' : 'Open projects'}
                 title={canCreateProject ? 'Create a new project' : 'Open the Projects workspace'}
               >
@@ -2550,7 +2550,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               disabled={isRefreshing}
               aria-label="Refresh dashboard data"
               title="Refresh dashboard data"
-              className="ams-dashboard-header-action ams-dashboard-header-action--refresh inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="ams-dashboard-header-action ams-dashboard-header-action--refresh inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors duration-150 hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
               <span className="hidden min-[440px]:inline">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>

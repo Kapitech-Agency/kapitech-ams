@@ -609,3 +609,12 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 
 
 - Button consistency follow-up includes the Analytics report choice tiles and the Needs Attention "Show all levels" action, so those controls use the same selected-state and card-action styles. Calendar overlays define their own copy of the control tokens because they render outside the Dashboard DOM.
+
+
+## Dashboard control consistency and CSS cascade cleanup — 27 October 2026
+
+- Removed Tailwind hover-lift classes from Dashboard header actions and removed CSS translateY hover effects from controls, card surfaces and chart bars. Hover feedback now comes from background, border and text color rather than vertical movement.
+- Consolidated repeated exact-selector CSS rules per media/support context by keeping the effective declaration for each property and moving the unique declarations into one canonical rule. Empty duplicate rules and empty at-rule wrappers were removed. Calendar chevron rotation on open remains a state indicator; it is not a hover-lift effect.
+- Recent Activity remains a source-backed table with search, actor/severity/time-window filters, custom From/To dates, sort order, page size and pagination. Project filters, per-card date ranges, header button geometry and tab wrapping remain in place.
+- Validation requirement: Quality Gate must pass on the exact cleanup commit. Full AMS CI also runs a dependency audit; previous runs have failed on an existing high-severity advisory for body-parser@1.20.6, unrelated to this front-end change.
+- No backend, API, database, auth, permission, workflow or financial-calculation changes.
