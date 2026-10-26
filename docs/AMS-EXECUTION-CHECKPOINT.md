@@ -659,3 +659,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Recent Activity search is compact and beside its filters. Actor filter width follows the longest loaded option and remains stable while another actor is selected; controls reflow on narrow screens.
 - Recorded-time period control and Open Time Logs sit beside the Recorded time heading. Open Finance, View audit log and Project registry use the standardized action height.
 - Corrected the calendar year matcher so year navigation can identify four-digit year options. Presentation-only; no backend, API, database, permission or calculation changes.
+
+
+## 0.5 Recent Activity layout correction — 27 October 2026
+
+- Fixed the Recent Activity responsive filter grid where the search field could collapse into one cell instead of spanning the row on mobile, and conflicting fixed-width actor/period controls could crowd the toolbar at intermediate widths.
+- Replaced the oversized page-number/First/Last pagination cluster with a compact Rows + Previous / Page X of Y / Next control group. Search, actor, severity, sort order, date-window filter, custom date range, results count and page-size selection remain functional.
+- Reasserted a single final CSS contract for this card's header, filters, table columns, mobile actor treatment and pagination. Other Dashboard cards, business logic, data sources, permissions and backend remain untouched.
+- Quality Gate / AMS CI must be checked on this correction commit before marking it validated.

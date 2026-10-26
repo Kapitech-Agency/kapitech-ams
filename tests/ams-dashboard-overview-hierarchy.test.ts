@@ -176,6 +176,40 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   ]) assert.ok(styles.includes(selector), 'Missing layout rule: ' + selector);
 });
 
+test('Recent Activity layout keeps filters aligned and pagination compact', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const activityStart = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  const activityEnd = dashboard.indexOf('</AdminPanel>', activityStart);
+  const activity = dashboard.slice(activityStart, activityEnd);
+  const finalLayerStart = styles.lastIndexOf('/* Recent Activity — stable header, responsive filter grid, and compact pagination. */');
+  assert.ok(activityStart >= 0 && activityEnd > activityStart);
+  assert.ok(finalLayerStart >= 0, 'Recent Activity needs one canonical final layout layer.');
+  const finalLayer = styles.slice(finalLayerStart);
+  assert.ok(activity.includes('<table className="ams-dashboard-activity-table">'));
+  assert.ok(activity.includes('Search recent activity'));
+  assert.ok(activity.includes('Filter activity by actor'));
+  assert.ok(activity.includes('Filter activity by severity'));
+  assert.ok(activity.includes('Filter activity by time window'));
+  assert.ok(activity.includes('Recent activity rows per page'));
+  assert.ok(activity.includes('Page {currentActivityPage} of {activityPageCount}'));
+  assert.ok(activity.includes('Previous activity page'));
+  assert.ok(activity.includes('Next activity page'));
+  assert.equal(activity.includes('First activity page'), false);
+  assert.equal(activity.includes('Last activity page'), false);
+  assert.equal(activity.includes('Go to activity page'), false);
+  for (const selector of [
+    '.ams-dashboard-activity-tools',
+    '.ams-dashboard-activity-search',
+    '.ams-dashboard-activity-filter--actor',
+    '.ams-dashboard-activity-table',
+    '.ams-dashboard-activity-pagination',
+    '.ams-dashboard-activity-page-status',
+    '@media (max-width: 759px)',
+    '@media (max-width: 379px)'
+  ]) assert.ok(finalLayer.includes(selector), 'Missing clean Recent Activity layout rule: ' + selector);
+});
+
 test('Dashboard cards use soft surfaces and whitespace instead of decorative divider lines', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');

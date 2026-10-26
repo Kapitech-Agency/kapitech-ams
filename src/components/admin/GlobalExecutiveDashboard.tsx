@@ -2011,11 +2011,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, [dashboardOverview.recentActivity, activitySearch, activityActorFilter, activitySeverityFilter, activityTimeFilter, activityStartDate, activityEndDate, activitySortOrder, isActivityCustomRangeInvalid, isActivityCustomRangeUnselected]);
   const activityPageCount = Math.max(1, Math.ceil(filteredDashboardRecentActivity.length / activityPageSize));
   const currentActivityPage = Math.min(activityPage, activityPageCount);
-  const activityPageNumbers = useMemo(() => {
-    if (activityPageCount <= 5) return Array.from({ length: activityPageCount }, (_, index) => index + 1);
-    const first = Math.max(1, Math.min(currentActivityPage - 2, activityPageCount - 4));
-    return Array.from({ length: 5 }, (_, index) => first + index);
-  }, [currentActivityPage, activityPageCount]);
   const hasActivityFilters = Boolean(activitySearch.trim() || activityActorFilter !== '__all_actors__' || activitySeverityFilter !== 'all' || activityTimeFilter !== '30' || activityStartDate || activityEndDate || activitySortOrder !== 'newest');
   const visibleDashboardRecentActivity = filteredDashboardRecentActivity.slice(
     (currentActivityPage - 1) * activityPageSize,
@@ -3753,7 +3748,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       )}
 
                       <div className="ams-dashboard-activity-pagination">
-                        <p>
+                        <p aria-live="polite">
                           {filteredDashboardRecentActivity.length > 0
                             ? 'Showing ' + activityFirstRow + '–' + activityLastRow + ' of ' + filteredDashboardRecentActivity.length + ' matching loaded events'
                             : 'No matching loaded events'}
@@ -3761,16 +3756,39 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <div className="ams-dashboard-activity-pagination__controls">
                           <label>
                             <span>Rows</span>
-<CustomSelect aria-label="Recent activity rows per page" value={String(activityPageSize)} onChange={(value) => { setActivityPageSize(Number(value)); setActivityPage(1); }} options={[{ value: '5', label: '5 rows' }, { value: '10', label: '10 rows' }, { value: '20', label: '20 rows' }]} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[88px]" menuClassName="ams-dashboard-dropdown-menu" />
+                            <CustomSelect
+                              aria-label="Recent activity rows per page"
+                              value={String(activityPageSize)}
+                              onChange={(value) => { setActivityPageSize(Number(value)); setActivityPage(1); }}
+                              options={[{ value: '5', label: '5 rows' }, { value: '10', label: '10 rows' }, { value: '20', label: '20 rows' }]}
+                              size="xs"
+                              className="ams-dashboard-custom-select"
+                              triggerClassName="ams-dashboard-select-trigger w-[88px]"
+                              menuClassName="ams-dashboard-dropdown-menu"
+                            />
                           </label>
                           <div className="ams-dashboard-activity-page-buttons" role="group" aria-label="Recent activity pages">
-                            <button type="button" className="ams-dashboard-page-step" aria-label="First activity page" disabled={currentActivityPage <= 1} onClick={() => setActivityPage(1)}>First</button>
-                            <button type="button" className="ams-dashboard-page-step" aria-label="Previous activity page" disabled={currentActivityPage <= 1} onClick={() => setActivityPage((page) => Math.max(1, Math.min(page, activityPageCount) - 1))}><ChevronLeft size={13} aria-hidden="true" /><span>Previous</span></button>
-                            {activityPageNumbers[0] > 1 ? <><button type="button" className="ams-dashboard-page-number" aria-label="Go to activity page 1" onClick={() => setActivityPage(1)}>1</button>{activityPageNumbers[0] > 2 ? <span className="ams-dashboard-page-ellipsis" aria-hidden="true">…</span> : null}</> : null}
-                            {activityPageNumbers.map((page) => <button key={page} type="button" className="ams-dashboard-page-number" aria-label={'Go to activity page ' + page} aria-current={currentActivityPage === page ? 'page' : undefined} onClick={() => setActivityPage(page)}>{page}</button>)}
-                            {activityPageNumbers[activityPageNumbers.length - 1] < activityPageCount ? <>{activityPageNumbers[activityPageNumbers.length - 1] < activityPageCount - 1 ? <span className="ams-dashboard-page-ellipsis" aria-hidden="true">…</span> : null}<button type="button" className="ams-dashboard-page-number" aria-label={'Go to activity page ' + activityPageCount} onClick={() => setActivityPage(activityPageCount)}>{activityPageCount}</button></> : null}
-                            <button type="button" className="ams-dashboard-page-step" aria-label="Next activity page" disabled={currentActivityPage >= activityPageCount} onClick={() => setActivityPage((page) => Math.min(activityPageCount, Math.max(1, page) + 1))}><span>Next</span><ChevronRight size={13} aria-hidden="true" /></button>
-                            <button type="button" className="ams-dashboard-page-step" aria-label="Last activity page" disabled={currentActivityPage >= activityPageCount} onClick={() => setActivityPage(activityPageCount)}>Last</button>
+                            <button
+                              type="button"
+                              className="ams-dashboard-page-step"
+                              aria-label="Previous activity page"
+                              disabled={currentActivityPage <= 1}
+                              onClick={() => setActivityPage((page) => Math.max(1, Math.min(page, activityPageCount) - 1))}
+                            >
+                              <ChevronLeft size={13} aria-hidden="true" />
+                              <span>Previous</span>
+                            </button>
+                            <span className="ams-dashboard-activity-page-status" aria-live="polite">Page {currentActivityPage} of {activityPageCount}</span>
+                            <button
+                              type="button"
+                              className="ams-dashboard-page-step"
+                              aria-label="Next activity page"
+                              disabled={currentActivityPage >= activityPageCount}
+                              onClick={() => setActivityPage((page) => Math.min(activityPageCount, Math.max(1, page) + 1))}
+                            >
+                              <span>Next</span>
+                              <ChevronRight size={13} aria-hidden="true" />
+                            </button>
                           </div>
                         </div>
                       </div>
