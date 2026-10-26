@@ -4,7 +4,7 @@
 **Delivery branch:** `main`  
 **Canonical roadmap:** [AMS End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md)  
 **Recovery protocol:** [AMS Resume After Timeout or Interruption Protocol](AMS-RESUME-AFTER-INTERRUPTION.md)  
-**Current task:** Stage 4 Dashboard Overview visual-first refinement, followed by Stage 5 authenticated rendered review. Docs-only main refinements are current through [327cc7cb](https://github.com/Kapitech-Agency/kapitech-ams/commit/327cc7cb73bc09ef6e72a55c57248040908384a1); the prior source/test head before this bounded warning-state UI slice was [1b614c1f](https://github.com/Kapitech-Agency/kapitech-ams/commit/1b614c1f4b2e48232d36f6ba745cf3ae987a2b95). The current checkpoint commit contains presentation-only refresh-warning compaction, a regression assertion and authenticated browser-inspection findings. Check exact current-main CI before declaring the slice validated. Authenticated visual review covered only native desktop width; data-source and responsive/accessibility limitations remain. Keep Dashboard as the only active module until explicit sign-off; do not start Inbox.
+**Current task:** Stage 4 Dashboard Overview main-content visual redesign, followed by Stage 5 authenticated rendered review. The latest bounded slice follows [b48a5aba](https://github.com/Kapitech-Agency/kapitech-ams/commit/b48a5aba85e7c9e41c1b81d517511dfb292f3ae1) and restructures unavailable/empty data states across Finance, Projects, task/delivery, team, quotation, exception and activity cards while preserving real data and behavior. Check exact current-main CI before declaring the slice validated. Authenticated review covered only native desktop width; data-source and responsive/accessibility limitations remain. Keep Dashboard as the only active module until explicit sign-off; do not start Inbox.
 
 
 > This checkpoint is an evidence snapshot, not live branch state. Refresh `main`, current workflow status, and source/tests on every resume. Section 1 is the prior source/test snapshot; the latest warning-state slice and browser findings are recorded in Section 0.
@@ -16,6 +16,14 @@
 - HTTP 429 appeared after repeated reload attempts during the inspection. This is an inspection-time observation, not proof of a systemic production rate-limit defect.
 - Bounded UI slice: shorten the visible refresh warning and move the unchanged full source message into a native keyboard-operable disclosure. Preserve source collection, loaded values, unavailable-vs-zero semantics, APIs, routes, permission checks and business behavior. Update the Dashboard regression test and this checkpoint in the same commit.
 - The UI slice is part of the current checkpoint commit. Verify the exact current main SHA's Quality Gate and AMS CI after the write; the prior Quality Gate on [1b614c1f](https://github.com/Kapitech-Agency/kapitech-ams/commit/1b614c1f4b2e48232d36f6ba745cf3ae987a2b95) passed, while the prior AMS CI failed at the existing body-parser@1.20.6 dependency audit advisory [GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828).
+
+
+### 0.1 Dashboard primary cards and content-state presentation
+
+- This slice changes the Dashboard main content, not the header: Finance trend and Projects portfolio states now use compact visual status rows rather than 220px/250px blank panels. Project progress, task queue, deadline, client focus, team workload, time logs, quotations, exceptions and activity source states now use a consistent icon/text treatment. Genuine empty states use a neutral icon style distinct from unavailable sources.
+- No values, records, permissions, routes, APIs or business operations were fabricated or changed. Populated charts, metrics and rows remain bound to canonical sources. The visual impact is greatest when production sources are unavailable, which was the state seen during authenticated inspection.
+- Added source-level regression coverage for status inventory, compact/empty state classes, and removal of oversized blank Finance and Projects panels. Validate exact-SHA Quality Gate and AMS CI following this commit.
+- Next: inspect the populated Finance + Projects visual hierarchy, then review Project progress/Needs attention, Task queue/Deadlines, Team/Client delivery, and Recent activity/shortcuts in order. Stage 5 responsive/accessibility evidence and explicit user sign-off remain required; do not start Inbox yet.
 
 ## 1. Prior application/test snapshot (before warning-state slice)
 

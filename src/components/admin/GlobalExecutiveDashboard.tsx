@@ -542,11 +542,18 @@ const getInquiryStatusTone = (status: string): DonutPoint['tone'] => {
   return 'muted';
 };
 
-const DashboardUnavailable: React.FC<{ title: string; description: string }> = ({ title, description }) => (
-  <div className="flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-8 text-center" role="status">
-    <AlertTriangle size={20} className="text-muted" aria-hidden="true" />
-    <p className="mt-3 text-xs font-semibold text-fg">{title}</p>
-    <p className="mt-1 max-w-md text-[11px] leading-5 text-muted">{description}</p>
+const DashboardUnavailable: React.FC<{ title: string; description: string; compact?: boolean }> = ({ title, description, compact = false }) => (
+  <div
+    className={compact ? 'ams-dashboard-state ams-dashboard-state--compact' : 'flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-8 text-center'}
+    role="status"
+  >
+    <span className={compact ? 'ams-dashboard-state__icon' : undefined} aria-hidden="true">
+      <AlertTriangle size={compact ? 16 : 20} className={compact ? undefined : 'text-muted'} />
+    </span>
+    <div className={compact ? 'min-w-0 flex-1' : undefined}>
+      <p className={compact ? 'text-xs font-semibold text-fg' : 'mt-3 text-xs font-semibold text-fg'}>{title}</p>
+      <p className={compact ? 'mt-1 max-w-full break-words text-[11px] leading-4 text-muted' : 'mt-1 max-w-md text-[11px] leading-5 text-muted'}>{description}</p>
+    </div>
   </div>
 );
 
@@ -2395,14 +2402,20 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Recent 30 days'}</span>
                       </div>
                       {operationalSnapshot.invoices === null || operationalSnapshot.expenses === null ? (
-                        <div className="flex min-h-[220px] flex-col justify-center rounded-control border border-line bg-bg px-4 py-5" role="status">
-                          <p className="text-xs font-medium text-fg">Financial movement unavailable</p>
-                          <p className="mt-1 text-[11px] leading-4 text-muted">Invoice and expense sources are not both available to this role or service.</p>
+                        <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
+                          <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={16} /></span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-fg">Financial movement unavailable</p>
+                            <p className="mt-1 break-words text-[11px] leading-4 text-muted">Invoice and expense sources are not both available to this role or service.</p>
+                          </div>
                         </div>
                       ) : !overviewFinanceTrendHasRecords ? (
-                        <div className="flex min-h-[220px] flex-col justify-center rounded-control border border-line bg-bg px-4 py-5" role="status">
-                          <p className="text-xs font-medium text-fg">No eligible financial records</p>
-                          <p className="mt-1 text-[11px] leading-4 text-muted">Issued invoices and eligible expenses will appear here when recorded.</p>
+                        <div className="ams-dashboard-state ams-dashboard-state--compact ams-dashboard-state--empty" role="status">
+                          <span className="ams-dashboard-state__icon" aria-hidden="true"><CircleDollarSign size={16} /></span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-fg">No eligible financial records</p>
+                            <p className="mt-1 break-words text-[11px] leading-4 text-muted">Issued invoices and eligible expenses will appear here when recorded.</p>
+                          </div>
                         </div>
                       ) : overviewFinanceTrendRows.length ? (
                         <>
@@ -2514,14 +2527,20 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
 
                       {operationalSnapshot.quotations === null ? (
-                        <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
-                          <p className="text-xs font-medium text-fg">{operationalSnapshot.loading ? 'Loading quotation records' : 'Quotation data unavailable'}</p>
-                          
+                        <div className="mt-3 ams-dashboard-state ams-dashboard-state--compact" role="status">
+                          <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={15} /></span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-fg">{operationalSnapshot.loading ? 'Loading quotation records' : 'Quotation data unavailable'}</p>
+                            <p className="mt-1 text-[11px] leading-4 text-muted">The follow-up queue cannot be confirmed from the current quotation source.</p>
+                          </div>
                         </div>
                       ) : dashboardQuotationRows.length === 0 ? (
-                        <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
-                          <p className="text-xs font-medium text-fg">No quotation records in {financeCurrency}</p>
-                          
+                        <div className="mt-3 ams-dashboard-state ams-dashboard-state--compact ams-dashboard-state--empty" role="status">
+                          <span className="ams-dashboard-state__icon" aria-hidden="true"><FileText size={15} /></span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-fg">No quotation records in {financeCurrency}</p>
+                            <p className="mt-1 text-[11px] leading-4 text-muted">No canonical quotation rows were returned for this currency.</p>
+                          </div>
                         </div>
                       ) : activeDashboardQuotations.length === 0 ? (
                         <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
@@ -2636,12 +2655,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
-                    <DashboardUnavailable title="Project portfolio unavailable" description="The canonical Projects source did not return current records." />
+                    <DashboardUnavailable title="Project portfolio unavailable" description="The canonical Projects source did not return current records." compact />
                   ) : rawProjectRows.length === 0 ? (
-                    <div className="flex min-h-[250px] flex-col items-center justify-center text-center" role="status">
-                      <FolderKanban size={23} className="text-muted" aria-hidden="true" />
-                      <p className="mt-3 text-xs font-semibold text-fg">No project records returned</p>
-                      
+                    <div className="ams-dashboard-state ams-dashboard-state--compact ams-dashboard-state--empty" role="status">
+                      <span className="ams-dashboard-state__icon" aria-hidden="true"><FolderKanban size={16} /></span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-fg">No project records returned</p>
+                        <p className="mt-1 text-[11px] leading-4 text-muted">The canonical Projects register returned no records.</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -2752,7 +2773,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
-                    <div className="p-4"><DashboardUnavailable title="Project progress unavailable" description="The Projects source did not return current records." /></div>
+                    <div className="p-4"><DashboardUnavailable title="Project progress unavailable" description="The Projects source did not return current records." compact /></div>
                   ) : featuredDashboardProjects.length === 0 ? (
                     <div className="px-4 py-8 text-center" role="status">
                       <p className="text-xs font-medium text-fg">{activeProjectRows.length === 0 ? 'No active projects' : 'No active projects match this service-line filter.'}</p>
@@ -2823,14 +2844,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               >
                 <div data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
                   {!dashboardOverview.attentionItemsDataAvailable ? (
-                    <div className="px-4 py-5" role="status">
-                      <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Exception data unavailable'}</p>
-                      
+                    <div className="p-3 sm:p-4" role="status">
+                      <div className="ams-dashboard-state ams-dashboard-state--compact">
+                        <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={15} /></span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-fg">{dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Exception data unavailable'}</p>
+                          <p className="mt-1 text-[11px] leading-4 text-muted">Unconfirmed sources are kept separate from a clean-state result.</p>
+                        </div>
+                      </div>
                     </div>
                   ) : overviewAttentionItems.length === 0 ? (
-                    <div className="px-4 py-5" role="status">
-                      <p className="text-xs font-medium text-fg">No cross-module exceptions returned</p>
-                      
+                    <div className="p-3 sm:p-4" role="status">
+                      <div className="ams-dashboard-state ams-dashboard-state--compact ams-dashboard-state--empty">
+                        <span className="ams-dashboard-state__icon" aria-hidden="true"><CheckCircle2 size={15} /></span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-fg">No cross-module exceptions returned</p>
+                          <p className="mt-1 text-[11px] leading-4 text-muted">The available source returned no active exceptions.</p>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="divide-y divide-line">
@@ -2955,7 +2986,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   </div>
                 </div>
                 {!canOpenTasks || operationalSnapshot.tasks === null ? (
-                  <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." /></div>
+                  <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." compact /></div>
                 ) : dashboardWorkTasks.length === 0 ? (
                   <div className="px-4 py-8" role="status">
                     <p className="text-xs font-semibold text-fg">No task records returned</p>
@@ -3031,7 +3062,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 ) : undefined}
               >
                 {operationalSnapshot.projects === null ? (
-                  <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned. Deadlines are not inferred." /></div>
+                  <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned. Deadlines are not inferred." compact /></div>
                 ) : rawProjectRows.length === 0 ? (
                   <p className="px-4 py-8 text-center text-xs text-muted" role="status">No project records returned.</p>
                 ) : (
@@ -3110,7 +3141,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     {canOpenTasks ? <Link to="/admin/tasks" className="text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                   </div>
                   {!canOpenTasks || operationalSnapshot.tasks === null ? (
-                    <p className="text-[11px] text-muted" role="status">Task assignment data unavailable.</p>
+                    <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
+                    <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={15} /></span>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-fg">Task assignment data unavailable</p>
+                      <p className="mt-1 text-[11px] leading-4 text-muted">Owner workload cannot be shown until the task source returns.</p>
+                    </div>
+                  </div>
                   ) : taskLoadByAssignee.length === 0 ? (
                     <p className="text-[11px] text-muted" role="status">No open task assignments in the current source.</p>
                   ) : (
@@ -3140,7 +3177,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   </div>
                   <p className="mb-3 text-[10px] leading-4 text-muted">Logged hours · not capacity</p>
                   {!canOpenTimeLogs || operationalSnapshot.timeLogs === null ? (
-                    <p className="text-[11px] text-muted" role="status">Time-log source unavailable.</p>
+                    <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
+                    <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={15} /></span>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-fg">Time-log source unavailable</p>
+                      <p className="mt-1 text-[11px] leading-4 text-muted">Recorded hours are not estimated from task assignments.</p>
+                    </div>
+                  </div>
                   ) : periodTimeRows.length === 0 ? (
                     <p className="text-[11px] text-muted" role="status">No time records returned for this reporting scope.</p>
                   ) : (
@@ -3174,7 +3217,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
-                    <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The Projects source did not return records. Client delivery counts are not inferred." /></div>
+                    <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The Projects source did not return records. Client delivery counts are not inferred." compact /></div>
                   ) : clientDeliveryFocus.length === 0 ? (
                     <p className="px-4 py-8 text-center text-xs text-muted" role="status">No client-linked delivery records.</p>
                   ) : (
@@ -3259,7 +3302,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   )}
                 >
                   {!dashboardOverview.recentActivityDataAvailable ? (
-                    <p className="px-4 py-5 text-[11px] text-muted" role="status">{dashboardOverview.loading ? 'Loading recent activity.' : 'Recent activity unavailable.'}</p>
+                    <div className="p-3 sm:p-4" role="status">
+                    <div className="ams-dashboard-state ams-dashboard-state--compact">
+                      <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={15} /></span>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-medium text-fg">{dashboardOverview.loading ? 'Loading recent activity' : 'Recent activity unavailable'}</p>
+                        <p className="mt-1 text-[11px] leading-4 text-muted">No activity entries are available from the current source.</p>
+                      </div>
+                    </div>
+                  </div>
                   ) : (dashboardOverview.recentActivity || []).length === 0 ? (
                     <p className="px-4 py-5 text-[11px] text-muted" role="status">No recent audit activity was returned.</p>
                   ) : (

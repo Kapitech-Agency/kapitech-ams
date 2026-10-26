@@ -934,3 +934,31 @@ test('Dashboard refresh warnings keep the main status concise and preserve sourc
   assert.ok(warning.includes('View refresh details'));
   assert.ok(warning.includes('{refreshNotice}'));
 });
+
+
+test('Dashboard Overview uses compact, consistent source states instead of oversized blank error panels', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ?");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ?", overviewStart);
+  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  for (const title of [
+    'Project portfolio unavailable',
+    'Project progress unavailable',
+    'Task queue unavailable',
+    'Delivery schedule unavailable',
+    'Client delivery data unavailable',
+    'Financial movement unavailable',
+    'No eligible financial records',
+    'Quotation data unavailable',
+    'Exception data unavailable'
+  ]) assert.ok(overview.includes(title), 'Missing truthful Dashboard state: ' + title);
+  assert.ok(overview.includes('ams-dashboard-state--compact'));
+  assert.ok(overview.includes('ams-dashboard-state--empty'));
+  assert.equal(overview.includes('min-h-[220px]'), false, 'Unavailable Finance charts must not reserve a chart-height blank panel.');
+  assert.equal(overview.includes('min-h-[250px]'), false, 'An empty project source must not reserve a large blank portfolio area.');
+  assert.ok(styles.includes('.ams-dashboard-state--compact'));
+  assert.ok(styles.includes('.ams-dashboard-state--empty .ams-dashboard-state__icon'));
+  assert.ok(styles.includes('@media (max-width: 599px)'));
+});

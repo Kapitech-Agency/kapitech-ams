@@ -1070,3 +1070,59 @@
     transform: none;
   }
 }
+
+
+/* Compact, source-truthful states keep a failed/empty source from becoming a large blank panel. */
+.ams-shell .ams-dashboard .ams-dashboard-state {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 58%, var(--panel));
+  text-align: left;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-state--compact {
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-state__icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--warning) 22%, var(--line));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--warning) 8%, var(--panel));
+  color: var(--warning);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-state--empty .ams-dashboard-state__icon {
+  border-color: var(--dashboard-card-border);
+  background: color-mix(in srgb, var(--text) 3%, var(--panel));
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-state p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-state,
+  .ams-shell .ams-dashboard .ams-dashboard-state--compact {
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-state__icon {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+    border-radius: 8px;
+  }
+}
