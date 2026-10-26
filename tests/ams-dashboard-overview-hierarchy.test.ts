@@ -136,7 +136,7 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   assert.ok(adminLayout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
   assert.equal(overview.includes('aria-label="Reporting date range"'), false, 'Overview should rely on card-local date controls.');
   assert.ok(!dashboard.includes('ams-dashboard-view-tabs flex min-w-0 items-center gap-1 overflow-x-auto'));
-  assert.ok(dashboard.includes('className="ams-project-registry-action'));
+  assert.ok(dashboard.includes('className="ams-dashboard-header-action ams-dashboard-header-action--registry'));
   assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
   assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
   assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
@@ -1125,7 +1125,7 @@ test('Dashboard calendar filters are dropdowns with card-local periods and acces
   assert.ok(overview.includes('aria-label="Recent activity start date"'));
   assert.ok(overview.includes('aria-label="Recent activity end date"'));
   assert.ok(styles.includes('.ams-calendar-period-filter__panel'));
-  assert.ok(styles.includes('background: var(--line);'));
+  assert.match(styles, /background:\s*var\(--line\);/);
   assert.ok(styles.includes('border-bottom: 2px solid var(--accent);'));
   assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
   assert.ok(styles.includes('.ams-portal-root .ams-calendar-period-filter__panel'));
@@ -1184,7 +1184,7 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
   const overview = dashboard.slice(start, end);
 
   assert.ok(dashboard.includes('ams-dashboard-header-primary-actions'));
-  assert.ok(overview.includes('ams-project-progress-toolbar'));
+  assert.ok(overview.includes('ams-project-progress-header-actions'));
   assert.ok(overview.includes('ams-dashboard-projects-body'));
   assert.ok(overview.includes('className="ams-project-portfolio-body space-y-4'));
   assert.doesNotMatch(overview, /overflow-x-auto/, 'Dashboard Overview filters must wrap rather than scroll horizontally.');
@@ -1206,6 +1206,8 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
   assert.ok(styles.includes('.ams-dashboard-select-trigger[aria-expanded="true"]'));
   assert.ok(styles.includes('.ams-dropdown-item[data-active="true"]:not([data-selected="true"])'));
   assert.ok(styles.includes('.ams-dashboard-filter-pill[aria-pressed="true"]'));
-  assert.ok(styles.includes('--dashboard-active-bg:#641326'));
+  assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
+  assert.match(styles, /border-bottom:\s*2px solid var\(--accent\)/);
+  assert.match(styles, /background:\s*var\(--line\)/);
   assert.ok(styles.includes('.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"]'));
 });
