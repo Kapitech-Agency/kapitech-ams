@@ -9,7 +9,7 @@ const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
 test('Dashboard Overview prioritizes urgent delivery actions, deadlines, and header shortcuts before reporting context', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewStart = dashboard.indexOf("      {view === 'overview' ? (");
   const performanceStart = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   assert.ok(overviewStart >= 0 && performanceStart > overviewStart, 'Dashboard overview branch should be identifiable');
   const overview = dashboard.slice(overviewStart, performanceStart);
@@ -86,7 +86,7 @@ test('Dashboard Client Delivery Focus prioritizes agency delivery risk before po
     last = position;
   }
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const end = dashboard.indexOf('aria-label="Recent activity"', start);
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"', start);
   assert.ok(start >= 0 && end > start);
   const panel = dashboard.slice(start, end);
   const metricOrder = ["label: 'Overdue'", "label: 'Blocked'", "label: 'Unassigned'"];
