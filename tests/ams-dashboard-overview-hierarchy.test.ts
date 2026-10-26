@@ -1128,3 +1128,37 @@ test('Dashboard lead row uses compact gutters and prevents an empty stretched Pr
   assert.match(styles, /\.ams-dashboard-projects-panel\s*\{[^}]*height:\s*100%;/s);
   assert.match(styles, /\.ams-overview-panel > div:last-child:not\(\[class~="p-0"\]\)\s*\{\s*padding:\s*16px;/);
 });
+
+
+test('Overview action buttons, panel headers, dropdown states, and filter rows share one visual contract', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf("\\n      {view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+
+  assert.ok(dashboard.includes('ams-dashboard-header-primary-actions'));
+  assert.ok(overview.includes('ams-project-progress-toolbar'));
+  assert.ok(overview.includes('className="ams-dashboard-projects-body'));
+  assert.ok(overview.includes('className="ams-project-portfolio-body space-y-4'));
+  assert.doesNotMatch(overview, /overflow-x-auto/, 'Dashboard Overview filters must wrap rather than scroll horizontally.');
+
+  for (const action of [
+    'Open Finance', 'Open quotation ledger', 'View tasks', 'Open Time Logs',
+    'View audit log', 'Open Inbox', 'Open Tasks', 'Open Projects', 'Open project delivery'
+  ]) {
+    const index = overview.indexOf(action);
+    assert.ok(index >= 0, 'Missing expected dashboard action: ' + action);
+    assert.ok(overview.slice(Math.max(0, index - 700), index).includes('ams-dashboard-card-action'),
+      'Action should use the shared card-action style: ' + action);
+  }
+
+  assert.ok(styles.includes('height: 58px;'));
+  assert.ok(styles.includes('.ams-dashboard-card-action'));
+  assert.ok(styles.includes('height: 32px;'));
+  assert.ok(styles.includes('.ams-dashboard-filter-pills'));
+  assert.ok(styles.includes('.ams-dashboard-select-trigger[aria-expanded="true"]'));
+  assert.ok(styles.includes('.ams-dropdown-item[data-active="true"]:not([data-selected="true"])'));
+  assert.ok(styles.includes('.ams-dashboard-filter-pill[aria-pressed="true"]'));
+  assert.ok(styles.includes('.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"]'));
+});

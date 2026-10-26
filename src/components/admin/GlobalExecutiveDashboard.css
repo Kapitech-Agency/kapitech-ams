@@ -2956,3 +2956,360 @@
   .ams-shell .ams-dashboard .ams-dashboard-view-tabs *,
   .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button { transition-duration: 0.01ms; }
 }
+
+
+/* Dashboard control-consistency layer: one action size, one card-header baseline, no filter-strip scroll. */
+.ams-shell .ams-dashboard .ams-dashboard-header-primary-actions {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-header-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-shortcut {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 36px;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding-inline: 10px;
+  border-radius: 8px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts {
+  display: flex;
+  min-width: 0;
+  flex: 0 1 auto;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+@media (min-width: 1280px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header {
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    align-items: center;
+    gap: 18px;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    width: auto;
+    max-width: 780px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    row-gap: 7px;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts {
+    flex-wrap: nowrap;
+    gap: 4px;
+    margin-left: 3px;
+    padding-left: 10px;
+    border-left: 1px solid var(--dashboard-card-border);
+  }
+}
+@media (max-width: 1279px) {
+  .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-header-primary-actions {
+    flex-wrap: wrap;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+}
+
+/* Card heading strips share a 58px baseline. Longer controls live in the body toolbar. */
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+  box-sizing: border-box;
+  display: flex;
+  height: 58px;
+  min-height: 58px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--dashboard-card-border);
+  background: color-mix(in srgb, var(--bg) 16%, var(--panel));
+}
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 19px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: auto;
+}
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+    height: 58px;
+    min-height: 58px;
+    gap: 8px;
+    padding: 9px 12px;
+  }
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {
+    font-size: 13px;
+    line-height: 17px;
+  }
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child {
+    gap: 4px;
+  }
+}
+
+/* All card actions share identical geometry and neutral, low-noise styling. */
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 32px;
+  min-height: 32px;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 550;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: var(--dashboard-hover-surface);
+  color: var(--text);
+}
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+/* Project filters and registry form one wrapped toolbar beneath the standard card header. */
+.ams-shell .ams-dashboard .ams-project-progress-toolbar {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--dashboard-card-border);
+  background: color-mix(in srgb, var(--bg) 24%, var(--panel));
+}
+.ams-shell .ams-dashboard .ams-project-progress-toolbar .ams-dashboard-segmented-filter {
+  flex: 0 0 auto;
+  height: 36px;
+  min-height: 36px;
+  overflow: visible;
+}
+.ams-shell .ams-dashboard .ams-project-progress-toolbar .ams-dashboard-project-filter {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 28px;
+  min-height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 9px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 13px;
+  white-space: nowrap;
+}
+.ams-shell .ams-dashboard .ams-project-progress-toolbar .ams-project-registry-action {
+  height: 36px;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-self: center;
+}
+.ams-shell .ams-dashboard .ams-dashboard-filter-pills {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  overflow: visible;
+  padding: 0;
+}
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill {
+  box-sizing: border-box;
+  height: 32px;
+  min-height: 32px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill__count {
+  display: inline-flex;
+  min-width: 19px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg) 42%, var(--panel));
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] > span,
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count {
+  border-color: color-mix(in srgb, #fff 30%, var(--accent));
+  background: color-mix(in srgb, #fff 13%, var(--accent));
+  color: #fff;
+}
+
+/* Dropdown open is a focus state; selected values remain the solid crimson state. */
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"],
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  color: var(--text);
+  box-shadow: none;
+}
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"] svg {
+  color: var(--accent-text);
+}
+.ams-dashboard-dropdown-menu {
+  box-sizing: border-box;
+  max-width: min(340px, calc(100vw - 24px));
+  overflow-x: clip;
+}
+.ams-dashboard-dropdown-menu .ams-dropdown-item {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  align-items: flex-start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.ams-dashboard-dropdown-menu .ams-dropdown-item > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.ams-dashboard-dropdown-menu .ams-dropdown-item > div:first-child > span {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.ams-dashboard-dropdown-menu .ams-dropdown-item[data-active="true"]:not([data-selected="true"]) {
+  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+  color: var(--text);
+}
+.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"],
+.ams-dashboard-dropdown-menu .ams-dropdown-item[aria-selected="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"] svg,
+.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"] span,
+.ams-dashboard-dropdown-menu .ams-dropdown-item[aria-selected="true"] svg,
+.ams-dashboard-dropdown-menu .ams-dropdown-item[aria-selected="true"] span {
+  color: #fff;
+}
+
+/* Selected filters, active tabs, and current pagination use the same brand state. */
+.ams-shell .ams-dashboard .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"],
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button[aria-current="page"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"] *,
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] *,
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter[aria-pressed="true"] * {
+  color: #fff;
+}
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Finance and Projects stretch to the same analytical row height. */
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] { align-items: stretch; }
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
+  display: flex; min-width: 0; align-self: stretch;
+}
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel {
+  display: flex; height: 100%; min-height: 100%; flex: 1 1 auto; flex-direction: column;
+}
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel > .ams-dashboard-projects-body {
+  display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column;
+}
+.ams-shell .ams-dashboard .ams-dashboard-projects-body > .ams-project-portfolio-body {
+  display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; justify-content: space-between;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-project-progress-toolbar { align-items: flex-start; padding: 10px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions *,
+  .ams-shell .ams-dashboard .ams-dashboard-card-action,
+  .ams-shell .ams-dashboard .ams-dashboard-filter-pill { transition-duration: .01ms; }
+}

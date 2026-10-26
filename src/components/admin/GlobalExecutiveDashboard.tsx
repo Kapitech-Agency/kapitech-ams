@@ -2355,6 +2355,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             data-ams-feature-slug="dashboard-quick-actions"
             aria-label="Dashboard quick actions"
           >
+            <div className="ams-dashboard-header-primary-actions" role="group" aria-label="Primary dashboard actions">
             {canOpenInvoiceRegister ? (
               <Link
                 to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}
@@ -2382,6 +2383,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 {canCreateProject ? 'New project' : 'Projects'}
               </Link>
             ) : null}
+            </div>
             {view === 'overview' ? (
               <nav className="ams-dashboard-header-shortcuts flex min-w-0 flex-wrap items-center gap-1.5" data-ams-feature-slug="dashboard-workspace-shortcuts" aria-label="Dashboard workspace shortcuts">
                 {[
@@ -2470,33 +2472,31 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   title="Projects in progress"
                   className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
-                  actions={(
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <div className="ams-dashboard-segmented-filter flex w-fit max-w-full flex-nowrap items-center gap-1 rounded-control border border-line bg-bg p-[3px]" role="group" aria-label="Filter projects by service line">
-                        {([
-                          { key: 'all', label: 'All', count: activeDashboardProjectFilterCounts.all },
-                          { key: 'creative', label: 'Creative', count: activeDashboardProjectFilterCounts.creative },
-                          { key: 'technology', label: 'IT', count: activeDashboardProjectFilterCounts.technology }
-                        ] as Array<{ key: DashboardProjectFilter; label: string; count: number }>).map((filter) => (
-                          <button key={filter.key} type="button" aria-pressed={overviewProjectFilter === filter.key} onClick={() => setOverviewProjectFilter(filter.key)} className={[
-                            'inline-flex min-h-7 shrink-0 items-center gap-1 rounded-full px-2 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                            overviewProjectFilter === filter.key ? 'bg-panel text-fg font-semibold' : 'text-muted hover:bg-panel/70 hover:text-fg'
-                          ].join(' ')}>
-                            {filter.label}
-                            <span className="text-[10px] tabular-nums text-muted">{filter.count}</span>
-                          </button>
-                        ))}
-                      </div>
-                      <Link to="/admin/projects?projects=all" className="ams-project-registry-action inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                        Project registry <ArrowUpRight size={13} aria-hidden="true" />
-                      </Link>
+                  >
+                  <div className="ams-project-progress-toolbar" data-ams-feature-slug="dashboard-project-filters" aria-label="Project delivery filters">
+                    <div className="ams-dashboard-segmented-filter flex w-fit max-w-full flex-nowrap items-center gap-1 rounded-control border border-line bg-bg p-[3px]" role="group" aria-label="Filter projects by service line">
+                      {([
+                        { key: 'all', label: 'All', count: activeDashboardProjectFilterCounts.all },
+                        { key: 'creative', label: 'Creative', count: activeDashboardProjectFilterCounts.creative },
+                        { key: 'technology', label: 'IT', count: activeDashboardProjectFilterCounts.technology }
+                      ] as Array<{ key: DashboardProjectFilter; label: string; count: number }>).map((filter) => (
+                        <button key={filter.key} type="button" aria-pressed={overviewProjectFilter === filter.key} onClick={() => setOverviewProjectFilter(filter.key)} className={[
+                          'ams-dashboard-project-filter inline-flex min-h-7 shrink-0 items-center gap-1 rounded-full px-2 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                          overviewProjectFilter === filter.key ? 'bg-panel text-fg font-semibold' : 'text-muted hover:bg-panel/70 hover:text-fg'
+                        ].join(' ')}>
+                          {filter.label}
+                          <span className="ams-dashboard-filter-pill__count text-[10px] tabular-nums text-muted">{filter.count}</span>
+                        </button>
+                      ))}
                     </div>
-                  )}
-                >
+                    <Link to="/admin/projects?projects=all" className="ams-project-registry-action inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      Project registry <ArrowUpRight size={13} aria-hidden="true" />
+                    </Link>
+                  </div>
                   {operationalSnapshot.projects === null ? (
                     <div className="p-4"><DashboardUnavailable title="Project progress unavailable" description="The Projects source did not return current records." compact /></div>
                   ) : featuredDashboardProjects.length === 0 ? (
-                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="PROJECT DELIVERY" icon={<FolderKanban size={17} aria-hidden="true" />} title={activeProjectRows.length === 0 ? 'No active projects yet' : 'No projects match this filter'} description={activeProjectRows.length === 0 ? 'Active delivery work will appear here when projects are in progress.' : 'Try All or choose the other service line to see matching projects.'} action={<Link to="/admin/projects?projects=all" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open project registry <ArrowUpRight size={12} aria-hidden="true" /></Link>} /></div>
+                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="PROJECT DELIVERY" icon={<FolderKanban size={17} aria-hidden="true" />} title={activeProjectRows.length === 0 ? 'No active projects yet' : 'No projects match this filter'} description={activeProjectRows.length === 0 ? 'Active delivery work will appear here when projects are in progress.' : 'Try All or choose the other service line to see matching projects.'} action={<Link to="/admin/projects?projects=all" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open project registry <ArrowUpRight size={12} aria-hidden="true" /></Link>} /></div>
                   ) : (
                     <div className="divide-y divide-line">
                       {featuredDashboardProjects.map((project) => {
@@ -2634,7 +2634,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <h3 className="text-xs font-semibold text-fg">Inbox triage</h3>
                         
                       </div>
-                      <Link to="/admin/inbox?view=messages" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Inbox <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                      <Link to="/admin/inbox?view=messages" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Inbox <ArrowUpRight size={12} aria-hidden="true" /></Link>
                     </div>
                     {inboxTriageSummary.state === 'loading' ? (
                       <p className="px-4 pb-4 text-[11px] text-muted" role="status">Loading inbound records.</p>
@@ -2684,13 +2684,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 className="h-full ams-overview-panel ams-overview-panel--list"
                 bodyClassName="p-0"
                 actions={canOpenTasks ? (
-                  <Link to={overviewTaskQueueHref} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                  <Link to={overviewTaskQueueHref} className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                     Open Tasks <ArrowUpRight size={13} aria-hidden="true" />
                   </Link>
                 ) : undefined}
               >
                 <div className="border-b border-line px-3 py-3 sm:px-4">
-                  <div className="flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Task queue filters">
+                  <div className="ams-dashboard-filter-pills flex flex-wrap gap-1.5" role="group" aria-label="Task queue filters">
                     {([
                       { key: 'action', label: 'Action needed', count: taskQueueCounts.action },
                       { key: 'review', label: 'Review', count: taskQueueCounts.review },
@@ -2705,12 +2705,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         disabled={!canOpenTasks}
                         onClick={() => setOverviewTaskFilter(tab.key)}
                         className={[
-                          'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
+                          'ams-dashboard-filter-pill inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
                           overviewTaskFilter === tab.key ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg'
                         ].join(' ')}
                       >
                         {tab.label}
-                        <span className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
+                        <span className="ams-dashboard-filter-pill__count rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
                       </button>
                     ))}
                   </div>
@@ -2719,7 +2719,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." compact /></div>
                 ) : dashboardWorkTasks.length === 0 ? (
                   <div className="px-4 py-8" role="status">
-                    <DashboardEmptyState eyebrow="TASK QUEUE" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No task records yet" description="Tasks will appear here when they are created in the canonical Tasks workspace." action={canOpenTasks ? <Link to="/admin/tasks" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Tasks <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} />
+                    <DashboardEmptyState eyebrow="TASK QUEUE" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No task records yet" description="Tasks will appear here when they are created in the canonical Tasks workspace." action={canOpenTasks ? <Link to="/admin/tasks" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Tasks <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} />
                   </div>
                 ) : activeDashboardTasks.length === 0 ? (
                   <div className="px-4 py-4"><DashboardEmptyState eyebrow="TASK QUEUE" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="Queue cleared" description="Every task in the current scope is complete. Switch to another queue to review other work." /></div>
@@ -2779,7 +2779,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 className="h-full ams-overview-panel ams-overview-panel--list"
                 bodyClassName="p-0"
                 actions={canOpenProjects ? (
-                  <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                  <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                     Open planning <ArrowUpRight size={13} aria-hidden="true" />
                   </Link>
                 ) : undefined}
@@ -2787,7 +2787,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 {operationalSnapshot.projects === null ? (
                   <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned. Deadlines are not inferred." compact /></div>
                 ) : rawProjectRows.length === 0 ? (
-                  <div className="px-4 py-4"><DashboardEmptyState eyebrow="DELIVERY TIMELINE" icon={<CalendarDays size={17} aria-hidden="true" />} title="No delivery dates to display" description="The project register returned no records, so upcoming deadlines cannot be determined." action={canOpenProjects ? <Link to="/admin/projects?projects=all" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Projects <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
+                  <div className="px-4 py-4"><DashboardEmptyState eyebrow="DELIVERY TIMELINE" icon={<CalendarDays size={17} aria-hidden="true" />} title="No delivery dates to display" description="The project register returned no records, so upcoming deadlines cannot be determined." action={canOpenProjects ? <Link to="/admin/projects?projects=all" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Projects <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
                 ) : (
                   <>
                     <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
@@ -2878,7 +2878,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--finance ams-dashboard-finance-panel"
                   bodyClassName="p-4 sm:p-5"
                   actions={(
-                    <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                       Open Finance <ArrowUpRight size={13} aria-hidden="true" />
                     </Link>
                   )}
@@ -2912,12 +2912,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
                       <div data-ams-feature-slug="dashboard-finance-control" className="ams-finance-control-links flex flex-wrap gap-2 border-t border-line pt-3">
                         {canOpenInvoiceRegister ? (
-                          <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                          <Link to="/admin/finance?tab=accounts-receivable" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                             <ReceiptText size={12} aria-hidden="true" /> Receivables <ArrowUpRight size={11} aria-hidden="true" />
                           </Link>
                         ) : null}
                         {canOpenExpenseRegister ? (
-                          <Link to="/admin/finance?tab=expenses" className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                          <Link to="/admin/finance?tab=expenses" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                             <ReceiptText size={12} aria-hidden="true" /> Expenses <ArrowUpRight size={11} aria-hidden="true" />
                           </Link>
                         ) : null}
@@ -3054,7 +3054,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </div>
                         <Link
                           to="/admin/finance?tab=quotations"
-                          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                          className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                         >
                           Open quotation ledger <ArrowUpRight size={12} aria-hidden="true" />
                         </Link>
@@ -3074,7 +3074,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION FOLLOW-UP" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No quotations need follow-up" description={overviewQuotationFilter === 'all' ? 'No active quotations currently meet the follow-up criteria.' : 'No active quotations match the selected stage.'} compact /></div>
                       ) : (
                         <>
-                          <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Filter quotations by stage">
+                          <div className="ams-dashboard-filter-pills mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter quotations by stage">
                             {([
                               { key: 'all', label: 'All active', count: dashboardQuotationFilterCounts.all },
                               { key: 'review', label: 'Review', count: dashboardQuotationFilterCounts.review },
@@ -3088,14 +3088,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 aria-pressed={overviewQuotationFilter === filter.key}
                                 onClick={() => setOverviewQuotationFilter(filter.key)}
                                 className={[
-                                  'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                                  'ams-dashboard-filter-pill inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                                   overviewQuotationFilter === filter.key
                                     ? 'border-accent/25 bg-accent/10 text-fg'
                                     : 'border-line bg-bg text-muted hover:border-line hover:bg-panel-hover hover:text-fg'
                                 ].join(' ')}
                               >
                                 {filter.label}
-                                <span className="rounded-full border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{filter.count}</span>
+                                <span className="ams-dashboard-filter-pill__count rounded-full border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{filter.count}</span>
                               </button>
                             ))}
                           </div>
@@ -3107,7 +3107,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => setOverviewQuotationFilter('all')}
-                                className="mt-2 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-3 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                                className="ams-dashboard-card-action mt-2 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-3 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                               >
                                 Clear stage filter
                               </button>
@@ -3174,7 +3174,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--projects ams-dashboard-projects-panel"
                   bodyClassName="p-4 sm:p-5 ams-dashboard-projects-body"
                   actions={(
-                    <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    <Link to="/admin/projects?projects=all" className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                       Open Projects <ArrowUpRight size={13} aria-hidden="true" />
                     </Link>
                   )}
@@ -3274,7 +3274,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <section className="ams-dashboard-team-tasks" data-ams-feature-slug="dashboard-task-load-by-owner" aria-label="Open tasks by owner">
                   <div className="mb-3 flex items-baseline justify-between gap-2">
                     <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
-                    {canOpenTasks ? <Link to="/admin/tasks" className="text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                    {canOpenTasks ? <Link to="/admin/tasks" className="ams-dashboard-card-action text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                   </div>
                   {!canOpenTasks || operationalSnapshot.tasks === null ? (
                     <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
@@ -3350,7 +3350,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       ))}
                     </div>
                   )}
-                  {canOpenTimeLogs ? <Link to="/admin/time-logs" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                  {canOpenTimeLogs ? <Link to="/admin/time-logs" className="ams-dashboard-card-action mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                 </section>
               </AdminPanel>
             </section>
@@ -3362,13 +3362,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
                   actions={(
-                    <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project delivery <ArrowUpRight size={13} aria-hidden="true" /></Link>
+                    <Link to="/admin/projects?projects=all" className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project delivery <ArrowUpRight size={13} aria-hidden="true" /></Link>
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
                     <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The Projects source did not return records. Client delivery counts are not inferred." compact /></div>
                   ) : clientDeliveryFocus.length === 0 ? (
-                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="CLIENT DELIVERY" icon={<Users size={17} aria-hidden="true" />} title="No client delivery items" description="Client-linked delivery summaries appear when active projects are connected to client records." action={canOpenClientDirectory ? <Link to="/admin/clients/all-clients" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Clients <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
+                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="CLIENT DELIVERY" icon={<Users size={17} aria-hidden="true" />} title="No client delivery items" description="Client-linked delivery summaries appear when active projects are connected to client records." action={canOpenClientDirectory ? <Link to="/admin/clients/all-clients" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Clients <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
                   ) : (
                     <div className="divide-y divide-line">
                       {clientDeliveryFocus.slice(0, 4).map((client) => (
@@ -3447,7 +3447,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--list ams-overview-panel--activity ams-dashboard-activity-panel"
                   bodyClassName="p-0"
                   actions={(
-                    <Link to="/admin/settings?tab=audit" className="inline-flex min-h-9 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                    <Link to="/admin/settings?tab=audit" className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
                   )}
                 >
                   {!dashboardOverview.recentActivityDataAvailable ? (

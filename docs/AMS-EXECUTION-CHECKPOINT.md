@@ -571,3 +571,13 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Kept Projects stretched to match the outer height of Finance. Team Workload owner signals and card-local period controls receive consistent alignment.
 - Recent Activity retains search, severity/actor/time-window filters, sorting, page-size and pagination; the new custom From/To range filters the audit records by the visible UTC date.
 - Updated regression assertions to reflect the removal of the Overview-wide date picker while retaining app-wide ReportingPeriodProvider coverage elsewhere. No API, database, access-policy or financial-calculation changes.
+
+
+## Dashboard control follow-up — 27 October 2026
+
+- Split primary Create invoice / New project actions from Tasks, Clients, Documents shortcuts and Refresh. Buttons share a fixed 36px header height and the action group may wrap instead of overflowing.
+- Moved Projects in progress service-line filters and Project registry to one toolbar beneath the card title. This keeps all card heading strips at a 58px baseline and the All/Creative/IT control group aligned with Project registry at 36px outer height.
+- Replaced Task Queue and Quotation Follow-up horizontal-scroll filter strips with wrapping button groups. The Dashboard Overview branch is regression-tested to contain no `overflow-x-auto`.
+- Applied one shared 32px card-action style to Finance, quotation, task, time-log, Inbox, audit, Projects and delivery links. Custom dropdowns now differentiate the open/focus tint from selected crimson option state; active filters, tabs and pagination retain a consistent crimson selected state.
+- Projects continues to stretch to Finance row height through its flex body. Recent Activity remains a source-backed table with search, actor/severity/time-window/custom-date filters, sort, row-count selection and pagination.
+- No backend/API/database/financial calculation/permissions changes. Quality Gate result must be confirmed for the new SHA; AMS CI still has an independent high-severity dependency audit finding for body-parser.
