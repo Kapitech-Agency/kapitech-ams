@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Dashboard Overview leads with Finance and Projects cards and groups agency operations visually', async () => {
+test('Dashboard Overview prioritizes urgent delivery actions, deadlines, and header shortcuts before reporting context', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const performanceStart = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
@@ -34,6 +34,7 @@ test('Dashboard Overview leads with Finance and Projects cards and groups agency
 
   assert.ok(team > deadlines && clientFocus > team, 'Team and client delivery context remain secondary.');
   assert.ok(activity > clientFocus, 'Recent audit activity remains the final, lower-priority content row.');
+  assert.ok(overview.includes('min-[1100px]:col-span-12'), 'Recent activity should use the available row width after shortcuts move to the header.');
   assert.equal(overview.includes('Priority 01'), false, 'The visual hierarchy must not use invented rank numbering.');
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false, 'Remove the redundant generic KPI strip.');
 
