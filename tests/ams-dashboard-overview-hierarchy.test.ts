@@ -1185,7 +1185,7 @@ test('Dashboard lead row aligns Projects to Finance and avoids conflicting card 
   assert.ok(row && /align-items:\s*stretch;/.test(row[1]) && /gap:\s*14px;/.test(row[1]));
   assert.ok(financeRow && /align-items:\s*stretch;/.test(financeRow[1]) && /gap:\s*12px;/.test(financeRow[1]));
   assert.ok(projectsSection && /align-self:\s*stretch;/.test(projectsSection[1]) && /display:\s*flex;/.test(projectsSection[1]));
-  assert.match(styles, /\.ams-overview-panel--projects\s*\{[^}]*height:\s*100%;/s);
+  assert.match(styles, /\.ams-dashboard-projects-panel\s*\{[^}]*height:\s*100%;/s);
 });;
 
 
