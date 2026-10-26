@@ -116,7 +116,6 @@ test('Dashboard Overview prioritizes Finance and Projects as distinct cards', as
   const start = dashboard.indexOf("{view === 'overview' ? (");
   const end = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, end);
-  const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projects = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
   const progress = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"');
@@ -128,7 +127,8 @@ test('Dashboard Overview prioritizes Finance and Projects as distinct cards', as
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
   const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
   const financeMovement = overview.indexOf('data-ams-feature-slug="dashboard-finance-movement"');
-  assert.ok(scope >= 0 && finance > scope && financeMovement > finance && projects > financeMovement);
+  assert.ok(finance >= 0 && financeMovement > finance && projects > financeMovement);
+  assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-money-movement"'), false);
   assert.ok(progress > projects && attention > progress);
   assert.ok(taskQueue > attention && commitments > taskQueue);

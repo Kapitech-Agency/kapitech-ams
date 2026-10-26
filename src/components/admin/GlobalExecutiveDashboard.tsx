@@ -2191,10 +2191,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
       <AdminModuleHeader slug="dashboard-header"
         className="mb-0 ams-dashboard-page-header"
-        eyebrow="Agency operations"
+        eyebrow={view === 'overview' ? undefined : 'Agency operations'}
         title="Dashboard"
         description={view === 'overview'
-          ? 'Finance, project delivery, deadlines, and team workload in one operational view.'
+          ? undefined
           : view === 'performance'
             ? 'Compare delivery progress, bottlenecks, and recorded team effort over the selected period.'
             : 'Explore supported trends across financial movement, inquiry demand, and portfolio status.'}
@@ -2321,28 +2321,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
-          <section
-            className="ams-overview-scope flex min-w-0 flex-col gap-3 rounded-card border border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-            data-ams-feature-slug="dashboard-overview-reporting-scope"
-            aria-label="Overview reporting scope"
-          >
-            <div className="ams-overview-scope__meta min-w-0">
-              <span className="ams-overview-scope__icon" aria-hidden="true"><CalendarDays size={16} /></span>
-              <div className="min-w-0">
-                <p className="ams-overview-scope__label">Reporting period</p>
-                <p className="ams-overview-scope__value">{reportPeriodEnabled && selectedReportingRange ? selectedReportingRange.label + ' · ' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate : 'Recent 30 days'}</p>
-              </div>
-            </div>
-            <div className="ams-overview-scope__chips flex min-w-0 flex-wrap gap-2" aria-label="Reporting scope">
-              <span className="ams-overview-scope__chip inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
-                <CircleDollarSign size={13} aria-hidden="true" /> Finance & recorded time
-              </span>
-              <span className="ams-overview-scope__chip inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
-                <FolderKanban size={13} aria-hidden="true" /> Projects & deadlines: current state
-              </span>
-            </div>
-          </section>
-
           <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Finance and project overview">
             {canOpenFinanceOverview ? (
               <section
@@ -2352,7 +2330,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               >
                 <AdminPanel
                   title="Finance"
-                  description="Receivables, cash received, and spending trends"
                   className="h-full ams-overview-panel ams-overview-panel--finance"
                   bodyClassName="p-4 sm:p-5"
                   actions={(
@@ -2401,7 +2378,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
                     <div className="ams-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0" data-ams-feature-slug="dashboard-finance-trend">
                       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                        <h3 className="text-xs font-semibold text-fg">Invoice value vs expenses</h3>
+                        <h3 className="text-xs font-semibold text-fg">Invoices vs expenses</h3>
                         <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Recent 30 days'}</span>
                       </div>
                       {operationalSnapshot.invoices === null || operationalSnapshot.expenses === null ? (
@@ -2426,7 +2403,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             presentation="maven"
                             ariaLabel={'Issued-invoice totals by invoice date and eligible expenses by recorded date. Scope: ' + describeFinancialTrendScope(overviewFinanceTrendRows, reportPeriodEnabled, reportPeriodLabel) + '. This comparison is not posted profit or cash flow.'}
                           />
-                          <p className="mt-2 text-[11px] leading-4 text-muted">Issued invoice values by issue date vs eligible expenses by recorded date. This comparison is not posted profit or cash flow.</p>
+                          
                         </>
                       ) : (
                         <p className="py-8 text-center text-xs text-muted" role="status">No trend buckets are available for this period.</p>
@@ -2449,7 +2426,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 <span className="ams-finance-movement-card__icon" aria-hidden="true"><ArrowUpRight size={13} /></span>
                               </div>
                               <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}</p>
-                              <p className="mt-1 text-[11px] leading-4 text-muted">Payments against issued invoices</p>
+                              
                             </div>
                             <div className="ams-finance-movement-card__chart">
                               {cashValueAvailable && overviewMoneyMovementRows.length ? (
@@ -2476,7 +2453,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 <span className="ams-finance-movement-card__icon" aria-hidden="true"><ReceiptText size={13} /></span>
                               </div>
                               <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}</p>
-                              <p className="mt-1 text-[11px] leading-4 text-muted">Eligible expenses by recorded date</p>
+                              
                             </div>
                             <div className="ams-finance-movement-card__chart">
                               {expensesValueAvailable && overviewMoneyMovementRows.length ? (
@@ -2513,7 +2490,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               {dashboardQuotationFilterCounts.all} active
                             </span>
                           </div>
-                          <p className="mt-1 text-[11px] leading-4 text-muted">Commercial handoff before delivery and invoicing</p>
+                          
                         </div>
                         <Link
                           to="/admin/finance?tab=quotations"
@@ -2526,17 +2503,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       {operationalSnapshot.quotations === null ? (
                         <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
                           <p className="text-xs font-medium text-fg">{operationalSnapshot.loading ? 'Loading quotation records' : 'Quotation data unavailable'}</p>
-                          <p className="mt-1 text-[11px] leading-4 text-muted">Quotation follow-up is hidden when the source is unavailable; the Finance ledger remains the source of truth.</p>
+                          
                         </div>
                       ) : dashboardQuotationRows.length === 0 ? (
                         <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
                           <p className="text-xs font-medium text-fg">No quotation records in {financeCurrency}</p>
-                          <p className="mt-1 text-[11px] leading-4 text-muted">The commercial pipeline uses saved quotation records in the current currency.</p>
+                          
                         </div>
                       ) : activeDashboardQuotations.length === 0 ? (
                         <div className="mt-3 rounded-xl border border-line bg-bg px-3 py-4" role="status">
                           <p className="text-xs font-medium text-fg">No quotations need follow-up</p>
-                          <p className="mt-1 text-[11px] leading-4 text-muted">No draft, review, sent, or approved quotation awaiting invoice conversion was returned.</p>
+                          
                         </div>
                       ) : (
                         <>
@@ -2569,7 +2546,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           {visibleDashboardQuotations.length === 0 ? (
                             <div className="mt-2 rounded-xl border border-line bg-bg px-3 py-4" role="status">
                               <p className="text-xs font-medium text-fg">No quotations match this stage</p>
-                              <p className="mt-1 text-[11px] leading-4 text-muted">Choose another stage to inspect the active quotation pipeline.</p>
+                              
                               <button
                                 type="button"
                                 onClick={() => setOverviewQuotationFilter('all')}
@@ -2621,7 +2598,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             </div>
                           )}
                           {filteredDashboardQuotations.length > visibleDashboardQuotations.length ? (
-                            <p className="mt-1 text-[10px] text-muted">Showing {visibleDashboardQuotations.length} of {filteredDashboardQuotations.length} quotations in this stage.</p>
+                            
                           ) : null}
                         </>
                       )}
@@ -2639,7 +2616,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               >
                 <AdminPanel
                   title="Projects"
-                  description="Portfolio health and Creative/IT workload"
                   className="h-full ams-overview-panel ams-overview-panel--projects"
                   bodyClassName="p-4 sm:p-5"
                   actions={(
@@ -2654,7 +2630,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <div className="flex min-h-[250px] flex-col items-center justify-center text-center" role="status">
                       <FolderKanban size={23} className="text-muted" aria-hidden="true" />
                       <p className="mt-3 text-xs font-semibold text-fg">No project records returned</p>
-                      <p className="mt-1 text-[11px] leading-4 text-muted">The portfolio will fill from saved project records.</p>
+                      
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -2705,7 +2681,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <div className="border-t border-line pt-3">
                             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
                               <h3 className="text-xs font-semibold text-fg">Creative & IT workload</h3>
-                              <span className="text-[10px] text-muted">Open tasks by workstream</span>
+                              
                             </div>
                             <div className="space-y-3">
                               {serviceLineSummaries.map((line) => (
@@ -2838,12 +2814,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   {!dashboardOverview.attentionItemsDataAvailable ? (
                     <div className="px-4 py-5" role="status">
                       <p className="text-xs font-medium text-fg">{dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Exception data unavailable'}</p>
-                      <p className="mt-1 text-[11px] leading-4 text-muted">The Dashboard service did not return a usable exception list. Unavailable data is not treated as a clean state.</p>
+                      
                     </div>
                   ) : overviewAttentionItems.length === 0 ? (
                     <div className="px-4 py-5" role="status">
                       <p className="text-xs font-medium text-fg">No cross-module exceptions returned</p>
-                      <p className="mt-1 text-[11px] leading-4 text-muted">Delivery queues and deadlines below still use their canonical records.</p>
+                      
                     </div>
                   ) : (
                     <div className="divide-y divide-line">
@@ -2884,7 +2860,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <div className="flex items-center justify-between gap-3 px-4 py-3">
                       <div>
                         <h3 className="text-xs font-semibold text-fg">Inbox</h3>
-                        <p className="mt-0.5 text-[10px] text-muted">New and actionable requests</p>
+                        
                       </div>
                       <Link to="/admin/inbox?view=messages" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Inbox <ArrowUpRight size={12} aria-hidden="true" /></Link>
                     </div>
@@ -2972,17 +2948,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 ) : dashboardWorkTasks.length === 0 ? (
                   <div className="px-4 py-8" role="status">
                     <p className="text-xs font-semibold text-fg">No task records returned</p>
-                    <p className="mt-1 text-[11px] text-muted">No saved task records were returned by the canonical source.</p>
+                    
                   </div>
                 ) : activeDashboardTasks.length === 0 ? (
                   <div className="px-4 py-8" role="status">
                     <p className="text-xs font-semibold text-fg">All returned tasks are complete</p>
-                    <p className="mt-1 text-[11px] text-muted">No open work items remain in the Tasks source.</p>
+                    
                   </div>
                 ) : visibleOverviewTasks.length === 0 ? (
                   <div className="px-4 py-8" role="status">
                     <p className="text-xs font-semibold text-fg">No tasks match this queue</p>
-                    <p className="mt-1 text-[11px] text-muted">Choose another queue filter to inspect a different state.</p>
+                    <p className="mt-1 text-[11px] text-muted">Try another filter.</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-line">
@@ -3052,7 +3028,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
                       <div className="flex flex-wrap items-end justify-between gap-3">
                         <div><p className="text-[11px] text-muted">Overdue and due within 30 days</p><p className="mt-1 text-xl font-semibold tabular-nums text-fg">{commitmentHorizonTotal}</p></div>
-                        <p className="text-[10px] text-muted">Current dated commitments</p>
+                        
                       </div>
                       {commitmentHorizonTotal > 0 ? (
                         <>

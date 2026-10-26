@@ -14,7 +14,6 @@ test('Dashboard Overview leads with Finance and Projects cards and groups agency
   assert.ok(overviewStart >= 0 && performanceStart > overviewStart, 'Dashboard overview branch should be identifiable');
   const overview = dashboard.slice(overviewStart, performanceStart);
 
-  const scope = overview.indexOf('data-ams-feature-slug="dashboard-overview-reporting-scope"');
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const portfolio = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
   const projectProgress = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"');
@@ -26,7 +25,8 @@ test('Dashboard Overview leads with Finance and Projects cards and groups agency
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
   const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
 
-  assert.ok(scope >= 0 && finance > scope && portfolio > finance, 'Finance and Projects must be the first main cards after scope.');
+  assert.ok(finance >= 0 && portfolio > finance, 'Finance and Projects must be the first main cards after the header toolbar.');
+  assert.equal(overview.includes('dashboard-overview-reporting-scope'), false, 'Do not repeat the reporting period as a second content card.');
   assert.ok(projectProgress > portfolio && attention > projectProgress, 'Project progress precedes the compact exception card.');
   assert.ok(taskQueue > attention && deadlines > taskQueue, 'Task execution and deadlines follow the Finance/Project lead cards.');
   assert.ok(team > deadlines && clientFocus > team, 'Team and client delivery context remain secondary.');
@@ -276,9 +276,9 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(dashboard.includes('Recent 30-day default window'));
   assert.ok(analytics.includes('All dates defaults to the recent 30 days.'));
-  assert.ok(overview.includes('Finance & recorded time'));
-  assert.ok(overview.includes('Projects & deadlines: current state'));
-  assert.ok(overview.includes('ams-overview-scope__value'));
+  assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
+  assert.ok(dashboard.includes('aria-label="Reporting date range"'));
+  assert.ok(dashboard.includes('ams-dashboard-period-controls'));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false);
   assert.equal(overview.includes('title="Active projects"'), false);
   assert.equal(dashboard.includes('DashboardTrendRangePicker'), false);
@@ -538,7 +538,6 @@ test('Dashboard Overview orders Finance and Projects first, followed by action-o
   assert.ok(start >= 0 && stop > start);
   const overview = dashboard.slice(start, stop);
   const order = [
-    'dashboard-overview-reporting-scope',
     'dashboard-finance-overview',
     'dashboard-project-portfolio',
     'dashboard-project-progress',
@@ -850,8 +849,9 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
   const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projectStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
   const finance = overview.slice(financeStart, projectStart);
-  assert.ok(overview.includes('ams-overview-scope__meta'));
-  assert.ok(overview.includes('ams-overview-scope__value'));
+  assert.equal(overview.includes('ams-overview-scope__meta'), false);
+  assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
+  assert.ok(dashboard.includes('ams-dashboard-period-controls'));
   assert.ok(finance.includes('ams-finance-control-links'));
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-movement"'));
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-trend"'));
@@ -872,7 +872,7 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
   assert.ok(overview.includes('setOverviewTaskFilter'));
   assert.ok(styles.includes('.ams-project-summary-grid'));
   assert.ok(styles.includes('.ams-finance-movement-card__icon'));
-  assert.ok(styles.includes('.ams-overview-scope__meta'));
+  assert.ok(styles.includes('.ams-dashboard-period-controls'));
   assert.equal(overview.includes('Priority 01'), false);
 });
 
@@ -907,3 +907,15 @@ test('Dashboard Overview exposes canonical quotation follow-up and functional co
 });
 
 
+
+
+test('Maven Finance trend uses reference-style point-following hover and consistent series colours', async () => {
+  const chart = await read('src/components/charts/DashboardCharts.tsx');
+  assert.ok(chart.includes('yPercent: number'));
+  assert.ok(chart.includes('yPercent: ((selectedPoint.y - top) / innerHeight) * 100'));
+  assert.ok(chart.includes('stroke={primaryLineColor}'));
+  assert.ok(chart.includes('stroke={secondaryLineColor}'));
+  assert.ok(chart.includes('top: isMavenPresentation ? `clamp(8px, calc(${hover?.yPercent ?? 35}% - 44px), calc(100% - 124px))` : \'0\''));
+  assert.ok(chart.includes('{!isMavenPresentation && <div className="mt-1 text-[10px] text-muted">'));
+  assert.ok(chart.includes('stopColor={primaryLineColor} stopOpacity="0"'));
+});

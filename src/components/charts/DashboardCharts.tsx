@@ -92,7 +92,7 @@ export const TrendChart: React.FC<{
   presentation?: 'default' | 'maven';
   ariaLabel: string;
 }> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, axisFormat, presentation = 'default', ariaLabel }) => {
-  const [hover, setHover] = useState<{ index: number; x: number; percent: number } | null>(null);
+  const [hover, setHover] = useState<{ index: number; x: number; percent: number; yPercent: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const gradientId = `dashboard-trend-${useId().replace(/:/g, '')}`;
   const isMavenPresentation = presentation === 'maven';
@@ -154,6 +154,7 @@ export const TrendChart: React.FC<{
       index: nearestIndex,
       x: selectedPoint.x,
       percent: (selectedPoint.x / width) * 100,
+      yPercent: ((selectedPoint.y - top) / innerHeight) * 100,
     });
   };
 
@@ -183,7 +184,12 @@ export const TrendChart: React.FC<{
     const safeIndex = Math.max(0, Math.min(points.length - 1, index));
     const selectedPoint = points[safeIndex];
     if (!selectedPoint) return;
-    setHover({ index: safeIndex, x: selectedPoint.x, percent: (selectedPoint.x / width) * 100 });
+    setHover({
+      index: safeIndex,
+      x: selectedPoint.x,
+      percent: (selectedPoint.x / width) * 100,
+      yPercent: ((selectedPoint.y - top) / innerHeight) * 100,
+    });
   };
   const handleChartKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
@@ -244,7 +250,7 @@ export const TrendChart: React.FC<{
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={primaryLineColor} stopOpacity={isMavenPresentation ? "0.10" : "0.24"} />
               <stop offset="68%" stopColor={primaryLineColor} stopOpacity={isMavenPresentation ? "0.025" : "0.075"} />
-              <stop offset="100%" stopColor="var(--series-1)" stopOpacity="0" />
+              <stop offset="100%" stopColor={primaryLineColor} stopOpacity="0" />
             </linearGradient>
           </defs>
 
@@ -289,10 +295,10 @@ export const TrendChart: React.FC<{
                 <text x={point.x} y={height - 15} textAnchor="middle" fontSize={isMavenPresentation ? "14" : "10"} fill="var(--muted)">{point.label}</text>
                 {activePoint && (
                   <>
-                    <circle cx={point.x} cy={point.y} r="5.5" fill="var(--panel)" stroke="var(--series-1)" strokeWidth="2.2" vectorEffect="non-scaling-stroke" />
-                    <circle cx={point.x} cy={point.y} r="2.4" fill="var(--series-1)" />
-                    {point.secondaryY !== undefined && <circle cx={point.x} cy={point.secondaryY} r="4.2" fill="var(--panel)" stroke="var(--series-3)" strokeWidth="2" vectorEffect="non-scaling-stroke" />}
-                    {point.tertiaryY !== undefined && <circle cx={point.x} cy={point.tertiaryY} r="4.2" fill="var(--panel)" stroke="var(--success)" strokeWidth="2" vectorEffect="non-scaling-stroke" />}
+                    <circle cx={point.x} cy={point.y} r="5.5" fill="var(--panel)" stroke={primaryLineColor} strokeWidth="2.2" vectorEffect="non-scaling-stroke" />
+                    <circle cx={point.x} cy={point.y} r="2.4" fill={primaryLineColor} />
+                    {point.secondaryY !== undefined && <circle cx={point.x} cy={point.secondaryY} r="4.2" fill="var(--panel)" stroke={secondaryLineColor} strokeWidth="2" vectorEffect="non-scaling-stroke" />}
+                    {point.tertiaryY !== undefined && <circle cx={point.x} cy={point.tertiaryY} r="4.2" fill="var(--panel)" stroke={tertiaryLineColor} strokeWidth="2" vectorEffect="non-scaling-stroke" />}
                   </>
                 )}
               </g>
@@ -304,10 +310,13 @@ export const TrendChart: React.FC<{
           {active && (
             <div
               className={["absolute top-0 z-10 w-[190px] -translate-x-1/2 rounded-card border border-line bg-panel px-3 py-2 text-xs ams-trend-tooltip", isMavenPresentation ? "ams-trend-tooltip--maven" : ""].join(" ")}
-              style={{ left: isMavenPresentation ? `clamp(108px, ${hover?.percent ?? 50}%, calc(100% - 108px))` : `${Math.max(8, Math.min(92, hover?.percent ?? 50))}%` }}
+              style={{
+                left: isMavenPresentation ? `clamp(108px, ${hover?.percent ?? 50}%, calc(100% - 108px))` : `${Math.max(8, Math.min(92, hover?.percent ?? 50))}%`,
+                top: isMavenPresentation ? `clamp(8px, calc(${hover?.yPercent ?? 35}% - 44px), calc(100% - 124px))` : '0',
+              }}
             >
               <p className="font-semibold text-fg">{active.label}</p>
-              <div className="mt-1 text-[10px] text-muted">{dragging ? 'Drag to inspect another period' : 'Hover or drag across the chart'}</div>
+              {!isMavenPresentation && <div className="mt-1 text-[10px] text-muted">{dragging ? 'Drag to inspect another period' : 'Hover or drag across the chart'}</div>}
               <div className="mt-2 space-y-1 text-muted">
                 <div className="flex justify-between gap-3"><span>{primaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.primary)}</span></div>
                 {secondaryLabel && active.secondary !== undefined && <div className="flex justify-between gap-3"><span>{secondaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.secondary)}</span></div>}
