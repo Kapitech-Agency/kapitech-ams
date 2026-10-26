@@ -1545,6 +1545,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     setValue: setReportingPeriodValue,
     clearFilter: clearReportingPeriodFilter
   } = useReportingPeriod();
+  const [overviewFinancePeriodMode, setOverviewFinancePeriodMode] = useState<ReportingPeriodMode>('month');
+  const [overviewFinancePeriodValue, setOverviewFinancePeriodValue] = useState(() => getCurrentDashboardPeriodValue('month'));
+  const [overviewTimePeriodMode, setOverviewTimePeriodMode] = useState<ReportingPeriodMode>('month');
+  const [overviewTimePeriodValue, setOverviewTimePeriodValue] = useState(() => getCurrentDashboardPeriodValue('month'));
   const selectedReportingRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, 'en-GB');
   const reportPeriodLabel = reportPeriodEnabled && selectedReportingRange
     ? selectedReportingRange.label + ' (' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate + ')'
@@ -1583,10 +1587,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [overviewProjectFilter, setOverviewProjectFilter] = useState<DashboardProjectFilter>('all');
   const [overviewDeadlineFilter, setOverviewDeadlineFilter] = useState<DashboardDeadlineFilter>('all');
   const [overviewQuotationFilter, setOverviewQuotationFilter] = useState<DashboardQuotationFilter>('all');
-  const [overviewFinancePeriodMode, setOverviewFinancePeriodMode] = useState<ReportingPeriodMode>('month');
-  const [overviewFinancePeriodValue, setOverviewFinancePeriodValue] = useState(() => getCurrentDashboardPeriodValue('month'));
-  const [overviewTimePeriodMode, setOverviewTimePeriodMode] = useState<ReportingPeriodMode>('month');
-  const [overviewTimePeriodValue, setOverviewTimePeriodValue] = useState(() => getCurrentDashboardPeriodValue('month'));
   const [attentionSeverityFilter, setAttentionSeverityFilter] = useState<DashboardAttentionSeverityFilter>('all');
   const [activitySearch, setActivitySearch] = useState('');
   const [activitySeverityFilter, setActivitySeverityFilter] = useState<DashboardActivitySeverityFilter>('all');
