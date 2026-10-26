@@ -118,8 +118,8 @@ test('Dashboard reuses canonical Finance invoice, issue-date, and payment helper
   assert.ok(currentOutstanding.includes('getInvoiceOutstanding(invoice)') && currentOutstanding.includes('isIssuedInvoice(invoice)'));
   assert.ok(dashboard.includes('const inCurrencyIssuedInvoices = inCurrencyInvoices.filter(isIssuedInvoice)'));
   assert.ok(analytics.includes('getInvoiceOutstanding(invoice)'));
-  assert.doesNotMatch(currentOutstanding, /const balance = invoice\\.balanceDue/);
-  assert.doesNotMatch(analytics, /const paid = Number\\(invoice\\.amountPaid/);
+  assert.doesNotMatch(currentOutstanding, /const balance = invoice\.balanceDue/);
+  assert.doesNotMatch(analytics, /const paid = Number\(invoice\.amountPaid/);
 });
 
 test('Dashboard Analytics does not turn currency-mismatched or quotation-only records into zero financial trends', () => {
