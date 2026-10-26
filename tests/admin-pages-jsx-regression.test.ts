@@ -245,7 +245,7 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   assert.ok(dashboard.includes('api.finance.getExpenses()') && dashboard.includes('api.tasks.getAll()'));
   assert.ok(dashboard.includes('<PerformanceView') && dashboard.includes('matchesDate={matchesDate}') && dashboard.includes('reportPeriodLabel={reportPeriodLabel}'));
   assert.ok(dashboard.includes('<AnalyticsView') && dashboard.includes('reportPeriodMode={reportPeriodMode}') && dashboard.includes('reportPeriodValue={reportPeriodValue}') && dashboard.includes('reportPeriodLabel={reportPeriodLabel}') && dashboard.includes('currency={financeCurrency}'));
-  assert.ok(dashboard.includes('className="mb-0"'));
+  assert.ok(dashboard.includes('className="mb-0 ams-dashboard-page-header"'));
   assert.equal(dashboard.includes('ariaLabel="Dashboard view"'), false);
   assert.ok(!dashboard.includes('-mt-2'));
   assert.ok(layout.includes('workspace-topbar-navigation') && layout.includes('<AdminSectionTabs'));
