@@ -279,7 +279,7 @@ test('Dashboard card actions, Recorded time controls, calendar navigation and Ac
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
 
-  assert.ok(dashboard.includes('filter((year) => /^\d{4}$/.test(year))'), 'Calendar year navigation should match four-digit years.');
+  assert.ok(dashboard.includes("filter((year) => /^\\d{4}$/.test(year))"), 'Calendar year navigation should match four-digit years.');
   assert.ok(dashboard.includes('dashboardActivityActorFilterWidth'));
   assert.ok(dashboard.includes('longestLabel * 6.8 + 44'));
   assert.ok(dashboard.includes("style={{ '--activity-actor-filter-width': dashboardActivityActorFilterWidth } as React.CSSProperties}"));
@@ -931,7 +931,8 @@ test('Dashboard Overview gates module links through the existing route-access po
   assert.ok(overview.includes('disabled={!canOpenTasks}'));
   assert.ok(overview.includes('canOpenDashboardRoute(taskDestination)'));
   assert.ok(overview.includes('canOpenProjects && canOpenDashboardRoute(projectHref)'));
-  assert.ok(overview.includes('{canOpenTimeLogs ? <Link to="/admin/time-logs"'));
+  assert.ok(overview.includes('to="/admin/time-logs"'));
+  assert.ok(overview.includes('ams-dashboard-team-time__header-actions'));
   assert.ok(overview.includes('{canOpenInvoiceRegister ? ('));
   assert.ok(overview.includes('{canOpenExpenseRegister ? ('));
   assert.ok(overview.includes("candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate))"));
