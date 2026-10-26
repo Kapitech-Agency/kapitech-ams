@@ -292,9 +292,9 @@ test('Dashboard quick actions and project-header links respect route access', as
   assert.ok(dashboard.includes("href: '/admin/finance?tab=accounts-receivable'"));
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-quick-actions"'));
   assert.ok(dashboard.includes("const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister"));
-  assert.ok(dashboard.includes("const canCreateTask = hasAdminPermission('canManageKanbanTasks') && canOpenTasks"));
+  assert.equal(dashboard.includes("const canCreateTask ="), false);
   assert.ok(dashboard.includes("to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}"));
-  assert.ok(dashboard.includes("to={canCreateTask ? '/admin/tasks?create=1' : '/admin/tasks'}"));
+  assert.equal(dashboard.includes("to={canCreateTask ? '/admin/tasks?create=1' : '/admin/tasks'}"), false);
   assert.ok(dashboard.includes("to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}"));
 });
 
@@ -766,10 +766,9 @@ test('Dashboard Overview exposes complete header navigation, reporting controls,
 });
 
 
-test('Dashboard header provides permission-aware invoice, task and project quick actions', async () => {
+test('Dashboard header provides permission-aware invoice, project and refresh actions', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
-  const tasks = await read('src/components/admin/TasksWorkspace.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const headerStart = dashboard.indexOf('<AdminModuleHeader slug="dashboard-header"');
   const headerEnd = dashboard.indexOf('<section className="ams-dashboard-toolbar', headerStart);
@@ -777,12 +776,14 @@ test('Dashboard header provides permission-aware invoice, task and project quick
   const header = dashboard.slice(headerStart, headerEnd);
   assert.ok(header.includes('data-ams-feature-slug="dashboard-quick-actions"'));
   assert.ok(dashboard.includes("const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister"));
-  assert.ok(dashboard.includes("const canCreateTask = hasAdminPermission('canManageKanbanTasks') && canOpenTasks"));
   assert.ok(header.includes("'/admin/finance?tab=accounts-receivable&action=create-invoice'"));
-  assert.ok(header.includes("'/admin/tasks?create=1'"));
+  assert.equal(header.includes('/admin/tasks?create=1'), false);
   assert.ok(header.includes("'/admin/projects?create=1'"));
+  assert.ok(header.includes('ams-dashboard-header-action--invoice'));
+  assert.ok(header.includes('ams-dashboard-header-action--project'));
+  assert.ok(header.includes('ams-dashboard-header-action--refresh'));
   assert.ok(header.includes("canCreateInvoice ? 'Create invoice' : 'Invoices'"));
-  assert.ok(header.includes("canCreateTask ? 'New task' : 'Tasks'"));
+  assert.equal(header.includes('New task'), false);
   assert.ok(header.includes("canCreateProject ? 'New project' : 'Projects'"));
   assert.ok(header.includes('aria-label="Refresh dashboard data"'));
 
@@ -791,9 +792,6 @@ test('Dashboard header provides permission-aware invoice, task and project quick
   assert.ok(invoicing.includes("embeddedView !== 'receivables'"));
   assert.ok(invoicing.includes('createInvoiceActionHandled.current = true'));
   assert.ok(invoicing.includes('openCreateInvoice();'));
-  assert.ok(tasks.includes("const requestedCreate = searchParams.get('create') === '1'"));
-  assert.ok(tasks.includes('createTaskRequestHandled.current = true'));
-  assert.ok(tasks.includes('if (canManageTasks) openNewTask();'));
   assert.ok(styles.includes('.ams-dashboard-header-actions > a,'));
   assert.ok(styles.includes('.ams-dashboard-header-actions > a:focus-visible'));
   assert.ok(styles.includes('prefers-reduced-motion: reduce'));

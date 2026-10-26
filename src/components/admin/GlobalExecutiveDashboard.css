@@ -513,13 +513,33 @@
 @media (max-width: 599px) {
   .ams-shell .ams-dashboard .ams-dashboard-header-actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
-  .ams-shell .ams-dashboard .ams-dashboard-header-actions > button {
+  .ams-shell .ams-dashboard .ams-dashboard-header-action {
     min-width: 0;
     width: 100%;
+    padding-inline: 10px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-action--invoice {
+    grid-column: 1;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions:has(.ams-dashboard-header-action--invoice):has(.ams-dashboard-header-action--project) .ams-dashboard-header-action--invoice {
+    grid-column: 1 / -1;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-action--project {
+    grid-column: 1;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-action--refresh {
+    grid-column: 2;
+    justify-self: end;
+    width: fit-content;
+    min-width: 40px;
     padding-inline: 10px;
   }
 }

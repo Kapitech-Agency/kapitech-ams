@@ -1372,7 +1372,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const canOpenClientDirectory = canOpenDashboardRoute('/admin/clients/all-clients');
   const canOpenTasks = canOpenDashboardRoute('/admin/tasks');
   const canCreateInvoice = hasAdminPermission('canManageInvoices') && canOpenInvoiceRegister;
-  const canCreateTask = hasAdminPermission('canManageKanbanTasks') && canOpenTasks && canOpenDashboardRoute('/admin/tasks?create=1');
   const canOpenTimeLogs = canOpenDashboardRoute('/admin/time-logs');
   const canOpenDocuments = canOpenDashboardRoute('/admin/documents');
   const canViewAuditLogs = hasAdminPermission('canViewSecurityAuditLogs');
@@ -2062,9 +2061,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <Link
                 to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}
                 className={[
-                  'inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-4 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                  'ams-dashboard-header-action ams-dashboard-header-action--invoice inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-4 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                   canCreateInvoice
-                    ? 'bg-accent text-white shadow-sm hover:-translate-y-px hover:bg-accent-hover'
+                    ? 'bg-accent text-white hover:-translate-y-px hover:bg-accent-hover'
                     : 'border border-line bg-panel text-fg hover:border-accent/30 hover:bg-panel-hover'
                 ].join(' ')}
                 aria-label={canCreateInvoice ? 'Create invoice' : 'Open invoices'}
@@ -2073,20 +2072,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 {canCreateInvoice ? 'Create invoice' : 'Invoices'}
               </Link>
             ) : null}
-            {canOpenTasks ? (
-              <Link
-                to={canCreateTask ? '/admin/tasks?create=1' : '/admin/tasks'}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                aria-label={canCreateTask ? 'Create task' : 'Open tasks'}
-              >
-                <CheckCircle2 size={14} aria-hidden="true" />
-                {canCreateTask ? 'New task' : 'Tasks'}
-              </Link>
-            ) : null}
             {canOpenProjects ? (
               <Link
                 to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="ams-dashboard-header-action ams-dashboard-header-action--project inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 aria-label={canCreateProject ? 'Create project' : 'Open projects'}
               >
                 <FolderKanban size={14} aria-hidden="true" />
@@ -2099,7 +2088,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               disabled={isRefreshing}
               aria-label="Refresh dashboard data"
               title="Refresh dashboard data"
-              className="inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="ams-dashboard-header-action ams-dashboard-header-action--refresh inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
               <span className="hidden min-[440px]:inline">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
