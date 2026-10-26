@@ -542,6 +542,32 @@ const getInquiryStatusTone = (status: string): DonutPoint['tone'] => {
   return 'muted';
 };
 
+type DashboardEmptyStateProps = {
+  title: string;
+  description: string;
+  icon?: React.ReactNode;
+  action?: React.ReactNode;
+  compact?: boolean;
+};
+
+const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = ({
+  title,
+  description,
+  icon = <FileText size={17} aria-hidden="true" />,
+  action,
+  compact = true
+}) => (
+  <div className={['ams-dashboard-empty', compact ? 'ams-dashboard-empty--compact' : ''].filter(Boolean).join(' ')} role="status">
+    <span className="ams-dashboard-empty__icon" aria-hidden="true">{icon}</span>
+    <div className="ams-dashboard-empty__content">
+      <p className="ams-dashboard-empty__eyebrow">Nothing to show</p>
+      <p className="ams-dashboard-empty__title">{title}</p>
+      <p className="ams-dashboard-empty__description">{description}</p>
+      {action ? <div className="ams-dashboard-empty__action">{action}</div> : null}
+    </div>
+  </div>
+);
+
 const DashboardUnavailable: React.FC<{ title: string; description: string; compact?: boolean }> = ({ title, description, compact = false }) => (
   <div
     className={compact ? 'ams-dashboard-state ams-dashboard-state--compact' : 'flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-8 text-center'}
@@ -2387,10 +2413,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   {operationalSnapshot.projects === null ? (
                     <div className="p-4"><DashboardUnavailable title="Project progress unavailable" description="The Projects source did not return current records." compact /></div>
                   ) : featuredDashboardProjects.length === 0 ? (
-                    <div className="px-4 py-8 text-center" role="status">
-                      <p className="text-xs font-medium text-fg">{activeProjectRows.length === 0 ? 'No active projects' : 'No active projects match this service-line filter.'}</p>
-                      <p className="mt-1 text-[11px] text-muted">Change the service-line filter to inspect another part of the portfolio.</p>
-                    </div>
+                    <div className="px-4 py-4"><DashboardEmptyState icon={<FolderKanban size={17} aria-hidden="true" />} title={activeProjectRows.length === 0 ? 'No active projects yet' : 'No projects match this filter'} description={activeProjectRows.length === 0 ? 'Active delivery work will appear here when projects are in progress.' : 'Try All or choose the other service line to see matching projects.'} action={<Link to="/admin/projects?projects=all" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open project registry <ArrowUpRight size={12} aria-hidden="true" /></Link>} /></div>
                   ) : (
                     <div className="divide-y divide-line">
                       {featuredDashboardProjects.map((project) => {
@@ -2549,7 +2572,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             ))}
                           </div>
                         ) : (
-                          <p className="px-4 py-3 text-[11px] text-muted" role="status">No inbound records need immediate triage.</p>
+                          <div className="px-4 py-3"><DashboardEmptyState icon={<FileText size={16} aria-hidden="true" />} title="Inbox is clear" description="No inbound records currently need immediate triage." compact /></div>
                         )}
                       </>
                     )}
@@ -2601,19 +2624,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." compact /></div>
                 ) : dashboardWorkTasks.length === 0 ? (
                   <div className="px-4 py-8" role="status">
-                    <p className="text-xs font-semibold text-fg">No task records returned</p>
-                    
+                    <DashboardEmptyState icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No task records yet" description="Tasks will appear here when they are created in the canonical Tasks workspace." action={canOpenTasks ? <Link to="/admin/tasks" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Tasks <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} />
                   </div>
                 ) : activeDashboardTasks.length === 0 ? (
-                  <div className="px-4 py-8" role="status">
-                    <p className="text-xs font-semibold text-fg">All returned tasks are complete</p>
-                    
-                  </div>
+                  <div className="px-4 py-4"><DashboardEmptyState icon={<CheckCircle2 size={17} aria-hidden="true" />} title="Queue cleared" description="Every task in the current scope is complete. Switch to another queue to review other work." /></div>
                 ) : visibleOverviewTasks.length === 0 ? (
-                  <div className="px-4 py-8" role="status">
-                    <p className="text-xs font-semibold text-fg">No tasks match this queue</p>
-                    <p className="mt-1 text-[11px] text-muted">Try another filter.</p>
-                  </div>
+                  <div className="px-4 py-4"><DashboardEmptyState icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No tasks in this queue" description="There are no matching tasks for this filter. Choose another queue to inspect different work." /></div>
                 ) : (
                   <div className="divide-y divide-line">
                     {visibleOverviewTasks.slice(0, 5).map((task) => {
@@ -2676,7 +2692,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 {operationalSnapshot.projects === null ? (
                   <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned. Deadlines are not inferred." compact /></div>
                 ) : rawProjectRows.length === 0 ? (
-                  <p className="px-4 py-8 text-center text-xs text-muted" role="status">No project records returned.</p>
+                  <div className="px-4 py-4"><DashboardEmptyState icon={<CalendarDays size={17} aria-hidden="true" />} title="No delivery dates to display" description="The project register returned no records, so upcoming deadlines cannot be determined." action={canOpenProjects ? <Link to="/admin/projects?projects=all" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Projects <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
                 ) : (
                   <>
                     <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
@@ -3088,14 +3104,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
 
                       {activeProjectRows.length === 0 ? (
-                        <p className="py-4 text-xs text-muted" role="status">No active projects are currently returned.</p>
+                        <DashboardEmptyState icon={<FolderKanban size={17} aria-hidden="true" />} title="No active project distribution" description="Portfolio risk and workload visuals appear when active projects are available." compact />
                       ) : (
                         <>
                           <div className="grid min-w-0 gap-3 sm:grid-cols-[150px_minmax(0,1fr)]">
                             {projectRiskBreakdown.reduce((sum, item) => sum + item.value, 0) > 0 ? (
                               <DonutChart data={projectRiskBreakdown} ariaLabel="Active projects grouped by saved risk and deadline signals" showLegend={false} centerLabel="Active" presentation="maven" />
                             ) : (
-                              <div className="flex min-h-[150px] items-center justify-center rounded-control border border-line bg-bg px-3 text-center text-[11px] text-muted" role="status">No risk or deadline distribution to chart.</div>
+                              <div className="min-w-0"><DashboardEmptyState icon={<CircleDollarSign size={17} aria-hidden="true" />} title="No risk signals to chart" description="No saved risk or deadline signals are available for these projects." compact /></div>
                             )}
                             <div className="min-w-0 space-y-2">
                               {projectRiskBreakdown.map((item) => {
@@ -3162,7 +3178,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   </div>
                   ) : taskLoadByAssignee.length === 0 ? (
-                    <p className="text-[11px] text-muted" role="status">No open task assignments in the current source.</p>
+                    <DashboardEmptyState icon={<Users size={17} aria-hidden="true" />} title="No open assignments" description="Open task distribution will appear here when tasks have owners." compact />
                   ) : (
                     <div className="space-y-3">
                       {taskLoadByAssignee.slice(0, 4).map((owner) => (
@@ -3198,7 +3214,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   </div>
                   ) : periodTimeRows.length === 0 ? (
-                    <p className="text-[11px] text-muted" role="status">No time records returned for this reporting scope.</p>
+                    <DashboardEmptyState icon={<Clock3 size={17} aria-hidden="true" />} title="No recorded time in this period" description="Hours are shown only when team members have saved time entries for the selected scope." compact />
                   ) : (
                     <div className="space-y-3">
                       {periodTimeRows.slice(0, 4).map((person) => (
@@ -3232,7 +3248,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   {operationalSnapshot.projects === null ? (
                     <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The Projects source did not return records. Client delivery counts are not inferred." compact /></div>
                   ) : clientDeliveryFocus.length === 0 ? (
-                    <p className="px-4 py-8 text-center text-xs text-muted" role="status">No client-linked delivery records.</p>
+                    <div className="px-4 py-4"><DashboardEmptyState icon={<Users size={17} aria-hidden="true" />} title="No client delivery items" description="Client-linked delivery summaries appear when active projects are connected to client records." action={canOpenClientDirectory ? <Link to="/admin/clients/all-clients" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Clients <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
                   ) : (
                     <div className="divide-y divide-line">
                       {clientDeliveryFocus.slice(0, 4).map((client) => (
@@ -3325,7 +3341,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   </div>
                   ) : (dashboardOverview.recentActivity || []).length === 0 ? (
-                    <p className="px-4 py-5 text-[11px] text-muted" role="status">No recent audit activity was returned.</p>
+                    <div className="px-4 py-4"><DashboardEmptyState icon={<FileText size={17} aria-hidden="true" />} title="No recent activity" description="New audit events will appear here as workspace actions are recorded." compact /></div>
                   ) : (
                     <div className="divide-y divide-line">
                       {dashboardOverview.recentActivity.slice(0, 5).map((activity, index) => {
