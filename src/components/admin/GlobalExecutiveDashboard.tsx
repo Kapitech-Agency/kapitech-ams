@@ -2597,9 +2597,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               })}
                             </div>
                           )}
-                          {filteredDashboardQuotations.length > visibleDashboardQuotations.length ? (
-                            
-                          ) : null}
+
                         </>
                       )}
                     </section>
