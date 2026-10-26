@@ -3313,3 +3313,168 @@
   .ams-shell .ams-dashboard .ams-dashboard-card-action,
   .ams-shell .ams-dashboard .ams-dashboard-filter-pill { transition-duration: .01ms; }
 }
+
+
+/* Dashboard final interaction contract: one scroll surface and a single control system. */
+html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { height:100%; overflow:hidden; }
+.ams-shell:has(.ams-dashboard) { width:100%; height:100dvh; max-height:100dvh; overflow:hidden; }
+.ams-shell:has(.ams-dashboard) > main { width:auto; min-width:0; min-height:0; height:100%; overflow-x:clip; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+.ams-shell .ams-dashboard { box-sizing:border-box; width:100%; max-width:100%; min-width:0; overflow-x:clip; }
+.ams-shell .ams-dashboard .ams-overview-card-row { display:grid; min-width:0; align-items:stretch; gap:14px; }
+.ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row { margin-top:14px; }
+.ams-shell .ams-dashboard .ams-overview-panel { box-sizing:border-box; min-width:0; height:100%; min-height:0; overflow:hidden; border:1px solid var(--dashboard-card-border); border-radius:12px; box-shadow:none; transform:none; }
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child { box-sizing:border-box; display:flex; height:58px; min-height:58px; align-items:center; justify-content:space-between; gap:10px; padding:10px 16px; border-bottom:1px solid var(--dashboard-card-border); background:color-mix(in srgb,var(--bg) 16%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:first-child { min-width:0; flex:1 1 auto; }
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 { margin:0; overflow:hidden; color:var(--text); font-size:13px; line-height:18px; font-weight:650; letter-spacing:-.012em; text-overflow:ellipsis; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child { display:flex; min-width:0; flex:0 0 auto; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:5px; }
+.ams-shell .ams-dashboard .ams-overview-panel > div:last-child:not([class~="p-0"]) { padding:14px 16px; }
+.ams-shell .ams-dashboard .ams-overview-panel > div:last-child[class~="p-0"] { padding:0; }
+.ams-shell .ams-dashboard .ams-dashboard-header-action,
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcut,
+.ams-shell .ams-dashboard .ams-project-registry-action { box-sizing:border-box; display:inline-flex; height:36px; min-height:36px; flex:0 0 auto; align-items:center; justify-content:center; gap:7px; padding:0 11px; border-radius:8px; font-size:11px; line-height:14px; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-dashboard-card-action { box-sizing:border-box; display:inline-flex; height:32px; min-height:32px; min-width:0; flex:0 0 auto; align-items:center; justify-content:center; gap:6px; padding:0 10px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); color:var(--muted); font-size:10px; line-height:14px; font-weight:550; text-decoration:none; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-dashboard-card-action:hover { border-color:var(--dashboard-card-border); background:var(--dashboard-hover-surface); color:var(--text); }
+.ams-shell .ams-dashboard .ams-dashboard-header-actions { display:flex; min-width:0; max-width:100%; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:7px; }
+.ams-shell .ams-dashboard .ams-dashboard-header-primary-actions { display:flex; min-width:0; align-items:center; flex-wrap:nowrap; gap:6px; }
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts { display:flex; min-width:0; align-items:center; flex-wrap:wrap; gap:5px; }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar { display:flex; min-width:0; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:8px; padding:0 0 12px; margin-bottom:14px; border-bottom:1px solid var(--dashboard-card-border); overflow:visible; }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs { display:flex; width:auto; max-width:100%; min-width:0; flex:0 1 auto; flex-wrap:wrap; align-items:center; gap:5px; padding:0; border:0; background:transparent; overflow:visible; }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab { box-sizing:border-box; display:inline-flex; height:36px; min-height:36px; flex:0 0 auto; align-items:center; justify-content:center; padding:0 13px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); color:var(--muted); font-size:11px; line-height:14px; text-decoration:none; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab:hover { background:var(--dashboard-hover-surface); color:var(--text); }
+.ams-shell .ams-dashboard .ams-dashboard-page-header { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:12px; margin-bottom:10px; padding-bottom:8px; border-bottom:0; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child { max-width:none; min-width:0; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header h1 { margin:0; font-size:25px; line-height:31px; letter-spacing:-.035em; }
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > button,
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcut { height:36px; min-height:36px; }
+@media (min-width:1280px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header { grid-template-columns:minmax(220px,1fr) minmax(0,max-content); align-items:center; column-gap:20px; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child { min-width:0; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header > div:last-child { justify-self:end; width:auto; }
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions { width:auto; max-width:none; flex-wrap:nowrap; justify-content:flex-end; gap:6px; }
+  .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts { flex-wrap:nowrap; padding-left:9px; margin-left:2px; border-left:1px solid var(--dashboard-card-border); }
+}
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter,
+.ams-shell .ams-dashboard .ams-dashboard-filter-pills { min-width:0; flex-wrap:wrap; overflow:visible; }
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter { display:inline-flex; flex:0 1 auto; align-items:center; gap:3px; height:36px; min-height:36px; padding:3px; border-radius:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button,
+.ams-shell .ams-dashboard .ams-dashboard-project-filter { box-sizing:border-box; display:inline-flex; height:28px; min-height:28px; flex:0 0 auto; align-items:center; justify-content:center; gap:5px; padding:0 9px; border-radius:6px; font-size:10px; line-height:13px; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-project-progress-toolbar { display:flex; min-width:0; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 14px; border-bottom:1px solid var(--dashboard-card-border); background:color-mix(in srgb,var(--bg) 22%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-dashboard-filter-pills { display:flex; align-items:center; gap:5px; padding:0; }
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill { box-sizing:border-box; display:inline-flex; height:32px; min-height:32px; align-items:center; justify-content:center; gap:6px; padding:0 9px; border-radius:7px; font-size:10px; line-height:13px; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill__count { display:inline-flex; min-width:18px; height:18px; align-items:center; justify-content:center; padding:0 5px; border:1px solid var(--dashboard-card-border); border-radius:5px; background:color-mix(in srgb,var(--bg) 36%,var(--panel)); color:var(--muted); font-size:9px; line-height:12px; font-variant-numeric:tabular-nums; }
+
+/* Selected project/task/calendar filters use a restrained deep-crimson state. */
+.ams-shell .ams-dashboard { --dashboard-active-bg:#641326; --dashboard-active-hover:#75182e; --dashboard-active-border:#96263e; --dashboard-active-text:#fff5f6; }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"],
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-project-filter[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets button[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-calendar-period-filter__group button[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid button[aria-pressed="true"] {
+  border-color:var(--dashboard-active-border); background:var(--dashboard-active-bg); color:var(--dashboard-active-text); font-weight:650;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,#fff 4%,transparent);
+}
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] > span,
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count { border-color:color-mix(in srgb,#fff 22%,var(--dashboard-active-border)); background:color-mix(in srgb,#fff 8%,var(--dashboard-active-bg)); color:#fff; }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"]:hover,
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-filter-pill[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid button[aria-pressed="true"]:hover:not(:disabled) { border-color:var(--dashboard-active-border); background:var(--dashboard-active-hover); color:#fff; }
+
+/* Projects body flexes to the entire Finance row height. */
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] { align-items:stretch; }
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] { display:flex; min-width:0; align-self:stretch; }
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel { display:flex; min-width:0; min-height:100%; height:100%; flex:1 1 auto; flex-direction:column; }
+.ams-shell .ams-dashboard .ams-dashboard-projects-body { display:flex; min-width:0; min-height:0; flex:1 1 auto; flex-direction:column; }
+.ams-shell .ams-dashboard .ams-dashboard-projects-body > .ams-project-portfolio-body { display:flex; min-height:0; flex:1 1 auto; flex-direction:column; justify-content:space-between; gap:16px; }
+
+/* One calendar-triggered period selector includes grouping and period selection. */
+.ams-shell .ams-dashboard .ams-calendar-period-filter { display:flex; min-width:0; flex-direction:column; align-items:stretch; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger { box-sizing:border-box; display:inline-flex; min-width:0; min-height:36px; align-items:center; justify-content:flex-start; gap:8px; padding:0 10px; border:1px solid var(--dashboard-card-border); border-radius:9px; background:color-mix(in srgb,var(--panel) 78%,var(--bg)); color:var(--text); font-size:10px; line-height:14px; text-align:left; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger:hover,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger:hover { border-color:color-mix(in srgb,var(--accent) 32%,var(--line)); background:var(--dashboard-hover-surface); }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger > svg:first-child,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger > svg:first-child { flex:0 0 auto; color:var(--muted); }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger > svg:last-child,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger > svg:last-child { flex:0 0 auto; margin-left:auto; color:var(--muted); transition:transform 120ms ease; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger > svg.is-open,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger > svg.is-open { transform:rotate(180deg); }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger-copy { display:flex; min-width:0; flex-direction:column; gap:1px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger-label { color:var(--muted); font-size:9px; line-height:11px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__trigger-value { max-width:180px; overflow:hidden; color:var(--text); font-size:11px; line-height:14px; font-weight:650; text-overflow:ellipsis; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__panel,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-panel { box-sizing:border-box; display:grid; width:100%; min-width:0; gap:11px; margin-top:8px; padding:12px; border:1px solid var(--dashboard-card-border); border-radius:12px; background:color-mix(in srgb,var(--bg) 38%,var(--panel)); box-shadow:0 8px 24px color-mix(in srgb,#000 13%,transparent); }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__panel-heading,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-panel__heading { display:flex; min-width:0; align-items:flex-start; justify-content:space-between; gap:10px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__panel-heading p,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-panel__heading p { margin:0; color:var(--text); font-size:11px; line-height:15px; font-weight:650; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__panel-heading span,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-panel__heading span { display:block; margin-top:3px; color:var(--muted); font-size:10px; line-height:14px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__panel-heading > button,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-panel__heading > button { display:inline-flex; min-height:28px; align-items:center; justify-content:center; padding:0 9px; border:1px solid var(--dashboard-card-border); border-radius:7px; background:var(--panel); color:var(--muted); font-size:10px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__group,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets { display:flex; min-width:0; flex-wrap:wrap; gap:5px; padding:3px; border:1px solid var(--dashboard-card-border); border-radius:9px; background:color-mix(in srgb,var(--bg) 42%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__group button,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets button { box-sizing:border-box; display:inline-flex; min-width:0; min-height:30px; flex:1 1 auto; align-items:center; justify-content:center; padding:0 9px; border:1px solid transparent; border-radius:7px; background:transparent; color:var(--muted); font-size:10px; line-height:13px; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__year { display:grid; grid-template-columns:32px minmax(0,1fr) 32px; align-items:center; gap:8px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__year button { display:inline-flex; width:32px; height:30px; align-items:center; justify-content:center; border:1px solid var(--dashboard-card-border); border-radius:7px; background:var(--panel); color:var(--text); }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__year button:disabled { cursor:not-allowed; opacity:.35; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__year strong { color:var(--text); font-size:12px; line-height:16px; text-align:center; font-variant-numeric:tabular-nums; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid { display:grid; min-width:0; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid.is-quarter { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid.is-year { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid button { box-sizing:border-box; display:flex; min-width:0; min-height:38px; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:6px 4px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); color:var(--text); font-size:10px; line-height:13px; font-variant-numeric:tabular-nums; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid.is-month button { min-height:34px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid button small { color:var(--muted); font-size:9px; line-height:11px; }
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid button:disabled { cursor:not-allowed; opacity:.3; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-filter { display:flex; min-width:0; flex:0 1 auto; flex-wrap:wrap; align-items:center; gap:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-filter.is-open { flex:1 1 100%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger { height:32px; min-height:32px; min-width:140px; padding:0 9px; border-radius:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-panel { flex:1 1 100%; gap:9px; margin-top:0; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets button { min-height:29px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-date-range { display:grid; min-width:0; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-date { display:flex; min-width:0; flex-direction:column; gap:4px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-date > span { color:var(--muted); font-size:9px; line-height:12px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-date input { box-sizing:border-box; width:100%; min-width:0; height:34px; min-height:34px; padding:0 9px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); color:var(--text); color-scheme:dark; font:inherit; font-size:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-date input:focus-visible,
+.ams-shell .ams-dashboard .ams-calendar-period-filter button:focus-visible,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-filter button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap { width:100%; min-width:0; overflow-x:clip; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table { width:100%; min-width:0; table-layout:fixed; border-collapse:collapse; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th,
+.ams-shell .ams-dashboard .ams-dashboard-activity-table td { overflow-wrap:anywhere; }
+.ams-shell .ams-dashboard .ams-dashboard-team-body { display:flex; min-width:0; flex:1 1 auto; flex-direction:column; gap:14px; padding:14px 16px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks,
+.ams-shell .ams-dashboard .ams-dashboard-team-time { min-width:0; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time { margin-top:auto; padding-top:14px; border-top:1px solid var(--dashboard-card-border); }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row { min-width:0; padding:10px 11px; border:1px solid var(--dashboard-card-border); border-radius:9px; background:color-mix(in srgb,var(--bg) 36%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals { display:flex; min-width:0; flex-wrap:wrap; gap:5px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span { display:inline-flex; min-height:22px; align-items:center; padding:3px 7px; border:1px solid var(--dashboard-card-border); border-radius:7px; background:color-mix(in srgb,var(--bg) 36%,var(--panel)); color:var(--muted); font-size:10px; line-height:13px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span.is-risk { border-color:color-mix(in srgb,var(--danger) 24%,var(--line)); background:color-mix(in srgb,var(--danger) 7%,var(--panel)); color:var(--danger); }
+@media (min-width:1280px) {
+  .ams-shell .ams-dashboard .ams-dashboard-finance-panel > div:last-child:not([class~="p-0"]) { padding:14px 16px; }
+  .ams-shell .ams-dashboard .ams-dashboard-finance-trend-region { height:auto; min-height:0; padding:12px 13px; }
+  .ams-shell .ams-dashboard .ams-dashboard-finance-trend-region .ams-trend-chart__plot { min-height:160px; }
+}
+@media (max-width:1279px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header { grid-template-columns:minmax(0,1fr); }
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions { justify-content:flex-start; }
+  .ams-shell .ams-dashboard .ams-finance-primary-grid { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:599px) {
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child { height:auto; min-height:56px; padding:9px 12px; }
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child { max-width:52%; flex-wrap:wrap; }
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs { display:grid; width:100%; grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab { width:100%; padding-inline:4px; font-size:10px; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-filter,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-filter.is-open { flex:1 1 100%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger { width:100%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-date-range { grid-template-columns:minmax(0,1fr); }
+  .ams-shell .ams-dashboard .ams-calendar-period-filter__grid.is-year { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}

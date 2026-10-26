@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Code2,
@@ -1505,6 +1506,101 @@ const AnalyticsView: React.FC<{
   );
 };
 
+
+type DashboardCalendarPeriodFilterProps = {
+  ariaLabel: string;
+  mode: ReportingPeriodMode;
+  value: string;
+  periodLabel: string;
+  options: Array<{ value: string; label: string }>;
+  onModeChange: (mode: ReportingPeriodMode, value: string) => void;
+  onValueChange: (value: string) => void;
+};
+
+const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps> = ({
+  ariaLabel, mode, value, periodLabel, options, onModeChange, onValueChange
+}) => {
+  const [open, setOpen] = useState(false);
+  const panelId = React.useId();
+  const selectedYear = Number(value.slice(0, 4)) || new Date().getFullYear();
+  const [visibleYear, setVisibleYear] = useState(selectedYear);
+  const years = Array.from(new Set(options.map((option) => option.value.slice(0, 4))))
+    .filter((year) => /^\d{4}$/.test(year))
+    .sort((left, right) => Number(right) - Number(left));
+  const availableValues = new Set(options.map((option) => option.value));
+
+  useEffect(() => { setVisibleYear(selectedYear); }, [selectedYear, mode]);
+
+  const previousYear = years.filter((year) => Number(year) < visibleYear).sort((a, b) => Number(b) - Number(a))[0];
+  const nextYear = years.filter((year) => Number(year) > visibleYear).sort((a, b) => Number(a) - Number(b))[0];
+  const yearLabel = String(visibleYear);
+  const periodTiles = mode === 'month'
+    ? Array.from({ length: 12 }, (_, index) => {
+        const date = new Date(visibleYear, index, 1);
+        return {
+          value: yearLabel + '-' + String(index + 1).padStart(2, '0'),
+          label: new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(date),
+          detail: new Intl.DateTimeFormat('en-GB', { month: 'long' }).format(date)
+        };
+      })
+    : mode === 'quarter'
+      ? [1, 2, 3, 4].map((quarter) => ({
+          value: yearLabel + '-Q' + quarter,
+          label: 'Q' + quarter,
+          detail: ['Jan – Mar', 'Apr – Jun', 'Jul – Sep', 'Oct – Dec'][quarter - 1]
+        }))
+      : years.map((year) => ({
+          value: year,
+          label: year,
+          detail: Number(year) === selectedYear ? 'Selected year' : ''
+        }));
+
+  return (
+    <div className={['ams-calendar-period-filter', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
+      <button type="button" className="ams-calendar-period-filter__trigger" aria-label={ariaLabel} aria-expanded={open} aria-controls={panelId} onClick={() => setOpen((state) => !state)}>
+        <CalendarDays size={14} aria-hidden="true" />
+        <span className="ams-calendar-period-filter__trigger-copy">
+          <span className="ams-calendar-period-filter__trigger-label">Period</span>
+          <span className="ams-calendar-period-filter__trigger-value">{periodLabel}</span>
+        </span>
+        <ChevronDown size={13} className={open ? 'is-open' : ''} aria-hidden="true" />
+      </button>
+      {open ? (
+        <div id={panelId} className="ams-calendar-period-filter__panel" role="group" aria-label={ariaLabel + ' calendar'} onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false); }}>
+          <div className="ams-calendar-period-filter__panel-heading">
+            <div><p>Choose reporting period</p><span>{periodLabel}</span></div>
+            <button type="button" aria-label="Close calendar filter" onClick={() => setOpen(false)}><span>Done</span></button>
+          </div>
+          <div className="ams-calendar-period-filter__group" role="group" aria-label="Reporting period grouping">
+            {([
+              { value: 'month', label: 'Month' },
+              { value: 'quarter', label: 'Quarter' },
+              { value: 'year', label: 'Year' }
+            ] as Array<{ value: ReportingPeriodMode; label: string }>).map((group) => (
+              <button key={group.value} type="button" aria-pressed={mode === group.value} onClick={() => { if (group.value !== mode) onModeChange(group.value, getCurrentDashboardPeriodValue(group.value)); }}>{group.label}</button>
+            ))}
+          </div>
+          {mode !== 'year' ? (
+            <div className="ams-calendar-period-filter__year">
+              <button type="button" disabled={!previousYear} aria-label="Previous calendar year" onClick={() => previousYear && setVisibleYear(Number(previousYear))}><ChevronLeft size={14} aria-hidden="true" /></button>
+              <strong>{yearLabel}</strong>
+              <button type="button" disabled={!nextYear} aria-label="Next calendar year" onClick={() => nextYear && setVisibleYear(Number(nextYear))}><ChevronRight size={14} aria-hidden="true" /></button>
+            </div>
+          ) : null}
+          <div className={['ams-calendar-period-filter__grid', mode === 'quarter' ? 'is-quarter' : mode === 'year' ? 'is-year' : 'is-month'].join(' ')} role="group" aria-label={mode === 'month' ? 'Select month' : mode === 'quarter' ? 'Select quarter' : 'Select year'}>
+            {periodTiles.map((tile) => (
+              <button key={tile.value} type="button" disabled={!availableValues.has(tile.value)} aria-pressed={value === tile.value} onClick={() => { onValueChange(tile.value); setOpen(false); }} title={tile.detail}>
+                <span>{tile.label}</span>
+                {tile.detail && mode !== 'month' ? <small>{tile.detail}</small> : null}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -1569,6 +1665,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [activitySeverityFilter, setActivitySeverityFilter] = useState<DashboardActivitySeverityFilter>('all');
   const [activityActorFilter, setActivityActorFilter] = useState('__all_actors__');
   const [activityTimeFilter, setActivityTimeFilter] = useState<DashboardActivityTimeFilter>('30');
+  const [activityCalendarOpen, setActivityCalendarOpen] = useState(false);
   const [activityStartDate, setActivityStartDate] = useState('');
   const [activityEndDate, setActivityEndDate] = useState('');
   const [activitySortOrder, setActivitySortOrder] = useState<DashboardActivitySortOrder>('newest');
@@ -2931,14 +3028,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <p className="mt-1 text-[10px] leading-4 text-muted">Issued invoice value vs eligible expenses</p>
                         </div>
                         <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-finance-period-controls">
-                          <label>
-                            <span>Group</span>
-                            <CustomSelect aria-label="Finance chart grouping" value={overviewFinancePeriodMode} onChange={(value) => { const mode = value as ReportingPeriodMode; setOverviewFinancePeriodMode(mode); setOverviewFinancePeriodValue(getCurrentDashboardPeriodValue(mode)); }} options={[{ value: 'month', label: 'Month' }, { value: 'quarter', label: 'Quarter' }, { value: 'year', label: 'Year' }]} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[92px]" menuClassName="ams-dashboard-dropdown-menu" />
-                          </label>
-                          <label className="ams-card-period-controls__period">
-                            <span>Period</span>
-                            <CustomSelect aria-label="Finance chart period" value={overviewFinancePeriodValue} onChange={setOverviewFinancePeriodValue} options={overviewFinancePeriodOptions.map((option) => ({ value: option.value, label: option.label }))} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[124px]" menuClassName="ams-dashboard-dropdown-menu" />
-                          </label>
+                          <DashboardCalendarPeriodFilter ariaLabel="Finance reporting period" mode={overviewFinancePeriodMode} value={overviewFinancePeriodValue} periodLabel={overviewFinancePeriodLabel} options={overviewFinancePeriodOptions} onModeChange={(mode, value) => { setOverviewFinancePeriodMode(mode); setOverviewFinancePeriodValue(value); }} onValueChange={setOverviewFinancePeriodValue} />
                         </div>
                       </div>
                       {operationalSnapshot.invoices === null || operationalSnapshot.expenses === null ? (
@@ -3315,14 +3405,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       <p className="mt-1 text-[10px] leading-4 text-muted">Logged hours · not capacity</p>
                     </div>
                     <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-time-period-controls">
-                      <label>
-                        <span>Group</span>
-                        <CustomSelect aria-label="Recorded time grouping" value={overviewTimePeriodMode} onChange={(value) => { const mode = value as ReportingPeriodMode; setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(getCurrentDashboardPeriodValue(mode)); }} options={[{ value: 'month', label: 'Month' }, { value: 'quarter', label: 'Quarter' }, { value: 'year', label: 'Year' }]} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[92px]" menuClassName="ams-dashboard-dropdown-menu" />
-                      </label>
-                      <label className="ams-card-period-controls__period">
-                        <span>Period</span>
-                        <CustomSelect aria-label="Recorded time period" value={overviewTimePeriodValue} onChange={setOverviewTimePeriodValue} options={overviewTimePeriodOptions.map((option) => ({ value: option.value, label: option.label }))} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[124px]" menuClassName="ams-dashboard-dropdown-menu" />
-                      </label>
+                      <DashboardCalendarPeriodFilter ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
                     </div>
                   </div>
                   {!canOpenTimeLogs || operationalSnapshot.timeLogs === null ? (
@@ -3476,27 +3559,37 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <span>Actor</span>
                           <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[150px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
-                        <label className="ams-dashboard-activity-filter">
-                          <span>Time window</span>
-<CustomSelect aria-label="Filter activity by time window" value={activityTimeFilter} onChange={(value) => { setActivityTimeFilter(value as DashboardActivityTimeFilter); setActivityPage(1); }} options={[{ value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' }, { value: '90', label: 'Last 90 days' }, { value: 'custom', label: 'Custom range' }, { value: 'all', label: 'All loaded dates' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[142px]" menuClassName="ams-dashboard-dropdown-menu" />
-                        </label>
-                        {activityTimeFilter === 'custom' ? (
-                          <div className="ams-dashboard-activity-date-range" role="group" aria-label="Custom activity date range">
-                            <label className="ams-dashboard-activity-date">
-                              <span>From</span>
-                              <input type="date" aria-label="Recent activity start date" value={activityStartDate} max={activityEndDate || undefined} onChange={(event) => { setActivityStartDate(event.target.value); setActivityPage(1); }} />
-                            </label>
-                            <label className="ams-dashboard-activity-date">
-                              <span>To</span>
-                              <input type="date" aria-label="Recent activity end date" value={activityEndDate} min={activityStartDate || undefined} onChange={(event) => { setActivityEndDate(event.target.value); setActivityPage(1); }} />
-                            </label>
-                          </div>
-                        ) : null}
+                        <div className={['ams-dashboard-activity-calendar-filter', activityCalendarOpen || activityTimeFilter === 'custom' ? 'is-open' : ''].filter(Boolean).join(' ')}>
+                          <button type="button" className="ams-dashboard-activity-calendar-trigger" aria-label="Filter activity by time window" aria-expanded={activityCalendarOpen || activityTimeFilter === 'custom'} onClick={() => setActivityCalendarOpen((open) => !open)}>
+                            <CalendarDays size={14} aria-hidden="true" />
+                            <span>{activityTimeFilter === '7' ? 'Last 7 days' : activityTimeFilter === '30' ? 'Last 30 days' : activityTimeFilter === '90' ? 'Last 90 days' : activityTimeFilter === 'custom' ? 'Custom range' : 'All loaded dates'}</span>
+                            <ChevronDown size={12} className={activityCalendarOpen || activityTimeFilter === 'custom' ? 'is-open' : ''} aria-hidden="true" />
+                          </button>
+                          {activityCalendarOpen || activityTimeFilter === 'custom' ? (
+                            <div className="ams-dashboard-activity-calendar-panel" role="group" aria-label="Activity calendar filter options">
+                              <div className="ams-dashboard-activity-calendar-panel__heading">
+                                <div><p>Time window</p><span>Choose a quick range or set exact dates</span></div>
+                                <button type="button" aria-label="Close activity calendar" onClick={() => setActivityCalendarOpen(false)}><span>Done</span></button>
+                              </div>
+                              <div className="ams-dashboard-activity-calendar-presets" role="group" aria-label="Activity date presets">
+                                {([{ value: '7', label: '7 days' }, { value: '30', label: '30 days' }, { value: '90', label: '90 days' }, { value: 'custom', label: 'Custom' }, { value: 'all', label: 'All dates' }] as Array<{ value: DashboardActivityTimeFilter; label: string }>).map((preset) => (
+                                  <button key={preset.value} type="button" aria-pressed={activityTimeFilter === preset.value} onClick={() => { setActivityTimeFilter(preset.value); setActivityPage(1); if (preset.value !== 'custom') setActivityCalendarOpen(false); }}>{preset.label}</button>
+                                ))}
+                              </div>
+                              {activityTimeFilter === 'custom' ? (
+                                <div className="ams-dashboard-activity-date-range" role="group" aria-label="Custom activity date range">
+                                  <label className="ams-dashboard-activity-date"><span>From</span><input type="date" aria-label="Recent activity start date" value={activityStartDate} max={activityEndDate || undefined} onChange={(event) => { setActivityStartDate(event.target.value); setActivityPage(1); }} /></label>
+                                  <label className="ams-dashboard-activity-date"><span>To</span><input type="date" aria-label="Recent activity end date" value={activityEndDate} min={activityStartDate || undefined} onChange={(event) => { setActivityEndDate(event.target.value); setActivityPage(1); }} /></label>
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
                         <label className="ams-dashboard-activity-filter">
                           <span>Order</span>
                           <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
-                        {hasActivityFilters ? <button type="button" className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityPage(1); }}>Reset filters <RefreshCw size={12} aria-hidden="true" /></button> : null}
+                        {hasActivityFilters ? <button type="button" className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters <RefreshCw size={12} aria-hidden="true" /></button> : null}
                       </div>
 
                       {filteredDashboardRecentActivity.length === 0 ? (
@@ -3508,7 +3601,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             description={(dashboardOverview.recentActivity || []).length === 0 ? 'New audit events will appear when workspace actions are recorded.' : isActivityCustomRangeUnselected ? 'Choose a start date, an end date, or both to filter the loaded audit events.' : isActivityCustomRangeInvalid ? 'The start date must be on or before the end date.' : 'Adjust the search, actor, severity or date range to inspect other loaded events.'}
                             compact
                             action={(dashboardOverview.recentActivity || []).length > 0 ? (
-                              <button type="button" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityPage(1); }} className="ams-dashboard-activity-reset">
+                              <button type="button" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }} className="ams-dashboard-activity-reset">
                                 Reset filters <RefreshCw size={11} aria-hidden="true" />
                               </button>
                             ) : undefined}

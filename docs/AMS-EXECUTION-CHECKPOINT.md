@@ -581,3 +581,12 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Applied one shared 32px card-action style to Finance, quotation, task, time-log, Inbox, audit, Projects and delivery links. Custom dropdowns now differentiate the open/focus tint from selected crimson option state; active filters, tabs and pagination retain a consistent crimson selected state.
 - Projects continues to stretch to Finance row height through its flex body. Recent Activity remains a source-backed table with search, actor/severity/time-window/custom-date filters, sort, row-count selection and pagination.
 - No backend/API/database/financial calculation/permissions changes. Quality Gate result must be confirmed for the new SHA; AMS CI still has an independent high-severity dependency audit finding for body-parser.
+
+
+## 0.5 Dashboard flow and calendar-control refinement — 27 October 2026
+
+- Dashboard shell/body scroll duplication is prevented by using the shell as the viewport boundary and the app main region as the sole vertical scroll container. Overview tabs and card filter groups wrap rather than form horizontal scroll strips.
+- A final Dashboard-only CSS contract standardizes card header heights, card-action dimensions, spacing and filter geometry to override legacy cascade conflicts.
+- Finance and Recorded Time use custom calendar-triggered period selectors with Month/Quarter/Year grouping inside the calendar. Period choices are constrained to values provided by the existing reporting-period helper. Recent Activity uses a matching date panel with 7/30/90-day, custom-date and all-loaded-date presets.
+- Project Portfolio has an explicit flex body to stretch with Finance in the shared analysis row. Project and task active filters use a restrained dark-crimson selected state.
+- Presentation-only: canonical data, routes, calculations, backend and permission checks remain unchanged. Validate Quality Gate and CI against the exact commit; dependency audit is tracked separately from frontend verification.

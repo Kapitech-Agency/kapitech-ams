@@ -914,8 +914,8 @@ test('Dashboard Overview keeps reporting controls card-local and operational fil
   assert.equal(dashboard.includes('onClick={clearReportingPeriodFilter}'), false);
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
   assert.equal(dashboard.includes('ams-dashboard-period-controls'), false);
-  assert.ok(overview.includes('aria-label="Finance chart period"'));
-  assert.ok(overview.includes('aria-label="Recorded time period"'));
+  assert.ok(overview.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(overview.includes('ariaLabel="Recorded time reporting period"'));
   assert.ok(overview.includes('aria-label="Filter activity by time window"'));
   assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
 
@@ -1005,8 +1005,8 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
   assert.equal(overview.includes('ams-overview-scope__meta'), false);
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
   assert.equal(dashboard.includes('ams-dashboard-period-controls'), false);
-  assert.ok(overview.includes('aria-label="Finance chart period"'));
-  assert.ok(overview.includes('aria-label="Recorded time period"'));
+  assert.ok(overview.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(overview.includes('ariaLabel="Recorded time reporting period"'));
   assert.ok(overview.includes('aria-label="Filter activity by time window"'));
   assert.ok(finance.includes('ams-finance-control-links'));
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-movement"'));
@@ -1092,6 +1092,28 @@ test('Dashboard refresh warnings keep the main status concise and preserve sourc
 });
 
 
+test('Dashboard calendar filters contain period grouping and date selection', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+  assert.ok(dashboard.includes('const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps>'));
+  assert.ok(dashboard.includes('Choose reporting period'));
+  assert.ok(dashboard.includes('aria-label="Reporting period grouping"'));
+  assert.ok(overview.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(overview.includes('ariaLabel="Recorded time reporting period"'));
+  assert.ok(overview.includes('aria-label="Filter activity by time window"'));
+  assert.ok(overview.includes('aria-label="Activity calendar filter options"'));
+  assert.ok(overview.includes('aria-label="Recent activity start date"'));
+  assert.ok(overview.includes('aria-label="Recent activity end date"'));
+  assert.ok(styles.includes('.ams-calendar-period-filter__panel'));
+  assert.ok(styles.includes('--dashboard-active-bg:#641326'));
+  assert.ok(styles.includes('body:has(.ams-shell .ams-dashboard)'));
+  assert.ok(styles.includes('overflow-y:auto;'));
+  assert.doesNotMatch(overview, /overflow-x-auto/, 'Dashboard Overview must not introduce horizontal scroll strips.');
+});
+
 test('Dashboard Overview uses compact source states and custom controls without oversized blank panels', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
@@ -1160,5 +1182,6 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
   assert.ok(styles.includes('.ams-dashboard-select-trigger[aria-expanded="true"]'));
   assert.ok(styles.includes('.ams-dropdown-item[data-active="true"]:not([data-selected="true"])'));
   assert.ok(styles.includes('.ams-dashboard-filter-pill[aria-pressed="true"]'));
+  assert.ok(styles.includes('--dashboard-active-bg:#641326'));
   assert.ok(styles.includes('.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"]'));
 });
