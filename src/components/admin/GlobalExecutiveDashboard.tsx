@@ -1126,12 +1126,12 @@ const AnalyticsView: React.FC<{
                     aria-pressed={active}
                     onClick={() => setReport(option.value)}
                     className={[
-                      'flex min-h-12 min-w-0 items-center gap-2.5 rounded-control border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                      'ams-dashboard-period-option flex min-h-12 min-w-0 items-center gap-2.5 rounded-control border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                       active ? 'border-accent/35 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg',
                     ].join(' ')}
                   >
                     <span className={[
-                      'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border',
+                      'ams-dashboard-period-option__icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border',
                       active ? 'border-accent/25 bg-accent/10 text-accent-text' : 'border-line bg-panel text-muted',
                     ].join(' ')}>
                       <ReportIcon size={15} aria-hidden="true" />
@@ -2742,7 +2742,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         title="No exceptions match this severity"
                         description="Choose another severity or show all exception levels."
                         compact
-                        action={<button type="button" onClick={() => setAttentionSeverityFilter('all')} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-fg hover:text-accent-text">Show all levels <ArrowUpRight size={12} aria-hidden="true" /></button>}
+                        action={<button type="button" onClick={() => setAttentionSeverityFilter('all')} className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-fg hover:text-accent-text">Show all levels <ArrowUpRight size={12} aria-hidden="true" /></button>}
                       />
                     </div>
                   ) : (

@@ -1215,6 +1215,7 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
 
 test('All Dashboard buttons use a shared size, shape, state, and keyboard-focus contract', async () => {
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const marker = '/* Dashboard button consistency contract - 2026-10-27.';
   const contractStart = styles.lastIndexOf(marker);
   assert.ok(contractStart >= 0, 'The canonical Dashboard button contract should be the final style layer.');
@@ -1234,6 +1235,8 @@ test('All Dashboard buttons use a shared size, shape, state, and keyboard-focus 
     '.ams-dashboard-activity-reset',
     '.ams-dashboard-page-step',
     '.ams-dashboard-activity-page-buttons button',
+    '.ams-dashboard-period-option',
+    '.ams-dashboard-period-option__icon',
     '.ams-portal-root .ams-calendar-period-filter__panel button'
   ]) assert.ok(controls.includes(selector), 'Missing standardized Dashboard control: ' + selector);
 
@@ -1247,6 +1250,9 @@ test('All Dashboard buttons use a shared size, shape, state, and keyboard-focus 
   assert.ok(controls.includes('outline: 2px solid var(--accent);'));
   assert.ok(controls.includes('button:disabled'));
   assert.ok(controls.includes('.ams-dashboard-toolbar > .ams-dashboard-view-tabs'));
+  assert.ok(controls.includes('.ams-dashboard-period-option[aria-pressed="true"]'));
+  assert.ok(dashboard.includes('ams-dashboard-period-option'));
+  assert.ok(dashboard.includes('ams-dashboard-card-action inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-fg hover:text-accent-text">Show all levels'));
   assert.ok(controls.includes('overflow: visible;'), 'View tabs and filter groups must not become horizontal scroll strips.');
   assert.doesNotMatch(controls, /!important/);
 });

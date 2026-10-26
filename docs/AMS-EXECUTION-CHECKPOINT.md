@@ -606,3 +606,6 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Added a final scoped button/control contract to GlobalExecutiveDashboard.css. Header actions and shortcuts use the same 36px geometry, card actions and pagination use 32px, Project service-line segments remain 28px inside a 36px group, and date/select triggers use the same 36px baseline. Larger deadline choice tiles retain their content-driven size but share the same border, radius and selected-state system.
 - Standardized border radius, typography, horizontal padding, hover behavior, disabled opacity, and visible keyboard focus. Navigation tabs retain their semantic underline; primary invoice creation retains the brand action treatment; selected filters use the same neutral surface. Calendar popup controls receive matching rules in their portal, outside the Dashboard DOM.
 - The work is limited to Dashboard presentation and regression coverage; no route, permissions, data, filter logic or backend behavior changed.
+
+
+- Button consistency follow-up includes the Analytics report choice tiles and the Needs Attention "Show all levels" action, so those controls use the same selected-state and card-action styles. Calendar overlays define their own copy of the control tokens because they render outside the Dashboard DOM.

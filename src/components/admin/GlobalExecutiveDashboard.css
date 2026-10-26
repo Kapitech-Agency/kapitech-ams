@@ -4128,3 +4128,50 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
     animation-iteration-count: 1;
   }
 }
+
+
+/* Large report-choice buttons are a named variant of the same control system. */
+.ams-shell .ams-dashboard button.ams-dashboard-period-option {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 58px;
+  align-items: center;
+  padding: 11px 12px;
+  border: 1px solid var(--dashboard-control-border);
+  border-radius: var(--dashboard-control-radius);
+  background: var(--dashboard-control-surface);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 500;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.ams-shell .ams-dashboard button.ams-dashboard-period-option:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--dashboard-control-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard button.ams-dashboard-period-option[aria-pressed="true"] {
+  border-color: var(--line);
+  background: var(--dashboard-control-selected);
+  color: var(--text);
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard button.ams-dashboard-period-option[aria-pressed="true"] .ams-dashboard-period-option__icon {
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--text);
+}
+
+/* All Dashboard controls use the same low-motion transition curve. */
+.ams-shell .ams-dashboard button,
+.ams-shell .ams-dashboard a,
+.ams-portal-root .ams-calendar-period-filter__panel button,
+.ams-portal-root .ams-dashboard-activity-calendar-panel button {
+  transition-property: background-color, color, border-color, box-shadow;
+  transition-duration: 120ms;
+  transition-timing-function: ease;
+}
