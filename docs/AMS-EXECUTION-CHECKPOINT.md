@@ -22,7 +22,7 @@
 
 - This slice changes the Dashboard main content, not the header: Finance trend and Projects portfolio states now use compact visual status rows rather than 220px/250px blank panels. Project progress, task queue, deadline, client focus, team workload, time logs, quotations, exceptions and activity source states now use a consistent icon/text treatment. Genuine empty states use a neutral icon style distinct from unavailable sources.
 - No values, records, permissions, routes, APIs or business operations were fabricated or changed. Populated charts, metrics and rows remain bound to canonical sources. The visual impact is greatest when production sources are unavailable, which was the state seen during authenticated inspection.
-- Added source-level regression coverage for status inventory, compact/empty state classes, and removal of oversized blank Finance and Projects panels. Validate exact-SHA Quality Gate and AMS CI following this commit.
+- Added source-level regression coverage for status inventory, compact/empty state classes, and removal of oversized blank Finance and Projects panels. The first exact-SHA test run identified a punctuation-level copy regression in the time-log unavailable label; restore its original sentence before rerunning the gates.
 - Next: inspect the populated Finance + Projects visual hierarchy, then review Project progress/Needs attention, Task queue/Deadlines, Team/Client delivery, and Recent activity/shortcuts in order. Stage 5 responsive/accessibility evidence and explicit user sign-off remain required; do not start Inbox yet.
 
 ## 1. Prior application/test snapshot (before warning-state slice)

@@ -3180,7 +3180,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
                     <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={15} /></span>
                     <div className="min-w-0">
-                      <p className="text-[11px] font-medium text-fg">Time-log source unavailable</p>
+                      <p className="text-[11px] font-medium text-fg">Time-log source unavailable.</p>
                       <p className="mt-1 text-[11px] leading-4 text-muted">Recorded hours are not estimated from task assignments.</p>
                     </div>
                   </div>
