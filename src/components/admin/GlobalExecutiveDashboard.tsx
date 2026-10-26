@@ -1524,7 +1524,7 @@ const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps
   const panelId = React.useId();
   const selectedYear = Number(value.slice(0, 4)) || new Date().getFullYear();
   const [visibleYear, setVisibleYear] = useState(selectedYear);
-  const years = Array.from(new Set(options.map((option) => option.value.slice(0, 4))))
+  const years: string[] = Array.from(new Set<string>(options.map((option) => option.value.slice(0, 4))))
     .filter((year) => /^\d{4}$/.test(year))
     .sort((left, right) => Number(right) - Number(left));
   const availableValues = new Set(options.map((option) => option.value));
