@@ -107,7 +107,7 @@ test('Dashboard Client Delivery Focus prioritizes agency delivery risk before po
 test('Dashboard Overview client delivery focus groups saved client relationships and preserves source boundaries', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const end = dashboard.indexOf('aria-label="Recent activity and shortcuts"', start);
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"', start);
   assert.ok(start >= 0 && end > start);
   const panel = dashboard.slice(start, end);
   assert.ok(dashboard.includes('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>'));
@@ -129,7 +129,7 @@ test('Dashboard Overview client delivery focus groups saved client relationships
 test('Dashboard client delivery focus resolves canonical client IDs and never invents project slugs for drill-downs', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const end = dashboard.indexOf('aria-label="Recent activity and shortcuts"', start);
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"', start);
   assert.ok(start >= 0 && end > start);
   const panel = dashboard.slice(start, end);
   assert.ok(dashboard.includes("const canOpenClientDirectory = canOpenDashboardRoute('/admin/clients/all-clients')"));
@@ -228,7 +228,7 @@ test('Dashboard overview keeps its operational cards source-backed and preserves
   for (const sourceCall of ['api.dashboard.getOverview()', 'api.projects.getAll()', 'api.tasks.getAll()', 'api.timeLogs.getAll()', 'api.finance.getInvoices()', 'api.finance.getExpenses()']) {
     assert.ok(dashboard.includes(sourceCall), 'Dashboard source missing: ' + sourceCall);
   }
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, stop);
   const analyticsStart = dashboard.indexOf('const AnalyticsView:');
@@ -263,7 +263,7 @@ test('Dashboard project creation action opens the existing create drawer only fo
 test('Dashboard Overview separates current operations from period-scoped Analytics without a duplicate chart filter', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const charts = await read('src/components/charts/DashboardCharts.tsx');
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, stop);
   const analyticsStart = dashboard.indexOf('const AnalyticsView:');
@@ -485,7 +485,7 @@ test('Dashboard Overview adds a permission-gated Inbox triage card from the cano
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const inboxTriage = await read('src/lib/inboxTriage.ts');
   const inboxPage = await read('src/pages/admin/AdminInbox.tsx');
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, stop);
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
@@ -495,7 +495,7 @@ test('Dashboard Overview adds a permission-gated Inbox triage card from the cano
   const triage = overview.indexOf('data-ams-feature-slug="dashboard-inbox-triage"');
   const queue = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const deadlines = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
-  assert.ok(finance >= 0 && projects > finance && progress > projects && exceptions > progress);
+  assert.ok(progress >= 0 && exceptions > progress && overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"') > exceptions && overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"') > overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"') && finance > overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"') && projects > finance);
   assert.ok(triage > exceptions && queue > triage && deadlines > queue);
   assert.ok(dashboard.includes("const canOpenInbox = canOpenDashboardRoute('/admin/inbox')"));
   assert.ok(dashboard.includes("canOpenInbox ? api.leads.getAll() : Promise.resolve"));
@@ -536,23 +536,22 @@ test('Dashboard Needs attention card shows severity and authorised Inbox triage 
 });
 
 
-test('Dashboard Overview orders Finance and Projects first, followed by action-oriented module cards', async () => {
+test('Dashboard Overview orders urgent delivery actions before finance and portfolio context', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
   assert.ok(start >= 0 && stop > start);
   const overview = dashboard.slice(start, stop);
   const order = [
-    'dashboard-finance-overview',
-    'dashboard-project-portfolio',
     'dashboard-project-progress',
     'dashboard-attention-center',
     'dashboard-delivery-desk',
     'dashboard-delivery-commitments',
+    'dashboard-finance-overview',
+    'dashboard-project-portfolio',
     'dashboard-team-workload',
     'dashboard-client-delivery-focus',
-    'dashboard-recent-activity',
-    'dashboard-workspace-shortcuts'
+    'dashboard-recent-activity'
   ];
   let previous = -1;
   for (const slug of order) {
@@ -560,6 +559,9 @@ test('Dashboard Overview orders Finance and Projects first, followed by action-o
     assert.ok(position > previous, 'Overview priority/order must be clear: ' + slug);
     previous = position;
   }
+  const shortcuts = dashboard.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
+  assert.ok(shortcuts >= 0 && shortcuts < start, 'Workspace shortcuts must live in the header before Overview content.');
+  assert.equal(overview.includes('dashboard-workspace-shortcuts'), false);
   assert.equal(overview.includes('Priority 01'), false);
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false);
   const financeCard = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
@@ -571,7 +573,7 @@ test('Dashboard Overview orders Finance and Projects first, followed by action-o
   assert.ok(overview.includes('data-ams-feature-slug="dashboard-expenses-recorded"'));
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-money-movement"'), false,
     'Money movement must not add an extra full-width row outside the Finance card.');
-  for (const label of ['Invoices vs expenses','Money movement','Projects in progress','Creative & IT workload','Needs attention','Task queue','Upcoming deadlines','Team workload','Client delivery focus','Recent activity','Workspaces']) {
+  for (const label of ['Invoices vs expenses','Money movement','Projects in progress','Creative & IT workload','Needs attention','Task queue','Upcoming deadlines','Team workload','Client delivery focus','Recent activity']) {
     assert.ok(overview.includes(label), 'Missing overview card: ' + label);
   }
   assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
@@ -589,7 +591,7 @@ test('Dashboard exceptions sort by severity without artificial priority numberin
   assert.match(dashboard, /if \(normalized === 'danger' \|\| normalized === 'critical'\) return 0;/);
   assert.match(dashboard, /if \(normalized === 'warning'\) return 1;/);
   assert.match(dashboard, /return \[\.\.\.allowedItems\]\.sort\(\(left, right\) =>\s*dashboardAttentionSeverityRank\(left\.severity\) - dashboardAttentionSeverityRank\(right\.severity\)/);
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const attentionStart = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
@@ -644,7 +646,7 @@ test('Dashboard Projects card visualizes Creative and IT workload from canonical
 
 test('Dashboard task queue and deadline cards remain compact, responsive and source-backed', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, stop);
   const queueStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
@@ -666,7 +668,7 @@ test('Dashboard task queue and deadline cards remain compact, responsive and sou
 
 test('Dashboard Overview gates module links through the existing route-access policy', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, stop);
   assert.ok(dashboard.includes("const canOpenProjects = canOpenDashboardRoute('/admin/projects')"));
@@ -687,7 +689,7 @@ test('Dashboard Overview gates module links through the existing route-access po
 
 test('Dashboard Overview displays canonical recent audit activity only for permitted roles', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, stop);
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
@@ -750,7 +752,7 @@ test('Dashboard Overview uses a rounded reference-led visual system and interact
 
 test('Dashboard Overview exposes complete header navigation, reporting controls, and working operational filters', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
 
@@ -847,7 +849,7 @@ test('Dashboard header provides permission-aware invoice, project and refresh ac
 test('Dashboard Overview presents Finance and Projects as compact visual work surfaces', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
@@ -883,7 +885,7 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
 
 test('Dashboard Overview exposes canonical quotation follow-up and functional commercial stage filters', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
