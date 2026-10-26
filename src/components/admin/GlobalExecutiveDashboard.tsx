@@ -2420,10 +2420,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </Link>
           ))}
         </nav>
-
-
-        </div>
-        ) : null}
       </section>
 
       {isRefreshing && !dashboardOverview.loading && !operationalSnapshot.loading ? (
