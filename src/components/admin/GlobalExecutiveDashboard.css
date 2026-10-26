@@ -1258,31 +1258,38 @@
 }
 
 
-/* Focus-card refinement: clearer card headers, predictable internal rhythm, and aligned data columns.
-   All rules are scoped to Dashboard and preserve canonical records, links, and access checks. */
-.ams-shell .ams-dashboard .ams-overview-panel--attention > div:first-child,
-.ams-shell .ams-dashboard .ams-overview-panel--finance > div:first-child,
-.ams-shell .ams-dashboard .ams-overview-panel--projects > div:first-child,
-.ams-shell .ams-dashboard .ams-overview-panel--activity > div:first-child {
+/* Card header baseline: one visible, consistent boundary on every Dashboard card. */
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
   align-items: center;
-  padding: 15px 18px 14px;
+  gap: 12px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--dashboard-card-border);
+  background: color-mix(in srgb, var(--bg) 16%, var(--panel));
 }
 
-.ams-shell .ams-dashboard .ams-overview-panel--attention > div:first-child h2,
-.ams-shell .ams-dashboard .ams-overview-panel--finance > div:first-child h2,
-.ams-shell .ams-dashboard .ams-overview-panel--projects > div:first-child h2,
-.ams-shell .ams-dashboard .ams-overview-panel--activity > div:first-child h2 {
+@media (min-width: 640px) {
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+    padding: 14px 20px;
+  }
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {
   font-size: 14px;
   line-height: 19px;
+  font-weight: 600;
   letter-spacing: -0.015em;
 }
 
-.ams-shell .ams-dashboard .ams-overview-panel--attention > div:first-child > div:last-child,
-.ams-shell .ams-dashboard .ams-overview-panel--finance > div:first-child > div:last-child,
-.ams-shell .ams-dashboard .ams-overview-panel--projects > div:first-child > div:last-child,
-.ams-shell .ams-dashboard .ams-overview-panel--activity > div:first-child > div:last-child {
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child {
   gap: 6px;
+}
+
+@media (max-width: 639px) {
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+    align-items: stretch;
+    gap: 10px;
+    padding: 13px 14px;
+  }
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-attention-panel {

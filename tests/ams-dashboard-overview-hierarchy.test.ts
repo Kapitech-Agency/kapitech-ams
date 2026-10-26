@@ -154,6 +154,31 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   ]) assert.ok(styles.includes(selector), 'Missing layout rule: ' + selector);
 });
 
+test('Dashboard cards use a consistent visible separator between every card header and its content', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const baselineStart = styles.indexOf('/* Card header baseline: one visible, consistent boundary on every Dashboard card. */');
+  const headerStart = styles.indexOf('.ams-shell .ams-dashboard .ams-overview-panel > div:first-child {', baselineStart);
+  const headerEnd = styles.indexOf('}', headerStart);
+  assert.ok(baselineStart >= 0 && headerStart > baselineStart && headerEnd > headerStart);
+  const headerRule = styles.slice(headerStart, headerEnd);
+  assert.ok(headerRule.includes('border-bottom: 1px solid var(--dashboard-card-border);'));
+  assert.ok(headerRule.includes('background: color-mix('));
+  assert.ok(styles.includes('.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {'));
+  assert.match(styles, /@media \(max-width: 639px\)\s*\{\s*\.ams-shell \.ams-dashboard \.ams-overview-panel > div:first-child \{\s*align-items: stretch;\s*gap: 10px;\s*padding: 13px 14px;/);
+  for (const marker of [
+    'dashboard-project-progress',
+    'dashboard-attention-center',
+    'dashboard-delivery-desk',
+    'dashboard-delivery-commitments',
+    'dashboard-finance-overview',
+    'dashboard-project-portfolio',
+    'dashboard-team-workload',
+    'dashboard-client-delivery-focus',
+    'dashboard-recent-activity'
+  ]) assert.ok(dashboard.includes('data-ams-feature-slug="' + marker + '"'), 'Missing card expected to use the shared header treatment: ' + marker);
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');

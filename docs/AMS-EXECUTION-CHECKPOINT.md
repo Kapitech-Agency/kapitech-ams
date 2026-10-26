@@ -545,3 +545,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Regression tests now assert the semantic Recent Activity table and its real filter controls, rather than the previous card/list markup and empty-state wording. Global reporting-period tests preserve shared controls for Performance/Analytics while allowing Recorded Time to use its own card-local scope.
 - Updated the Main-Content Restructuring Specification and Maven-inspired implementation guide so the source documentation no longer requires a global date selector on Overview.
 - TypeScript passed on the previous code SHA; this test/documentation correction must be validated by the next Quality Gate run before marking this slice complete.
+
+
+## 0.7 Consistent Dashboard card header separators — 26 October 2026
+
+- Normalized the header treatment across all Dashboard Overview cards, including Project Delivery, Needs Attention, Task Queue, Upcoming Deadlines, Finance, Projects, Team Workload, Client Delivery Focus and Recent Activity.
+- Every card now uses one shared heading size, consistent header padding, a subtle header surface and a visible one-pixel divider before the content. Mobile uses a smaller horizontal inset and stacked action layout; list/table cards retain their own row dividers beneath the shared header boundary.
+- Added a regression test to prevent card-specific headers from silently losing the shared separator. No business data, calculations, routes, permissions, or backend/API files changed.
