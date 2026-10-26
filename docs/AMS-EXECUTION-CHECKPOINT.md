@@ -671,6 +671,14 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 
 ## 0.6 Dashboard pixel-precision spacing pass — 27 October 2026
 
-- Established a final, scoped spacing contract for Dashboard card rows and card headers: 16px between workspace cards, 12px header rhythm, and 8px between sibling controls. At narrow widths, Finance period and Open Finance remain left-aligned with the same 8px gap instead of being pushed to opposite ends of the header.
+- Established a final, scoped spacing contract for Dashboard card rows and card headers: preserved the original 12px between workspace cards, 12px header rhythm, and 8px between sibling controls. Changes apply to controls within a card/header, not the space between cards. At narrow widths, Finance period and Open Finance remain left-aligned with the same 8px gap instead of being pushed to opposite ends of the header.
 - Finance calendar and Open Finance now share a 36px baseline and have zero incidental margins. Header action groups, Team time controls and Recent Activity actions reuse the same alignment rhythm. Narrow-screen header padding is 14px while desktop header padding is 14px 18px.
 - Added a source regression test for the final CSS contract. This is a presentation-only refinement; canonical data, period behavior, links, permissions, backend and calculations are unchanged. Verify the Quality Gate on this exact commit before acceptance.
+
+
+## 0.7 Dashboard control alignment and Recent Activity export — 27 October 2026
+
+- Preserved the established 12px gaps between Dashboard cards. Standardized only internal control alignment: page-header quick actions and shortcuts share 36px height; project All/Creative/IT filters and Project registry share 28px height; Dashboard tabs wrap and no longer act as a horizontal scroll strip.
+- Finance and Recorded Time retain independent card-level reporting periods; Recent Activity keeps search, severity, actor, date window/custom range, sort, reset, and pagination controls. Added CSV export for the currently filtered/sorted loaded audit events with Activity, Actor, UTC timestamp and Severity fields only; no sensitive audit metadata or new API source is exported.
+- Team Workload gets a consistent internal rhythm for task-owner signals, recorded-time rows, and its period controls. The existing Projects-to-Finance equal-height contract is preserved.
+- Presentation-only changes; canonical data access, permission gates, routes, backend, and financial calculations are unchanged. Validate Quality Gate and CI on this exact SHA.

@@ -331,8 +331,29 @@ test('Dashboard pixel-precision spacing keeps Finance period and Open Finance al
 
   assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*gap: 8px/s);
   assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*justify-content: flex-start/s);
-  assert.match(finalLayer, /\.ams-overview-card-row \{[^}]*column-gap: 16px;[^}]*row-gap: 16px/s);
-  assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \.ams-calendar-period-filter__trigger,\s*\.ams-dashboard-finance-header-actions \.ams-dashboard-card-action \{[^}]*height: 36px;[^}]*min-height: 36px/s);
+  assert.match(finalLayer, /\.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
+  assert.match(finalLayer, /\.ams-shell \.ams-dashboard \.ams-dashboard-finance-header-actions \.ams-calendar-period-filter__trigger,\s*\.ams-shell \.ams-dashboard \.ams-dashboard-finance-header-actions \.ams-dashboard-card-action \{[^}]*height: 36px;[^}]*min-height: 36px/s);
+});
+
+test('Dashboard controls align internally without changing card gutters; Recent Activity exports filtered rows', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = styles.lastIndexOf('/* Dashboard final control alignment — card-to-card spacing is deliberately unchanged. */');
+  assert.ok(start >= 0);
+  const finalContract = styles.slice(start);
+  assert.match(finalContract, /\.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
+  assert.match(finalContract, /\.ams-dashboard-header-actions \.ams-dashboard-header-action,[\s\S]*?height: 36px;\s*min-height: 36px/s);
+  assert.match(finalContract, /\.ams-project-progress-header-actions \.ams-dashboard-segmented-filter button,[\s\S]*?height: 28px;\s*min-height: 28px/s);
+  assert.ok(finalContract.includes('overflow-x: visible;'));
+  assert.ok(dashboard.includes('const exportFilteredDashboardActivity = () => {'));
+  assert.ok(dashboard.includes('aria-label="Export filtered recent activity as CSV"'));
+  assert.ok(dashboard.includes('const exportedRows = filteredDashboardRecentActivity.map((activity) => {'));
+  assert.ok(dashboard.includes("['Activity', 'Actor', 'Timestamp (UTC)', 'Severity']"));
+  assert.ok(dashboard.includes('ams-dashboard-activity-table'));
+  assert.ok(dashboard.includes('aria-label="Search recent activity"'));
+  assert.ok(dashboard.includes('aria-label="Filter activity by severity"'));
+  assert.ok(dashboard.includes('aria-label="Filter activity by actor"'));
+  assert.ok(dashboard.includes('aria-label="Sort recent activity"'));
 });
 
 test('Dashboard card actions, Recorded time controls, calendar navigation and Activity filter widths stay aligned', async () => {

@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Code2,
+  Download,
   CircleDollarSign,
   Clock3,
   FolderKanban,
@@ -2019,6 +2020,35 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const activityFirstRow = filteredDashboardRecentActivity.length ? (currentActivityPage - 1) * activityPageSize + 1 : 0;
   const activityLastRow = Math.min(currentActivityPage * activityPageSize, filteredDashboardRecentActivity.length);
 
+  const exportFilteredDashboardActivity = () => {
+    const escapeCsvCell = (value: unknown) => {
+      const raw = String(value ?? '');
+      const formulaSafe = /^\s*[=+\-@]/.test(raw) ? "'" + raw : raw;
+      return '"' + formulaSafe.replace(/"/g, '""') + '"';
+    };
+    const exportedRows = filteredDashboardRecentActivity.map((activity) => {
+      const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
+      const timestampValue = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toISOString() : '';
+      const severity = getDashboardActivitySeverity(activity.severity);
+      const severityLabel = severity === 'critical' ? 'Critical' : severity === 'warning' ? 'Warning' : 'Info';
+      return [activity.action || 'Recorded audit event', activity.actor || 'System', timestampValue, severityLabel];
+    });
+    const csv = [
+      ['Activity', 'Actor', 'Timestamp (UTC)', 'Severity'],
+      ...exportedRows
+    ].map((row) => row.map(escapeCsvCell).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
+    const objectUrl = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = 'kapitech-dashboard-activity-' + new Date().toISOString().slice(0, 10) + '.csv';
+    anchor.hidden = true;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.URL.revokeObjectURL(objectUrl);
+  };
+
   const attentionSeveritySummary = useMemo(() => {
     const counts = { total: overviewAttentionItems.length, urgent: 0, attention: 0, other: 0 };
     for (const item of overviewAttentionItems) {
@@ -3682,6 +3712,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
                         {hasActivityFilters ? <button type="button" className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters <RefreshCw size={12} aria-hidden="true" /></button> : null}
+                        <button
+                          type="button"
+                          className="ams-dashboard-activity-export"
+                          onClick={exportFilteredDashboardActivity}
+                          disabled={filteredDashboardRecentActivity.length === 0}
+                          title="Export all matching loaded events as a CSV file"
+                          aria-label="Export filtered recent activity as CSV"
+                        >
+                          <Download size={12} aria-hidden="true" />
+                          Export CSV
+                        </button>
                       </div>
 
                       {filteredDashboardRecentActivity.length === 0 ? (
