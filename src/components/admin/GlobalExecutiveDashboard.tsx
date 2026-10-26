@@ -1570,10 +1570,10 @@ const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps
       : nextMode === 'quarter'
         ? yearLabel + '-Q' + Math.ceil(selectedMonth / 3)
         : yearLabel + '-' + String(selectedMonth).padStart(2, '0');
-    const nextValue = options.some((option) => option.value === candidate)
+    const nextOptions = getDashboardReportingPeriodOptions(nextMode, candidate);
+    const nextValue = nextOptions.some((option) => option.value === candidate)
       ? candidate
-      : options.find((option) => option.value.startsWith(yearLabel))?.value
-        || getCurrentDashboardPeriodValue(nextMode);
+      : nextOptions[0]?.value || getCurrentDashboardPeriodValue(nextMode);
     onModeChange(nextMode, nextValue);
   };
 
@@ -3647,6 +3647,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               </div>
                             </DropdownPortal>
                           ) : null}
+                        </div>
                         <label className="ams-dashboard-activity-filter">
                           <span>Order</span>
                           <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
