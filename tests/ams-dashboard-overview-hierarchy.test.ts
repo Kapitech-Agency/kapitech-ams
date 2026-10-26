@@ -149,7 +149,7 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   assert.ok(adminLayout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
   assert.equal(overview.includes('aria-label="Reporting date range"'), false, 'Overview should rely on card-local date controls.');
   assert.ok(!dashboard.includes('ams-dashboard-view-tabs flex min-w-0 items-center gap-1 overflow-x-auto'));
-  assert.ok(dashboard.includes('className="ams-dashboard-header-action ams-dashboard-header-action--registry'));
+  assert.ok(overview.includes('className="ams-project-registry-action'));
   assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
   assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
   assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
@@ -174,27 +174,25 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   ]) assert.ok(styles.includes(selector), 'Missing layout rule: ' + selector);
 });
 
-test('Dashboard cards use a consistent visible separator between every card header and its content', async () => {
+test('Dashboard cards use soft surfaces and whitespace instead of decorative divider lines', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
-  const headerRules = [...styles.matchAll(/\.ams-shell \.ams-dashboard \.ams-overview-panel\s*>\s*div:first-child\s*\{([^}]*)\}/g)].map((match) => match[1]);
-  assert.ok(headerRules.some((rule) =>
-    /border-bottom:\s*1px solid var\(--dashboard-card-border\);/.test(rule) &&
-    /background:\s*color-mix\(/.test(rule)
-  ), 'A canonical card-header rule must provide both a visible separator and a shared header surface.');
+  const polishStart = styles.lastIndexOf('/* Minimal Dashboard polish: no decorative dividers — 2026-10-27.');
+  assert.ok(polishStart >= 0, 'A final no-divider visual pass should be the active styling layer.');
+  const polish = styles.slice(polishStart);
+  assert.ok(polish.includes('border-bottom: 0;'));
+  assert.ok(polish.includes('border-top: 0;'));
+  assert.ok(polish.includes('border-collapse: separate;'));
+  assert.ok(polish.includes('.ams-dashboard-activity-table tbody tr'));
+  assert.ok(polish.includes('background: color-mix('));
   assert.ok(styles.includes('.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {'));
-  assert.match(styles, /@media \(max-width: 639px\)\s*\{\s*\.ams-shell \.ams-dashboard \.ams-overview-panel > div:first-child \{\s*align-items: stretch;\s*gap: 10px;\s*padding: 13px 14px;/);
   for (const marker of [
-    'dashboard-project-progress',
-    'dashboard-attention-center',
-    'dashboard-delivery-desk',
-    'dashboard-delivery-commitments',
-    'dashboard-finance-overview',
-    'dashboard-project-portfolio',
-    'dashboard-team-workload',
-    'dashboard-client-delivery-focus',
+    'dashboard-project-progress', 'dashboard-attention-center',
+    'dashboard-delivery-desk', 'dashboard-delivery-commitments',
+    'dashboard-finance-overview', 'dashboard-project-portfolio',
+    'dashboard-team-workload', 'dashboard-client-delivery-focus',
     'dashboard-recent-activity'
-  ]) assert.ok(dashboard.includes('data-ams-feature-slug="' + marker + '"'), 'Missing card expected to use the shared header treatment: ' + marker);
+  ]) assert.ok(dashboard.includes('data-ams-feature-slug="' + marker + '"'), 'Missing dashboard card: ' + marker);
 });
 
 test('Dashboard controls use card-local dropdowns, design-system active states, and compact pagination', async () => {
@@ -215,20 +213,24 @@ test('Dashboard controls use card-local dropdowns, design-system active states, 
   }
 });
 
-test('Dashboard header owns Project registry and project filters share the card header', async () => {
+test('Project registry sits beside compact service-line filters in the Project Progress card header', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const headerStart = dashboard.indexOf('className="ams-dashboard-header-actions');
-  const projectRegistry = dashboard.indexOf('className="ams-dashboard-header-action ams-dashboard-header-action--registry');
+  const headerEnd = dashboard.indexOf('<section className="ams-dashboard-toolbar', headerStart);
   const projectProgress = dashboard.indexOf('data-ams-feature-slug="dashboard-project-progress"');
+  const projectProgressEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"', projectProgress);
+  const projectRegistry = dashboard.indexOf('className="ams-project-registry-action');
   const portfolioStart = dashboard.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
   const portfolioEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-team-workload"', portfolioStart);
-  assert.ok(headerStart >= 0 && projectRegistry > headerStart && projectRegistry < projectProgress, 'Project registry must be a page-header action.');
+  assert.ok(headerStart >= 0 && headerEnd > headerStart);
+  assert.equal(dashboard.slice(headerStart, headerEnd).includes('Project registry'), false, 'Registry should not crowd the global quick-action group.');
+  assert.ok(projectProgress >= 0 && projectRegistry > projectProgress && projectRegistry < projectProgressEnd, 'Project registry and filters should share the Project Progress header row.');
   assert.ok(dashboard.includes('actions={(\n                    <div className="ams-project-progress-header-actions"'), 'Project filters belong in the card header.');
-  assert.equal(dashboard.slice(projectProgress, projectRegistry).includes('ams-project-registry-action'), false, 'Project Registry must not be duplicated in the card body.');
+  assert.ok(dashboard.slice(projectProgress, projectProgressEnd).includes('ams-dashboard-project-filter'));
   assert.ok(dashboard.slice(portfolioStart, portfolioEnd).includes('bodyClassName="ams-dashboard-projects-body p-4 sm:p-5"'), 'Projects must use the flex-fill body.');
   assert.ok(styles.includes('.ams-dashboard-projects-body > .ams-project-portfolio-body'));
-  assert.ok(styles.includes('.ams-dashboard-header-action--registry'));
+  assert.ok(styles.includes('.ams-project-registry-action'));
 });
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
@@ -1003,7 +1005,7 @@ test('Dashboard header provides aligned quick actions and tabs without a duplica
   assert.ok(styles.includes('border-bottom: 0'));
   assert.ok(styles.includes('.ams-dashboard-page-header h1'));
   assert.ok(styles.includes('border-radius: 10px'));
-  assert.ok(styles.includes('border-bottom-color: var(--accent)'));
+  assert.ok(styles.includes('.ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"]'));
   assert.ok(styles.includes('.ams-dashboard-select-trigger'));
   assert.ok(styles.includes('prefers-reduced-motion: reduce'));
 
@@ -1173,7 +1175,8 @@ test('Dashboard calendar filters are dropdowns with card-local periods and acces
   assert.ok(overview.includes('aria-label="Recent activity end date"'));
   assert.ok(styles.includes('.ams-calendar-period-filter__panel'));
   assert.match(styles, /background:\s*var\(--line\);/);
-  assert.match(styles, /border-bottom:\s*2px solid var\(--accent\)/);
+  assert.ok(styles.includes('/* Minimal Dashboard polish: no decorative dividers — 2026-10-27.'));
+  assert.ok(styles.includes('border-bottom: 0;'), 'Active tabs must use a soft selected surface, not an underline.');
   assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
   assert.ok(styles.includes('.ams-portal-root .ams-calendar-period-filter__panel'));
   assert.ok(styles.includes('.ams-portal-root .ams-dashboard-activity-calendar-panel'));

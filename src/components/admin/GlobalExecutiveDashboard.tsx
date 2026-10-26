@@ -2520,17 +2520,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </Link>
             ) : null}
             </div>
-            {canOpenProjects ? (
-              <Link
-                to="/admin/projects?projects=all"
-                className="ams-dashboard-header-action ams-dashboard-header-action--registry inline-flex min-h-9 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                aria-label="Open Project registry"
-                title="Open the full Project registry"
-              >
-                <FolderKanban size={14} aria-hidden="true" />
-                Project registry
-              </Link>
-            ) : null}
             {view === 'overview' ? (
               <nav className="ams-dashboard-header-shortcuts flex min-w-0 flex-wrap items-center gap-1.5" data-ams-feature-slug="dashboard-workspace-shortcuts" aria-label="Dashboard workspace shortcuts">
                 {[
@@ -2642,6 +2631,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </button>
                         ))}
                       </div>
+                      <Link
+                        to="/admin/projects?projects=all"
+                        className="ams-project-registry-action inline-flex items-center justify-center gap-1.5 rounded-control px-3 text-[11px] font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                        aria-label="Open Project registry"
+                        title="Open the full Project registry"
+                      >
+                        <FolderKanban size={13} aria-hidden="true" />
+                        Project registry
+                        <ArrowUpRight size={12} aria-hidden="true" />
+                      </Link>
                     </div>
                   )}
                 >

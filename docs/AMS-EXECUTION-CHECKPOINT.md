@@ -634,3 +634,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Reworked Cash & Expense Movement into two comparable tiles. Each tile places its primary value and contextual label before a full-width, baseline-aligned mini bar chart; cash receipts and eligible expense buckets retain their separate colors and canonical source calculations. The period chip reflects the Finance period selected above.
 - Quotation follow-up remains a distinct, filterable canonical register preview below the movement section. Existing role checks, date range semantics, source-unavailable states, invoice/expense formulas, currencies and routes are unchanged.
 - Regression assertions now cover the Cash & Expense Movement context, date scope, bar chart layout and responsive container variants. Confirm the new Quality Gate result for this exact commit; the unrelated CI dependency audit has historically flagged `body-parser@1.20.6`.
+
+
+## 0.5 Dashboard refinement: no decorative dividers — 27 October 2026
+
+- Moved Project Registry from the global quick-action cluster to the Projects in Progress card header beside All/Creative/IT. The service-line filters remain compact; the registry action shares their 36px toolbar height.
+- Replaced the active tab underline and internal card/list dividers with soft selected surfaces, spacing, row hover states and restrained typography. Major cards keep a subtle outer boundary; internal groups rely on visual rhythm instead of horizontal rules.
+- Finance and Team Workload retain their own per-card date controls. Recent Activity retains search, actor/severity/time filters, custom date range, sort order, page size and pagination; table rows use soft surfaces instead of grid lines.
+- UI, regression tests and execution checkpoint updated together. Verify Quality Gate on the resulting commit. No API, database, authentication, permission, financial calculation or source-record changes.

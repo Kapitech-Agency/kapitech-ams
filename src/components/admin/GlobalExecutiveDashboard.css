@@ -4511,3 +4511,703 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
     transition-duration: .01ms;
   }
 }
+
+
+/* Minimal Dashboard polish: no decorative dividers — 2026-10-27.
+   Use spacing, soft surface contrast and typographic hierarchy instead of rules. */
+.ams-shell .ams-dashboard .ams-overview-panel {
+  border-color: color-mix(in srgb, var(--line) 58%, transparent);
+  box-shadow: 0 7px 22px color-mix(in srgb, #000 11%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child,
+.ams-shell .ams-dashboard .ams-dashboard-team-panel > div:first-child {
+  border-bottom: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+  min-height: 56px;
+  height: auto;
+  padding: 14px 17px 10px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {
+  font-size: 14px;
+  line-height: 19px;
+  letter-spacing: -.018em;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar {
+  margin-bottom: 15px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 0;
+  border: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header > div:last-child {
+  width: auto;
+  min-width: 0;
+  justify-self: end;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions {
+  display: flex;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-primary-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-shortcut,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > button {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-height);
+  min-height: var(--dashboard-control-height);
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border-radius: 9px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts {
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcut {
+  padding-inline: 9px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcut:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--text) 5%, var(--panel));
+  color: var(--text);
+}
+
+/* Tabs are a compact, non-scrolling segmented switcher; active state is a soft surface, not an underline. */
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
+  padding: 3px;
+  border: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 36%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab,
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-height);
+  min-height: var(--dashboard-control-height);
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 550;
+  line-height: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab:hover {
+  border: 0;
+  border-bottom: 0;
+  background: color-mix(in srgb, var(--text) 4%, var(--panel));
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
+  border: 0;
+  border-bottom: 0;
+  background: color-mix(in srgb, var(--accent) 13%, var(--panel));
+  color: var(--text);
+  font-weight: 650;
+  box-shadow: none;
+}
+
+/* The project service-line filters and registry action share one 36px toolbar. */
+.ams-shell .ams-dashboard .ams-project-progress-header-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-segmented-filter {
+  display: inline-flex;
+  height: 36px;
+  min-height: 36px;
+  min-width: 0;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  overflow: visible;
+  border: 0;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bg) 34%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-filter {
+  display: inline-flex;
+  height: 28px;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 13px;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-filter[aria-pressed="true"] {
+  border: 0;
+  background: color-mix(in srgb, var(--text) 8%, var(--panel));
+  color: var(--text);
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-filter-pill__count {
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-project-registry-action {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 36px;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--text) 5%, var(--panel));
+  color: var(--text);
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-project-registry-action:hover {
+  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+}
+
+/* List cards use breathing room and rounded row surfaces, never a stack of horizontal rules. */
+.ams-shell .ams-dashboard .ams-overview-panel .divide-y {
+  display: grid;
+  gap: 3px;
+  padding: 7px 8px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-top-width: 0;
+}
+
+.ams-shell .ams-dashboard [data-ams-feature-slug="dashboard-project-progress"] .divide-y > article,
+.ams-shell .ams-dashboard .ams-dashboard-attention-list__rows > article,
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage .divide-y > article,
+.ams-shell .ams-dashboard .ams-overview-panel--client-delivery .divide-y > article {
+  border: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 24%, var(--panel));
+}
+
+.ams-shell .ams-dashboard [data-ams-feature-slug="dashboard-project-progress"] .divide-y > article:hover,
+.ams-shell .ams-dashboard .ams-dashboard-attention-list__rows > article:hover,
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage .divide-y > article:hover,
+.ams-shell .ams-dashboard .ams-overview-panel--client-delivery .divide-y > article:hover {
+  background: var(--dashboard-hover-surface);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-panel > div:last-child[class~="p-0"] {
+  padding: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-list__rows {
+  gap: 4px;
+  padding: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 11px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-list__footnote {
+  margin: 0 8px;
+  padding: 8px 4px 3px;
+  border: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-toolbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 11px 16px 4px;
+  border: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage {
+  margin: 6px 10px 10px;
+  padding: 6px 0 0;
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 30%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage__header {
+  padding: 10px 12px 7px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metrics {
+  padding: 0 10px 10px;
+  border: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metric {
+  gap: 3px;
+  padding: 8px 10px;
+  border: 0;
+  background: color-mix(in srgb, var(--text) 4%, var(--panel));
+}
+
+/* Finance is grouped into soft surfaces; whitespace does the separating. */
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel > div:first-child {
+  border-bottom: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel > .ams-dashboard-finance-body {
+  padding: 14px 16px 16px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-grid {
+  align-items: stretch;
+  gap: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric {
+  border: 0;
+  border-radius: 13px;
+  background:
+    radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 68%),
+    color-mix(in srgb, var(--text) 3%, var(--panel));
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-trend-region,
+.ams-shell .ams-dashboard .ams-finance-trend-region {
+  min-width: 0;
+  min-height: 0;
+  padding: 14px;
+  border: 0;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--bg) 28%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement {
+  margin-top: 14px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement__heading {
+  margin-bottom: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement__heading h3 {
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement__grid {
+  gap: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card {
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--text) 3%, var(--panel));
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up {
+  margin-top: 15px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up .divide-y {
+  padding: 3px 0 0;
+  gap: 2px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row {
+  padding: 12px 10px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bg) 25%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row:hover {
+  background: var(--dashboard-hover-surface);
+}
+
+/* Projects: use soft metric tiles and distinct section spacing in place of rules. */
+.ams-shell .ams-dashboard .ams-project-summary-item {
+  min-height: 76px;
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--text) 4%, var(--panel));
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item--danger {
+  background: color-mix(in srgb, var(--danger) 6%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item--danger .ams-project-summary-item__icon {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-row {
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 3%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-project-workload {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ams-shell .ams-dashboard .ams-project-workload__rows {
+  gap: 13px;
+}
+
+/* Team Workload is a clean comparison list, not a grid of outlined mini-cards. */
+.ams-shell .ams-dashboard .ams-dashboard-team-panel > div:first-child {
+  border-bottom: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-body {
+  gap: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--text) 3%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span {
+  min-height: 20px;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 4%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span.is-risk {
+  border: 0;
+  background: color-mix(in srgb, var(--danger) 9%, var(--panel));
+  color: var(--danger);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time {
+  margin-top: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 30%, var(--panel));
+}
+
+/* Recent Activity stays a proper table; soft row surfaces replace grid lines. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-panel > div:first-child {
+  border-bottom: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+  gap: 8px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search input,
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter .ams-dashboard-select-trigger,
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger {
+  min-height: 34px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
+  padding: 0 12px;
+  overflow-x: auto;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table {
+  border-collapse: separate;
+  border-spacing: 0 4px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table thead th {
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 13px;
+  font-weight: 600;
+  letter-spacing: .045em;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr {
+  background: color-mix(in srgb, var(--bg) 25%, var(--panel));
+  transition: background-color 130ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr:hover {
+  background: var(--dashboard-hover-surface);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td {
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  vertical-align: middle;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td:first-child {
+  border-radius: 9px 0 0 9px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td:last-child {
+  border-radius: 0 9px 9px 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__action {
+  color: var(--text);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__actor,
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__time {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__severity {
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination {
+  margin: 7px 14px 12px;
+  padding: 10px 0 0;
+  border: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls {
+  gap: 8px;
+}
+
+@media (min-width: 1280px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header {
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    align-items: center;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    width: auto;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 1279px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+    min-height: 0;
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 13px 14px 8px;
+  }
+
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 1 auto;
+    justify-content: flex-start;
+  }
+
+  .ams-shell .ams-dashboard .ams-project-progress-header-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-segmented-filter {
+    flex: 0 0 auto;
+    max-width: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-project-registry-action {
+    flex: 0 0 auto;
+    padding-inline: 9px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-search {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-filter {
+    width: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-trigger {
+    width: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-reset {
+    width: fit-content;
+  }
+}
+
+@media (max-width: 379px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-filter,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-filter,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-reset {
+    grid-column: 1;
+    width: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action,
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-shortcut {
+    padding-inline: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr {
+    transition-duration: .01ms;
+  }
+}
