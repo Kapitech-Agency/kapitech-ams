@@ -1061,6 +1061,35 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
 });
 
 
+test('Dashboard Finance layout follows the card width and keeps its financial sections visually distinct', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const projectStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
+  const finance = overview.slice(financeStart, projectStart);
+
+  assert.ok(finance.includes('ams-dashboard-finance-body'));
+  assert.ok(finance.includes('ams-finance-primary-grid'));
+  assert.ok(finance.includes('ams-finance-primary-metric'));
+  assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-trend"'));
+  assert.ok(finance.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(finance.includes('ams-finance-movement-card__value'));
+  assert.ok(finance.includes('Cash &amp; expense movement'));
+  assert.ok(finance.includes('ams-quotation-follow-up__description'));
+  assert.ok(finance.includes('data-ams-feature-slug="dashboard-commercial-quotation-pipeline"'));
+
+  assert.ok(styles.includes('container-name: finance-card;'));
+  assert.ok(styles.includes('@container finance-card (min-width: 620px)'));
+  assert.ok(styles.includes('@container finance-card (max-width: 619px)'));
+  assert.ok(styles.includes('@container finance-card (max-width: 419px)'));
+  assert.ok(styles.includes('.ams-dashboard-finance-trend-region .ams-trend-chart__plot'));
+  assert.ok(styles.includes('.ams-finance-quotation-row'));
+  assert.ok(styles.includes('grid-template-columns: minmax(0, 1fr)'));
+});
+
 test('Dashboard Overview exposes canonical quotation follow-up and functional commercial stage filters', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");

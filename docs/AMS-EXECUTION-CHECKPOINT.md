@@ -618,3 +618,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Recent Activity remains a source-backed table with search, actor/severity/time-window filters, custom From/To dates, sort order, page size and pagination. Project filters, per-card date ranges, header button geometry and tab wrapping remain in place.
 - Validation requirement: Quality Gate must pass on the exact cleanup commit. Full AMS CI also runs a dependency audit; previous runs have failed on an existing high-severity advisory for body-parser@1.20.6, unrelated to this front-end change.
 - No backend, API, database, auth, permission, workflow or financial-calculation changes.
+
+
+## 0.5 Finance card responsive polish — 27 October 2026
+
+- Scoped the layout to the Finance panel container so the headline receivables metric and financial trend only sit side-by-side when the actual card is wide enough; narrower card widths use a single-column layout without fixed-height blank space.
+- Refined the Finance headline metric, period-filter/chart region, cash/expense movement tiles and quotation follow-up list. Period controls remain local to Finance. The trend subtitle states the distinct invoice and expense date bases; movement values receive consistent type treatment; quotation follow-up includes a concise purpose line.
+- Existing records, filter behavior, routes, permissions, currencies, period calculations, invoice/expense semantics and empty/unavailable states are unchanged. Regression coverage now checks container-aware breakpoints and Finance section hierarchy.
+- Verify Quality Gate on the exact commit; rendered review of Finance at desktop, tablet and mobile widths remains required before visual sign-off.

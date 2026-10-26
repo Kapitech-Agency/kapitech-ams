@@ -3028,7 +3028,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <AdminPanel
                   title="Finance"
                   className="h-full ams-overview-panel ams-overview-panel--finance ams-dashboard-finance-panel"
-                  bodyClassName="p-4 sm:p-5"
+                  bodyClassName="ams-dashboard-finance-body p-4 sm:p-5"
                   actions={(
                     <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                       Open Finance <ArrowUpRight size={13} aria-hidden="true" />
@@ -3080,7 +3080,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       <div className="ams-finance-trend-heading mb-3 flex flex-wrap items-center justify-between gap-3">
                         <div className="min-w-0">
                           <h3 className="text-xs font-semibold text-fg">Invoices vs expenses</h3>
-                          <p className="mt-1 text-[10px] leading-4 text-muted">Issued invoice value vs eligible expenses</p>
+                          <p className="ams-finance-trend-description mt-1 text-[10px] leading-4 text-muted">Issued invoices by invoice date · expenses by record date</p>
                         </div>
                         <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-finance-period-controls">
                           <DashboardCalendarPeriodFilter caption="Finance period" ariaLabel="Finance reporting period" mode={overviewFinancePeriodMode} value={overviewFinancePeriodValue} periodLabel={overviewFinancePeriodLabel} options={overviewFinancePeriodOptions} onModeChange={(mode, value) => { setOverviewFinancePeriodMode(mode); setOverviewFinancePeriodValue(value); }} onValueChange={setOverviewFinancePeriodValue} />
@@ -3111,7 +3111,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           
                         </>
                       ) : (
-                        <p className="py-8 text-center text-xs text-muted" role="status">No trend buckets are available for this period.</p>
+                        <DashboardEmptyState eyebrow="FINANCIAL MOVEMENT" icon={<CircleDollarSign size={17} aria-hidden="true" />} title="No trend buckets available" description="There are no comparable invoice and expense values for this period." compact />
                       )}
                     </div>
                   </div>
@@ -3119,7 +3119,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
                     <section className="ams-finance-movement" data-ams-feature-slug="dashboard-finance-movement" aria-label="Money movement">
                       <div className="ams-finance-movement__heading">
-                        <h3>Period movement</h3>
+                        <h3>Cash &amp; expense movement</h3>
                         <span className="ams-finance-movement__period">Same period as the trend above</span>
                       </div>
                       <div className={['ams-finance-movement__grid', canOpenInvoiceRegister && canOpenExpenseRegister ? 'is-balanced' : 'is-single'].join(' ')}>
@@ -3130,7 +3130,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 <p className="text-[11px] font-medium text-muted">Cash received</p>
                                 <span className="ams-finance-movement-card__icon" aria-hidden="true"><ArrowUpRight size={13} /></span>
                               </div>
-                              <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}</p>
+                              <p className="ams-finance-movement-card__value mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}</p>
                               
                             </div>
                             <div className="ams-finance-movement-card__chart">
@@ -3157,7 +3157,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 <p className="text-[11px] font-medium text-muted">Expenses recorded</p>
                                 <span className="ams-finance-movement-card__icon" aria-hidden="true"><ReceiptText size={13} /></span>
                               </div>
-                              <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}</p>
+                              <p className="ams-finance-movement-card__value mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}</p>
                               
                             </div>
                             <div className="ams-finance-movement-card__chart">
@@ -3195,7 +3195,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               {dashboardQuotationFilterCounts.all} active
                             </span>
                           </div>
-                          
+                          <p className="ams-quotation-follow-up__description mt-1 text-[11px] leading-4 text-muted">Review pending stages and quotations nearing expiry.</p>
                         </div>
                         <Link
                           to="/admin/finance?tab=quotations"
