@@ -338,7 +338,11 @@ test('Dashboard card actions, Recorded time controls, calendar navigation and Ac
     '.ams-dashboard-finance-panel .ams-finance-movement-card',
     '.ams-dashboard-activity-tools'
   ]) assert.ok(styles.includes(selector), 'Missing focused Dashboard style: ' + selector);
-  assert.match(styles, /grid-template-columns:\s*minmax\(160px, 190px\) 132px var\(--activity-actor-filter-width, 190px\) 142px auto/);
+  assert.ok(styles.includes('grid-template-columns: minmax(220px, 1.4fr) 132px minmax(160px, 1fr) 142px auto;'));
+  assert.ok(styles.includes('@media (max-width: 1199px)'));
+  assert.ok(styles.includes('grid-template-columns: minmax(0, 1.35fr) minmax(120px, .8fr) minmax(150px, 1fr);'));
+  assert.ok(styles.includes('grid-template-columns: repeat(2, minmax(0, 1fr));'));
+  assert.ok(styles.includes('.ams-dashboard-activity-page-status'));
   assert.ok(overview.includes('Open Time Logs'));
   assert.ok(overview.includes('Open Finance'));
   assert.ok(overview.includes('View audit log'));
