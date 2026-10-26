@@ -509,3 +509,5 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Removed the lower Workspace Shortcuts card; recent activity now occupies the final row without a duplicate/secondary shortcuts panel.
 - Scope remained frontend presentation and regression assertions only. No backend, API, database, authentication, role, permission, route, or business-logic changes.
 - Visual sign-off is still pending; this source change is not evidence of authenticated production rendering or responsive acceptance.
+
+- Follow-up layout correction: the final Recent Activity panel now uses the full available row width after the shortcut panel was removed.
