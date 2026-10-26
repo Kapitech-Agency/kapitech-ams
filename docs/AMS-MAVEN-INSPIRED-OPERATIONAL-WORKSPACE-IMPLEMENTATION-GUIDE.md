@@ -199,6 +199,8 @@ Follow this card order:
 
 Let the financial trend and project risk visualization establish the primary visual anchors. Use balanced card proportions, compact counters, bars and concise rows. Preserve AMS design tokens and responsive behavior. Do not invent values, create inferred project progress, repeat a generic KPI strip or bury Finance and Projects beneath exception lists.
 
+**Current visual composition detail (26 October 2026):** present reporting period as one compact icon/value row with two small scope chips, not a paragraph. Inside Finance, the receivable balance and invoice-versus-expense line chart are the primary surface; Cash received and Expenses recorded appear as two compact sparkbar cards directly below, still inside Finance. In Projects, use three equal metric tiles (Active, Overdue, Open tasks) before the ring breakdown and the matched Creative/IT open-task bars. Put each filter's count inside its filter control rather than repeating a second “showing X of Y” line. Prefer visual marks and exact values; keep explanatory text for date-basis, source-unavailable, genuinely empty, and financial-semantics context only. Existing period, project/deadline/task filters remain functional.
+
 ### Header, reporting and filter behavior
 
 - Show direct navigation for Overview, Performance and Analytics in the Dashboard header area; the active state and URL must agree.
