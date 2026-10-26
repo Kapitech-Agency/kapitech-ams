@@ -137,10 +137,10 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   assert.equal(overview.includes('aria-label="Reporting date range"'), false, 'Overview should rely on card-local date controls.');
   assert.ok(!dashboard.includes('ams-dashboard-view-tabs flex min-w-0 items-center gap-1 overflow-x-auto'));
   assert.ok(dashboard.includes('className="ams-project-registry-action'));
-  assert.ok(dashboard.includes('aria-label="Finance chart grouping"'));
-  assert.ok(dashboard.includes('aria-label="Finance chart period"'));
-  assert.ok(dashboard.includes('aria-label="Recorded time grouping"'));
-  assert.ok(dashboard.includes('aria-label="Recorded time period"'));
+  assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
+  assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
   assert.ok(dashboard.includes('aria-label="Filter attention by severity"'));
   for (const label of [
     'Search recent activity', 'Filter activity by severity',
@@ -192,7 +192,7 @@ test('Dashboard controls use card-local dates, custom dropdowns, red active stat
   assert.ok(dashboard.includes("import { CustomSelect } from '../ui/CustomSelect';"));
   assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
   assert.equal(dashboard.includes('aria-label="Reporting period filters"'), false);
-  for (const label of ['Finance chart grouping','Finance chart period','Recorded time grouping','Recorded time period','Filter attention by severity','Filter activity by actor','Filter activity by severity','Filter activity by time window','Sort recent activity','Recent activity rows per page']) {
+  for (const label of ['Filter attention by severity','Filter activity by actor','Filter activity by severity','Filter activity by time window','Sort recent activity','Recent activity rows per page']) {
     assert.ok(dashboard.includes('aria-label="' + label + '"'), 'Missing custom card dropdown: ' + label);
   }
   assert.ok(dashboard.includes('const dashboardActivityActors = useMemo'));

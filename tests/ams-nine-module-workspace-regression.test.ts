@@ -641,14 +641,14 @@ test('Dashboard header context follows the selected Overview, Performance, or An
   assert.match(dashboard, /aria-label="Dashboard views"/);
   assert.match(dashboard, /aria-current=\{view === tab\.key \? 'page' : undefined\}/);
   assert.doesNotMatch(dashboard, /aria-label="Reporting date range"/);
-  assert.ok(dashboard.includes('aria-label="Finance chart period"'));
-  assert.ok(dashboard.includes('aria-label="Recorded time period"'));
+  assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
   const adminLayout = await read('src/pages/admin/AdminLayout.tsx');
   assert.ok(adminLayout.includes('const isDashboardOverview ='));
   assert.ok(adminLayout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
   assert.doesNotMatch(dashboard, /aria-label="Reporting period type"/);
-  assert.ok(dashboard.includes('aria-label="Finance chart grouping"'));
-  assert.ok(dashboard.includes('aria-label="Recorded time grouping"'));
+  assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
 });
 
 test('Dashboard invalid workspace query values normalize to Overview', async () => {

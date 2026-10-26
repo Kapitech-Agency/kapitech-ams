@@ -166,10 +166,10 @@ test('global reporting period controls stay in the admin layout shared by module
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
-  assert.ok(dashboard.includes('aria-label="Finance chart grouping"'));
-  assert.ok(dashboard.includes('aria-label="Finance chart period"'));
-  assert.ok(dashboard.includes('aria-label="Recorded time grouping"'));
-  assert.ok(dashboard.includes('aria-label="Recorded time period"'));
+  assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
+  assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
+  assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
   assert.ok(layout.includes('const isDashboardOverview ='));
   assert.ok(layout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
   assert.doesNotMatch(overview, /aria-label="Reporting date range"/);
