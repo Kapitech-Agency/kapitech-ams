@@ -344,6 +344,7 @@ test('Dashboard controls align internally without changing card gutters; Recent 
   assert.match(styles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
   assert.match(finalContract, /\.ams-dashboard-header-actions \.ams-dashboard-header-action,[\s\S]*?height: 36px;\s*min-height: 36px/s);
   assert.match(finalContract, /\.ams-project-progress-header-actions \.ams-dashboard-segmented-filter button,[\s\S]*?height: 28px;\s*min-height: 28px/s);
+  assert.match(finalContract, /\.ams-project-progress-header-actions \.ams-dashboard-segmented-filter \{[^}]*padding: 0;[^}]*border: 0/s);
   assert.ok(finalContract.includes('overflow-x: visible;'));
   assert.ok(dashboard.includes('const exportFilteredDashboardActivity = () => {'));
   assert.ok(dashboard.includes('aria-label="Export filtered recent activity as CSV"'));

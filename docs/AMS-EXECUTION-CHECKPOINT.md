@@ -682,3 +682,6 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Finance and Recorded Time retain independent card-level reporting periods; Recent Activity keeps search, severity, actor, date window/custom range, sort, reset, and pagination controls. Added CSV export for the currently filtered/sorted loaded audit events with Activity, Actor, UTC timestamp and Severity fields only; no sensitive audit metadata or new API source is exported.
 - Team Workload gets a consistent internal rhythm for task-owner signals, recorded-time rows, and its period controls. The existing Projects-to-Finance equal-height contract is preserved.
 - Presentation-only changes; canonical data access, permission gates, routes, backend, and financial calculations are unchanged. Validate Quality Gate and CI on this exact SHA.
+
+
+- Follow-up alignment detail: removed the extra outer padding/border around the All/Creative/IT segmented group so its visible height no longer exceeds the 28px Project registry action. Card-to-card gap remains 12px.

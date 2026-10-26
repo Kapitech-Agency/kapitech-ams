@@ -6672,11 +6672,11 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   flex: 0 1 auto;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 3px;
-  padding: 2px;
-  border: 1px solid var(--dashboard-card-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--bg) 52%, var(--panel));
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-segmented-filter button,
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action {
