@@ -23,14 +23,17 @@ test('Dashboard Overview leads with Finance and Projects cards and groups agency
   const team = overview.indexOf('data-ams-feature-slug="dashboard-team-workload"');
   const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
-  const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
+  const shortcuts = dashboard.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
 
-  assert.ok(finance >= 0 && portfolio > finance, 'Finance and Projects must be the first main cards after the header toolbar.');
+  assert.ok(projectProgress >= 0 && attention > projectProgress, 'Urgent delivery exceptions must lead the Overview before reporting context.');
+  assert.ok(taskQueue > attention && deadlines > taskQueue, 'Action queues and deadlines must precede portfolio and financial analysis.');
+  assert.ok(finance > deadlines && portfolio > finance, 'Finance and portfolio context follows immediate delivery actions.');
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false, 'Do not repeat the reporting period as a second content card.');
-  assert.ok(projectProgress > portfolio && attention > projectProgress, 'Project progress precedes the compact exception card.');
-  assert.ok(taskQueue > attention && deadlines > taskQueue, 'Task execution and deadlines follow the Finance/Project lead cards.');
+  assert.ok(shortcuts >= 0 && shortcuts < overviewStart, 'Workspace shortcuts belong in the page header, not in the lower content rows.');
+  assert.equal(overview.includes('dashboard-workspace-shortcuts'), false, 'Do not repeat workspace shortcuts as a lower card.');
+
   assert.ok(team > deadlines && clientFocus > team, 'Team and client delivery context remain secondary.');
-  assert.ok(activity > clientFocus && shortcuts > activity, 'Audit activity and shortcuts stay at the bottom of the overview.');
+  assert.ok(activity > clientFocus, 'Recent audit activity remains the final, lower-priority content row.');
   assert.equal(overview.includes('Priority 01'), false, 'The visual hierarchy must not use invented rank numbering.');
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false, 'Remove the redundant generic KPI strip.');
 
@@ -82,7 +85,7 @@ test('Dashboard Client Delivery Focus prioritizes agency delivery risk before po
     last = position;
   }
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
-  const end = dashboard.indexOf('aria-label="Recent activity and shortcuts"', start);
+  const end = dashboard.indexOf('aria-label="Recent activity"', start);
   assert.ok(start >= 0 && end > start);
   const panel = dashboard.slice(start, end);
   const metricOrder = ["label: 'Overdue'", "label: 'Blocked'", "label: 'Unassigned'"];
