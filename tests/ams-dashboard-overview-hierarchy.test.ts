@@ -929,7 +929,7 @@ test('Dashboard Overview exposes canonical quotation follow-up and functional co
   assert.ok(dashboard.includes("['draft', 'review', 'sent'].includes(quotation.status)"), 'Draft, review, and sent quotations remain in the actionable current pipeline.');
   assert.ok(financeCard.includes('No quotations match this stage'));
   assert.ok(financeCard.includes('Quotation data unavailable'));
-  assert.ok(financeCard.includes('No quotation records in {financeCurrency}'));
+  assert.ok(financeCard.includes("title={'No quotation records in ' + financeCurrency}"));
   assert.ok(financeCard.includes('Validity not recorded'));
   assert.ok(financeCard.includes('Amount not recorded'));
   assert.ok(financeCard.includes('to="/admin/finance?tab=quotations"'));
@@ -986,7 +986,7 @@ test('Dashboard Overview uses compact, consistent source states instead of overs
     'Exception data unavailable'
   ]) assert.ok(overview.includes(title), 'Missing truthful Dashboard state: ' + title);
   assert.ok(overview.includes('ams-dashboard-state--compact'));
-  assert.ok(overview.includes('ams-dashboard-state--empty'));
+  assert.ok(overview.includes('ams-dashboard-empty'));
   assert.equal(overview.includes('min-h-[220px]'), false, 'Unavailable Finance charts must not reserve a chart-height blank panel.');
   assert.equal(overview.includes('min-h-[250px]'), false, 'An empty project source must not reserve a large blank portfolio area.');
   assert.ok(styles.includes('.ams-dashboard-state--compact'));

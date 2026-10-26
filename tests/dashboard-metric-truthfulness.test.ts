@@ -10,7 +10,7 @@ test('Dashboard priority exceptions distinguish source-backed records, empty dat
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
   assert.ok(dashboard.includes('attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
-  assert.ok(dashboard.includes('No cross-module exceptions returned'));
+  assert.ok(dashboard.includes('title="No active exceptions"'));
   assert.ok(dashboard.includes('Exception data unavailable'));
   assert.ok(dashboard.includes("dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Exception data unavailable'"));
   assert.ok(dashboard.includes("const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;"));
@@ -162,7 +162,7 @@ test('Dashboard Finance and delivery cards distinguish unavailable sources from 
   assert.ok(overview.includes('Task queue unavailable'));
   assert.ok(overview.includes('title="No task records yet"'));
   assert.ok(overview.includes('Project portfolio unavailable'));
-  assert.ok(overview.includes('No project records returned'));
+  assert.ok(overview.includes('title="No project records yet"'));
   assert.ok(overview.includes('Delivery schedule unavailable'));
   assert.ok(overview.includes('Invoice source unavailable.'));
   assert.ok(overview.includes('Expense source unavailable.'));
