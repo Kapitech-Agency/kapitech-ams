@@ -550,3 +550,58 @@
     transition-duration: 0.01ms;
   }
 }
+
+
+/* Overview content: period-aware Money movement, client delivery and recorded-time comparisons. */
+.ams-shell .ams-dashboard .ams-overview-panel .text-\[10px\] {
+  font-size: 11px;
+  line-height: 16px;
+}
+.ams-shell .ams-dashboard .ams-overview-panel--money { min-height: 204px; }
+.ams-shell .ams-dashboard .ams-overview-panel--money .ams-money-movement-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(150px, 1.18fr);
+  gap: 18px;
+  align-items: center;
+  min-width: 0;
+}
+.ams-shell .ams-dashboard .ams-overview-panel--money .ams-money-movement-chart { min-width: 0; }
+.ams-shell .ams-dashboard .ams-money-movement-sparkline {
+  display: flex; align-items: flex-end; gap: 5px; height: 64px; min-width: 0;
+  padding: 4px 2px 0; border-bottom: 1px solid var(--line);
+}
+.ams-shell .ams-dashboard .ams-money-movement-sparkbar {
+  display: block; flex: 1 1 0; min-width: 3px; max-width: 22px;
+  border-radius: 5px 5px 2px 2px; background: var(--series-2); opacity: 0.84;
+  transition: height 180ms ease, opacity 150ms ease, transform 150ms ease;
+}
+.ams-shell .ams-dashboard .ams-money-movement-sparkbar:hover { opacity: 1; transform: translateY(-2px); }
+.ams-shell .ams-dashboard .ams-money-movement-sparkline--expenses .ams-money-movement-sparkbar { background: var(--series-3); }
+.ams-shell .ams-dashboard .ams-money-movement-period { white-space: nowrap; }
+.ams-shell .ams-dashboard .ams-client-delivery-load__track,
+.ams-shell .ams-dashboard .ams-recorded-time-row__track {
+  height: 7px; overflow: hidden; border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 64%, var(--panel));
+}
+.ams-shell .ams-dashboard .ams-client-delivery-load__track > span,
+.ams-shell .ams-dashboard .ams-recorded-time-row__track > span {
+  display: block; height: 100%; border-radius: inherit; background: var(--series-2); transition: width 220ms ease;
+}
+.ams-shell .ams-dashboard .ams-client-delivery-signals > div {
+  min-height: 60px; transition: background-color 150ms ease, border-color 150ms ease;
+}
+.ams-shell .ams-dashboard .ams-client-delivery-signals > div:hover { border-color: color-mix(in srgb, var(--accent) 18%, var(--line)); }
+.ams-shell .ams-dashboard .ams-recorded-time-row__track > span { background: var(--series-3); }
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-overview-panel--money .ams-money-movement-card { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .ams-shell .ams-dashboard .ams-money-movement-sparkline { height: 54px; }
+  .ams-shell .ams-dashboard .ams-overview-panel--money { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-money-movement-sparkbar,
+  .ams-shell .ams-dashboard .ams-client-delivery-signals > div,
+  .ams-shell .ams-dashboard .ams-client-delivery-load__track > span,
+  .ams-shell .ams-dashboard .ams-recorded-time-row__track > span {
+    transition-duration: 0.01ms; transform: none;
+  }
+}

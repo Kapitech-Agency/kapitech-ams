@@ -1531,7 +1531,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
   const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
   const currentDayKey = localDateKey(new Date());
-  const currentMonthKey = currentDayKey.slice(0, 7);
+  const overviewFinancialPeriodStart = reportPeriodEnabled && selectedReportingRange
+    ? selectedReportingRange.startDate
+    : shiftDashboardDate(currentDayKey, -29);
+  const overviewFinancialPeriodEnd = reportPeriodEnabled && selectedReportingRange
+    ? selectedReportingRange.endDate
+    : currentDayKey;
+  const matchesOverviewFinancialPeriod = (value: unknown) => {
+    const day = dateKey(value);
+    return isValidDashboardDate(day) && day >= overviewFinancialPeriodStart && day <= overviewFinancialPeriodEnd;
+  };
   const nextThreeDaysKey = shiftDashboardDate(currentDayKey, 3);
   const nextSevenDaysKey = shiftDashboardDate(currentDayKey, 7);
   const nextThirtyDaysKey = shiftDashboardDate(currentDayKey, 30);
@@ -1928,6 +1937,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       )
       .slice(0, 5);
   }, [activeDashboardTasks, activeProjectRows, allUpcomingCommitments, canOpenClientDirectory, canOpenProjects, canOpenTasks, clientDirectoryById, currentDayKey, operationalSnapshot.projects, operationalSnapshot.tasks]);
+  const clientDeliveryOpenTaskMaximum = Math.max(1, ...clientDeliveryFocus.map((client) => client.openTaskCount ?? 0));
 
   const upcomingCommitments = allUpcomingCommitments.filter((item) => {
     if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey;
@@ -1977,6 +1987,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     }
     return Array.from(groups.values()).sort((left, right) => right.minutes - left.minutes || left.name.localeCompare(right.name)).slice(0, 5);
   }, [matchesDate, operationalSnapshot.timeLogs]);
+  const periodTimeRowsMaximum = Math.max(1, ...periodTimeRows.map((person) => person.minutes));
 
   const activeTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.length;
   const overdueTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.filter((task) => dashboardTaskIsOverdue(task, currentDayKey)).length;
@@ -1990,18 +2001,18 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const financeExpenseRows = (operationalSnapshot.expenses || []).filter((expense: any) =>
     String(expense.currency || 'IDR').toUpperCase() === financeCurrency && isDashboardExpenseEligible(expense)
   );
-  const liveCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
+  const livePeriodCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
     if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency || !isIssuedInvoice(invoice)) return sum;
     return sum + getPaymentRows(invoice)
-      .filter((payment) => String(payment.date || '').slice(0, 7) === currentMonthKey)
+      .filter((payment) => matchesOverviewFinancialPeriod(payment.date))
       .reduce((paymentSum, payment) => paymentSum + Math.max(0, Number(payment.amount) || 0), 0);
   }, 0);
   const liveOutstanding = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
     if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency || !isIssuedInvoice(invoice)) return sum;
     return sum + getInvoiceOutstanding(invoice);
   }, 0);
-  const liveMonthlyExpenses = operationalSnapshot.expenses === null ? null : operationalSnapshot.expenses.reduce((sum: number, expense: any) => {
-    if (String(expense.currency || 'IDR').toUpperCase() !== financeCurrency || String(expense.date || '').slice(0, 7) !== currentMonthKey || !isDashboardExpenseEligible(expense)) return sum;
+  const livePeriodExpenses = operationalSnapshot.expenses === null ? null : operationalSnapshot.expenses.reduce((sum: number, expense: any) => {
+    if (String(expense.currency || 'IDR').toUpperCase() !== financeCurrency || !matchesOverviewFinancialPeriod(expense.date || expense.expenseDate || expense.createdAt) || !isDashboardExpenseEligible(expense)) return sum;
     return sum + Math.max(0, Number(expense.amount) || 0);
   }, 0);
   const cashValueAvailable = operationalSnapshot.invoices !== null && issuedInvoicesInSelectedCurrency.length > 0;
@@ -2013,7 +2024,25 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, issuedInvoicesInSelectedCurrency, financeExpenseRows)
       : buildRecentFinancialTrend(issuedInvoicesInSelectedCurrency, financeExpenseRows)
     : [];
-  const overviewFinanceTrendHasRecords = issuedInvoicesInSelectedCurrency.length > 0 || financeExpenseRows.length > 0;
+  const overviewMoneyMovementRows = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null
+    ? overviewFinanceTrendRows.map((bucket) => {
+        const cashReceived = issuedInvoicesInSelectedCurrency.reduce((sum, invoice) => sum + getPaymentRows(invoice)
+          .filter((payment) => {
+            const day = dateKey(payment.date);
+            return isValidDashboardDate(day) && day >= bucket.startDate && day < bucket.endDate;
+          })
+          .reduce((paymentSum, payment) => paymentSum + Math.max(0, Number(payment.amount) || 0), 0), 0);
+        const recordedExpenses = financeExpenseRows.reduce((sum, expense) => {
+          const day = dateKey(expense.date || expense.expenseDate || expense.createdAt);
+          if (!isValidDashboardDate(day) || day < bucket.startDate || day >= bucket.endDate) return sum;
+          return sum + Math.max(0, Number(expense.amount) || 0);
+        }, 0);
+        return { ...bucket, cashReceived, recordedExpenses };
+      })
+    : [];
+  const overviewCashMovementMaximum = Math.max(1, ...overviewMoneyMovementRows.map((bucket) => bucket.cashReceived));
+  const overviewExpenseMovementMaximum = Math.max(1, ...overviewMoneyMovementRows.map((bucket) => bucket.recordedExpenses));
+  const overviewFinanceTrendHasRecords = overviewFinanceTrendRows.some((bucket) => bucket.primary > 0 || bucket.secondary > 0);
   const projectRiskBreakdown: DonutPoint[] = operationalSnapshot.projects === null
     ? []
     : buildProjectDeliveryBreakdown(rawProjectRows).map((item) => ({ label: item.label, value: item.value, tone: item.tone }));
@@ -2209,11 +2238,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="grid min-w-0 gap-5 min-[900px]:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
                     <div className="flex min-w-0 flex-col justify-between gap-5">
                       <div>
-                        <p className="text-xs font-medium text-muted">{canOpenInvoiceRegister ? 'Outstanding receivables' : 'Recorded expenses this month'}</p>
+                        <p className="text-xs font-medium text-muted">{canOpenInvoiceRegister ? 'Outstanding receivables' : 'Expenses recorded in period'}</p>
                         <p className="mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">
                           {canOpenInvoiceRegister
                             ? outstandingValueAvailable && liveOutstanding !== null ? formatLiveMoney(liveOutstanding, financeCurrency) : '—'
-                            : expensesValueAvailable && liveMonthlyExpenses !== null ? formatLiveMoney(liveMonthlyExpenses, financeCurrency) : '—'}
+                            : expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}
                         </p>
                         <p className="mt-1 text-[11px] leading-4 text-muted">
                           {canOpenInvoiceRegister
@@ -2230,27 +2259,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-4 border-t border-line pt-4 sm:grid-cols-2">
-                        {canOpenInvoiceRegister ? (
-                          <div className="min-w-0 border-l-2 border-series-3 pl-3">
-                            <p className="text-[10px] leading-4 text-muted">Cash received this month</p>
-                            <p className="mt-1 break-words text-base font-semibold tabular-nums text-fg">
-                              {cashValueAvailable && liveCashCollected !== null ? formatLiveMoney(liveCashCollected, financeCurrency) : '—'}
-                            </p>
-                          </div>
-                        ) : null}
-                        {canOpenExpenseRegister && canOpenInvoiceRegister ? (
-                          <div className="min-w-0 border-l-2 border-danger pl-3">
-                            <p className="text-[10px] leading-4 text-muted">Recorded expenses this month</p>
-                            <p className="mt-1 break-words text-base font-semibold tabular-nums text-fg">
-                              {expensesValueAvailable && liveMonthlyExpenses !== null ? formatLiveMoney(liveMonthlyExpenses, financeCurrency) : '—'}
-                            </p>
-                          </div>
-                        ) : null}
-                      </div>
-
                       <div data-ams-feature-slug="dashboard-finance-control" className="space-y-2 border-t border-line pt-3">
-                        <p className="text-[10px] leading-4 text-muted">Finance owns posted accounting truth; Dashboard summarizes canonical records.</p>
                         <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                           {canOpenInvoiceRegister ? (
                             <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -2268,7 +2277,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
                     <div className="ams-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0">
                       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                        <h3 className="text-xs font-semibold text-fg">Financial movement</h3>
+                        <h3 className="text-xs font-semibold text-fg">Invoice value vs expenses</h3>
                         <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Recent 30 days'}</span>
                       </div>
                       {operationalSnapshot.invoices === null || operationalSnapshot.expenses === null ? (
@@ -2293,7 +2302,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             presentation="maven"
                             ariaLabel={'Issued-invoice totals by invoice date and eligible expenses by recorded date. Scope: ' + describeFinancialTrendScope(overviewFinanceTrendRows, reportPeriodEnabled, reportPeriodLabel) + '. This comparison is not posted profit or cash flow.'}
                           />
-                          <p className="mt-2 text-[10px] leading-4 text-muted">Invoice values use issue dates; expenses use recorded dates. This comparison is not posted profit or cash flow.</p>
+                          <p className="mt-2 text-[11px] leading-4 text-muted">Issued invoice values by issue date vs eligible expenses by recorded date. This comparison is not posted profit or cash flow.</p>
                         </>
                       ) : (
                         <p className="py-8 text-center text-xs text-muted" role="status">No trend buckets are available for this period.</p>
@@ -2405,6 +2414,98 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </section>
             ) : null}
           </section>
+
+          {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
+            <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" data-ams-feature-slug="dashboard-money-movement" aria-label="Money movement">
+              <div className="col-span-full flex min-w-0 flex-wrap items-end justify-between gap-2 px-1">
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">Money movement</h2>
+                  <p className="mt-1 text-[11px] text-muted">Cash received and eligible expenses recorded in the selected period.</p>
+                </div>
+                <span className="ams-money-movement-period rounded-full border border-line bg-panel px-3 py-1.5 text-[11px] text-muted">{overviewPeriodDisplay}</span>
+              </div>
+              {canOpenInvoiceRegister ? (
+                <section className={['min-w-0', canOpenExpenseRegister ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-cash-received" aria-label="Cash received">
+                  <AdminPanel title="Cash received" description="Payments recorded against issued invoices" className="h-full ams-overview-panel ams-overview-panel--money" bodyClassName="p-4 sm:p-5"
+                    actions={(
+                      <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                        Open receivables <ArrowUpRight size={13} aria-hidden="true" />
+                      </Link>
+                    )}
+                  >
+                    <div className="ams-money-movement-card">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-medium text-muted">Received in period</p>
+                        <p className="mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">
+                          {cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}
+                        </p>
+                        <p className="mt-1 text-[11px] text-muted">{overviewPeriodDisplay}</p>
+                      </div>
+                      <div className="ams-money-movement-chart">
+                        {cashValueAvailable && overviewMoneyMovementRows.length ? (
+                          <>
+                            <div className="ams-money-movement-sparkline ams-money-movement-sparkline--cash" role="img" aria-label={'Cash received by period bucket: ' + overviewMoneyMovementRows.map((bucket) => bucket.label + ' ' + formatLiveMoney(bucket.cashReceived, financeCurrency)).join(', ')}>
+                              {overviewMoneyMovementRows.map((bucket) => {
+                                const barHeight = bucket.cashReceived > 0 ? Math.max(5, bucket.cashReceived / overviewCashMovementMaximum * 100) : 0;
+                                return <span key={bucket.startDate} className="ams-money-movement-sparkbar" style={{ height: barHeight + '%' }} title={bucket.label + ': ' + formatLiveMoney(bucket.cashReceived, financeCurrency)} />;
+                              })}
+                            </div>
+                            <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
+                          </>
+                        ) : (
+                          <p className="flex h-full min-h-[64px] items-center text-[11px] text-muted" role="status">{cashValueAvailable ? 'Period trend is unavailable.' : 'No issued invoice records are available for this currency.'}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">
+                      <span className="text-[11px] text-muted">Issued invoices only</span>
+                      <span className="text-[11px] font-medium tabular-nums text-fg">{cashValueAvailable ? 'Source available' : 'Source unavailable'}</span>
+                    </div>
+                  </AdminPanel>
+                </section>
+              ) : null}
+              {canOpenExpenseRegister ? (
+                <section className={['min-w-0', canOpenInvoiceRegister ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-expenses-recorded" aria-label="Expenses recorded">
+                  <AdminPanel title="Expenses recorded" description="Eligible expense records by recorded date" className="h-full ams-overview-panel ams-overview-panel--money" bodyClassName="p-4 sm:p-5"
+                    actions={(
+                      <Link to="/admin/finance?tab=expenses" className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                        Open expenses <ArrowUpRight size={13} aria-hidden="true" />
+                      </Link>
+                    )}
+                  >
+                    <div className="ams-money-movement-card">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-medium text-muted">Recorded in period</p>
+                        <p className="mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">
+                          {expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}
+                        </p>
+                        <p className="mt-1 text-[11px] text-muted">{overviewPeriodDisplay}</p>
+                      </div>
+                      <div className="ams-money-movement-chart">
+                        {expensesValueAvailable && overviewMoneyMovementRows.length ? (
+                          <>
+                            <div className="ams-money-movement-sparkline ams-money-movement-sparkline--expenses" role="img" aria-label={'Recorded expenses by period bucket: ' + overviewMoneyMovementRows.map((bucket) => bucket.label + ' ' + formatLiveMoney(bucket.recordedExpenses, financeCurrency)).join(', ')}>
+                              {overviewMoneyMovementRows.map((bucket) => {
+                                const barHeight = bucket.recordedExpenses > 0 ? Math.max(5, bucket.recordedExpenses / overviewExpenseMovementMaximum * 100) : 0;
+                                return <span key={bucket.startDate} className="ams-money-movement-sparkbar" style={{ height: barHeight + '%' }} title={bucket.label + ': ' + formatLiveMoney(bucket.recordedExpenses, financeCurrency)} />;
+                              })}
+                            </div>
+                            <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
+                          </>
+                        ) : (
+                          <p className="flex h-full min-h-[64px] items-center text-[11px] text-muted" role="status">{expensesValueAvailable ? 'Period trend is unavailable.' : 'No eligible expense records are available for this currency.'}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">
+                      <span className="text-[11px] text-muted">Voided/cancelled records excluded</span>
+                      <span className="text-[11px] font-medium tabular-nums text-fg">{expensesValueAvailable ? 'Source available' : 'Source unavailable'}</span>
+                    </div>
+                  </AdminPanel>
+                </section>
+              ) : null}
+            </section>
+          ) : null}
 
           <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
             {canOpenProjects ? (
@@ -2831,11 +2932,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   ) : periodTimeRows.length === 0 ? (
                     <p className="text-[11px] text-muted" role="status">No time records returned for this reporting scope.</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {periodTimeRows.slice(0, 4).map((person) => (
-                        <div key={person.name} className="flex items-center justify-between gap-3 border-b border-line pb-2 last:border-b-0">
-                          <span className="min-w-0 truncate text-xs text-fg">{person.name}</span>
-                          <span className="shrink-0 text-[11px] tabular-nums text-muted">{Math.floor(person.minutes / 60)}h {person.minutes % 60}m</span>
+                        <div key={person.name} className="ams-recorded-time-row space-y-1.5">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="min-w-0 truncate text-xs font-medium text-fg">{person.name}</span>
+                            <span className="shrink-0 text-[11px] tabular-nums text-muted">{Math.floor(person.minutes / 60)}h {person.minutes % 60}m</span>
+                          </div>
+                          <div className="ams-recorded-time-row__track" role="img" aria-label={'Recorded time for ' + person.name + ': ' + Math.floor(person.minutes / 60) + ' hours ' + (person.minutes % 60) + ' minutes'}>
+                            <span style={{ width: Math.min(100, person.minutes / periodTimeRowsMaximum * 100) + '%' }} />
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -2874,30 +2980,51 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             </div>
                             <span className="shrink-0 text-[10px] text-muted">{client.projectCount} active projects</span>
                           </div>
-                          {client.openTaskCount === null ? <p className="text-[10px] leading-4 text-muted">Task measures unavailable for this role or source.</p> : null}
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 min-[600px]:grid-cols-5">
-                            {[
-                              { label: 'Overdue tasks', value: client.overdueTaskCount },
-                              { label: 'Blocked tasks', value: client.blockedTaskCount },
-                              { label: 'Unassigned tasks', value: client.unassignedTaskCount },
-                              { label: 'Tasks in review', value: client.reviewTaskCount },
-                              { label: 'Open tasks', value: client.openTaskCount }
-                            ].map((metric) => (
-                              <div key={metric.label} className="min-w-0 border-l border-line pl-2">
-                                <p className="text-[10px] leading-4 text-muted">{metric.label}</p>
-                                <p className={['mt-0.5 text-sm font-semibold tabular-nums', metric.value == null ? 'text-muted' : (metric.label === 'Overdue tasks' || metric.label === 'Blocked tasks') && metric.value > 0 ? 'text-danger' : 'text-fg'].join(' ')}>{metric.value == null ? '—' : metric.value}</p>
+                          {client.openTaskCount === null ? (
+                            <p className="text-[11px] leading-4 text-muted" role="status">Task signals unavailable for this role or source.</p>
+                          ) : (
+                            <>
+                              <div className="ams-client-delivery-load space-y-2">
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="text-[11px] font-medium text-muted">Open task load</span>
+                                  <span className="text-xs font-semibold tabular-nums text-fg">{client.openTaskCount}</span>
+                                </div>
+                                <div className="ams-client-delivery-load__track" role="img" aria-label={'Open tasks for ' + client.name + ': ' + client.openTaskCount}>
+                                  <span style={{ width: Math.min(100, client.openTaskCount / clientDeliveryOpenTaskMaximum * 100) + '%' }} />
+                                </div>
                               </div>
-                            ))}
-                          </div>
+                              <div className="ams-client-delivery-signals grid grid-cols-3 gap-2">
+                                {[
+                                  { label: 'Overdue', value: client.overdueTaskCount, tone: 'danger' },
+                                  { label: 'Blocked', value: client.blockedTaskCount, tone: 'warning' },
+                                  { label: 'Unassigned', value: client.unassignedTaskCount, tone: 'neutral' }
+                                ].map((signal) => (
+                                  <div key={signal.label} className={['min-w-0 rounded-xl border px-2.5 py-2', signal.tone === 'danger' && signal.value ? 'border-danger/20 bg-danger/5' : signal.tone === 'warning' && signal.value ? 'border-warning/20 bg-warning/5' : 'border-line bg-bg'].join(' ')}>
+                                    <p className="text-[11px] text-muted">{signal.label}</p>
+                                    <p className={['mt-1 text-base font-semibold tabular-nums', signal.value === null ? 'text-muted' : signal.tone === 'danger' && signal.value > 0 ? 'text-danger' : signal.tone === 'warning' && signal.value > 0 ? 'text-warning' : 'text-fg'].join(' ')}>{signal.value === null ? '—' : signal.value}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
+                                <span className="rounded-full border border-line bg-bg px-2.5 py-1">In review {client.reviewTaskCount === null ? '—' : client.reviewTaskCount}</span>
+                              </div>
+                            </>
+                          )}
                           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                             <div className="flex min-w-0 flex-wrap gap-x-3 gap-y-1">
                               {client.projects.slice(0, 2).map((project, index) => project.href && canOpenDashboardRoute(project.href) ? (
-                                <Link key={project.href} to={project.href} className="inline-flex min-h-7 items-center gap-1 text-[10px] font-medium text-muted hover:text-accent-text">{project.name} <ArrowUpRight size={10} aria-hidden="true" /></Link>
+                                <Link key={project.href} to={project.href} className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-medium text-muted hover:text-accent-text">{project.name} <ArrowUpRight size={12} aria-hidden="true" /></Link>
                               ) : (
-                                <span key={project.href || project.name + '-' + index} className="inline-flex min-h-7 items-center text-[10px] text-muted">{project.name}</span>
+                                <span key={project.href || project.name + '-' + index} className="inline-flex min-h-8 items-center text-[11px] text-muted">{project.name}</span>
                               ))}
                             </div>
-                            <span className="text-[10px] tabular-nums text-muted">{client.nextCommitmentDate ? 'Next due ' + formatDashboardDate(client.nextCommitmentDate) : client.overdueCommitmentCount > 0 ? 'Overdue commitments remain' : 'No dated commitment in 30 days'}</span>
+                            <span className={['text-[11px] tabular-nums', client.overdueCommitmentCount > 0 ? 'font-medium text-danger' : 'text-muted'].join(' ')}>
+                              {client.overdueCommitmentCount > 0
+                                ? client.overdueCommitmentCount + ' overdue commitments'
+                                : client.nextCommitmentDate
+                                  ? 'Next due ' + formatDashboardDate(client.nextCommitmentDate)
+                                  : 'No dated commitment in 30 days'}
+                            </span>
                           </div>
                         </article>
                       ))}
