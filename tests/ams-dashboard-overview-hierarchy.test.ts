@@ -1215,7 +1215,7 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
 
 test('All Dashboard buttons use a shared size, shape, state, and keyboard-focus contract', async () => {
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
-  const marker = '/* Dashboard button consistency contract - 2026-10-27. */';
+  const marker = '/* Dashboard button consistency contract - 2026-10-27.';
   const contractStart = styles.lastIndexOf(marker);
   assert.ok(contractStart >= 0, 'The canonical Dashboard button contract should be the final style layer.');
   const controls = styles.slice(contractStart);

@@ -798,7 +798,7 @@
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-header-action--invoice.bg-accent:hover {
-  background: var(--accent-hover);
+  background: color-mix(in srgb, var(--accent) 88%, var(--bg));
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-header-action--invoice.border {
