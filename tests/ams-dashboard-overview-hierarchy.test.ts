@@ -162,7 +162,8 @@ test('Dashboard Overview Finance controls link to canonical ledgers only when ro
   assert.ok(finance.includes('Expenses recorded'));
   assert.ok(finance.includes('to="/admin/finance?tab=accounts-receivable"'));
   assert.ok(finance.includes('to="/admin/finance?tab=expenses"'));
-  assert.ok(finance.includes('Issued invoice values by issue date vs eligible expenses by recorded date'));
+  assert.ok(finance.includes('Invoices vs expenses'));
+  assert.ok(finance.includes('Issued-invoice totals by invoice date and eligible expenses by recorded date'));
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-movement"'));
   assert.ok(finance.includes('<TrendChart'));
   assert.ok(finance.includes('primaryLabel="Issued invoices"'));
@@ -566,7 +567,7 @@ test('Dashboard Overview orders Finance and Projects first, followed by action-o
   assert.ok(overview.includes('data-ams-feature-slug="dashboard-expenses-recorded"'));
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-money-movement"'), false,
     'Money movement must not add an extra full-width row outside the Finance card.');
-  for (const label of ['Invoice value vs expenses','Money movement','Projects in progress','Creative & IT workload','Needs attention','Task queue','Upcoming deadlines','Team workload','Client delivery focus','Recent activity','Workspaces']) {
+  for (const label of ['Invoices vs expenses','Money movement','Projects in progress','Creative & IT workload','Needs attention','Task queue','Upcoming deadlines','Team workload','Client delivery focus','Recent activity','Workspaces']) {
     assert.ok(overview.includes(label), 'Missing overview card: ' + label);
   }
   assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
@@ -761,10 +762,9 @@ test('Dashboard Overview exposes complete header navigation, reporting controls,
   assert.ok(dashboard.includes('aria-label="Previous reporting period"'));
   assert.ok(dashboard.includes('aria-label="Next reporting period"'));
   assert.ok(dashboard.includes('onClick={clearReportingPeriodFilter}'));
-  assert.ok(overview.includes('Finance & recorded time'));
-  assert.ok(overview.includes('ams-overview-scope__meta'));
-  assert.ok(overview.includes('Projects & deadlines: current state'));
-  assert.ok(overview.includes('ams-overview-scope__value'));
+  assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
+  assert.ok(dashboard.includes('ams-dashboard-period-controls'));
+  assert.ok(dashboard.includes('aria-label="Reporting date range"'));
 
   assert.ok(dashboard.includes("orderedActiveDashboardProjects\n    .filter((project) => overviewProjectFilter === 'all' || getDashboardServiceLine(project) === overviewProjectFilter)"));
   assert.ok(overview.includes('aria-label="Filter projects by service line"'));

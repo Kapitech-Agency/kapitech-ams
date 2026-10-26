@@ -165,8 +165,9 @@ test('global reporting period controls stay in the admin layout shared by module
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
-  assert.ok(overview.includes('Finance & recorded time'));
-  assert.ok(overview.includes('Projects & deadlines: current state'));
+  assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
+  assert.ok(dashboard.includes('ams-dashboard-period-controls'));
+  assert.ok(dashboard.includes('aria-label="Reporting date range"'));
   assert.ok(dashboard.includes('const visibleOverviewTasks = useMemo(() =>'));
   assert.doesNotMatch(overview, /matchesInterval\(task\.dueDate/,
     'The action queue shows current open work. The selected global period is not an invisible task filter.');

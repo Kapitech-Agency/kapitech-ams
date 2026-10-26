@@ -12,7 +12,7 @@ test('Dashboard priority exceptions distinguish source-backed records, empty dat
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
   assert.ok(dashboard.includes('No cross-module exceptions returned'));
   assert.ok(dashboard.includes('Exception data unavailable'));
-  assert.ok(dashboard.includes('Unavailable data is not treated as a clean state.'));
+  assert.ok(dashboard.includes("dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Exception data unavailable'"));
   assert.ok(dashboard.includes("const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;"));
 });
 
