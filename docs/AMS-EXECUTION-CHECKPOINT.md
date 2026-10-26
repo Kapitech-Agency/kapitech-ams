@@ -667,3 +667,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Replaced the oversized page-number/First/Last pagination cluster with a compact Rows + Previous / Page X of Y / Next control group. Search, actor, severity, sort order, date-window filter, custom date range, results count and page-size selection remain functional.
 - Reasserted a single final CSS contract for this card's header, filters, table columns, mobile actor treatment and pagination. Other Dashboard cards, business logic, data sources, permissions and backend remain untouched.
 - Quality Gate / AMS CI must be checked on this correction commit before marking it validated.
+
+
+## 0.6 Dashboard pixel-precision spacing pass — 27 October 2026
+
+- Established a final, scoped spacing contract for Dashboard card rows and card headers: 16px between workspace cards, 12px header rhythm, and 8px between sibling controls. At narrow widths, Finance period and Open Finance remain left-aligned with the same 8px gap instead of being pushed to opposite ends of the header.
+- Finance calendar and Open Finance now share a 36px baseline and have zero incidental margins. Header action groups, Team time controls and Recent Activity actions reuse the same alignment rhythm. Narrow-screen header padding is 14px while desktop header padding is 14px 18px.
+- Added a source regression test for the final CSS contract. This is a presentation-only refinement; canonical data, period behavior, links, permissions, backend and calculations are unchanged. Verify the Quality Gate on this exact commit before acceptance.

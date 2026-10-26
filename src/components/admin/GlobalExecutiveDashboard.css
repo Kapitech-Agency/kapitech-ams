@@ -6391,3 +6391,130 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions { justify-content: flex-start; flex-wrap: wrap; }
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions { width: 100%; }
 }
+
+
+/* Dashboard pixel-precision spacing contract — 27 October 2026. */
+/* Use a small spacing scale consistently across every Dashboard workspace row. */
+.ams-shell .ams-dashboard .ams-overview-card-row {
+  column-gap: 16px;
+  row-gap: 16px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+  gap: 12px;
+  padding: 14px 18px;
+  align-items: center;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child {
+  min-width: 0;
+  gap: 8px;
+}
+
+/* Finance period selector and primary action share one predictable baseline and an exact 8px gap.
+   Do not distribute controls across the full header width at narrow breakpoints. */
+.ams-shell .ams-dashboard .ams-dashboard-finance-header-actions {
+  display: flex;
+  width: auto;
+  min-width: 0;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-header-actions > .ams-card-period-controls {
+  display: flex;
+  width: 232px;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 232px;
+  align-items: center;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-header-actions .ams-calendar-period-filter {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-header-actions .ams-calendar-period-filter__trigger,
+.ams-shell .ams-dashboard .ams-dashboard-finance-header-actions .ams-dashboard-card-action {
+  box-sizing: border-box;
+  height: 36px;
+  min-height: 36px;
+  align-self: center;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-header-actions .ams-dashboard-card-action {
+  flex: 0 0 auto;
+  padding-inline: 12px;
+  border-radius: 9px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+/* Header controls throughout the Dashboard use the same rhythm and baseline. */
+.ams-shell .ams-dashboard .ams-dashboard-card-header-actions,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions,
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions {
+  align-items: center;
+  gap: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-card-action,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-dashboard-team-time__action,
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-card-action {
+  box-sizing: border-box;
+  height: 36px;
+  min-height: 36px;
+  align-self: center;
+  margin-block: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter,
+.ams-shell .ams-dashboard .ams-dashboard-team-header-actions .ams-calendar-period-filter {
+  align-self: center;
+  margin-block: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-filter {
+  align-self: center;
+  margin-block: 0;
+}
+
+@media (max-width: 639px) {
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-finance-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-finance-header-actions > .ams-card-period-controls {
+    width: min(232px, 100%);
+    flex: 0 1 232px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-finance-header-actions .ams-dashboard-card-action {
+    flex: 0 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-finance-header-actions *,
+  .ams-shell .ams-dashboard .ams-dashboard-card-header-actions * {
+    scroll-behavior: auto;
+  }
+}

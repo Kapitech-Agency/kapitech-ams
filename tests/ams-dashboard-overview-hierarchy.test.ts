@@ -309,6 +309,32 @@ test('Dashboard card-local calendars sit in card headers, dropdown widths are st
   assert.ok(styles.includes('.ams-project-progress-header-actions .ams-project-registry-action'));
 });
 
+
+test('Dashboard pixel-precision spacing keeps Finance period and Open Finance aligned with the shared spacing scale', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const marker = '/* Dashboard pixel-precision spacing contract — 27 October 2026. */';
+  const start = styles.lastIndexOf(marker);
+  assert.ok(start >= 0, 'A single final spacing contract must own the final Dashboard spacing rules.');
+  const finalLayer = styles.slice(start);
+
+  for (const selector of [
+    '.ams-overview-card-row {',
+    '.ams-overview-panel > div:first-child {',
+    '.ams-dashboard-finance-header-actions {',
+    '.ams-dashboard-finance-header-actions > .ams-card-period-controls {',
+    '.ams-dashboard-finance-header-actions .ams-calendar-period-filter__trigger,',
+    '.ams-dashboard-finance-header-actions .ams-dashboard-card-action {',
+    '.ams-dashboard-team-time__header-actions,',
+    '.ams-dashboard-activity-header-actions,',
+    '@media (max-width: 639px)'
+  ]) assert.ok(finalLayer.includes(selector), 'Missing final spacing rule: ' + selector);
+
+  assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*gap: 8px/s);
+  assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*justify-content: flex-start/s);
+  assert.match(finalLayer, /\.ams-overview-card-row \{[^}]*column-gap: 16px;[^}]*row-gap: 16px/s);
+  assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \.ams-calendar-period-filter__trigger,\s*\.ams-dashboard-finance-header-actions \.ams-dashboard-card-action \{[^}]*height: 36px;[^}]*min-height: 36px/s);
+});
+
 test('Dashboard card actions, Recorded time controls, calendar navigation and Activity filter widths stay aligned', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
