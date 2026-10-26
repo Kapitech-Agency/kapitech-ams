@@ -646,7 +646,12 @@ test('Dashboard header context follows the selected Overview, Performance, or An
   const adminLayout = await read('src/pages/admin/AdminLayout.tsx');
   assert.ok(adminLayout.includes('const isDashboardOverview ='));
   assert.ok(adminLayout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
-  assert.match(dashboard, /aria-label="Reporting period type"/);
+  assert.doesNotMatch(dashboard, /aria-label="Reporting period type"/);
+  assert.ok(dashboard.includes('aria-label="Finance chart grouping"'));
+  assert.ok(dashboard.includes('aria-label="Recorded time grouping"'));
+  const adminLayout = await read('src/pages/admin/AdminLayout.tsx');
+  assert.ok(adminLayout.includes('const isDashboardOverview ='));
+  assert.ok(adminLayout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
 });
 
 test('Dashboard invalid workspace query values normalize to Overview', async () => {

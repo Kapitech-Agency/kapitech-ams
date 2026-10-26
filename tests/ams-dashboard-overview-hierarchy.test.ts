@@ -144,10 +144,14 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   assert.ok(dashboard.includes('aria-label="Filter attention by severity"'));
   for (const label of [
     'Search recent activity', 'Filter activity by severity',
-    'Filter activity by time window', 'Recent activity rows per page',
+    'Filter activity by time window', 'Recent activity start date',
+    'Recent activity end date', 'Recent activity rows per page',
     'Previous activity page', 'Next activity page'
   ]) assert.ok(overview.includes('aria-label="' + label + '"'), 'Missing activity table control: ' + label);
   assert.ok(overview.includes('<table className="ams-dashboard-activity-table">'));
+  assert.ok(overview.includes("{ value: 'custom', label: 'Custom range' }"));
+  assert.ok(overview.includes('activityStartDate && eventDay < activityStartDate'));
+  assert.ok(overview.includes('activityEndDate && eventDay > activityEndDate'));
   assert.ok(overview.includes('<th scope="col">Actor</th>'));
   assert.ok(overview.includes('visibleDashboardRecentActivity.map'));
   for (const selector of [
