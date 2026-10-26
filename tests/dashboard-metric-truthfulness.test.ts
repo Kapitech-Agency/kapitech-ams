@@ -65,7 +65,7 @@ test('Dashboard Finance card uses canonical invoice payments for selected-period
   assert.ok(financeStart >= 0 && financeEnd > financeStart);
   const finance = dashboard.slice(financeStart, financeEnd);
   const movementStart = finance.indexOf('data-ams-feature-slug="dashboard-finance-movement"');
-  assert.ok(movementStart > 0, 'Money movement should be nested inside the primary Finance card.');
+  assert.ok(movementStart > 0, 'Cash/expense mini-visuals should be nested inside the primary Finance card.');
   assert.equal(dashboard.includes('data-ams-feature-slug="dashboard-money-movement"'), false,
     'Money movement should not create a separate full-width row.');
   const cashStart = dashboard.indexOf('const livePeriodCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce');

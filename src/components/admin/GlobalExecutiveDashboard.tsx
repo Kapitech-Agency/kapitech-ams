@@ -2206,16 +2206,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             data-ams-feature-slug="dashboard-overview-reporting-scope"
             aria-label="Overview reporting scope"
           >
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-fg">{reportPeriodEnabled && selectedReportingRange ? selectedReportingRange.label + ' · ' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate : 'Recent 30 days · default period'}</p>
-              <p className="mt-0.5 text-[11px] text-muted">The selected period controls financial movement and recorded-time summaries. Project health, open tasks, receivables, and deadlines show current operational state.</p>
+            <div className="ams-overview-scope__meta min-w-0">
+              <span className="ams-overview-scope__icon" aria-hidden="true"><CalendarDays size={16} /></span>
+              <div className="min-w-0">
+                <p className="ams-overview-scope__label">Reporting period</p>
+                <p className="ams-overview-scope__value">{reportPeriodEnabled && selectedReportingRange ? selectedReportingRange.label + ' · ' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate : 'Recent 30 days'}</p>
+              </div>
             </div>
-            <div className="flex min-w-0 flex-wrap gap-2">
+            <div className="ams-overview-scope__chips flex min-w-0 flex-wrap gap-2" aria-label="Reporting scope">
               <span className="ams-overview-scope__chip inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
-                <CircleDollarSign size={13} aria-hidden="true" /> Finance trend: {overviewPeriodDisplay}
+                <CircleDollarSign size={13} aria-hidden="true" /> Finance & recorded time
               </span>
               <span className="ams-overview-scope__chip inline-flex min-h-7 items-center gap-2 rounded-badge border border-line bg-panel px-2.5 text-[10px] text-muted">
-                <CalendarDays size={13} aria-hidden="true" /> Deadlines: overdue + next 30 days
+                <FolderKanban size={13} aria-hidden="true" /> Projects & deadlines: current state
               </span>
             </div>
           </section>
@@ -2247,38 +2250,36 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             ? outstandingValueAvailable && liveOutstanding !== null ? formatLiveMoney(liveOutstanding, financeCurrency) : '—'
                             : expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}
                         </p>
-                        <p className="mt-1 text-[11px] leading-4 text-muted">
+                        <p className="ams-finance-receivables__context mt-1.5 text-[11px] leading-4 text-muted" role="status">
                           {canOpenInvoiceRegister
                             ? operationalSnapshot.invoices === null
-                              ? 'Invoice source unavailable.'
+                              ? 'Invoice source unavailable'
                               : outstandingValueAvailable
-                                ? 'Current open balances on issued invoices.'
-                                : 'No issued invoice records are available to confirm an open balance.'
+                                ? 'Open issued invoices'
+                                : 'No issued invoice records'
                             : operationalSnapshot.expenses === null
-                              ? 'Expense source unavailable.'
+                              ? 'Expense source unavailable'
                               : expensesValueAvailable
-                                ? 'Eligible expenses recorded in the selected period.'
-                                : 'No eligible expense records are available to confirm a selected-period total.'}
+                                ? 'Eligible expenses · selected period'
+                                : 'No eligible expense records'}
                         </p>
                       </div>
 
-                      <div data-ams-feature-slug="dashboard-finance-control" className="space-y-2 border-t border-line pt-3">
-                        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                          {canOpenInvoiceRegister ? (
-                            <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                              Accounts receivable <ArrowUpRight size={12} aria-hidden="true" />
-                            </Link>
-                          ) : null}
-                          {canOpenExpenseRegister ? (
-                            <Link to="/admin/finance?tab=expenses" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                              Expenses <ArrowUpRight size={12} aria-hidden="true" />
-                            </Link>
-                          ) : null}
-                        </div>
+                      <div data-ams-feature-slug="dashboard-finance-control" className="ams-finance-control-links flex flex-wrap gap-2 border-t border-line pt-3">
+                        {canOpenInvoiceRegister ? (
+                          <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                            <ReceiptText size={12} aria-hidden="true" /> Receivables <ArrowUpRight size={11} aria-hidden="true" />
+                          </Link>
+                        ) : null}
+                        {canOpenExpenseRegister ? (
+                          <Link to="/admin/finance?tab=expenses" className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                            <ReceiptText size={12} aria-hidden="true" /> Expenses <ArrowUpRight size={11} aria-hidden="true" />
+                          </Link>
+                        ) : null}
                       </div>
                     </div>
 
-                    <div className="ams-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0">
+                    <div className="ams-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0" data-ams-feature-slug="dashboard-finance-trend">
                       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
                         <h3 className="text-xs font-semibold text-fg">Invoice value vs expenses</h3>
                         <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Recent 30 days'}</span>
@@ -2316,17 +2317,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
                     <section className="ams-finance-movement" data-ams-feature-slug="dashboard-finance-movement" aria-label="Money movement">
                       <div className="ams-finance-movement__heading">
-                        <div>
-                          <h3>Money movement</h3>
-                          <p>Cash received and eligible expenses in the selected period.</p>
-                        </div>
+                        <h3>Period movement</h3>
                         <span className="ams-finance-movement__period">{overviewPeriodDisplay}</span>
                       </div>
                       <div className={['ams-finance-movement__grid', canOpenInvoiceRegister && canOpenExpenseRegister ? 'is-balanced' : 'is-single'].join(' ')}>
                         {canOpenInvoiceRegister ? (
                           <div className="ams-finance-movement-card" data-ams-feature-slug="dashboard-cash-received" aria-label="Cash received">
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-medium text-muted">Cash received</p>
+                            <div className="ams-finance-movement-card__copy min-w-0">
+                              <div className="ams-finance-movement-card__label">
+                                <p className="text-[11px] font-medium text-muted">Cash received</p>
+                                <span className="ams-finance-movement-card__icon" aria-hidden="true"><ArrowUpRight size={13} /></span>
+                              </div>
                               <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}</p>
                               <p className="mt-1 text-[11px] leading-4 text-muted">Payments against issued invoices</p>
                             </div>
@@ -2348,9 +2349,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                         ) : null}
                         {canOpenExpenseRegister ? (
-                          <div className="ams-finance-movement-card" data-ams-feature-slug="dashboard-expenses-recorded" aria-label="Expenses recorded">
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-medium text-muted">Expenses recorded</p>
+                          <div className="ams-finance-movement-card ams-finance-movement-card--expenses" data-ams-feature-slug="dashboard-expenses-recorded" aria-label="Expenses recorded">
+                            <div className="ams-finance-movement-card__copy min-w-0">
+                              <div className="ams-finance-movement-card__label">
+                                <p className="text-[11px] font-medium text-muted">Expenses recorded</p>
+                                <span className="ams-finance-movement-card__icon" aria-hidden="true"><ReceiptText size={13} /></span>
+                              </div>
                               <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}</p>
                               <p className="mt-1 text-[11px] leading-4 text-muted">Eligible expenses by recorded date</p>
                             </div>
@@ -2405,20 +2409,21 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
-                        <div>
-                          <p className="text-[11px] text-muted">Active projects</p>
-                          <p className="mt-1 text-2xl font-semibold tabular-nums text-fg">{activeProjectRows.length}</p>
+                      <div className="ams-project-summary-grid grid grid-cols-3 gap-2" aria-label="Current project portfolio metrics">
+                        <div className="ams-project-summary-item" data-ams-feature-slug="dashboard-active-project-count">
+                          <span className="ams-project-summary-item__icon" aria-hidden="true"><FolderKanban size={14} /></span>
+                          <p>Active</p>
+                          <strong>{activeProjectRows.length}</strong>
                         </div>
-                        <div className="flex gap-5">
-                          <div className="border-l-2 border-danger pl-3">
-                            <p className="text-[10px] leading-4 text-muted">Overdue commitments</p>
-                            <p className={['mt-1 text-lg font-semibold tabular-nums', overdueCommitmentCount ? 'text-danger' : 'text-fg'].join(' ')}>{overdueCommitmentCount ?? '—'}</p>
-                          </div>
-                          <div className="border-l-2 border-series-3 pl-3">
-                            <p className="text-[10px] leading-4 text-muted">Open tasks</p>
-                            <p className="mt-1 text-lg font-semibold tabular-nums text-fg">{activeTaskCount ?? '—'}</p>
-                          </div>
+                        <div className="ams-project-summary-item ams-project-summary-item--danger" data-ams-feature-slug="dashboard-overdue-commitment-count">
+                          <span className="ams-project-summary-item__icon" aria-hidden="true"><AlertTriangle size={14} /></span>
+                          <p>Overdue</p>
+                          <strong>{overdueCommitmentCount ?? '—'}</strong>
+                        </div>
+                        <div className="ams-project-summary-item ams-project-summary-item--tasks" data-ams-feature-slug="dashboard-open-task-count">
+                          <span className="ams-project-summary-item__icon" aria-hidden="true"><CheckCircle2 size={14} /></span>
+                          <p>Open tasks</p>
+                          <strong>{activeTaskCount ?? '—'}</strong>
                         </div>
                       </div>
 
@@ -2451,7 +2456,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <div className="border-t border-line pt-3">
                             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
                               <h3 className="text-xs font-semibold text-fg">Creative & IT workload</h3>
-                              <span className="text-[10px] text-muted">Saved service line · open task load</span>
+                              <span className="text-[10px] text-muted">Open tasks by workstream</span>
                             </div>
                             <div className="space-y-3">
                               {serviceLineSummaries.map((line) => (
@@ -2519,7 +2524,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <div className="divide-y divide-line">
-                      <p className="px-4 pb-2 pt-3 text-[10px] text-muted">Showing {featuredDashboardProjects.length} of {activeDashboardProjectFilterCounts[overviewProjectFilter]} matching active projects</p>
                       {featuredDashboardProjects.map((project) => {
                         const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
                         const overdue = isValidDashboardDate(due) && due < currentDayKey;
@@ -2615,7 +2619,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 <p className="break-words text-xs font-semibold text-fg">{item.title || 'Attention item'}</p>
                                 <span className={['rounded-badge border px-2 py-0.5 text-[10px] font-medium', toneClasses[tone]].join(' ')}>{severityLabel}</span>
                               </div>
-                              {item.description ? <p className="mt-1 line-clamp-2 break-words text-[11px] leading-4 text-muted">{item.description}</p> : null}
+                              {item.description ? <p className="mt-1 line-clamp-1 break-words text-[11px] leading-4 text-muted">{item.description}</p> : null}
                               {safeDestination ? <Link to={safeDestination} className="mt-1.5 inline-flex min-h-7 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">{category === 'Finance' ? 'Receivables' : category === 'Delivery' ? 'Delivery' : category === 'Sales' ? 'Inbox' : 'Review'} <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                             </div>
                           </article>
@@ -2680,7 +2684,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Task delivery queue">
               <AdminPanel
                 title="Task queue"
-                description="Open work ordered by recorded delivery risk"
                 className="h-full ams-overview-panel ams-overview-panel--list"
                 bodyClassName="p-0"
                 actions={canOpenTasks ? (
@@ -2899,7 +2902,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
                     <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</span>
                   </div>
-                  <p className="mb-3 text-[10px] leading-4 text-muted">Recorded hours are activity history, not available capacity.</p>
+                  <p className="mb-3 text-[10px] leading-4 text-muted">Logged hours · not capacity</p>
                   {!canOpenTimeLogs || operationalSnapshot.timeLogs === null ? (
                     <p className="text-[11px] text-muted" role="status">Time-log source unavailable.</p>
                   ) : periodTimeRows.length === 0 ? (

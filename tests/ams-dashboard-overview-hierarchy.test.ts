@@ -276,7 +276,9 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(dashboard.includes('Recent 30-day default window'));
   assert.ok(analytics.includes('All dates defaults to the recent 30 days.'));
-  assert.ok(overview.includes('The selected period controls financial movement and recorded-time summaries. Project health, open tasks, receivables, and deadlines show current operational state.'));
+  assert.ok(overview.includes('Finance & recorded time'));
+  assert.ok(overview.includes('Projects & deadlines: current state'));
+  assert.ok(overview.includes('ams-overview-scope__value'));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false);
   assert.equal(overview.includes('title="Active projects"'), false);
   assert.equal(dashboard.includes('DashboardTrendRangePicker'), false);
@@ -760,7 +762,8 @@ test('Dashboard Overview exposes complete header navigation, reporting controls,
   assert.ok(dashboard.includes('aria-label="Previous reporting period"'));
   assert.ok(dashboard.includes('aria-label="Next reporting period"'));
   assert.ok(dashboard.includes('onClick={clearReportingPeriodFilter}'));
-  assert.ok(overview.includes('The selected period controls financial movement and recorded-time summaries'));
+  assert.ok(overview.includes('Finance & recorded time'));
+  assert.ok(overview.includes('ams-overview-scope__meta'));
   assert.ok(overview.includes('Finance trend: {overviewPeriodDisplay}'));
 
   assert.ok(dashboard.includes("orderedActiveDashboardProjects\n    .filter((project) => overviewProjectFilter === 'all' || getDashboardServiceLine(project) === overviewProjectFilter)"));
@@ -825,4 +828,40 @@ test('Dashboard header provides permission-aware invoice, project and refresh ac
   assert.ok(toolbar.includes('aria-label="Next reporting period"'));
   assert.ok(toolbar.includes('clearReportingPeriodFilter'));
   assert.ok(toolbar.includes("view === tab.key ? 'is-active border-accent bg-transparent text-fg'"));
+});
+
+
+test('Dashboard Overview presents Finance and Projects as compact visual work surfaces', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const projectStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
+  const finance = overview.slice(financeStart, projectStart);
+  assert.ok(overview.includes('ams-overview-scope__meta'));
+  assert.ok(overview.includes('ams-overview-scope__value'));
+  assert.ok(finance.includes('ams-finance-control-links'));
+  assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-movement"'));
+  assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-trend"'));
+  assert.ok(finance.includes('presentation="maven"'));
+  assert.ok(finance.includes('ams-finance-movement-card__chart'));
+  assert.ok(finance.includes('ams-money-movement-sparkline--cash'));
+  assert.ok(finance.includes('ams-money-movement-sparkline--expenses'));
+  assert.equal(finance.includes('Cash received and eligible expenses in the selected period.'), false);
+  assert.ok(overview.includes('ams-project-summary-grid'));
+  assert.ok(overview.includes('dashboard-active-project-count'));
+  assert.ok(overview.includes('dashboard-overdue-commitment-count'));
+  assert.ok(overview.includes('dashboard-open-task-count'));
+  assert.ok(overview.includes('Filter projects by service line'));
+  assert.ok(overview.includes('Filter deadlines'));
+  assert.ok(overview.includes('Task queue filters'));
+  assert.ok(overview.includes('setOverviewProjectFilter'));
+  assert.ok(overview.includes('setOverviewDeadlineFilter'));
+  assert.ok(overview.includes('setOverviewTaskFilter'));
+  assert.ok(styles.includes('.ams-project-summary-grid'));
+  assert.ok(styles.includes('.ams-finance-movement-card__icon'));
+  assert.ok(styles.includes('.ams-overview-scope__meta'));
+  assert.equal(overview.includes('Priority 01'), false);
 });

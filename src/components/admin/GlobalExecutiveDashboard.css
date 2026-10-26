@@ -827,3 +827,202 @@
     min-width: 0;
   }
 }
+
+
+/* Dashboard Overview: data-first scope and balanced visual summary cards. */
+.ams-shell .ams-dashboard .ams-overview-scope {
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
+}
+.ams-shell .ams-dashboard .ams-overview-scope__meta {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.ams-shell .ams-dashboard .ams-overview-scope__icon {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--bg) 68%, var(--panel));
+  color: var(--muted);
+}
+.ams-shell .ams-dashboard .ams-overview-scope__label {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 500;
+}
+.ams-shell .ams-dashboard .ams-overview-scope__value {
+  margin-top: 2px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ams-shell .ams-dashboard .ams-overview-scope__chips {
+  justify-content: flex-end;
+}
+.ams-shell .ams-dashboard .ams-finance-receivables__context {
+  min-height: 16px;
+}
+.ams-shell .ams-dashboard .ams-finance-control-links a {
+  border-color: var(--dashboard-card-border);
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+}
+.ams-shell .ams-dashboard .ams-finance-control-links a:hover {
+  transform: translateY(-1px);
+}
+.ams-shell .ams-dashboard .ams-finance-movement {
+  margin-top: 0;
+  padding-top: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
+}
+.ams-shell .ams-dashboard .ams-finance-movement__heading {
+  margin-bottom: 9px;
+}
+.ams-shell .ams-dashboard .ams-finance-movement__heading h3 {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.ams-shell .ams-dashboard .ams-finance-movement-card {
+  grid-template-columns: minmax(0, .86fr) minmax(108px, 1.14fr);
+  padding: 12px 13px;
+  border-radius: 13px;
+}
+.ams-shell .ams-dashboard .ams-finance-movement-card__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+.ams-shell .ams-dashboard .ams-finance-movement-card__icon {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--series-2);
+}
+.ams-shell .ams-dashboard .ams-finance-movement-card--expenses .ams-finance-movement-card__icon {
+  color: var(--series-3);
+}
+.ams-shell .ams-dashboard .ams-finance-movement-card__copy > p.text-lg {
+  font-size: clamp(16px, 1.3vw, 20px);
+  line-height: 24px;
+  letter-spacing: -.025em;
+}
+.ams-shell .ams-dashboard .ams-finance-movement-card__chart .ams-money-movement-sparkline {
+  height: 52px;
+  gap: 4px;
+}
+.ams-shell .ams-dashboard .ams-project-summary-grid {
+  min-width: 0;
+}
+.ams-shell .ams-dashboard .ams-project-summary-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  column-gap: 8px;
+  row-gap: 4px;
+  min-width: 0;
+  min-height: 80px;
+  padding: 10px 11px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--bg) 50%, var(--panel));
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.ams-shell .ams-dashboard .ams-project-summary-item:hover {
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--line));
+  background: var(--dashboard-hover-surface);
+}
+.ams-shell .ams-dashboard .ams-project-summary-item__icon {
+  display: inline-flex;
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--line) 55%, var(--panel));
+  color: var(--muted);
+  grid-row: 1;
+}
+.ams-shell .ams-dashboard .ams-project-summary-item p {
+  align-self: center;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ams-shell .ams-dashboard .ams-project-summary-item strong {
+  grid-column: 1 / -1;
+  color: var(--text);
+  font-size: 21px;
+  font-weight: 650;
+  line-height: 25px;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+.ams-shell .ams-dashboard .ams-project-summary-item--danger .ams-project-summary-item__icon {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--panel));
+}
+.ams-shell .ams-dashboard .ams-project-summary-item--danger strong {
+  color: var(--danger);
+}
+.ams-shell .ams-dashboard .ams-project-summary-item--tasks .ams-project-summary-item__icon {
+  color: var(--series-3);
+  background: color-mix(in srgb, var(--series-3) 9%, var(--panel));
+}
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-overview-scope {
+    align-items: stretch;
+    padding: 12px;
+  }
+  .ams-shell .ams-dashboard .ams-overview-scope__chips {
+    justify-content: flex-start;
+  }
+  .ams-shell .ams-dashboard .ams-finance-movement__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ams-shell .ams-dashboard .ams-finance-movement-card {
+    grid-template-columns: minmax(0, .9fr) minmax(100px, 1.1fr);
+  }
+  .ams-shell .ams-dashboard .ams-project-summary-item {
+    min-height: 72px;
+    padding: 8px;
+    column-gap: 5px;
+  }
+  .ams-shell .ams-dashboard .ams-project-summary-item strong {
+    font-size: 19px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-finance-control-links a,
+  .ams-shell .ams-dashboard .ams-finance-movement-card,
+  .ams-shell .ams-dashboard .ams-project-summary-item {
+    transition-duration: 0.01ms;
+    transform: none;
+  }
+}
