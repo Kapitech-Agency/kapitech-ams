@@ -3305,7 +3305,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
 <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Recent activity">
             {canViewAuditLogs ? (
-              <section className="min-w-0 min-[1100px]:col-span-8" data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
+              <section className="min-w-0 min-[1100px]:col-span-12" data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
                 <AdminPanel
                   title="Recent activity"
                   className="h-full ams-overview-panel ams-overview-panel--list"
