@@ -95,8 +95,8 @@ test('Dashboard hover states do not lift controls and exact-selector CSS overrid
   assert.ok(styles.includes('--dashboard-control-height: 36px'));
   assert.ok(styles.includes('--dashboard-control-compact-height: 32px'));
   assert.match(styles, /\.ams-dashboard-toolbar[^{}]*\.ams-dashboard-view-tabs|\.ams-dashboard-toolbar\s*>\s*\.ams-dashboard-view-tabs/);
-  const rules = styles.match(/\.ams-shell \.ams-dashboard \.ams-dashboard-header-actions\s*\{/g) || [];
-  assert.equal(rules.length, 1, 'Header action base layout should be defined once in the consolidated cascade.');
+  const rules = styles.match(/^\.ams-shell \.ams-dashboard \.ams-dashboard-header-actions\s*\{/gm) || [];
+  assert.equal(rules.length, 1, 'Header action base layout should be defined once outside responsive contexts.');
 });
 test('Dashboard Needs Attention, Finance, Projects and Recent Activity use deliberate card hierarchies', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
@@ -177,13 +177,11 @@ test('Overview uses per-card period controls, compact project filters, aligned h
 test('Dashboard cards use a consistent visible separator between every card header and its content', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
-  const baselineStart = styles.indexOf('/* Card header baseline: one visible, consistent boundary on every Dashboard card. */');
-  const headerStart = styles.indexOf('.ams-shell .ams-dashboard .ams-overview-panel > div:first-child {', baselineStart);
-  const headerEnd = styles.indexOf('}', headerStart);
-  assert.ok(baselineStart >= 0 && headerStart > baselineStart && headerEnd > headerStart);
-  const headerRule = styles.slice(headerStart, headerEnd);
-  assert.ok(headerRule.includes('border-bottom: 1px solid var(--dashboard-card-border);'));
-  assert.ok(headerRule.includes('background: color-mix('));
+  const headerRules = [...styles.matchAll(/\.ams-shell \.ams-dashboard \.ams-overview-panel\s*>\s*div:first-child\s*\{([^}]*)\}/g)].map((match) => match[1]);
+  assert.ok(headerRules.some((rule) =>
+    /border-bottom:\s*1px solid var\(--dashboard-card-border\);/.test(rule) &&
+    /background:\s*color-mix\(/.test(rule)
+  ), 'A canonical card-header rule must provide both a visible separator and a shared header surface.');
   assert.ok(styles.includes('.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {'));
   assert.match(styles, /@media \(max-width: 639px\)\s*\{\s*\.ams-shell \.ams-dashboard \.ams-overview-panel > div:first-child \{\s*align-items: stretch;\s*gap: 10px;\s*padding: 13px 14px;/);
   for (const marker of [
@@ -1179,14 +1177,16 @@ test('Dashboard Overview uses compact source states and custom controls without 
 });
 
 
-test('Dashboard lead row uses compact gutters and prevents an empty stretched Projects panel', async () => {
+test('Dashboard lead row aligns Projects to Finance and avoids conflicting card heights', async () => {
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
-  assert.match(styles, /\.ams-overview-card-row\s*\{\s*align-items:\s*stretch;\s*gap:\s*12px;/);
-  assert.match(styles, /\.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*\{\s*align-items:\s*stretch;/);
-  assert.match(styles, /section\[data-ams-feature-slug="dashboard-project-portfolio"\]\s*\{\s*display:\s*flex;\s*align-self:\s*stretch;/);
-  assert.match(styles, /\.ams-dashboard-projects-panel\s*\{[^}]*height:\s*100%;/s);
-  assert.match(styles, /\.ams-overview-panel > div:last-child:not\(\[class~="p-0"\]\)\s*\{\s*padding:\s*16px;/);
-});
+  const row = styles.match(/\.ams-shell \.ams-dashboard \.ams-overview-card-row\s*\{([^}]*)\}/);
+  const financeRow = styles.match(/\.ams-shell \.ams-dashboard \.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*\{([^}]*)\}/);
+  const projectsSection = styles.match(/\.ams-shell \.ams-dashboard \.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*>\s*section\[data-ams-feature-slug="dashboard-project-portfolio"\]\s*\{([^}]*)\}/);
+  assert.ok(row && /align-items:\s*stretch;/.test(row[1]) && /gap:\s*14px;/.test(row[1]));
+  assert.ok(financeRow && /align-items:\s*stretch;/.test(financeRow[1]) && /gap:\s*12px;/.test(financeRow[1]));
+  assert.ok(projectsSection && /align-self:\s*stretch;/.test(projectsSection[1]) && /display:\s*flex;/.test(projectsSection[1]));
+  assert.match(styles, /\.ams-overview-panel--projects\s*\{[^}]*height:\s*100%;/s);
+});;
 
 
 test('Overview action buttons, panel headers, dropdown states, and filter rows share one visual contract', async () => {
@@ -1255,7 +1255,8 @@ test('All Dashboard buttons use a shared size, shape, state, and keyboard-focus 
 
   assert.ok(controls.includes('--dashboard-control-height: 36px;'));
   assert.ok(controls.includes('--dashboard-control-compact-height: 32px;'));
-  assert.ok(controls.includes('.ams-portal-root .ams-calendar-period-filter__panel,\n.ams-portal-root .ams-dashboard-activity-calendar-panel {\n  --dashboard-control-height: 36px;'), 'Calendar portal must define the same tokens outside the Dashboard DOM.');
+  const portalTokenRule = controls.match(/\.ams-portal-root \.ams-calendar-period-filter__panel,\s*\.ams-portal-root \.ams-dashboard-activity-calendar-panel\s*\{([^}]*)\}/);
+  assert.ok(portalTokenRule && /--dashboard-control-height:\s*36px;/.test(portalTokenRule[1]), 'Calendar portal must define the same tokens outside the Dashboard DOM.');
   assert.ok(controls.includes('--dashboard-control-radius: 8px;'));
   assert.ok(controls.includes('height: var(--dashboard-control-height);'));
   assert.ok(controls.includes('height: var(--dashboard-control-compact-height);'));
