@@ -2725,11 +2725,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                         </>
                       ) : (
-                        <DashboardEmptyState eyebrow="DELIVERY HORIZON" tone="success" icon={<CalendarDays size={16} aria-hidden="true" />}} title="No upcoming commitments" description="No dated open commitments fall within the next 30 days." compact />
+                        <DashboardEmptyState eyebrow="DELIVERY HORIZON" tone="success" icon={<CalendarDays size={16} aria-hidden="true" />} title="No upcoming commitments" description="No dated open commitments fall within the next 30 days." compact />
                       )}
                     </div>
                     {upcomingCommitments.length === 0 ? (
-                      {commitmentHorizonTotal === 0 ? null : (
+                      commitmentHorizonTotal === 0 ? null : (
                         <div className="px-4 py-3">
                           <DashboardEmptyState
                             eyebrow="DEADLINE FILTER"
@@ -2740,7 +2740,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             compact
                           />
                         </div>
-                      )}
+                      )
                     ) : (
                       <div className="divide-y divide-line">
                         {upcomingCommitments.slice(0, 4).map((item) => {
@@ -2840,7 +2840,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                         </div>
                       ) : !overviewFinanceTrendHasRecords ? (
-                        <DashboardEmptyState eyebrow="FINANCIAL MOVEMENT" icon={<CircleDollarSign size={17} aria-hidden="true" />}} title="No eligible financial records" description="No issued-invoice or eligible-expense values are available for the selected currency and period." compact />
+                        <DashboardEmptyState eyebrow="FINANCIAL MOVEMENT" icon={<CircleDollarSign size={17} aria-hidden="true" />} title="No eligible financial records" description="No issued-invoice or eligible-expense values are available for the selected currency and period." compact />
                       ) : overviewFinanceTrendRows.length ? (
                         <>
                           <TrendChart
