@@ -1141,3 +1141,111 @@
     border-radius: 8px;
   }
 }
+
+
+/* Intentional empty states: explain the current state, why the panel is empty,
+   and a safe next step when an authorised destination exists. */
+.ams-shell .ams-dashboard .ams-dashboard-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 16px;
+  border: 1px dashed color-mix(in srgb, var(--line) 92%, transparent);
+  border-radius: 13px;
+  background:
+    radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 68%),
+    color-mix(in srgb, var(--bg) 42%, var(--panel));
+  text-align: left;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty--compact {
+  padding: 13px 12px;
+  gap: 10px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--bg) 54%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty__icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 15%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty__eyebrow {
+  margin: 0 0 3px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 13px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty__description {
+  max-width: 56ch;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty__action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty__action a {
+  min-height: 30px;
+  border-radius: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-empty__action a:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-empty {
+    gap: 9px;
+    padding: 13px 11px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-empty__icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-empty *,
+  .ams-shell .ams-dashboard .ams-dashboard-empty__action a {
+    transition-duration: 0.01ms;
+  }
+}
