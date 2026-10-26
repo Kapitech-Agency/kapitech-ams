@@ -2254,8 +2254,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             : operationalSnapshot.expenses === null
                               ? 'Expense source unavailable.'
                               : expensesValueAvailable
-                                ? 'Eligible expenses recorded this month.'
-                                : 'No eligible expense records are available to confirm a monthly total.'}
+                                ? 'Eligible expenses recorded in the selected period.'
+                                : 'No eligible expense records are available to confirm a selected-period total.'}
                         </p>
                       </div>
 
@@ -2309,7 +2309,69 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       )}
                     </div>
                   </div>
-                </AdminPanel>
+                
+                  {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
+                    <section className="ams-finance-movement" data-ams-feature-slug="dashboard-finance-movement" aria-label="Money movement">
+                      <div className="ams-finance-movement__heading">
+                        <div>
+                          <h3>Money movement</h3>
+                          <p>Cash received and eligible expenses in the selected period.</p>
+                        </div>
+                        <span className="ams-finance-movement__period">{overviewPeriodDisplay}</span>
+                      </div>
+                      <div className={['ams-finance-movement__grid', canOpenInvoiceRegister && canOpenExpenseRegister ? 'is-balanced' : 'is-single'].join(' ')}>
+                        {canOpenInvoiceRegister ? (
+                          <div className="ams-finance-movement-card" data-ams-feature-slug="dashboard-cash-received" aria-label="Cash received">
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-medium text-muted">Cash received</p>
+                              <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}</p>
+                              <p className="mt-1 text-[11px] leading-4 text-muted">Payments against issued invoices</p>
+                            </div>
+                            <div className="ams-finance-movement-card__chart">
+                              {cashValueAvailable && overviewMoneyMovementRows.length ? (
+                                <>
+                                  <div className="ams-money-movement-sparkline ams-money-movement-sparkline--cash" role="img" aria-label={'Cash received by period bucket: ' + overviewMoneyMovementRows.map((bucket) => bucket.label + ' ' + formatLiveMoney(bucket.cashReceived, financeCurrency)).join(', ')}>
+                                    {overviewMoneyMovementRows.map((bucket) => {
+                                      const barHeight = bucket.cashReceived > 0 ? Math.max(5, bucket.cashReceived / overviewCashMovementMaximum * 100) : 0;
+                                      return <span key={bucket.startDate} className="ams-money-movement-sparkbar" style={{ height: barHeight + '%' }} title={bucket.label + ': ' + formatLiveMoney(bucket.cashReceived, financeCurrency)} />;
+                                    })}
+                                  </div>
+                                  <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
+                                </>
+                              ) : (
+                                <p className="flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.invoices === null ? 'Invoice source unavailable.' : cashValueAvailable ? 'Period trend unavailable.' : 'No issued invoice records are available for this currency.'}</p>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                        {canOpenExpenseRegister ? (
+                          <div className="ams-finance-movement-card" data-ams-feature-slug="dashboard-expenses-recorded" aria-label="Expenses recorded">
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-medium text-muted">Expenses recorded</p>
+                              <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}</p>
+                              <p className="mt-1 text-[11px] leading-4 text-muted">Eligible expenses by recorded date</p>
+                            </div>
+                            <div className="ams-finance-movement-card__chart">
+                              {expensesValueAvailable && overviewMoneyMovementRows.length ? (
+                                <>
+                                  <div className="ams-money-movement-sparkline ams-money-movement-sparkline--expenses" role="img" aria-label={'Recorded expenses by period bucket: ' + overviewMoneyMovementRows.map((bucket) => bucket.label + ' ' + formatLiveMoney(bucket.recordedExpenses, financeCurrency)).join(', ')}>
+                                    {overviewMoneyMovementRows.map((bucket) => {
+                                      const barHeight = bucket.recordedExpenses > 0 ? Math.max(5, bucket.recordedExpenses / overviewExpenseMovementMaximum * 100) : 0;
+                                      return <span key={bucket.startDate} className="ams-money-movement-sparkbar" style={{ height: barHeight + '%' }} title={bucket.label + ': ' + formatLiveMoney(bucket.recordedExpenses, financeCurrency)} />;
+                                    })}
+                                  </div>
+                                  <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
+                                </>
+                              ) : (
+                                <p className="flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.expenses === null ? 'Expense source unavailable.' : expensesValueAvailable ? 'Period trend unavailable.' : 'No eligible expense records are available for this currency.'}</p>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </section>
+                  ) : null}
+</AdminPanel>
               </section>
             ) : null}
 
@@ -2414,98 +2476,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </section>
             ) : null}
           </section>
-
-          {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
-            <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" data-ams-feature-slug="dashboard-money-movement" aria-label="Money movement">
-              <div className="col-span-full flex min-w-0 flex-wrap items-end justify-between gap-2 px-1">
-                <div>
-                  <h2 className="text-sm font-semibold text-fg">Money movement</h2>
-                  <p className="mt-1 text-[11px] text-muted">Cash received and eligible expenses recorded in the selected period.</p>
-                </div>
-                <span className="ams-money-movement-period rounded-full border border-line bg-panel px-3 py-1.5 text-[11px] text-muted">{overviewPeriodDisplay}</span>
-              </div>
-              {canOpenInvoiceRegister ? (
-                <section className={['min-w-0', canOpenExpenseRegister ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-cash-received" aria-label="Cash received">
-                  <AdminPanel title="Cash received" description="Payments recorded against issued invoices" className="h-full ams-overview-panel ams-overview-panel--money" bodyClassName="p-4 sm:p-5"
-                    actions={(
-                      <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                        Open receivables <ArrowUpRight size={13} aria-hidden="true" />
-                      </Link>
-                    )}
-                  >
-                    <div className="ams-money-movement-card">
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-medium text-muted">Received in period</p>
-                        <p className="mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">
-                          {cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}
-                        </p>
-                        <p className="mt-1 text-[11px] text-muted">{overviewPeriodDisplay}</p>
-                      </div>
-                      <div className="ams-money-movement-chart">
-                        {cashValueAvailable && overviewMoneyMovementRows.length ? (
-                          <>
-                            <div className="ams-money-movement-sparkline ams-money-movement-sparkline--cash" role="img" aria-label={'Cash received by period bucket: ' + overviewMoneyMovementRows.map((bucket) => bucket.label + ' ' + formatLiveMoney(bucket.cashReceived, financeCurrency)).join(', ')}>
-                              {overviewMoneyMovementRows.map((bucket) => {
-                                const barHeight = bucket.cashReceived > 0 ? Math.max(5, bucket.cashReceived / overviewCashMovementMaximum * 100) : 0;
-                                return <span key={bucket.startDate} className="ams-money-movement-sparkbar" style={{ height: barHeight + '%' }} title={bucket.label + ': ' + formatLiveMoney(bucket.cashReceived, financeCurrency)} />;
-                              })}
-                            </div>
-                            <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
-                          </>
-                        ) : (
-                          <p className="flex h-full min-h-[64px] items-center text-[11px] text-muted" role="status">{cashValueAvailable ? 'Period trend is unavailable.' : 'No issued invoice records are available for this currency.'}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">
-                      <span className="text-[11px] text-muted">Issued invoices only</span>
-                      <span className="text-[11px] font-medium tabular-nums text-fg">{cashValueAvailable ? 'Source available' : 'Source unavailable'}</span>
-                    </div>
-                  </AdminPanel>
-                </section>
-              ) : null}
-              {canOpenExpenseRegister ? (
-                <section className={['min-w-0', canOpenInvoiceRegister ? 'min-[1100px]:col-span-6' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-expenses-recorded" aria-label="Expenses recorded">
-                  <AdminPanel title="Expenses recorded" description="Eligible expense records by recorded date" className="h-full ams-overview-panel ams-overview-panel--money" bodyClassName="p-4 sm:p-5"
-                    actions={(
-                      <Link to="/admin/finance?tab=expenses" className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                        Open expenses <ArrowUpRight size={13} aria-hidden="true" />
-                      </Link>
-                    )}
-                  >
-                    <div className="ams-money-movement-card">
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-medium text-muted">Recorded in period</p>
-                        <p className="mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">
-                          {expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}
-                        </p>
-                        <p className="mt-1 text-[11px] text-muted">{overviewPeriodDisplay}</p>
-                      </div>
-                      <div className="ams-money-movement-chart">
-                        {expensesValueAvailable && overviewMoneyMovementRows.length ? (
-                          <>
-                            <div className="ams-money-movement-sparkline ams-money-movement-sparkline--expenses" role="img" aria-label={'Recorded expenses by period bucket: ' + overviewMoneyMovementRows.map((bucket) => bucket.label + ' ' + formatLiveMoney(bucket.recordedExpenses, financeCurrency)).join(', ')}>
-                              {overviewMoneyMovementRows.map((bucket) => {
-                                const barHeight = bucket.recordedExpenses > 0 ? Math.max(5, bucket.recordedExpenses / overviewExpenseMovementMaximum * 100) : 0;
-                                return <span key={bucket.startDate} className="ams-money-movement-sparkbar" style={{ height: barHeight + '%' }} title={bucket.label + ': ' + formatLiveMoney(bucket.recordedExpenses, financeCurrency)} />;
-                              })}
-                            </div>
-                            <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
-                          </>
-                        ) : (
-                          <p className="flex h-full min-h-[64px] items-center text-[11px] text-muted" role="status">{expensesValueAvailable ? 'Period trend is unavailable.' : 'No eligible expense records are available for this currency.'}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">
-                      <span className="text-[11px] text-muted">Voided/cancelled records excluded</span>
-                      <span className="text-[11px] font-medium tabular-nums text-fg">{expensesValueAvailable ? 'Source available' : 'Source unavailable'}</span>
-                    </div>
-                  </AdminPanel>
-                </section>
-              ) : null}
-            </section>
-          ) : null}
 
           <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
             {canOpenProjects ? (

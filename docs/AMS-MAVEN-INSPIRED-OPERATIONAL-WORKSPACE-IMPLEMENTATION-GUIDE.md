@@ -191,7 +191,7 @@ Follow the production-ready dashboard reference supplied by the user as the layo
 
 Follow this card order:
 1. Compact page/reporting scope.
-2. **Finance + Projects portfolio** as the primary card row. Finance leads with outstanding receivables, cash received and recorded expenses as separate values plus a source-backed issued-invoice/expense trend. Projects pairs it with active-project totals, a risk/deadline donut and Creative/IT workload bars.
+2. **Finance + Projects portfolio** as the primary card row. Finance leads with outstanding receivables; cash received and eligible expenses remain distinct selected-period values inside that same card, supported by compact bars and the source-backed issued-invoice/expense line trend. Do not add a separate full-width Money movement row between the primary row and Projects in progress. Projects pairs the Finance card with active-project totals, a risk/deadline donut and Creative/IT workload bars.
 3. **Projects in progress + Needs attention.** Show saved project-progress bars only when valid progressPercent is present; otherwise show “Progress not recorded”. Needs attention is a compact secondary exception card, severity-sorted and visually distinct from canonical Inbox triage. Never use artificial labels such as “Priority 01”.
 4. **Task queue + Upcoming deadlines.** Keep task filters, state, owner and due date in a clear queue; pair it with the source-backed deadline horizon and concise commitment rows.
 5. **Team workload + Client delivery focus.** Use proportional task-load bars, factual recorded-time values and source-backed client delivery signals.

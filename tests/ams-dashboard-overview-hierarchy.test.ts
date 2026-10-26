@@ -42,9 +42,9 @@ test('Dashboard Overview leads with Finance and Projects cards and groups agency
   assert.ok(dashboard.includes('const getDashboardSavedProgress'));
   assert.ok(overview.includes('getDashboardSavedProgress(project)'), 'Project bars must use only saved progress data.');
   assert.ok(overview.includes('Progress not recorded'), 'Missing progress must not be fabricated.');
-  assert.ok(overview.includes('Cash received this month'));
+  assert.ok(overview.includes('Cash received'));
   assert.ok(overview.includes('Outstanding receivables'));
-  assert.ok(overview.includes('Recorded expenses this month'));
+  assert.ok(overview.includes('Expenses recorded'));
   assert.ok(overview.includes('Task queue unavailable'));
   assert.ok(overview.includes('Time-log source unavailable'));
   assert.ok(overview.includes('dashboard-task-load-by-owner'));
@@ -154,9 +154,9 @@ test('Dashboard Overview Finance controls link to canonical ledgers only when ro
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-control"'));
   assert.ok(finance.includes('{canOpenInvoiceRegister ? ('));
   assert.ok(finance.includes('{canOpenExpenseRegister ? ('));
-  assert.ok(finance.includes('Cash received this month'));
+  assert.ok(finance.includes('Cash received'));
   assert.ok(finance.includes('Outstanding receivables'));
-  assert.ok(finance.includes('Recorded expenses this month'));
+  assert.ok(finance.includes('Expenses recorded'));
   assert.ok(finance.includes('to="/admin/finance?tab=accounts-receivable"'));
   assert.ok(finance.includes('to="/admin/finance?tab=expenses"'));
   assert.ok(finance.includes('Finance owns posted accounting truth'));
@@ -552,7 +552,16 @@ test('Dashboard Overview orders Finance and Projects first, followed by action-o
   }
   assert.equal(overview.includes('Priority 01'), false);
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false);
-  for (const label of ['Financial movement','Projects in progress','Creative & IT workload','Needs attention','Task queue','Upcoming deadlines','Team workload','Client delivery focus','Recent activity','Workspaces']) {
+  const financeCard = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
+  const financeMovement = overview.indexOf('data-ams-feature-slug="dashboard-finance-movement"');
+  const projectPortfolio = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
+  assert.ok(financeCard >= 0 && financeMovement > financeCard && projectPortfolio > financeMovement,
+    'Cash received and expenses must stay within the primary Finance card before the Projects card.');
+  assert.ok(overview.includes('data-ams-feature-slug="dashboard-cash-received"'));
+  assert.ok(overview.includes('data-ams-feature-slug="dashboard-expenses-recorded"'));
+  assert.equal(overview.includes('data-ams-feature-slug="dashboard-money-movement"'), false,
+    'Money movement must not add an extra full-width row outside the Finance card.');
+  for (const label of ['Invoice value vs expenses','Money movement','Projects in progress','Creative & IT workload','Needs attention','Task queue','Upcoming deadlines','Team workload','Client delivery focus','Recent activity','Workspaces']) {
     assert.ok(overview.includes(label), 'Missing overview card: ' + label);
   }
   assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
