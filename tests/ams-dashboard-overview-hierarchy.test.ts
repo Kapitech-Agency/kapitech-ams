@@ -1133,7 +1133,7 @@ test('Dashboard lead row uses compact gutters and prevents an empty stretched Pr
 test('Overview action buttons, panel headers, dropdown states, and filter rows share one visual contract', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
-  const start = dashboard.indexOf("\\n      {view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const end = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, end);
 
