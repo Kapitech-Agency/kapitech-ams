@@ -23,6 +23,7 @@ import {
   Users,
 } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge } from './AdminModulePrimitives';
+import { CustomSelect } from '../ui/CustomSelect';
 import { DonutChart, TrendChart, type DonutPoint, type TrendPoint } from '../charts/DashboardCharts';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
@@ -44,6 +45,7 @@ type DashboardQuotationFilter = 'all' | 'review' | 'approved' | 'sent' | 'draft'
 type DashboardAttentionSeverityFilter = 'all' | 'urgent' | 'attention' | 'info';
 type DashboardActivitySeverityFilter = 'all' | 'critical' | 'warning' | 'info';
 type DashboardActivityTimeFilter = '7' | '30' | '90' | 'all';
+type DashboardActivitySortOrder = 'newest' | 'oldest';
 
 type DashboardQuotation = {
   id: string;
@@ -1541,9 +1543,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     value: reportPeriodValue,
     mode: reportPeriodMode,
     enabled: reportPeriodEnabled,
-    setMode: setReportingPeriodMode,
-    setValue: setReportingPeriodValue,
-    clearFilter: clearReportingPeriodFilter
   } = useReportingPeriod();
   const [overviewFinancePeriodMode, setOverviewFinancePeriodMode] = useState<ReportingPeriodMode>('month');
   const [overviewFinancePeriodValue, setOverviewFinancePeriodValue] = useState(() => getCurrentDashboardPeriodValue('month'));
@@ -1553,36 +1552,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const reportPeriodLabel = reportPeriodEnabled && selectedReportingRange
     ? selectedReportingRange.label + ' (' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate + ')'
     : 'All dates';
-  const reportingPeriodOptions = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const years = getReportingYearOptions(currentYear, [], selectedReportingRange?.year ?? currentYear);
-    return years.flatMap((year) => {
-      if (reportPeriodMode === 'year') {
-        const value = String(year);
-        return [{ value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') }];
-      }
-      if (reportPeriodMode === 'quarter') {
-        return [1, 2, 3, 4].map((quarter) => {
-          const value = String(year) + '-Q' + quarter;
-          return { value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') };
-        });
-      }
-      return Array.from({ length: 12 }, (_, index) => {
-        const value = String(year) + '-' + String(index + 1).padStart(2, '0');
-        return { value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') };
-      });
-    }).sort((left, right) => right.value.localeCompare(left.value));
-  }, [reportPeriodMode, selectedReportingRange?.year]);
+
   const overviewFinancePeriodRange = useMemo(() => getReportingPeriodRange(overviewFinancePeriodValue, overviewFinancePeriodMode, 'en-GB'), [overviewFinancePeriodMode, overviewFinancePeriodValue]);
   const overviewTimePeriodRange = useMemo(() => getReportingPeriodRange(overviewTimePeriodValue, overviewTimePeriodMode, 'en-GB'), [overviewTimePeriodMode, overviewTimePeriodValue]);
   const overviewFinancePeriodOptions = useMemo(() => getDashboardReportingPeriodOptions(overviewFinancePeriodMode, overviewFinancePeriodValue), [overviewFinancePeriodMode, overviewFinancePeriodValue]);
   const overviewTimePeriodOptions = useMemo(() => getDashboardReportingPeriodOptions(overviewTimePeriodMode, overviewTimePeriodValue), [overviewTimePeriodMode, overviewTimePeriodValue]);
   const overviewFinancePeriodLabel = overviewFinancePeriodRange?.label || 'Selected period';
   const overviewTimePeriodLabel = overviewTimePeriodRange?.label || 'Selected period';
-  const previousReportingPeriodValue = getAdjacentReportingPeriodValue(reportPeriodValue, reportPeriodMode, -1);
-  const nextReportingPeriodValue = getAdjacentReportingPeriodValue(reportPeriodValue, reportPeriodMode, 1);
-  const canMoveToPreviousPeriod = reportPeriodEnabled && reportingPeriodOptions.some((option) => option.value === previousReportingPeriodValue);
-  const canMoveToNextPeriod = reportPeriodEnabled && reportingPeriodOptions.some((option) => option.value === nextReportingPeriodValue);
+
   const [overviewTaskFilter, setOverviewTaskFilter] = useState<DashboardTaskFilter>('action');
   const [overviewProjectFilter, setOverviewProjectFilter] = useState<DashboardProjectFilter>('all');
   const [overviewDeadlineFilter, setOverviewDeadlineFilter] = useState<DashboardDeadlineFilter>('all');
@@ -1590,7 +1567,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [attentionSeverityFilter, setAttentionSeverityFilter] = useState<DashboardAttentionSeverityFilter>('all');
   const [activitySearch, setActivitySearch] = useState('');
   const [activitySeverityFilter, setActivitySeverityFilter] = useState<DashboardActivitySeverityFilter>('all');
+  const [activityActorFilter, setActivityActorFilter] = useState('__all_actors__');
   const [activityTimeFilter, setActivityTimeFilter] = useState<DashboardActivityTimeFilter>('30');
+  const [activitySortOrder, setActivitySortOrder] = useState<DashboardActivitySortOrder>('newest');
   const [activityPageSize, setActivityPageSize] = useState(5);
   const [activityPage, setActivityPage] = useState(1);
   const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; attentionItems?: DashboardAttentionItem[]; attentionItemsDataAvailable?: boolean; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
@@ -1838,6 +1817,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     return severity === 'info';
   }), [overviewAttentionItems, attentionSeverityFilter]);
 
+  const dashboardActivityActors = useMemo(() => {
+    return Array.from(new Set((dashboardOverview.recentActivity || [])
+      .map((activity) => String(activity.actor || 'System').trim() || 'System')))
+      .sort((left, right) => left.localeCompare(right));
+  }, [dashboardOverview.recentActivity]);
+  const dashboardActivityActorOptions = useMemo(
+    () => [
+      { value: '__all_actors__', label: 'All actors' },
+      ...dashboardActivityActors.map((actor) => ({ value: actor, label: actor }))
+    ],
+    [dashboardActivityActors]
+  );
+
   const filteredDashboardRecentActivity = useMemo(() => {
     const query = activitySearch.trim().toLowerCase();
     const cutoff = activityTimeFilter === 'all' ? null : Date.now() - Number(activityTimeFilter) * 24 * 60 * 60 * 1000;
@@ -1846,6 +1838,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         const action = String(activity.action || 'Recorded audit event');
         const actor = String(activity.actor || 'System');
         if (query && !(action + ' ' + actor).toLowerCase().includes(query)) return false;
+        if (activityActorFilter !== '__all_actors__' && actor !== activityActorFilter) return false;
         if (activitySeverityFilter !== 'all' && getDashboardActivitySeverity(activity.severity) !== activitySeverityFilter) return false;
         if (cutoff !== null) {
           const timestamp = activity.timestamp ? new Date(activity.timestamp).getTime() : Number.NaN;
@@ -1860,11 +1853,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         if (!Number.isFinite(leftTime) && !Number.isFinite(rightTime)) return 0;
         if (!Number.isFinite(leftTime)) return 1;
         if (!Number.isFinite(rightTime)) return -1;
-        return rightTime - leftTime;
+        return activitySortOrder === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
       });
-  }, [dashboardOverview.recentActivity, activitySearch, activitySeverityFilter, activityTimeFilter]);
+  }, [dashboardOverview.recentActivity, activitySearch, activityActorFilter, activitySeverityFilter, activityTimeFilter, activitySortOrder]);
   const activityPageCount = Math.max(1, Math.ceil(filteredDashboardRecentActivity.length / activityPageSize));
   const currentActivityPage = Math.min(activityPage, activityPageCount);
+  const activityPageNumbers = useMemo(() => {
+    if (activityPageCount <= 5) return Array.from({ length: activityPageCount }, (_, index) => index + 1);
+    const first = Math.max(1, Math.min(currentActivityPage - 2, activityPageCount - 4));
+    return Array.from({ length: 5 }, (_, index) => first + index);
+  }, [currentActivityPage, activityPageCount]);
+  const hasActivityFilters = Boolean(activitySearch.trim() || activityActorFilter !== '__all_actors__' || activitySeverityFilter !== 'all' || activityTimeFilter !== '30' || activitySortOrder !== 'newest');
   const visibleDashboardRecentActivity = filteredDashboardRecentActivity.slice(
     (currentActivityPage - 1) * activityPageSize,
     currentActivityPage * activityPageSize
@@ -2422,40 +2421,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           ))}
         </nav>
 
-        {view !== 'overview' ? (
-        <div className="ams-dashboard-period-controls flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end" aria-label="Reporting period filters">
-          <label className="ams-dashboard-period-field flex min-w-0 flex-col gap-1">
-            <span className="text-[10px] font-medium text-muted">Group by</span>
-            <select aria-label="Reporting period type" value={reportPeriodMode} onChange={(event) => setReportingPeriodMode(event.target.value as ReportingPeriodMode)} className="ams-dashboard-period-select min-h-10 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[120px]">
-              <option value="month">Month</option>
-              <option value="quarter">Quarter</option>
-              <option value="year">Year</option>
-            </select>
-          </label>
-          <label className="ams-dashboard-period-field flex min-w-0 flex-col gap-1">
-            <span className="text-[11px] font-medium text-muted">Date range</span>
-            <span className="ams-dashboard-date-select relative block min-w-0">
-              <CalendarDays size={14} className="ams-dashboard-date-select__icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
-              <select aria-label="Reporting date range" value={reportPeriodEnabled ? reportPeriodValue : '__recent_30_days__'} onChange={(event) => {
-                if (event.target.value === '__recent_30_days__') clearReportingPeriodFilter();
-                else setReportingPeriodValue(event.target.value);
-              }} className="ams-dashboard-period-select ams-dashboard-date-select__input min-h-10 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[190px]">
-                <option value="__recent_30_days__">Recent 30 days · default</option>
-                {reportingPeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-              </select>
-            </span>
-          </label>
-          <div className="flex items-center gap-1.5">
-            <button type="button" aria-label="Previous reporting period" title="Previous period" disabled={!canMoveToPreviousPeriod} onClick={() => setReportingPeriodValue(previousReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
-              <ChevronLeft size={15} aria-hidden="true" />
-            </button>
-            <button type="button" aria-label="Next reporting period" title="Next period" disabled={!canMoveToNextPeriod} onClick={() => setReportingPeriodValue(nextReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
-              <ChevronRight size={15} aria-hidden="true" />
-            </button>
-          </div>
-          {reportPeriodEnabled ? (
-            <button type="button" onClick={clearReportingPeriodFilter} className="ams-dashboard-clear-period inline-flex min-h-10 items-center justify-center rounded-control border border-line px-3 text-xs font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Clear period</button>
-          ) : null}
+
         </div>
         ) : null}
       </section>
@@ -2594,12 +2560,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       <span>Cross-module exceptions</span>
                       <label>
                         <span>Severity</span>
-                        <select aria-label="Filter attention by severity" value={attentionSeverityFilter} onChange={(event) => setAttentionSeverityFilter(event.target.value as DashboardAttentionSeverityFilter)}>
-                          <option value="all">All levels</option>
-                          <option value="urgent">Urgent</option>
-                          <option value="attention">Attention</option>
-                          <option value="info">Info</option>
-                        </select>
+                        <CustomSelect aria-label="Filter attention by severity" value={attentionSeverityFilter} onChange={(value) => setAttentionSeverityFilter(value as DashboardAttentionSeverityFilter)} options={[{ value: 'all', label: 'All levels' }, { value: 'urgent', label: 'Urgent' }, { value: 'attention', label: 'Attention' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[118px]" menuClassName="ams-dashboard-dropdown-menu" />
                       </label>
                     </div>
                   ) : null}
@@ -2966,21 +2927,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-finance-period-controls">
                           <label>
                             <span>Group</span>
-                            <select aria-label="Finance chart grouping" value={overviewFinancePeriodMode} onChange={(event) => {
-                              const mode = event.target.value as ReportingPeriodMode;
-                              setOverviewFinancePeriodMode(mode);
-                              setOverviewFinancePeriodValue(getCurrentDashboardPeriodValue(mode));
-                            }}>
-                              <option value="month">Month</option>
-                              <option value="quarter">Quarter</option>
-                              <option value="year">Year</option>
-                            </select>
+                            <CustomSelect aria-label="Finance chart grouping" value={overviewFinancePeriodMode} onChange={(value) => { const mode = value as ReportingPeriodMode; setOverviewFinancePeriodMode(mode); setOverviewFinancePeriodValue(getCurrentDashboardPeriodValue(mode)); }} options={[{ value: 'month', label: 'Month' }, { value: 'quarter', label: 'Quarter' }, { value: 'year', label: 'Year' }]} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[92px]" menuClassName="ams-dashboard-dropdown-menu" />
                           </label>
                           <label className="ams-card-period-controls__period">
                             <span>Period</span>
-                            <select aria-label="Finance chart period" value={overviewFinancePeriodValue} onChange={(event) => setOverviewFinancePeriodValue(event.target.value)}>
-                              {overviewFinancePeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                            </select>
+                            <CustomSelect aria-label="Finance chart period" value={overviewFinancePeriodValue} onChange={setOverviewFinancePeriodValue} options={overviewFinancePeriodOptions.map((option) => ({ value: option.value, label: option.label }))} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[124px]" menuClassName="ams-dashboard-dropdown-menu" />
                           </label>
                         </div>
                       </div>
@@ -3360,21 +3311,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-time-period-controls">
                       <label>
                         <span>Group</span>
-                        <select aria-label="Recorded time grouping" value={overviewTimePeriodMode} onChange={(event) => {
-                          const mode = event.target.value as ReportingPeriodMode;
-                          setOverviewTimePeriodMode(mode);
-                          setOverviewTimePeriodValue(getCurrentDashboardPeriodValue(mode));
-                        }}>
-                          <option value="month">Month</option>
-                          <option value="quarter">Quarter</option>
-                          <option value="year">Year</option>
-                        </select>
+                        <CustomSelect aria-label="Recorded time grouping" value={overviewTimePeriodMode} onChange={(value) => { const mode = value as ReportingPeriodMode; setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(getCurrentDashboardPeriodValue(mode)); }} options={[{ value: 'month', label: 'Month' }, { value: 'quarter', label: 'Quarter' }, { value: 'year', label: 'Year' }]} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[92px]" menuClassName="ams-dashboard-dropdown-menu" />
                       </label>
                       <label className="ams-card-period-controls__period">
                         <span>Period</span>
-                        <select aria-label="Recorded time period" value={overviewTimePeriodValue} onChange={(event) => setOverviewTimePeriodValue(event.target.value)}>
-                          {overviewTimePeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                        </select>
+                        <CustomSelect aria-label="Recorded time period" value={overviewTimePeriodValue} onChange={setOverviewTimePeriodValue} options={overviewTimePeriodOptions.map((option) => ({ value: option.value, label: option.label }))} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[124px]" menuClassName="ams-dashboard-dropdown-menu" />
                       </label>
                     </div>
                   </div>
@@ -3523,22 +3464,21 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </label>
                         <label className="ams-dashboard-activity-filter">
                           <span>Severity</span>
-                          <select aria-label="Filter activity by severity" value={activitySeverityFilter} onChange={(event) => { setActivitySeverityFilter(event.target.value as DashboardActivitySeverityFilter); setActivityPage(1); }}>
-                            <option value="all">All levels</option>
-                            <option value="critical">Critical</option>
-                            <option value="warning">Warning</option>
-                            <option value="info">Info</option>
-                          </select>
+<CustomSelect aria-label="Filter activity by severity" value={activitySeverityFilter} onChange={(value) => { setActivitySeverityFilter(value as DashboardActivitySeverityFilter); setActivityPage(1); }} options={[{ value: 'all', label: 'All levels' }, { value: 'critical', label: 'Critical' }, { value: 'warning', label: 'Warning' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[126px]" menuClassName="ams-dashboard-dropdown-menu" />
+                        </label>
+                        <label className="ams-dashboard-activity-filter">
+                          <span>Actor</span>
+                          <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[150px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
                         <label className="ams-dashboard-activity-filter">
                           <span>Time window</span>
-                          <select aria-label="Filter activity by time window" value={activityTimeFilter} onChange={(event) => { setActivityTimeFilter(event.target.value as DashboardActivityTimeFilter); setActivityPage(1); }}>
-                            <option value="7">Last 7 days</option>
-                            <option value="30">Last 30 days</option>
-                            <option value="90">Last 90 days</option>
-                            <option value="all">All loaded dates</option>
-                          </select>
+<CustomSelect aria-label="Filter activity by time window" value={activityTimeFilter} onChange={(value) => { setActivityTimeFilter(value as DashboardActivityTimeFilter); setActivityPage(1); }} options={[{ value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' }, { value: '90', label: 'Last 90 days' }, { value: 'all', label: 'All loaded dates' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[142px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
+                        <label className="ams-dashboard-activity-filter">
+                          <span>Order</span>
+                          <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
+                        </label>
+                        {hasActivityFilters ? <button type="button" className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivitySortOrder('newest'); setActivityPage(1); }}>Reset filters <RefreshCw size={12} aria-hidden="true" /></button> : null}
                       </div>
 
                       {filteredDashboardRecentActivity.length === 0 ? (
@@ -3547,10 +3487,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             eyebrow="AUDIT ACTIVITY"
                             icon={<Search size={17} aria-hidden="true" />}
                             title={(dashboardOverview.recentActivity || []).length === 0 ? 'No recorded activity yet' : 'No activity matches these filters'}
-                            description={(dashboardOverview.recentActivity || []).length === 0 ? 'New audit events will appear when workspace actions are recorded.' : 'Adjust the search, severity or time window to inspect other loaded events.'}
+                            description={(dashboardOverview.recentActivity || []).length === 0 ? 'New audit events will appear when workspace actions are recorded.' : 'Adjust the search, actor, severity or time window to inspect other loaded events.'}
                             compact
                             action={(dashboardOverview.recentActivity || []).length > 0 ? (
-                              <button type="button" onClick={() => { setActivitySearch(''); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityPage(1); }} className="inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-fg hover:text-accent-text">
+                              <button type="button" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivitySortOrder('newest'); setActivityPage(1); }} className="ams-dashboard-activity-reset">
                                 Reset filters <RefreshCw size={11} aria-hidden="true" />
                               </button>
                             ) : undefined}
@@ -3613,19 +3553,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <div className="ams-dashboard-activity-pagination__controls">
                           <label>
                             <span>Rows</span>
-                            <select aria-label="Recent activity rows per page" value={String(activityPageSize)} onChange={(event) => { setActivityPageSize(Number(event.target.value)); setActivityPage(1); }}>
-                              <option value="5">5</option>
-                              <option value="10">10</option>
-                            </select>
+<CustomSelect aria-label="Recent activity rows per page" value={String(activityPageSize)} onChange={(value) => { setActivityPageSize(Number(value)); setActivityPage(1); }} options={[{ value: '5', label: '5 rows' }, { value: '10', label: '10 rows' }, { value: '20', label: '20 rows' }]} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[88px]" menuClassName="ams-dashboard-dropdown-menu" />
                           </label>
-                          <div role="group" aria-label="Recent activity pages">
-                            <button type="button" aria-label="Previous activity page" disabled={currentActivityPage <= 1} onClick={() => setActivityPage((page) => Math.max(1, Math.min(page, activityPageCount) - 1))}>
-                              <ChevronLeft size={14} aria-hidden="true" /> Previous
-                            </button>
-                            <span>Page {currentActivityPage} of {activityPageCount}</span>
-                            <button type="button" aria-label="Next activity page" disabled={currentActivityPage >= activityPageCount} onClick={() => setActivityPage((page) => Math.min(activityPageCount, Math.max(1, page) + 1))}>
-                              Next <ChevronRight size={14} aria-hidden="true" />
-                            </button>
+                          <div className="ams-dashboard-activity-page-buttons" role="group" aria-label="Recent activity pages">
+                            <button type="button" className="ams-dashboard-page-step" aria-label="First activity page" disabled={currentActivityPage <= 1} onClick={() => setActivityPage(1)}>First</button>
+                            <button type="button" className="ams-dashboard-page-step" aria-label="Previous activity page" disabled={currentActivityPage <= 1} onClick={() => setActivityPage((page) => Math.max(1, Math.min(page, activityPageCount) - 1))}><ChevronLeft size={13} aria-hidden="true" /><span>Previous</span></button>
+                            {activityPageNumbers[0] > 1 ? <><button type="button" className="ams-dashboard-page-number" aria-label="Go to activity page 1" onClick={() => setActivityPage(1)}>1</button>{activityPageNumbers[0] > 2 ? <span className="ams-dashboard-page-ellipsis" aria-hidden="true">…</span> : null}</> : null}
+                            {activityPageNumbers.map((page) => <button key={page} type="button" className="ams-dashboard-page-number" aria-label={'Go to activity page ' + page} aria-current={currentActivityPage === page ? 'page' : undefined} onClick={() => setActivityPage(page)}>{page}</button>)}
+                            {activityPageNumbers[activityPageNumbers.length - 1] < activityPageCount ? <>{activityPageNumbers[activityPageNumbers.length - 1] < activityPageCount - 1 ? <span className="ams-dashboard-page-ellipsis" aria-hidden="true">…</span> : null}<button type="button" className="ams-dashboard-page-number" aria-label={'Go to activity page ' + activityPageCount} onClick={() => setActivityPage(activityPageCount)}>{activityPageCount}</button></> : null}
+                            <button type="button" className="ams-dashboard-page-step" aria-label="Next activity page" disabled={currentActivityPage >= activityPageCount} onClick={() => setActivityPage((page) => Math.min(activityPageCount, Math.max(1, page) + 1))}><span>Next</span><ChevronRight size={13} aria-hidden="true" /></button>
+                            <button type="button" className="ams-dashboard-page-step" aria-label="Last activity page" disabled={currentActivityPage >= activityPageCount} onClick={() => setActivityPage(activityPageCount)}>Last</button>
                           </div>
                         </div>
                       </div>

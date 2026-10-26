@@ -179,6 +179,23 @@ test('Dashboard cards use a consistent visible separator between every card head
   ]) assert.ok(dashboard.includes('data-ams-feature-slug="' + marker + '"'), 'Missing card expected to use the shared header treatment: ' + marker);
 });
 
+test('Dashboard controls use card-local dates, custom dropdowns, red active states, and compact pagination', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  assert.ok(dashboard.includes("import { CustomSelect } from '../ui/CustomSelect';"));
+  assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
+  assert.equal(dashboard.includes('aria-label="Reporting period filters"'), false);
+  for (const label of ['Finance chart grouping','Finance chart period','Recorded time grouping','Recorded time period','Filter attention by severity','Filter activity by actor','Filter activity by severity','Filter activity by time window','Sort recent activity','Recent activity rows per page']) {
+    assert.ok(dashboard.includes('aria-label="' + label + '"'), 'Missing custom card dropdown: ' + label);
+  }
+  assert.ok(dashboard.includes('const dashboardActivityActors = useMemo'));
+  assert.ok(dashboard.includes("activityActorFilter !== '__all_actors__'"));
+  assert.ok(dashboard.includes("activitySortOrder === 'oldest'"));
+  for (const selector of ['.ams-dashboard-view-tab[aria-current="page"]','.ams-dashboard button[aria-pressed="true"]','.ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]','.ams-dashboard-projects-body','.ams-dashboard-finance-trend-region .ams-trend-chart__plot','.ams-dashboard-activity-page-buttons','.ams-shell:has(.ams-dashboard)']) {
+    assert.ok(styles.includes(selector), 'Missing final Dashboard layout/control rule: ' + selector);
+  }
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');
@@ -391,7 +408,7 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(dashboard.includes('value: reportPeriodValue,'));
   assert.ok(dashboard.includes('mode: reportPeriodMode,'));
   assert.ok(dashboard.includes('enabled: reportPeriodEnabled,'));
-  assert.ok(dashboard.includes('setValue: setReportingPeriodValue'));
+  assert.equal(dashboard.includes('setValue: setReportingPeriodValue'), false);
   assert.ok(dashboard.includes('useReportingPeriod()'));
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(analytics.includes('buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)'));
@@ -399,8 +416,8 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(dashboard.includes('Recent 30-day default window'));
   assert.ok(analytics.includes('All dates defaults to the recent 30 days.'));
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
-  assert.ok(dashboard.includes('aria-label="Reporting date range"'));
-  assert.ok(dashboard.includes('ams-dashboard-period-controls'));
+  assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
+  assert.equal(dashboard.includes('ams-dashboard-period-controls'), false);
   assert.equal(overview.includes('title="Invoices vs expenses"'), false);
   assert.equal(overview.includes('title="Active projects"'), false);
   assert.equal(dashboard.includes('DashboardTrendRangePicker'), false);
@@ -870,7 +887,7 @@ test('Dashboard Overview uses a rounded reference-led visual system and interact
 });
 
 
-test('Dashboard Overview exposes complete header navigation, reporting controls, and working operational filters', async () => {
+test('Dashboard Overview keeps reporting controls card-local and operational filters functional', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
@@ -878,19 +895,22 @@ test('Dashboard Overview exposes complete header navigation, reporting controls,
 
   assert.ok(dashboard.includes('aria-label="Dashboard views"'));
   assert.ok(dashboard.includes("to={tab.key === 'overview' ? '/admin/dashboard' : '/admin/dashboard?view=' + tab.key}"));
-  assert.ok(dashboard.includes('aria-label="Reporting period type"'));
-  assert.ok(dashboard.includes('aria-label="Reporting date range"'));
-  assert.ok(dashboard.includes('setMode: setReportingPeriodMode'));
-  assert.ok(dashboard.includes('setValue: setReportingPeriodValue'));
-  assert.ok(dashboard.includes('clearFilter: clearReportingPeriodFilter'));
-  assert.ok(dashboard.includes('getReportingYearOptions(currentYear, [], selectedReportingRange?.year ?? currentYear)'));
+  assert.equal(dashboard.includes('aria-label="Reporting period type"'), false);
+  assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
+  assert.equal(dashboard.includes('setMode: setReportingPeriodMode'), false);
+  assert.equal(dashboard.includes('setValue: setReportingPeriodValue'), false);
+  assert.equal(dashboard.includes('clearFilter: clearReportingPeriodFilter'), false);
+  assert.equal(dashboard.includes('getReportingYearOptions(currentYear, [], selectedReportingRange?.year ?? currentYear)'), false);
   assert.ok(dashboard.includes('formatReportingPeriodLabel(value, reportPeriodMode, \'en-GB\')'));
-  assert.ok(dashboard.includes('aria-label="Previous reporting period"'));
-  assert.ok(dashboard.includes('aria-label="Next reporting period"'));
-  assert.ok(dashboard.includes('onClick={clearReportingPeriodFilter}'));
+  assert.equal(dashboard.includes('aria-label="Previous reporting period"'), false);
+  assert.equal(dashboard.includes('aria-label="Next reporting period"'), false);
+  assert.equal(dashboard.includes('onClick={clearReportingPeriodFilter}'), false);
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
-  assert.ok(dashboard.includes('ams-dashboard-period-controls'));
-  assert.ok(dashboard.includes('aria-label="Reporting date range"'));
+  assert.equal(dashboard.includes('ams-dashboard-period-controls'), false);
+  assert.ok(overview.includes('aria-label="Finance chart period"'));
+  assert.ok(overview.includes('aria-label="Recorded time period"'));
+  assert.ok(overview.includes('aria-label="Filter activity by time window"'));
+  assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
 
   assert.ok(dashboard.includes("orderedActiveDashboardProjects\n    .filter((project) => overviewProjectFilter === 'all' || getDashboardServiceLine(project) === overviewProjectFilter)"));
   assert.ok(overview.includes('aria-label="Filter projects by service line"'));
@@ -911,7 +931,7 @@ test('Dashboard Overview exposes complete header navigation, reporting controls,
 });
 
 
-test('Dashboard header provides permission-aware invoice, project and refresh actions', async () => {
+test('Dashboard header provides aligned quick actions and tabs without a duplicate reporting bar', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
@@ -949,19 +969,19 @@ test('Dashboard header provides permission-aware invoice, project and refresh ac
   assert.ok(styles.includes('.ams-dashboard-page-header h1'));
   assert.ok(styles.includes('border-radius: 10px'));
   assert.ok(styles.includes('border-bottom-color: var(--accent)'));
-  assert.ok(styles.includes('.ams-dashboard-date-select__input'));
+  assert.ok(styles.includes('.ams-dashboard-select-trigger'));
   assert.ok(styles.includes('prefers-reduced-motion: reduce'));
 
   const toolbarStart = dashboard.indexOf('<section className="ams-dashboard-toolbar');
   const toolbarEnd = dashboard.indexOf('{isRefreshing &&', toolbarStart);
   const toolbar = dashboard.slice(toolbarStart, toolbarEnd);
   assert.ok(toolbar.includes('aria-label="Dashboard views"'));
-  assert.ok(toolbar.includes('aria-label="Reporting period filters"'));
-  assert.ok(toolbar.includes('aria-label="Reporting date range"'));
-  assert.ok(toolbar.includes('<CalendarDays size={14}'));
-  assert.ok(toolbar.includes('aria-label="Previous reporting period"'));
-  assert.ok(toolbar.includes('aria-label="Next reporting period"'));
-  assert.ok(toolbar.includes('clearReportingPeriodFilter'));
+  assert.equal(toolbar.includes('aria-label="Reporting period filters"'), false);
+  assert.equal(toolbar.includes('aria-label="Reporting date range"'), false);
+  assert.equal(toolbar.includes('<CalendarDays size={14}'), false);
+  assert.equal(toolbar.includes('aria-label="Previous reporting period"'), false);
+  assert.equal(toolbar.includes('aria-label="Next reporting period"'), false);
+  assert.equal(toolbar.includes('clearReportingPeriodFilter'), false);
   assert.ok(toolbar.includes("view === tab.key ? 'is-active border-accent bg-transparent text-fg'"));
 });
 
@@ -977,7 +997,10 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
   const finance = overview.slice(financeStart, projectStart);
   assert.equal(overview.includes('ams-overview-scope__meta'), false);
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
-  assert.ok(dashboard.includes('ams-dashboard-period-controls'));
+  assert.equal(dashboard.includes('ams-dashboard-period-controls'), false);
+  assert.ok(overview.includes('aria-label="Finance chart period"'));
+  assert.ok(overview.includes('aria-label="Recorded time period"'));
+  assert.ok(overview.includes('aria-label="Filter activity by time window"'));
   assert.ok(finance.includes('ams-finance-control-links'));
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-movement"'));
   assert.ok(finance.includes('data-ams-feature-slug="dashboard-finance-trend"'));
@@ -1062,7 +1085,7 @@ test('Dashboard refresh warnings keep the main status concise and preserve sourc
 });
 
 
-test('Dashboard Overview uses compact, consistent source states instead of oversized blank error panels', async () => {
+test('Dashboard Overview uses compact source states and custom controls without oversized blank panels', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const overviewStart = dashboard.indexOf("{view === 'overview' ?");

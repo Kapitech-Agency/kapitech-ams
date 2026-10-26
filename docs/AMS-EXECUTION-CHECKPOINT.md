@@ -552,3 +552,13 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Normalized the header treatment across all Dashboard Overview cards, including Project Delivery, Needs Attention, Task Queue, Upcoming Deadlines, Finance, Projects, Team Workload, Client Delivery Focus and Recent Activity.
 - Every card now uses one shared heading size, consistent header padding, a subtle header surface and a visible one-pixel divider before the content. Mobile uses a smaller horizontal inset and stacked action layout; list/table cards retain their own row dividers beneath the shared header boundary.
 - Added a regression test to prevent card-specific headers from silently losing the shared separator. No business data, calculations, routes, permissions, or backend/API files changed.
+
+
+## 0.5 Dashboard control and visual consistency pass — 26 October 2026
+
+- Removed the duplicated page-level Dashboard period selectors; Finance trend and Recorded Time retain card-local period controls. Upcoming Deadlines, Needs Attention and Recent Activity keep their dedicated filters.
+- Replaced card-level native dropdowns with AMS CustomSelect controls for consistent chevron spacing, menus and selected states.
+- Unified header action heights, rectangular button surfaces, red active selections, no hover outline/card glow, and wrapping tabs/header actions. The Dashboard mount uses a single constrained page-scroll container.
+- Projects stretches to match Finance; the Finance line-chart region is taller to align with the receivables panel. Team Workload uses the same outer card/body rhythm as sibling cards.
+- Recent Activity adds actor and sort filters to search/severity/time filters, with numbered pagination, first/previous/next/last and 5/10/20 rows per page. Filters operate on already-loaded audit records only.
+- No API, database, authentication, role/permission, finance calculation or business-logic changes.

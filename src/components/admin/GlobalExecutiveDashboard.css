@@ -2570,3 +2570,205 @@
     transition-duration: 0.01ms;
   }
 }
+
+
+/* Dashboard final control/layout pass: resolve historic cascade conflicts in one final layer. */
+.ams-shell:has(.ams-dashboard) { height:100dvh; max-height:100dvh; overflow:hidden; overflow-x:clip; }
+.ams-shell:has(.ams-dashboard) > main { min-width:0; min-height:0; overflow-x:clip; overflow-y:auto; overscroll-behavior-y:contain; }
+.ams-shell .ams-dashboard { box-sizing:border-box; width:100%; max-width:100%; min-width:0; overflow-x:clip; }
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:14px; padding-bottom:10px; margin-bottom:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child { width:100%; max-width:none; min-width:0; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header h1 { margin:0; font-size:25px; line-height:31px; }
+.ams-shell .ams-dashboard .ams-dashboard-header-actions { display:flex; flex:0 1 auto; flex-wrap:wrap; align-items:center; justify-content:flex-start; gap:7px; width:100%; max-width:100%; min-width:0; }
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > button,
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcut { box-sizing:border-box; height:36px; min-height:36px; align-self:center; border-radius:8px; padding-inline:11px; gap:7px; font-size:11px; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-dashboard-header-action--invoice,
+.ams-shell .ams-dashboard .ams-dashboard-header-action--project { min-width:0; }
+.ams-shell .ams-dashboard .ams-dashboard-header-action--refresh { min-width:36px; padding-inline:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts { display:flex; flex:0 1 auto; flex-wrap:wrap; justify-content:flex-start; align-items:center; gap:6px; min-width:0; }
+@media (min-width:1100px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header { grid-template-columns:minmax(0,1fr) minmax(0,auto); align-items:center; gap:18px; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child { min-width:0; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header > div:last-child { width:auto; min-width:0; justify-self:end; }
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions { width:auto; max-width:700px; justify-content:flex-end; flex-wrap:wrap; }
+}
+@media (max-width:599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header h1 { font-size:23px; line-height:29px; }
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions { justify-content:flex-start; gap:6px; }
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions > button,
+  .ams-shell .ams-dashboard .ams-dashboard-header-shortcut { padding-inline:8px; font-size:10px; }
+}
+
+/* Tabs wrap rather than scroll. */
+.ams-shell .ams-dashboard .ams-dashboard-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-start; gap:12px; min-width:0; padding-bottom:12px; border-bottom:1px solid var(--dashboard-card-border); overflow:visible; }
+.ams-shell .ams-dashboard .ams-dashboard-view-tabs { display:flex; flex:0 1 auto; flex-wrap:wrap; align-items:center; width:fit-content; max-width:100%; min-width:0; gap:6px; overflow:visible; border:0; background:transparent; }
+.ams-shell .ams-dashboard .ams-dashboard-view-tab { display:inline-flex; flex:0 0 auto; height:36px; min-height:36px; align-items:center; justify-content:center; padding-inline:13px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); color:var(--muted); white-space:nowrap; text-decoration:none; }
+.ams-shell .ams-dashboard .ams-dashboard-view-tab:hover { border-color:var(--dashboard-card-border); background:var(--panel); color:var(--text); }
+.ams-shell .ams-dashboard .ams-dashboard-view-tab[aria-current="page"] { border-color:var(--accent); background:var(--accent); color:#fff; font-weight:650; }
+@media (max-width:599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar { align-items:stretch; }
+  .ams-shell .ams-dashboard .ams-dashboard-view-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; }
+  .ams-shell .ams-dashboard .ams-dashboard-view-tab { width:100%; padding-inline:6px; font-size:11px; }
+}
+
+/* No outer card glow/outline on hover or focus. */
+.ams-shell .ams-dashboard .ams-overview-panel:has(a:hover),
+.ams-shell .ams-dashboard .ams-overview-panel:has(button:hover),
+.ams-shell .ams-dashboard .ams-overview-panel:focus-within { border-color:var(--dashboard-card-border); box-shadow:var(--dashboard-card-shadow); transform:none; }
+.ams-shell .ams-dashboard button,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > a,
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcut,
+.ams-shell .ams-dashboard .ams-dashboard-view-tab,
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button,
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter,
+.ams-shell .ams-dashboard .ams-quotation-follow-up button,
+.ams-shell .ams-dashboard .ams-finance-control-links a,
+.ams-shell .ams-dashboard .ams-project-registry-action,
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination button { border-radius:8px; box-shadow:none; transition:background-color 120ms ease,color 120ms ease,border-color 120ms ease; }
+.ams-shell .ams-dashboard button:hover:not(:disabled),
+.ams-shell .ams-dashboard a:hover { outline:none; box-shadow:none; transform:none; }
+.ams-shell .ams-dashboard button:focus,
+.ams-shell .ams-dashboard button:focus-visible,
+.ams-shell .ams-dashboard a:focus,
+.ams-shell .ams-dashboard a:focus-visible,
+.ams-shell .ams-dashboard input:focus,
+.ams-shell .ams-dashboard input:focus-visible,
+.ams-shell .ams-dashboard textarea:focus-visible { outline:none; box-shadow:none; }
+.ams-shell .ams-dashboard .ams-dashboard-view-tab:focus-visible,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > a:focus-visible,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions > button:focus-visible,
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button:focus-visible,
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter:focus-visible,
+.ams-shell .ams-dashboard .ams-dashboard-activity-reset:focus-visible,
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination button:focus-visible { outline:none; border-color:var(--accent); box-shadow:none; }
+
+/* Boxed filters, consistent heights, red active states. */
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter { box-sizing:border-box; height:36px; min-height:36px; align-items:center; gap:3px; padding:3px; border-radius:8px; overflow:visible; }
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button { height:28px; min-height:28px; padding:0 9px; border:1px solid var(--dashboard-card-border); border-radius:6px; background:var(--panel); color:var(--muted); white-space:nowrap; font-size:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter[aria-pressed="true"],
+.ams-shell .ams-dashboard button[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-view-tab[aria-current="page"],
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button[aria-current="page"] { border-color:var(--accent); background:var(--accent); color:#fff; }
+.ams-shell .ams-dashboard button[aria-pressed="true"] *,
+.ams-shell .ams-dashboard .ams-dashboard-view-tab[aria-current="page"] *,
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button[aria-current="page"] * { color:#fff; }
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter:hover:not(:disabled) { border-color:var(--dashboard-card-border); background:var(--panel); color:var(--text); }
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"]:hover,
+.ams-shell .ams-dashboard .ams-dashboard-deadline-filter[aria-pressed="true"]:hover { border-color:var(--accent); background:var(--accent); color:#fff; }
+.ams-shell .ams-dashboard .ams-project-registry-action { box-sizing:border-box; display:inline-flex; height:36px; min-height:36px; align-items:center; border-radius:8px; padding-inline:11px; font-size:11px; white-space:nowrap; }
+
+/* App custom dropdown: consistent button size and inset chevron. */
+.ams-shell .ams-dashboard .ams-dashboard-custom-select { min-width:0; }
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger { box-sizing:border-box; height:32px; min-height:32px; padding:0 10px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); color:var(--text); box-shadow:none; font-size:10px; line-height:14px; }
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger:hover:not(:disabled) { border-color:var(--dashboard-card-border); background:var(--panel); color:var(--text); }
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"],
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]:hover { border-color:var(--accent); background:var(--accent); color:#fff; }
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"] svg { color:#fff; }
+.ams-shell .ams-dashboard .ams-dashboard-select-trigger:focus-visible { outline:none; border-color:var(--accent); box-shadow:none; }
+.ams-dashboard-dropdown-menu .ams-dropdown-item { border-radius:6px; }
+.ams-dashboard-dropdown-menu .ams-dropdown-item[aria-selected="true"],
+.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"] { background:var(--accent); color:#fff; }
+.ams-dashboard-dropdown-menu .ams-dropdown-item[aria-selected="true"] svg,
+.ams-dashboard-dropdown-menu .ams-dropdown-item[aria-selected="true"] span,
+.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"] svg,
+.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"] span { color:#fff; }
+.ams-dashboard-dropdown-menu .ams-dropdown-item:focus,
+.ams-dashboard-dropdown-menu .ams-dropdown-item:focus-visible { outline:none; box-shadow:none; }
+
+/* Projects is flex-filled to match Finance height. */
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] { align-items:stretch; gap:12px; }
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] { display:flex; align-self:stretch; min-height:100%; }
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel { display:flex; flex:1 1 auto; flex-direction:column; height:100%; min-height:100%; }
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel > .ams-dashboard-projects-body { display:flex; flex:1 1 auto; flex-direction:column; }
+.ams-shell .ams-dashboard .ams-project-portfolio-body { flex:1 1 auto; justify-content:space-between; gap:16px; }
+
+/* Finance's trend gets a full-height canvas alongside receivables. */
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel > div:last-child:not([class~="p-0"]) { padding:16px 18px 18px; }
+.ams-shell .ams-dashboard .ams-finance-primary-grid { grid-template-columns:minmax(0,1fr); align-items:stretch; gap:14px; }
+.ams-shell .ams-dashboard .ams-finance-primary-metric { min-width:0; min-height:0; padding:16px; border:1px solid var(--dashboard-card-border); border-radius:12px; background:color-mix(in srgb,var(--bg) 42%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-finance-primary-metric__value { font-size:clamp(22px,2vw,31px); line-height:1.15; letter-spacing:-.04em; }
+.ams-shell .ams-dashboard .ams-finance-trend-region { display:flex; min-width:0; min-height:0; flex-direction:column; padding:14px; border:1px solid var(--dashboard-card-border); border-radius:12px; background:color-mix(in srgb,var(--bg) 36%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-finance-trend-heading { flex:0 0 auto; align-items:flex-start; gap:10px; }
+.ams-shell .ams-dashboard .ams-finance-trend-region .ams-trend-chart--maven { display:flex; flex:1 1 auto; min-width:0; min-height:0; flex-direction:column; }
+.ams-shell .ams-dashboard .ams-finance-trend-region .ams-trend-chart__legend { flex:0 0 auto; flex-wrap:wrap; }
+.ams-shell .ams-dashboard .ams-finance-trend-region .ams-trend-chart__plot { flex:1 1 auto; min-height:190px; height:100%; aspect-ratio:auto; }
+@media (min-width:1100px) {
+  .ams-shell .ams-dashboard .ams-finance-primary-grid { grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr); gap:15px; align-items:stretch; }
+  .ams-shell .ams-dashboard .ams-finance-primary-metric,
+  .ams-shell .ams-dashboard .ams-finance-trend-region { height:324px; min-height:324px; }
+  .ams-shell .ams-dashboard .ams-finance-primary-metric { display:flex; flex-direction:column; justify-content:space-between; }
+  .ams-shell .ams-dashboard .ams-finance-trend-region { padding:14px 13px; }
+}
+@media (max-width:1099px) {
+  .ams-shell .ams-dashboard .ams-finance-primary-metric,
+  .ams-shell .ams-dashboard .ams-finance-trend-region { height:auto; min-height:0; }
+}
+
+/* Team Workload uses the same card shell/body rhythm as its siblings. */
+.ams-shell .ams-dashboard .ams-dashboard-team-panel { display:flex; height:100%; min-width:0; flex-direction:column; }
+.ams-shell .ams-dashboard .ams-dashboard-team-panel > div:first-child { align-items:center; padding:15px 18px 14px; border-bottom:1px solid var(--dashboard-card-border); }
+.ams-shell .ams-dashboard .ams-dashboard-team-body { display:flex; flex:1 1 auto; min-width:0; flex-direction:column; gap:16px; padding:16px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks,
+.ams-shell .ams-dashboard .ams-dashboard-team-time { min-width:0; margin-top:0; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time { padding-top:16px; border-top:1px solid var(--dashboard-card-border); }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header { align-items:center; gap:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row { padding:11px 12px; border:1px solid var(--dashboard-card-border); border-radius:10px; background:color-mix(in srgb,var(--bg) 42%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__heading { align-items:center; justify-content:space-between; gap:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row .h-2,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track { height:7px; border-radius:999px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals { gap:6px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span { min-height:22px; padding:3px 7px; border-radius:7px; font-size:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row { display:flex; flex-direction:column; gap:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row > div:first-child { align-items:center; gap:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track { background:color-mix(in srgb,var(--line) 75%,var(--panel)); }
+
+/* Recent Activity table filters and pagination are compact and responsive. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-tools { display:flex; flex-wrap:wrap; align-items:end; gap:8px; padding:12px 16px; border-bottom:1px solid var(--dashboard-card-border); background:color-mix(in srgb,var(--bg) 28%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-dashboard-activity-search { min-width:200px; min-height:32px; height:32px; flex:1 1 220px; border-radius:8px; padding-inline:9px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter { flex:0 1 auto; min-width:0; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter > span { font-size:9px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter .ams-dashboard-custom-select { width:100%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-reset { display:inline-flex; flex:0 0 auto; min-height:32px; align-items:center; justify-content:center; gap:6px; padding:0 10px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); color:var(--text); font-size:10px; font-weight:550; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap { min-width:0; width:100%; overflow-x:clip; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table { width:100%; min-width:0; table-layout:fixed; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th { padding:10px 16px; background:color-mix(in srgb,var(--bg) 32%,var(--panel)); font-size:9px; line-height:13px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table td { padding:12px 16px; font-size:11px; line-height:16px; overflow-wrap:anywhere; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-top:1px solid var(--dashboard-card-border); background:color-mix(in srgb,var(--bg) 24%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination > p { color:var(--muted); font-size:10px; line-height:15px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls > label { display:flex; align-items:center; gap:6px; font-size:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons { display:flex; flex-wrap:wrap; align-items:center; gap:5px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button { display:inline-flex; min-width:30px; min-height:30px; align-items:center; justify-content:center; gap:4px; padding:0 8px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); color:var(--text); font-size:10px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button[aria-current="page"] { border-color:var(--accent); background:var(--accent); color:#fff; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons button:disabled { opacity:.38; cursor:not-allowed; }
+.ams-shell .ams-dashboard .ams-dashboard-page-ellipsis { padding-inline:2px; color:var(--muted); font-size:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls label > span { color:var(--muted); }
+.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls label .ams-dashboard-custom-select { min-width:88px; }
+@media (max-width:759px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools { align-items:stretch; padding:12px; gap:8px; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-search { flex-basis:100%; min-width:0; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-filter { flex:1 1 calc(50% - 4px); }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-filter .ams-dashboard-select-trigger { width:100%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-pagination { align-items:flex-start; flex-direction:column; padding:12px; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls { width:100%; justify-content:space-between; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons { width:100%; justify-content:flex-start; }
+}
+@media (max-width:599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions { gap:6px; }
+  .ams-shell .ams-dashboard .ams-dashboard-header-shortcut { padding-inline:8px; font-size:10px; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table td { padding:9px 8px; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2),
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table td:nth-child(2) { display:none; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions *,
+  .ams-shell .ams-dashboard .ams-dashboard-view-tabs *,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons * { transition-duration:.01ms; }
+}
