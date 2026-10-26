@@ -95,7 +95,7 @@ test('Dashboard Client Delivery Focus prioritizes agency delivery risk before po
   assert.ok(panel.indexOf('Open task load') >= 0);
   assert.ok(panel.indexOf('In review {client.reviewTaskCount') > previous);
   assert.ok(panel.includes('clientDeliveryFocus.slice(0, 4).map((client) => ('));
-  assert.ok(panel.includes('Overdue commitments remain'));
+  assert.ok(panel.includes("client.overdueCommitmentCount + ' overdue commitments'"));
   assert.ok(panel.includes('No dated commitment in 30 days'));
 });
 
@@ -117,7 +117,7 @@ test('Dashboard Overview client delivery focus groups saved client relationships
   assert.ok(panel.includes('client.overdueTaskCount'));
   assert.ok(panel.includes('client.nextCommitmentDate'));
   assert.ok(panel.includes('project.href && canOpenDashboardRoute(project.href)'));
-  assert.ok(panel.includes('Overdue commitments remain'));
+  assert.ok(panel.includes("client.overdueCommitmentCount + ' overdue commitments'"));
   assert.ok(panel.includes('No dated commitment in 30 days'));
 });
 
