@@ -56,7 +56,7 @@ test('Dashboard Overview prioritizes urgent delivery actions, deadlines, and hea
   assert.ok(overview.includes('dashboard-inbox-triage'));
   assert.ok(overview.includes('dashboard-priority-exceptions'));
   assert.ok(dashboard.includes('api.tasks.getAll()'));
-  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(overviewFinancePeriodMode, overviewFinancePeriodValue'));
   assert.doesNotMatch(overview, /sampleProjects|demoProject|fakeFinance|const fake/i);
 });
 
@@ -121,6 +121,35 @@ test('Dashboard Needs Attention, Finance, Projects and Recent Activity use delib
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-finance-trend"'));
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-project-portfolio"'));
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-recent-activity"'));
+});
+
+test('Overview uses per-card period controls, compact project filters, aligned header actions and an accessible activity table', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+  assert.ok(dashboard.includes("{view !== 'overview' ? ("), 'Global reporting period controls must not appear on the Overview tab.');
+  assert.ok(!dashboard.includes('ams-dashboard-view-tabs flex min-w-0 items-center gap-1 overflow-x-auto'));
+  assert.ok(dashboard.includes('className="ams-project-registry-action'));
+  assert.ok(dashboard.includes('aria-label="Finance chart grouping"'));
+  assert.ok(dashboard.includes('aria-label="Finance chart period"'));
+  assert.ok(dashboard.includes('aria-label="Recorded time grouping"'));
+  assert.ok(dashboard.includes('aria-label="Recorded time period"'));
+  assert.ok(dashboard.includes('aria-label="Filter attention by severity"'));
+  for (const label of [
+    'Search recent activity', 'Filter activity by severity',
+    'Filter activity by time window', 'Recent activity rows per page',
+    'Previous activity page', 'Next activity page'
+  ]) assert.ok(overview.includes('aria-label="' + label + '"'), 'Missing activity table control: ' + label);
+  assert.ok(overview.includes('<table className="ams-dashboard-activity-table">'));
+  assert.ok(overview.includes('<th scope="col">Actor</th>'));
+  assert.ok(overview.includes('visibleDashboardRecentActivity.map'));
+  for (const selector of [
+    '.ams-dashboard-header-shortcut', '.ams-dashboard-view-tabs',
+    '.ams-dashboard-projects-panel', '.ams-dashboard-team-body',
+    '.ams-dashboard-activity-table', '.ams-dashboard-activity-tools'
+  ]) assert.ok(styles.includes(selector), 'Missing layout rule: ' + selector);
 });
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
@@ -589,7 +618,8 @@ test('Dashboard Needs attention card shows severity and authorised Inbox triage 
   assert.ok(attention.includes('title="Needs attention"'));
   assert.ok(attention.includes('attentionSeveritySummary.urgent > 0'));
   assert.ok(attention.includes('attentionSeveritySummary.attention > 0'));
-  assert.ok(attention.includes('overviewAttentionItems.slice(0, 4).map((item, index) => {'));
+  assert.ok(attention.includes('filteredOverviewAttentionItems.slice(0, 4).map((item, index) => {'));
+  assert.ok(attention.includes('aria-label="Filter attention by severity"'));
   assert.ok(attention.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
   assert.ok(attention.includes('data-ams-feature-slug="dashboard-inbox-triage"'));
   assert.ok(attention.includes("label: 'New', value: inboxTriageSummary.newCount"));
@@ -1036,8 +1066,8 @@ test('Dashboard Overview uses compact, consistent source states instead of overs
 test('Dashboard lead row uses compact gutters and prevents an empty stretched Projects panel', async () => {
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   assert.match(styles, /\.ams-overview-card-row\s*\{\s*align-items:\s*stretch;\s*gap:\s*12px;/);
-  assert.match(styles, /\.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*\{\s*align-items:\s*start;\s*gap:\s*12px;/);
-  assert.match(styles, /section\[data-ams-feature-slug="dashboard-project-portfolio"\]\s*\{\s*align-self:\s*start;/);
-  assert.match(styles, /\.ams-overview-panel--projects\s*\{\s*height:\s*auto;/);
+  assert.match(styles, /\.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*\{\s*align-items:\s*stretch;/);
+  assert.match(styles, /section\[data-ams-feature-slug="dashboard-project-portfolio"\]\s*\{\s*display:\s*flex;\s*align-self:\s*stretch;/);
+  assert.match(styles, /\.ams-dashboard-projects-panel\s*\{[^}]*height:\s*100%;/s);
   assert.match(styles, /\.ams-overview-panel > div:last-child:not\(\[class~="p-0"\]\)\s*\{\s*padding:\s*16px;/);
 });

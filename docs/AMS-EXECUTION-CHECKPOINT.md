@@ -527,3 +527,13 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Focused only on Needs attention, Finance, Projects portfolio and Recent activity. Needs attention now has consistent severity rails, a clearer row hierarchy and a separate Inbox triage sub-workspace with aligned count tiles. Finance separates its headline receivable metric from the trend, stages its movement visuals as supporting cards and keeps quotation follow-up as a distinct source-backed list. Projects has a labelled portfolio-signal distribution, clearer metric tiles and aligned Creative/IT workload bars. Recent Activity uses explicit event, actor/time and severity columns instead of leaving the centre of the full-width panel empty.
 - All changes are presentation-only. Existing canonical records, filters, source states, routes, authorization checks, financial semantics and empty/unavailable behavior remain unchanged. New regression assertions cover the four card structures and scoped CSS.
 - Quality Gate must pass on the exact commit before this slice is considered validated; production visual inspection at desktop/tablet/mobile widths remains a separate acceptance step.
+
+
+## 0.5 Dashboard control and card layout pass — 26 October 2026
+
+- Projects portfolio now stretches to the Finance panel height in the shared row, while its metrics, portfolio signal distribution and Creative/IT workload retain deliberate internal spacing.
+- Dashboard Overview no longer uses a global reporting-period/date-range selector. Finance trend/money movement and Team recorded-time each own independent Month/Quarter/Year controls. Needs Attention has a functional severity filter; Upcoming deadlines and task queue keep their existing current-state filters.
+- Project All/Creative/IT filter controls are compact and aligned with Project registry. Dashboard tabs wrap instead of using horizontal scrolling. Quick-action controls share an exact height and wrap cleanly at constrained widths.
+- Team workload receives a stable owner-row layout and its own recorded-time period filter.
+- Recent Activity is a semantic table with search, severity/time-window filters, row-count control, and local pagination, based only on loaded canonical audit records. Permission checks and audit fields remain unchanged.
+- All changes stay in frontend presentation/derived filtering. No backend, API, database, authentication, permission policy or Finance formula changes.
