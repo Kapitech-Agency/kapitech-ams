@@ -8,17 +8,17 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
 
-test('Dashboard Overview leads with balanced Finance and Projects cards using canonical layout tokens', async () => {
+test('Dashboard Overview keeps finance and portfolio as distinct reporting cards after urgent actions', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /featureSlug="dashboard-module"/);
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const end = dashboard.indexOf(") : view === 'performance' ? (", start);
   assert.ok(start >= 0 && end > start);
   const overview = dashboard.slice(start, end);
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projects = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
   const progress = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"');
-  assert.ok(finance >= 0 && projects > finance && progress > projects);
+  assert.ok(progress >= 0 && finance > progress && projects > finance);
   assert.match(overview, /min-\[1100px\]:col-span-7/);
   assert.match(overview, /min-\[1100px\]:col-span-5/);
   assert.ok(overview.includes('Financial movement'));
@@ -113,7 +113,7 @@ test('Client exports use one scope-aware CSV handler and preserve missing billed
 
 test('Dashboard Overview prioritizes Finance and Projects as distinct cards', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf("{view === 'overview' ? (");
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const end = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, end);
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
@@ -125,14 +125,16 @@ test('Dashboard Overview prioritizes Finance and Projects as distinct cards', as
   const team = overview.indexOf('data-ams-feature-slug="dashboard-team-workload"');
   const clientFocus = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"');
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
-  const shortcuts = overview.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
+  const shortcuts = dashboard.indexOf('data-ams-feature-slug="dashboard-workspace-shortcuts"');
   const financeMovement = overview.indexOf('data-ams-feature-slug="dashboard-finance-movement"');
   assert.ok(finance >= 0 && financeMovement > finance && projects > financeMovement);
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-money-movement"'), false);
-  assert.ok(progress > projects && attention > progress);
+  assert.ok(progress >= 0 && attention > progress && finance > attention);
   assert.ok(taskQueue > attention && commitments > taskQueue);
-  assert.ok(team > commitments && clientFocus > team && activity > clientFocus && shortcuts > activity);
+  assert.ok(team > commitments && clientFocus > team && activity > clientFocus);
+  assert.ok(shortcuts >= 0 && shortcuts < start, 'Shortcuts belong in the header, not in the lower content rows.');
+  assert.equal(overview.includes('dashboard-workspace-shortcuts'), false);
   assert.equal(overview.includes('Priority 01'), false);
   assert.equal(overview.includes('data-ams-feature-slug="dashboard-agency-operating-indicators"'), false);
   assert.ok(overview.includes('<TrendChart') && overview.includes('<DonutChart'));
