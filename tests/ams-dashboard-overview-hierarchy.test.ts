@@ -186,10 +186,11 @@ test('Dashboard cards use a consistent visible separator between every card head
   ]) assert.ok(dashboard.includes('data-ams-feature-slug="' + marker + '"'), 'Missing card expected to use the shared header treatment: ' + marker);
 });
 
-test('Dashboard controls use card-local dates, custom dropdowns, red active states, and compact pagination', async () => {
+test('Dashboard controls use card-local dropdowns, design-system active states, and compact pagination', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   assert.ok(dashboard.includes("import { CustomSelect } from '../ui/CustomSelect';"));
+  assert.ok(dashboard.includes("import { DropdownPortal } from '../ui/DropdownPortal';"));
   assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
   assert.equal(dashboard.includes('aria-label="Reporting period filters"'), false);
   for (const label of ['Filter attention by severity','Filter activity by actor','Filter activity by severity','Filter activity by time window','Sort recent activity','Recent activity rows per page']) {
@@ -198,9 +199,25 @@ test('Dashboard controls use card-local dates, custom dropdowns, red active stat
   assert.ok(dashboard.includes('const dashboardActivityActors = useMemo'));
   assert.ok(dashboard.includes("activityActorFilter !== '__all_actors__'"));
   assert.ok(dashboard.includes("activitySortOrder === 'oldest'"));
-  for (const selector of ['.ams-dashboard-view-tab[aria-current="page"]','.ams-dashboard button[aria-pressed="true"]','.ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]','.ams-dashboard-projects-body','.ams-dashboard-finance-trend-region .ams-trend-chart__plot','.ams-dashboard-activity-page-buttons','.ams-shell:has(.ams-dashboard)']) {
+  for (const selector of ['.ams-dashboard-view-tab[aria-current="page"]','.ams-dashboard button[aria-pressed="true"]','.ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]','.ams-dashboard-projects-body','.ams-dashboard-finance-trend-region .ams-trend-chart__plot','.ams-dashboard-activity-page-buttons','.ams-shell:has(.ams-dashboard)','.ams-portal-root .ams-calendar-period-filter__panel','.ams-portal-root .ams-dashboard-activity-calendar-panel']) {
     assert.ok(styles.includes(selector), 'Missing final Dashboard layout/control rule: ' + selector);
   }
+});
+
+test('Dashboard header owns Project registry and project filters share the card header', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const headerStart = dashboard.indexOf('className="ams-dashboard-header-actions');
+  const projectRegistry = dashboard.indexOf('className="ams-dashboard-header-action ams-dashboard-header-action--registry');
+  const projectProgress = dashboard.indexOf('data-ams-feature-slug="dashboard-project-progress"');
+  const portfolioStart = dashboard.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
+  const portfolioEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-team-workload"', portfolioStart);
+  assert.ok(headerStart >= 0 && projectRegistry > headerStart && projectRegistry < projectProgress, 'Project registry must be a page-header action.');
+  assert.ok(dashboard.includes('actions={(\n                    <div className="ams-project-progress-header-actions"'), 'Project filters belong in the card header.');
+  assert.equal(dashboard.slice(projectProgress, projectRegistry).includes('ams-project-registry-action'), false, 'Project Registry must not be duplicated in the card body.');
+  assert.ok(dashboard.slice(portfolioStart, portfolioEnd).includes('bodyClassName="ams-dashboard-projects-body p-4 sm:p-5"'), 'Projects must use the flex-fill body.');
+  assert.ok(styles.includes('.ams-dashboard-projects-body > .ams-project-portfolio-body'));
+  assert.ok(styles.includes('.ams-dashboard-header-action--registry'));
 });
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
@@ -1092,7 +1109,7 @@ test('Dashboard refresh warnings keep the main status concise and preserve sourc
 });
 
 
-test('Dashboard calendar filters contain period grouping and date selection', async () => {
+test('Dashboard calendar filters are dropdowns with card-local periods and accessible date selection', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
@@ -1108,10 +1125,17 @@ test('Dashboard calendar filters contain period grouping and date selection', as
   assert.ok(overview.includes('aria-label="Recent activity start date"'));
   assert.ok(overview.includes('aria-label="Recent activity end date"'));
   assert.ok(styles.includes('.ams-calendar-period-filter__panel'));
-  assert.ok(styles.includes('--dashboard-active-bg:#641326'));
-  assert.ok(styles.includes('body:has(.ams-shell .ams-dashboard)'));
+  assert.ok(styles.includes('background: var(--line);'));
+  assert.ok(styles.includes('border-bottom: 2px solid var(--accent);'));
+  assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
+  assert.ok(styles.includes('.ams-portal-root .ams-calendar-period-filter__panel'));
+  assert.ok(styles.includes('.ams-portal-root .ams-dashboard-activity-calendar-panel'));
   assert.ok(styles.includes('overflow-y:auto;'));
   assert.doesNotMatch(overview, /overflow-x-auto/, 'Dashboard Overview must not introduce horizontal scroll strips.');
+  assert.ok(dashboard.includes('aria-expanded={open}'));
+  assert.ok(dashboard.includes('anchorRef={triggerRef}'));
+  assert.ok(dashboard.includes('anchorRef={activityCalendarTriggerRef}'));
+  assert.ok(dashboard.includes("setActivityCalendarOpen(preset.value === 'custom')"));
 });
 
 test('Dashboard Overview uses compact source states and custom controls without oversized blank panels', async () => {

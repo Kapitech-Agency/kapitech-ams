@@ -590,3 +590,12 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Finance and Recorded Time use custom calendar-triggered period selectors with Month/Quarter/Year grouping inside the calendar. Period choices are constrained to values provided by the existing reporting-period helper. Recent Activity uses a matching date panel with 7/30/90-day, custom-date and all-loaded-date presets.
 - Project Portfolio has an explicit flex body to stretch with Finance in the shared analysis row. Project and task active filters use a restrained dark-crimson selected state.
 - Presentation-only: canonical data, routes, calculations, backend and permission checks remain unchanged. Validate Quality Gate and CI against the exact commit; dependency audit is tracked separately from frontend verification.
+
+
+## 0.5 Dashboard header, period-dropdown and active-state consistency — 27 October 2026
+
+- Project registry is a permission-aware Dashboard header action. All/Creative/IT project filters now live in the Projects in progress card heading and use compact segmented-control geometry.
+- Finance and Recorded time use the shared DropdownPortal for reporting periods. Recent Activity uses the same overlay behavior for time presets and custom dates; it closes on outside click/Escape and does not remain open simply because Custom range is selected.
+- Active state matches the root AMS design system: Overview/Performance/Analytics uses the light underline tab, segmented filters use the neutral `--line` surface, calendar selections and custom dropdown selections use a restrained accent tint, and pagination remains a distinct page indicator.
+- Header controls are standardized at 36px. Source records, authorization, routes, financial formulas and backend/API/database logic remain unchanged.
+- Regression tests cover card-header placement, project registry ownership, dropdown portal wiring and active-state styling. Check CI/Quality Gate for the exact commit before marking this work validated.
