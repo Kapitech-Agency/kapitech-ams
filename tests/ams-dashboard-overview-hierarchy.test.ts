@@ -437,7 +437,7 @@ test('Dashboard segmented filters use one reusable neutral-state component', asy
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   assert.ok(dashboard.includes("import { DashboardFilterGroup } from './DashboardControls';"));
   for (const label of ['Filter projects by service line','Task queue filters','Filter deadlines','Filter quotations by stage','Activity date presets','Reporting period grouping']) assert.ok(dashboard.includes('ariaLabel="' + label + '"'));
-  assert.ok(shared.includes('export const DashboardFilterOptionButton'));
+  assert.ok(shared.includes('export const DashboardControl'));
   assert.ok(shared.includes('export const DashboardFilterGroup'));
   assert.ok(styles.includes('background:var(--dashboard-control-selected)'));
   assert.ok(styles.includes('color-mix(in srgb,var(--text) 7%,var(--panel))'));
@@ -1209,8 +1209,8 @@ test('Dashboard header provides aligned quick actions and tabs without a duplica
   assert.ok(header.includes('className="mb-0 ams-dashboard-page-header"'));
   assert.ok(styles.includes('.ams-dashboard-header-actions > a,'));
   assert.ok(styles.includes('.ams-dashboard-header-actions > a:focus-visible'));
-  assert.ok(styles.includes('.ams-dashboard-header-action--invoice.bg-accent'));
-  assert.ok(styles.includes('.ams-dashboard-header-action--invoice.border'));
+  assert.ok(styles.includes('.ams-dashboard-control--primary'));
+  assert.ok(styles.includes('.ams-dashboard-control--action'));
   assert.ok(styles.includes('grid-template-columns: minmax(0, 1fr) auto'));
   assert.ok(styles.includes('border-bottom: 0'));
   assert.ok(styles.includes('.ams-dashboard-page-header h1'));

@@ -700,3 +700,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Filter groups use a visible rounded background; options share consistent spacing and sizing. Hover and active states are neutral grey, not brand red; task filters have a more comfortable group size than compact project filters.
 - The global reporting period remains out of the Dashboard header. Card-local period controls remain attached to their respective cards.
 - Frontend-only, without changing API/data sources, permissions, business logic, or financial calculations.
+
+
+## 0.6 Shared Dashboard action controls — 27 October 2026
+
+- The shared control module now renders Dashboard actions and filters through one reusable primitive. Header invoice/project/shortcut/refresh actions, card CTAs and Recent Activity date/reset/export/pagination actions use consistent rounded controls, boxed icons, and standard/compact heights.
+- Filter active and hover states remain neutral grey. Create Invoice retains primary emphasis. Finance and Projects stretch to equal height on wide layouts.
+- Existing hrefs, handlers, role permission gates, data semantics and financial calculations are preserved. Frontend-only.

@@ -25,7 +25,7 @@ import {
   Users,
 } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge } from './AdminModulePrimitives';
-import { DashboardFilterGroup } from './DashboardControls';
+import { DashboardControl, DashboardFilterGroup } from './DashboardControls';
 import { CustomSelect } from '../ui/CustomSelect';
 import { DropdownPortal } from '../ui/DropdownPortal';
 import { DonutChart, TrendChart, type DonutPoint, type TrendPoint } from '../charts/DashboardCharts';
@@ -2525,31 +2525,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           >
             <div className="ams-dashboard-header-primary-actions" role="group" aria-label="Primary dashboard actions">
             {canOpenInvoiceRegister ? (
-              <Link
-                to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}
-                className={[
-                  'ams-dashboard-header-action ams-dashboard-header-action--invoice inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-xs font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                  canCreateInvoice
-                    ? 'bg-accent text-white hover:bg-accent-hover'
-                    : 'border border-line bg-panel text-fg hover:border-accent/30 hover:bg-panel-hover'
-                ].join(' ')}
-                aria-label={canCreateInvoice ? 'Create invoice' : 'Open invoices'}
-                title={canCreateInvoice ? 'Create a new invoice' : 'Open the invoice register'}
-              >
-                <ReceiptText size={15} aria-hidden="true" />
-                {canCreateInvoice ? 'Create invoice' : 'Invoices'}
-              </Link>
+              <DashboardControl to={canCreateInvoice?'/admin/finance?tab=accounts-receivable&action=create-invoice':'/admin/finance?tab=accounts-receivable'} variant={canCreateInvoice?'primary':'action'} size="standard" icon={<ReceiptText size={14}/>} className="ams-dashboard-header-action ams-dashboard-header-action--invoice" ariaLabel={canCreateInvoice?'Create invoice':'Open invoices'} title={canCreateInvoice?'Create a new invoice':'Open the invoice register'} showArrow={false}>{canCreateInvoice?'Create invoice':'Invoices'}</DashboardControl>
             ) : null}
             {canOpenProjects ? (
-              <Link
-                to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
-                className="ams-dashboard-header-action ams-dashboard-header-action--project inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-colors duration-150 hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                aria-label={canCreateProject ? 'Create project' : 'Open projects'}
-                title={canCreateProject ? 'Create a new project' : 'Open the Projects workspace'}
-              >
-                <FolderKanban size={14} aria-hidden="true" />
-                {canCreateProject ? 'New project' : 'Projects'}
-              </Link>
+              <DashboardControl to={canCreateProject?'/admin/projects?create=1':'/admin/projects'} variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-header-action ams-dashboard-header-action--project" ariaLabel={canCreateProject?'Create project':'Open projects'} title={canCreateProject?'Create a new project':'Open the Projects workspace'}>{canCreateProject?'New project':'Projects'}</DashboardControl>
             ) : null}
             </div>
             {view === 'overview' ? (
@@ -2559,23 +2538,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   { label: 'Clients', icon: <Users size={13} aria-hidden="true" />, href: '/admin/clients/all-clients' },
                   { label: 'Documents', icon: <FileText size={13} aria-hidden="true" />, href: '/admin/documents' }
                 ].filter((action) => canOpenDashboardRoute(action.href)).map((action) => (
-                  <Link key={action.label} to={action.href} className="ams-dashboard-header-shortcut inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label={'Open ' + action.label} title={'Open ' + action.label}>
-                    <span className="shrink-0">{action.icon}</span><span>{action.label}</span>
-                  </Link>
+                  <DashboardControl to={action.href} variant="shortcut" size="standard" icon={action.icon} showArrow={false} className="ams-dashboard-header-shortcut" ariaLabel={'Open '+action.label} title={'Open '+action.label}>{action.label}</DashboardControl>
                 ))}
               </nav>
             ) : null}
-            <button
-              type="button"
-              onClick={() => setRefreshRequest((current) => current + 1)}
-              disabled={isRefreshing}
-              aria-label="Refresh dashboard data"
-              title="Refresh dashboard data"
-              className="ams-dashboard-header-action ams-dashboard-header-action--refresh inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors duration-150 hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
-              <span className="hidden min-[440px]:inline">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
-            </button>
+            <DashboardControl type="button" onClick={() => setRefreshRequest((current)=>current+1)} disabled={isRefreshing} variant="action" size="standard" icon={<RefreshCw size={14} className={isRefreshing?'animate-spin':''}/>} className="ams-dashboard-header-action ams-dashboard-header-action--refresh" ariaLabel="Refresh dashboard data" title="Refresh dashboard data" showArrow={false}>{isRefreshing?'Refreshing…':'Refresh'}</DashboardControl>
           </div>
         )}
       />
@@ -2647,16 +2614,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         {value:'creative',label:'Creative',count:activeDashboardProjectFilterCounts.creative},
                         {value:'technology',label:'IT',count:activeDashboardProjectFilterCounts.technology}
                       ]} />
-                      <Link
-                        to="/admin/projects?projects=all"
-                        className="ams-project-registry-action inline-flex items-center justify-center gap-1.5 rounded-control px-3 text-[11px] font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                        aria-label="Open Project registry"
-                        title="Open the full Project registry"
-                      >
-                        <FolderKanban size={13} aria-hidden="true" />
-                        Project registry
-                        <ArrowUpRight size={12} aria-hidden="true" />
-                      </Link>
+                      <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-project-registry-action" ariaLabel="Open Project registry" title="Open the full Project registry">Project registry</DashboardControl>
                     </div>
                   )}
                 >
@@ -2801,7 +2759,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <h3 className="text-xs font-semibold text-fg">Inbox triage</h3>
                         
                       </div>
-                      <Link to="/admin/inbox?view=messages" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Inbox <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                      <DashboardControl to="/admin/inbox?view=messages" variant="action" size="compact" icon={<Users size={13}/>} className="ams-dashboard-card-action">Open Inbox</DashboardControl>
                     </div>
                     {inboxTriageSummary.state === 'loading' ? (
                       <p className="px-4 pb-4 text-[11px] text-muted" role="status">Loading inbound records.</p>
@@ -2851,9 +2809,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 className="h-full ams-overview-panel ams-overview-panel--list"
                 bodyClassName="p-0"
                 actions={canOpenTasks ? (
-                  <Link to={overviewTaskQueueHref} className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                    Open Tasks <ArrowUpRight size={13} aria-hidden="true" />
-                  </Link>
+                  <DashboardControl to={overviewTaskQueueHref} variant="action" size="standard" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action">Open Tasks</DashboardControl>
                 ) : undefined}
               >
                 <div className="border-b border-line px-3 py-3 sm:px-4">
@@ -2929,9 +2885,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 className="h-full ams-overview-panel ams-overview-panel--list"
                 bodyClassName="p-0"
                 actions={canOpenProjects ? (
-                  <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                    Open planning <ArrowUpRight size={13} aria-hidden="true" />
-                  </Link>
+                  <DashboardControl to="/admin/projects?projects=planning-delivery&planningView=milestones" variant="action" size="standard" icon={<CalendarDays size={14}/>} className="ams-dashboard-card-action">Open planning</DashboardControl>
                 ) : undefined}
               >
                 {operationalSnapshot.projects === null ? (
@@ -3022,9 +2976,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-finance-period-controls">
                         <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Finance reporting period" mode={overviewFinancePeriodMode} value={overviewFinancePeriodValue} periodLabel={overviewFinancePeriodLabel} options={overviewFinancePeriodOptions} onModeChange={(mode, value) => { setOverviewFinancePeriodMode(mode); setOverviewFinancePeriodValue(value); }} onValueChange={setOverviewFinancePeriodValue} />
                       </div>
-                      <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="ams-dashboard-card-action inline-flex items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                        Open Finance <ArrowUpRight size={13} aria-hidden="true" />
-                      </Link>
+                      <DashboardControl to={canOpenInvoiceRegister?'/admin/finance?tab=accounts-receivable':'/admin/finance?tab=expenses'} variant="action" size="standard" icon={<CircleDollarSign size={14}/>} className="ams-dashboard-card-action">Open Finance</DashboardControl>
                     </div>
                   )}
                 >
@@ -3057,14 +3009,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
                       <div data-ams-feature-slug="dashboard-finance-control" className="ams-finance-control-links flex flex-wrap gap-2">
                         {canOpenInvoiceRegister ? (
-                          <Link to="/admin/finance?tab=accounts-receivable" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                            <ReceiptText size={12} aria-hidden="true" /> Receivables <ArrowUpRight size={11} aria-hidden="true" />
-                          </Link>
+                          <DashboardControl to="/admin/finance?tab=accounts-receivable" variant="action" size="compact" icon={<ReceiptText size={13}/>} className="ams-dashboard-card-action">Receivables</DashboardControl>
                         ) : null}
                         {canOpenExpenseRegister ? (
-                          <Link to="/admin/finance?tab=expenses" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                            <ReceiptText size={12} aria-hidden="true" /> Expenses <ArrowUpRight size={11} aria-hidden="true" />
-                          </Link>
+                          <DashboardControl to="/admin/finance?tab=expenses" variant="action" size="compact" icon={<ReceiptText size={13}/>} className="ams-dashboard-card-action">Expenses</DashboardControl>
                         ) : null}
                       </div>
                     </div>
@@ -3301,9 +3249,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--projects ams-dashboard-projects-panel"
                   bodyClassName="ams-dashboard-projects-body p-4 sm:p-5"
                   actions={(
-                    <Link to="/admin/projects?projects=all" className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                      Open Projects <ArrowUpRight size={13} aria-hidden="true" />
-                    </Link>
+                    <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open Projects</DashboardControl>
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
@@ -3450,7 +3396,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <div className="ams-card-period-controls ams-card-period-controls--time" data-ams-feature-slug="dashboard-time-period-controls">
                           <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
                         </div>
-                        <Link to="/admin/time-logs" className="ams-dashboard-card-action ams-dashboard-team-time__action inline-flex items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Time Logs <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                        <DashboardControl to="/admin/time-logs" variant="action" size="standard" icon={<Clock3 size={14}/>} className="ams-dashboard-card-action ams-dashboard-team-time__action">Open Time Logs</DashboardControl>
                       </div>
                     ) : null}
                   </div>
@@ -3490,7 +3436,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
                   actions={(
-                    <Link to="/admin/projects?projects=all" className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project delivery <ArrowUpRight size={13} aria-hidden="true" /></Link>
+                    <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open project delivery</DashboardControl>
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
@@ -3577,11 +3523,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   actions={(
                     <div className="ams-dashboard-card-header-actions ams-dashboard-activity-header-actions">
                       <div className={['ams-dashboard-activity-calendar-filter', activityCalendarOpen ? 'is-open' : '', activityTimeFilter === 'custom' ? 'has-custom-range' : ''].filter(Boolean).join(' ')}>
-                                                <button ref={activityCalendarTriggerRef} type="button" className="ams-dashboard-activity-calendar-trigger" aria-label="Filter activity by time window" aria-expanded={activityCalendarOpen} aria-controls={activityCalendarOpen ? activityCalendarPanelId : undefined} onClick={() => setActivityCalendarOpen((open) => !open)}>
-                                                  <CalendarDays size={14} aria-hidden="true" />
-                                                  <span>{activityTimeFilter === '7' ? 'Last 7 days' : activityTimeFilter === '30' ? 'Last 30 days' : activityTimeFilter === '90' ? 'Last 90 days' : activityTimeFilter === 'custom' ? 'Custom range' : 'All loaded dates'}</span>
-                                                  <ChevronDown size={12} className={activityCalendarOpen ? 'is-open' : ''} aria-hidden="true" />
-                                                </button>
+                                                <DashboardControl type="button" buttonRef={activityCalendarTriggerRef} variant="action" size="standard" icon={<CalendarDays size={14}/>} trailingIcon={<ChevronDown size={12} className={activityCalendarOpen?'is-open':''}/>} showArrow={false} className="ams-dashboard-activity-calendar-trigger" ariaLabel="Filter activity by time window" ariaExpanded={activityCalendarOpen} ariaControls={activityCalendarOpen?activityCalendarPanelId:undefined} title="Filter activity by time window" onClick={() => setActivityCalendarOpen((open)=>!open)}>{activityTimeFilter==='7'?'Last 7 days':activityTimeFilter==='30'?'Last 30 days':activityTimeFilter==='90'?'Last 90 days':activityTimeFilter==='custom'?'Custom range':'All loaded dates'}</DashboardControl>
                                                 {activityCalendarOpen ? (
                                                   <DropdownPortal
                                                     open={activityCalendarOpen}
@@ -3593,7 +3535,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                                     <div id={activityCalendarPanelId} className="ams-dashboard-activity-calendar-panel__content" role="group" aria-label="Activity calendar filter options">
                                                       <div className="ams-dashboard-activity-calendar-panel__heading">
                                                         <div><p>Time window</p><span>Choose a quick range or set exact dates</span></div>
-                                                        <button type="button" aria-label="Close activity calendar" onClick={() => setActivityCalendarOpen(false)}><span>Done</span></button>
+                                                        <DashboardControl type="button" variant="action" size="compact" icon={<CheckCircle2 size={13}/>} showArrow={false} ariaLabel="Close activity calendar" onClick={() => setActivityCalendarOpen(false)}>Done</DashboardControl>
                                                       </div>
                                                       <DashboardFilterGroup ariaLabel="Activity date presets" value={activityTimeFilter} density="compact" className="ams-dashboard-activity-calendar-presets" onChange={(value)=>{const next=value as DashboardActivityTimeFilter;setActivityTimeFilter(next);setActivityPage(1);setActivityCalendarOpen(next==='custom');}} options={[
                                                         {value:'7',label:'7 days'},{value:'30',label:'30 days'},{value:'90',label:'90 days'},{value:'custom',label:'Custom'},{value:'all',label:'All dates'}
@@ -3608,7 +3550,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                                   </DropdownPortal>
                                                 ) : null}
                                               </div>
-                      <Link to="/admin/settings?tab=audit" className="ams-dashboard-card-action inline-flex items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
+                      <DashboardControl to="/admin/settings?tab=audit" variant="action" size="standard" icon={<Eye size={14}/>} className="ams-dashboard-card-action">View audit log</DashboardControl>
                     </div>
                   )}
                 >
@@ -3643,18 +3585,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <span>Order</span>
                           <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
-                        {hasActivityFilters ? <button type="button" className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters <RefreshCw size={12} aria-hidden="true" /></button> : null}
-                        <button
-                          type="button"
-                          className="ams-dashboard-activity-export"
-                          onClick={exportFilteredDashboardActivity}
-                          disabled={filteredDashboardRecentActivity.length === 0}
-                          title="Export all matching loaded events as a CSV file"
-                          aria-label="Export filtered recent activity as CSV"
-                        >
-                          <Download size={12} aria-hidden="true" />
-                          Export CSV
-                        </button>
+                        {hasActivityFilters ? <DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters</DashboardControl> : null}
+                        <DashboardControl type="button" variant="action" size="standard" icon={<Download size={13}/>} showArrow={false} className="ams-dashboard-activity-export" onClick={exportFilteredDashboardActivity} disabled={filteredDashboardRecentActivity.length===0} title="Export all matching loaded events as a CSV file" ariaLabel="Export filtered recent activity as CSV">Export CSV</DashboardControl>
                       </div>
 
                       {filteredDashboardRecentActivity.length === 0 ? (
@@ -3666,9 +3598,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             description={(dashboardOverview.recentActivity || []).length === 0 ? 'New audit events will appear when workspace actions are recorded.' : isActivityCustomRangeUnselected ? 'Choose a start date, an end date, or both to filter the loaded audit events.' : isActivityCustomRangeInvalid ? 'The start date must be on or before the end date.' : 'Adjust the search, actor, severity or date range to inspect other loaded events.'}
                             compact
                             action={(dashboardOverview.recentActivity || []).length > 0 ? (
-                              <button type="button" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }} className="ams-dashboard-activity-reset">
-                                Reset filters <RefreshCw size={11} aria-hidden="true" />
-                              </button>
+                              <DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters</DashboardControl>
                             ) : undefined}
                           />
                         </div>
@@ -3741,27 +3671,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             />
                           </label>
                           <div className="ams-dashboard-activity-page-buttons" role="group" aria-label="Recent activity pages">
-                            <button
-                              type="button"
-                              className="ams-dashboard-page-step"
-                              aria-label="Previous activity page"
-                              disabled={currentActivityPage <= 1}
-                              onClick={() => setActivityPage((page) => Math.max(1, Math.min(page, activityPageCount) - 1))}
-                            >
-                              <ChevronLeft size={13} aria-hidden="true" />
-                              <span>Previous</span>
-                            </button>
+                            <DashboardControl type="button" variant="action" size="compact" icon={<ChevronLeft size={13}/>} showArrow={false} className="ams-dashboard-page-step" ariaLabel="Previous activity page" disabled={currentActivityPage<=1} onClick={() => setActivityPage((page)=>Math.max(1,Math.min(page,activityPageCount)-1))}>Previous</DashboardControl>
                             <span className="ams-dashboard-activity-page-status" aria-live="polite">Page {currentActivityPage} of {activityPageCount}</span>
-                            <button
-                              type="button"
-                              className="ams-dashboard-page-step"
-                              aria-label="Next activity page"
-                              disabled={currentActivityPage >= activityPageCount}
-                              onClick={() => setActivityPage((page) => Math.min(activityPageCount, Math.max(1, page) + 1))}
-                            >
-                              <span>Next</span>
-                              <ChevronRight size={13} aria-hidden="true" />
-                            </button>
+                            <DashboardControl type="button" variant="action" size="compact" trailingIcon={<ChevronRight size={13}/>} showArrow={false} className="ams-dashboard-page-step" ariaLabel="Next activity page" disabled={currentActivityPage>=activityPageCount} onClick={() => setActivityPage((page)=>Math.min(activityPageCount,Math.max(1,page)+1))}>Next</DashboardControl>
                           </div>
                         </div>
                       </div>

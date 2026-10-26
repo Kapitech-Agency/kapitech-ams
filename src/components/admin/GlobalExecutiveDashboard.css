@@ -7109,3 +7109,39 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 @media (max-width:599px) {.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid {grid-template-columns:repeat(2,minmax(0,1fr))}.ams-shell .ams-dashboard .ams-dashboard-filter-group--comfortable {width:100%;flex-wrap:wrap}}
 @media (max-width:379px) {.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid {grid-template-columns:minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce) {.ams-shell .ams-dashboard .ams-dashboard-control--filter {transition-duration:.01ms}}
+
+
+/* Shared Dashboard actions: the same primitive renders header, card and Recent Activity actions. */
+.ams-shell .ams-dashboard .ams-dashboard-control {
+ box-sizing:border-box;display:inline-flex;min-width:0;height:var(--dashboard-control-height);min-height:var(--dashboard-control-height);
+ align-items:center;justify-content:center;gap:8px;padding:0 11px;border:1px solid var(--dashboard-control-border);border-radius:var(--dashboard-control-radius);
+ background:var(--dashboard-control-surface);color:var(--text);font-size:11px;font-weight:550;line-height:14px;text-decoration:none;white-space:nowrap;cursor:pointer;
+ transition:border-color 140ms ease,background-color 140ms ease,color 140ms ease;
+}
+.ams-shell .ams-dashboard .ams-dashboard-control__icon,.ams-shell .ams-dashboard .ams-dashboard-control__trailing-icon {display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;line-height:0}
+.ams-shell .ams-dashboard .ams-dashboard-control__label {min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ams-shell .ams-dashboard .ams-dashboard-control__count {display:inline-flex;min-width:19px;height:19px;flex:0 0 auto;align-items:center;justify-content:center;padding:0 5px;border:1px solid color-mix(in srgb,var(--line) 88%,var(--text) 3%);border-radius:6px;background:color-mix(in srgb,var(--bg) 28%,var(--panel));color:var(--muted);font-size:9px;font-weight:600;line-height:12px;font-variant-numeric:tabular-nums}
+.ams-shell .ams-dashboard .ams-dashboard-control--action:hover:not(:disabled),.ams-shell .ams-dashboard a.ams-dashboard-control--action:hover,
+.ams-shell .ams-dashboard .ams-dashboard-control--shortcut:hover:not(:disabled),.ams-shell .ams-dashboard a.ams-dashboard-control--shortcut:hover,
+.ams-shell .ams-dashboard .ams-dashboard-control--icon:hover:not(:disabled),.ams-shell .ams-dashboard .ams-dashboard-control--quiet:hover:not(:disabled) {border-color:color-mix(in srgb,var(--text) 14%,var(--line));background:var(--dashboard-control-hover);color:var(--text);box-shadow:none}
+.ams-shell .ams-dashboard .ams-dashboard-control--primary {border-color:var(--accent);background:var(--accent);color:#fff;font-weight:650}
+.ams-shell .ams-dashboard .ams-dashboard-control--primary:hover:not(:disabled),.ams-shell .ams-dashboard a.ams-dashboard-control--primary:hover {border-color:var(--accent-hover);background:var(--accent-hover);color:#fff}
+.ams-shell .ams-dashboard .ams-dashboard-control--compact {height:var(--dashboard-control-compact-height);min-height:var(--dashboard-control-compact-height);padding-inline:9px;font-size:10px}
+.ams-shell .ams-dashboard .ams-dashboard-control--roomy {height:32px;min-height:32px;padding-inline:11px;gap:8px}
+.ams-shell .ams-dashboard .ams-dashboard-control--action .ams-dashboard-control__icon,.ams-shell .ams-dashboard .ams-dashboard-control--shortcut .ams-dashboard-control__icon,.ams-shell .ams-dashboard .ams-dashboard-control--primary .ams-dashboard-control__icon {display:inline-grid;width:22px;height:22px;flex:0 0 22px;place-items:center;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:6px;background:color-mix(in srgb,currentColor 5%,transparent)}
+.ams-shell .ams-dashboard .ams-dashboard-control--compact .ams-dashboard-control__icon,.ams-shell .ams-dashboard .ams-dashboard-control--roomy .ams-dashboard-control__icon {width:20px;height:20px;flex-basis:20px;border-radius:6px}
+.ams-shell .ams-dashboard .ams-dashboard-control--primary .ams-dashboard-control__icon {border-color:rgb(255 255 255 / 22%);background:rgb(255 255 255 / 10%)}
+.ams-shell .ams-dashboard .ams-dashboard-control:focus-visible {outline:2px solid var(--accent);outline-offset:2px;z-index:1}
+.ams-shell .ams-dashboard .ams-dashboard-control:disabled,.ams-shell .ams-dashboard .ams-dashboard-control[aria-disabled="true"] {cursor:not-allowed;opacity:.45;box-shadow:none}
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control,.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action,.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control {height:var(--dashboard-control-height);min-height:var(--dashboard-control-height);align-self:center;border-radius:9px}
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action {height:var(--dashboard-control-height);min-height:var(--dashboard-control-height)}
+@media (min-width:1100px) {
+ .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {align-items:stretch}
+ .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
+ .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {display:flex;min-width:0;align-self:stretch}
+ .ams-shell .ams-dashboard .ams-dashboard-finance-panel,.ams-shell .ams-dashboard .ams-dashboard-projects-panel {display:flex;width:100%;min-width:0;min-height:100%;height:100%;flex:1 1 auto;flex-direction:column}
+ .ams-shell .ams-dashboard .ams-dashboard-projects-body {display:flex;min-height:0;flex:1 1 auto;flex-direction:column}
+ .ams-shell .ams-dashboard .ams-dashboard-projects-body > .ams-project-portfolio-body {flex:1 1 auto;justify-content:space-between}
+}
+@media (prefers-reduced-motion:reduce) {.ams-shell .ams-dashboard .ams-dashboard-control,.ams-shell .ams-dashboard .ams-dashboard-control * {transition-duration:.01ms}}
