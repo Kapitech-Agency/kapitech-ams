@@ -919,3 +919,18 @@ test('Maven Finance trend uses reference-style point-following hover and consist
   assert.ok(chart.includes('{!isMavenPresentation && <div className="mt-1 text-[10px] text-muted">'));
   assert.ok(chart.includes('stopColor={primaryLineColor} stopOpacity="0"'));
 });
+
+
+test('Dashboard refresh warnings keep the main status concise and preserve source detail on demand', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-refresh-warning"');
+  const end = dashboard.indexOf("{view === 'overview' ?", start);
+  assert.ok(start >= 0 && end > start, 'Dashboard refresh warning should be present before the Overview cards.');
+  const warning = dashboard.slice(start, end);
+  assert.ok(warning.includes('Some dashboard data could not be refreshed.'));
+  assert.ok(warning.includes('Dashboard refresh failed.'));
+  assert.ok(warning.includes('Previously loaded values remain visible; unavailable sources are not treated as zero.'));
+  assert.ok(warning.includes('<details'));
+  assert.ok(warning.includes('View refresh details'));
+  assert.ok(warning.includes('{refreshNotice}'));
+});

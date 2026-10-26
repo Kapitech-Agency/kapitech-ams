@@ -2314,9 +2314,22 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </p>
       ) : null}
       {refreshNotice ? (
-        <p className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-xs text-muted" role="status" data-ams-feature-slug="dashboard-refresh-warning">
-          {refreshNotice}
-        </p>
+        <div className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-xs text-muted" role="status" data-ams-feature-slug="dashboard-refresh-warning">
+          <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
+            <p className="min-w-0 flex-1 leading-5">
+              {refreshNotice.startsWith('Could not refresh ')
+                ? 'Some dashboard data could not be refreshed.'
+                : 'Dashboard refresh failed.'}{' '}
+              Previously loaded values remain visible; unavailable sources are not treated as zero.
+            </p>
+            <details className="min-w-0 max-w-full">
+              <summary className="min-h-9 cursor-pointer py-1 font-medium text-warning underline decoration-warning/40 underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                View refresh details
+              </summary>
+              <p className="mt-1 max-w-full break-words leading-4">{refreshNotice}</p>
+            </details>
+          </div>
+        </div>
       ) : null}
 
       {view === 'overview' ? (
