@@ -1818,9 +1818,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }), [overviewAttentionItems, attentionSeverityFilter]);
 
   const dashboardActivityActors = useMemo(() => {
-    return Array.from(new Set((dashboardOverview.recentActivity || [])
-      .map((activity) => String(activity.actor || 'System').trim() || 'System')))
-      .sort((left, right) => left.localeCompare(right));
+    const actors = new Set<string>((dashboardOverview.recentActivity || [])
+      .map((activity) => String(activity.actor || 'System').trim() || 'System'));
+    return Array.from(actors).sort((left, right) => left.localeCompare(right));
   }, [dashboardOverview.recentActivity]);
   const dashboardActivityActorOptions = useMemo(
     () => [
