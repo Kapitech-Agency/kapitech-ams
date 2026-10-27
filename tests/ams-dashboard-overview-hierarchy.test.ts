@@ -718,7 +718,7 @@ test('Projects in progress and Needs attention stay aligned in the delivery row'
   assert.ok(project.includes('min-[1100px]:col-span-7'), 'Projects in progress must occupy the same wide 7-column span as Task Queue.');
   assert.equal(project.includes('min-[1280px]:col-span-5'), false, 'The project delivery width must not shrink at wider desktop breakpoints.');
   assert.ok(project.includes('ams-dashboard-project-progress-panel'));
-  assert.ok(attention.includes("canOpenProjects ? 'min-[1100px]:col-span-5'"), 'Needs attention is the narrower 5-column companion.');
+  assert.ok(row.includes("canOpenProjects ? 'min-[1100px]:col-span-5'"), 'Needs attention is the narrower 5-column companion.');
   const taskQueueStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const taskQueueSection = dashboard.lastIndexOf('<section', taskQueueStart);
   const deadlinesStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskQueueStart);
