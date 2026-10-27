@@ -704,6 +704,28 @@ test('Dashboard header controls, Projects height, Team Workload and Recent Activ
   assert.ok(styles.includes('display: flex;'));
 });
 
+test('Projects in progress is compact and Needs attention gets the wider delivery-triage column', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('aria-label="Project delivery and exceptions"');
+  const projectStart = dashboard.indexOf('data-ams-feature-slug="dashboard-project-progress"', start);
+  const attentionStart = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"', projectStart);
+  const nextRow = dashboard.indexOf('aria-label="Task queue and delivery deadlines"', attentionStart);
+  assert.ok(start >= 0 && projectStart > start && attentionStart > projectStart && nextRow > attentionStart);
+  const row = dashboard.slice(start, nextRow);
+  const project = row.slice(0, row.indexOf('data-ams-feature-slug="dashboard-attention-center"'));
+  const attention = row.slice(row.indexOf('data-ams-feature-slug="dashboard-attention-center"'));
+  assert.ok(project.includes('min-[1100px]:col-span-6'));
+  assert.ok(project.includes('min-[1280px]:col-span-5'));
+  assert.ok(project.includes('ams-dashboard-project-progress-panel'));
+  assert.ok(attention.includes("min-[1100px]:col-span-6 min-[1280px]:col-span-7"));
+  assert.ok(styles.includes('.ams-dashboard-delivery-row {\n  align-items: start;'));
+  assert.ok(styles.includes('.ams-dashboard-project-progress-panel {\n  height: auto;'));
+  assert.ok(styles.includes('grid-column: span 5 / span 5;'));
+  assert.ok(styles.includes('grid-column: span 7 / span 7;'));
+  assert.ok(styles.includes('grid-column: span 6 / span 6;'));
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');

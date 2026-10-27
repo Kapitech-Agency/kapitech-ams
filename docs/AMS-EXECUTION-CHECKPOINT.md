@@ -807,3 +807,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Unified vertical spacing between Overview card rows to 8px, including the Task Queue + Upcoming Deadlines row on narrow screens. Adjacent card-row sections no longer retain a larger 14px top margin.
 - Kept the 12px horizontal gutter on desktop while using the tighter 8px vertical rhythm, so columns retain enough separation and stacked rows are more compact.
 - Added regression assertions for the shared row gap, sibling-row margin, and delivery-row layout. Presentation-only; no data, permissions, routes, or backend behavior changed.
+
+
+## 0.7 Project delivery row width correction — 27 October 2026
+
+- The user-supplied screenshot showed that the empty Projects in progress card still occupied 7/12 of the desktop row while Needs attention and its Inbox triage only had 5/12. Updated the row to 6/6 from 1100–1279px and 5/7 from 1280px upward, giving the attention/triage card the wider share.
+- Projects in progress now sizes to its own content instead of stretching vertically to the Inbox-heavy neighbor when no projects are active. Finance and Projects portfolio continue to use their separate shared-height row contract.
+- Added regression coverage for the exact row spans and compact empty-card behavior. Presentation-only: no data source, routes, permission checks, or business calculations changed.

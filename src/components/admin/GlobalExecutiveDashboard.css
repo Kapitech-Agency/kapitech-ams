@@ -9059,3 +9059,44 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions > .ams-card-period-controls { flex: 1 1 170px; }
   .ams-shell .ams-dashboard .ams-dashboard-activity-table__severity { min-width: 0; padding-inline: 5px; font-size: 9px; }
 }
+
+
+/* Correct the empty Projects in progress row from the supplied production screenshot:
+   the project list is compact, while Needs attention owns more horizontal room for Inbox triage. */
+.ams-shell .ams-dashboard .ams-dashboard-delivery-row {
+  align-items: start;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-project-progress-section {
+  align-self: start;
+  min-width: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-project-progress-panel {
+  height: auto;
+  min-height: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-project-progress-panel > div:last-child[class~="p-0"] {
+  min-height: 0;
+}
+
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-project-progress-section {
+    grid-column: span 6 / span 6;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-attention-section {
+    grid-column: span 6 / span 6;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-project-progress-section {
+    grid-column: span 5 / span 5;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-attention-section {
+    grid-column: span 7 / span 7;
+  }
+}
