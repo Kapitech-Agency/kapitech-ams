@@ -315,7 +315,13 @@ test('Project service-line filters are a single shared segmented control aligned
   assert.ok(projectCard.includes("{value:'technology',label:'IT',count:activeDashboardProjectFilterCounts.technology}"));
   assert.doesNotMatch(projectCard, /<button\b/, 'Service-line options must not be recreated as separate custom buttons.');
   assert.ok(projectCard.includes('size="standard" icon={<FolderKanban'), 'Project Registry uses the standard action size.');
-  assert.match(contract, /\.ams-dashboard-project-service-filter\s*\{[^}]*height: var\(--dashboard-control-height, 36px\)[^}]*padding: var\(--dashboard-filter-shell-padding, 2px\)[^}]*border: 1px solid/s);
+  const groupRuleStart = contract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,');
+  const groupRuleEnd = contract.indexOf('\n}', groupRuleStart) + 2;
+  const groupRule = contract.slice(groupRuleStart, groupRuleEnd);
+  assert.ok(groupRuleStart >= 0 && groupRuleEnd > groupRuleStart, 'Project service-line filter must use the shared bordered group rule.');
+  assert.ok(groupRule.includes('height: var(--dashboard-control-height, 36px);'));
+  assert.ok(groupRule.includes('padding: var(--dashboard-filter-shell-padding, 2px);'));
+  assert.ok(groupRule.includes('border: 1px solid var(--dashboard-control-border, var(--line));'));
   assert.match(contract, /\.ams-dashboard-project-service-filter \.ams-dashboard-control--filter\s*\{[^}]*height: var\(--dashboard-control-filter-height, 28px\)[^}]*padding: 0 var\(--dashboard-control-padding-filter-x, 10px\)/s);
   assert.ok(contract.includes('.ams-dashboard-view-tabs'));
   assert.ok(contract.includes('overflow-x: visible;'), 'Dashboard tabs wrap rather than becoming a horizontal scroll strip.');
@@ -598,8 +604,9 @@ test('Dashboard uses a consistent typography scale, neutral project filters and 
   const projectFilterStart = overview.indexOf('className="ams-project-progress-header-actions"');
   assert.ok(projectFilterStart >= 0);
   assert.ok(dashboardStyles.includes('.ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
-  const projectFilterCss = dashboardStyles.slice(dashboardStyles.lastIndexOf('/* Project service-line filters: neutral selected treatment'));
-  assert.ok(projectFilterCss.includes('background: color-mix(in srgb, var(--text) 8%, var(--panel))'));
+  const projectFilterCss = dashboardStyles.slice(dashboardStyles.lastIndexOf('/* Final Dashboard control contract. */'));
+  assert.ok(projectFilterCss.includes('background: var(--dashboard-control-selected)'));
+  assert.ok(projectFilterCss.includes('padding: var(--dashboard-filter-shell-padding, 2px);'));
   assert.doesNotMatch(projectFilterCss, /background:\s*var\(--accent\)/);
   assert.ok(dashboardStyles.includes('overflow-x: visible;'));
 
