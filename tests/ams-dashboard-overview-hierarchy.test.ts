@@ -428,13 +428,13 @@ test('Upcoming deadlines supports a card-local custom date window beyond the def
 
 test('Dashboard pixel-precision spacing uses equal 12px horizontal and vertical card gutters', async () => {
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
-  const marker = '/* Dashboard pixel-precision spacing contract — 27 October 2026. */';
+  const marker = '/* Dashboard unified grid gutter contract — 27 October 2026.';
   const start = styles.lastIndexOf(marker);
   assert.ok(start >= 0, 'A single final spacing contract must own the final Dashboard spacing rules.');
   const finalLayer = styles.slice(start);
 
   for (const selector of [
-    '.ams-overview-card-row {',
+    '.ams-overview-card-row,',
     '.ams-overview-panel > div:first-child {',
     '.ams-dashboard-finance-header-actions {',
     '.ams-dashboard-finance-header-actions > .ams-card-period-controls {',
@@ -447,9 +447,10 @@ test('Dashboard pixel-precision spacing uses equal 12px horizontal and vertical 
 
   assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*gap: 8px/s);
   assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*justify-content: flex-start/s);
-  assert.match(finalLayer, /\.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
-  assert.match(finalLayer, /\.ams-overview-card-row \+ \.ams-overview-card-row \{[^}]*margin-top: 12px;/s);
-  assert.match(finalLayer, /\.ams-dashboard-delivery-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
+  assert.match(finalLayer, /\.ams-shell \.ams-page-shell\.ams-dashboard \{[^}]*gap: var\(--ams-dashboard-grid-gap\);/s);
+  assert.match(finalLayer, /\.ams-overview-card-row,[\s\S]*?gap: var\(--ams-dashboard-grid-gap\);[\s\S]*?column-gap: var\(--ams-dashboard-grid-gap\);[\s\S]*?row-gap: var\(--ams-dashboard-grid-gap\);/);
+  assert.match(finalLayer, /\.ams-overview-card-row \+ \.ams-overview-card-row \{[^}]*margin-top: 0;[^}]*margin-block-start: 0;/s);
+  assert.match(finalLayer, /\.ams-dashboard-delivery-row,[\s\S]*?column-gap: var\(--ams-dashboard-grid-gap\);[\s\S]*?row-gap: var\(--ams-dashboard-grid-gap\);/);
   assert.match(finalLayer, /\.ams-shell \.ams-dashboard \.ams-dashboard-finance-header-actions \.ams-calendar-period-filter__trigger,\s*\.ams-shell \.ams-dashboard \.ams-dashboard-finance-header-actions \.ams-dashboard-card-action \{[^}]*height: 36px;[^}]*min-height: 36px/s);
 });
 
@@ -459,8 +460,11 @@ test('Dashboard actions, filters and calendars share one hover and geometry cont
   const sharedComponent = await read('src/components/admin/DashboardControls.tsx');
   const pageStyles = await read('src/components/admin/GlobalExecutiveDashboard.css');
 
-  assert.match(pageStyles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
-  assert.match(pageStyles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \+ \.ams-overview-card-row \{[^}]*margin-top: 12px;/s);
+  const unifiedMarker = '/* Dashboard unified grid gutter contract — 27 October 2026.';
+  const finalLayer = pageStyles.slice(pageStyles.lastIndexOf(unifiedMarker));
+  assert.match(finalLayer, /\.ams-shell \.ams-page-shell\.ams-dashboard \{[^}]*gap: var\(--ams-dashboard-grid-gap\);/s);
+  assert.match(finalLayer, /\.ams-overview-card-row,[\s\S]*?column-gap: var\(--ams-dashboard-grid-gap\);[\s\S]*?row-gap: var\(--ams-dashboard-grid-gap\)/s);
+  assert.match(finalLayer, /\.ams-overview-card-row \+ \.ams-overview-card-row \{[^}]*margin-top: 0;[^}]*margin-block-start: 0;/s);
   assert.ok(sharedComponent.includes("import './DashboardControls.css';"));
   assert.ok(sharedStyles.includes('--dashboard-control-hover:'));
   assert.ok(sharedStyles.includes('--dashboard-control-hover-border:'));
@@ -1938,7 +1942,8 @@ test('Dashboard Overview uses one spacing token for all horizontal and vertical 
   const finalLayer = styles.slice(styles.lastIndexOf(marker));
   assert.ok(finalLayer.includes('--ams-dashboard-grid-gap: 12px;'));
   assert.match(finalLayer, /\.ams-overview-card-row,[\s\S]*?gap: var\(--ams-dashboard-grid-gap\);[\s\S]*?column-gap: var\(--ams-dashboard-grid-gap\);[\s\S]*?row-gap: var\(--ams-dashboard-grid-gap\);/);
-  assert.match(finalLayer, /\.ams-overview-card-row \+ \.ams-overview-card-row\s*\{\s*margin-top: var\(--ams-dashboard-grid-gap\);\s*margin-block-start: var\(--ams-dashboard-grid-gap\);/);
+  assert.match(finalLayer, /\.ams-shell \.ams-page-shell\.ams-dashboard\s*\{[^}]*gap: var\(--ams-dashboard-grid-gap\);/s);
+  assert.match(finalLayer, /\.ams-overview-card-row \+ \.ams-overview-card-row\s*\{\s*margin-top: 0;\s*margin-block-start: 0;/);
   for (const row of [
     'Project delivery and exceptions',
     'Task queue and delivery deadlines',

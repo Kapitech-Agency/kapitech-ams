@@ -838,3 +838,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - The two repository workflows are validation-only (`.github/workflows/ams-ci.yml` and `.github/workflows/ams-quality.yml`); neither performs a Hostinger deploy. Hostinger's external Git auto-deploy setting cannot be verified through the tools connected to this session.
 - Latest CI and Quality Gate for `eb4a8afda42d5d6cb5bc4125946ee1f733222876` both failed at the Dashboard regression assertion in `tests/ams-nine-module-workspace-regression.test.ts`: the test still required the previous 6/6 and 1280px width rules while the source and final CSS now use the approved 7/5 delivery split. That caused the production-build step in Quality Gate to be skipped. The stale assertion is corrected to match the actual project-progress and Needs-attention row markup; rerun both workflows before treating this fix as validated.
 - Next verification requires an authenticated Dashboard browser session and Hostinger auto-deployment status. No backend, database, authentication, access-policy, or finance logic changes are made.
+
+
+## 0.7 Correction: Dashboard vertical card gap — 27 October 2026
+
+- Root cause confirmed: the shared `.ams-page-shell` applies `gap: 24px` to direct children while Dashboard also assigned a `12px` top margin to each successive card row. This compounding made the vertical space visibly wider than the horizontal card gutter despite each grid declaring 12px gaps.
+- Dashboard now overrides only its own page-shell gap to `--ams-dashboard-grid-gap: 12px` and removes the additional margins between consecutive card rows. Horizontal gutters, stacked-card row gaps and top-level Dashboard section gaps now share the same 12px measurement.
+- Regression tests now assert the final effective CSS: Dashboard page-shell gap uses the shared token and sibling card rows have zero added margin.
+- Presentation/CSS/tests/documentation only; no API, database, authentication, permission or business-logic changes.

@@ -2581,7 +2581,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 .ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
-  margin-top: 12px;
+  margin-top: 0;
+  margin-block-start: 0;
 }
 
 .ams-shell .ams-dashboard .ams-overview-panel {
@@ -6101,7 +6102,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 .ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
-  margin-top: 12px;
+  margin-top: 0;
+  margin-block-start: 0;
 }
 
 .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
@@ -9115,6 +9117,12 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   --ams-dashboard-grid-gap: 12px;
 }
 
+/* AdminPageShell defaults to 24px between direct children. The Dashboard's
+   shell must use the same 12px token as the horizontal card gutter. */
+.ams-shell .ams-page-shell.ams-dashboard {
+  gap: var(--ams-dashboard-grid-gap);
+}
+
 .ams-shell .ams-dashboard .ams-overview-card-row,
 .ams-shell .ams-dashboard .ams-dashboard-delivery-row,
 .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {
@@ -9132,8 +9140,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 /* Card rows are siblings in the Overview fragment. Apply the exact same
    spacing token between rows, without compounding margins from prior layers. */
 .ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
-  margin-top: var(--ams-dashboard-grid-gap);
-  margin-block-start: var(--ams-dashboard-grid-gap);
+  margin-top: 0;
+  margin-block-start: 0;
 }
 
 .ams-shell .ams-dashboard .ams-overview-card-row > section {
