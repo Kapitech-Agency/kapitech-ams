@@ -23,7 +23,8 @@ test('Dashboard Overview keeps finance and portfolio as distinct reporting cards
   const deliveryRowEnd = overview.indexOf('aria-label="Task queue and delivery deadlines"', deliveryRowStart);
   const deliveryRow = overview.slice(deliveryRowStart, deliveryRowEnd);
   assert.match(deliveryRow, /ams-dashboard-project-progress-section min-w-0 min-\[1100px\]:col-span-7/);
-  assert.match(deliveryRow, /ams-dashboard-attention-section min-w-0 min-\[1100px\]:col-span-5/);
+  assert.match(deliveryRow, /ams-dashboard-attention-section/);
+  assert.match(deliveryRow, /canOpenProjects \? 'min-\[1100px\]:col-span-5'/);
   assert.match(deliveryRow, /data-ams-feature-slug="dashboard-project-progress"/);
   assert.match(deliveryRow, /data-ams-feature-slug="dashboard-attention-center"/);
   assert.match(overview, /min-\[1100px\]:col-span-7/);
