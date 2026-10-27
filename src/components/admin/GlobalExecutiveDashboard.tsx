@@ -3204,7 +3204,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       data-ams-feature-slug="dashboard-commercial-quotation-pipeline"
                       aria-label="Quotation follow-up"
                     >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="ams-quotation-follow-up__header flex min-w-0 flex-wrap items-start gap-3">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="text-sm font-semibold text-fg">Quotation follow-up</h3>
@@ -3214,7 +3214,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                           <p className="ams-quotation-follow-up__description mt-1 text-[11px] leading-4 text-muted">Review pending stages and quotations nearing expiry.</p>
                         </div>
-                        <DashboardControl to="/admin/finance?tab=quotations" variant="action" size="standard" icon={<FileText size={14}/>} className="ams-dashboard-card-action">Open quotation ledger</DashboardControl>
                       </div>
 
                       {operationalSnapshot.quotations === null ? (
@@ -3226,9 +3225,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                         </div>
                       ) : dashboardQuotationRows.length === 0 ? (
-                        <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION REGISTER" icon={<FileText size={17} aria-hidden="true" />} title={'No quotation records in ' + financeCurrency} description="The quotation source returned no records in this currency." compact /></div>
+                        <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION REGISTER" icon={<FileText size={17} aria-hidden="true" />} title={'No quotation records in ' + financeCurrency} description="The quotation source returned no records in this currency." compact action={<DashboardControl to="/admin/finance?tab=quotations" variant="action" size="standard" icon={<FileText size={14}/>} className="ams-dashboard-card-action">Open quotation ledger</DashboardControl>} /></div>
                       ) : activeDashboardQuotations.length === 0 ? (
-                        <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION FOLLOW-UP" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No quotations need follow-up" description={overviewQuotationFilter === 'all' ? 'No active quotations currently meet the follow-up criteria.' : 'No active quotations match the selected stage.'} compact /></div>
+                        <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION FOLLOW-UP" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No quotations need follow-up" description={overviewQuotationFilter === 'all' ? 'No active quotations currently meet the follow-up criteria.' : 'No active quotations match the selected stage.'} compact action={<DashboardControl to="/admin/finance?tab=quotations" variant="action" size="standard" icon={<FileText size={14}/>} className="ams-dashboard-card-action">Open quotation ledger</DashboardControl>} /></div>
                       ) : (
                         <>
                           <DashboardFilterGroup ariaLabel="Filter quotations by stage" value={overviewQuotationFilter} onChange={(value)=>setOverviewQuotationFilter(value as DashboardQuotationFilter)} density="comfortable" className="ams-dashboard-quotation-filter mt-3" options={[
@@ -3240,16 +3239,20 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           ]} />
 
                           {visibleDashboardQuotations.length === 0 ? (
-                            <div className="mt-2 rounded-xl border border-line bg-bg px-3 py-4" role="status">
-                              <p className="text-xs font-medium text-fg">No quotations match this stage</p>
-                              
-                              <button
-                                type="button"
-                                onClick={() => setOverviewQuotationFilter('all')}
-                                className="ams-dashboard-card-action mt-2 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-3 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                              >
-                                Clear stage filter
-                              </button>
+                            <div className="mt-2 px-1 py-3">
+                              <DashboardEmptyState
+                                eyebrow="QUOTATION FILTER"
+                                icon={<Filter size={17} aria-hidden="true" />}
+                                title="No quotations match this stage"
+                                description="Try another quotation stage or open the quotation ledger to review the full register."
+                                compact
+                                action={(
+                                  <>
+                                    <DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-card-action" onClick={() => setOverviewQuotationFilter('all')}>Clear stage filter</DashboardControl>
+                                    <DashboardControl to="/admin/finance?tab=quotations" variant="action" size="standard" icon={<FileText size={14}/>} className="ams-dashboard-card-action">Open quotation ledger</DashboardControl>
+                                  </>
+                                )}
+                              />
                             </div>
                           ) : (
                             <div className="mt-2 divide-y divide-line">
@@ -3460,7 +3463,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <div className="ams-card-period-controls ams-card-period-controls--time" data-ams-feature-slug="dashboard-time-period-controls">
                           <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
                         </div>
-                        <DashboardControl to="/admin/time-logs" variant="action" size="standard" icon={<Clock3 size={14}/>} className="ams-dashboard-card-action ams-dashboard-team-time__action">Open Time Logs</DashboardControl>
                       </div>
                     ) : null}
                   </div>
@@ -3473,7 +3475,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   </div>
                   ) : periodTimeRows.length === 0 ? (
-                    <DashboardEmptyState eyebrow="RECORDED TIME" icon={<Clock3 size={17} aria-hidden="true" />} title="No recorded time in this period" description="Hours are shown only when team members have saved time entries for the selected scope." compact />
+                    <DashboardEmptyState
+                      eyebrow="RECORDED TIME"
+                      icon={<Clock3 size={17} aria-hidden="true" />}
+                      title="No recorded time in this period"
+                      description="Hours are shown only when team members have saved time entries for the selected scope."
+                      compact
+                      action={canOpenTimeLogs ? <DashboardControl to="/admin/time-logs" variant="action" size="standard" icon={<Clock3 size={14}/>} className="ams-dashboard-card-action ams-dashboard-team-time__action">Open Time Logs</DashboardControl> : undefined}
+                    />
                   ) : (
                     <div className="space-y-3">
                       {periodTimeRows.slice(0, 4).map((person) => (

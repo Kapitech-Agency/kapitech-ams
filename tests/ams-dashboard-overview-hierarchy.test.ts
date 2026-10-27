@@ -325,7 +325,9 @@ test('Dashboard card-local calendars sit in card headers, dropdown widths are st
   const recordedTimeHeader = team.slice(recordedTimeStart, recordedTimeEnd);
   assert.ok(recordedTimeStart >= 0 && team.indexOf('dashboard-time-period-controls') > recordedTimeStart);
   assert.ok(recordedTimeHeader.includes('ams-dashboard-team-time__header-actions'));
-  assert.ok(recordedTimeHeader.includes('Open Time Logs'));
+  assert.equal(recordedTimeHeader.includes('Open Time Logs'), false, 'Open Time Logs belongs inside the recorded-time empty state, not in the heading.');
+  assert.ok(team.includes('action={canOpenTimeLogs ? <DashboardControl to="/admin/time-logs"'), 'Empty recorded-time state owns the Open Time Logs action.');
+  assert.ok(team.includes('title="No recorded time in this period"'));
   assert.ok(recordedTimeHeader.includes('ariaLabel="Recorded time reporting period"'));
   assert.equal(team.includes('ams-dashboard-team-header-actions'), false, 'Recorded-time controls belong beside their own heading.');
   assert.ok(activity.indexOf('Filter activity by time window') < activity.indexOf('ams-dashboard-activity-tools'));
@@ -537,6 +539,54 @@ test('Dashboard project and task filters use padded neutral states, card actions
   assert.ok(controls.includes('.ams-dashboard-control--filter[aria-pressed="true"]'));
   assert.ok(finalContract.includes('.ams-dashboard-project-service-filter'));
   assert.ok(finalContract.includes('.ams-dashboard-task-queue-filter'));
+});
+
+test('Dashboard uses a consistent typography scale, neutral project filters and empty-state-only ledger actions', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const dashboardStyles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const controlStyles = await read('src/components/admin/DashboardControls.css');
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const quotationStart = overview.indexOf('data-ams-feature-slug="dashboard-commercial-quotation-pipeline"');
+  const projectsStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', quotationStart);
+  const quotations = overview.slice(quotationStart, projectsStart);
+  const quotationHeaderStart = quotations.indexOf('ams-quotation-follow-up__header');
+  const quotationBodyStart = quotations.indexOf('operationalSnapshot.quotations === null', quotationHeaderStart);
+  const quotationHeader = quotations.slice(quotationHeaderStart, quotationBodyStart);
+  const recordedTimeStart = overview.indexOf('data-ams-feature-slug="dashboard-recorded-time-by-person"');
+  const recordedTimeEnd = overview.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"', recordedTimeStart);
+  const recordedTime = overview.slice(recordedTimeStart, recordedTimeEnd);
+
+  assert.ok(dashboardStyles.includes('--ams-dashboard-type-h1: 26px'));
+  assert.ok(dashboardStyles.includes('--ams-dashboard-type-h2: 15px'));
+  assert.ok(dashboardStyles.includes('--ams-dashboard-type-h3: 13px'));
+  assert.ok(dashboardStyles.includes('--ams-dashboard-type-h4: 12px'));
+  assert.ok(dashboardStyles.includes('--ams-dashboard-type-body: 12px'));
+  assert.ok(dashboardStyles.includes('--ams-dashboard-type-secondary: 11px'));
+  assert.ok(dashboardStyles.includes('--ams-dashboard-type-meta: 10px'));
+  assert.ok(dashboardStyles.includes('.ams-dashboard-page-header h1'));
+  assert.ok(dashboardStyles.includes('.ams-overview-panel > div:first-child h2'));
+  assert.ok(dashboardStyles.includes('.ams-overview-panel h3'));
+
+  const projectFilterStart = overview.indexOf('className="ams-project-progress-header-actions"');
+  const projectFilterEnd = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"', projectFilterStart + 1);
+  assert.ok(projectFilterStart >= 0);
+  assert.ok(dashboardStyles.includes('.ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
+  const projectFilterCss = dashboardStyles.slice(dashboardStyles.lastIndexOf('/* Project service-line filters: neutral selected treatment'));
+  assert.ok(projectFilterCss.includes('background: color-mix(in srgb, var(--text) 8%, var(--panel))'));
+  assert.doesNotMatch(projectFilterCss, /background:\s*var\(--accent\)/);
+  assert.ok(dashboardStyles.includes('overflow-x: visible;'));
+
+  assert.equal(quotationHeader.includes('Open quotation ledger'), false, 'Quotation ledger action must not crowd the Quotation Follow-up heading.');
+  assert.ok(quotations.includes('action={<DashboardControl to="/admin/finance?tab=quotations"'), 'Quotation ledger action must be available inside an empty state.');
+  assert.ok(quotations.includes('title="No quotations match this stage"'));
+  assert.equal(recordedTime.includes('Open Time Logs</DashboardControl>') && recordedTime.indexOf('ams-dashboard-team-time__header-actions') < recordedTime.indexOf('Open Time Logs</DashboardControl>'), false,
+    'Open Time Logs must not appear as a permanent heading action.');
+  assert.ok(recordedTime.includes('action={canOpenTimeLogs ? <DashboardControl to="/admin/time-logs"'), 'Open Time Logs is shown in the empty state only.');
+  assert.ok(controlStyles.includes('--dashboard-control-height: 36px;'));
+  assert.ok(controlStyles.includes('--dashboard-control-compact-height: 32px;'));
+  assert.ok(dashboardStyles.includes('.ams-overview-card-row[aria-label="Finance and project overview"] .ams-overview-panel--projects'));
 });
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {

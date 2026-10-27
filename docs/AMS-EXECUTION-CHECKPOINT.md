@@ -763,3 +763,13 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Moved the existing All levels / Urgent / Attention / Info selector into the card header at the far right. A source-confirmed empty state now appears immediately to its left as a rounded rectangular indicator; it is not duplicated in the body.
 - The filter still uses the existing attentionSeverityFilter state and canonical records. Per-item urgency labels, source availability handling, severity sorting, route access checks and Inbox triage remain intact.
 - This was a scoped frontend and regression-test change only. Confirm the new commit's Quality Gate before considering the slice validated.
+
+
+## 0.5 Dashboard control, empty-state action and typography cleanup — 27 October 2026
+
+- Removed the permanent **Open quotation ledger** control from the Quotation Follow-up heading; the ledger route is now offered from the genuine no-records, no-follow-up and filtered-empty states.
+- Moved **Open Time Logs** from the Recorded time heading into its empty state. The independent period selector remains in the recorded-time card header.
+- Standardized Dashboard type scale: H1 26/32, H2 15/20, H3 13/18, H4 12/17, H5/H6 11/15; body 12/18, supporting copy 11/16, metadata 10/14.
+- Enforced a two-tier control geometry: standard actions 36px high with 12px horizontal padding; compact filter/registry controls 32px high with 10px padding. Projects-in-progress filters use a neutral gray active state and plain count text, without a crimson block. Tabs remain wrapping/non-scrolling.
+- Reasserted the equal-height Finance/Projects row, compact activity filters and responsive Recent Activity table styles. Existing per-card date controls and recent-activity search/actor/severity/time/order/export/pagination behavior remain in place.
+- UI/UX and documentation only. No backend, API, database, permissions, authentication, route behavior or financial calculations changed.
