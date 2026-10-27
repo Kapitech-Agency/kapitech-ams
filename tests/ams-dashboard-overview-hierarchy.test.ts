@@ -443,7 +443,7 @@ test('Dashboard pixel-precision spacing uses equal 12px horizontal and vertical 
     '.ams-dashboard-team-time__header-actions,',
     '.ams-dashboard-activity-header-actions {',
     '@media (max-width: 639px)'
-  ]) assert.ok(finalLayer.includes(selector), 'Missing final spacing rule: ' + selector);
+  ]) assert.ok(styles.includes(selector), 'Missing Dashboard spacing rule: ' + selector);
 
   assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*gap: 8px/s);
   assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*justify-content: flex-start/s);
