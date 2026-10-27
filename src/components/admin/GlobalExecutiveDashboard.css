@@ -1952,7 +1952,7 @@
   background:var(--panel);
   color:var(--text);
 }
-.ams-shell .ams-dashboard .ams-dashboard-view-tab[aria-current="page"] { border-color:transparent; border-bottom:2px solid var(--accent); background:transparent; color:var(--text); font-weight:600; }
+.ams-shell .ams-dashboard .ams-dashboard-view-tab[aria-current="page"] { border-color:transparent; border-bottom: 0; background:transparent; color:var(--text); font-weight:600; }
 @media (max-width:599px) {
   .ams-shell .ams-dashboard .ams-dashboard-toolbar { align-items:stretch; }
   .ams-shell .ams-dashboard .ams-dashboard-view-tabs {
@@ -3339,7 +3339,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 
 .ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
   border-color: transparent;
-  border-bottom: 2px solid var(--accent);
+  border-bottom: 0;
   background: transparent;
   color: var(--text);
   font-weight: 600;
@@ -7224,10 +7224,10 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab.is-active,
 .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
-  border-bottom: 2px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-  color: var(--text);
+  border: 1px solid var(--accent);
+  border-bottom: 0;
+  background: var(--accent);
+  color: #fff;
   font-weight: 650;
   box-shadow: none;
 }
@@ -7371,11 +7371,12 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 .ams-shell .ams-dashboard .ams-dashboard-task-queue-filter .ams-dashboard-control--filter.is-active,
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"],
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active {
-  border-color: var(--dashboard-control-hover-border);
-  background: var(--dashboard-control-selected);
+  border: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--dashboard-control-selected, color-mix(in srgb, var(--text) 9%, var(--panel)));
   color: var(--text);
   font-weight: 650;
-  box-shadow: inset 0 -2px 0 var(--accent);
+  box-shadow: none;
 }
 .ams-shell .ams-dashboard .ams-dashboard-task-queue-filter .ams-dashboard-control--filter[aria-pressed="true"] *,
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"] * {
@@ -7612,4 +7613,75 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter {
     flex: 0 0 auto;
   }
+}
+
+
+/* Active state contract: tabs are crimson; filters remain neutral grey with no accent underline. */
+.ams-shell .ams-dashboard .ams-dashboard-control--filter[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-control--filter.is-active,
+.ams-portal-root .ams-dashboard-control--filter[aria-pressed="true"],
+.ams-portal-root .ams-dashboard-control--filter.is-active,
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets button[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-calendar-period-filter__group button[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid button[aria-pressed="true"],
+.ams-portal-root .ams-calendar-period-filter__group button[aria-pressed="true"],
+.ams-portal-root .ams-calendar-period-filter__grid button[aria-pressed="true"],
+.ams-portal-root .ams-dashboard-activity-calendar-presets button[aria-pressed="true"] {
+  border-color: var(--line);
+  border-bottom-color: var(--line);
+  background: var(--dashboard-control-selected, color-mix(in srgb, var(--text) 9%, var(--panel)));
+  color: var(--text);
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-control--filter[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-control--filter.is-active:hover:not(:disabled),
+.ams-portal-root .ams-dashboard-control--filter[aria-pressed="true"]:hover:not(:disabled),
+.ams-portal-root .ams-dashboard-control--filter.is-active:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets button[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-calendar-period-filter__group button[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-calendar-period-filter__grid button[aria-pressed="true"]:hover:not(:disabled),
+.ams-portal-root .ams-calendar-period-filter__group button[aria-pressed="true"]:hover:not(:disabled),
+.ams-portal-root .ams-calendar-period-filter__grid button[aria-pressed="true"]:hover:not(:disabled),
+.ams-portal-root .ams-dashboard-activity-calendar-presets button[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: var(--line);
+  border-bottom-color: var(--line);
+  background: var(--dashboard-control-selected, color-mix(in srgb, var(--text) 9%, var(--panel)));
+  color: var(--text);
+  box-shadow: none;
+  transform: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__count,
+.ams-shell .ams-dashboard .ams-dashboard-control--filter.is-active .ams-dashboard-control__count,
+.ams-portal-root .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__count,
+.ams-portal-root .ams-dashboard-control--filter.is-active .ams-dashboard-control__count {
+  border-color: var(--dashboard-card-border);
+  background: color-mix(in srgb, var(--line) 70%, var(--panel));
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab.is-active,
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
+  border: 1px solid var(--accent);
+  border-bottom: 0;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab.is-active:hover,
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"]:hover {
+  border-color: var(--accent);
+  border-bottom: 0;
+  background: var(--accent);
+  color: #fff;
 }

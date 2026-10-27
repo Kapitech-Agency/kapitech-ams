@@ -504,6 +504,24 @@ test('Dashboard active tabs, shared filter states, aligned card bodies, compact 
   assert.ok(deadlines.includes('ams-dashboard-deadline-list'));
 });
 
+test('Task Queue and Upcoming Deadlines empty states share the same top inset', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const taskStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const deadlineStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskStart);
+  const overviewEnd = dashboard.indexOf('data-ams-feature-slug="dashboard-team-workload"', deadlineStart);
+  assert.ok(taskStart >= 0 && deadlineStart > taskStart && overviewEnd > deadlineStart);
+  const task = dashboard.slice(taskStart, deadlineStart);
+  const deadlines = dashboard.slice(deadlineStart, overviewEnd);
+  const taskEmptyStart = task.indexOf(') : dashboardWorkTasks.length === 0 ? (');
+  const taskEmptyEnd = task.indexOf(') : activeDashboardTasks.length === 0 ?', taskEmptyStart);
+  assert.ok(taskEmptyStart >= 0 && taskEmptyEnd > taskEmptyStart);
+  const taskEmptyState = task.slice(taskEmptyStart, taskEmptyEnd);
+  assert.ok(taskEmptyState.includes('<div className="px-4 py-4" role="status">'));
+  assert.doesNotMatch(taskEmptyState, /py-8/);
+  assert.ok(deadlines.includes('<div className="px-4 py-4"><DashboardEmptyState eyebrow="DELIVERY TIMELINE"'),
+    'The empty deadline state uses the same 16px top inset as the task queue.');
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');
@@ -1471,7 +1489,12 @@ test('Dashboard calendar filters are dropdowns with card-local periods and acces
   assert.ok(styles.includes('.ams-calendar-period-filter__panel'));
   assert.match(styles, /background:\s*var\(--line\);/);
   assert.ok(styles.includes('/* Minimal Dashboard polish: no decorative dividers — 2026-10-27.'));
-  assert.ok(styles.includes('border-bottom-color: var(--accent);'), 'Active tabs use the design-system underline without horizontal scrolling.');
+  const finalTabLayer = styles.slice(styles.lastIndexOf('/* Dashboard interaction and alignment contract — final layer, 27 October 2026. */'));
+  assert.ok(finalTabLayer.includes('background: var(--accent);'), 'Active tabs remain crimson.');
+  assert.ok(finalTabLayer.includes('border-bottom: 0;'), 'Active tabs must not use a bottom underline.');
+  assert.doesNotMatch(finalTabLayer, /border-bottom:\s*2px solid var\(--accent\)/, 'No active tab underline should remain in the final layer.');
+  assert.ok(finalTabLayer.includes('.ams-dashboard-control--filter[aria-pressed="true"]'));
+  assert.doesNotMatch(finalTabLayer, /box-shadow:\s*inset 0 -2px 0 var\(--accent\)/, 'Active filters use a neutral grey surface without a crimson underline.');
   assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
   assert.ok(styles.includes('.ams-portal-root .ams-calendar-period-filter__panel'));
   assert.ok(styles.includes('.ams-portal-root .ams-dashboard-activity-calendar-panel'));

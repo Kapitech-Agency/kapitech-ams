@@ -372,9 +372,10 @@
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab.is-active {
-  background: transparent;
-  color: var(--text);
-  border-bottom-color: var(--accent);
+  border: 1px solid var(--accent);
+  border-bottom: 0;
+  background: var(--accent);
+  color: #fff;
 }
 
 .ams-shell .ams-dashboard .ams-calendar-period-filter {

@@ -2586,7 +2586,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               to={tab.key === 'overview' ? '/admin/dashboard' : '/admin/dashboard?view=' + tab.key}
               aria-current={view === tab.key ? 'page' : undefined}
               className={[
-                'ams-dashboard-view-tab inline-flex min-h-10 shrink-0 items-center border-b-2 border-x-0 border-t-0 px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                'ams-dashboard-view-tab inline-flex min-h-10 shrink-0 items-center border border-transparent px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                 view === tab.key ? 'is-active border-accent bg-transparent text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-transparent hover:text-fg'
               ].join(' ')}
             >
@@ -2851,7 +2851,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 {!canOpenTasks || operationalSnapshot.tasks === null ? (
                   <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." compact /></div>
                 ) : dashboardWorkTasks.length === 0 ? (
-                  <div className="px-4 py-8" role="status">
+                  <div className="px-4 py-4" role="status">
                     <DashboardEmptyState eyebrow="TASK QUEUE" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No task records yet" description="Tasks will appear here when they are created in the canonical Tasks workspace." action={canOpenTasks ? <DashboardControl to="/admin/tasks" variant="action" size="standard" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action">Open Tasks</DashboardControl> : undefined} />
                   </div>
                 ) : activeDashboardTasks.length === 0 ? (
