@@ -793,3 +793,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 
 
 - Recent Activity now supports additional client-side sort modes: highest severity first and actor A–Z, in addition to newest and oldest. Tie-breaking remains deterministic by timestamp; existing actor/severity/date filters, CSV export and pagination remain source-backed.
+
+
+## 0.5 Dashboard responsive control and card hierarchy consolidation — 27 October 2026
+
+- Consolidated overridden CSS declarations safely and replaced the repeated header/tab/card overrides with one final layout contract. The final rules give the header a stable action baseline, make action groups wrap at tablet widths, prohibit horizontal scrolling on the Dashboard tabs, keep Project service-line options compact inside the same-height registry toolbar, and make Projects flex-fill the Finance row.
+- Team Workload uses separated task/time groups and aligned local period controls. Recent Activity keeps its search, actor/severity/date/order filters, custom range, CSV export and shared pagination; the table now uses soft row surfaces and a dedicated narrow-screen column layout.
+- Existing canonical data, permissions, routes, financial semantics and filter behavior remain unchanged. TypeScript, regression tests, production build and AMS CI results must be checked on this commit.

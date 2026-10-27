@@ -251,6 +251,22 @@ test('Dashboard controls use card-local dropdowns, design-system active states, 
   }
 });
 
+test('Dashboard final layout contract keeps controls aligned and card content predictable', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const finalLayer = styles.slice(styles.lastIndexOf('/* Dashboard final layout contract — 27 October 2026. */'));
+
+  assert.ok(finalLayer.includes('overflow-x: clip;'), 'Dashboard tabs must not create a horizontal scroll strip.');
+  assert.ok(finalLayer.includes('flex-wrap: wrap;'), 'Header controls must wrap instead of overflowing their row.');
+  assert.ok(finalLayer.includes('height: 36px;'));
+  assert.ok(finalLayer.includes('height: 28px;'), 'Project service-line choices remain compact inside the 36px shared toolbar.');
+  assert.ok(finalLayer.includes('.ams-dashboard-finance-panel'));
+  assert.ok(finalLayer.includes('.ams-dashboard-projects-panel'));
+  assert.ok(finalLayer.includes('.ams-dashboard-team-owner-row'));
+  assert.ok(finalLayer.includes('.ams-dashboard-activity-table tbody td'));
+  assert.ok(finalLayer.includes('border-spacing: 0 5px;'));
+  assert.ok(finalLayer.includes('@media (max-width: 759px)'));
+});
+
 test('Project registry sits beside compact service-line filters in the Project Progress card header', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
@@ -329,14 +345,14 @@ test('Project service-line filters are a single shared segmented control aligned
   assert.ok(projectCard.includes("{value:'technology',label:'IT',count:activeDashboardProjectFilterCounts.technology}"));
   assert.doesNotMatch(projectCard, /<button\b/, 'Service-line options must not be recreated as separate custom buttons.');
   assert.ok(projectCard.includes('size="standard" icon={<FolderKanban'), 'Project Registry uses the standard action size.');
-  const groupRuleStart = contract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,');
+  const groupRuleStart = contract.lastIndexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,');
   const groupRuleEnd = contract.indexOf('\n}', groupRuleStart) + 2;
   const groupRule = contract.slice(groupRuleStart, groupRuleEnd);
   assert.ok(groupRuleStart >= 0 && groupRuleEnd > groupRuleStart, 'Project service-line filter must use the shared bordered group rule.');
   assert.ok(groupRule.includes('height: var(--dashboard-control-height, 36px);'));
   assert.ok(groupRule.includes('padding: var(--dashboard-filter-shell-padding, 2px);'));
   assert.ok(groupRule.includes('border: 1px solid var(--dashboard-control-border, var(--line));'));
-  const itemRuleStart = contract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter,');
+  const itemRuleStart = contract.lastIndexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter,');
   const itemRuleEnd = contract.indexOf('\n}', itemRuleStart) + 2;
   const itemRule = contract.slice(itemRuleStart, itemRuleEnd);
   assert.ok(itemRuleStart >= 0 && itemRuleEnd > itemRuleStart, 'Segmented options must use a shared compact item rule.');
