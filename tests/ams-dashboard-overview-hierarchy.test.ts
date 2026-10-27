@@ -1034,6 +1034,10 @@ test('Dashboard Needs Attention places its clean-state pill and level filter in 
   assert.equal(body.includes('>Severity</span>'), false);
   assert.ok(styles.includes('.ams-dashboard-attention-empty-indicator'));
   assert.ok(styles.includes('.ams-dashboard-attention-header-filter'));
+  assert.match(styles, /\.ams-dashboard-attention-empty-indicator\s*\{[^}]*height:\s*32px;[^}]*min-height:\s*32px;/s);
+  assert.match(styles, /\.ams-dashboard-attention-header-filter\s*\{[^}]*height:\s*32px;[^}]*min-height:\s*32px;/s);
+  assert.match(styles, /\.ams-dashboard-attention-header-filter \.ams-dashboard-select-trigger\s*\{[^}]*height:\s*32px;[^}]*min-height:\s*32px;/s);
+  assert.match(styles, /\.ams-dashboard-attention-empty-indicator\s*\{[^}]*align-self:\s*center;/s);
   assert.ok(body.includes('title="No exceptions match this severity"'), 'Filtered-empty state remains actionable.');
   assert.ok(body.includes("setAttentionSeverityFilter('all')"));
 });
