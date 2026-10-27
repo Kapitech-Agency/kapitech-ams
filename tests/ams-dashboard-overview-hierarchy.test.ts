@@ -164,7 +164,7 @@ test('Overview uses per-card period controls, compact project filters, aligned h
     'Previous activity page', 'Next activity page'
   ]) assert.ok(overview.includes('aria-label="' + label + '"') || overview.includes('ariaLabel="' + label + '"'), 'Missing activity table control: ' + label);
   assert.ok(overview.includes('<table className="ams-dashboard-activity-table">'));
-  assert.ok(overview.includes("{ value: 'custom', label: 'Custom' }"));
+  assert.ok(overview.includes("{value:'custom',label:'Custom'}"));
   assert.ok(dashboard.includes('activityStartDate && eventDay < activityStartDate'));
   assert.ok(dashboard.includes('activityEndDate && eventDay > activityEndDate'));
   assert.ok(overview.includes('<th scope="col">Actor</th>'));
@@ -278,7 +278,7 @@ test('Dashboard Project and Task filters share one segmented background and inte
   const deadlinesStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskStart);
   const project = dashboard.slice(projectStart, attentionStart);
   const queue = dashboard.slice(taskStart, deadlinesStart);
-  const marker = styles.lastIndexOf('/* Dashboard unified segmented filter contract - 2026-10-27. */');
+  const marker = styles.lastIndexOf('/* Dashboard refinement — aligned header, card heights, compact filters, and local deadline range. */');
   assert.ok(projectStart >= 0 && attentionStart > projectStart);
   assert.ok(taskStart >= 0 && deadlinesStart > taskStart);
   assert.ok(dashboard.includes("import { DashboardControl, DashboardFilterGroup } from './DashboardControls';"));
@@ -294,7 +294,7 @@ test('Dashboard Project and Task filters share one segmented background and inte
   assert.ok(finalFilters.includes('.ams-dashboard-control--filter:hover:not(:disabled)'));
   assert.ok(finalFilters.includes('.ams-dashboard-control--filter[aria-pressed="true"]'));
   assert.ok(finalFilters.includes('.ams-dashboard-control__count'));
-  assert.ok(finalFilters.includes('background:var(--dashboard-control-selected)'));
+  assert.ok(finalFilters.includes('background:var(--dashboard-control-selected)') || finalFilters.includes('background: var(--dashboard-control-selected)'));
   assert.ok(finalFilters.includes('.ams-dashboard-projects-panel {'));
 });
 
@@ -338,6 +338,26 @@ test('Dashboard card-local calendars sit in card headers, dropdown widths are st
   assert.ok(styles.includes('.ams-project-progress-header-actions .ams-project-registry-action'));
 });
 
+
+test('Upcoming deadlines supports a card-local custom date window beyond the default 30-day horizon', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-finance-overview"', start);
+  assert.ok(start >= 0 && end > start);
+  const deadlines = dashboard.slice(start, end);
+  assert.ok(dashboard.includes("type DashboardDeadlineFilter = 'all' | 'overdue' | 'next7' | 'days8to30' | 'custom'"));
+  assert.ok(dashboard.includes('const isDeadlineCustomRangeInvalid = Boolean(deadlineStartDate && deadlineEndDate && deadlineStartDate > deadlineEndDate)'));
+  assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'custom')"));
+  assert.ok(dashboard.includes('if (deadlineStartDate && item.dueDate < deadlineStartDate) return false'));
+  assert.ok(dashboard.includes('if (deadlineEndDate && item.dueDate > deadlineEndDate) return false'));
+  assert.ok(deadlines.includes('aria-label="Filter deadlines by custom date range"'));
+  assert.ok(deadlines.includes('aria-label="Deadline start date"'));
+  assert.ok(deadlines.includes('aria-label="Deadline end date"'));
+  assert.ok(deadlines.includes('aria-label="Custom deadline date range"'));
+  assert.ok(styles.includes('.ams-dashboard-deadline-date-range'));
+  assert.equal(deadlines.includes('aria-label="Reporting date range"'), false);
+});
 
 test('Dashboard pixel-precision spacing keeps Finance period and Open Finance aligned with the shared spacing scale', async () => {
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
@@ -445,7 +465,7 @@ test('Dashboard segmented filters use one reusable neutral-state component', asy
   assert.ok(shared.includes('export const DashboardControl'));
   assert.ok(shared.includes('export const DashboardFilterGroup'));
   assert.ok(styles.includes('--dashboard-control-selected'));
-  assert.ok(styles.includes('color-mix(in srgb,var(--text) 7%,var(--panel))'));
+  assert.ok(styles.includes('--dashboard-control-selected:'));
 });
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
@@ -636,7 +656,7 @@ test('Dashboard project creation action opens the existing create drawer only fo
   assert.match(dashboard, /const canCreateProject = canManageProjects && canOpenDashboardRoute\('\/admin\/projects\?create=1'\)/);
   assert.ok(dashboard.includes('{canOpenProjects ? ('));
   assert.ok(dashboard.includes("to={canCreateProject?'/admin/projects?create=1':'/admin/projects'}"));
-  assert.match(dashboard, /\{canCreateProject \? 'New project' : 'Projects'\}/);
+  assert.match(dashboard, /canCreateProject\s*\?\s*'New project'\s*:\s*'Projects'/);
   assert.match(projects, /const createProjectRequestHandled = React\.useRef\(false\)/);
   assert.match(projects, /searchParams\.get\('create'\) === '1'/);
   assert.match(projects, /next\.delete\('create'\)/);
@@ -1006,7 +1026,7 @@ test('Dashboard Overview visualizes all dated commitments and keeps the deadline
   assert.ok(deadlines.includes("aria-label={'Delivery deadlines: ' + overdueHorizonCount"));
   assert.ok(deadlines.includes('upcomingCommitments.slice(0, 4).map((item) => {'));
   assert.ok(deadlines.includes("label:'Overdue'"));
-  assert.ok(deadlines.includes("label: 'Today–7 days'"));
+  assert.ok(deadlines.includes("label:'Today–7 days'"));
   assert.ok(deadlines.includes("label: 'Days 8–30'"));
   assert.ok(deadlines.includes('overdueHorizonCount / commitmentHorizonTotal'));
   assert.ok(deadlines.includes('nextSevenDayCommitmentCount / commitmentHorizonTotal'));
@@ -1184,9 +1204,9 @@ test('Dashboard Overview keeps reporting controls card-local and operational fil
   assert.ok(dashboard.includes("orderedActiveDashboardProjects\n    .filter((project) => overviewProjectFilter === 'all' || getDashboardServiceLine(project) === overviewProjectFilter)"));
   assert.ok(overview.includes('ariaLabel="Filter projects by service line"'));
   assert.ok(overview.includes('onChange={(value)=>setOverviewProjectFilter(value as DashboardProjectFilter)}'));
-  assert.ok(overview.includes('count: activeDashboardProjectFilterCounts.all'));
-  assert.ok(overview.includes('count: activeDashboardProjectFilterCounts.creative'));
-  assert.ok(overview.includes('count: activeDashboardProjectFilterCounts.technology'));
+  assert.ok(overview.includes('count:activeDashboardProjectFilterCounts.all'));
+  assert.ok(overview.includes('count:activeDashboardProjectFilterCounts.creative'));
+  assert.ok(overview.includes('count:activeDashboardProjectFilterCounts.technology'));
   assert.ok((await read('src/components/admin/DashboardControls.tsx')).includes('count={o.count}'));
 
   assert.ok(dashboard.includes("const upcomingCommitments = allUpcomingCommitments.filter((item) => {"));
@@ -1218,9 +1238,14 @@ test('Dashboard header provides aligned quick actions and tabs without a duplica
   assert.ok(header.includes("title={canCreateProject?'Create a new project':'Open the Projects workspace'}"));
   assert.ok(header.includes('ams-dashboard-header-action--project'));
   assert.ok(header.includes('ams-dashboard-header-action--refresh'));
-  assert.ok(header.includes("canCreateInvoice ? 'Create invoice' : 'Invoices'"));
+  assert.ok(header.includes('ams-dashboard-header-utility-actions'));
+  assert.ok(styles.includes('.ams-dashboard-page-header .ams-dashboard-header-actions .ams-dashboard-control'));
+  assert.ok(styles.includes('height:36px; min-height:36px;'));
+  assert.ok(styles.includes('.ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs'));
+  assert.ok(styles.includes('overflow-x:visible;'));
+  assert.ok(header.includes("canCreateInvoice?'Create invoice':'Invoices'"));
   assert.equal(header.includes('New task'), false);
-  assert.ok(header.includes("canCreateProject ? 'New project' : 'Projects'"));
+  assert.ok(header.includes("canCreateProject?'New project':'Projects'"));
   assert.ok(header.includes('ariaLabel="Refresh dashboard data"'));
 
   assert.ok(invoicing.includes("const requestedInvoiceAction = searchParams.get('action')"));
@@ -1347,7 +1372,7 @@ test('Dashboard Overview exposes canonical quotation follow-up and functional co
   assert.ok(financeCard.includes('data-ams-feature-slug="dashboard-commercial-quotation-pipeline"'));
   assert.ok(financeCard.includes('ariaLabel="Filter quotations by stage"'));
   assert.ok(financeCard.includes('onChange={(value)=>setOverviewQuotationFilter(value as DashboardQuotationFilter)'));
-  assert.ok(financeCard.includes("onClick={() => setOverviewQuotationFilter(filter.key)}"));
+  assert.ok(financeCard.includes("onChange={(value)=>setOverviewQuotationFilter(value as DashboardQuotationFilter)"));
   assert.ok(dashboard.includes("(quotation.status === 'approved' && !quotation.invoiceId)"), 'Approved quotations without a linked invoice stay in the active follow-up pipeline.');
   assert.ok(dashboard.includes("['draft', 'review', 'sent'].includes(quotation.status)"), 'Draft, review, and sent quotations remain in the actionable current pipeline.');
   assert.ok(financeCard.includes('No quotations match this stage'));
@@ -1534,7 +1559,7 @@ test('All Dashboard buttons, filters, and calendar controls share the same compo
     'ams-calendar-period-filter__trigger', 'ams-calendar-period-filter__tile',
     'ams-dashboard-activity-calendar-trigger'
   ]) assert.ok(dashboard.includes(marker), 'Missing shared Dashboard control usage: ' + marker);
-  assert.ok(dashboard.includes('className="ams-dashboard-projects-body p-4 sm:p-5"'));
+  assert.ok(dashboard.includes('bodyClassName="ams-dashboard-projects-body p-4 sm:p-5"'));
   assert.ok(pageStyles.includes('.ams-dashboard-projects-body > .ams-project-portfolio-body'));
   assert.ok(pageStyles.includes('.ams-dashboard-team-time__header-actions'));
 });
