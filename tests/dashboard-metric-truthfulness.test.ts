@@ -10,7 +10,8 @@ test('Dashboard priority exceptions distinguish source-backed records, empty dat
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
   assert.ok(dashboard.includes('attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
-  assert.ok(dashboard.includes('title="No active exceptions"'));
+  assert.ok(dashboard.includes('ams-dashboard-attention-empty-indicator'));
+  assert.ok(dashboard.includes('No active exceptions'));
   assert.ok(dashboard.includes('Exception data unavailable'));
   assert.ok(dashboard.includes("dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Exception data unavailable'"));
   assert.ok(dashboard.includes("const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;"));

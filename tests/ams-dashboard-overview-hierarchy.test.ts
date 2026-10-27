@@ -73,12 +73,13 @@ test('Dashboard Overview empty states are contextual, action-aware and distinct 
   assert.ok(dashboard.includes("tone?: 'neutral' | 'success';"));
   assert.ok(styles.includes('.ams-dashboard-empty--success .ams-dashboard-empty__icon'));
   for (const label of [
-    'PROJECT DELIVERY', 'OPERATIONS CLEAR', 'INBOX TRIAGE', 'TASK QUEUE',
+    'PROJECT DELIVERY', 'INBOX TRIAGE', 'TASK QUEUE',
     'DELIVERY TIMELINE', 'DELIVERY HORIZON',
     'QUOTATION FOLLOW-UP', 'PROJECT PORTFOLIO', 'RISK DISTRIBUTION',
     'TEAM WORKLOAD', 'RECORDED TIME', 'CLIENT DELIVERY', 'AUDIT ACTIVITY'
   ]) assert.ok(overview.includes('eyebrow="' + label + '"'), 'Missing contextual empty-state heading: ' + label);
-  assert.ok(overview.includes('title="No active exceptions"'));
+  assert.ok(overview.includes('ams-dashboard-attention-empty-indicator'));
+  assert.ok(overview.includes('No active exceptions'));
   assert.ok(overview.includes("'No recorded activity yet'"));
   assert.ok(overview.includes('title="No task records yet"'));
   assert.ok(overview.includes('ams-finance-chart-empty-state'));
@@ -1080,7 +1081,8 @@ test('Dashboard Overview orders urgent delivery actions before finance and portf
   assert.ok(dashboard.includes('const attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
   assert.ok(overview.includes('Exception data unavailable'));
-  assert.ok(overview.includes('title="No active exceptions"'));
+  assert.ok(overview.includes('ams-dashboard-attention-empty-indicator'));
+  assert.ok(overview.includes('No active exceptions'));
   assert.ok(overview.includes("candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate))"));
   assert.equal(overview.includes('title="Invoices vs expenses"'), false);
   assert.equal(overview.includes('title="Team capacity"'), false);
