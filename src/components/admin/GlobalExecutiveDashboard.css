@@ -3001,18 +3001,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 .ams-shell .ams-dashboard .ams-dashboard-header-action--registry { color:var(--text); background:var(--panel); border-color:var(--dashboard-card-border); }
 .ams-shell .ams-dashboard .ams-dashboard-header-action--registry:hover { border-color:color-mix(in srgb,var(--accent) 28%,var(--line)); background:var(--dashboard-hover-surface); }
-.ams-shell .ams-dashboard .ams-dashboard-header-actions {
-  flex-shrink: 0;
-  flex:0 1 auto;
-  width: 100%;
-  display:flex;
-  min-width:0;
-  max-width:100%;
-  justify-content:flex-start;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:6px;
-}
+/* Legacy header action sizing removed; shared controls own the base geometry. */
 @media (min-width:1280px) {
   .ams-shell .ams-dashboard .ams-dashboard-page-header {
     gap: 18px;
@@ -7094,3 +7083,95 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions { align-items:stretch; justify-content:flex-start; }
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions { width:100%; }
 }
+
+/* Dashboard refinement — aligned header, card heights, compact filters, and local date range. */
+.ams-shell .ams-dashboard .ams-dashboard-page-header { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,max-content); align-items:center; gap:12px 18px; min-width:0; margin:0 0 12px; padding:0; border:0; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header > div:last-child { display:flex; min-width:0; max-width:100%; justify-self:end; align-items:center; margin:0; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions { display:flex; width:auto; min-width:0; max-width:100%; flex:0 1 auto; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-primary-actions,
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts,
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions { display:flex; min-width:0; flex:0 1 auto; flex-wrap:nowrap; align-items:center; gap:6px; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts { margin-left:2px; padding-left:10px; border-left:1px solid var(--dashboard-card-border); }
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions .ams-dashboard-control,
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts .ams-dashboard-control { box-sizing:border-box; display:inline-flex; height:36px; min-height:36px; flex:0 0 auto; align-items:center; justify-content:center; gap:7px; padding:0 10px; border-radius:8px; line-height:14px; white-space:nowrap; }
+@media (max-width:1279px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header { grid-template-columns:minmax(0,1fr); align-items:start; row-gap:10px; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header > div:last-child { width:100%; justify-self:start; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions { width:100%; justify-content:flex-start; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts { margin-left:0; padding-left:0; border-left:0; }
+}
+@media (max-width:639px) { .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions, .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-primary-actions { flex-wrap:wrap; justify-content:flex-start; } .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts { flex-wrap:wrap; } }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs { display:flex; width:fit-content; min-width:0; max-width:100%; flex-wrap:wrap; align-items:center; gap:4px; overflow:visible; overflow-x:visible; overflow-y:visible; white-space:normal; }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab { height:36px; min-height:36px; min-width:0; flex:0 0 auto; white-space:nowrap; }
+@media (max-width:599px) { .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs { display:grid; width:100%; max-width:100%; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; } .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab { width:100%; padding-inline:4px; font-size:10px; justify-content:center; } }
+
+/* Compact All / Creative / IT filters align with the Project registry action. */
+.ams-shell .ams-dashboard .ams-project-progress-header-actions { display:flex; min-width:0; max-width:100%; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; }
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter { display:inline-flex; width:fit-content; min-width:0; height:32px; min-height:32px; flex-wrap:nowrap; align-items:center; gap:2px; padding:2px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:color-mix(in srgb,var(--bg) 36%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter { height:26px; min-height:26px; padding:0 8px; gap:5px; border-radius:6px; font-size:10px; line-height:13px; }
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter:hover:not(:disabled) { background:var(--dashboard-control-hover); }
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"] { border-color:var(--dashboard-control-hover-border); background:var(--dashboard-control-selected); color:var(--text); }
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action { height:32px; min-height:32px; align-self:center; padding:0 9px; border-radius:8px; font-size:10px; line-height:13px; white-space:nowrap; }
+
+/* Projects stretches with Finance on desktop, replacing the legacy auto-height rule. */
+@media (min-width:1100px) {
+ .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] { align-items:stretch; }
+ .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
+ .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] { display:flex; min-width:0; align-self:stretch; }
+ .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-panel { height:100%; min-height:100%; align-self:stretch; }
+ .ams-shell .ams-dashboard .ams-dashboard-finance-panel,
+ .ams-shell .ams-dashboard .ams-dashboard-projects-panel { display:flex; width:100%; min-width:0; min-height:100%; height:100%; flex:1 1 auto; flex-direction:column; }
+ .ams-shell .ams-dashboard .ams-dashboard-finance-body,
+ .ams-shell .ams-dashboard .ams-dashboard-projects-body { display:flex; min-height:0; flex:1 1 auto; flex-direction:column; }
+ .ams-shell .ams-dashboard .ams-dashboard-projects-body > .ams-project-portfolio-body { flex:1 1 auto; justify-content:space-between; }
+}
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel { min-width:0; height:100%; }
+
+/* Team Workload rhythm: separate task assignments and recorded-time analysis. */
+.ams-shell .ams-dashboard .ams-dashboard-team-body { display:flex; min-width:0; flex:1 1 auto; flex-direction:column; gap:0; padding:14px 16px 16px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks { padding-bottom:16px; border-bottom:1px solid var(--dashboard-card-border); }
+.ams-shell .ams-dashboard .ams-dashboard-team-time { margin:0; padding-top:16px; border-top:0; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header { display:flex; min-width:0; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 12px; margin:0 0 12px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions { display:flex; min-width:0; max-width:100%; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:7px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions > .ams-card-period-controls { width:190px; min-width:0; max-width:100%; flex:0 1 190px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-dashboard-card-action { height:32px; min-height:32px; padding-inline:9px; border-radius:8px; white-space:nowrap; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row { display:grid; min-width:0; gap:8px; padding:12px 0; border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent); }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row:last-child { border-bottom:0; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals { display:flex; min-width:0; flex-wrap:wrap; align-items:center; gap:5px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span { display:inline-flex; min-height:22px; align-items:center; padding:3px 7px; border:1px solid var(--dashboard-card-border); border-radius:6px; background:color-mix(in srgb,var(--bg) 35%,var(--panel)); font-size:10px; line-height:13px; white-space:nowrap; }
+@media (max-width:639px) { .ams-shell .ams-dashboard .ams-dashboard-team-body { padding:12px; } .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions { width:100%; justify-content:flex-start; } .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions > .ams-card-period-controls { flex:1 1 170px; } }
+
+/* Recent Activity keeps its search/filter grid and table columns aligned. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions { display:flex; min-width:0; max-width:100%; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:7px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-filter { width:172px; min-width:0; max-width:100%; flex:0 1 172px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-tools { display:grid; grid-template-columns:minmax(190px,1.45fr) minmax(112px,.75fr) minmax(150px,1fr) minmax(112px,.75fr) auto auto; align-items:end; gap:9px; padding:14px 16px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-search { display:flex; height:36px; min-height:36px; align-items:center; gap:8px; padding:0 10px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--panel); }
+.ams-shell .ams-dashboard .ams-dashboard-activity-search input { width:100%; min-width:0; height:34px; border:0; outline:0; background:transparent; color:var(--text); font-size:11px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter .ams-dashboard-select-trigger { height:36px; min-height:36px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table { width:100%; min-width:0; table-layout:fixed; border-collapse:separate; border-spacing:0; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table thead th { padding:10px 12px; background:color-mix(in srgb,var(--bg) 30%,var(--panel)); color:var(--muted); font-size:9px; line-height:13px; font-weight:650; letter-spacing:.055em; text-align:left; text-transform:uppercase; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td { padding:12px; font-size:11px; line-height:16px; overflow-wrap:anywhere; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr:hover { background:var(--dashboard-hover-surface); }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width:43%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2) { width:18%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width:25%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width:14%; }
+@media (max-width:1199px) { .ams-shell .ams-dashboard .ams-dashboard-activity-tools { grid-template-columns:minmax(0,1.35fr) minmax(120px,.8fr) minmax(150px,1fr); gap:10px; } }
+@media (max-width:759px) { .ams-shell .ams-dashboard .ams-dashboard-activity-tools { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:12px; } .ams-shell .ams-dashboard .ams-dashboard-activity-search { grid-column:1/-1; } .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2), .ams-shell .ams-dashboard .ams-dashboard-activity-table td:nth-child(2) { display:none; } .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width:48%; } .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width:34%; } .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width:18%; } .ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor { display:block; } }
+
+/* Upcoming Deadlines supports its own custom window, independent of other cards. */
+.ams-shell .ams-dashboard .ams-dashboard-deadline-summary { display:grid; gap:13px; padding:14px 16px 16px; border-bottom:1px solid var(--dashboard-card-border); background:color-mix(in srgb,var(--bg) 20%,var(--panel)); }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-summary__header { display:flex; min-width:0; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-custom-trigger { height:32px; min-height:32px; border-radius:8px; padding-inline:10px; font-size:10px; }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-custom-trigger[aria-expanded="true"] { border-color:var(--dashboard-control-hover-border); background:var(--dashboard-control-selected); color:var(--text); }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-horizon-bar { display:flex; height:7px; min-width:0; overflow:hidden; border-radius:999px; background:var(--line); }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-horizon-bar__overdue { display:block; height:100%; background:var(--danger); }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-horizon-bar__next { display:block; height:100%; background:var(--warning); }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-horizon-bar__later { display:block; height:100%; background:var(--info); }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-date-range { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:end; gap:10px; padding:12px; border:1px solid var(--dashboard-card-border); border-radius:10px; background:var(--panel); }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-date { display:flex; min-width:0; flex-direction:column; gap:5px; }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-date > span { color:var(--muted); font-size:10px; line-height:13px; }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-date input { box-sizing:border-box; width:100%; min-width:0; height:34px; min-height:34px; padding:0 8px; border:1px solid var(--dashboard-card-border); border-radius:8px; background:var(--bg); color:var(--text); color-scheme:dark; font-size:11px; }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-date input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ams-shell .ams-dashboard .ams-dashboard-deadline-date-range__clear { grid-column:1/-1; justify-self:start; height:30px; min-height:30px; border-radius:7px; }
+@media (max-width:599px) { .ams-shell .ams-dashboard .ams-dashboard-deadline-summary { padding:12px; gap:11px; } .ams-shell .ams-dashboard .ams-dashboard-deadline-date-range { grid-template-columns:minmax(0,1fr); } }
