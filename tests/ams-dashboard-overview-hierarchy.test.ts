@@ -278,7 +278,7 @@ test('Dashboard Project and Task filters share one segmented background and inte
   const deadlinesStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskStart);
   const project = dashboard.slice(projectStart, attentionStart);
   const queue = dashboard.slice(taskStart, deadlinesStart);
-  const marker = styles.lastIndexOf('/* Dashboard refinement — aligned header, cards, compact filters, and local date range. */');
+  const marker = styles.lastIndexOf('/* Dashboard refinement — aligned header, card heights, compact filters, and local date range. */');
   assert.ok(projectStart >= 0 && attentionStart > projectStart);
   assert.ok(taskStart >= 0 && deadlinesStart > taskStart);
   assert.ok(dashboard.includes("import { DashboardControl, DashboardFilterGroup } from './DashboardControls';"));
