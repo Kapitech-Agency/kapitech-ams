@@ -773,3 +773,12 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Enforced a two-tier control geometry: standard actions 36px high with 12px horizontal padding; compact filter/registry controls 32px high with 10px padding. Projects-in-progress filters use a neutral gray active state and plain count text, without a crimson block. Tabs remain wrapping/non-scrolling.
 - Reasserted the equal-height Finance/Projects row, compact activity filters and responsive Recent Activity table styles. Existing per-card date controls and recent-activity search/actor/severity/time/order/export/pagination behavior remain in place.
 - UI/UX and documentation only. No backend, API, database, permissions, authentication, route behavior or financial calculations changed.
+
+
+## 0.5 Shared Dashboard filter shell and button-padding contract — 27 October 2026
+
+- Confirmed All / Creative / IT already use the shared `DashboardFilterGroup` component. The visual defect came from a later legacy Dashboard CSS rule that reset its wrapper to transparent with no border, removing the shared segmented surface. That conflicting rule has been removed.
+- The final segmented group is a 36px bordered shell with 2px interior padding; each option is 28px high and uses the shared 10px horizontal filter padding. The adjacent Project registry action and header quick actions use the 36px / 12px standard-action contract.
+- Added canonical padding variables for standard, compact and filter controls, content gap, segmented shell padding and item radius in `DashboardControls.css`. Card-level styles now specify grouped layout and responsiveness rather than one-off horizontal padding.
+- Added regression checks for shared-component usage, visible grouping, size alignment, padding tokens and non-scrolling Dashboard tabs.
+- Frontend-only. No changes to backend/API/database/authentication/permissions/financial calculations or canonical source processing.

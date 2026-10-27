@@ -5,7 +5,14 @@
 .ams-portal-root .ams-dashboard-activity-calendar-panel {
   --dashboard-control-height: 36px;
   --dashboard-control-compact-height: 32px;
+  --dashboard-control-filter-height: 28px;
+  --dashboard-control-padding-standard-x: 12px;
+  --dashboard-control-padding-compact-x: 10px;
+  --dashboard-control-padding-filter-x: 10px;
+  --dashboard-control-content-gap: 8px;
   --dashboard-control-radius: 8px;
+  --dashboard-filter-shell-padding: 2px;
+  --dashboard-filter-item-radius: 6px;
   --dashboard-control-border: var(--dashboard-card-border, var(--line));
   --dashboard-control-surface: var(--panel);
   --dashboard-control-hover: color-mix(in srgb, var(--text) 6%, var(--panel));
@@ -22,8 +29,8 @@
   min-height: var(--dashboard-control-height, 36px);
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 0 11px;
+  gap: var(--dashboard-control-content-gap, 8px);
+  padding: 0 var(--dashboard-control-padding-standard-x, 12px);
   border: 1px solid var(--dashboard-control-border, var(--line));
   border-radius: var(--dashboard-control-radius, 8px);
   background: var(--dashboard-control-surface, var(--panel));
@@ -100,7 +107,7 @@
 .ams-portal-root .ams-dashboard-control--compact {
   height: var(--dashboard-control-compact-height, 32px);
   min-height: var(--dashboard-control-compact-height, 32px);
-  padding-inline: 9px;
+  padding-inline: var(--dashboard-control-padding-compact-x, 10px);
   font-size: 10px;
 }
 
@@ -108,7 +115,7 @@
 .ams-portal-root .ams-dashboard-control--roomy {
   height: 32px;
   min-height: 32px;
-  padding-inline: 11px;
+  padding-inline: var(--dashboard-control-padding-standard-x, 12px);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-control--action .ams-dashboard-control__icon,
@@ -153,10 +160,10 @@
   min-height: 28px;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 0 10px;
+  gap: var(--dashboard-control-content-gap, 8px);
+  padding: 0 var(--dashboard-control-padding-filter-x, 10px);
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--dashboard-filter-item-radius, 6px);
   background: transparent;
   color: var(--muted);
   font-size: 10px;
@@ -253,7 +260,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 10px var(--dashboard-control-padding-standard-x, 12px);
   border: 1px solid var(--dashboard-control-border, var(--line));
   border-radius: 8px;
   background: color-mix(in srgb, var(--bg) 30%, var(--panel));
@@ -392,7 +399,7 @@
   min-width: 0;
   justify-content: flex-start;
   gap: 9px;
-  padding-inline: 10px;
+  padding-inline: var(--dashboard-control-padding-standard-x, 12px);
 }
 
 .ams-shell .ams-dashboard .ams-calendar-period-filter__trigger-copy {
@@ -562,18 +569,42 @@
 }
 
 
-/* Specificity guard: shared control styling must win over legacy card-local button rules. */
-.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control,
-.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control,
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control,
-.ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-control,
-.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action,
-.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control {
+/* Shared geometry contract: dimensions and padding follow semantic control size. */
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action:not(.ams-dashboard-control--compact),
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon) {
+  box-sizing: border-box;
   height: var(--dashboard-control-height, 36px);
   min-height: var(--dashboard-control-height, 36px);
-  border-radius: 8px;
+  padding-inline: var(--dashboard-control-padding-standard-x, 12px);
+  gap: var(--dashboard-control-content-gap, 8px);
+  border-radius: var(--dashboard-control-radius, 8px);
 }
 
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control--compact,
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control--compact,
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control--compact,
+.ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-control--compact,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-control--compact,
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control--compact {
+  box-sizing: border-box;
+  height: var(--dashboard-control-compact-height, 32px);
+  min-height: var(--dashboard-control-compact-height, 32px);
+  padding-inline: var(--dashboard-control-padding-compact-x, 10px);
+  gap: var(--dashboard-control-content-gap, 8px);
+  border-radius: var(--dashboard-control-radius, 8px);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-filter-group .ams-dashboard-control--filter,
+.ams-portal-root .ams-dashboard-filter-group .ams-dashboard-control--filter {
+  padding-inline: var(--dashboard-control-padding-filter-x, 10px);
+  gap: var(--dashboard-control-content-gap, 8px);
+}
+
+/* Hover/focus colors are common to links, buttons, selects and segmented choices. */
 .ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control:hover:not(:disabled),

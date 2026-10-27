@@ -125,7 +125,7 @@ The user-selected Maven / Orbix reference informs information hierarchy, concise
 - **Surface treatment:** maintain a quiet one-pixel outline, low-contrast secondary surfaces and one consistent header/body rhythm. Light mode may use a very subtle card shadow; dark mode remains shadow-free.
 - **Trend chart:** use restrained blue and teal lines for the two financial series, a soft grid, concise axis values, smooth curves and a small floating detail surface on hover. Hover follows the nearest data point, not the raw pointer position. On the Overview Finance trend, canonical data remains issued invoices and eligible expenses; visual colors must not imply that one series is profit or cash flow.
 - **Project ring:** hover/focus emphasizes one segment and updates the center to the corresponding saved count and share. Underlying risk/deadline calculations stay unchanged.
-- **Interactions:** header actions and date selectors use restrained 8–10px control corners; Overview/Performance/Analytics uses a light underline tab pattern, while leading cards retain their dedicated 16px radius. Keep quiet hover/focus borders and short transitions. Lists and workload bars get a restrained hover response. Honor `prefers-reduced-motion`; preserve visible keyboard focus.
+- **Interactions:** header actions and date selectors use shared Dashboard control geometry; related filters use `DashboardFilterGroup`, never separately hand-built button rows. Overview/Performance/Analytics tabs wrap without horizontal scrolling. Keep quiet hover/focus borders and short transitions. Lists and workload bars get a restrained hover response. Honor `prefers-reduced-motion`; preserve visible keyboard focus.
 - **Scope boundary:** CSS and chart presentation props are scoped to Dashboard Overview. Do not modify the global theme, navigation, API, permission policy, source records or Finance formulas to imitate the reference.
 
 ### 2.7 Tailwind v4 setup (copy-paste)
@@ -360,15 +360,22 @@ For every component define default, hover, focus-visible, active, and disabled s
 - `--panel` background, 1px `--line`, radius 12, padding 16. Header row: title left, controls right, 8px above content.
 
 ### Segmented control (range selector)
-- Container `--bg`, radius 8, padding 2. Items radius 6, padding 3px 10px. Selected: `--line` background, `--text`. Unselected: `--muted`.
+- Use the shared `DashboardFilterGroup` component for related filter options; do not hand-build parallel rows of filter buttons.
+- The Dashboard segmented shell uses a 1px `--line`-family border, `--bg`-family fill, radius 8 and 2px interior padding. Its inner options use radius 6, 28px height and 10px horizontal padding. The shell aligns to a standard 36px sibling action; its inner options remain visually compact.
+- Selected options use a neutral `--line`-family background and `--text`; unselected options use `--muted`. Crimson is not a filter-selection fill.
 
 ### Buttons
-| Variant | Style |
+| Semantic size | Geometry and padding |
 |---|---|
-| Primary | `--accent` fill, white text, radius 8, padding 7px 12px, weight 500. Hover `crimson-600`, pressed `crimson-700`. |
+| Standard action | 36px high, 12px horizontal padding, 8px icon-to-label gap, radius 8. |
+| Compact action | 32px high, 10px horizontal padding, 8px content gap, radius 8. |
+| Segmented option | 28px high, 10px horizontal padding, radius 6; aligned inside a 36px grouped shell. |
+| Primary | `--accent` fill, white text, weight 500. Hover `crimson-600`, pressed `crimson-700`. |
 | Secondary | `--panel` fill, 1px `--line`, `--text`. Hover: border `--muted`. |
 | Ghost | Transparent, `--muted` text. Hover: `--text`. |
 | Destructive | `--danger` outline or fill with icon + text. Always behind a confirm step (see section 8). |
+
+In the Dashboard, `src/components/admin/DashboardControls.css` is the source of truth for shared size and padding variables: `--dashboard-control-padding-standard-x` (12px), `--dashboard-control-padding-compact-x` (10px), and `--dashboard-control-padding-filter-x` (10px). Card-level CSS may define grouped layout and responsive behavior, but must not invent alternate horizontal padding for a control of the same semantic size.
 
 One primary button per view region. Buttons that trigger a request show a pending state and are disabled while pending.
 

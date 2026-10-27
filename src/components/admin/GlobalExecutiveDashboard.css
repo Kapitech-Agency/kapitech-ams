@@ -8133,67 +8133,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   line-height: 14px;
 }
 
-/* Project service-line filters: neutral selected treatment, no crimson text/background block. */
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter {
-  display: inline-flex;
-  height: var(--ams-dashboard-control-compact-height, 32px);
-  min-height: var(--ams-dashboard-control-compact-height, 32px);
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  overflow: visible;
-}
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter {
-  box-sizing: border-box;
-  height: var(--ams-dashboard-control-compact-height, 32px);
-  min-height: var(--ams-dashboard-control-compact-height, 32px);
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 14px;
-  font-weight: 550;
-  box-shadow: none;
-}
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"],
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active {
-  border-color: var(--dashboard-card-border);
-  border-bottom-color: var(--dashboard-card-border);
-  background: color-mix(in srgb, var(--text) 8%, var(--panel));
-  color: var(--text);
-  font-weight: 650;
-  box-shadow: none;
-}
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__label,
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__label {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--text);
-}
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control__count {
-  min-width: 0;
-  height: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 14px;
-}
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__count,
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__count {
-  background: transparent;
-  color: var(--muted);
-}
-
 /* Never let tab navigation become a horizontally scrolling strip. */
 .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs {
   display: flex;
@@ -8311,12 +8250,207 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 
 
 /* Segmented filter buttons share the compact geometry; grid/metric filters retain their own card layout. */
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--segmented .ams-dashboard-control--filter {
+.ams-shell .ams-dashboard .ams-dashboard-filter-group--compact.ams-dashboard-filter-group--segmented .ams-dashboard-control--filter {
   box-sizing: border-box;
-  height: var(--ams-dashboard-control-compact-height, 32px);
-  min-height: var(--ams-dashboard-control-compact-height, 32px);
-  padding: 0 10px;
-  border-radius: 8px;
+  height: var(--dashboard-control-filter-height, 28px);
+  min-height: var(--dashboard-control-filter-height, 28px);
+  padding-inline: var(--dashboard-control-padding-filter-x, 10px);
+  border-radius: var(--dashboard-filter-item-radius, 6px);
   font-size: 10px;
   line-height: 14px;
+}
+
+
+/* Final Dashboard control contract. */
+.ams-shell .ams-dashboard .ams-project-progress-header-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  height: var(--dashboard-control-height, 36px);
+  min-height: var(--dashboard-control-height, 36px);
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  padding: var(--dashboard-filter-shell-padding, 2px);
+  border: 1px solid var(--dashboard-control-border, var(--line));
+  border-radius: var(--dashboard-control-radius, 8px);
+  background: color-mix(in srgb, var(--bg) 38%, var(--panel));
+  overflow: visible;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-filter-height, 28px);
+  min-height: var(--dashboard-control-filter-height, 28px);
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 var(--dashboard-control-padding-filter-x, 10px);
+  border: 1px solid transparent;
+  border-radius: var(--dashboard-filter-item-radius, 6px);
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 550;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter:hover:not(:disabled) {
+  border-color: var(--dashboard-control-hover-border);
+  background: var(--dashboard-control-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter[aria-pressed="true"] {
+  border-color: var(--dashboard-control-hover-border);
+  background: var(--dashboard-control-selected);
+  color: var(--text);
+  font-weight: 650;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control__count {
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action:not(.ams-dashboard-control--compact) {
+  box-sizing: border-box;
+  height: var(--dashboard-control-height, 36px);
+  min-height: var(--dashboard-control-height, 36px);
+  padding-inline: var(--dashboard-control-padding-standard-x, 12px);
+  gap: var(--dashboard-control-content-gap, 8px);
+  border-radius: var(--dashboard-control-radius, 8px);
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action.ams-dashboard-control {
+  height: var(--dashboard-control-height, 36px);
+  min-height: var(--dashboard-control-height, 36px);
+  padding-inline: var(--dashboard-control-padding-standard-x, 12px);
+  gap: var(--dashboard-control-content-gap, 8px);
+  border-radius: var(--dashboard-control-radius, 8px);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control,
+.ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control,
+.ams-shell .ams-dashboard .ams-dashboard-header-primary-actions .ams-dashboard-control,
+.ams-shell .ams-dashboard .ams-dashboard-header-utility-actions .ams-dashboard-control {
+  box-sizing: border-box;
+  height: var(--dashboard-control-height, 36px);
+  min-height: var(--dashboard-control-height, 36px);
+  padding-inline: var(--dashboard-control-padding-standard-x, 12px);
+  gap: var(--dashboard-control-content-gap, 8px);
+  border-radius: var(--dashboard-control-radius, 8px);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
+  overflow-x: visible;
+  overflow-y: visible;
+  scrollbar-width: none;
+  white-space: normal;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--dashboard-control-height, 36px);
+  min-height: var(--dashboard-control-height, 36px);
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--dashboard-control-padding-standard-x, 12px);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab:hover:not(.is-active):not([aria-current="page"]) {
+  background: var(--dashboard-control-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab.is-active,
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
+  border: 1px solid var(--accent);
+  border-bottom-width: 1px;
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (max-width: 1099px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header > div:last-child {
+    width: 100%;
+    justify-self: start;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs {
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 8px;
+    justify-content: center;
+  }
 }

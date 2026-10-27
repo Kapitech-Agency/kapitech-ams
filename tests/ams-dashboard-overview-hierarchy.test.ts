@@ -300,6 +300,28 @@ test('Dashboard Project and Task filters share one segmented background and inte
   assert.ok(finalFilters.includes('.ams-dashboard-projects-panel {'));
 });
 
+test('Project service-line filters are a single shared segmented control aligned with Project registry', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const controls = await read('src/components/admin/DashboardControls.css');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-project-progress"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"', start);
+  const projectCard = dashboard.slice(start, end);
+  const contract = styles.slice(styles.lastIndexOf('/* Final Dashboard control contract. */'));
+
+  assert.ok(projectCard.includes('<DashboardFilterGroup ariaLabel="Filter projects by service line"'));
+  assert.ok(projectCard.includes("{value:'all',label:'All',count:activeDashboardProjectFilterCounts.all}"));
+  assert.ok(projectCard.includes("{value:'creative',label:'Creative',count:activeDashboardProjectFilterCounts.creative}"));
+  assert.ok(projectCard.includes("{value:'technology',label:'IT',count:activeDashboardProjectFilterCounts.technology}"));
+  assert.doesNotMatch(projectCard, /<button\b/, 'Service-line options must not be recreated as separate custom buttons.');
+  assert.ok(projectCard.includes('size="standard" icon={<FolderKanban'), 'Project Registry uses the standard action size.');
+  assert.match(contract, /\.ams-dashboard-project-service-filter\s*\{[^}]*height: var\(--dashboard-control-height, 36px\)[^}]*padding: var\(--dashboard-filter-shell-padding, 2px\)[^}]*border: 1px solid/s);
+  assert.match(contract, /\.ams-dashboard-project-service-filter \.ams-dashboard-control--filter\s*\{[^}]*height: var\(--dashboard-control-filter-height, 28px\)[^}]*padding: 0 var\(--dashboard-control-padding-filter-x, 10px\)/s);
+  assert.ok(contract.includes('.ams-dashboard-view-tabs'));
+  assert.ok(contract.includes('overflow-x: visible;'), 'Dashboard tabs wrap rather than becoming a horizontal scroll strip.');
+  assert.ok(controls.includes('--dashboard-control-padding-standard-x: 12px;'));
+});
+
 test('Dashboard card-local calendars sit in card headers, dropdown widths are stable, and empty Finance trends preserve their plot', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
@@ -525,20 +547,24 @@ test('Task Queue and Upcoming Deadlines empty states share the same top inset', 
     'The empty deadline state uses the same 16px top inset as the task queue.');
 });
 
-test('Dashboard project and task filters use padded neutral states, card actions use rounded rectangles, and Recorded Time has top spacing', async () => {
+test('Dashboard project and task filters use a shared segmented shell and canonical control-padding tokens', async () => {
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const controls = await read('src/components/admin/DashboardControls.css');
-  const finalContract = styles.slice(styles.lastIndexOf('/* Final Dashboard control contract.'));
+  const finalContract = styles.slice(styles.lastIndexOf('/* Final Dashboard control contract. */'));
+  const workloadRules = styles.slice(styles.indexOf('/* Team Workload rhythm:'));
 
-  assert.ok(finalContract.includes('padding: 2px;'), 'Filter group shells need interior padding.');
-  assert.ok(finalContract.includes('padding: 0 10px;'), 'Filter buttons need horizontal text padding.');
+  assert.ok(finalContract.includes('padding: var(--dashboard-filter-shell-padding, 2px);'), 'Filter group shells use the shared interior-padding token.');
+  assert.ok(finalContract.includes('padding: 0 var(--dashboard-control-padding-filter-x, 10px);'), 'Segmented items use the shared filter-padding token.');
   assert.ok(finalContract.includes('background: var(--dashboard-control-selected'), 'Active filter background must be neutral, not brand red.');
-  assert.ok(finalContract.includes('color: var(--text);'), 'Active project filter label must use neutral text.');
-  assert.ok(finalContract.includes('border-radius: 8px;'), 'Card action links must be rounded rectangles, not pill buttons.');
-  assert.ok(finalContract.includes('padding-top: 16px;'), 'Recorded Time must retain explicit top spacing.');
+  assert.ok(finalContract.includes('color: var(--text);'), 'Active filter label uses neutral text.');
+  assert.ok(finalContract.includes('border-radius: var(--dashboard-control-radius, 8px);'), 'Control shell radius uses the shared token.');
+  assert.ok(workloadRules.includes('padding-top: 16px;'), 'Recorded Time must retain explicit top spacing.');
   assert.ok(controls.includes('.ams-dashboard-control--filter[aria-pressed="true"]'));
   assert.ok(finalContract.includes('.ams-dashboard-project-service-filter'));
   assert.ok(finalContract.includes('.ams-dashboard-task-queue-filter'));
+  for (const token of ['--dashboard-control-padding-standard-x: 12px;', '--dashboard-control-padding-compact-x: 10px;', '--dashboard-control-padding-filter-x: 10px;']) {
+    assert.ok(controls.includes(token), 'Missing canonical padding token: ' + token);
+  }
 });
 
 test('Dashboard uses a consistent typography scale, neutral project filters and empty-state-only ledger actions', async () => {
