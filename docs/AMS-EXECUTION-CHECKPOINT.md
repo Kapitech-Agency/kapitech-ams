@@ -722,3 +722,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Added a dedicated shared component stylesheet for one neutral hover surface, 8px rounded-rectangle action geometry, consistent heights and card-local calendar buttons. The period calendar's trigger, Done, year navigation and month/quarter/year choices use DashboardControl.
 - Finance and Project Portfolio stretch to equal height at desktop. Team Workload has a clear separator and row rhythm between task assignments and recorded time.
 - No backend/API/authentication/permissions/finance formula changes. Exact-SHA Quality Gate and authenticated visual checks remain required before acceptance.
+
+
+### 0.7 Shared control style authority and verification fixes — 27 October 2026
+
+- Styled action controls in Needs Attention, task empty states, deadline empty states, client empty states, and Quotation Follow-up now use DashboardControl instead of bespoke raw links/buttons.
+- Shared control stylesheet adds a final specificity guard so header actions, card actions, filter/calendar controls, and calendar-portal buttons use one neutral hover surface and 8px rounded-rectangle geometry.
+- Regression tests are being aligned with the shared component contract (ARIA props and filter-group rendering), rather than removed or weakened to mask source-shape changes.
+- No backend/API/database/authentication/permission/finance-calculation changes.

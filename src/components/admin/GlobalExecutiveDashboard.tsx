@@ -2732,7 +2732,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         title="No exceptions match this severity"
                         description="Choose another severity or show all exception levels."
                         compact
-                        action={<button type="button" onClick={() => setAttentionSeverityFilter('all')} className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-fg hover:text-accent-text">Show all levels <ArrowUpRight size={12} aria-hidden="true" /></button>}
+                        action={<DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-card-action" onClick={() => setAttentionSeverityFilter('all')}>Show all levels</DashboardControl>}
                       />
                     </div>
                   ) : (
@@ -2842,7 +2842,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." compact /></div>
                 ) : dashboardWorkTasks.length === 0 ? (
                   <div className="px-4 py-8" role="status">
-                    <DashboardEmptyState eyebrow="TASK QUEUE" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No task records yet" description="Tasks will appear here when they are created in the canonical Tasks workspace." action={canOpenTasks ? <Link to="/admin/tasks" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Tasks <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} />
+                    <DashboardEmptyState eyebrow="TASK QUEUE" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No task records yet" description="Tasks will appear here when they are created in the canonical Tasks workspace." action={canOpenTasks ? <DashboardControl to="/admin/tasks" variant="action" size="standard" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action">Open Tasks</DashboardControl> : undefined} />
                   </div>
                 ) : activeDashboardTasks.length === 0 ? (
                   <div className="px-4 py-4"><DashboardEmptyState eyebrow="TASK QUEUE" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="Queue cleared" description="Every task in the current scope is complete. Switch to another queue to review other work." /></div>
@@ -2908,7 +2908,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 {operationalSnapshot.projects === null ? (
                   <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned. Deadlines are not inferred." compact /></div>
                 ) : rawProjectRows.length === 0 ? (
-                  <div className="px-4 py-4"><DashboardEmptyState eyebrow="DELIVERY TIMELINE" icon={<CalendarDays size={17} aria-hidden="true" />} title="No delivery dates to display" description="The project register returned no records, so upcoming deadlines cannot be determined." action={canOpenProjects ? <Link to="/admin/projects?projects=all" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Projects <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
+                  <div className="px-4 py-4"><DashboardEmptyState eyebrow="DELIVERY TIMELINE" icon={<CalendarDays size={17} aria-hidden="true" />} title="No delivery dates to display" description="The project register returned no records, so upcoming deadlines cannot be determined." action={canOpenProjects ? <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open Projects</DashboardControl> : undefined} /></div>
                 ) : (
                   <>
                     <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
@@ -3162,12 +3162,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                           <p className="ams-quotation-follow-up__description mt-1 text-[11px] leading-4 text-muted">Review pending stages and quotations nearing expiry.</p>
                         </div>
-                        <Link
-                          to="/admin/finance?tab=quotations"
-                          className="ams-dashboard-card-action inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                        >
-                          Open quotation ledger <ArrowUpRight size={12} aria-hidden="true" />
-                        </Link>
+                        <DashboardControl to="/admin/finance?tab=quotations" variant="action" size="standard" icon={<FileText size={14}/>} className="ams-dashboard-card-action">Open quotation ledger</DashboardControl>
                       </div>
 
                       {operationalSnapshot.quotations === null ? (
@@ -3459,7 +3454,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   {operationalSnapshot.projects === null ? (
                     <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The Projects source did not return records. Client delivery counts are not inferred." compact /></div>
                   ) : clientDeliveryFocus.length === 0 ? (
-                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="CLIENT DELIVERY" icon={<Users size={17} aria-hidden="true" />} title="No client delivery items" description="Client-linked delivery summaries appear when active projects are connected to client records." action={canOpenClientDirectory ? <Link to="/admin/clients/all-clients" className="ams-dashboard-card-action inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Clients <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
+                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="CLIENT DELIVERY" icon={<Users size={17} aria-hidden="true" />} title="No client delivery items" description="Client-linked delivery summaries appear when active projects are connected to client records." action={canOpenClientDirectory ? <DashboardControl to="/admin/clients/all-clients" variant="action" size="standard" icon={<Users size={14}/>} className="ams-dashboard-card-action">Open Clients</DashboardControl> : undefined} /></div>
                   ) : (
                     <div className="divide-y divide-line">
                       {clientDeliveryFocus.slice(0, 4).map((client) => (
