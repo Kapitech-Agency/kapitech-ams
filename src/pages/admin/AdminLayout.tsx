@@ -33,6 +33,8 @@ const DEFAULT_PROFILE_TITLE = 'Stakeholder account';
 export const AdminLayout: React.FC = () => {
   const { language } = useLanguage();
   const location = useLocation();
+  const dashboardRequestedView = new URLSearchParams(location.search).get('view');
+  const isDashboardOverview = location.pathname === '/admin/dashboard' && (!dashboardRequestedView || dashboardRequestedView === 'overview');
   const navigate = useNavigate();
   const session = getAdminSession();
   const amsRole = getAmsRole(session?.user);
@@ -274,7 +276,7 @@ export const AdminLayout: React.FC = () => {
           aria-label="Mobile workspace controls"
           data-ams-slug="mobile-workspace-controls"
         >
-          <AdminReportingPeriodBar />
+          {!isDashboardOverview ? <AdminReportingPeriodBar /> : null}
           <Button
             type="button"
             variant="secondary"
@@ -409,7 +411,7 @@ export const AdminLayout: React.FC = () => {
               </Button>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <AdminReportingPeriodBar />
+              {!isDashboardOverview ? <AdminReportingPeriodBar /> : null}
               <GlobalTimerControl userId={session?.user?.id} />
               <AdminNotificationCenter />
               <Button

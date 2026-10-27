@@ -68,6 +68,21 @@ When appropriate:
 
 Not every screen needs KPI cards. Do not leave blank metric gaps or add meaningless cards for visual parity. Do not add a second header below a subtab. Tab changes must not shift the overall shell.
 
+### Dashboard typography and control scale
+
+The Dashboard uses a fixed semantic scale rather than ad-hoc heading sizes:
+- **H1 page title:** 26px / 32px, weight 650.
+- **H2 card title:** 15px / 20px, weight 650.
+- **H3 section title:** 13px / 18px, weight 650.
+- **H4 compact subsection:** 12px / 17px, weight 600.
+- **H5/H6 secondary heading:** 11px / 15px, weight 600.
+- **Body:** 12px / 18px; **supporting copy:** 11px / 16px; **metadata/field labels:** 10px / 14px.
+- Use one control geometry contract sourced from `src/components/admin/DashboardControls.css`: standard actions are 36px high with 12px horizontal padding; compact actions are 32px high with 10px horizontal padding; segmented options are 28px high with 10px horizontal padding inside a 36px bordered shell. Reuse CSS variables for padding; do not add button-specific horizontal padding values to card markup.
+- When a segmented filter sits beside a standard action, align the outer group shell and action to 36px; keep inner options compact. Use `DashboardFilterGroup` for all related options such as All / Creative / IT, not separate custom button markup.
+- Active filters are neutral, never crimson blocks. Crimson remains reserved for the primary brand action and active Dashboard view tabs. Tabs wrap within available width; they never become a horizontal scroll strip. Header actions in the same row use the same standard size and padding tokens.
+- Card-local time filters live in the card they control. Actions such as Open quotation ledger and Open Time Logs belong in the relevant empty state when the data list is empty, not as permanent actions beside the section title.
+- Recent Activity uses its own search, actor, severity, time-window and sort controls; export and pagination act on the filtered loaded records.
+
 ## 5. Navigation and URL state
 
 - Primary navigation follows the nine-module target in the master guide.
