@@ -271,16 +271,18 @@ test('Project registry sits beside compact service-line filters in the Project P
   assert.ok(styles.includes('.ams-project-registry-action'));
 });
 
-test('Project All/Creative/IT filters do not render a coloured selection block', async () => {
+test('Project All/Creative/IT filters match the Task queue segmented-control design', async () => {
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
-  const correctionStart = styles.lastIndexOf('/* Final user-directed correction: project service-line filters use a text-only active state. */');
-  assert.ok(correctionStart >= 0, 'Final text-only filter state override should be present.');
-  const correction = styles.slice(correctionStart);
-  assert.ok(correction.includes('.ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
-  assert.match(correction, /background:\s*transparent;/);
-  assert.match(correction, /border-color:\s*transparent;/);
-  assert.doesNotMatch(correction, /background:\s*var\(--accent\)|background:\s*var\(--dashboard-control-selected\)/);
-  assert.ok(correction.includes('.ams-dashboard-project-service-filter .ams-dashboard-control__count'));
+  const contract = styles.slice(styles.lastIndexOf('/* Final Dashboard control contract. */'));
+  assert.ok(contract.includes('.ams-project-progress-header-actions .ams-dashboard-project-service-filter,'));
+  assert.ok(contract.includes('.ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter {'));
+  assert.ok(contract.includes('.ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter,'));
+  assert.ok(contract.includes('.ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter {'));
+  assert.ok(contract.includes('height: var(--dashboard-control-height, 36px);'));
+  assert.ok(contract.includes('height: var(--dashboard-control-filter-height, 28px);'));
+  assert.ok(contract.includes('padding: var(--dashboard-filter-shell-padding, 2px);'));
+  assert.ok(contract.includes('background: var(--dashboard-control-selected);'));
+  assert.doesNotMatch(styles, /Final user-directed correction: project service-line filters use a text-only active state/);
 });
 
 test('Dashboard Project and Task filters share one segmented background and interaction contract', async () => {
