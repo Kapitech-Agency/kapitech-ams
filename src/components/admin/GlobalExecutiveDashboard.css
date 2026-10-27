@@ -9762,3 +9762,318 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     transition-duration: 0.01ms;
   }
 }
+
+
+/* Team Workload — final card-local layout layer, 27 October 2026.
+   Consolidates conflicting earlier rules without changing data calculations or permissions. */
+.ams-shell .ams-dashboard .ams-dashboard-team-panel {
+  display: flex;
+  min-width: 0;
+  min-height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  padding: 15px 16px 16px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks,
+.ams-shell .ams-dashboard .ams-dashboard-team-time {
+  min-width: 0;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks {
+  padding: 0 0 15px;
+  border-bottom: 1px solid var(--dashboard-card-border, var(--line));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks__header,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 9px 12px;
+  margin-bottom: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks__header h3,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header h3 {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-section-caption {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-task-action {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  height: 30px;
+  min-height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-list {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+  padding: 11px 0 12px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 58%, transparent);
+  border-radius: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row:first-child { padding-top: 2px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row:last-child { padding-bottom: 0; border-bottom: 0; }
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__heading > span:first-child {
+  min-width: 0;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__count {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__count strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 15px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 72%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 180ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 20px;
+  align-items: center;
+  padding: 2px 7px;
+  border: 1px solid var(--dashboard-card-border, var(--line));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg) 35%, var(--panel));
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 13px;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-risk {
+  border-color: color-mix(in srgb, var(--danger) 25%, var(--line));
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+  color: var(--danger);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-warning {
+  border-color: color-mix(in srgb, var(--warning) 24%, var(--line));
+  background: color-mix(in srgb, var(--warning) 7%, var(--panel));
+  color: var(--warning);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-review {
+  border-color: color-mix(in srgb, var(--info) 22%, var(--line));
+  background: color-mix(in srgb, var(--info) 6%, var(--panel));
+  color: var(--info);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-clear {
+  padding-inline: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time {
+  padding-top: 15px;
+  border-top: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header { align-items: center; margin-bottom: 11px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header > div:first-child { min-width: 0; }
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 178px;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions > .ams-card-period-controls,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter {
+  width: 178px;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter__trigger {
+  width: 100%;
+  height: 34px;
+  min-height: 34px;
+  padding-inline: 9px;
+  border-radius: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-list {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 58%, transparent);
+  border-radius: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row:first-child { padding-top: 2px; }
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row:last-child { padding-bottom: 0; border-bottom: 0; }
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__name {
+  min-width: 0;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__value {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 72%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--series-3);
+  transition: width 180ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__entries {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body { padding: 13px 12px; }
+  .ams-shell .ams-dashboard .ams-dashboard-team-tasks__header,
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header { align-items: flex-start; gap: 9px; }
+  .ams-shell .ams-dashboard .ams-dashboard-team-task-action { height: 28px; min-height: 28px; padding-inline: 8px; }
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header { flex-direction: column; }
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions,
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions > .ams-card-period-controls,
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter {
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-owner-row__fill,
+  .ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track > span { transition-duration: 0.01ms; }
+}

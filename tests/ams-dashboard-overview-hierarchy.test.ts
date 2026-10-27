@@ -745,6 +745,37 @@ test('Projects in progress and Needs attention stay aligned in the delivery row'
   assert.ok(styles.includes('Keep the delivery row identical to Task Queue: wide primary workspace (7/12),'));
 });
 
+test('Dashboard Team Workload aligns owner assignment signals and recorded-time rows', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-team-workload"');
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-client-delivery-focus"', start);
+  assert.ok(start >= 0 && end > start);
+  const team = dashboard.slice(start, end);
+
+  assert.ok(team.includes('ams-dashboard-team-tasks__header'));
+  assert.ok(team.includes('Prioritised by overdue, blocked, then total tasks'));
+  assert.ok(team.includes('ams-dashboard-owner-list'));
+  assert.ok(team.includes('ams-dashboard-owner-row__track'));
+  assert.ok(team.includes('owner.overdue > 0 ?'));
+  assert.ok(team.includes('owner.blocked > 0 ?'));
+  assert.ok(team.includes('owner.review > 0 ?'));
+  assert.ok(team.includes('No overdue or blocked tasks'));
+  assert.ok(team.includes('ams-dashboard-recorded-time-list'));
+  assert.ok(team.includes('person.entries'));
+  assert.ok(team.includes('Recorded time reporting period'));
+  assert.ok(team.includes('aria-label={\'Recorded time for \' + person.name'));
+
+  for (const selector of [
+    '.ams-dashboard-team-panel > .ams-dashboard-team-body',
+    '.ams-dashboard-owner-row__count',
+    '.ams-dashboard-owner-row__signals > .is-warning',
+    '.ams-dashboard-recorded-time-row__heading',
+    '.ams-dashboard-recorded-time-row__entries',
+    '@media (max-width: 599px)'
+  ]) assert.ok(styles.includes(selector), 'Missing Team Workload layout rule: ' + selector);
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');

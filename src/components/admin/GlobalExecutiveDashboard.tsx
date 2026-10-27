@@ -3443,9 +3443,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 bodyClassName="p-4 sm:p-5 ams-dashboard-team-body"
               >
                 <section className="ams-dashboard-team-tasks" data-ams-feature-slug="dashboard-task-load-by-owner" aria-label="Open tasks by owner">
-                  <div className="mb-3 flex items-baseline justify-between gap-2">
-                    <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
-                    {canOpenTasks ? <Link to="/admin/tasks" className="ams-dashboard-card-action text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                  <div className="ams-dashboard-team-tasks__header mb-3 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
+                      <p className="ams-dashboard-team-section-caption">Prioritised by overdue, blocked, then total tasks</p>
+                    </div>
+                    {canOpenTasks ? <Link to="/admin/tasks" className="ams-dashboard-card-action ams-dashboard-team-task-action text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                   </div>
                   {!canOpenTasks || operationalSnapshot.tasks === null ? (
                     <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
@@ -3458,20 +3461,21 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   ) : taskLoadByAssignee.length === 0 ? (
                     <DashboardEmptyState eyebrow="TEAM WORKLOAD" icon={<Users size={17} aria-hidden="true" />} title="No open assignments" description="Open task distribution will appear here when tasks have owners." compact />
                   ) : (
-                    <div className="space-y-3">
+                    <div className="ams-dashboard-owner-list">
                       {taskLoadByAssignee.slice(0, 4).map((owner) => (
-                        <div key={owner.label} className="ams-dashboard-owner-row space-y-1.5">
+                        <div key={owner.label} className="ams-dashboard-owner-row">
                           <div className="ams-dashboard-owner-row__heading flex items-center justify-between gap-3">
                             <span className="min-w-0 truncate text-xs font-medium text-fg">{owner.label}</span>
-                            <span className="shrink-0 text-[11px] tabular-nums text-muted">{owner.total} tasks</span>
+                            <span className="ams-dashboard-owner-row__count"><strong>{owner.total}</strong><span>tasks</span></span>
                           </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Open task load for ' + owner.label + ': ' + owner.total + ' tasks.'}>
-                            <div className="h-full rounded-full bg-accent" style={{ width: owner.total / taskLoadByAssigneeMaximum * 100 + '%' }} />
+                          <div className="ams-dashboard-owner-row__track h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Open task load for ' + owner.label + ': ' + owner.total + ' tasks.'}>
+                            <div className="ams-dashboard-owner-row__fill h-full rounded-full bg-accent" style={{ width: owner.total / taskLoadByAssigneeMaximum * 100 + '%' }} />
                           </div>
                           <div className="ams-dashboard-owner-row__signals flex flex-wrap gap-x-2 gap-y-1 text-[10px] text-muted">
-                            <span className={owner.overdue > 0 ? 'is-risk' : ''}>{owner.overdue} overdue</span>
-                            <span className={owner.blocked > 0 ? 'is-risk' : ''}>{owner.blocked} blocked</span>
-                            <span>{owner.review} in review</span>
+                            {owner.overdue > 0 ? <span className="is-risk">{owner.overdue} overdue</span> : null}
+                            {owner.blocked > 0 ? <span className="is-warning">{owner.blocked} blocked</span> : null}
+                            {owner.review > 0 ? <span className="is-review">{owner.review} in review</span> : null}
+                            {owner.overdue === 0 && owner.blocked === 0 ? <span className="is-clear">No overdue or blocked tasks</span> : null}
                           </div>
                         </div>
                       ))}
@@ -3483,7 +3487,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="ams-dashboard-team-time__header mb-3 flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
-                      <p className="mt-1 text-[10px] leading-4 text-muted">Logged hours · not capacity</p>
+                      <p className="ams-dashboard-team-section-caption">Actual logged hours · not team capacity</p>
                     </div>
                     {canOpenTimeLogs ? (
                       <div className="ams-dashboard-team-time__header-actions">
@@ -3511,17 +3515,18 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       action={canOpenTimeLogs ? <DashboardControl to="/admin/time-logs" variant="action" size="standard" icon={<Clock3 size={14}/>} className="ams-dashboard-card-action ams-dashboard-team-time__action">Open Time Logs</DashboardControl> : undefined}
                     />
                   ) : (
-                    <div className="space-y-3">
+                    <div className="ams-dashboard-recorded-time-list">
                       {periodTimeRows.slice(0, 4).map((person) => (
-                        <div key={person.name} className="ams-dashboard-recorded-time-row ams-recorded-time-row space-y-1.5">
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="min-w-0 truncate text-xs font-medium text-fg">{person.name}</span>
-                            <span className="shrink-0 text-[11px] tabular-nums text-muted">{Math.floor(person.minutes / 60)}h {person.minutes % 60}m</span>
+                        <article key={person.name} className="ams-dashboard-recorded-time-row">
+                          <div className="ams-dashboard-recorded-time-row__heading">
+                            <span className="ams-dashboard-recorded-time-row__name">{person.name}</span>
+                            <strong className="ams-dashboard-recorded-time-row__value">{Math.floor(person.minutes / 60)}h {person.minutes % 60}m</strong>
                           </div>
-                          <div className="ams-recorded-time-row__track" role="img" aria-label={'Recorded time for ' + person.name + ': ' + Math.floor(person.minutes / 60) + ' hours ' + (person.minutes % 60) + ' minutes'}>
+                          <div className="ams-dashboard-recorded-time-row__track ams-recorded-time-row__track" role="img" aria-label={'Recorded time for ' + person.name + ': ' + Math.floor(person.minutes / 60) + ' hours ' + (person.minutes % 60) + ' minutes'}>
                             <span style={{ width: Math.min(100, person.minutes / periodTimeRowsMaximum * 100) + '%' }} />
                           </div>
-                        </div>
+                          <p className="ams-dashboard-recorded-time-row__entries">{person.entries} {person.entries === 1 ? 'entry' : 'entries'}</p>
+                        </article>
                       ))}
                     </div>
                   )}

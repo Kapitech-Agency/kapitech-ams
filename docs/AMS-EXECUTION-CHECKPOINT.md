@@ -846,3 +846,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Dashboard now overrides only its own page-shell gap to `--ams-dashboard-grid-gap: 12px` and removes the additional margins between consecutive card rows. Horizontal gutters, stacked-card row gaps and top-level Dashboard section gaps now share the same 12px measurement.
 - Regression tests now assert the final effective CSS: Dashboard page-shell gap uses the shared token and sibling card rows have zero added margin.
 - Presentation/CSS/tests/documentation only; no API, database, authentication, permission or business-logic changes.
+
+
+## Team Workload focused refinement — 27 October 2026
+
+- Scope: `dashboard-team-workload` only. Open-task owner rows now use compact task counts, consistent progress tracks, and non-zero overdue/blocked/review signals. Zero-value badges are hidden so an owner row does not become cluttered; a concise neutral line confirms no overdue/blocked tasks when applicable.
+- Recorded-time rows align person, logged duration, progress track and count of recorded entries. Its period selector remains local to Recorded Time. The two subsections use a predictable spacing system and reflow on narrow screens.
+- Added focused regression coverage for the card structure, meaningful status indicators, recorded entry counts and responsive layout.
+- No API/database/authentication/permission changes or task/time calculations changed. Confirm Quality Gate on the resulting commit.
