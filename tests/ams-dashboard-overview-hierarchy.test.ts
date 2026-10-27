@@ -271,6 +271,18 @@ test('Project registry sits beside compact service-line filters in the Project P
   assert.ok(styles.includes('.ams-project-registry-action'));
 });
 
+test('Project All/Creative/IT filters do not render a coloured selection block', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const correctionStart = styles.lastIndexOf('/* Final user-directed correction: project service-line filters use a text-only active state. */');
+  assert.ok(correctionStart >= 0, 'Final text-only filter state override should be present.');
+  const correction = styles.slice(correctionStart);
+  assert.ok(correction.includes('.ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
+  assert.match(correction, /background:\s*transparent;/);
+  assert.match(correction, /border-color:\s*transparent;/);
+  assert.doesNotMatch(correction, /background:\s*var\(--accent\)|background:\s*var\(--dashboard-control-selected\)/);
+  assert.ok(correction.includes('.ams-dashboard-project-service-filter .ams-dashboard-control__count'));
+});
+
 test('Dashboard Project and Task filters share one segmented background and interaction contract', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
