@@ -2650,7 +2650,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <section className="ams-dashboard-project-progress-section min-w-0 min-[1100px]:col-span-6 min-[1280px]:col-span-5" data-ams-feature-slug="dashboard-project-progress" aria-label="Projects in progress">
                 <AdminPanel
                   title="Projects in progress"
-                  className="ams-overview-panel ams-overview-panel--list ams-dashboard-project-progress-panel"
+                  className="h-full flex flex-col ams-overview-panel ams-overview-panel--list ams-dashboard-project-progress-panel"
                   bodyClassName="p-0"
                   actions={(
                     <div className="ams-project-progress-header-actions" data-ams-feature-slug="dashboard-project-filters" aria-label="Project delivery filters">
@@ -2717,10 +2717,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </section>
             ) : null}
 
-            <section className={[('ams-dashboard-attention-section'), 'min-w-0', canOpenProjects ? 'min-[1100px]:col-span-6 min-[1280px]:col-span-7' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
+            <section className={['ams-dashboard-attention-section', 'min-w-0', canOpenProjects ? 'min-[1100px]:col-span-6 min-[1280px]:col-span-7' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
               <AdminPanel
                 title="Needs attention"
-                className="h-full ams-overview-panel ams-overview-panel--attention ams-dashboard-attention-panel"
+                className="h-full flex flex-col ams-overview-panel ams-overview-panel--attention ams-dashboard-attention-panel"
                 bodyClassName="p-0"
                 actions={dashboardOverview.attentionItemsDataAvailable ? (
                   <div className="ams-dashboard-attention-header-actions">
@@ -2751,7 +2751,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
                     </div>
                   ) : overviewAttentionItems.length === 0 ? (
-                    null
+                    <div className="p-3 sm:p-4">
+                      <DashboardEmptyState
+                        eyebrow="OPERATIONS CLEAR"
+                        tone="success"
+                        icon={<CheckCircle2 size={17} aria-hidden="true" />}
+                        title="No active exceptions"
+                        description="Available sources returned no cross-module issues that need attention."
+                        compact
+                      />
+                    </div>
                   ) : filteredOverviewAttentionItems.length === 0 ? (
                     <div className="ams-dashboard-attention-filter-empty px-4 py-3">
                       <DashboardEmptyState
