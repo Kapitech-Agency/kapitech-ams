@@ -656,7 +656,7 @@ test('Dashboard header controls, Projects height, Team Workload and Recent Activ
   assert.ok(dashboard.includes('aria-label="Filter activity by severity"'));
   assert.ok(dashboard.includes('aria-label="Filter activity by actor"'));
   assert.ok(dashboard.includes('aria-label="Sort recent activity"'));
-  assert.ok(dashboard.includes('aria-label="Filter activity by time window"'));
+  assert.ok(dashboard.includes('ariaLabel="Filter activity by time window"'));
   assert.ok(dashboard.includes('Export filtered recent activity as CSV'));
   assert.ok(dashboard.includes('pageSizeAriaLabel="Recent activity rows per page"'));
 

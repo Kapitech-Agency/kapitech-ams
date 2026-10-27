@@ -8799,10 +8799,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
     grid-column: 1 / -1;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-filter--actor {
-    width: auto !important;
-  }
-
   .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
     padding-inline: 8px;
   }
