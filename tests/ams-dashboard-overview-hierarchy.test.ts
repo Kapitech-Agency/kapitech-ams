@@ -322,7 +322,12 @@ test('Project service-line filters are a single shared segmented control aligned
   assert.ok(groupRule.includes('height: var(--dashboard-control-height, 36px);'));
   assert.ok(groupRule.includes('padding: var(--dashboard-filter-shell-padding, 2px);'));
   assert.ok(groupRule.includes('border: 1px solid var(--dashboard-control-border, var(--line));'));
-  assert.match(contract, /\.ams-dashboard-project-service-filter \.ams-dashboard-control--filter\s*\{[^}]*height: var\(--dashboard-control-filter-height, 28px\)[^}]*padding: 0 var\(--dashboard-control-padding-filter-x, 10px\)/s);
+  const itemRuleStart = contract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter,');
+  const itemRuleEnd = contract.indexOf('\n}', itemRuleStart) + 2;
+  const itemRule = contract.slice(itemRuleStart, itemRuleEnd);
+  assert.ok(itemRuleStart >= 0 && itemRuleEnd > itemRuleStart, 'Segmented options must use a shared compact item rule.');
+  assert.ok(itemRule.includes('height: var(--dashboard-control-filter-height, 28px);'));
+  assert.ok(itemRule.includes('padding: 0 var(--dashboard-control-padding-filter-x, 10px);'));
   assert.ok(contract.includes('.ams-dashboard-view-tabs'));
   assert.ok(contract.includes('overflow-x: visible;'), 'Dashboard tabs wrap rather than becoming a horizontal scroll strip.');
   assert.ok(controls.includes('--dashboard-control-padding-standard-x: 12px;'));
@@ -604,7 +609,11 @@ test('Dashboard uses a consistent typography scale, neutral project filters and 
   const projectFilterStart = overview.indexOf('className="ams-project-progress-header-actions"');
   assert.ok(projectFilterStart >= 0);
   assert.ok(dashboardStyles.includes('.ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
-  const projectFilterCss = dashboardStyles.slice(dashboardStyles.lastIndexOf('/* Final Dashboard control contract. */'));
+  const finalContract = dashboardStyles.slice(dashboardStyles.lastIndexOf('/* Final Dashboard control contract. */'));
+  const projectFilterStart = finalContract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,');
+  const projectRegistryStart = finalContract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action', projectFilterStart);
+  const projectFilterCss = finalContract.slice(projectFilterStart, projectRegistryStart);
+  assert.ok(projectFilterStart >= 0 && projectRegistryStart > projectFilterStart);
   assert.ok(projectFilterCss.includes('background: var(--dashboard-control-selected)'));
   assert.ok(projectFilterCss.includes('padding: var(--dashboard-filter-shell-padding, 2px);'));
   assert.doesNotMatch(projectFilterCss, /background:\s*var\(--accent\)/);
