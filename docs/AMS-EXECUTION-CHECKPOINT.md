@@ -782,3 +782,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Added canonical padding variables for standard, compact and filter controls, content gap, segmented shell padding and item radius in `DashboardControls.css`. Card-level styles now specify grouped layout and responsiveness rather than one-off horizontal padding.
 - Added regression checks for shared-component usage, visible grouping, size alignment, padding tokens and non-scrolling Dashboard tabs.
 - Frontend-only. No changes to backend/API/database/authentication/permissions/financial calculations or canonical source processing.
+
+
+## 0.5 Dashboard alignment and filter parity follow-up — 27 October 2026
+
+- Project service-line filter now uses the same shared segmented-control shell, item height, padding, border, and active state as Task Queue. Removed the project-only text-only active-state override and updated regression coverage.
+- Tightened the Dashboard header control baseline and wrapping behavior; tabs wrap naturally and do not form a horizontal scroll strip. Kept date-range controls scoped to cards that need them rather than adding a global reporting-date control.
+- Reinforced the Projects portfolio flex-fill layout alongside Finance, separated Team Workload's owner/task and recorded-time sections, and refined Recent Activity's filter toolbar/table spacing across desktop and compact layouts. Recent Activity retains the source-backed search, severity, actor, date-range, sort, reset, CSV export, and pagination features.
+- Frontend-only. No API, database, permissions, authentication, or business calculations changed. Validation is pending for this exact commit; full authenticated visual review remains necessary.

@@ -647,6 +647,41 @@ test('Dashboard uses a consistent typography scale, neutral project filters and 
   assert.ok(dashboardStyles.includes('.ams-overview-card-row[aria-label="Finance and project overview"] .ams-overview-panel--projects'));
 });
 
+test('Dashboard header controls, Projects height, Team Workload and Recent Activity remain aligned and responsive', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+
+  assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-quick-actions"'));
+  assert.ok(dashboard.includes('aria-label="Dashboard views"'));
+  assert.ok(dashboard.includes('aria-label="Filter activity by severity"'));
+  assert.ok(dashboard.includes('aria-label="Filter activity by actor"'));
+  assert.ok(dashboard.includes('aria-label="Sort recent activity"'));
+  assert.ok(dashboard.includes('aria-label="Filter activity by time window"'));
+  assert.ok(dashboard.includes('Export filtered recent activity as CSV'));
+  assert.ok(dashboard.includes('pageSizeAriaLabel="Recent activity rows per page"'));
+
+  for (const selector of [
+    '.ams-dashboard-header-primary-actions',
+    '.ams-dashboard-header-shortcuts',
+    '.ams-dashboard-header-utility-actions',
+    '.ams-dashboard-view-tabs',
+    '.ams-dashboard-projects-body > .ams-project-portfolio-body',
+    '.ams-dashboard-team-tasks',
+    '.ams-dashboard-team-time',
+    '.ams-dashboard-owner-row__signals > span',
+    '.ams-dashboard-activity-tools',
+    '.ams-dashboard-activity-table',
+    '@media (max-width: 1199px)',
+    '@media (max-width: 759px)'
+  ]) assert.ok(styles.includes(selector), 'Missing Dashboard alignment/responsive rule: ' + selector);
+
+  assert.ok(styles.includes('height: 36px;'));
+  assert.ok(styles.includes('overflow-x: visible;'));
+  assert.ok(styles.includes('justify-content: space-between;'));
+  assert.ok(styles.includes('grid-template-columns: minmax(220px, 1.5fr)'));
+  assert.ok(styles.includes('display: flex;'));
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');
