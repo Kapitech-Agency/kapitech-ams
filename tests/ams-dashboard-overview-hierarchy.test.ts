@@ -987,7 +987,7 @@ test('Dashboard final layout keeps date controls local, cards aligned and tab na
   assert.ok(overview.includes('data-ams-feature-slug="dashboard-finance-period-controls"'));
   assert.ok(overview.includes('data-ams-feature-slug="dashboard-time-period-controls"'));
   assert.ok(overview.includes('data-ams-feature-slug="dashboard-recent-activity"'));
-  assert.ok(overview.includes('data-ams-dashboard-activity'));
+  assert.ok(overview.includes('data-ams-feature-slug="dashboard-recent-activity"'));
   assert.ok(overview.includes('ams-dashboard-activity-table'));
   assert.ok(overview.includes('Export CSV'));
   assert.ok(overview.includes('Reset filters'));

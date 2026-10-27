@@ -9573,9 +9573,9 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 43%; }
-.ams-shell .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2) { width: 19%; }
-.ams-shell .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 26%; }
-.ams-shell .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 12%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2) { width: 19%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 26%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 12%; }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-table__action {
   margin: 0;
