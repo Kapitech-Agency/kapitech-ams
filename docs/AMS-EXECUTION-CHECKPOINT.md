@@ -790,3 +790,6 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Tightened the Dashboard header control baseline and wrapping behavior; tabs wrap naturally and do not form a horizontal scroll strip. Kept date-range controls scoped to cards that need them rather than adding a global reporting-date control.
 - Reinforced the Projects portfolio flex-fill layout alongside Finance, separated Team Workload's owner/task and recorded-time sections, and refined Recent Activity's filter toolbar/table spacing across desktop and compact layouts. Recent Activity retains the source-backed search, severity, actor, date-range, sort, reset, CSV export, and pagination features.
 - Frontend-only. No API, database, permissions, authentication, or business calculations changed. Validation is pending for this exact commit; full authenticated visual review remains necessary.
+
+
+- Recent Activity now supports additional client-side sort modes: highest severity first and actor A–Z, in addition to newest and oldest. Tie-breaking remains deterministic by timestamp; existing actor/severity/date filters, CSV export and pagination remain source-backed.

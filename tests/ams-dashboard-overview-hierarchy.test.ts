@@ -466,6 +466,8 @@ test('Dashboard actions, filters and calendars share one hover and geometry cont
   assert.ok(dashboard.includes('aria-label="Filter activity by severity"'));
   assert.ok(dashboard.includes('aria-label="Filter activity by actor"'));
   assert.ok(dashboard.includes('aria-label="Sort recent activity"'));
+  assert.ok(dashboard.includes("value: 'severity', label: 'Highest severity'"));
+  assert.ok(dashboard.includes("value: 'actor', label: 'Actor A–Z'"));
 });
 
 test('Dashboard card actions, Recorded time controls, calendar navigation and Activity filter widths stay aligned', async () => {

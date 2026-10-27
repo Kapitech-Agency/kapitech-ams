@@ -49,7 +49,7 @@ type DashboardQuotationFilter = 'all' | 'review' | 'approved' | 'sent' | 'draft'
 type DashboardAttentionSeverityFilter = 'all' | 'urgent' | 'attention' | 'info';
 type DashboardActivitySeverityFilter = 'all' | 'critical' | 'warning' | 'info';
 type DashboardActivityTimeFilter = '7' | '30' | '90' | 'custom' | 'all';
-type DashboardActivitySortOrder = 'newest' | 'oldest';
+type DashboardActivitySortOrder = 'newest' | 'oldest' | 'severity' | 'actor';
 
 type DashboardQuotation = {
   id: string;
@@ -2018,6 +2018,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       .sort((left, right) => {
         const leftTime = left.timestamp ? new Date(left.timestamp).getTime() : Number.NaN;
         const rightTime = right.timestamp ? new Date(right.timestamp).getTime() : Number.NaN;
+        const newestFirst = () => {
+          if (!Number.isFinite(leftTime) && !Number.isFinite(rightTime)) return 0;
+          if (!Number.isFinite(leftTime)) return 1;
+          if (!Number.isFinite(rightTime)) return -1;
+          return rightTime - leftTime;
+        };
+        if (activitySortOrder === 'severity') {
+          const severityRank = (activity: DashboardRecentActivity) => {
+            const severity = getDashboardActivitySeverity(activity.severity);
+            return severity === 'critical' ? 0 : severity === 'warning' ? 1 : 2;
+          };
+          const severityDifference = severityRank(left) - severityRank(right);
+          return severityDifference || newestFirst();
+        }
+        if (activitySortOrder === 'actor') {
+          const actorDifference = String(left.actor || 'System').localeCompare(String(right.actor || 'System'));
+          return actorDifference || newestFirst();
+        }
         if (!Number.isFinite(leftTime) && !Number.isFinite(rightTime)) return 0;
         if (!Number.isFinite(leftTime)) return 1;
         if (!Number.isFinite(rightTime)) return -1;
@@ -3656,7 +3674,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         
                         <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--order">
                           <span>Order</span>
-                          <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
+                          <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'severity', label: 'Highest severity' }, { value: 'actor', label: 'Actor A–Z' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
                         {hasActivityFilters ? <DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters</DashboardControl> : null}
                         <DashboardControl type="button" variant="action" size="standard" icon={<Download size={13}/>} showArrow={false} className="ams-dashboard-activity-export" onClick={exportFilteredDashboardActivity} disabled={filteredDashboardRecentActivity.length===0} title="Export all matching loaded events as a CSV file" ariaLabel="Export filtered recent activity as CSV">Export CSV</DashboardControl>
