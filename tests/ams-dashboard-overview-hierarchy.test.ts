@@ -718,7 +718,7 @@ test('Projects in progress is compact and Needs attention gets the wider deliver
   assert.ok(project.includes('min-[1100px]:col-span-6'));
   assert.ok(project.includes('min-[1280px]:col-span-5'));
   assert.ok(project.includes('ams-dashboard-project-progress-panel'));
-  assert.ok(attention.includes("min-[1100px]:col-span-6 min-[1280px]:col-span-7"));
+  assert.ok(row.includes("min-[1100px]:col-span-6 min-[1280px]:col-span-7"));
   assert.ok(styles.includes('.ams-dashboard-delivery-row {\n  align-items: start;'));
   assert.ok(styles.includes('.ams-dashboard-project-progress-panel {\n  height: auto;'));
   assert.ok(styles.includes('grid-column: span 5 / span 5;'));
