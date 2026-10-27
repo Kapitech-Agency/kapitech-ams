@@ -1577,7 +1577,9 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
   assert.ok(styles.includes('.ams-dropdown-item[data-active="true"]:not([data-selected="true"])'));
   assert.ok(styles.includes('.ams-dashboard-filter-pill[aria-pressed="true"]'));
   assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
-  assert.match(styles, /border-bottom:\s*2px solid var\(--accent\)/);
+  const activeTabsLayer = styles.slice(styles.lastIndexOf('/* Dashboard interaction and alignment contract — final layer, 27 October 2026. */'));
+  assert.ok(activeTabsLayer.includes('background: var(--accent);'), 'Selected tabs retain their crimson active state.');
+  assert.doesNotMatch(activeTabsLayer, /border-bottom:\s*2px solid var\(--accent\)/, 'Selected tabs must not use a crimson underline.');
   assert.match(styles, /background:\s*var\(--line\)/);
   assert.ok(styles.includes('.ams-dashboard-dropdown-menu .ams-dropdown-item[data-selected="true"]'));
 });
