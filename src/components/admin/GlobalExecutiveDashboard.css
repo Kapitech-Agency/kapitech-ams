@@ -2577,11 +2577,11 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   display: grid;
   min-width: 0;
   align-items: stretch;
-  gap: 14px;
+  gap: 12px;
 }
 
 .ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .ams-shell .ams-dashboard .ams-overview-panel {
@@ -6093,15 +6093,15 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 /* Dashboard pixel-precision spacing contract — 27 October 2026. */
 
-/* Compact, consistent card rhythm: 12px between desktop columns and 8px between stacked rows. */
+/* One spacing token for both axes: 12px between cards and 12px between card rows. */
 
 .ams-shell .ams-dashboard .ams-overview-card-row {
   column-gap: 12px;
-  row-gap: 8px;
+  row-gap: 12px;
 }
 
 .ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
@@ -7320,7 +7320,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard .ams-dashboard-delivery-row {
   align-items: stretch;
   column-gap: 12px;
-  row-gap: 8px;
+  row-gap: 12px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-delivery-row > section {
