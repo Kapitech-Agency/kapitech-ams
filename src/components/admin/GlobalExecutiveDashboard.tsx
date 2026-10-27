@@ -2705,23 +2705,23 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 className="h-full ams-overview-panel ams-overview-panel--attention ams-dashboard-attention-panel"
                 bodyClassName="p-0"
                 actions={dashboardOverview.attentionItemsDataAvailable ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {attentionSeveritySummary.urgent > 0 ? <span className="rounded-badge border border-danger/25 bg-danger/10 px-2 py-1 text-[10px] font-medium text-danger">{attentionSeveritySummary.urgent} urgent</span> : null}
-                    {attentionSeveritySummary.attention > 0 ? <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">{attentionSeveritySummary.attention} attention</span> : null}
-                    {attentionSeveritySummary.total === 0 ? <span className="text-[10px] text-muted">No active exceptions</span> : null}
+                  <div className="ams-dashboard-attention-header-actions">
+                    {attentionSeveritySummary.total === 0 ? (
+                      <span className="ams-dashboard-attention-empty-indicator">
+                        <CheckCircle2 size={13} aria-hidden="true" />
+                        No active exceptions
+                      </span>
+                    ) : (
+                      <div className="ams-dashboard-attention-counts">
+                        {attentionSeveritySummary.urgent > 0 ? <span className="rounded-badge border border-danger/25 bg-danger/10 px-2 py-1 text-[10px] font-medium text-danger">{attentionSeveritySummary.urgent} urgent</span> : null}
+                        {attentionSeveritySummary.attention > 0 ? <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">{attentionSeveritySummary.attention} attention</span> : null}
+                      </div>
+                    )}
+                    <CustomSelect aria-label="Filter attention by severity" value={attentionSeverityFilter} onChange={(value) => setAttentionSeverityFilter(value as DashboardAttentionSeverityFilter)} options={[{ value: 'all', label: 'All levels' }, { value: 'urgent', label: 'Urgent' }, { value: 'attention', label: 'Attention' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select ams-dashboard-attention-header-filter" triggerClassName="ams-dashboard-select-trigger w-[118px]" menuClassName="ams-dashboard-dropdown-menu" />
                   </div>
                 ) : undefined}
               >
                 <div className="ams-dashboard-attention-list" data-ams-feature-slug="dashboard-priority-exceptions" aria-label="Priority exceptions">
-                  {dashboardOverview.attentionItemsDataAvailable ? (
-                    <div className="ams-dashboard-attention-toolbar">
-                      <span>Cross-module exceptions</span>
-                      <label>
-                        <span>Severity</span>
-                        <CustomSelect aria-label="Filter attention by severity" value={attentionSeverityFilter} onChange={(value) => setAttentionSeverityFilter(value as DashboardAttentionSeverityFilter)} options={[{ value: 'all', label: 'All levels' }, { value: 'urgent', label: 'Urgent' }, { value: 'attention', label: 'Attention' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select" triggerClassName="ams-dashboard-select-trigger w-[118px]" menuClassName="ams-dashboard-dropdown-menu" />
-                      </label>
-                    </div>
-                  ) : null}
                   {!dashboardOverview.attentionItemsDataAvailable ? (
                     <div className="p-3 sm:p-4" role="status">
                       <div className="ams-dashboard-state ams-dashboard-state--compact">
@@ -2733,7 +2733,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
                     </div>
                   ) : overviewAttentionItems.length === 0 ? (
-                    <div className="p-3 sm:p-4"><DashboardEmptyState eyebrow="OPERATIONS CLEAR" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No active exceptions" description="Available sources returned no cross-module issues that need attention." compact /></div>
+                    null
                   ) : filteredOverviewAttentionItems.length === 0 ? (
                     <div className="ams-dashboard-attention-filter-empty px-4 py-3">
                       <DashboardEmptyState

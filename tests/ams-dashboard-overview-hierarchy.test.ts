@@ -1015,6 +1015,28 @@ test('Dashboard Needs attention card shows severity and authorised Inbox triage 
 });
 
 
+test('Dashboard Needs Attention places its clean-state pill and level filter in the header', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-attention-center"');
+  const bodyStart = dashboard.indexOf('<div className="ams-dashboard-attention-list"', start);
+  const end = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"', bodyStart);
+  assert.ok(start >= 0 && bodyStart > start && end > bodyStart);
+  const header = dashboard.slice(start, bodyStart);
+  const body = dashboard.slice(bodyStart, end);
+  assert.ok(header.includes('ams-dashboard-attention-empty-indicator'));
+  assert.ok(header.includes('No active exceptions'));
+  assert.ok(header.indexOf('No active exceptions') < header.indexOf('Filter attention by severity'));
+  assert.ok(header.includes("label: 'All levels'"));
+  assert.equal(header.includes('>Severity</span>'), false, 'Do not repeat a visible Severity label beside the level selector.');
+  assert.equal(body.includes('ams-dashboard-attention-toolbar'), false, 'The filter should live in the card header, not inside the body.');
+  assert.equal(body.includes('>Severity</span>'), false);
+  assert.ok(styles.includes('.ams-dashboard-attention-empty-indicator'));
+  assert.ok(styles.includes('.ams-dashboard-attention-header-filter'));
+  assert.ok(body.includes('title="No exceptions match this severity"'), 'Filtered-empty state remains actionable.');
+  assert.ok(body.includes("setAttentionSeverityFilter('all')"));
+});
+
 test('Dashboard Overview orders urgent delivery actions before finance and portfolio context', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");

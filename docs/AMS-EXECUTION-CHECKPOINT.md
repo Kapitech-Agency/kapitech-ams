@@ -755,3 +755,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Applied a specific rounded-rectangle contract to Project registry, Open planning, Open Projects, Open project delivery and other Dashboard card-action links so card-header anchor rules cannot turn them back into pills. Actions match the filter group height.
 - Restored explicit 16px top spacing and divider for Recorded Time within Team Workload.
 - Added regression assertions for the filter shell padding, neutral active state, rounded card action links and Recorded Time spacing. Frontend presentation only; no API, database, auth, permission, data-source or workflow logic changed.
+
+
+## 0.5 Needs Attention header control refinement — 27 October 2026
+
+- Removed the redundant visible “Severity” label from the Needs Attention filter.
+- Moved the existing All levels / Urgent / Attention / Info selector into the card header at the far right. A source-confirmed empty state now appears immediately to its left as a rounded rectangular indicator; it is not duplicated in the body.
+- The filter still uses the existing attentionSeverityFilter state and canonical records. Per-item urgency labels, source availability handling, severity sorting, route access checks and Inbox triage remain intact.
+- This was a scoped frontend and regression-test change only. Confirm the new commit's Quality Gate before considering the slice validated.

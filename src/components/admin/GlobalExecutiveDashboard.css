@@ -7825,3 +7825,78 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
     justify-content: flex-start;
   }
 }
+
+
+/* Needs Attention header: put the empty state and filter controls on one aligned row. */
+.ams-shell .ams-dashboard .ams-dashboard-attention-header-actions {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-counts {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-empty-indicator {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 30px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bg) 52%, var(--panel));
+  color: var(--text);
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-empty-indicator svg {
+  flex: 0 0 auto;
+  color: var(--success);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-header-filter {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-header-filter .ams-dashboard-select-trigger {
+  min-height: 32px;
+  border-radius: 9px;
+}
+
+@media (min-width: 600px) {
+  .ams-shell .ams-dashboard .ams-dashboard-attention-header-actions {
+    width: auto;
+  }
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-attention-header-actions {
+    justify-content: space-between;
+    gap: 7px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-attention-empty-indicator {
+    min-height: 29px;
+    padding-inline: 8px;
+    font-size: 9px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-attention-header-filter .ams-dashboard-select-trigger {
+    width: 112px;
+  }
+}
