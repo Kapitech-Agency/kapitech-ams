@@ -160,9 +160,10 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   for (const label of [
     'Search recent activity', 'Filter activity by severity',
     'Filter activity by time window', 'Recent activity start date',
-    'Recent activity end date', 'Recent activity rows per page',
-    'Previous activity page', 'Next activity page'
+    'Recent activity end date'
   ]) assert.ok(overview.includes('aria-label="' + label + '"') || overview.includes('ariaLabel="' + label + '"'), 'Missing activity table control: ' + label);
+  assert.ok(overview.includes('pageSizeAriaLabel="Recent activity rows per page"'));
+  assert.ok(overview.includes('<AdminTablePagination'));
   assert.ok(overview.includes('<table className="ams-dashboard-activity-table">'));
   assert.ok(overview.includes("{value:'custom',label:'Custom'}"));
   assert.ok(dashboard.includes('activityStartDate && eventDay < activityStartDate'));
@@ -236,9 +237,10 @@ test('Dashboard controls use card-local dropdowns, design-system active states, 
   assert.ok(dashboard.includes("import { DropdownPortal } from '../ui/DropdownPortal';"));
   assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
   assert.equal(dashboard.includes('aria-label="Reporting period filters"'), false);
-  for (const label of ['Filter attention by severity','Filter activity by actor','Filter activity by severity','Filter activity by time window','Sort recent activity','Recent activity rows per page']) {
+  for (const label of ['Filter attention by severity','Filter activity by actor','Filter activity by severity','Filter activity by time window','Sort recent activity']) {
     assert.ok(dashboard.includes('aria-label="' + label + '"') || dashboard.includes('ariaLabel="' + label + '"'), 'Missing custom card dropdown: ' + label);
   }
+  assert.ok(dashboard.includes('pageSizeAriaLabel="Recent activity rows per page"'), 'The shared AMS pagination should expose its accessible page-size label.');
   assert.ok(dashboard.includes('const dashboardActivityActors = useMemo'));
   assert.ok(dashboard.includes("activityActorFilter !== '__all_actors__'"));
   assert.ok(dashboard.includes("activitySortOrder === 'oldest'"));
@@ -492,10 +494,13 @@ test('Dashboard active tabs, shared filter states, aligned card bodies, compact 
   const taskStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const deadlineStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskStart);
   const task = dashboard.slice(taskStart, deadlineStart);
+  const overviewStop = dashboard.indexOf(") : view === 'performance' ? (", deadlineStart);
+  const deadlines = dashboard.slice(deadlineStart, overviewStop);
   assert.ok(task.includes('ams-dashboard-task-queue-panel'));
   assert.ok(task.includes('ams-dashboard-task-queue-list'));
   assert.ok(task.includes('Open Tasks'));
-  assert.ok(task.includes('ams-dashboard-deadlines-panel'));
+  assert.ok(deadlines.includes('ams-dashboard-deadlines-panel'));
+  assert.ok(deadlines.includes('ams-dashboard-deadline-list'));
 });
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
@@ -1100,7 +1105,8 @@ test('Dashboard task queue and deadline cards remain compact, responsive and sou
   assert.ok(overview.includes("aria-label={'Open task load for ' + owner.label"));
   assert.ok(overview.includes("style={{ width: owner.total / taskLoadByAssigneeMaximum * 100 + '%' }}"));
   assert.equal(overview.includes('pagedDashboardProjects'), false);
-  assert.equal(overview.includes('AdminTablePagination'), false);
+  assert.equal(queue.includes('AdminTablePagination'), false, 'The Tasks queue does not use a second local pagination system.');
+  assert.ok(overview.includes('<AdminTablePagination'), 'Recent Activity should use the existing AMS pagination primitive.');
   assert.equal(overview.includes('title="Active projects"'), false);
 });
 
