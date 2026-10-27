@@ -829,3 +829,12 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - The final CSS layer resets residual row margins before applying the same token, preventing prior one-off row and delivery-grid declarations from creating uneven gutters.
 - Added regression coverage for the shared horizontal/vertical gutter contract across Project delivery, Task queue, Finance/Projects, Team/client, and Recent Activity rows.
 - Presentation-only: no record sources, access rules, routes, calculations, or service logic changed.
+
+
+## 0.6 Investigation: dashboard changes not visible in production — 27 October 2026
+
+- Confirmed the current `main` source contains the recent Dashboard header, per-card period controls, compact project filters, team workload restructuring, and Recent Activity table/filter markup.
+- Public `/api/health/ready` is healthy, but the dashboard route is protected; available browser profiles have no recorded AMS sign-in. The dashboard's authenticated DOM/assets therefore cannot yet be compared with the production UI from this session.
+- The two repository workflows are validation-only (`.github/workflows/ams-ci.yml` and `.github/workflows/ams-quality.yml`); neither performs a Hostinger deploy. Hostinger's external Git auto-deploy setting cannot be verified through the tools connected to this session.
+- Latest CI and Quality Gate for `eb4a8afda42d5d6cb5bc4125946ee1f733222876` both failed at the Dashboard regression assertion in `tests/ams-nine-module-workspace-regression.test.ts`: the test still required the previous 6/6 and 1280px width rules while the source and final CSS now use the approved 7/5 delivery split. That caused the production-build step in Quality Gate to be skipped. The stale assertion is corrected to match the actual project-progress and Needs-attention row markup; rerun both workflows before treating this fix as validated.
+- Next verification requires an authenticated Dashboard browser session and Hostinger auto-deployment status. No backend, database, authentication, access-policy, or finance logic changes are made.
