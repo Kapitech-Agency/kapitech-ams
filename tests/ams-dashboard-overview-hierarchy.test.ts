@@ -570,7 +570,6 @@ test('Dashboard uses a consistent typography scale, neutral project filters and 
   assert.ok(dashboardStyles.includes('.ams-overview-panel h3'));
 
   const projectFilterStart = overview.indexOf('className="ams-project-progress-header-actions"');
-  const projectFilterEnd = overview.indexOf('data-ams-feature-slug="dashboard-project-progress"', projectFilterStart + 1);
   assert.ok(projectFilterStart >= 0);
   assert.ok(dashboardStyles.includes('.ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
   const projectFilterCss = dashboardStyles.slice(dashboardStyles.lastIndexOf('/* Project service-line filters: neutral selected treatment'));
@@ -581,8 +580,11 @@ test('Dashboard uses a consistent typography scale, neutral project filters and 
   assert.equal(quotationHeader.includes('Open quotation ledger'), false, 'Quotation ledger action must not crowd the Quotation Follow-up heading.');
   assert.ok(quotations.includes('action={<DashboardControl to="/admin/finance?tab=quotations"'), 'Quotation ledger action must be available inside an empty state.');
   assert.ok(quotations.includes('title="No quotations match this stage"'));
-  assert.equal(recordedTime.includes('Open Time Logs</DashboardControl>') && recordedTime.indexOf('ams-dashboard-team-time__header-actions') < recordedTime.indexOf('Open Time Logs</DashboardControl>'), false,
-    'Open Time Logs must not appear as a permanent heading action.');
+  const timeHeaderStart = recordedTime.indexOf('ams-dashboard-team-time__header-actions');
+  const timeEmptyStart = recordedTime.indexOf('title="No recorded time in this period"');
+  const timeHeader = recordedTime.slice(timeHeaderStart, timeEmptyStart);
+  assert.ok(timeHeaderStart >= 0 && timeEmptyStart > timeHeaderStart);
+  assert.equal(timeHeader.includes('Open Time Logs'), false, 'Open Time Logs must not appear as a permanent heading action.');
   assert.ok(recordedTime.includes('action={canOpenTimeLogs ? <DashboardControl to="/admin/time-logs"'), 'Open Time Logs is shown in the empty state only.');
   assert.ok(controlStyles.includes('--dashboard-control-height: 36px;'));
   assert.ok(controlStyles.includes('--dashboard-control-compact-height: 32px;'));

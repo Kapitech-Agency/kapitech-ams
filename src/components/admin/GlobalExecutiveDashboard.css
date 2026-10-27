@@ -8307,4 +8307,16 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   line-height: 14px;
 }
 
-/* Recent Activity header/table retains filters, pagination and export; only typography and control geometry are normalized. */
+
+
+
+/* Segmented filter buttons share the compact geometry; grid/metric filters retain their own card layout. */
+.ams-shell .ams-dashboard .ams-dashboard-filter-group--segmented .ams-dashboard-control--filter {
+  box-sizing: border-box;
+  height: var(--ams-dashboard-control-compact-height, 32px);
+  min-height: var(--ams-dashboard-control-compact-height, 32px);
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 14px;
+}
