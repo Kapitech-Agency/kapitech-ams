@@ -244,7 +244,8 @@ test('Dashboard controls use card-local dropdowns, design-system active states, 
   assert.ok(dashboard.includes('const dashboardActivityActors = useMemo'));
   assert.ok(dashboard.includes("activityActorFilter !== '__all_actors__'"));
   assert.ok(dashboard.includes("activitySortOrder === 'oldest'"));
-  for (const selector of ['.ams-dashboard-view-tab[aria-current="page"]','.ams-dashboard button[aria-pressed="true"]','.ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]','.ams-dashboard-projects-body','.ams-dashboard-finance-trend-region .ams-trend-chart__plot','.ams-table-pagination','.ams-shell:has(.ams-dashboard)','.ams-portal-root .ams-calendar-period-filter__panel','.ams-portal-root .ams-dashboard-activity-calendar-panel']) {
+  assert.ok(dashboard.includes('<AdminTablePagination'), 'Recent Activity must use AMS shared pagination.');
+  for (const selector of ['.ams-dashboard-view-tab[aria-current="page"]','.ams-dashboard button[aria-pressed="true"]','.ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]','.ams-dashboard-projects-body','.ams-dashboard-finance-trend-region .ams-trend-chart__plot','.ams-shell:has(.ams-dashboard)','.ams-portal-root .ams-calendar-period-filter__panel','.ams-portal-root .ams-dashboard-activity-calendar-panel']) {
     assert.ok(styles.includes(selector), 'Missing final Dashboard layout/control rule: ' + selector);
   }
 });
