@@ -261,7 +261,7 @@ test('Dashboard final layout contract keeps controls aligned and card content pr
   assert.ok(finalLayer.includes('height: 28px;'), 'Project service-line choices remain compact inside the 36px shared toolbar.');
   assert.ok(finalLayer.includes('.ams-dashboard-finance-panel'));
   assert.ok(finalLayer.includes('.ams-dashboard-projects-panel'));
-  assert.ok(finalLayer.includes('.ams-dashboard-team-owner-row'));
+  assert.ok(finalLayer.includes('.ams-dashboard-owner-row'));
   assert.ok(finalLayer.includes('.ams-dashboard-activity-table tbody td'));
   assert.ok(finalLayer.includes('border-spacing: 0 5px;'));
   assert.ok(finalLayer.includes('@media (max-width: 759px)'));
