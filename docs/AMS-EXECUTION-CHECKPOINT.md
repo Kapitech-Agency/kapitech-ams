@@ -714,3 +714,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Moved the existing Task Queue filters from the body into the card header beside the Open Tasks action. Filter values, counts, permissions and queue filtering behavior remain unchanged; filter density is compact and wraps rather than introducing horizontal scrolling.
 - Added a regression test confirming the filters belong to the card header and are not duplicated in the queue body.
 - Presentation-only change; no backend, API, database, auth, permission or task workflow changes.
+
+
+### 0.6 Shared control and calendar consistency — 27 October 2026
+
+- Baseline: [282511c2](https://github.com/Kapitech-Agency/kapitech-ams/commit/282511c263fb24615aec27934d17d92a5d461cbe). Quality Gate regressions were traced to source-shape assertions that no longer matched shared DashboardControl/DashboardFilterGroup usage and card-local activity filtering.
+- Added a dedicated shared component stylesheet for one neutral hover surface, 8px rounded-rectangle action geometry, consistent heights and card-local calendar buttons. The period calendar's trigger, Done, year navigation and month/quarter/year choices use DashboardControl.
+- Finance and Project Portfolio stretch to equal height at desktop. Team Workload has a clear separator and row rhythm between task assignments and recorded time.
+- No backend/API/authentication/permissions/finance formula changes. Exact-SHA Quality Gate and authenticated visual checks remain required before acceptance.

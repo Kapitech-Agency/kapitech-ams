@@ -1581,22 +1581,25 @@ const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps
 
   return (
     <div className={['ams-calendar-period-filter', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
-      <button
-        ref={triggerRef}
+      <DashboardControl
         type="button"
+        buttonRef={triggerRef}
+        variant="action"
+        size="standard"
+        icon={<CalendarDays size={14} />}
+        trailingIcon={<ChevronDown size={13} className={open ? 'is-open' : ''} />}
+        showArrow={false}
         className="ams-calendar-period-filter__trigger"
-        aria-label={ariaLabel}
-        aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
+        ariaLabel={ariaLabel}
+        ariaExpanded={open}
+        ariaControls={open ? panelId : undefined}
         onClick={() => setOpen((state) => !state)}
       >
-        <CalendarDays size={14} aria-hidden="true" />
         <span className="ams-calendar-period-filter__trigger-copy">
           <span className="ams-calendar-period-filter__trigger-label">{caption}</span>
           <span className="ams-calendar-period-filter__trigger-value">{periodLabel}</span>
         </span>
-        <ChevronDown size={13} className={open ? 'is-open' : ''} aria-hidden="true" />
-      </button>
+      </DashboardControl>
       <DropdownPortal
         open={open}
         anchorRef={triggerRef}
@@ -1607,24 +1610,38 @@ const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps
         <div id={panelId} className="ams-calendar-period-filter__panel-content" role="group" aria-label={ariaLabel + ' calendar'}>
           <div className="ams-calendar-period-filter__panel-heading">
             <div><p>Choose reporting period</p><span>{periodLabel}</span></div>
-            <button type="button" aria-label="Close calendar filter" onClick={() => setOpen(false)}><span>Done</span></button>
+            <DashboardControl type="button" variant="action" size="compact" showArrow={false} className="ams-calendar-period-filter__done" ariaLabel="Close calendar filter" onClick={() => setOpen(false)}>Done</DashboardControl>
           </div>
           <DashboardFilterGroup ariaLabel="Reporting period grouping" value={mode} onChange={(value)=>changeMode(value as ReportingPeriodMode)} density="compact" className="ams-calendar-period-filter__group" options={[
             {value:'month',label:'Month'},{value:'quarter',label:'Quarter'},{value:'year',label:'Year'}
           ]} />
           {mode !== 'year' ? (
             <div className="ams-calendar-period-filter__year">
-              <button type="button" disabled={!previousYear} aria-label="Previous calendar year" onClick={() => previousYear && setVisibleYear(Number(previousYear))}><ChevronLeft size={14} aria-hidden="true" /></button>
+              <DashboardControl type="button" variant="icon" size="standard" disabled={!previousYear} ariaLabel="Previous calendar year" onClick={() => previousYear && setVisibleYear(Number(previousYear))} showArrow={false} className="ams-calendar-period-filter__year-step"><ChevronLeft size={14} aria-hidden="true" /></DashboardControl>
               <strong>{yearLabel}</strong>
-              <button type="button" disabled={!nextYear} aria-label="Next calendar year" onClick={() => nextYear && setVisibleYear(Number(nextYear))}><ChevronRight size={14} aria-hidden="true" /></button>
+              <DashboardControl type="button" variant="icon" size="standard" disabled={!nextYear} ariaLabel="Next calendar year" onClick={() => nextYear && setVisibleYear(Number(nextYear))} showArrow={false} className="ams-calendar-period-filter__year-step"><ChevronRight size={14} aria-hidden="true" /></DashboardControl>
             </div>
           ) : null}
           <div className={['ams-calendar-period-filter__grid', mode === 'quarter' ? 'is-quarter' : mode === 'year' ? 'is-year' : 'is-month'].join(' ')} role="group" aria-label={mode === 'month' ? 'Select month' : mode === 'quarter' ? 'Select quarter' : 'Select year'}>
             {periodTiles.map((tile) => (
-              <button key={tile.value} type="button" disabled={!availableValues.has(tile.value)} aria-pressed={value === tile.value} onClick={() => { onValueChange(tile.value); setOpen(false); }} title={tile.detail}>
-                <span>{tile.label}</span>
-                {tile.detail && mode !== 'month' ? <small>{tile.detail}</small> : null}
-              </button>
+              <DashboardControl
+                key={tile.value}
+                type="button"
+                variant="filter"
+                size="standard"
+                disabled={!availableValues.has(tile.value)}
+                active={value === tile.value}
+                ariaPressed={value === tile.value}
+                onClick={() => { onValueChange(tile.value); setOpen(false); }}
+                title={tile.detail}
+                showArrow={false}
+                className="ams-calendar-period-filter__tile"
+              >
+                <span className="ams-calendar-period-filter__tile-copy">
+                  <span>{tile.label}</span>
+                  {tile.detail && mode !== 'month' ? <small>{tile.detail}</small> : null}
+                </span>
+              </DashboardControl>
             ))}
           </div>
         </div>

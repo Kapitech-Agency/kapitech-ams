@@ -7055,107 +7055,42 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 
-/* Dashboard button consistency contract - 2026-10-27. Shared filter component layer. */
-.ams-shell .ams-dashboard {
-  --dashboard-control-height:36px; --dashboard-control-compact-height:32px; --dashboard-control-radius:9px;
-  --dashboard-control-border:var(--dashboard-card-border,var(--line)); --dashboard-control-surface:var(--panel);
-  --dashboard-control-hover:color-mix(in srgb,var(--text) 6%,var(--panel)); --dashboard-control-selected:color-mix(in srgb,var(--text) 9%,var(--panel));
-}
-.ams-shell .ams-dashboard .ams-dashboard-control--filter {
-  box-sizing:border-box;display:inline-flex;min-width:0;height:28px;min-height:28px;align-items:center;justify-content:center;gap:7px;
-  padding:0 10px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--muted);font-size:10px;font-weight:550;
-  line-height:14px;white-space:nowrap;cursor:pointer;transition:border-color 140ms ease,background-color 140ms ease,color 140ms ease;
-}
-.ams-shell .ams-dashboard .ams-dashboard-control__label {min-width:0;overflow:hidden;text-overflow:ellipsis}
-.ams-shell .ams-dashboard .ams-dashboard-control__count {
-  display:inline-flex;min-width:19px;height:19px;flex:0 0 auto;align-items:center;justify-content:center;padding:0 5px;
-  border:1px solid color-mix(in srgb,var(--line) 88%,var(--text) 3%);border-radius:6px;background:color-mix(in srgb,var(--bg) 28%,var(--panel));
-  color:var(--muted);font-size:9px;font-weight:600;line-height:12px;font-variant-numeric:tabular-nums;
-}
-.ams-shell .ams-dashboard .ams-dashboard-control--filter:hover:not(:disabled),.ams-shell .ams-dashboard .ams-dashboard-control--filter.is-active:hover:not(:disabled) {
-  border-color:color-mix(in srgb,var(--text) 13%,var(--line));background:color-mix(in srgb,var(--text) 7%,var(--panel));color:var(--text)
-}
-.ams-shell .ams-dashboard .ams-dashboard-control--filter[aria-pressed="true"],.ams-shell .ams-dashboard .ams-dashboard-control--filter.is-active {
-  border-color:color-mix(in srgb,var(--text) 13%,var(--line));background:var(--dashboard-control-selected);color:var(--text);font-weight:650
-}
-.ams-shell .ams-dashboard .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__count {
-  border-color:color-mix(in srgb,var(--text) 15%,var(--line));background:color-mix(in srgb,var(--text) 5%,var(--panel));color:var(--text)
-}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group {
-  box-sizing:border-box;display:flex;width:fit-content;max-width:100%;min-width:0;flex:0 1 auto;flex-wrap:wrap;align-items:center;align-content:center;
-  gap:3px;padding:3px;border:1px solid var(--dashboard-control-border);border-radius:10px;background:color-mix(in srgb,var(--bg) 42%,var(--panel));overflow:visible
-}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--compact {min-height:var(--dashboard-control-height);flex-wrap:nowrap;gap:2px}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--comfortable {min-height:40px;gap:3px;padding:4px}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--comfortable .ams-dashboard-control--filter {height:30px;min-height:30px;padding-inline:11px;border-radius:8px;font-size:11px}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid {display:grid;width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:0;border:0;background:transparent}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control--filter {
-  display:flex;min-height:65px;height:auto;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;padding:10px 12px;
-  border:1px solid var(--dashboard-control-border);border-radius:11px;background:color-mix(in srgb,var(--bg) 30%,var(--panel));white-space:normal
-}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control--filter:hover:not(:disabled),
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control--filter[aria-pressed="true"] {border-color:color-mix(in srgb,var(--text) 16%,var(--line));background:var(--dashboard-control-selected);color:var(--text)}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control__label {font-size:10px;line-height:14px}
-.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control__metric {margin-top:auto;color:var(--text);font-size:20px;line-height:24px;font-weight:650;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
-.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar {
-  display: flex;
-  min-width: 0;
-  max-width: 100%;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 0;
-}
-.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter {
-  width: fit-content;
-  max-width: 100%;
-  min-width: 0;
-}
-.ams-shell .ams-dashboard .ams-dashboard-task-queue-filter {max-width:100%}
-.ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets {width:fit-content;max-width:100%}
-.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs {display:flex;min-width:0;max-width:100%;flex-wrap:wrap;align-items:center;gap:5px;overflow:visible;overflow-x:visible;scrollbar-width:none}
-.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs .ams-dashboard-view-tab {height:var(--dashboard-control-height);min-height:var(--dashboard-control-height);white-space:nowrap}
-.ams-shell .ams-dashboard .ams-dashboard-select-trigger {min-height:var(--dashboard-control-height);height:var(--dashboard-control-height);border-radius:var(--dashboard-control-radius)}
-.ams-portal-root .ams-calendar-period-filter__panel,.ams-portal-root .ams-dashboard-activity-calendar-panel {--dashboard-control-height:36px;--dashboard-control-compact-height:32px;--dashboard-control-radius:9px}
-.ams-portal-root .ams-calendar-period-filter__panel button,.ams-portal-root .ams-dashboard-activity-calendar-panel button {border-radius:var(--dashboard-control-radius)}
-@media (max-width:799px) {.ams-shell .ams-dashboard .ams-dashboard-filter-group--compact {flex-wrap:wrap}}
-@media (max-width:599px) {.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid {grid-template-columns:repeat(2,minmax(0,1fr))}.ams-shell .ams-dashboard .ams-dashboard-filter-group--comfortable {width:100%;flex-wrap:wrap}}
-@media (max-width:379px) {.ams-shell .ams-dashboard .ams-dashboard-filter-group--grid {grid-template-columns:minmax(0,1fr)}}
-@media (prefers-reduced-motion:reduce) {.ams-shell .ams-dashboard .ams-dashboard-control--filter {transition-duration:.01ms}}
 
+/* Card composition is kept separate from the shared Dashboard control system. */
+@media (min-width: 1100px) {
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] { align-items: stretch; }
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
+    display: flex; min-width: 0; align-self: stretch;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-finance-panel,
+  .ams-shell .ams-dashboard .ams-dashboard-projects-panel {
+    display: flex; width: 100%; min-width: 0; min-height: 100%; height: 100%; flex: 1 1 auto; flex-direction: column;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-finance-body,
+  .ams-shell .ams-dashboard .ams-dashboard-projects-body { display:flex; min-height:0; flex:1 1 auto; flex-direction:column; }
+  .ams-shell .ams-dashboard .ams-dashboard-projects-body > .ams-project-portfolio-body { flex:1 1 auto; justify-content:space-between; }
+}
 
-/* Shared Dashboard actions: the same primitive renders header, card and Recent Activity actions. */
-.ams-shell .ams-dashboard .ams-dashboard-control {
- box-sizing:border-box;display:inline-flex;min-width:0;height:var(--dashboard-control-height);min-height:var(--dashboard-control-height);
- align-items:center;justify-content:center;gap:8px;padding:0 11px;border:1px solid var(--dashboard-control-border);border-radius:var(--dashboard-control-radius);
- background:var(--dashboard-control-surface);color:var(--text);font-size:11px;font-weight:550;line-height:14px;text-decoration:none;white-space:nowrap;cursor:pointer;
- transition:border-color 140ms ease,background-color 140ms ease,color 140ms ease;
+/* Team Workload keeps task assignment and recorded time as two ordered groups. */
+.ams-shell .ams-dashboard .ams-dashboard-team-panel { display:flex; min-width:0; min-height:100%; flex-direction:column; }
+.ams-shell .ams-dashboard .ams-dashboard-team-body { display:flex; min-width:0; flex:1 1 auto; flex-direction:column; gap:18px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks { min-width:0; padding-bottom:16px; border-bottom:1px solid var(--dashboard-card-border); }
+.ams-shell .ams-dashboard .ams-dashboard-team-time { min-width:0; margin-top:0; padding-top:0; border-top:0; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header { align-items:center; gap:12px; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions { display:flex; min-width:0; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row { min-width:0; padding:10px 0; border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent); }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row:last-child { border-bottom:0; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals { gap:6px; }
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span {
+  display:inline-flex; min-height:22px; align-items:center; padding:2px 7px; border:1px solid var(--dashboard-card-border);
+  border-radius:6px; background:color-mix(in srgb,var(--bg) 35%,var(--panel)); font-size:10px; line-height:14px;
 }
-.ams-shell .ams-dashboard .ams-dashboard-control__icon,.ams-shell .ams-dashboard .ams-dashboard-control__trailing-icon {display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;line-height:0}
-.ams-shell .ams-dashboard .ams-dashboard-control__label {min-width:0;overflow:hidden;text-overflow:ellipsis}
-.ams-shell .ams-dashboard .ams-dashboard-control__count {display:inline-flex;min-width:19px;height:19px;flex:0 0 auto;align-items:center;justify-content:center;padding:0 5px;border:1px solid color-mix(in srgb,var(--line) 88%,var(--text) 3%);border-radius:6px;background:color-mix(in srgb,var(--bg) 28%,var(--panel));color:var(--muted);font-size:9px;font-weight:600;line-height:12px;font-variant-numeric:tabular-nums}
-.ams-shell .ams-dashboard .ams-dashboard-control--action:hover:not(:disabled),.ams-shell .ams-dashboard a.ams-dashboard-control--action:hover,
-.ams-shell .ams-dashboard .ams-dashboard-control--shortcut:hover:not(:disabled),.ams-shell .ams-dashboard a.ams-dashboard-control--shortcut:hover,
-.ams-shell .ams-dashboard .ams-dashboard-control--icon:hover:not(:disabled),.ams-shell .ams-dashboard .ams-dashboard-control--quiet:hover:not(:disabled) {border-color:color-mix(in srgb,var(--text) 14%,var(--line));background:var(--dashboard-control-hover);color:var(--text);box-shadow:none}
-.ams-shell .ams-dashboard .ams-dashboard-control--primary {border-color:var(--accent);background:var(--accent);color:#fff;font-weight:650}
-.ams-shell .ams-dashboard .ams-dashboard-control--primary:hover:not(:disabled),.ams-shell .ams-dashboard a.ams-dashboard-control--primary:hover {border-color:var(--accent-hover);background:var(--accent-hover);color:#fff}
-.ams-shell .ams-dashboard .ams-dashboard-control--compact {height:var(--dashboard-control-compact-height);min-height:var(--dashboard-control-compact-height);padding-inline:9px;font-size:10px}
-.ams-shell .ams-dashboard .ams-dashboard-control--roomy {height:32px;min-height:32px;padding-inline:11px;gap:8px}
-.ams-shell .ams-dashboard .ams-dashboard-control--action .ams-dashboard-control__icon,.ams-shell .ams-dashboard .ams-dashboard-control--shortcut .ams-dashboard-control__icon,.ams-shell .ams-dashboard .ams-dashboard-control--primary .ams-dashboard-control__icon {display:inline-grid;width:22px;height:22px;flex:0 0 22px;place-items:center;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:6px;background:color-mix(in srgb,currentColor 5%,transparent)}
-.ams-shell .ams-dashboard .ams-dashboard-control--compact .ams-dashboard-control__icon,.ams-shell .ams-dashboard .ams-dashboard-control--roomy .ams-dashboard-control__icon {width:20px;height:20px;flex-basis:20px;border-radius:6px}
-.ams-shell .ams-dashboard .ams-dashboard-control--primary .ams-dashboard-control__icon {border-color:rgb(255 255 255 / 22%);background:rgb(255 255 255 / 10%)}
-.ams-shell .ams-dashboard .ams-dashboard-control:focus-visible {outline:2px solid var(--accent);outline-offset:2px;z-index:1}
-.ams-shell .ams-dashboard .ams-dashboard-control:disabled,.ams-shell .ams-dashboard .ams-dashboard-control[aria-disabled="true"] {cursor:not-allowed;opacity:.45;box-shadow:none}
-.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control,.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control,
-.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action,.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control {height:var(--dashboard-control-height);min-height:var(--dashboard-control-height);align-self:center;border-radius:9px}
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action {height:var(--dashboard-control-height);min-height:var(--dashboard-control-height)}
-@media (min-width:1100px) {
- .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {align-items:stretch}
- .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
- .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {display:flex;min-width:0;align-self:stretch}
- .ams-shell .ams-dashboard .ams-dashboard-finance-panel,.ams-shell .ams-dashboard .ams-dashboard-projects-panel {display:flex;width:100%;min-width:0;min-height:100%;height:100%;flex:1 1 auto;flex-direction:column}
- .ams-shell .ams-dashboard .ams-dashboard-projects-body {display:flex;min-height:0;flex:1 1 auto;flex-direction:column}
- .ams-shell .ams-dashboard .ams-dashboard-projects-body > .ams-project-portfolio-body {flex:1 1 auto;justify-content:space-between}
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span.is-risk {
+  border-color:color-mix(in srgb,var(--danger) 22%,var(--line)); background:color-mix(in srgb,var(--danger) 6%,var(--panel)); color:var(--danger);
 }
-@media (prefers-reduced-motion:reduce) {.ams-shell .ams-dashboard .ams-dashboard-control,.ams-shell .ams-dashboard .ams-dashboard-control * {transition-duration:.01ms}}
+@media (max-width:599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header,
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions { align-items:stretch; justify-content:flex-start; }
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions { width:100%; }
+}
