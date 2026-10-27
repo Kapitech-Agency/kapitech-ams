@@ -6,28 +6,21 @@ import {
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Code2,
-  Download,
   CircleDollarSign,
   Clock3,
   FolderKanban,
   FileText,
   Eye,
-  Filter,
   RefreshCw,
-  Search,
   Palette,
   Plus,
   ReceiptText,
   Users,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge, AdminTablePagination } from './AdminModulePrimitives';
-import { DashboardControl, DashboardFilterGroup } from './DashboardControls';
-import { CustomSelect } from '../ui/CustomSelect';
-import { DropdownPortal } from '../ui/DropdownPortal';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge } from './AdminModulePrimitives';
 import { DonutChart, TrendChart, type DonutPoint, type TrendPoint } from '../charts/DashboardCharts';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
@@ -43,13 +36,9 @@ type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
 type DashboardTone = 'success' | 'warning' | 'danger' | 'info';
 type DashboardTaskFilter = 'action' | 'review' | 'overdue' | 'blocked' | 'unassigned';
 type DashboardProjectFilter = 'all' | 'creative' | 'technology';
-type DashboardDeadlineFilter = 'all' | 'overdue' | 'next7' | 'days8to30' | 'custom';
+type DashboardDeadlineFilter = 'all' | 'overdue' | 'next7' | 'days8to30';
 type DashboardQuotationStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
 type DashboardQuotationFilter = 'all' | 'review' | 'approved' | 'sent' | 'draft';
-type DashboardAttentionSeverityFilter = 'all' | 'urgent' | 'attention' | 'info';
-type DashboardActivitySeverityFilter = 'all' | 'critical' | 'warning' | 'info';
-type DashboardActivityTimeFilter = '7' | '30' | '90' | 'custom' | 'all';
-type DashboardActivitySortOrder = 'newest' | 'oldest' | 'severity' | 'actor';
 
 type DashboardQuotation = {
   id: string;
@@ -275,43 +264,6 @@ const getAdjacentReportingPeriodValue = (value: string, mode: ReportingPeriodMod
   const year = Math.floor(absoluteQuarter / 4);
   const quarter = ((absoluteQuarter % 4) + 4) % 4 + 1;
   return String(year) + '-Q' + quarter;
-};
-
-const getCurrentDashboardPeriodValue = (mode: ReportingPeriodMode): string => {
-  const now = new Date();
-  const year = String(now.getFullYear());
-  if (mode === 'year') return year;
-  if (mode === 'quarter') return year + '-Q' + (Math.floor(now.getMonth() / 3) + 1);
-  return year + '-' + String(now.getMonth() + 1).padStart(2, '0');
-};
-
-const getDashboardReportingPeriodOptions = (mode: ReportingPeriodMode, value: string) => {
-  const currentYear = new Date().getFullYear();
-  const selectedRange = getReportingPeriodRange(value, mode, 'en-GB');
-  const years = getReportingYearOptions(currentYear, [], selectedRange?.year ?? currentYear);
-  return years.flatMap((year) => {
-    if (mode === 'year') {
-      const optionValue = String(year);
-      return [{ value: optionValue, label: formatReportingPeriodLabel(optionValue, mode, 'en-GB') }];
-    }
-    if (mode === 'quarter') {
-      return [1, 2, 3, 4].map((quarter) => {
-        const optionValue = String(year) + '-Q' + quarter;
-        return { value: optionValue, label: formatReportingPeriodLabel(optionValue, mode, 'en-GB') };
-      });
-    }
-    return Array.from({ length: 12 }, (_, index) => {
-      const optionValue = String(year) + '-' + String(index + 1).padStart(2, '0');
-      return { value: optionValue, label: formatReportingPeriodLabel(optionValue, mode, 'en-GB') };
-    });
-  }).sort((left, right) => right.value.localeCompare(left.value));
-};
-
-const getDashboardActivitySeverity = (value: unknown): 'critical' | 'warning' | 'info' => {
-  const normalized = String(value || 'info').trim().toLowerCase();
-  if (normalized === 'critical' || normalized === 'danger' || normalized === 'error') return 'critical';
-  if (normalized === 'warning' || normalized === 'warn') return 'warning';
-  return 'info';
 };
 
 const getDashboardSavedProgress = (project: any): number | null => {
@@ -1128,12 +1080,12 @@ const AnalyticsView: React.FC<{
                     aria-pressed={active}
                     onClick={() => setReport(option.value)}
                     className={[
-                      'ams-dashboard-period-option flex min-h-12 min-w-0 items-center gap-2.5 rounded-control border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                      'flex min-h-12 min-w-0 items-center gap-2.5 rounded-control border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                       active ? 'border-accent/35 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg',
                     ].join(' ')}
                   >
                     <span className={[
-                      'ams-dashboard-period-option__icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border',
+                      'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border',
                       active ? 'border-accent/25 bg-accent/10 text-accent-text' : 'border-line bg-panel text-muted',
                     ].join(' ')}>
                       <ReportIcon size={15} aria-hidden="true" />
@@ -1509,148 +1461,6 @@ const AnalyticsView: React.FC<{
   );
 };
 
-
-type DashboardCalendarPeriodFilterProps = {
-  ariaLabel: string;
-  caption: string;
-  mode: ReportingPeriodMode;
-  value: string;
-  periodLabel: string;
-  options: Array<{ value: string; label: string }>;
-  onModeChange: (mode: ReportingPeriodMode, value: string) => void;
-  onValueChange: (value: string) => void;
-};
-
-const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps> = ({
-  ariaLabel, caption, mode, value, periodLabel, options, onModeChange, onValueChange
-}) => {
-  const [open, setOpen] = useState(false);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  const panelId = React.useId();
-  const selectedYear = Number(value.slice(0, 4)) || new Date().getFullYear();
-  const [visibleYear, setVisibleYear] = useState(selectedYear);
-  const years: string[] = Array.from(new Set<string>(options.map((option) => option.value.slice(0, 4))))
-    .filter((year) => /^\d{4}$/.test(year))
-    .sort((left, right) => Number(right) - Number(left));
-  const availableValues = new Set(options.map((option) => option.value));
-
-  useEffect(() => { setVisibleYear(selectedYear); }, [selectedYear, mode]);
-
-  const previousYear = years.filter((year) => Number(year) < visibleYear).sort((a, b) => Number(b) - Number(a))[0];
-  const nextYear = years.filter((year) => Number(year) > visibleYear).sort((a, b) => Number(a) - Number(b))[0];
-  const yearLabel = String(visibleYear);
-  const periodTiles = mode === 'month'
-    ? Array.from({ length: 12 }, (_, index) => {
-        const date = new Date(visibleYear, index, 1);
-        return {
-          value: yearLabel + '-' + String(index + 1).padStart(2, '0'),
-          label: new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(date),
-          detail: new Intl.DateTimeFormat('en-GB', { month: 'long' }).format(date)
-        };
-      })
-    : mode === 'quarter'
-      ? [1, 2, 3, 4].map((quarter) => ({
-          value: yearLabel + '-Q' + quarter,
-          label: 'Q' + quarter,
-          detail: ['Jan – Mar', 'Apr – Jun', 'Jul – Sep', 'Oct – Dec'][quarter - 1]
-        }))
-      : years.map((year) => ({
-          value: year,
-          label: year,
-          detail: Number(year) === selectedYear ? 'Selected year' : ''
-        }));
-
-  const changeMode = (nextMode: ReportingPeriodMode) => {
-    if (nextMode === mode) return;
-    const selectedMonth = mode === 'month'
-      ? Number(value.slice(5, 7)) || new Date().getMonth() + 1
-      : mode === 'quarter'
-        ? (Math.max(1, Number(value.split('-Q')[1]) || 1) - 1) * 3 + 1
-        : new Date().getMonth() + 1;
-    const candidate = nextMode === 'year'
-      ? yearLabel
-      : nextMode === 'quarter'
-        ? yearLabel + '-Q' + Math.ceil(selectedMonth / 3)
-        : yearLabel + '-' + String(selectedMonth).padStart(2, '0');
-    const nextOptions = getDashboardReportingPeriodOptions(nextMode, candidate);
-    const nextValue = nextOptions.some((option) => option.value === candidate)
-      ? candidate
-      : nextOptions[0]?.value || getCurrentDashboardPeriodValue(nextMode);
-    onModeChange(nextMode, nextValue);
-  };
-
-  return (
-    <div className={['ams-calendar-period-filter', open ? 'is-open' : ''].filter(Boolean).join(' ')}>
-      <DashboardControl
-        type="button"
-        buttonRef={triggerRef}
-        variant="action"
-        size="standard"
-        icon={<CalendarDays size={14} />}
-        trailingIcon={<ChevronDown size={13} className={open ? 'is-open' : ''} />}
-        showArrow={false}
-        className="ams-calendar-period-filter__trigger"
-        ariaLabel={ariaLabel}
-        ariaExpanded={open}
-        ariaControls={open ? panelId : undefined}
-        onClick={() => setOpen((state) => !state)}
-      >
-        <span className="ams-calendar-period-filter__trigger-copy">
-          <span className="ams-calendar-period-filter__trigger-label">{caption}</span>
-          <span className="ams-calendar-period-filter__trigger-value">{periodLabel}</span>
-        </span>
-      </DashboardControl>
-      <DropdownPortal
-        open={open}
-        anchorRef={triggerRef}
-        onClose={() => setOpen(false)}
-        align="right"
-        className="ams-popover-surface ams-calendar-period-filter__panel"
-      >
-        <div id={panelId} className="ams-calendar-period-filter__panel-content" role="group" aria-label={ariaLabel + ' calendar'}>
-          <div className="ams-calendar-period-filter__panel-heading">
-            <div><p>Choose reporting period</p><span>{periodLabel}</span></div>
-            <DashboardControl type="button" variant="action" size="compact" showArrow={false} className="ams-calendar-period-filter__done" ariaLabel="Close calendar filter" onClick={() => setOpen(false)}>Done</DashboardControl>
-          </div>
-          <DashboardFilterGroup ariaLabel="Reporting period grouping" value={mode} onChange={(value)=>changeMode(value as ReportingPeriodMode)} density="compact" className="ams-calendar-period-filter__group" options={[
-            {value:'month',label:'Month'},{value:'quarter',label:'Quarter'},{value:'year',label:'Year'}
-          ]} />
-          {mode !== 'year' ? (
-            <div className="ams-calendar-period-filter__year">
-              <DashboardControl type="button" variant="icon" size="standard" disabled={!previousYear} ariaLabel="Previous calendar year" onClick={() => previousYear && setVisibleYear(Number(previousYear))} showArrow={false} className="ams-calendar-period-filter__year-step"><ChevronLeft size={14} aria-hidden="true" /></DashboardControl>
-              <strong>{yearLabel}</strong>
-              <DashboardControl type="button" variant="icon" size="standard" disabled={!nextYear} ariaLabel="Next calendar year" onClick={() => nextYear && setVisibleYear(Number(nextYear))} showArrow={false} className="ams-calendar-period-filter__year-step"><ChevronRight size={14} aria-hidden="true" /></DashboardControl>
-            </div>
-          ) : null}
-          <div className={['ams-calendar-period-filter__grid', mode === 'quarter' ? 'is-quarter' : mode === 'year' ? 'is-year' : 'is-month'].join(' ')} role="group" aria-label={mode === 'month' ? 'Select month' : mode === 'quarter' ? 'Select quarter' : 'Select year'}>
-            {periodTiles.map((tile) => (
-              <DashboardControl
-                key={tile.value}
-                type="button"
-                variant="filter"
-                size="standard"
-                disabled={!availableValues.has(tile.value)}
-                active={value === tile.value}
-                ariaPressed={value === tile.value}
-                onClick={() => { onValueChange(tile.value); setOpen(false); }}
-                title={tile.detail}
-                showArrow={false}
-                className="ams-calendar-period-filter__tile"
-              >
-                <span className="ams-calendar-period-filter__tile-copy">
-                  <span>{tile.label}</span>
-                  {tile.detail && mode !== 'month' ? <small>{tile.detail}</small> : null}
-                </span>
-              </DashboardControl>
-            ))}
-          </div>
-        </div>
-      </DropdownPortal>
-    </div>
-  );
-};
-
-
 export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -1689,42 +1499,43 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     value: reportPeriodValue,
     mode: reportPeriodMode,
     enabled: reportPeriodEnabled,
+    setMode: setReportingPeriodMode,
+    setValue: setReportingPeriodValue,
+    clearFilter: clearReportingPeriodFilter
   } = useReportingPeriod();
-  const [overviewFinancePeriodMode, setOverviewFinancePeriodMode] = useState<ReportingPeriodMode>('month');
-  const [overviewFinancePeriodValue, setOverviewFinancePeriodValue] = useState(() => getCurrentDashboardPeriodValue('month'));
-  const [overviewTimePeriodMode, setOverviewTimePeriodMode] = useState<ReportingPeriodMode>('month');
-  const [overviewTimePeriodValue, setOverviewTimePeriodValue] = useState(() => getCurrentDashboardPeriodValue('month'));
   const selectedReportingRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, 'en-GB');
   const reportPeriodLabel = reportPeriodEnabled && selectedReportingRange
     ? selectedReportingRange.label + ' (' + selectedReportingRange.startDate + ' – ' + selectedReportingRange.endDate + ')'
     : 'All dates';
-
-  const overviewFinancePeriodRange = useMemo(() => getReportingPeriodRange(overviewFinancePeriodValue, overviewFinancePeriodMode, 'en-GB'), [overviewFinancePeriodMode, overviewFinancePeriodValue]);
-  const overviewTimePeriodRange = useMemo(() => getReportingPeriodRange(overviewTimePeriodValue, overviewTimePeriodMode, 'en-GB'), [overviewTimePeriodMode, overviewTimePeriodValue]);
-  const overviewFinancePeriodOptions = useMemo(() => getDashboardReportingPeriodOptions(overviewFinancePeriodMode, overviewFinancePeriodValue), [overviewFinancePeriodMode, overviewFinancePeriodValue]);
-  const overviewTimePeriodOptions = useMemo(() => getDashboardReportingPeriodOptions(overviewTimePeriodMode, overviewTimePeriodValue), [overviewTimePeriodMode, overviewTimePeriodValue]);
-  const overviewFinancePeriodLabel = overviewFinancePeriodRange?.label || 'Selected period';
-  const overviewTimePeriodLabel = overviewTimePeriodRange?.label || 'Selected period';
-
+  const reportingPeriodOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = getReportingYearOptions(currentYear, [], selectedReportingRange?.year ?? currentYear);
+    return years.flatMap((year) => {
+      if (reportPeriodMode === 'year') {
+        const value = String(year);
+        return [{ value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') }];
+      }
+      if (reportPeriodMode === 'quarter') {
+        return [1, 2, 3, 4].map((quarter) => {
+          const value = String(year) + '-Q' + quarter;
+          return { value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') };
+        });
+      }
+      return Array.from({ length: 12 }, (_, index) => {
+        const value = String(year) + '-' + String(index + 1).padStart(2, '0');
+        return { value, label: formatReportingPeriodLabel(value, reportPeriodMode, 'en-GB') };
+      });
+    }).sort((left, right) => right.value.localeCompare(left.value));
+  }, [reportPeriodMode, selectedReportingRange?.year]);
+  const previousReportingPeriodValue = getAdjacentReportingPeriodValue(reportPeriodValue, reportPeriodMode, -1);
+  const nextReportingPeriodValue = getAdjacentReportingPeriodValue(reportPeriodValue, reportPeriodMode, 1);
+  const canMoveToPreviousPeriod = reportPeriodEnabled && reportingPeriodOptions.some((option) => option.value === previousReportingPeriodValue);
+  const canMoveToNextPeriod = reportPeriodEnabled && reportingPeriodOptions.some((option) => option.value === nextReportingPeriodValue);
+  const overviewPeriodDisplay = reportPeriodEnabled && selectedReportingRange ? selectedReportingRange.label : 'Recent 30 days';
   const [overviewTaskFilter, setOverviewTaskFilter] = useState<DashboardTaskFilter>('action');
   const [overviewProjectFilter, setOverviewProjectFilter] = useState<DashboardProjectFilter>('all');
   const [overviewDeadlineFilter, setOverviewDeadlineFilter] = useState<DashboardDeadlineFilter>('all');
-  const [deadlineStartDate, setDeadlineStartDate] = useState('');
-  const [deadlineEndDate, setDeadlineEndDate] = useState('');
   const [overviewQuotationFilter, setOverviewQuotationFilter] = useState<DashboardQuotationFilter>('all');
-  const [attentionSeverityFilter, setAttentionSeverityFilter] = useState<DashboardAttentionSeverityFilter>('all');
-  const [activitySearch, setActivitySearch] = useState('');
-  const [activitySeverityFilter, setActivitySeverityFilter] = useState<DashboardActivitySeverityFilter>('all');
-  const [activityActorFilter, setActivityActorFilter] = useState('__all_actors__');
-  const [activityTimeFilter, setActivityTimeFilter] = useState<DashboardActivityTimeFilter>('30');
-  const [activityCalendarOpen, setActivityCalendarOpen] = useState(false);
-  const activityCalendarTriggerRef = React.useRef<HTMLButtonElement>(null);
-  const activityCalendarPanelId = React.useId();
-  const [activityStartDate, setActivityStartDate] = useState('');
-  const [activityEndDate, setActivityEndDate] = useState('');
-  const [activitySortOrder, setActivitySortOrder] = useState<DashboardActivitySortOrder>('newest');
-  const [activityPageSize, setActivityPageSize] = useState(5);
-  const [activityPage, setActivityPage] = useState(1);
   const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; attentionItems?: DashboardAttentionItem[]; attentionItemsDataAvailable?: boolean; recentActivity?: DashboardRecentActivity[]; recentActivityDataAvailable?: boolean; projectDataAvailable?: boolean; stale?: boolean; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
   const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
     loading: true, projects: null, clients: null, inboxLeads: null, tasks: null, timeLogs: null, invoices: null, expenses: null, quotations: null
@@ -1832,14 +1643,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
   const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
   const currentDayKey = localDateKey(new Date());
-  const overviewFinancialPeriodStart = overviewFinancePeriodRange?.startDate || shiftDashboardDate(currentDayKey, -29);
-  const overviewFinancialPeriodEnd = overviewFinancePeriodRange?.endDate || currentDayKey;
-  const overviewTimePeriodStart = overviewTimePeriodRange?.startDate || shiftDashboardDate(currentDayKey, -29);
-  const overviewTimePeriodEnd = overviewTimePeriodRange?.endDate || currentDayKey;
-  const matchesOverviewTimePeriod = (value: unknown) => {
-    const day = dateKey(value);
-    return isValidDashboardDate(day) && day >= overviewTimePeriodStart && day <= overviewTimePeriodEnd;
-  };
+  const overviewFinancialPeriodStart = reportPeriodEnabled && selectedReportingRange
+    ? selectedReportingRange.startDate
+    : shiftDashboardDate(currentDayKey, -29);
+  const overviewFinancialPeriodEnd = reportPeriodEnabled && selectedReportingRange
+    ? selectedReportingRange.endDate
+    : currentDayKey;
   const matchesOverviewFinancialPeriod = (value: unknown) => {
     const day = dateKey(value);
     return isValidDashboardDate(day) && day >= overviewFinancialPeriodStart && day <= overviewFinancialPeriodEnd;
@@ -1961,122 +1770,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       dashboardAttentionSeverityRank(left.severity) - dashboardAttentionSeverityRank(right.severity)
     );
   }, [canOpenInbox, dashboardOverview.attentionItems]);
-
-  const filteredOverviewAttentionItems = useMemo(() => overviewAttentionItems.filter((item) => {
-    if (attentionSeverityFilter === 'all') return true;
-    const severity = getDashboardActivitySeverity(item.severity);
-    if (attentionSeverityFilter === 'urgent') return severity === 'critical';
-    if (attentionSeverityFilter === 'attention') return severity === 'warning';
-    return severity === 'info';
-  }), [overviewAttentionItems, attentionSeverityFilter]);
-
-  const dashboardActivityActors = useMemo(() => {
-    const actors = new Set<string>((dashboardOverview.recentActivity || [])
-      .map((activity) => String(activity.actor || 'System').trim() || 'System'));
-    return Array.from(actors).sort((left, right) => left.localeCompare(right));
-  }, [dashboardOverview.recentActivity]);
-  const dashboardActivityActorOptions = useMemo(
-    () => [
-      { value: '__all_actors__', label: 'All actors' },
-      ...dashboardActivityActors.map((actor) => ({ value: actor, label: actor }))
-    ],
-    [dashboardActivityActors]
-  );
-  const dashboardActivityActorFilterWidth = useMemo(() => {
-    const longestLabel = dashboardActivityActorOptions.reduce(
-      (longest, option) => Math.max(longest, String(option.label || option.value).length),
-      'All actors'.length
-    );
-    return Math.min(260, Math.max(168, Math.ceil(longestLabel * 6.8 + 44))) + 'px';
-  }, [dashboardActivityActorOptions]);
-
-  const isActivityCustomRangeInvalid = Boolean(activityStartDate && activityEndDate && activityStartDate > activityEndDate);
-  const isActivityCustomRangeUnselected = activityTimeFilter === 'custom' && !activityStartDate && !activityEndDate;
-  const filteredDashboardRecentActivity = useMemo(() => {
-    const query = activitySearch.trim().toLowerCase();
-    const cutoff = ['7', '30', '90'].includes(activityTimeFilter) ? Date.now() - Number(activityTimeFilter) * 24 * 60 * 60 * 1000 : null;
-    if (isActivityCustomRangeInvalid || isActivityCustomRangeUnselected) return [];
-    return (dashboardOverview.recentActivity || [])
-      .filter((activity) => {
-        const action = String(activity.action || 'Recorded audit event');
-        const actor = String(activity.actor || 'System');
-        if (query && !(action + ' ' + actor).toLowerCase().includes(query)) return false;
-        if (activityActorFilter !== '__all_actors__' && actor !== activityActorFilter) return false;
-        if (activitySeverityFilter !== 'all' && getDashboardActivitySeverity(activity.severity) !== activitySeverityFilter) return false;
-        const timestamp = activity.timestamp ? new Date(activity.timestamp).getTime() : Number.NaN;
-        if (activityTimeFilter === 'custom') {
-          if (!Number.isFinite(timestamp)) return false;
-          const eventDay = new Date(timestamp).toISOString().slice(0, 10);
-          if (activityStartDate && eventDay < activityStartDate) return false;
-          if (activityEndDate && eventDay > activityEndDate) return false;
-        } else if (cutoff !== null) {
-          if (!Number.isFinite(timestamp) || timestamp < cutoff) return false;
-        }
-        return true;
-      })
-      .slice()
-      .sort((left, right) => {
-        const leftTime = left.timestamp ? new Date(left.timestamp).getTime() : Number.NaN;
-        const rightTime = right.timestamp ? new Date(right.timestamp).getTime() : Number.NaN;
-        const newestFirst = () => {
-          if (!Number.isFinite(leftTime) && !Number.isFinite(rightTime)) return 0;
-          if (!Number.isFinite(leftTime)) return 1;
-          if (!Number.isFinite(rightTime)) return -1;
-          return rightTime - leftTime;
-        };
-        if (activitySortOrder === 'severity') {
-          const severityRank = (activity: DashboardRecentActivity) => {
-            const severity = getDashboardActivitySeverity(activity.severity);
-            return severity === 'critical' ? 0 : severity === 'warning' ? 1 : 2;
-          };
-          const severityDifference = severityRank(left) - severityRank(right);
-          return severityDifference || newestFirst();
-        }
-        if (activitySortOrder === 'actor') {
-          const actorDifference = String(left.actor || 'System').localeCompare(String(right.actor || 'System'));
-          return actorDifference || newestFirst();
-        }
-        if (!Number.isFinite(leftTime) && !Number.isFinite(rightTime)) return 0;
-        if (!Number.isFinite(leftTime)) return 1;
-        if (!Number.isFinite(rightTime)) return -1;
-        return activitySortOrder === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
-      });
-  }, [dashboardOverview.recentActivity, activitySearch, activityActorFilter, activitySeverityFilter, activityTimeFilter, activityStartDate, activityEndDate, activitySortOrder, isActivityCustomRangeInvalid, isActivityCustomRangeUnselected]);
-  const activityPageCount = Math.max(1, Math.ceil(filteredDashboardRecentActivity.length / activityPageSize));
-  const currentActivityPage = Math.min(activityPage, activityPageCount);
-  const hasActivityFilters = Boolean(activitySearch.trim() || activityActorFilter !== '__all_actors__' || activitySeverityFilter !== 'all' || activityTimeFilter !== '30' || activityStartDate || activityEndDate || activitySortOrder !== 'newest');
-  const visibleDashboardRecentActivity = filteredDashboardRecentActivity.slice(
-    (currentActivityPage - 1) * activityPageSize,
-    currentActivityPage * activityPageSize
-  );
-  const exportFilteredDashboardActivity = () => {
-    const escapeCsvCell = (value: unknown) => {
-      const raw = String(value ?? '');
-      const formulaSafe = /^\s*[=+\-@]/.test(raw) ? "'" + raw : raw;
-      return '"' + formulaSafe.replace(/"/g, '""') + '"';
-    };
-    const exportedRows = filteredDashboardRecentActivity.map((activity) => {
-      const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
-      const timestampValue = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toISOString() : '';
-      const severity = getDashboardActivitySeverity(activity.severity);
-      const severityLabel = severity === 'critical' ? 'Critical' : severity === 'warning' ? 'Warning' : 'Info';
-      return [activity.action || 'Recorded audit event', activity.actor || 'System', timestampValue, severityLabel];
-    });
-    const csv = [
-      ['Activity', 'Actor', 'Timestamp (UTC)', 'Severity'],
-      ...exportedRows
-    ].map((row) => row.map(escapeCsvCell).join(',')).join('\r\n');
-    const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
-    const objectUrl = window.URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = objectUrl;
-    anchor.download = 'kapitech-dashboard-activity-' + new Date().toISOString().slice(0, 10) + '.csv';
-    anchor.hidden = true;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    window.URL.revokeObjectURL(objectUrl);
-  };
 
   const attentionSeveritySummary = useMemo(() => {
     const counts = { total: overviewAttentionItems.length, urgent: 0, attention: 0, other: 0 };
@@ -2221,7 +1914,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       for (const milestone of milestones) {
         if (milestone?.completed === true || isFinishedWork(milestone?.status)) continue;
         const dueDate = dateKey(milestone?.dueDate || milestone?.targetDate);
-        if (!isValidDashboardDate(dueDate)) continue;
+        if (!isValidDashboardDate(dueDate) || dueDate > nextThirtyDaysKey) continue;
         datedMilestoneKeys.add(dueDate);
         commitments.push({
           id: 'milestone-' + String(milestone.id || milestone.slug || milestone.title || projectId + '-' + dueDate),
@@ -2240,7 +1933,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         });
       }
       const projectDueDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
-      if (isValidDashboardDate(projectDueDate) && !datedMilestoneKeys.has(projectDueDate)) {
+      if (isValidDashboardDate(projectDueDate) && projectDueDate <= nextThirtyDaysKey && !datedMilestoneKeys.has(projectDueDate)) {
         commitments.push({
           id: 'project-deadline-' + projectId,
           projectId,
@@ -2405,25 +2098,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, [activeDashboardTasks, activeProjectRows, allUpcomingCommitments, canOpenClientDirectory, canOpenProjects, canOpenTasks, clientDirectoryById, currentDayKey, operationalSnapshot.projects, operationalSnapshot.tasks]);
   const clientDeliveryOpenTaskMaximum = Math.max(1, ...clientDeliveryFocus.map((client) => client.openTaskCount ?? 0));
 
-  const isDeadlineCustomRangeInvalid = Boolean(deadlineStartDate && deadlineEndDate && deadlineStartDate > deadlineEndDate);
-  const isDeadlineCustomRangeUnselected = overviewDeadlineFilter === 'custom' && !deadlineStartDate && !deadlineEndDate;
-  const commitmentHorizonItems = allUpcomingCommitments.filter((item) => item.dueDate <= nextThirtyDaysKey);
   const upcomingCommitments = allUpcomingCommitments.filter((item) => {
-    if (overviewDeadlineFilter === 'custom') {
-      if (isDeadlineCustomRangeInvalid || isDeadlineCustomRangeUnselected) return false;
-      if (deadlineStartDate && item.dueDate < deadlineStartDate) return false;
-      if (deadlineEndDate && item.dueDate > deadlineEndDate) return false;
-      return true;
-    }
     if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey;
     if (overviewDeadlineFilter === 'next7') return item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey;
     if (overviewDeadlineFilter === 'days8to30') return item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey;
-    return item.dueDate <= nextThirtyDaysKey;
+    return true;
   }).slice(0, 8);
-  const commitmentHorizonTotal = commitmentHorizonItems.length;
-  const overdueHorizonCount = commitmentHorizonItems.filter((item) => item.dueDate < currentDayKey).length;
-  const nextSevenDayCommitmentCount = commitmentHorizonItems.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
-  const daysEightToThirtyCommitmentCount = commitmentHorizonItems.filter((item) => item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey).length;
+  const commitmentHorizonTotal = allUpcomingCommitments.length;
+  const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length;
+  const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
+  const daysEightToThirtyCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey).length;
   const overdueCommitmentCount = operationalSnapshot.projects === null ? null : activeProjectRows.reduce((total: number, project: any) => {
     const targetDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
     const dueProjectIsOverdue = isValidDashboardDate(targetDate) && targetDate < currentDayKey;
@@ -2452,7 +2136,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const periodTimeRows = useMemo(() => {
     if (operationalSnapshot.timeLogs === null) return [];
     const groups = new Map<string, { name: string; minutes: number; entries: number }>();
-    for (const log of operationalSnapshot.timeLogs.filter((item: any) => matchesOverviewTimePeriod(item.date))) {
+    for (const log of operationalSnapshot.timeLogs.filter((item: any) => matchesDate(item.date))) {
       const key = String(log.userId || log.user || 'unassigned');
       const name = String(log.user || '').trim() || (log.userId ? 'Assigned team member' : 'Unassigned / general');
       const group = groups.get(key) || { name, minutes: 0, entries: 0 };
@@ -2461,7 +2145,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       groups.set(key, group);
     }
     return Array.from(groups.values()).sort((left, right) => right.minutes - left.minutes || left.name.localeCompare(right.name)).slice(0, 5);
-  }, [operationalSnapshot.timeLogs, overviewTimePeriodStart, overviewTimePeriodEnd]);
+  }, [matchesDate, operationalSnapshot.timeLogs]);
   const periodTimeRowsMaximum = Math.max(1, ...periodTimeRows.map((person) => person.minutes));
 
   const activeTaskCount = operationalSnapshot.tasks === null ? null : activeDashboardTasks.length;
@@ -2495,8 +2179,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const expensesValueAvailable = operationalSnapshot.expenses !== null && financeExpenseRows.length > 0;
   const canOpenFinanceOverview = canOpenInvoiceRegister || canOpenExpenseRegister;
   const overviewFinanceTrendRows = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null
-    ? overviewFinancePeriodRange
-      ? buildFinancialTrendForReportingPeriod(overviewFinancePeriodMode, overviewFinancePeriodValue, issuedInvoicesInSelectedCurrency, financeExpenseRows)
+    ? reportPeriodEnabled
+      ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, issuedInvoicesInSelectedCurrency, financeExpenseRows)
       : buildRecentFinancialTrend(issuedInvoicesInSelectedCurrency, financeExpenseRows)
     : [];
   const overviewMoneyMovementRows = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null
@@ -2518,11 +2202,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const overviewCashMovementMaximum = Math.max(1, ...overviewMoneyMovementRows.map((bucket) => bucket.cashReceived));
   const overviewExpenseMovementMaximum = Math.max(1, ...overviewMoneyMovementRows.map((bucket) => bucket.recordedExpenses));
   const overviewFinanceTrendHasRecords = overviewFinanceTrendRows.some((bucket) => bucket.primary > 0 || bucket.secondary > 0);
-  const overviewFinanceChartRows = overviewFinanceTrendRows.length
-    ? overviewFinanceTrendRows.map((bucket) => overviewFinanceTrendHasRecords
-      ? bucket
-      : { ...bucket, primary: 0, secondary: 0, tertiary: 0 })
-    : buildRecentFinancialTrend([], []);
   const projectRiskBreakdown: DonutPoint[] = operationalSnapshot.projects === null
     ? []
     : buildProjectDeliveryBreakdown(rawProjectRows).map((item) => ({ label: item.label, value: item.value, tone: item.tone }));
@@ -2566,14 +2245,33 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             data-ams-feature-slug="dashboard-quick-actions"
             aria-label="Dashboard quick actions"
           >
-            <div className="ams-dashboard-header-primary-actions" role="group" aria-label="Primary dashboard actions">
             {canOpenInvoiceRegister ? (
-              <DashboardControl to={canCreateInvoice?'/admin/finance?tab=accounts-receivable&action=create-invoice':'/admin/finance?tab=accounts-receivable'} variant={canCreateInvoice?'primary':'action'} size="standard" icon={<ReceiptText size={14}/>} className="ams-dashboard-header-action ams-dashboard-header-action--invoice" ariaLabel={canCreateInvoice?'Create invoice':'Open invoices'} title={canCreateInvoice?'Create a new invoice':'Open the invoice register'} showArrow={false}>{canCreateInvoice?'Create invoice':'Invoices'}</DashboardControl>
+              <Link
+                to={canCreateInvoice ? '/admin/finance?tab=accounts-receivable&action=create-invoice' : '/admin/finance?tab=accounts-receivable'}
+                className={[
+                  'ams-dashboard-header-action ams-dashboard-header-action--invoice inline-flex min-h-10 items-center justify-center gap-2 rounded-control px-4 text-xs font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                  canCreateInvoice
+                    ? 'bg-accent text-white hover:-translate-y-px hover:bg-accent-hover'
+                    : 'border border-line bg-panel text-fg hover:border-accent/30 hover:bg-panel-hover'
+                ].join(' ')}
+                aria-label={canCreateInvoice ? 'Create invoice' : 'Open invoices'}
+                title={canCreateInvoice ? 'Create a new invoice' : 'Open the invoice register'}
+              >
+                <ReceiptText size={15} aria-hidden="true" />
+                {canCreateInvoice ? 'Create invoice' : 'Invoices'}
+              </Link>
             ) : null}
             {canOpenProjects ? (
-              <DashboardControl to={canCreateProject?'/admin/projects?create=1':'/admin/projects'} variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-header-action ams-dashboard-header-action--project" ariaLabel={canCreateProject?'Create project':'Open projects'} title={canCreateProject?'Create a new project':'Open the Projects workspace'}>{canCreateProject?'New project':'Projects'}</DashboardControl>
+              <Link
+                to={canCreateProject ? '/admin/projects?create=1' : '/admin/projects'}
+                className="ams-dashboard-header-action ams-dashboard-header-action--project inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3.5 text-xs font-medium text-fg transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                aria-label={canCreateProject ? 'Create project' : 'Open projects'}
+                title={canCreateProject ? 'Create a new project' : 'Open the Projects workspace'}
+              >
+                <FolderKanban size={14} aria-hidden="true" />
+                {canCreateProject ? 'New project' : 'Projects'}
+              </Link>
             ) : null}
-            </div>
             {view === 'overview' ? (
               <nav className="ams-dashboard-header-shortcuts flex min-w-0 flex-wrap items-center gap-1.5" data-ams-feature-slug="dashboard-workspace-shortcuts" aria-label="Dashboard workspace shortcuts">
                 {[
@@ -2581,19 +2279,29 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   { label: 'Clients', icon: <Users size={13} aria-hidden="true" />, href: '/admin/clients/all-clients' },
                   { label: 'Documents', icon: <FileText size={13} aria-hidden="true" />, href: '/admin/documents' }
                 ].filter((action) => canOpenDashboardRoute(action.href)).map((action) => (
-                  <DashboardControl to={action.href} variant="shortcut" size="standard" icon={action.icon} showArrow={false} className="ams-dashboard-header-shortcut" ariaLabel={'Open '+action.label} title={'Open '+action.label}>{action.label}</DashboardControl>
+                  <Link key={action.label} to={action.href} className="ams-dashboard-header-shortcut inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label={'Open ' + action.label} title={'Open ' + action.label}>
+                    <span className="shrink-0">{action.icon}</span><span>{action.label}</span>
+                  </Link>
                 ))}
               </nav>
             ) : null}
-            <div className="ams-dashboard-header-utility-actions" role="group" aria-label="Dashboard utility actions">
-              <DashboardControl type="button" onClick={() => setRefreshRequest((current)=>current+1)} disabled={isRefreshing} variant="action" size="standard" icon={<RefreshCw size={14} className={isRefreshing?'animate-spin':''}/>} className="ams-dashboard-header-action ams-dashboard-header-action--refresh" ariaLabel="Refresh dashboard data" title="Refresh dashboard data" showArrow={false}>{isRefreshing?'Refreshing…':'Refresh'}</DashboardControl>
-            </div>
+            <button
+              type="button"
+              onClick={() => setRefreshRequest((current) => current + 1)}
+              disabled={isRefreshing}
+              aria-label="Refresh dashboard data"
+              title="Refresh dashboard data"
+              className="ams-dashboard-header-action ams-dashboard-header-action--refresh inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-all duration-150 hover:-translate-y-px hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
+              <span className="hidden min-[440px]:inline">{isRefreshing ? 'Refreshing…' : 'Refresh'}</span>
+            </button>
           </div>
         )}
       />
 
       <section className="ams-dashboard-toolbar flex min-w-0 flex-col gap-3 border-b border-line/70 pb-4 xl:flex-row xl:items-center xl:justify-between" data-ams-feature-slug="dashboard-view-and-reporting-controls" aria-label="Dashboard view and reporting controls">
-        <nav className="ams-dashboard-view-tabs flex min-w-0 flex-wrap items-center gap-1" aria-label="Dashboard views">
+        <nav className="ams-dashboard-view-tabs flex min-w-0 items-center gap-1 overflow-x-auto" aria-label="Dashboard views">
           {([
             { key: 'overview', label: 'Overview' },
             { key: 'performance', label: 'Performance' },
@@ -2604,7 +2312,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               to={tab.key === 'overview' ? '/admin/dashboard' : '/admin/dashboard?view=' + tab.key}
               aria-current={view === tab.key ? 'page' : undefined}
               className={[
-                'ams-dashboard-view-tab inline-flex min-h-10 shrink-0 items-center border border-transparent px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                'ams-dashboard-view-tab inline-flex min-h-10 shrink-0 items-center border-b-2 border-x-0 border-t-0 px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                 view === tab.key ? 'is-active border-accent bg-transparent text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-transparent hover:text-fg'
               ].join(' ')}
             >
@@ -2612,6 +2320,41 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </Link>
           ))}
         </nav>
+
+        <div className="ams-dashboard-period-controls flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end" aria-label="Reporting period filters">
+          <label className="ams-dashboard-period-field flex min-w-0 flex-col gap-1">
+            <span className="text-[10px] font-medium text-muted">Group by</span>
+            <select aria-label="Reporting period type" value={reportPeriodMode} onChange={(event) => setReportingPeriodMode(event.target.value as ReportingPeriodMode)} className="ams-dashboard-period-select min-h-10 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[120px]">
+              <option value="month">Month</option>
+              <option value="quarter">Quarter</option>
+              <option value="year">Year</option>
+            </select>
+          </label>
+          <label className="ams-dashboard-period-field flex min-w-0 flex-col gap-1">
+            <span className="text-[11px] font-medium text-muted">Date range</span>
+            <span className="ams-dashboard-date-select relative block min-w-0">
+              <CalendarDays size={14} className="ams-dashboard-date-select__icon pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
+              <select aria-label="Reporting date range" value={reportPeriodEnabled ? reportPeriodValue : '__recent_30_days__'} onChange={(event) => {
+                if (event.target.value === '__recent_30_days__') clearReportingPeriodFilter();
+                else setReportingPeriodValue(event.target.value);
+              }} className="ams-dashboard-period-select ams-dashboard-date-select__input min-h-10 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg outline-none transition-colors hover:border-accent/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-[190px]">
+                <option value="__recent_30_days__">Recent 30 days · default</option>
+                {reportingPeriodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </span>
+          </label>
+          <div className="flex items-center gap-1.5">
+            <button type="button" aria-label="Previous reporting period" title="Previous period" disabled={!canMoveToPreviousPeriod} onClick={() => setReportingPeriodValue(previousReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
+              <ChevronLeft size={15} aria-hidden="true" />
+            </button>
+            <button type="button" aria-label="Next reporting period" title="Next period" disabled={!canMoveToNextPeriod} onClick={() => setReportingPeriodValue(nextReportingPeriodValue)} className="ams-dashboard-period-step inline-flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35">
+              <ChevronRight size={15} aria-hidden="true" />
+            </button>
+          </div>
+          {reportPeriodEnabled ? (
+            <button type="button" onClick={clearReportingPeriodFilter} className="ams-dashboard-clear-period inline-flex min-h-10 items-center justify-center rounded-control border border-line px-3 text-xs font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Clear period</button>
+          ) : null}
+        </div>
       </section>
 
       {isRefreshing && !dashboardOverview.loading && !operationalSnapshot.loading ? (
@@ -2645,28 +2388,40 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
-          <section className="ams-overview-card-row ams-dashboard-delivery-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
+          <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
             {canOpenProjects ? (
-              <section className="ams-dashboard-project-progress-section min-w-0 min-[1100px]:col-span-6 min-[1280px]:col-span-5" data-ams-feature-slug="dashboard-project-progress" aria-label="Projects in progress">
+              <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-project-progress" aria-label="Projects in progress">
                 <AdminPanel
                   title="Projects in progress"
-                  className="ams-overview-panel ams-overview-panel--list ams-dashboard-project-progress-panel"
+                  className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
                   actions={(
-                    <div className="ams-project-progress-header-actions" data-ams-feature-slug="dashboard-project-filters" aria-label="Project delivery filters">
-                      <DashboardFilterGroup ariaLabel="Filter projects by service line" value={overviewProjectFilter} onChange={(value)=>setOverviewProjectFilter(value as DashboardProjectFilter)} density="compact" className="ams-dashboard-project-service-filter ams-dashboard-segmented-filter" options={[
-                        {value:'all',label:'All',count:activeDashboardProjectFilterCounts.all},
-                        {value:'creative',label:'Creative',count:activeDashboardProjectFilterCounts.creative},
-                        {value:'technology',label:'IT',count:activeDashboardProjectFilterCounts.technology}
-                      ]} />
-                      <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-project-registry-action" ariaLabel="Open Project registry" title="Open the full Project registry">Project registry</DashboardControl>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <div className="ams-dashboard-segmented-filter flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-line bg-bg p-1" role="group" aria-label="Filter projects by service line">
+                        {([
+                          { key: 'all', label: 'All', count: activeDashboardProjectFilterCounts.all },
+                          { key: 'creative', label: 'Creative', count: activeDashboardProjectFilterCounts.creative },
+                          { key: 'technology', label: 'IT', count: activeDashboardProjectFilterCounts.technology }
+                        ] as Array<{ key: DashboardProjectFilter; label: string; count: number }>).map((filter) => (
+                          <button key={filter.key} type="button" aria-pressed={overviewProjectFilter === filter.key} onClick={() => setOverviewProjectFilter(filter.key)} className={[
+                            'inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                            overviewProjectFilter === filter.key ? 'bg-panel text-fg font-semibold' : 'text-muted hover:bg-panel/70 hover:text-fg'
+                          ].join(' ')}>
+                            {filter.label}
+                            <span className="text-[10px] tabular-nums text-muted">{filter.count}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                        Project registry <ArrowUpRight size={13} aria-hidden="true" />
+                      </Link>
                     </div>
                   )}
                 >
-{operationalSnapshot.projects === null ? (
+                  {operationalSnapshot.projects === null ? (
                     <div className="p-4"><DashboardUnavailable title="Project progress unavailable" description="The Projects source did not return current records." compact /></div>
                   ) : featuredDashboardProjects.length === 0 ? (
-                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="PROJECT DELIVERY" icon={<FolderKanban size={17} aria-hidden="true" />} title={activeProjectRows.length === 0 ? 'No active projects yet' : 'No projects match this filter'} description={activeProjectRows.length === 0 ? 'Active delivery work will appear here when projects are in progress.' : 'Try All or choose the other service line to see matching projects.'} /></div>
+                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="PROJECT DELIVERY" icon={<FolderKanban size={17} aria-hidden="true" />} title={activeProjectRows.length === 0 ? 'No active projects yet' : 'No projects match this filter'} description={activeProjectRows.length === 0 ? 'Active delivery work will appear here when projects are in progress.' : 'Try All or choose the other service line to see matching projects.'} action={<Link to="/admin/projects?projects=all" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open project registry <ArrowUpRight size={12} aria-hidden="true" /></Link>} /></div>
                   ) : (
                     <div className="divide-y divide-line">
                       {featuredDashboardProjects.map((project) => {
@@ -2717,25 +2472,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </section>
             ) : null}
 
-            <section className={[('ams-dashboard-attention-section'), 'min-w-0', canOpenProjects ? 'min-[1100px]:col-span-6 min-[1280px]:col-span-7' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
+            <section className={['min-w-0', canOpenProjects ? 'min-[1100px]:col-span-5' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
               <AdminPanel
                 title="Needs attention"
                 className="h-full ams-overview-panel ams-overview-panel--attention ams-dashboard-attention-panel"
                 bodyClassName="p-0"
                 actions={dashboardOverview.attentionItemsDataAvailable ? (
-                  <div className="ams-dashboard-attention-header-actions">
-                    {attentionSeveritySummary.total === 0 ? (
-                      <span className="ams-dashboard-attention-empty-indicator">
-                        <CheckCircle2 size={13} aria-hidden="true" />
-                        No active exceptions
-                      </span>
-                    ) : (
-                      <div className="ams-dashboard-attention-counts">
-                        {attentionSeveritySummary.urgent > 0 ? <span className="rounded-badge border border-danger/25 bg-danger/10 px-2 py-1 text-[10px] font-medium text-danger">{attentionSeveritySummary.urgent} urgent</span> : null}
-                        {attentionSeveritySummary.attention > 0 ? <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">{attentionSeveritySummary.attention} attention</span> : null}
-                      </div>
-                    )}
-                    <CustomSelect aria-label="Filter attention by severity" value={attentionSeverityFilter} onChange={(value) => setAttentionSeverityFilter(value as DashboardAttentionSeverityFilter)} options={[{ value: 'all', label: 'All levels' }, { value: 'urgent', label: 'Urgent' }, { value: 'attention', label: 'Attention' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select ams-dashboard-attention-header-filter" triggerClassName="ams-dashboard-select-trigger w-[118px]" menuClassName="ams-dashboard-dropdown-menu" />
+                  <div className="flex flex-wrap items-center gap-2">
+                    {attentionSeveritySummary.urgent > 0 ? <span className="rounded-badge border border-danger/25 bg-danger/10 px-2 py-1 text-[10px] font-medium text-danger">{attentionSeveritySummary.urgent} urgent</span> : null}
+                    {attentionSeveritySummary.attention > 0 ? <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">{attentionSeveritySummary.attention} attention</span> : null}
+                    {attentionSeveritySummary.total === 0 ? <span className="text-[10px] text-muted">No active exceptions</span> : null}
                   </div>
                 ) : undefined}
               >
@@ -2751,21 +2497,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       </div>
                     </div>
                   ) : overviewAttentionItems.length === 0 ? (
-                    null
-                  ) : filteredOverviewAttentionItems.length === 0 ? (
-                    <div className="ams-dashboard-attention-filter-empty px-4 py-3">
-                      <DashboardEmptyState
-                        eyebrow="ATTENTION FILTER"
-                        icon={<Filter size={16} aria-hidden="true" />}
-                        title="No exceptions match this severity"
-                        description="Choose another severity or show all exception levels."
-                        compact
-                        action={<DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-card-action" onClick={() => setAttentionSeverityFilter('all')}>Show all levels</DashboardControl>}
-                      />
-                    </div>
+                    <div className="p-3 sm:p-4"><DashboardEmptyState eyebrow="OPERATIONS CLEAR" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No active exceptions" description="Available sources returned no cross-module issues that need attention." compact /></div>
                   ) : (
-                    <div className="ams-dashboard-attention-list__rows divide-y divide-line">
-                      {filteredOverviewAttentionItems.slice(0, 4).map((item, index) => {
+                    <div className="divide-y divide-line">
+                      {overviewAttentionItems.slice(0, 4).map((item, index) => {
                         const severity = String(item.severity || 'info').toLowerCase();
                         const tone: DashboardTone = severity === 'danger' || severity === 'critical' ? 'danger' : severity === 'warning' ? 'warning' : 'info';
                         const category = String(item.category || 'Operations');
@@ -2792,7 +2527,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </article>
                         );
                       })}
-                      {filteredOverviewAttentionItems.length > 4 ? <p className="ams-dashboard-attention-list__footnote border-t border-line px-4 py-2 text-[10px] text-muted">Showing 4 of {filteredOverviewAttentionItems.length} matching exceptions.</p> : null}
+                      {overviewAttentionItems.length > 4 ? <p className="ams-dashboard-attention-list__footnote border-t border-line px-4 py-2 text-[10px] text-muted">Showing 4 of {overviewAttentionItems.length} exceptions.</p> : null}
                     </div>
                   )}
                 </div>
@@ -2804,7 +2539,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         <h3 className="text-xs font-semibold text-fg">Inbox triage</h3>
                         
                       </div>
-                      <DashboardControl to="/admin/inbox?view=messages" variant="action" size="compact" icon={<Users size={13}/>} className="ams-dashboard-card-action">Open Inbox</DashboardControl>
+                      <Link to="/admin/inbox?view=messages" className="inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open Inbox <ArrowUpRight size={12} aria-hidden="true" /></Link>
                     </div>
                     {inboxTriageSummary.state === 'loading' ? (
                       <p className="px-4 pb-4 text-[11px] text-muted" role="status">Loading inbound records.</p>
@@ -2847,37 +2582,56 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </section>
           </section>
 
-<section className="ams-overview-card-row ams-dashboard-delivery-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Task queue and delivery deadlines">
+<section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Task queue and delivery deadlines">
             <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Task delivery queue">
               <AdminPanel
                 title="Task queue"
-                className="h-full ams-overview-panel ams-overview-panel--list ams-dashboard-task-queue-panel"
-                bodyClassName="ams-dashboard-task-queue-body p-0"
-                actions={(
-                  <div className="ams-dashboard-card-header-actions ams-dashboard-task-filter-toolbar">
-                    <DashboardFilterGroup ariaLabel="Task queue filters" value={overviewTaskFilter} onChange={(value)=>setOverviewTaskFilter(value as DashboardTaskFilter)} density="compact" disabled={!canOpenTasks} className="ams-dashboard-task-queue-filter" options={[
-                    {value:'action',label:'Action needed',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.action:'—'},
-                    {value:'review',label:'Review',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.review:'—'},
-                    {value:'overdue',label:'Overdue',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.overdue:'—'},
-                    {value:'blocked',label:'Blocked',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.blocked:'—'},
-                    {value:'unassigned',label:'Unassigned',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.unassigned:'—'}
-                  ]} />
-                    {canOpenTasks ? <DashboardControl to={overviewTaskQueueHref} variant="action" size="standard" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action">Open Tasks</DashboardControl> : null}
-                  </div>
-                )}
+                className="h-full ams-overview-panel ams-overview-panel--list"
+                bodyClassName="p-0"
+                actions={canOpenTasks ? (
+                  <Link to={overviewTaskQueueHref} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    Open Tasks <ArrowUpRight size={13} aria-hidden="true" />
+                  </Link>
+                ) : undefined}
               >
+                <div className="border-b border-line px-3 py-3 sm:px-4">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Task queue filters">
+                    {([
+                      { key: 'action', label: 'Action needed', count: taskQueueCounts.action },
+                      { key: 'review', label: 'Review', count: taskQueueCounts.review },
+                      { key: 'overdue', label: 'Overdue', count: taskQueueCounts.overdue },
+                      { key: 'blocked', label: 'Blocked', count: taskQueueCounts.blocked },
+                      { key: 'unassigned', label: 'Unassigned', count: taskQueueCounts.unassigned }
+                    ] as Array<{ key: DashboardTaskFilter; label: string; count: number }>).map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        aria-pressed={overviewTaskFilter === tab.key}
+                        disabled={!canOpenTasks}
+                        onClick={() => setOverviewTaskFilter(tab.key)}
+                        className={[
+                          'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50',
+                          overviewTaskFilter === tab.key ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg'
+                        ].join(' ')}
+                      >
+                        {tab.label}
+                        <span className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{canOpenTasks && operationalSnapshot.tasks !== null ? tab.count : '—'}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {!canOpenTasks || operationalSnapshot.tasks === null ? (
                   <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." compact /></div>
                 ) : dashboardWorkTasks.length === 0 ? (
-                  <div className="px-4 py-4" role="status">
-                    <DashboardEmptyState eyebrow="TASK QUEUE" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No task records yet" description="Tasks will appear here when they are created in the canonical Tasks workspace." action={canOpenTasks ? <DashboardControl to="/admin/tasks" variant="action" size="standard" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action">Open Tasks</DashboardControl> : undefined} />
+                  <div className="px-4 py-8" role="status">
+                    <DashboardEmptyState eyebrow="TASK QUEUE" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No task records yet" description="Tasks will appear here when they are created in the canonical Tasks workspace." action={canOpenTasks ? <Link to="/admin/tasks" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Tasks <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} />
                   </div>
                 ) : activeDashboardTasks.length === 0 ? (
                   <div className="px-4 py-4"><DashboardEmptyState eyebrow="TASK QUEUE" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="Queue cleared" description="Every task in the current scope is complete. Switch to another queue to review other work." /></div>
                 ) : visibleOverviewTasks.length === 0 ? (
                   <div className="px-4 py-4"><DashboardEmptyState eyebrow="QUEUE FILTER" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No tasks in this queue" description="There are no matching tasks for this filter. Choose another queue to inspect different work." /></div>
                 ) : (
-                  <div className="ams-dashboard-task-queue-list divide-y divide-line">
+                  <div className="divide-y divide-line">
                     {visibleOverviewTasks.slice(0, 5).map((task) => {
                       const overdue = dashboardTaskIsOverdue(task, currentDayKey);
                       const dueSoon = dashboardTaskIsDueSoon(task, currentDayKey, nextSevenDaysKey);
@@ -2927,85 +2681,55 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-delivery-commitments" aria-label="Upcoming delivery deadlines">
               <AdminPanel
                 title="Upcoming deadlines"
-                className="h-full ams-overview-panel ams-overview-panel--list ams-dashboard-deadlines-panel"
-                bodyClassName="ams-dashboard-deadlines-body p-0"
+                className="h-full ams-overview-panel ams-overview-panel--list"
+                bodyClassName="p-0"
                 actions={canOpenProjects ? (
-                  <DashboardControl to="/admin/projects?projects=planning-delivery&planningView=milestones" variant="action" size="standard" icon={<CalendarDays size={14}/>} className="ams-dashboard-card-action">Open planning</DashboardControl>
+                  <Link to="/admin/projects?projects=planning-delivery&planningView=milestones" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    Open planning <ArrowUpRight size={13} aria-hidden="true" />
+                  </Link>
                 ) : undefined}
               >
                 {operationalSnapshot.projects === null ? (
                   <div className="p-4"><DashboardUnavailable title="Delivery schedule unavailable" description="Project and milestone records were not returned. Deadlines are not inferred." compact /></div>
                 ) : rawProjectRows.length === 0 ? (
-                  <div className="px-4 py-4"><DashboardEmptyState eyebrow="DELIVERY TIMELINE" icon={<CalendarDays size={17} aria-hidden="true" />} title="No delivery dates to display" description="The project register returned no records, so upcoming deadlines cannot be determined." action={canOpenProjects ? <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open Projects</DashboardControl> : undefined} /></div>
+                  <div className="px-4 py-4"><DashboardEmptyState eyebrow="DELIVERY TIMELINE" icon={<CalendarDays size={17} aria-hidden="true" />} title="No delivery dates to display" description="The project register returned no records, so upcoming deadlines cannot be determined." action={canOpenProjects ? <Link to="/admin/projects?projects=all" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Projects <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
                 ) : (
                   <>
-                    <div className="ams-dashboard-deadline-summary" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
-                      <div className="ams-dashboard-deadline-summary__header">
-                        <div className="min-w-0">
-                          <p className="text-[11px] text-muted">Overdue and due within 30 days</p>
-                          <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{commitmentHorizonTotal}</p>
-                        </div>
-                        <DashboardControl
-                          type="button"
-                          variant="action"
-                          size="compact"
-                          icon={<CalendarDays size={13}/>}
-                          showArrow={false}
-                          className="ams-dashboard-deadline-custom-trigger"
-                          ariaLabel="Filter deadlines by custom date range"
-                          ariaExpanded={overviewDeadlineFilter === 'custom'}
-                          ariaControls="ams-dashboard-deadline-custom-range"
-                          active={overviewDeadlineFilter === 'custom'}
-                          onClick={() => setOverviewDeadlineFilter((current) => current === 'custom' ? 'all' : 'custom')}
-                        >
-                          {overviewDeadlineFilter === 'custom' ? 'Custom dates selected' : 'Custom dates'}
-                        </DashboardControl>
+                    <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
+                      <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div><p className="text-[11px] text-muted">Overdue and due within 30 days</p><p className="mt-1 text-xl font-semibold tabular-nums text-fg">{commitmentHorizonTotal}</p></div>
+                        
                       </div>
                       {commitmentHorizonTotal > 0 ? (
                         <>
-                          <div className="ams-dashboard-deadline-horizon-bar" role="img" aria-label={'Delivery deadlines within 30 days: ' + overdueHorizonCount + ' overdue, ' + nextSevenDayCommitmentCount + ' due in 7 days, ' + daysEightToThirtyCommitmentCount + ' due in days 8 to 30.'}>
-                            {overdueHorizonCount > 0 ? <span className="ams-dashboard-deadline-horizon-bar__overdue" style={{ width: overdueHorizonCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
-                            {nextSevenDayCommitmentCount > 0 ? <span className="ams-dashboard-deadline-horizon-bar__next" style={{ width: nextSevenDayCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
-                            {daysEightToThirtyCommitmentCount > 0 ? <span className="ams-dashboard-deadline-horizon-bar__later" style={{ width: daysEightToThirtyCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
+                          <div className="flex h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Delivery deadlines: ' + overdueHorizonCount + ' overdue, ' + nextSevenDayCommitmentCount + ' due in 7 days, ' + daysEightToThirtyCommitmentCount + ' due in days 8 to 30.'}>
+                            {overdueHorizonCount > 0 ? <span className="h-full bg-danger" style={{ width: overdueHorizonCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
+                            {nextSevenDayCommitmentCount > 0 ? <span className="h-full bg-warning" style={{ width: nextSevenDayCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
+                            {daysEightToThirtyCommitmentCount > 0 ? <span className="h-full bg-info" style={{ width: daysEightToThirtyCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
                           </div>
-                          <DashboardFilterGroup ariaLabel="Filter deadlines" value={overviewDeadlineFilter} onChange={(value)=>setOverviewDeadlineFilter(value as DashboardDeadlineFilter)} density="metric" layout="grid" className="ams-dashboard-deadline-filter-group" options={[
-                            {value:'all',label:'All',metric:commitmentHorizonTotal},
-                            {value:'overdue',label:'Overdue',metric:overdueHorizonCount},
-                            {value:'next7',label:'Today–7 days',metric:nextSevenDayCommitmentCount},
-                            {value:'days8to30',label:'Days 8–30',metric:daysEightToThirtyCommitmentCount}
-                          ]} />
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Filter deadlines">
+                            {([
+                              { key: 'all', label: 'All', count: commitmentHorizonTotal, tone: 'text-fg' },
+                              { key: 'overdue', label: 'Overdue', count: overdueHorizonCount, tone: 'text-danger' },
+                              { key: 'next7', label: 'Today–7 days', count: nextSevenDayCommitmentCount, tone: 'text-warning' },
+                              { key: 'days8to30', label: 'Days 8–30', count: daysEightToThirtyCommitmentCount, tone: 'text-muted' }
+                            ] as Array<{ key: DashboardDeadlineFilter; label: string; count: number; tone: string }>).map((item) => (
+                              <button key={item.key} type="button" aria-pressed={overviewDeadlineFilter === item.key} onClick={() => setOverviewDeadlineFilter(item.key)} className={[
+                                'ams-dashboard-deadline-filter flex min-w-0 flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                                overviewDeadlineFilter === item.key ? 'is-active border-accent/25 bg-accent/5' : 'border-transparent bg-panel/70 hover:border-line hover:bg-panel'
+                              ].join(' ')}>
+                                <span className={['text-[10px] leading-4', item.tone].join(' ')}>{item.label}</span>
+                                <span className="text-base font-semibold tabular-nums text-fg">{item.count}</span>
+                              </button>
+                            ))}
+                          </div>
                         </>
-                      ) : overviewDeadlineFilter !== 'custom' ? (
+                      ) : (
                         <DashboardEmptyState eyebrow="DELIVERY HORIZON" tone="success" icon={<CalendarDays size={16} aria-hidden="true" />} title="No upcoming commitments" description="No dated open commitments fall within the next 30 days." compact />
-                      ) : null}
-                      {overviewDeadlineFilter === 'custom' ? (
-                        <div id="ams-dashboard-deadline-custom-range" className="ams-dashboard-deadline-date-range" role="group" aria-label="Custom deadline date range">
-                          <label className="ams-dashboard-deadline-date">
-                            <span>From</span>
-                            <input type="date" aria-label="Deadline start date" value={deadlineStartDate} max={deadlineEndDate || undefined} onChange={(event) => setDeadlineStartDate(event.target.value)} />
-                          </label>
-                          <label className="ams-dashboard-deadline-date">
-                            <span>To</span>
-                            <input type="date" aria-label="Deadline end date" value={deadlineEndDate} min={deadlineStartDate || undefined} onChange={(event) => setDeadlineEndDate(event.target.value)} />
-                          </label>
-                          {(deadlineStartDate || deadlineEndDate) ? (
-                            <DashboardControl type="button" variant="action" size="compact" icon={<RefreshCw size={12}/>} showArrow={false} className="ams-dashboard-deadline-date-range__clear" onClick={() => { setDeadlineStartDate(''); setDeadlineEndDate(''); }}>Clear dates</DashboardControl>
-                          ) : null}
-                        </div>
-                      ) : null}
+                      )}
                     </div>
                     {upcomingCommitments.length === 0 ? (
-                      overviewDeadlineFilter === 'custom' ? (
-                        <div className="px-4 py-3">
-                          <DashboardEmptyState
-                            eyebrow="DEADLINE RANGE"
-                            icon={<CalendarDays size={16} aria-hidden="true" />}
-                            title={isDeadlineCustomRangeUnselected ? 'Choose custom dates' : isDeadlineCustomRangeInvalid ? 'Check the selected dates' : 'No commitments in this date range'}
-                            description={isDeadlineCustomRangeUnselected ? 'Choose a start date, an end date, or both to inspect saved delivery dates outside the standard 30-day horizon.' : isDeadlineCustomRangeInvalid ? 'The start date must be on or before the end date.' : 'No saved project or milestone deadlines match the chosen date range.'}
-                            compact
-                          />
-                        </div>
-                      ) : commitmentHorizonTotal === 0 ? null : (
+                      commitmentHorizonTotal === 0 ? null : (
                         <div className="px-4 py-3">
                           <DashboardEmptyState
                             eyebrow="DEADLINE FILTER"
@@ -3018,7 +2742,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </div>
                       )
                     ) : (
-                      <div className="ams-dashboard-deadline-list divide-y divide-line">
+                      <div className="divide-y divide-line">
                         {upcomingCommitments.slice(0, 4).map((item) => {
                           const overdue = item.dueDate < currentDayKey;
                           const dueTone: DashboardTone = overdue ? 'danger' : item.dueDate === currentDayKey ? 'warning' : 'info';
@@ -3057,14 +2781,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <AdminPanel
                   title="Finance"
                   className="h-full ams-overview-panel ams-overview-panel--finance ams-dashboard-finance-panel"
-                  bodyClassName="ams-dashboard-finance-body p-4 sm:p-5"
+                  bodyClassName="p-4 sm:p-5"
                   actions={(
-                    <div className="ams-dashboard-card-header-actions ams-dashboard-finance-header-actions">
-                      <div className="ams-card-period-controls" data-ams-feature-slug="dashboard-finance-period-controls">
-                        <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Finance reporting period" mode={overviewFinancePeriodMode} value={overviewFinancePeriodValue} periodLabel={overviewFinancePeriodLabel} options={overviewFinancePeriodOptions} onModeChange={(mode, value) => { setOverviewFinancePeriodMode(mode); setOverviewFinancePeriodValue(value); }} onValueChange={setOverviewFinancePeriodValue} />
-                      </div>
-                      <DashboardControl to={canOpenInvoiceRegister?'/admin/finance?tab=accounts-receivable':'/admin/finance?tab=expenses'} variant="action" size="standard" icon={<CircleDollarSign size={14}/>} className="ams-dashboard-card-action">Open Finance</DashboardControl>
-                    </div>
+                    <Link to={canOpenInvoiceRegister ? '/admin/finance?tab=accounts-receivable' : '/admin/finance?tab=expenses'} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      Open Finance <ArrowUpRight size={13} aria-hidden="true" />
+                    </Link>
                   )}
                 >
                   <div className="ams-finance-primary-grid grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
@@ -3094,23 +2815,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </p>
                       </div>
 
-                      <div data-ams-feature-slug="dashboard-finance-control" className="ams-finance-control-links flex flex-wrap gap-2">
+                      <div data-ams-feature-slug="dashboard-finance-control" className="ams-finance-control-links flex flex-wrap gap-2 border-t border-line pt-3">
                         {canOpenInvoiceRegister ? (
-                          <DashboardControl to="/admin/finance?tab=accounts-receivable" variant="action" size="compact" icon={<ReceiptText size={13}/>} className="ams-dashboard-card-action">Receivables</DashboardControl>
+                          <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                            <ReceiptText size={12} aria-hidden="true" /> Receivables <ArrowUpRight size={11} aria-hidden="true" />
+                          </Link>
                         ) : null}
                         {canOpenExpenseRegister ? (
-                          <DashboardControl to="/admin/finance?tab=expenses" variant="action" size="compact" icon={<ReceiptText size={13}/>} className="ams-dashboard-card-action">Expenses</DashboardControl>
+                          <Link to="/admin/finance?tab=expenses" className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                            <ReceiptText size={12} aria-hidden="true" /> Expenses <ArrowUpRight size={11} aria-hidden="true" />
+                          </Link>
                         ) : null}
                       </div>
                     </div>
 
-                    <div className="ams-finance-trend-region ams-dashboard-finance-trend-region min-w-0" data-ams-feature-slug="dashboard-finance-trend">
-                      <div className="ams-finance-trend-heading mb-3 flex flex-wrap items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <h3 className="text-xs font-semibold text-fg">Invoices vs expenses</h3>
-                          <p className="ams-finance-trend-description mt-1 text-[10px] leading-4 text-muted">Issued invoices by invoice date · expenses by record date</p>
-                        </div>
-
+                    <div className="ams-finance-trend-region min-w-0 border-t border-line pt-4 min-[900px]:border-l min-[900px]:border-t-0 min-[900px]:pl-5 min-[900px]:pt-0" data-ams-feature-slug="dashboard-finance-trend">
+                      <div className="ams-finance-trend-heading mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                        <h3 className="text-xs font-semibold text-fg">Invoices vs expenses</h3>
+                        <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'Recent 30 days'}</span>
                       </div>
                       {operationalSnapshot.invoices === null || operationalSnapshot.expenses === null ? (
                         <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
@@ -3120,28 +2842,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             <p className="mt-1 break-words text-[11px] leading-4 text-muted">Invoice and expense sources are not both available to this role or service.</p>
                           </div>
                         </div>
-                      ) : (
-                        <div className={['ams-finance-chart-stage', overviewFinanceTrendHasRecords ? '' : 'is-empty'].filter(Boolean).join(' ')}>
+                      ) : !overviewFinanceTrendHasRecords ? (
+                        <DashboardEmptyState eyebrow="FINANCIAL MOVEMENT" icon={<CircleDollarSign size={17} aria-hidden="true" />} title="No eligible financial records" description="No issued-invoice or eligible-expense values are available for the selected currency and period." compact />
+                      ) : overviewFinanceTrendRows.length ? (
+                        <>
                           <TrendChart
-                            data={overviewFinanceChartRows}
+                            data={overviewFinanceTrendRows}
                             primaryLabel="Issued invoices"
                             secondaryLabel="Recorded expenses"
                             tertiaryLabel=""
                             primaryFormat={(value) => formatLiveMoney(value, financeCurrency)}
                             axisFormat={(value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: financeCurrency, notation: 'compact', maximumFractionDigits: 1 }).format(value)}
                             presentation="maven"
-                            ariaLabel={'Issued-invoice totals by invoice date and eligible expenses by recorded date. Scope: ' + describeFinancialTrendScope(overviewFinanceChartRows, Boolean(overviewFinancePeriodRange), overviewFinancePeriodLabel) + '. This comparison is not posted profit or cash flow.'}
+                            ariaLabel={'Issued-invoice totals by invoice date and eligible expenses by recorded date. Scope: ' + describeFinancialTrendScope(overviewFinanceTrendRows, reportPeriodEnabled, reportPeriodLabel) + '. This comparison is not posted profit or cash flow.'}
                           />
-                          {!overviewFinanceTrendHasRecords ? (
-                            <div className="ams-finance-chart-empty-state" role="status">
-                              <div className="ams-finance-chart-empty-state__copy">
-                                <CircleDollarSign size={17} aria-hidden="true" />
-                                <p>No eligible financial records</p>
-                                <span>No invoice or eligible expense values were recorded in this period.</span>
-                              </div>
-                            </div>
-                          ) : null}
-                        </div>
+                          
+                        </>
+                      ) : (
+                        <p className="py-8 text-center text-xs text-muted" role="status">No trend buckets are available for this period.</p>
                       )}
                     </div>
                   </div>
@@ -3149,22 +2867,18 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   {(canOpenInvoiceRegister || canOpenExpenseRegister) ? (
                     <section className="ams-finance-movement" data-ams-feature-slug="dashboard-finance-movement" aria-label="Money movement">
                       <div className="ams-finance-movement__heading">
-                        <div className="ams-finance-movement__title-group">
-                          <h3>Cash &amp; expense movement</h3>
-                          <p>Recorded receipts and eligible expenses by period bucket.</p>
-                        </div>
-                        
+                        <h3>Period movement</h3>
+                        <span className="ams-finance-movement__period">{overviewPeriodDisplay}</span>
                       </div>
                       <div className={['ams-finance-movement__grid', canOpenInvoiceRegister && canOpenExpenseRegister ? 'is-balanced' : 'is-single'].join(' ')}>
                         {canOpenInvoiceRegister ? (
-                          <div className="ams-finance-movement-card ams-finance-movement-card--cash" data-ams-feature-slug="dashboard-cash-received" aria-label="Cash received">
+                          <div className="ams-finance-movement-card" data-ams-feature-slug="dashboard-cash-received" aria-label="Cash received">
                             <div className="ams-finance-movement-card__copy min-w-0">
                               <div className="ams-finance-movement-card__label">
                                 <p className="text-[11px] font-medium text-muted">Cash received</p>
                                 <span className="ams-finance-movement-card__icon" aria-hidden="true"><ArrowUpRight size={13} /></span>
                               </div>
-                              <p className="ams-finance-movement-card__value mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}</p>
-                              <p className="ams-finance-movement-card__context">Receipts recorded in this period</p>
+                              <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{cashValueAvailable && livePeriodCashCollected !== null ? formatLiveMoney(livePeriodCashCollected, financeCurrency) : '—'}</p>
                               
                             </div>
                             <div className="ams-finance-movement-card__chart">
@@ -3176,10 +2890,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                       return <span key={bucket.startDate} className="ams-money-movement-sparkbar" style={{ height: barHeight + '%' }} title={bucket.label + ': ' + formatLiveMoney(bucket.cashReceived, financeCurrency)} />;
                                     })}
                                   </div>
-                                  <div className="ams-finance-movement-card__axis-labels mt-2 flex items-center justify-between gap-2 text-[10px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
+                                  <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
                                 </>
                               ) : (
-                                <p className="ams-finance-movement-card__empty flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.invoices === null ? 'Invoice source unavailable.' : cashValueAvailable ? 'Period trend unavailable.' : 'No issued invoice records are available for this currency.'}</p>
+                                <p className="flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.invoices === null ? 'Invoice source unavailable.' : cashValueAvailable ? 'Period trend unavailable.' : 'No issued invoice records are available for this currency.'}</p>
                               )}
                             </div>
                           </div>
@@ -3191,8 +2905,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 <p className="text-[11px] font-medium text-muted">Expenses recorded</p>
                                 <span className="ams-finance-movement-card__icon" aria-hidden="true"><ReceiptText size={13} /></span>
                               </div>
-                              <p className="ams-finance-movement-card__value mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}</p>
-                              <p className="ams-finance-movement-card__context">Eligible expenses recorded in this period</p>
+                              <p className="mt-1.5 break-words text-base font-semibold tabular-nums text-fg">{expensesValueAvailable && livePeriodExpenses !== null ? formatLiveMoney(livePeriodExpenses, financeCurrency) : '—'}</p>
                               
                             </div>
                             <div className="ams-finance-movement-card__chart">
@@ -3207,7 +2920,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                   <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted"><span>{overviewMoneyMovementRows[0].label}</span><span>{overviewMoneyMovementRows[overviewMoneyMovementRows.length - 1].label}</span></div>
                                 </>
                               ) : (
-                                <p className="ams-finance-movement-card__empty flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.expenses === null ? 'Expense source unavailable.' : expensesValueAvailable ? 'Period trend unavailable.' : 'No eligible expense records are available for this currency.'}</p>
+                                <p className="flex min-h-[48px] items-center text-[11px] leading-4 text-muted" role="status">{operationalSnapshot.expenses === null ? 'Expense source unavailable.' : expensesValueAvailable ? 'Period trend unavailable.' : 'No eligible expense records are available for this currency.'}</p>
                               )}
                             </div>
                           </div>
@@ -3218,11 +2931,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
                   {canOpenQuotationRegister ? (
                     <section
-                      className="ams-quotation-follow-up mt-4"
+                      className="ams-quotation-follow-up mt-4 border-t border-line pt-4"
                       data-ams-feature-slug="dashboard-commercial-quotation-pipeline"
                       aria-label="Quotation follow-up"
                     >
-                      <div className="ams-quotation-follow-up__header flex min-w-0 flex-wrap items-start gap-3">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="text-sm font-semibold text-fg">Quotation follow-up</h3>
@@ -3230,8 +2943,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               {dashboardQuotationFilterCounts.all} active
                             </span>
                           </div>
-                          <p className="ams-quotation-follow-up__description mt-1 text-[11px] leading-4 text-muted">Review pending stages and quotations nearing expiry.</p>
+                          
                         </div>
+                        <Link
+                          to="/admin/finance?tab=quotations"
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:border-accent/25 hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                        >
+                          Open quotation ledger <ArrowUpRight size={12} aria-hidden="true" />
+                        </Link>
                       </div>
 
                       {operationalSnapshot.quotations === null ? (
@@ -3243,34 +2962,48 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           </div>
                         </div>
                       ) : dashboardQuotationRows.length === 0 ? (
-                        <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION REGISTER" icon={<FileText size={17} aria-hidden="true" />} title={'No quotation records in ' + financeCurrency} description="The quotation source returned no records in this currency." compact action={<DashboardControl to="/admin/finance?tab=quotations" variant="action" size="standard" icon={<FileText size={14}/>} className="ams-dashboard-card-action">Open quotation ledger</DashboardControl>} /></div>
+                        <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION REGISTER" icon={<FileText size={17} aria-hidden="true" />} title={'No quotation records in ' + financeCurrency} description="The quotation source returned no records in this currency." compact /></div>
                       ) : activeDashboardQuotations.length === 0 ? (
-                        <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION FOLLOW-UP" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No quotations need follow-up" description={overviewQuotationFilter === 'all' ? 'No active quotations currently meet the follow-up criteria.' : 'No active quotations match the selected stage.'} compact action={<DashboardControl to="/admin/finance?tab=quotations" variant="action" size="standard" icon={<FileText size={14}/>} className="ams-dashboard-card-action">Open quotation ledger</DashboardControl>} /></div>
+                        <div className="mt-3"><DashboardEmptyState eyebrow="QUOTATION FOLLOW-UP" tone="success" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No quotations need follow-up" description={overviewQuotationFilter === 'all' ? 'No active quotations currently meet the follow-up criteria.' : 'No active quotations match the selected stage.'} compact /></div>
                       ) : (
                         <>
-                          <DashboardFilterGroup ariaLabel="Filter quotations by stage" value={overviewQuotationFilter} onChange={(value)=>setOverviewQuotationFilter(value as DashboardQuotationFilter)} density="comfortable" className="ams-dashboard-quotation-filter mt-3" options={[
-                            {value:'all',label:'All active',count:dashboardQuotationFilterCounts.all},
-                            {value:'review',label:'Review',count:dashboardQuotationFilterCounts.review},
-                            {value:'approved',label:'Approved',count:dashboardQuotationFilterCounts.approved},
-                            {value:'sent',label:'Sent',count:dashboardQuotationFilterCounts.sent},
-                            {value:'draft',label:'Draft',count:dashboardQuotationFilterCounts.draft}
-                          ]} />
+                          <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Filter quotations by stage">
+                            {([
+                              { key: 'all', label: 'All active', count: dashboardQuotationFilterCounts.all },
+                              { key: 'review', label: 'Review', count: dashboardQuotationFilterCounts.review },
+                              { key: 'approved', label: 'Approved', count: dashboardQuotationFilterCounts.approved },
+                              { key: 'sent', label: 'Sent', count: dashboardQuotationFilterCounts.sent },
+                              { key: 'draft', label: 'Draft', count: dashboardQuotationFilterCounts.draft }
+                            ] as Array<{ key: DashboardQuotationFilter; label: string; count: number }>).map((filter) => (
+                              <button
+                                key={filter.key}
+                                type="button"
+                                aria-pressed={overviewQuotationFilter === filter.key}
+                                onClick={() => setOverviewQuotationFilter(filter.key)}
+                                className={[
+                                  'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                                  overviewQuotationFilter === filter.key
+                                    ? 'border-accent/25 bg-accent/10 text-fg'
+                                    : 'border-line bg-bg text-muted hover:border-line hover:bg-panel-hover hover:text-fg'
+                                ].join(' ')}
+                              >
+                                {filter.label}
+                                <span className="rounded-full border border-line bg-panel px-1.5 py-0.5 text-[10px] tabular-nums">{filter.count}</span>
+                              </button>
+                            ))}
+                          </div>
 
                           {visibleDashboardQuotations.length === 0 ? (
-                            <div className="mt-2 px-1 py-3">
-                              <DashboardEmptyState
-                                eyebrow="QUOTATION FILTER"
-                                icon={<Filter size={17} aria-hidden="true" />}
-                                title="No quotations match this stage"
-                                description="Try another quotation stage or open the quotation ledger to review the full register."
-                                compact
-                                action={(
-                                  <>
-                                    <DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-card-action" onClick={() => setOverviewQuotationFilter('all')}>Clear stage filter</DashboardControl>
-                                    <DashboardControl to="/admin/finance?tab=quotations" variant="action" size="standard" icon={<FileText size={14}/>} className="ams-dashboard-card-action">Open quotation ledger</DashboardControl>
-                                  </>
-                                )}
-                              />
+                            <div className="mt-2 rounded-xl border border-line bg-bg px-3 py-4" role="status">
+                              <p className="text-xs font-medium text-fg">No quotations match this stage</p>
+                              
+                              <button
+                                type="button"
+                                onClick={() => setOverviewQuotationFilter('all')}
+                                className="mt-2 inline-flex min-h-8 items-center gap-1 rounded-full border border-line px-3 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                              >
+                                Clear stage filter
+                              </button>
                             </div>
                           ) : (
                             <div className="mt-2 divide-y divide-line">
@@ -3332,9 +3065,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <AdminPanel
                   title="Projects"
                   className="h-full ams-overview-panel ams-overview-panel--projects ams-dashboard-projects-panel"
-                  bodyClassName="ams-dashboard-projects-body p-4 sm:p-5"
+                  bodyClassName="p-4 sm:p-5"
                   actions={(
-                    <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open Projects</DashboardControl>
+                    <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      Open Projects <ArrowUpRight size={13} aria-hidden="true" />
+                    </Link>
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
@@ -3428,15 +3163,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
 <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Team and client delivery">
             <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-team-workload" aria-label="Team workload">
-              <AdminPanel
-                title="Team workload"
-                className="h-full ams-overview-panel ams-dashboard-team-panel"
-                bodyClassName="p-4 sm:p-5 ams-dashboard-team-body"
-              >
-                <section className="ams-dashboard-team-tasks" data-ams-feature-slug="dashboard-task-load-by-owner" aria-label="Open tasks by owner">
+              <AdminPanel title="Team workload" className="h-full ams-overview-panel" bodyClassName="p-4 sm:p-5">
+                <section data-ams-feature-slug="dashboard-task-load-by-owner" aria-label="Open tasks by owner">
                   <div className="mb-3 flex items-baseline justify-between gap-2">
                     <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
-                    {canOpenTasks ? <Link to="/admin/tasks" className="ams-dashboard-card-action text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
+                    {canOpenTasks ? <Link to="/admin/tasks" className="text-[11px] font-medium text-muted hover:text-accent-text">View tasks <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                   </div>
                   {!canOpenTasks || operationalSnapshot.tasks === null ? (
                     <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
@@ -3451,18 +3182,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   ) : (
                     <div className="space-y-3">
                       {taskLoadByAssignee.slice(0, 4).map((owner) => (
-                        <div key={owner.label} className="ams-dashboard-owner-row space-y-1.5">
-                          <div className="ams-dashboard-owner-row__heading flex items-center justify-between gap-3">
+                        <div key={owner.label} className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-3">
                             <span className="min-w-0 truncate text-xs font-medium text-fg">{owner.label}</span>
                             <span className="shrink-0 text-[11px] tabular-nums text-muted">{owner.total} tasks</span>
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Open task load for ' + owner.label + ': ' + owner.total + ' tasks.'}>
                             <div className="h-full rounded-full bg-accent" style={{ width: owner.total / taskLoadByAssigneeMaximum * 100 + '%' }} />
                           </div>
-                          <div className="ams-dashboard-owner-row__signals flex flex-wrap gap-x-2 gap-y-1 text-[10px] text-muted">
-                            <span className={owner.overdue > 0 ? 'is-risk' : ''}>{owner.overdue} overdue</span>
-                            <span className={owner.blocked > 0 ? 'is-risk' : ''}>{owner.blocked} blocked</span>
-                            <span>{owner.review} in review</span>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted">
+                            <span>{owner.overdue} overdue</span><span>{owner.blocked} blocked</span><span>{owner.review} in review</span>
                           </div>
                         </div>
                       ))}
@@ -3470,20 +3199,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   )}
                 </section>
 
-                <section className="ams-dashboard-team-time mt-5" data-ams-feature-slug="dashboard-recorded-time-by-person" aria-label="Recorded time by person">
-                  <div className="ams-dashboard-team-time__header mb-3 flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
-                      <p className="mt-1 text-[10px] leading-4 text-muted">Logged hours · not capacity</p>
-                    </div>
-                    {canOpenTimeLogs ? (
-                      <div className="ams-dashboard-team-time__header-actions">
-                        <div className="ams-card-period-controls ams-card-period-controls--time" data-ams-feature-slug="dashboard-time-period-controls">
-                          <DashboardCalendarPeriodFilter caption="Period" ariaLabel="Recorded time reporting period" mode={overviewTimePeriodMode} value={overviewTimePeriodValue} periodLabel={overviewTimePeriodLabel} options={overviewTimePeriodOptions} onModeChange={(mode, value) => { setOverviewTimePeriodMode(mode); setOverviewTimePeriodValue(value); }} onValueChange={setOverviewTimePeriodValue} />
-                        </div>
-                      </div>
-                    ) : null}
+                <section className="mt-5 border-t border-line pt-4" data-ams-feature-slug="dashboard-recorded-time-by-person" aria-label="Recorded time by person">
+                  <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
+                    <span className="text-[10px] text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All recorded dates'}</span>
                   </div>
+                  <p className="mb-3 text-[10px] leading-4 text-muted">Logged hours · not capacity</p>
                   {!canOpenTimeLogs || operationalSnapshot.timeLogs === null ? (
                     <div className="ams-dashboard-state ams-dashboard-state--compact" role="status">
                     <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={15} /></span>
@@ -3493,18 +3214,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   </div>
                   ) : periodTimeRows.length === 0 ? (
-                    <DashboardEmptyState
-                      eyebrow="RECORDED TIME"
-                      icon={<Clock3 size={17} aria-hidden="true" />}
-                      title="No recorded time in this period"
-                      description="Hours are shown only when team members have saved time entries for the selected scope."
-                      compact
-                      action={canOpenTimeLogs ? <DashboardControl to="/admin/time-logs" variant="action" size="standard" icon={<Clock3 size={14}/>} className="ams-dashboard-card-action ams-dashboard-team-time__action">Open Time Logs</DashboardControl> : undefined}
-                    />
+                    <DashboardEmptyState eyebrow="RECORDED TIME" icon={<Clock3 size={17} aria-hidden="true" />} title="No recorded time in this period" description="Hours are shown only when team members have saved time entries for the selected scope." compact />
                   ) : (
                     <div className="space-y-3">
                       {periodTimeRows.slice(0, 4).map((person) => (
-                        <div key={person.name} className="ams-dashboard-recorded-time-row ams-recorded-time-row space-y-1.5">
+                        <div key={person.name} className="ams-recorded-time-row space-y-1.5">
                           <div className="flex items-center justify-between gap-3">
                             <span className="min-w-0 truncate text-xs font-medium text-fg">{person.name}</span>
                             <span className="shrink-0 text-[11px] tabular-nums text-muted">{Math.floor(person.minutes / 60)}h {person.minutes % 60}m</span>
@@ -3516,6 +3230,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                       ))}
                     </div>
                   )}
+                  {canOpenTimeLogs ? <Link to="/admin/time-logs" className="mt-3 inline-flex min-h-8 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">Open Time Logs <ArrowUpRight size={11} aria-hidden="true" /></Link> : null}
                 </section>
               </AdminPanel>
             </section>
@@ -3527,13 +3242,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
                   actions={(
-                    <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open project delivery</DashboardControl>
+                    <Link to="/admin/projects?projects=all" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Open project delivery <ArrowUpRight size={13} aria-hidden="true" /></Link>
                   )}
                 >
                   {operationalSnapshot.projects === null ? (
                     <div className="p-4"><DashboardUnavailable title="Client delivery data unavailable" description="The Projects source did not return records. Client delivery counts are not inferred." compact /></div>
                   ) : clientDeliveryFocus.length === 0 ? (
-                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="CLIENT DELIVERY" icon={<Users size={17} aria-hidden="true" />} title="No client delivery items" description="Client-linked delivery summaries appear when active projects are connected to client records." action={canOpenClientDirectory ? <DashboardControl to="/admin/clients/all-clients" variant="action" size="standard" icon={<Users size={14}/>} className="ams-dashboard-card-action">Open Clients</DashboardControl> : undefined} /></div>
+                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="CLIENT DELIVERY" icon={<Users size={17} aria-hidden="true" />} title="No client delivery items" description="Client-linked delivery summaries appear when active projects are connected to client records." action={canOpenClientDirectory ? <Link to="/admin/clients/all-clients" className="inline-flex min-h-8 items-center gap-1.5 text-[11px] font-semibold text-fg hover:text-accent-text">Open Clients <ArrowUpRight size={12} aria-hidden="true" /></Link> : undefined} /></div>
                   ) : (
                     <div className="divide-y divide-line">
                       {clientDeliveryFocus.slice(0, 4).map((client) => (
@@ -3612,149 +3327,52 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   className="h-full ams-overview-panel ams-overview-panel--list ams-overview-panel--activity ams-dashboard-activity-panel"
                   bodyClassName="p-0"
                   actions={(
-                    <div className="ams-dashboard-card-header-actions ams-dashboard-activity-header-actions">
-                      <div className={['ams-dashboard-activity-calendar-filter', activityCalendarOpen ? 'is-open' : '', activityTimeFilter === 'custom' ? 'has-custom-range' : ''].filter(Boolean).join(' ')}>
-                                                <DashboardControl type="button" buttonRef={activityCalendarTriggerRef} variant="action" size="standard" icon={<CalendarDays size={14}/>} trailingIcon={<ChevronDown size={12} className={activityCalendarOpen?'is-open':''}/>} showArrow={false} className="ams-dashboard-activity-calendar-trigger" ariaLabel="Filter activity by time window" ariaExpanded={activityCalendarOpen} ariaControls={activityCalendarOpen?activityCalendarPanelId:undefined} title="Filter activity by time window" onClick={() => setActivityCalendarOpen((open)=>!open)}>{activityTimeFilter==='7'?'Last 7 days':activityTimeFilter==='30'?'Last 30 days':activityTimeFilter==='90'?'Last 90 days':activityTimeFilter==='custom'?'Custom range':'All loaded dates'}</DashboardControl>
-                                                {activityCalendarOpen ? (
-                                                  <DropdownPortal
-                                                    open={activityCalendarOpen}
-                                                    anchorRef={activityCalendarTriggerRef}
-                                                    onClose={() => setActivityCalendarOpen(false)}
-                                                    align="right"
-                                                    className="ams-popover-surface ams-dashboard-activity-calendar-panel"
-                                                  >
-                                                    <div id={activityCalendarPanelId} className="ams-dashboard-activity-calendar-panel__content" role="group" aria-label="Activity calendar filter options">
-                                                      <div className="ams-dashboard-activity-calendar-panel__heading">
-                                                        <div><p>Time window</p><span>Choose a quick range or set exact dates</span></div>
-                                                        <DashboardControl type="button" variant="action" size="compact" icon={<CheckCircle2 size={13}/>} showArrow={false} ariaLabel="Close activity calendar" onClick={() => setActivityCalendarOpen(false)}>Done</DashboardControl>
-                                                      </div>
-                                                      <DashboardFilterGroup ariaLabel="Activity date presets" value={activityTimeFilter} density="compact" className="ams-dashboard-activity-calendar-presets" onChange={(value)=>{const next=value as DashboardActivityTimeFilter;setActivityTimeFilter(next);setActivityPage(1);setActivityCalendarOpen(next==='custom');}} options={[
-                                                        {value:'7',label:'7 days'},{value:'30',label:'30 days'},{value:'90',label:'90 days'},{value:'custom',label:'Custom'},{value:'all',label:'All dates'}
-                                                      ]} />
-                                                      {activityTimeFilter === 'custom' ? (
-                                                        <div className="ams-dashboard-activity-date-range" role="group" aria-label="Custom activity date range">
-                                                          <label className="ams-dashboard-activity-date"><span>From</span><input type="date" aria-label="Recent activity start date" value={activityStartDate} max={activityEndDate || undefined} onChange={(event) => { setActivityStartDate(event.target.value); setActivityPage(1); }} /></label>
-                                                          <label className="ams-dashboard-activity-date"><span>To</span><input type="date" aria-label="Recent activity end date" value={activityEndDate} min={activityStartDate || undefined} onChange={(event) => { setActivityEndDate(event.target.value); setActivityPage(1); }} /></label>
-                                                        </div>
-                                                      ) : null}
-                                                    </div>
-                                                  </DropdownPortal>
-                                                ) : null}
-                                              </div>
-                      <DashboardControl to="/admin/settings?tab=audit" variant="action" size="standard" icon={<Eye size={14}/>} className="ams-dashboard-card-action">View audit log</DashboardControl>
-                    </div>
+                    <Link to="/admin/settings?tab=audit" className="inline-flex min-h-9 items-center gap-1 text-[11px] font-medium text-muted hover:text-accent-text">View audit log <ArrowUpRight size={12} aria-hidden="true" /></Link>
                   )}
                 >
                   {!dashboardOverview.recentActivityDataAvailable ? (
-                    <div className="p-4" role="status">
-                      <DashboardUnavailable title={dashboardOverview.loading ? 'Loading recent activity' : 'Recent activity unavailable'} description="The audit feed cannot be confirmed from the current source." compact />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="ams-dashboard-activity-tools" style={{ '--activity-actor-filter-width': dashboardActivityActorFilterWidth } as React.CSSProperties} role="search" aria-label="Filter recent activity">
-                        <label className="ams-dashboard-activity-search">
-                          <span className="sr-only">Search event or actor</span>
-                          <Search size={14} aria-hidden="true" />
-                          <input
-                            type="search"
-                            aria-label="Search recent activity"
-                            value={activitySearch}
-                            onChange={(event) => { setActivitySearch(event.target.value); setActivityPage(1); }}
-                            placeholder="Search event or actor"
-                          />
-                        </label>
-                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--severity">
-                          <span>Severity</span>
-<CustomSelect aria-label="Filter activity by severity" value={activitySeverityFilter} onChange={(value) => { setActivitySeverityFilter(value as DashboardActivitySeverityFilter); setActivityPage(1); }} options={[{ value: 'all', label: 'All levels' }, { value: 'critical', label: 'Critical' }, { value: 'warning', label: 'Warning' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[126px]" menuClassName="ams-dashboard-dropdown-menu" />
-                        </label>
-                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor" style={{ width: dashboardActivityActorFilterWidth, maxWidth: '100%' }}>
-                          <span>Actor</span>
-                          <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
-                        </label>
-                        
-                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--order">
-                          <span>Order</span>
-                          <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'severity', label: 'Highest severity' }, { value: 'actor', label: 'Actor A–Z' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
-                        </label>
-                        {hasActivityFilters ? <DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters</DashboardControl> : null}
-                        <DashboardControl type="button" variant="action" size="standard" icon={<Download size={13}/>} showArrow={false} className="ams-dashboard-activity-export" onClick={exportFilteredDashboardActivity} disabled={filteredDashboardRecentActivity.length===0} title="Export all matching loaded events as a CSV file" ariaLabel="Export filtered recent activity as CSV">Export CSV</DashboardControl>
+                    <div className="p-3 sm:p-4" role="status">
+                    <div className="ams-dashboard-state ams-dashboard-state--compact">
+                      <span className="ams-dashboard-state__icon" aria-hidden="true"><AlertTriangle size={15} /></span>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-medium text-fg">{dashboardOverview.loading ? 'Loading recent activity' : 'Recent activity unavailable'}</p>
+                        <p className="mt-1 text-[11px] leading-4 text-muted">No activity entries are available from the current source.</p>
                       </div>
-
-                      {filteredDashboardRecentActivity.length === 0 ? (
-                        <div className="px-4 py-4">
-                          <DashboardEmptyState
-                            eyebrow="AUDIT ACTIVITY"
-                            icon={<Search size={17} aria-hidden="true" />}
-                            title={(dashboardOverview.recentActivity || []).length === 0 ? 'No recorded activity yet' : isActivityCustomRangeUnselected ? 'Choose a custom date range' : isActivityCustomRangeInvalid ? 'Check the selected date range' : 'No activity matches these filters'}
-                            description={(dashboardOverview.recentActivity || []).length === 0 ? 'New audit events will appear when workspace actions are recorded.' : isActivityCustomRangeUnselected ? 'Choose a start date, an end date, or both to filter the loaded audit events.' : isActivityCustomRangeInvalid ? 'The start date must be on or before the end date.' : 'Adjust the search, actor, severity or date range to inspect other loaded events.'}
-                            compact
-                            action={(dashboardOverview.recentActivity || []).length > 0 ? (
-                              <DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters</DashboardControl>
-                            ) : undefined}
-                          />
-                        </div>
-                      ) : (
-                        <div className="ams-dashboard-activity-table-wrap">
-                          <table className="ams-dashboard-activity-table">
-                            <caption className="sr-only">Recent audit activity with actor, time and severity from the loaded audit feed.</caption>
-                            <thead>
-                              <tr>
-                                <th scope="col">Activity</th>
-                                <th scope="col">Actor</th>
-                                <th scope="col">Date &amp; time (UTC)</th>
-                                <th scope="col">Severity</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {visibleDashboardRecentActivity.map((activity, index) => {
-                                const severity = getDashboardActivitySeverity(activity.severity);
-                                const severityClasses = severity === 'critical'
-                                  ? 'border-danger/20 bg-danger/10 text-danger'
-                                  : severity === 'warning'
-                                    ? 'border-warning/20 bg-warning/10 text-warning'
-                                    : 'border-line bg-bg text-muted';
-                                const severityLabel = severity === 'critical' ? 'Critical' : severity === 'warning' ? 'Warning' : 'Info';
-                                const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
-                                const timestampValid = Boolean(timestamp && !Number.isNaN(timestamp.getTime()));
-                                const timestampLabel = timestampValid && timestamp
-                                  ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(timestamp) + ' UTC'
-                                  : 'Time not recorded';
-                                const actor = activity.actor ? activity.actor : 'System';
-                                return (
-                                  <tr key={String(activity.id || activity.timestamp || index)}>
-                                    <td>
-                                      <p className="ams-dashboard-activity-table__action">{activity.action || 'Recorded audit event'}</p>
-                                      <p className="ams-dashboard-activity-table__mobile-actor">{actor}</p>
-                                    </td>
-                                    <td className="ams-dashboard-activity-table__actor">{actor}</td>
-                                    <td>
-                                      <time className="ams-dashboard-activity-table__time" dateTime={timestampValid && timestamp ? timestamp.toISOString() : undefined}>{timestampLabel}</time>
-                                    </td>
-                                    <td>
-                                      <span className={'ams-dashboard-activity-table__severity inline-flex items-center justify-center rounded-badge border px-2 py-1 text-[10px] font-medium ' + severityClasses}>{severityLabel}</span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-
-                      {filteredDashboardRecentActivity.length > 0 ? (
-                        <AdminTablePagination
-                          total={filteredDashboardRecentActivity.length}
-                          page={currentActivityPage}
-                          pageSize={activityPageSize}
-                          onPageChange={setActivityPage}
-                          onPageSizeChange={(size) => { setActivityPageSize(size); setActivityPage(1); }}
-                          itemLabel="matching loaded events"
-                          pageSizeOptions={[5, 10, 20]}
-                          pageSizeAriaLabel="Recent activity rows per page"
-                          slug="dashboard-recent-activity-pagination"
-                        />
-                      ) : null}
-                    </>
+                    </div>
+                  </div>
+                  ) : (dashboardOverview.recentActivity || []).length === 0 ? (
+                    <div className="px-4 py-4"><DashboardEmptyState eyebrow="AUDIT ACTIVITY" icon={<FileText size={17} aria-hidden="true" />} title="No recent activity" description="New audit events will appear here as workspace actions are recorded." compact /></div>
+                  ) : (
+                    <div className="divide-y divide-line">
+                      {dashboardOverview.recentActivity.slice(0, 5).map((activity, index) => {
+                        const severity = String(activity.severity || 'info').toLowerCase();
+                        const severityClasses = severity === 'critical'
+                          ? 'border-danger/20 bg-danger/10 text-danger'
+                          : severity === 'warning'
+                            ? 'border-warning/20 bg-warning/10 text-warning'
+                            : 'border-line bg-bg text-muted';
+                        const severityLabel = severity === 'critical' ? 'Critical' : severity === 'warning' ? 'Warning' : 'Info';
+                        const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
+                        const timestampLabel = timestamp && !Number.isNaN(timestamp.getTime())
+                          ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(timestamp) + ' UTC'
+                          : 'Time not recorded';
+                        return (
+                          <article key={String(activity.id || activity.timestamp || index)} className="ams-dashboard-activity-row">
+                            <div className="ams-dashboard-activity-row__event flex min-w-0 items-start gap-3">
+                              <span className="ams-dashboard-activity-row__icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted"><Clock3 size={14} aria-hidden="true" /></span>
+                              <div className="ams-dashboard-activity-row__main min-w-0">
+                                <p className="ams-dashboard-activity-row__action break-words text-xs font-medium text-fg">{activity.action || 'Recorded audit event'}</p>
+                              </div>
+                            </div>
+                            <div className="ams-dashboard-activity-row__meta">
+                              <span className="ams-dashboard-activity-row__actor">{activity.actor ? 'By ' + activity.actor : 'By system'}</span>
+                              <time className="ams-dashboard-activity-row__time" dateTime={timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toISOString() : undefined}>{timestampLabel}</time>
+                            </div>
+                            <span className={'ams-dashboard-activity-row__severity shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium ' + severityClasses}>{severityLabel}</span>
+                          </article>
+                        );
+                      })}
+                    </div>
                   )}
                 </AdminPanel>
               </section>

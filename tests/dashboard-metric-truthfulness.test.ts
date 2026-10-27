@@ -10,8 +10,7 @@ test('Dashboard priority exceptions distinguish source-backed records, empty dat
   assert.ok(dashboard.includes('data-ams-feature-slug="dashboard-priority-exceptions"'));
   assert.ok(dashboard.includes('attentionItemsDataReturned = Array.isArray(data.attentionItems)'));
   assert.ok(dashboard.includes('attentionItemsDataAvailable: attentionItemsDataReturned ? true : previous.attentionItemsDataAvailable'));
-  assert.ok(dashboard.includes('ams-dashboard-attention-empty-indicator'));
-  assert.ok(dashboard.includes('No active exceptions'));
+  assert.ok(dashboard.includes('title="No active exceptions"'));
   assert.ok(dashboard.includes('Exception data unavailable'));
   assert.ok(dashboard.includes("dashboardOverview.loading ? 'Loading cross-module exceptions' : 'Exception data unavailable'"));
   assert.ok(dashboard.includes("const safeDestination = candidates.find((candidate) => candidate.startsWith('/admin/') && canOpenDashboardRoute(candidate)) || null;"));
@@ -45,7 +44,7 @@ test('Dashboard deadline distribution counts all source commitments rather than 
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey"));
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'next7') return item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey"));
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'days8to30') return item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey"));
-  assert.ok(dashboard.includes('const nextSevenDayCommitmentCount = commitmentHorizonItems.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length'));
+  assert.ok(dashboard.includes('const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length'));
   assert.doesNotMatch(dashboard, /const nextSevenDayCommitmentCount = upcomingCommitments\.filter/);
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
