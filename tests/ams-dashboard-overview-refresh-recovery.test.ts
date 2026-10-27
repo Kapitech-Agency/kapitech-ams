@@ -9,8 +9,8 @@ const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
 test('Dashboard Overview exposes an accessible manual refresh action and keeps last values visible', async () => {
   const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  assert.match(source, /aria-label="Refresh dashboard data"/);
-  assert.match(source, /onClick=\{\(\) => setRefreshRequest\(\(current\) => current \+ 1\)\}/);
+  assert.ok(source.includes('ariaLabel="Refresh dashboard data"'));
+  assert.ok(source.includes('onClick={() => setRefreshRequest((current)=>current+1)}'));
   assert.match(source, /disabled=\{isRefreshing\}/);
   assert.match(source, /Refreshing dashboard sources\. Previously loaded values remain visible\./);
   assert.match(source, /data-ams-feature-slug="dashboard-refresh-warning"/);

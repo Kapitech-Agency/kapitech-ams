@@ -217,7 +217,8 @@ test('main viewport scrollbar is stable and horizontal scroll regions show a vis
 
 test('primary data surfaces remain named and keyboard-accessible across all nine AMS modules', async () => {
   const checks: Array<[string, RegExp, string]> = [
-    ['src/components/admin/GlobalExecutiveDashboard.tsx', /data-ams-feature-slug="dashboard-delivery-desk"[\s\S]*role="group" aria-label="Task queue filters"[\s\S]*aria-pressed=\{overviewTaskFilter === tab\.key\}/, 'Dashboard'],
+    ['src/components/admin/GlobalExecutiveDashboard.tsx', /data-ams-feature-slug="dashboard-delivery-desk"[\s\S]*ariaLabel="Task queue filters"[\s\S]*onChange=\{\(value\)=>setOverviewTaskFilter\(value as DashboardTaskFilter\)\}/, 'Dashboard'],
+    ['src/components/admin/DashboardControls.tsx', /role="group" aria-label=\{ariaLabel\}/, 'Dashboard shared filter component'],
     ['src/pages/admin/AdminInbox.tsx', /aria-label="Scrollable inbox inquiry register"/, 'Inbox'],
     ['src/pages/admin/AdminProjects.tsx', /aria-label="Scrollable project register table"/, 'Projects'],
     ['src/components/admin/TasksWorkspace.tsx', /aria-label="Scrollable task register"/, 'Tasks'],
