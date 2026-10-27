@@ -447,7 +447,9 @@ test('Dashboard pixel-precision spacing keeps Finance period and Open Finance al
 
   assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*gap: 8px/s);
   assert.match(finalLayer, /\.ams-dashboard-finance-header-actions \{[^}]*justify-content: flex-start/s);
-  assert.match(finalLayer, /\.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
+  assert.match(finalLayer, /\.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 8px/s);
+  assert.match(finalLayer, /\.ams-overview-card-row \+ \.ams-overview-card-row \{[^}]*margin-top: 8px;/s);
+  assert.match(finalLayer, /\.ams-dashboard-delivery-row \{[^}]*column-gap: 12px;[^}]*row-gap: 8px/s);
   assert.match(finalLayer, /\.ams-shell \.ams-dashboard \.ams-dashboard-finance-header-actions \.ams-calendar-period-filter__trigger,\s*\.ams-shell \.ams-dashboard \.ams-dashboard-finance-header-actions \.ams-dashboard-card-action \{[^}]*height: 36px;[^}]*min-height: 36px/s);
 });
 
@@ -457,7 +459,8 @@ test('Dashboard actions, filters and calendars share one hover and geometry cont
   const sharedComponent = await read('src/components/admin/DashboardControls.tsx');
   const pageStyles = await read('src/components/admin/GlobalExecutiveDashboard.css');
 
-  assert.match(pageStyles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 12px/s);
+  assert.match(pageStyles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \{[^}]*column-gap: 12px;[^}]*row-gap: 8px/s);
+  assert.match(pageStyles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row \+ \.ams-overview-card-row \{[^}]*margin-top: 8px;/s);
   assert.ok(sharedComponent.includes("import './DashboardControls.css';"));
   assert.ok(sharedStyles.includes('--dashboard-control-hover:'));
   assert.ok(sharedStyles.includes('--dashboard-control-hover-border:'));

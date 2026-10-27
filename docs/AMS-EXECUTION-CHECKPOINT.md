@@ -800,3 +800,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Removed 1,481 declarations that were superseded by later declarations for the same selector and context, then added one explicit final layout contract for the header, tabs, project filters, card heights, Team Workload and Recent Activity. The final rules give the header a stable action baseline, make action groups wrap at tablet widths, prohibit horizontal scrolling on the Dashboard tabs, keep Project service-line options compact inside the same-height registry toolbar, and make Projects flex-fill the Finance row.
 - Team Workload uses separated task/time groups and aligned local period controls. Recent Activity keeps its search, actor/severity/date/order filters, custom range, CSV export and shared pagination; the table now uses soft row surfaces and a dedicated narrow-screen column layout.
 - Existing canonical data, permissions, routes, financial semantics and filter behavior remain unchanged. TypeScript, regression tests, production build and AMS CI results must be checked on this commit.
+
+
+## 0.6 Dashboard card-to-card spacing correction — 27 October 2026
+
+- Unified vertical spacing between Overview card rows to 8px, including the Task Queue + Upcoming Deadlines row on narrow screens. Adjacent card-row sections no longer retain a larger 14px top margin.
+- Kept the 12px horizontal gutter on desktop while using the tighter 8px vertical rhythm, so columns retain enough separation and stacked rows are more compact.
+- Added regression assertions for the shared row gap, sibling-row margin, and delivery-row layout. Presentation-only; no data, permissions, routes, or backend behavior changed.
