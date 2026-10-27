@@ -610,10 +610,10 @@ test('Dashboard uses a consistent typography scale, neutral project filters and 
   assert.ok(projectFilterStart >= 0);
   assert.ok(dashboardStyles.includes('.ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
   const finalContract = dashboardStyles.slice(dashboardStyles.lastIndexOf('/* Final Dashboard control contract. */'));
-  const projectFilterStart = finalContract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,');
-  const projectRegistryStart = finalContract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action', projectFilterStart);
-  const projectFilterCss = finalContract.slice(projectFilterStart, projectRegistryStart);
-  assert.ok(projectFilterStart >= 0 && projectRegistryStart > projectFilterStart);
+  const projectGroupCssStart = finalContract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,');
+  const projectRegistryCssStart = finalContract.indexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action', projectGroupCssStart);
+  const projectFilterCss = finalContract.slice(projectGroupCssStart, projectRegistryCssStart);
+  assert.ok(projectGroupCssStart >= 0 && projectRegistryCssStart > projectGroupCssStart);
   assert.ok(projectFilterCss.includes('background: var(--dashboard-control-selected)'));
   assert.ok(projectFilterCss.includes('padding: var(--dashboard-filter-shell-padding, 2px);'));
   assert.doesNotMatch(projectFilterCss, /background:\s*var\(--accent\)/);
