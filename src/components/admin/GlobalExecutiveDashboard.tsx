@@ -43,7 +43,7 @@ type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
 type DashboardTone = 'success' | 'warning' | 'danger' | 'info';
 type DashboardTaskFilter = 'action' | 'review' | 'overdue' | 'blocked' | 'unassigned';
 type DashboardProjectFilter = 'all' | 'creative' | 'technology';
-type DashboardDeadlineFilter = 'all' | 'overdue' | 'next7' | 'days8to30';
+type DashboardDeadlineFilter = 'all' | 'overdue' | 'next7' | 'days8to30' | 'custom';
 type DashboardQuotationStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
 type DashboardQuotationFilter = 'all' | 'review' | 'approved' | 'sent' | 'draft';
 type DashboardAttentionSeverityFilter = 'all' | 'urgent' | 'attention' | 'info';
@@ -1709,6 +1709,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [overviewTaskFilter, setOverviewTaskFilter] = useState<DashboardTaskFilter>('action');
   const [overviewProjectFilter, setOverviewProjectFilter] = useState<DashboardProjectFilter>('all');
   const [overviewDeadlineFilter, setOverviewDeadlineFilter] = useState<DashboardDeadlineFilter>('all');
+  const [deadlineStartDate, setDeadlineStartDate] = useState('');
+  const [deadlineEndDate, setDeadlineEndDate] = useState('');
   const [overviewQuotationFilter, setOverviewQuotationFilter] = useState<DashboardQuotationFilter>('all');
   const [attentionSeverityFilter, setAttentionSeverityFilter] = useState<DashboardAttentionSeverityFilter>('all');
   const [activitySearch, setActivitySearch] = useState('');
@@ -2204,7 +2206,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       for (const milestone of milestones) {
         if (milestone?.completed === true || isFinishedWork(milestone?.status)) continue;
         const dueDate = dateKey(milestone?.dueDate || milestone?.targetDate);
-        if (!isValidDashboardDate(dueDate) || dueDate > nextThirtyDaysKey) continue;
+        if (!isValidDashboardDate(dueDate)) continue;
         datedMilestoneKeys.add(dueDate);
         commitments.push({
           id: 'milestone-' + String(milestone.id || milestone.slug || milestone.title || projectId + '-' + dueDate),
@@ -2223,7 +2225,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         });
       }
       const projectDueDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
-      if (isValidDashboardDate(projectDueDate) && projectDueDate <= nextThirtyDaysKey && !datedMilestoneKeys.has(projectDueDate)) {
+      if (isValidDashboardDate(projectDueDate) && !datedMilestoneKeys.has(projectDueDate)) {
         commitments.push({
           id: 'project-deadline-' + projectId,
           projectId,
@@ -2388,16 +2390,25 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, [activeDashboardTasks, activeProjectRows, allUpcomingCommitments, canOpenClientDirectory, canOpenProjects, canOpenTasks, clientDirectoryById, currentDayKey, operationalSnapshot.projects, operationalSnapshot.tasks]);
   const clientDeliveryOpenTaskMaximum = Math.max(1, ...clientDeliveryFocus.map((client) => client.openTaskCount ?? 0));
 
+  const isDeadlineCustomRangeInvalid = Boolean(deadlineStartDate && deadlineEndDate && deadlineStartDate > deadlineEndDate);
+  const isDeadlineCustomRangeUnselected = overviewDeadlineFilter === 'custom' && !deadlineStartDate && !deadlineEndDate;
+  const commitmentHorizonItems = allUpcomingCommitments.filter((item) => item.dueDate <= nextThirtyDaysKey);
   const upcomingCommitments = allUpcomingCommitments.filter((item) => {
+    if (overviewDeadlineFilter === 'custom') {
+      if (isDeadlineCustomRangeInvalid || isDeadlineCustomRangeUnselected) return false;
+      if (deadlineStartDate && item.dueDate < deadlineStartDate) return false;
+      if (deadlineEndDate && item.dueDate > deadlineEndDate) return false;
+      return true;
+    }
     if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey;
     if (overviewDeadlineFilter === 'next7') return item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey;
     if (overviewDeadlineFilter === 'days8to30') return item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey;
-    return true;
+    return item.dueDate <= nextThirtyDaysKey;
   }).slice(0, 8);
-  const commitmentHorizonTotal = allUpcomingCommitments.length;
-  const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length;
-  const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
-  const daysEightToThirtyCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey).length;
+  const commitmentHorizonTotal = commitmentHorizonItems.length;
+  const overdueHorizonCount = commitmentHorizonItems.filter((item) => item.dueDate < currentDayKey).length;
+  const nextSevenDayCommitmentCount = commitmentHorizonItems.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length;
+  const daysEightToThirtyCommitmentCount = commitmentHorizonItems.filter((item) => item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey).length;
   const overdueCommitmentCount = operationalSnapshot.projects === null ? null : activeProjectRows.reduce((total: number, project: any) => {
     const targetDate = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
     const dueProjectIsOverdue = isValidDashboardDate(targetDate) && targetDate < currentDayKey;
@@ -2559,7 +2570,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 ))}
               </nav>
             ) : null}
-            <DashboardControl type="button" onClick={() => setRefreshRequest((current)=>current+1)} disabled={isRefreshing} variant="action" size="standard" icon={<RefreshCw size={14} className={isRefreshing?'animate-spin':''}/>} className="ams-dashboard-header-action ams-dashboard-header-action--refresh" ariaLabel="Refresh dashboard data" title="Refresh dashboard data" showArrow={false}>{isRefreshing?'Refreshing…':'Refresh'}</DashboardControl>
+            <div className="ams-dashboard-header-utility-actions" role="group" aria-label="Dashboard utility actions">
+              <DashboardControl type="button" onClick={() => setRefreshRequest((current)=>current+1)} disabled={isRefreshing} variant="action" size="standard" icon={<RefreshCw size={14} className={isRefreshing?'animate-spin':''}/>} className="ams-dashboard-header-action ams-dashboard-header-action--refresh" ariaLabel="Refresh dashboard data" title="Refresh dashboard data" showArrow={false}>{isRefreshing?'Refreshing…':'Refresh'}</DashboardControl>
+            </div>
           </div>
         )}
       />
@@ -2626,7 +2639,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   bodyClassName="p-0"
                   actions={(
                     <div className="ams-project-progress-header-actions" data-ams-feature-slug="dashboard-project-filters" aria-label="Project delivery filters">
-                      <DashboardFilterGroup ariaLabel="Filter projects by service line" value={overviewProjectFilter} onChange={(value)=>setOverviewProjectFilter(value as DashboardProjectFilter)} density="compact" className="ams-dashboard-project-service-filter" options={[
+                      <DashboardFilterGroup ariaLabel="Filter projects by service line" value={overviewProjectFilter} onChange={(value)=>setOverviewProjectFilter(value as DashboardProjectFilter)} density="compact" className="ams-dashboard-project-service-filter ams-dashboard-segmented-filter" options={[
                         {value:'all',label:'All',count:activeDashboardProjectFilterCounts.all},
                         {value:'creative',label:'Creative',count:activeDashboardProjectFilterCounts.creative},
                         {value:'technology',label:'IT',count:activeDashboardProjectFilterCounts.technology}
@@ -2911,17 +2924,34 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="px-4 py-4"><DashboardEmptyState eyebrow="DELIVERY TIMELINE" icon={<CalendarDays size={17} aria-hidden="true" />} title="No delivery dates to display" description="The project register returned no records, so upcoming deadlines cannot be determined." action={canOpenProjects ? <DashboardControl to="/admin/projects?projects=all" variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open Projects</DashboardControl> : undefined} /></div>
                 ) : (
                   <>
-                    <div className="space-y-3 border-b border-line bg-bg/50 px-4 py-4" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
-                      <div className="flex flex-wrap items-end justify-between gap-3">
-                        <div><p className="text-[11px] text-muted">Overdue and due within 30 days</p><p className="mt-1 text-xl font-semibold tabular-nums text-fg">{commitmentHorizonTotal}</p></div>
-                        
+                    <div className="ams-dashboard-deadline-summary" data-ams-feature-slug="dashboard-delivery-horizon-visualization">
+                      <div className="ams-dashboard-deadline-summary__header">
+                        <div className="min-w-0">
+                          <p className="text-[11px] text-muted">Overdue and due within 30 days</p>
+                          <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{commitmentHorizonTotal}</p>
+                        </div>
+                        <DashboardControl
+                          type="button"
+                          variant="action"
+                          size="compact"
+                          icon={<CalendarDays size={13}/>}
+                          showArrow={false}
+                          className="ams-dashboard-deadline-custom-trigger"
+                          ariaLabel="Filter deadlines by custom date range"
+                          ariaExpanded={overviewDeadlineFilter === 'custom'}
+                          ariaControls="ams-dashboard-deadline-custom-range"
+                          active={overviewDeadlineFilter === 'custom'}
+                          onClick={() => setOverviewDeadlineFilter((current) => current === 'custom' ? 'all' : 'custom')}
+                        >
+                          {overviewDeadlineFilter === 'custom' ? 'Custom dates selected' : 'Custom dates'}
+                        </DashboardControl>
                       </div>
                       {commitmentHorizonTotal > 0 ? (
                         <>
-                          <div className="flex h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={'Delivery deadlines: ' + overdueHorizonCount + ' overdue, ' + nextSevenDayCommitmentCount + ' due in 7 days, ' + daysEightToThirtyCommitmentCount + ' due in days 8 to 30.'}>
-                            {overdueHorizonCount > 0 ? <span className="h-full bg-danger" style={{ width: overdueHorizonCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
-                            {nextSevenDayCommitmentCount > 0 ? <span className="h-full bg-warning" style={{ width: nextSevenDayCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
-                            {daysEightToThirtyCommitmentCount > 0 ? <span className="h-full bg-info" style={{ width: daysEightToThirtyCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
+                          <div className="ams-dashboard-deadline-horizon-bar" role="img" aria-label={'Delivery deadlines within 30 days: ' + overdueHorizonCount + ' overdue, ' + nextSevenDayCommitmentCount + ' due in 7 days, ' + daysEightToThirtyCommitmentCount + ' due in days 8 to 30.'}>
+                            {overdueHorizonCount > 0 ? <span className="ams-dashboard-deadline-horizon-bar__overdue" style={{ width: overdueHorizonCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
+                            {nextSevenDayCommitmentCount > 0 ? <span className="ams-dashboard-deadline-horizon-bar__next" style={{ width: nextSevenDayCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
+                            {daysEightToThirtyCommitmentCount > 0 ? <span className="ams-dashboard-deadline-horizon-bar__later" style={{ width: daysEightToThirtyCommitmentCount / commitmentHorizonTotal * 100 + '%' }} aria-hidden="true" /> : null}
                           </div>
                           <DashboardFilterGroup ariaLabel="Filter deadlines" value={overviewDeadlineFilter} onChange={(value)=>setOverviewDeadlineFilter(value as DashboardDeadlineFilter)} density="metric" layout="grid" className="ams-dashboard-deadline-filter-group" options={[
                             {value:'all',label:'All',metric:commitmentHorizonTotal},
@@ -2930,12 +2960,37 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             {value:'days8to30',label:'Days 8–30',metric:daysEightToThirtyCommitmentCount}
                           ]} />
                         </>
-                      ) : (
+                      ) : overviewDeadlineFilter !== 'custom' ? (
                         <DashboardEmptyState eyebrow="DELIVERY HORIZON" tone="success" icon={<CalendarDays size={16} aria-hidden="true" />} title="No upcoming commitments" description="No dated open commitments fall within the next 30 days." compact />
-                      )}
+                      ) : null}
+                      {overviewDeadlineFilter === 'custom' ? (
+                        <div id="ams-dashboard-deadline-custom-range" className="ams-dashboard-deadline-date-range" role="group" aria-label="Custom deadline date range">
+                          <label className="ams-dashboard-deadline-date">
+                            <span>From</span>
+                            <input type="date" aria-label="Deadline start date" value={deadlineStartDate} max={deadlineEndDate || undefined} onChange={(event) => setDeadlineStartDate(event.target.value)} />
+                          </label>
+                          <label className="ams-dashboard-deadline-date">
+                            <span>To</span>
+                            <input type="date" aria-label="Deadline end date" value={deadlineEndDate} min={deadlineStartDate || undefined} onChange={(event) => setDeadlineEndDate(event.target.value)} />
+                          </label>
+                          {(deadlineStartDate || deadlineEndDate) ? (
+                            <DashboardControl type="button" variant="action" size="compact" icon={<RefreshCw size={12}/>} showArrow={false} className="ams-dashboard-deadline-date-range__clear" onClick={() => { setDeadlineStartDate(''); setDeadlineEndDate(''); }}>Clear dates</DashboardControl>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                     {upcomingCommitments.length === 0 ? (
-                      commitmentHorizonTotal === 0 ? null : (
+                      overviewDeadlineFilter === 'custom' ? (
+                        <div className="px-4 py-3">
+                          <DashboardEmptyState
+                            eyebrow="DEADLINE RANGE"
+                            icon={<CalendarDays size={16} aria-hidden="true" />}
+                            title={isDeadlineCustomRangeUnselected ? 'Choose custom dates' : isDeadlineCustomRangeInvalid ? 'Check the selected dates' : 'No commitments in this date range'}
+                            description={isDeadlineCustomRangeUnselected ? 'Choose a start date, an end date, or both to inspect saved delivery dates outside the standard 30-day horizon.' : isDeadlineCustomRangeInvalid ? 'The start date must be on or before the end date.' : 'No saved project or milestone deadlines match the chosen date range.'}
+                            compact
+                          />
+                        </div>
+                      ) : commitmentHorizonTotal === 0 ? null : (
                         <div className="px-4 py-3">
                           <DashboardEmptyState
                             eyebrow="DEADLINE FILTER"
