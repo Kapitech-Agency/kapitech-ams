@@ -970,6 +970,47 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(charts.includes('{secondaryLabel && <span className="inline-flex items-center gap-2">'));
 });
 
+test('Dashboard final layout keeps date controls local, cards aligned and tab navigation non-scrolling', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  assert.ok(start >= 0 && end > start);
+  const overview = dashboard.slice(start, end);
+  const toolbarStart = dashboard.indexOf('<section className="ams-dashboard-toolbar');
+  const toolbarEnd = dashboard.indexOf('</section>', toolbarStart);
+  const toolbar = dashboard.slice(toolbarStart, toolbarEnd);
+
+  assert.ok(toolbar.includes('ams-dashboard-view-tabs'));
+  assert.doesNotMatch(toolbar, /DashboardCalendarPeriodFilter|Reporting date range|ams-card-period-controls/,
+    'The global tabs strip must not contain a global date filter.');
+  assert.ok(overview.includes('data-ams-feature-slug="dashboard-finance-period-controls"'));
+  assert.ok(overview.includes('data-ams-feature-slug="dashboard-time-period-controls"'));
+  assert.ok(overview.includes('data-ams-feature-slug="dashboard-recent-activity"'));
+  assert.ok(overview.includes('data-ams-dashboard-activity'));
+  assert.ok(overview.includes('ams-dashboard-activity-table'));
+  assert.ok(overview.includes('Export CSV'));
+  assert.ok(overview.includes('Reset filters'));
+  assert.ok(overview.includes('Filter activity by severity'));
+  assert.ok(overview.includes('Filter activity by actor'));
+  assert.ok(overview.includes('Sort recent activity'));
+
+  for (const selector of [
+    '.ams-dashboard-page-header.ams-page-header',
+    'overflow-x: clip',
+    '.ams-dashboard-project-service-filter .ams-dashboard-control--filter',
+    '.ams-dashboard-projects-body',
+    '.ams-dashboard-team-body',
+    '.ams-dashboard-activity-tools',
+    '.ams-dashboard-activity-table'
+  ]) assert.ok(styles.includes(selector), 'Missing final Dashboard layout rule: ' + selector);
+
+  assert.match(styles, /\.ams-overview-card-row\[aria-label="Finance and project overview"\][\s\S]*?align-items:\s*stretch;/);
+  assert.ok(dashboard.includes('DashboardCalendarPeriodFilter caption="Period" ariaLabel="Finance reporting period"'));
+  assert.ok(dashboard.includes('DashboardCalendarPeriodFilter caption="Period" ariaLabel="Recorded time reporting period"'));
+  assert.equal(toolbar.includes('overflow-x-auto'), false, 'Dashboard view tabs must never use horizontal scrolling.');
+});
+
 test('Dashboard quick actions and project-header links respect route access', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.ok(dashboard.includes('const currentNavigationRole = getAmsRole(getAdminSession()?.user)'));
