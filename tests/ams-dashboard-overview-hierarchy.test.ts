@@ -1049,6 +1049,23 @@ test('Dashboard task queue and deadline cards remain compact, responsive and sou
 });
 
 
+test('Task queue filters live in the card header beside Open Tasks', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const queueStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const headerActionsStart = dashboard.indexOf('actions={(', queueStart);
+  const headerEnd = dashboard.indexOf('\n              >', headerActionsStart);
+  const bodyEnd = dashboard.indexOf('</AdminPanel>', headerEnd);
+  assert.ok(queueStart >= 0 && headerActionsStart > queueStart && headerEnd > headerActionsStart && bodyEnd > headerEnd);
+  const headerActions = dashboard.slice(headerActionsStart, headerEnd);
+  const body = dashboard.slice(headerEnd, bodyEnd);
+  assert.ok(headerActions.includes('ariaLabel="Task queue filters"'));
+  assert.ok(headerActions.includes('density="compact"'));
+  assert.ok(headerActions.includes('className="ams-dashboard-card-header-actions ams-dashboard-task-filter-toolbar"'));
+  assert.ok(headerActions.includes('overviewTaskQueueHref'));
+  assert.equal(body.includes('ariaLabel="Task queue filters"'), false, 'The Task queue body should not repeat filters already placed in its header.');
+  assert.equal(body.includes('ams-dashboard-task-filter-toolbar'), false);
+});
+
 test('Dashboard Overview gates module links through the existing route-access policy', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");

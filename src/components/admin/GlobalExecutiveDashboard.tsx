@@ -2808,19 +2808,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 title="Task queue"
                 className="h-full ams-overview-panel ams-overview-panel--list"
                 bodyClassName="p-0"
-                actions={canOpenTasks ? (
-                  <DashboardControl to={overviewTaskQueueHref} variant="action" size="standard" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action">Open Tasks</DashboardControl>
-                ) : undefined}
-              >
-                <div className="border-b border-line px-3 py-3 sm:px-4">
-                  <DashboardFilterGroup ariaLabel="Task queue filters" value={overviewTaskFilter} onChange={(value)=>setOverviewTaskFilter(value as DashboardTaskFilter)} density="comfortable" disabled={!canOpenTasks} className="ams-dashboard-task-queue-filter" options={[
+                actions={(
+                  <div className="ams-dashboard-card-header-actions ams-dashboard-task-filter-toolbar">
+                    <DashboardFilterGroup ariaLabel="Task queue filters" value={overviewTaskFilter} onChange={(value)=>setOverviewTaskFilter(value as DashboardTaskFilter)} density="compact" disabled={!canOpenTasks} className="ams-dashboard-task-queue-filter" options={[
                     {value:'action',label:'Action needed',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.action:'—'},
                     {value:'review',label:'Review',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.review:'—'},
                     {value:'overdue',label:'Overdue',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.overdue:'—'},
                     {value:'blocked',label:'Blocked',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.blocked:'—'},
                     {value:'unassigned',label:'Unassigned',count:canOpenTasks&&operationalSnapshot.tasks!==null?taskQueueCounts.unassigned:'—'}
                   ]} />
-                </div>
+                    {canOpenTasks ? <DashboardControl to={overviewTaskQueueHref} variant="action" size="standard" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action">Open Tasks</DashboardControl> : null}
+                  </div>
+                )}
+              >
                 {!canOpenTasks || operationalSnapshot.tasks === null ? (
                   <div className="p-4"><DashboardUnavailable title="Task queue unavailable" description="The canonical Tasks source is not available to this role or did not return records." compact /></div>
                 ) : dashboardWorkTasks.length === 0 ? (

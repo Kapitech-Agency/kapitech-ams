@@ -707,3 +707,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - The shared control module now renders Dashboard actions and filters through one reusable primitive. Header invoice/project/shortcut/refresh actions, card CTAs and Recent Activity date/reset/export/pagination actions use consistent rounded controls, boxed icons, and standard/compact heights.
 - Filter active and hover states remain neutral grey. Create Invoice retains primary emphasis. Finance and Projects stretch to equal height on wide layouts.
 - Existing hrefs, handlers, role permission gates, data semantics and financial calculations are preserved. Frontend-only.
+
+
+## 0.5 Task Queue filter placement — 27 October 2026
+
+- Moved the existing Task Queue filters from the body into the card header beside the Open Tasks action. Filter values, counts, permissions and queue filtering behavior remain unchanged; filter density is compact and wraps rather than introducing horizontal scrolling.
+- Added a regression test confirming the filters belong to the card header and are not duplicated in the queue body.
+- Presentation-only change; no backend, API, database, auth, permission or task workflow changes.

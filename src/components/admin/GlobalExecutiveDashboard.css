@@ -7097,7 +7097,21 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control--filter[aria-pressed="true"] {border-color:color-mix(in srgb,var(--text) 16%,var(--line));background:var(--dashboard-control-selected);color:var(--text)}
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control__label {font-size:10px;line-height:14px}
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control__metric {margin-top:auto;color:var(--text);font-size:20px;line-height:24px;font-weight:650;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
-.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar {padding:14px 16px}
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0;
+}
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter {
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+}
 .ams-shell .ams-dashboard .ams-dashboard-task-queue-filter {max-width:100%}
 .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets {width:fit-content;max-width:100%}
 .ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs {display:flex;min-width:0;max-width:100%;flex-wrap:wrap;align-items:center;gap:5px;overflow:visible;overflow-x:visible;scrollbar-width:none}
