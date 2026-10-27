@@ -176,38 +176,36 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   ]) assert.ok(styles.includes(selector), 'Missing layout rule: ' + selector);
 });
 
-test('Recent Activity layout keeps filters aligned and pagination compact', async () => {
+test('Recent Activity reuses AMS pagination while keeping date, severity, actor, and search filters functional', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const activityStart = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
   const activityEnd = dashboard.indexOf('</AdminPanel>', activityStart);
-  const activity = dashboard.slice(activityStart, activityEnd);
-  const finalLayerStart = styles.lastIndexOf('/* Recent Activity — stable header, responsive filter grid, and compact pagination. */');
   assert.ok(activityStart >= 0 && activityEnd > activityStart);
-  assert.ok(finalLayerStart >= 0, 'Recent Activity needs one canonical final layout layer.');
-  const finalLayer = styles.slice(finalLayerStart);
-  assert.ok(activity.includes('<table className="ams-dashboard-activity-table">'));
+  const activity = dashboard.slice(activityStart, activityEnd);
+  assert.ok(dashboard.includes('AdminTablePagination } from \'./AdminModulePrimitives\''));
+  assert.ok(activity.includes('<AdminTablePagination'));
+  assert.ok(activity.includes('total={filteredDashboardRecentActivity.length}'));
+  assert.ok(activity.includes('page={currentActivityPage}'));
+  assert.ok(activity.includes('pageSize={activityPageSize}'));
+  assert.ok(activity.includes('pageSizeOptions={[5, 10, 20]}'));
+  assert.ok(primitives.includes('className="ams-table-pagination border-t border-line bg-panel px-4 py-3 sm:px-5"'));
   assert.ok(activity.includes('Search recent activity'));
   assert.ok(activity.includes('Filter activity by actor'));
   assert.ok(activity.includes('Filter activity by severity'));
   assert.ok(activity.includes('Filter activity by time window'));
-  assert.ok(activity.includes('Recent activity rows per page'));
-  assert.ok(activity.includes('Page {currentActivityPage} of {activityPageCount}'));
-  assert.ok(activity.includes('Previous activity page'));
-  assert.ok(activity.includes('Next activity page'));
-  assert.equal(activity.includes('First activity page'), false);
-  assert.equal(activity.includes('Last activity page'), false);
-  assert.equal(activity.includes('Go to activity page'), false);
+  assert.ok(activity.includes('aria-label="Recent activity start date"'));
+  assert.ok(activity.includes('aria-label="Recent activity end date"'));
+  assert.equal(activity.includes('ams-dashboard-activity-page-buttons'), false);
+  assert.equal(activity.includes('Page {currentActivityPage} of {activityPageCount}'), false);
   for (const selector of [
     '.ams-dashboard-activity-tools',
     '.ams-dashboard-activity-search',
     '.ams-dashboard-activity-filter--actor',
     '.ams-dashboard-activity-table',
-    '.ams-dashboard-activity-pagination',
-    '.ams-dashboard-activity-page-status',
-    '@media (max-width: 759px)',
-    '@media (max-width: 379px)'
-  ]) assert.ok(finalLayer.includes(selector), 'Missing clean Recent Activity layout rule: ' + selector);
+    '@media (max-width: 759px)'
+  ]) assert.ok(styles.includes(selector), 'Missing responsive Recent Activity rule: ' + selector);
 });
 
 test('Dashboard cards use soft surfaces and whitespace instead of decorative divider lines', async () => {
@@ -244,7 +242,7 @@ test('Dashboard controls use card-local dropdowns, design-system active states, 
   assert.ok(dashboard.includes('const dashboardActivityActors = useMemo'));
   assert.ok(dashboard.includes("activityActorFilter !== '__all_actors__'"));
   assert.ok(dashboard.includes("activitySortOrder === 'oldest'"));
-  for (const selector of ['.ams-dashboard-view-tab[aria-current="page"]','.ams-dashboard button[aria-pressed="true"]','.ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]','.ams-dashboard-projects-body','.ams-dashboard-finance-trend-region .ams-trend-chart__plot','.ams-dashboard-activity-page-buttons','.ams-shell:has(.ams-dashboard)','.ams-portal-root .ams-calendar-period-filter__panel','.ams-portal-root .ams-dashboard-activity-calendar-panel']) {
+  for (const selector of ['.ams-dashboard-view-tab[aria-current="page"]','.ams-dashboard button[aria-pressed="true"]','.ams-dashboard .ams-dashboard-select-trigger[aria-expanded="true"]','.ams-dashboard-projects-body','.ams-dashboard-finance-trend-region .ams-trend-chart__plot','.ams-table-pagination','.ams-shell:has(.ams-dashboard)','.ams-portal-root .ams-calendar-period-filter__panel','.ams-portal-root .ams-dashboard-activity-calendar-panel']) {
     assert.ok(styles.includes(selector), 'Missing final Dashboard layout/control rule: ' + selector);
   }
 });
@@ -450,7 +448,7 @@ test('Dashboard card actions, Recorded time controls, calendar navigation and Ac
   assert.ok(styles.includes('@media (max-width: 1199px)'));
   assert.ok(styles.includes('grid-template-columns: minmax(0, 1.35fr) minmax(120px, .8fr) minmax(150px, 1fr);'));
   assert.ok(styles.includes('grid-template-columns: repeat(2, minmax(0, 1fr));'));
-  assert.ok(styles.includes('.ams-dashboard-activity-page-status'));
+  assert.ok(dashboard.includes('<AdminTablePagination'));
   assert.ok(overview.includes('Open Time Logs'));
   assert.ok(overview.includes('Open Finance'));
   assert.ok(overview.includes('View audit log'));
@@ -467,6 +465,39 @@ test('Dashboard segmented filters use one reusable neutral-state component', asy
   assert.ok(styles.includes('--dashboard-control-selected'));
   assert.ok(styles.includes('--dashboard-control-selected:'));
 });
+test('Dashboard active tabs, shared filter states, aligned card bodies, compact actions, and team spacing stay consistent', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+
+  assert.ok(dashboard.includes('aria-current={view === tab.key ? \'page\' : undefined}'));
+  assert.ok(styles.includes('.ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"]'));
+  assert.ok(styles.includes('overflow-x: visible;'));
+  assert.ok(styles.includes('.ams-dashboard-task-queue-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
+  assert.ok(styles.includes('.ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
+  assert.ok(styles.includes('.ams-dashboard-task-queue-filter .ams-dashboard-control--filter,'));
+  assert.ok(styles.includes('.ams-project-progress-header-actions .ams-project-registry-action'));
+  assert.ok(styles.includes('.ams-dashboard-delivery-row'));
+  assert.ok(styles.includes('.ams-dashboard-task-queue-body,'));
+  assert.ok(styles.includes('.ams-dashboard-deadlines-body'));
+  assert.ok(styles.includes('.ams-dashboard-finance-body,'));
+  assert.ok(styles.includes('.ams-dashboard-projects-body'));
+  assert.ok(styles.includes('.ams-dashboard-team-tasks'));
+  assert.ok(styles.includes('border-bottom: 0;'));
+  assert.ok(styles.includes('.ams-calendar-period-filter__trigger'));
+  assert.ok(styles.includes('.ams-dashboard-activity-calendar-trigger'));
+  assert.ok(styles.includes('border-radius: 8px;'));
+  assert.ok(dashboard.includes('<AdminTablePagination'));
+  assert.ok(primitives.includes('export const AdminTablePagination'));
+  const taskStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const deadlineStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskStart);
+  const task = dashboard.slice(taskStart, deadlineStart);
+  assert.ok(task.includes('ams-dashboard-task-queue-panel'));
+  assert.ok(task.includes('ams-dashboard-task-queue-list'));
+  assert.ok(task.includes('Open Tasks'));
+  assert.ok(task.includes('ams-dashboard-deadlines-panel'));
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');

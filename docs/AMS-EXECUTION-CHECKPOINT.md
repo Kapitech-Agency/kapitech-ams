@@ -737,3 +737,13 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Updated regression expectations to the card-local deadline range and 30-day summary model. Tests verify custom dates filter already-loaded saved project/milestone deadlines, while summary counts remain limited to the standard overdue/30-day horizon.
 - Header controls, tab wrapping, project filter sizing, equal-height Finance/Projects, Team Workload rhythm and Recent Activity table layout are covered alongside the new deadline range.
 - Frontend-only. Production visual sign-off remains outstanding; CI dependency audit is a separate existing advisory.
+
+
+## 0.5 Dashboard control alignment and pagination correction — 27 October 2026
+
+- Restored a clearly visible selected state for Overview/Performance/Analytics and unified Project service-line filters with Task Queue filter active styling.
+- Matched the Project Progress filters with Project registry and Task Queue filters with Open Tasks; card actions are consistent rounded rectangles. Header quick actions, card-local calendar triggers and controls use the same measured baselines.
+- Finance and Projects flex bodies share their desktop row height. Task Queue and Upcoming Deadlines use a matching flex-fill body contract. Recorded Time is separated from owner workload by spacing, not a divider line.
+- Recent Activity now uses shared `AdminTablePagination` from `AdminModulePrimitives`; custom pagination markup was removed while search, actor/severity/date filters, sort order, CSV export and responsive table semantics stay intact.
+- Date selection remains card-local: Finance, Recorded Time, Upcoming Deadlines and Recent Activity each scope only their own measures.
+- Presentation-only changes; no backend, API, data model, permissions, Finance formulas, or authorization checks changed.

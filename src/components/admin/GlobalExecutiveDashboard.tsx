@@ -24,7 +24,7 @@ import {
   ReceiptText,
   Users,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge, AdminTablePagination } from './AdminModulePrimitives';
 import { DashboardControl, DashboardFilterGroup } from './DashboardControls';
 import { CustomSelect } from '../ui/CustomSelect';
 import { DropdownPortal } from '../ui/DropdownPortal';
@@ -2031,9 +2031,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     (currentActivityPage - 1) * activityPageSize,
     currentActivityPage * activityPageSize
   );
-  const activityFirstRow = filteredDashboardRecentActivity.length ? (currentActivityPage - 1) * activityPageSize + 1 : 0;
-  const activityLastRow = Math.min(currentActivityPage * activityPageSize, filteredDashboardRecentActivity.length);
-
   const exportFilteredDashboardActivity = () => {
     const escapeCsvCell = (value: unknown) => {
       const raw = String(value ?? '');
@@ -2832,12 +2829,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </section>
           </section>
 
-<section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Task queue and delivery deadlines">
+<section className="ams-overview-card-row ams-dashboard-delivery-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Task queue and delivery deadlines">
             <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Task delivery queue">
               <AdminPanel
                 title="Task queue"
-                className="h-full ams-overview-panel ams-overview-panel--list"
-                bodyClassName="p-0"
+                className="h-full ams-overview-panel ams-overview-panel--list ams-dashboard-task-queue-panel"
+                bodyClassName="ams-dashboard-task-queue-body p-0"
                 actions={(
                   <div className="ams-dashboard-card-header-actions ams-dashboard-task-filter-toolbar">
                     <DashboardFilterGroup ariaLabel="Task queue filters" value={overviewTaskFilter} onChange={(value)=>setOverviewTaskFilter(value as DashboardTaskFilter)} density="compact" disabled={!canOpenTasks} className="ams-dashboard-task-queue-filter" options={[
@@ -2862,7 +2859,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 ) : visibleOverviewTasks.length === 0 ? (
                   <div className="px-4 py-4"><DashboardEmptyState eyebrow="QUEUE FILTER" icon={<CheckCircle2 size={17} aria-hidden="true" />} title="No tasks in this queue" description="There are no matching tasks for this filter. Choose another queue to inspect different work." /></div>
                 ) : (
-                  <div className="divide-y divide-line">
+                  <div className="ams-dashboard-task-queue-list divide-y divide-line">
                     {visibleOverviewTasks.slice(0, 5).map((task) => {
                       const overdue = dashboardTaskIsOverdue(task, currentDayKey);
                       const dueSoon = dashboardTaskIsDueSoon(task, currentDayKey, nextSevenDaysKey);
@@ -2912,8 +2909,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-delivery-commitments" aria-label="Upcoming delivery deadlines">
               <AdminPanel
                 title="Upcoming deadlines"
-                className="h-full ams-overview-panel ams-overview-panel--list"
-                bodyClassName="p-0"
+                className="h-full ams-overview-panel ams-overview-panel--list ams-dashboard-deadlines-panel"
+                bodyClassName="ams-dashboard-deadlines-body p-0"
                 actions={canOpenProjects ? (
                   <DashboardControl to="/admin/projects?projects=planning-delivery&planningView=milestones" variant="action" size="standard" icon={<CalendarDays size={14}/>} className="ams-dashboard-card-action">Open planning</DashboardControl>
                 ) : undefined}
@@ -3003,7 +3000,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </div>
                       )
                     ) : (
-                      <div className="divide-y divide-line">
+                      <div className="ams-dashboard-deadline-list divide-y divide-line">
                         {upcomingCommitments.slice(0, 4).map((item) => {
                           const overdue = item.dueDate < currentDayKey;
                           const dueTone: DashboardTone = overdue ? 'danger' : item.dueDate === currentDayKey ? 'warning' : 'info';
@@ -3717,33 +3714,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </div>
                       )}
 
-                      <div className="ams-dashboard-activity-pagination">
-                        <p aria-live="polite">
-                          {filteredDashboardRecentActivity.length > 0
-                            ? 'Showing ' + activityFirstRow + '–' + activityLastRow + ' of ' + filteredDashboardRecentActivity.length + ' matching loaded events'
-                            : 'No matching loaded events'}
-                        </p>
-                        <div className="ams-dashboard-activity-pagination__controls">
-                          <label>
-                            <span>Rows</span>
-                            <CustomSelect
-                              aria-label="Recent activity rows per page"
-                              value={String(activityPageSize)}
-                              onChange={(value) => { setActivityPageSize(Number(value)); setActivityPage(1); }}
-                              options={[{ value: '5', label: '5 rows' }, { value: '10', label: '10 rows' }, { value: '20', label: '20 rows' }]}
-                              size="xs"
-                              className="ams-dashboard-custom-select"
-                              triggerClassName="ams-dashboard-select-trigger w-[88px]"
-                              menuClassName="ams-dashboard-dropdown-menu"
-                            />
-                          </label>
-                          <div className="ams-dashboard-activity-page-buttons" role="group" aria-label="Recent activity pages">
-                            <DashboardControl type="button" variant="action" size="compact" icon={<ChevronLeft size={13}/>} showArrow={false} className="ams-dashboard-page-step" ariaLabel="Previous activity page" disabled={currentActivityPage<=1} onClick={() => setActivityPage((page)=>Math.max(1,Math.min(page,activityPageCount)-1))}>Previous</DashboardControl>
-                            <span className="ams-dashboard-activity-page-status" aria-live="polite">Page {currentActivityPage} of {activityPageCount}</span>
-                            <DashboardControl type="button" variant="action" size="compact" trailingIcon={<ChevronRight size={13}/>} showArrow={false} className="ams-dashboard-page-step" ariaLabel="Next activity page" disabled={currentActivityPage>=activityPageCount} onClick={() => setActivityPage((page)=>Math.min(activityPageCount,Math.max(1,page)+1))}>Next</DashboardControl>
-                          </div>
-                        </div>
-                      </div>
+                      {filteredDashboardRecentActivity.length > 0 ? (
+                        <AdminTablePagination
+                          total={filteredDashboardRecentActivity.length}
+                          page={currentActivityPage}
+                          pageSize={activityPageSize}
+                          onPageChange={setActivityPage}
+                          onPageSizeChange={(size) => { setActivityPageSize(size); setActivityPage(1); }}
+                          itemLabel="matching loaded events"
+                          pageSizeOptions={[5, 10, 20]}
+                          pageSizeAriaLabel="Recent activity rows per page"
+                          slug="dashboard-recent-activity-pagination"
+                        />
+                      ) : null}
                     </>
                   )}
                 </AdminPanel>
