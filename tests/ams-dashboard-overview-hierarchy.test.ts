@@ -1888,3 +1888,24 @@ test('All Dashboard buttons, filters, and calendar controls share the same compo
   assert.ok(pageStyles.includes('.ams-dashboard-projects-body > .ams-project-portfolio-body'));
   assert.ok(pageStyles.includes('.ams-dashboard-team-time__header-actions'));
 });
+
+
+test('Dashboard Overview uses one spacing token for all horizontal and vertical card gutters', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const marker = '/* Dashboard unified grid gutter contract — 27 October 2026.';
+  const finalLayer = styles.slice(styles.lastIndexOf(marker));
+  assert.ok(finalLayer.includes('--ams-dashboard-grid-gap: 12px;'));
+  assert.match(finalLayer, /\.ams-overview-card-row,[\s\S]*?gap: var\(--ams-dashboard-grid-gap\);[\s\S]*?column-gap: var\(--ams-dashboard-grid-gap\);[\s\S]*?row-gap: var\(--ams-dashboard-grid-gap\);/);
+  assert.match(finalLayer, /\.ams-overview-card-row \+ \.ams-overview-card-row\s*\{\s*margin-top: var\(--ams-dashboard-grid-gap\);\s*margin-block-start: var\(--ams-dashboard-grid-gap\);/);
+  for (const row of [
+    'Project delivery and exceptions',
+    'Task queue and delivery deadlines',
+    'Finance and project overview',
+    'Team and client delivery',
+    'Recent activity'
+  ]) {
+    assert.ok(dashboard.includes('aria-label="' + row + '"'), 'Missing Overview grid row: ' + row);
+  }
+  assert.ok(finalLayer.includes('.ams-overview-card-row > section'));
+});

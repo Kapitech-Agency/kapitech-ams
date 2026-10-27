@@ -9105,3 +9105,39 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     grid-column: span 5 / span 5;
   }
 }
+
+
+/* Dashboard unified grid gutter contract — 27 October 2026.
+   One token owns both the horizontal distance between cards and the vertical
+   distance between consecutive card rows. This final layer overrides older
+   one-off grid declarations without changing each card's internal spacing. */
+.ams-shell .ams-dashboard {
+  --ams-dashboard-grid-gap: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-card-row,
+.ams-shell .ams-dashboard .ams-dashboard-delivery-row,
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {
+  display: grid;
+  min-width: 0;
+  gap: var(--ams-dashboard-grid-gap);
+  column-gap: var(--ams-dashboard-grid-gap);
+  row-gap: var(--ams-dashboard-grid-gap);
+  margin-top: 0;
+  margin-block-start: 0;
+  margin-bottom: 0;
+  margin-block-end: 0;
+}
+
+/* Card rows are siblings in the Overview fragment. Apply the exact same
+   spacing token between rows, without compounding margins from prior layers. */
+.ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
+  margin-top: var(--ams-dashboard-grid-gap);
+  margin-block-start: var(--ams-dashboard-grid-gap);
+}
+
+.ams-shell .ams-dashboard .ams-overview-card-row > section {
+  min-width: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}

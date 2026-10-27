@@ -821,3 +821,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Corrected the desktop grid after the project card was incorrectly narrowed: **Projects in Progress now occupies 7/12 columns, aligned exactly with Task Queue; Needs Attention is the 5/12 companion, aligned with Upcoming Deadlines**. This split stays stable at desktop widths rather than shrinking from 7 columns to 5 on wide screens.
 - Kept the responsive stack below the existing desktop breakpoint. No data, permission, workflow, route, finance, or API behavior changed.
 - Regression coverage explicitly compares the Projects in Progress width with Task Queue and guards the intended 7/5 split.
+
+
+## 0.5 Dashboard grid gutter consistency — 27 October 2026
+
+- Added one authoritative Dashboard spacing token (12px) to control the horizontal gap between sibling cards and the vertical gap between consecutive Overview rows.
+- The final CSS layer resets residual row margins before applying the same token, preventing prior one-off row and delivery-grid declarations from creating uneven gutters.
+- Added regression coverage for the shared horizontal/vertical gutter contract across Project delivery, Task queue, Finance/Projects, Team/client, and Recent Activity rows.
+- Presentation-only: no record sources, access rules, routes, calculations, or service logic changed.
