@@ -2647,7 +2647,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <>
           <section className="ams-overview-card-row ams-dashboard-delivery-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
             {canOpenProjects ? (
-              <section className="ams-dashboard-project-progress-section min-w-0 min-[1100px]:col-span-6 min-[1280px]:col-span-5" data-ams-feature-slug="dashboard-project-progress" aria-label="Projects in progress">
+              <section className="ams-dashboard-project-progress-section min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-project-progress" aria-label="Projects in progress">
                 <AdminPanel
                   title="Projects in progress"
                   className="h-full flex flex-col ams-overview-panel ams-overview-panel--list ams-dashboard-project-progress-panel"
@@ -2717,7 +2717,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </section>
             ) : null}
 
-            <section className={['ams-dashboard-attention-section', 'min-w-0', canOpenProjects ? 'min-[1100px]:col-span-6 min-[1280px]:col-span-7' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
+            <section className={['ams-dashboard-attention-section', 'min-w-0', canOpenProjects ? 'min-[1100px]:col-span-5' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
               <AdminPanel
                 title="Needs attention"
                 className="h-full flex flex-col ams-overview-panel ams-overview-panel--attention ams-dashboard-attention-panel"

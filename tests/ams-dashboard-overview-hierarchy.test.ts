@@ -715,10 +715,16 @@ test('Projects in progress and Needs attention stay aligned in the delivery row'
   const row = dashboard.slice(start, nextRow);
   const project = row.slice(0, row.indexOf('data-ams-feature-slug="dashboard-attention-center"'));
   const attention = row.slice(row.indexOf('data-ams-feature-slug="dashboard-attention-center"'));
-  assert.ok(project.includes('min-[1100px]:col-span-6'));
-  assert.ok(project.includes('min-[1280px]:col-span-5'));
+  assert.ok(project.includes('min-[1100px]:col-span-7'), 'Projects in progress must occupy the same wide 7-column span as Task Queue.');
+  assert.equal(project.includes('min-[1280px]:col-span-5'), false, 'The project delivery width must not shrink at wider desktop breakpoints.');
   assert.ok(project.includes('ams-dashboard-project-progress-panel'));
-  assert.ok(row.includes("min-[1100px]:col-span-6 min-[1280px]:col-span-7"));
+  assert.ok(attention.includes("canOpenProjects ? 'min-[1100px]:col-span-5'"), 'Needs attention is the narrower 5-column companion.');
+  const taskQueueStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
+  const taskQueueSection = dashboard.lastIndexOf('<section', taskQueueStart);
+  const deadlinesStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskQueueStart);
+  const taskQueue = dashboard.slice(taskQueueSection, deadlinesStart);
+  assert.ok(taskQueue.includes('min-[1100px]:col-span-7'), 'Task Queue establishes the intended wide-card width.');
+  assert.ok(dashboard.includes('min-[1100px]:col-span-5'), 'Deadline and attention companion cards use the narrow 5-column span.');
   assert.ok(project.includes('h-full flex flex-col ams-overview-panel'));
   assert.ok(attention.includes('h-full flex flex-col ams-overview-panel'));
   assert.ok(attention.includes('title="No active exceptions"'));
@@ -728,7 +734,7 @@ test('Projects in progress and Needs attention stay aligned in the delivery row'
   assert.ok(styles.includes('flex: 1 1 auto;'));
   assert.ok(styles.includes('grid-column: span 5 / span 5;'));
   assert.ok(styles.includes('grid-column: span 7 / span 7;'));
-  assert.ok(styles.includes('grid-column: span 6 / span 6;'));
+  assert.ok(styles.includes('Keep the delivery row identical to Task Queue: wide primary workspace (7/12),'));
 });
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {

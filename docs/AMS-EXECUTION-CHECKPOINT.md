@@ -814,3 +814,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - The user-supplied screenshot showed that the empty Projects in progress card still occupied 7/12 of the desktop row while Needs attention and its Inbox triage only had 5/12. Updated the row to 6/6 from 1100–1279px and 5/7 from 1280px upward, giving the attention/triage card the wider share.
 - Projects in progress now sizes to its own content instead of stretching vertically to the Inbox-heavy neighbor when no projects are active. Finance and Projects portfolio continue to use their separate shared-height row contract.
 - Added regression coverage for the exact row spans and compact empty-card behavior. Presentation-only: no data source, routes, permission checks, or business calculations changed.
+
+
+## 0.5 Restore delivery row proportions — 27 October 2026
+
+- Corrected the desktop grid after the project card was incorrectly narrowed: **Projects in Progress now occupies 7/12 columns, aligned exactly with Task Queue; Needs Attention is the 5/12 companion, aligned with Upcoming Deadlines**. This split stays stable at desktop widths rather than shrinking from 7 columns to 5 on wide screens.
+- Kept the responsive stack below the existing desktop breakpoint. No data, permission, workflow, route, finance, or API behavior changed.
+- Regression coverage explicitly compares the Projects in Progress width with Task Queue and guards the intended 7/5 split.

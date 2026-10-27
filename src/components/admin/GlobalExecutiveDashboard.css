@@ -9094,23 +9094,14 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   flex: 1 1 auto;
 }
 
-/* Preserve the intended responsive column balance for the two delivery cards. */
-@media (min-width: 1100px) and (max-width: 1279px) {
+/* Keep the delivery row identical to Task Queue: wide primary workspace (7/12),
+   narrower attention companion (5/12), at every desktop breakpoint. */
+@media (min-width: 1100px) {
   .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-project-progress-section {
-    grid-column: span 6 / span 6;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-attention-section {
-    grid-column: span 6 / span 6;
-  }
-}
-
-@media (min-width: 1280px) {
-  .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-project-progress-section {
-    grid-column: span 5 / span 5;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-attention-section {
     grid-column: span 7 / span 7;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-delivery-row > .ams-dashboard-attention-section {
+    grid-column: span 5 / span 5;
   }
 }
