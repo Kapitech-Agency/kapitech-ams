@@ -730,3 +730,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Shared control stylesheet adds a final specificity guard so header actions, card actions, filter/calendar controls, and calendar-portal buttons use one neutral hover surface and 8px rounded-rectangle geometry.
 - Regression tests are being aligned with the shared component contract (ARIA props and filter-group rendering), rather than removed or weakened to mask source-shape changes.
 - No backend/API/database/authentication/permission/finance-calculation changes.
+
+
+### 0.9 Deadline range regression alignment — 27 October 2026
+
+- Updated regression expectations to the card-local deadline range and 30-day summary model. Tests verify custom dates filter already-loaded saved project/milestone deadlines, while summary counts remain limited to the standard overdue/30-day horizon.
+- Header controls, tab wrapping, project filter sizing, equal-height Finance/Projects, Team Workload rhythm and Recent Activity table layout are covered alongside the new deadline range.
+- Frontend-only. Production visual sign-off remains outstanding; CI dependency audit is a separate existing advisory.

@@ -278,7 +278,7 @@ test('Dashboard Project and Task filters share one segmented background and inte
   const deadlinesStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskStart);
   const project = dashboard.slice(projectStart, attentionStart);
   const queue = dashboard.slice(taskStart, deadlinesStart);
-  const marker = styles.lastIndexOf('/* Dashboard refinement — aligned header, card heights, compact filters, and local deadline range. */');
+  const marker = styles.lastIndexOf('/* Dashboard refinement — aligned header, cards, compact filters, and local date range. */');
   assert.ok(projectStart >= 0 && attentionStart > projectStart);
   assert.ok(taskStart >= 0 && deadlinesStart > taskStart);
   assert.ok(dashboard.includes("import { DashboardControl, DashboardFilterGroup } from './DashboardControls';"));
@@ -351,7 +351,7 @@ test('Upcoming deadlines supports a card-local custom date window beyond the def
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'custom')"));
   assert.ok(dashboard.includes('if (deadlineStartDate && item.dueDate < deadlineStartDate) return false'));
   assert.ok(dashboard.includes('if (deadlineEndDate && item.dueDate > deadlineEndDate) return false'));
-  assert.ok(deadlines.includes('aria-label="Filter deadlines by custom date range"'));
+  assert.ok(deadlines.includes('ariaLabel="Filter deadlines by custom date range"'));
   assert.ok(deadlines.includes('aria-label="Deadline start date"'));
   assert.ok(deadlines.includes('aria-label="Deadline end date"'));
   assert.ok(deadlines.includes('aria-label="Custom deadline date range"'));
@@ -1019,15 +1019,15 @@ test('Dashboard Overview visualizes all dated commitments and keeps the deadline
   const end = dashboard.indexOf('data-ams-feature-slug="dashboard-team-workload"', start);
   assert.ok(start >= 0 && end > start);
   const deadlines = dashboard.slice(start, end);
-  assert.ok(dashboard.includes('const commitmentHorizonTotal = allUpcomingCommitments.length'));
-  assert.ok(dashboard.includes("const overdueHorizonCount = allUpcomingCommitments.filter((item) => item.dueDate < currentDayKey).length"));
+  assert.ok(dashboard.includes('const commitmentHorizonTotal = commitmentHorizonItems.length'));
+  assert.ok(dashboard.includes("const overdueHorizonCount = commitmentHorizonItems.filter((item) => item.dueDate < currentDayKey).length"));
   assert.ok(dashboard.includes('const daysEightToThirtyCommitmentCount'));
   assert.ok(deadlines.includes('Overdue and due within 30 days'));
-  assert.ok(deadlines.includes("aria-label={'Delivery deadlines: ' + overdueHorizonCount"));
+  assert.ok(deadlines.includes("aria-label={'Delivery deadlines within 30 days: ' + overdueHorizonCount"));
   assert.ok(deadlines.includes('upcomingCommitments.slice(0, 4).map((item) => {'));
   assert.ok(deadlines.includes("label:'Overdue'"));
   assert.ok(deadlines.includes("label:'Today–7 days'"));
-  assert.ok(deadlines.includes("label: 'Days 8–30'"));
+  assert.ok(deadlines.includes("label:'Days 8–30'"));
   assert.ok(deadlines.includes('overdueHorizonCount / commitmentHorizonTotal'));
   assert.ok(deadlines.includes('nextSevenDayCommitmentCount / commitmentHorizonTotal'));
   assert.ok(deadlines.includes('daysEightToThirtyCommitmentCount / commitmentHorizonTotal'));

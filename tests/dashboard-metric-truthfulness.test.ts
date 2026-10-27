@@ -44,7 +44,7 @@ test('Dashboard deadline distribution counts all source commitments rather than 
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'overdue') return item.dueDate < currentDayKey"));
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'next7') return item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey"));
   assert.ok(dashboard.includes("if (overviewDeadlineFilter === 'days8to30') return item.dueDate > nextSevenDaysKey && item.dueDate <= nextThirtyDaysKey"));
-  assert.ok(dashboard.includes('const nextSevenDayCommitmentCount = allUpcomingCommitments.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length'));
+  assert.ok(dashboard.includes('const nextSevenDayCommitmentCount = commitmentHorizonItems.filter((item) => item.dueDate >= currentDayKey && item.dueDate <= nextSevenDaysKey).length'));
   assert.doesNotMatch(dashboard, /const nextSevenDayCommitmentCount = upcomingCommitments\.filter/);
   const overviewStart = dashboard.indexOf("{view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
