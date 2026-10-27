@@ -747,3 +747,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Recent Activity now uses shared `AdminTablePagination` from `AdminModulePrimitives`; custom pagination markup was removed while search, actor/severity/date filters, sort order, CSV export and responsive table semantics stay intact.
 - Date selection remains card-local: Finance, Recorded Time, Upcoming Deadlines and Recent Activity each scope only their own measures.
 - Presentation-only changes; no backend, API, data model, permissions, Finance formulas, or authorization checks changed.
+
+
+## 0.5 Dashboard filter/action-control correction — 27 October 2026
+
+- Corrected the final cascade for Projects in progress and Task Queue filter groups: the segmented containers now retain visible inner padding and a rounded neutral shell; selected filter text/background/border are forced to neutral tokens rather than the crimson brand accent.
+- Applied a specific rounded-rectangle contract to Project registry, Open planning, Open Projects, Open project delivery and other Dashboard card-action links so card-header anchor rules cannot turn them back into pills. Actions match the filter group height.
+- Restored explicit 16px top spacing and divider for Recorded Time within Team Workload.
+- Added regression assertions for the filter shell padding, neutral active state, rounded card action links and Recorded Time spacing. Frontend presentation only; no API, database, auth, permission, data-source or workflow logic changed.

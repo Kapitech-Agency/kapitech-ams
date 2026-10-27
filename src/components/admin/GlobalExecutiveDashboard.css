@@ -7685,3 +7685,143 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
   background: var(--accent);
   color: #fff;
 }
+
+
+/* Final Dashboard control contract.
+   Keep project/task filters padded, neutral, and aligned with their adjacent actions.
+   Use this final scoped block to override legacy card-level pill styles above. */
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  height: 32px;
+  min-height: 32px;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--dashboard-card-border, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 38%, var(--panel));
+  overflow: visible;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 26px;
+  min-height: 26px;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 550;
+  line-height: 13px;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter:hover:not(:disabled),
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter:hover:not(:disabled) {
+  border-color: var(--dashboard-control-hover-border, color-mix(in srgb, var(--text) 14%, var(--line)));
+  background: var(--dashboard-control-hover, color-mix(in srgb, var(--text) 6%, var(--panel)));
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter[aria-pressed="true"],
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter.is-active {
+  border-color: var(--line);
+  border-bottom-color: var(--line);
+  background: var(--dashboard-control-selected, color-mix(in srgb, var(--text) 9%, var(--panel)));
+  color: var(--text);
+  font-weight: 650;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__label,
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__label,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__label,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__label {
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__count,
+.ams-shell .ams-dashboard .ams-dashboard-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__count,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__count,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__count {
+  border-color: var(--dashboard-card-border, var(--line));
+  background: color-mix(in srgb, var(--line) 70%, var(--panel));
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-card-action,
+.ams-shell .ams-dashboard .ams-dashboard-deadlines-panel > div:first-child a.ams-dashboard-card-action,
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child a.ams-project-registry-action,
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child a.ams-dashboard-card-action,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions a.ams-dashboard-card-action {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 32px;
+  min-height: 32px;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--dashboard-card-border, var(--line));
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 550;
+  line-height: 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action:hover,
+.ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-card-action:hover,
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child a.ams-project-registry-action:hover,
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child a.ams-dashboard-card-action:hover,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action:hover,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions a.ams-dashboard-card-action:hover {
+  border-color: var(--dashboard-control-hover-border, color-mix(in srgb, var(--text) 14%, var(--line)));
+  background: var(--dashboard-control-hover, color-mix(in srgb, var(--text) 6%, var(--panel)));
+  color: var(--text);
+  border-radius: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-body > .ams-dashboard-team-time {
+  min-width: 0;
+  margin-top: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--dashboard-card-border, var(--line));
+}
+
+@media (max-width: 759px) {
+  .ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter {
+    width: 100%;
+    height: auto;
+    min-height: 32px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}

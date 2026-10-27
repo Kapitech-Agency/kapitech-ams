@@ -522,6 +522,22 @@ test('Task Queue and Upcoming Deadlines empty states share the same top inset', 
     'The empty deadline state uses the same 16px top inset as the task queue.');
 });
 
+test('Dashboard project and task filters use padded neutral states, card actions use rounded rectangles, and Recorded Time has top spacing', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const controls = await read('src/components/admin/DashboardControls.css');
+  const finalContract = styles.slice(styles.lastIndexOf('/* Final Dashboard control contract.'));
+
+  assert.ok(finalContract.includes('padding: 2px;'), 'Filter group shells need interior padding.');
+  assert.ok(finalContract.includes('padding: 0 10px;'), 'Filter buttons need horizontal text padding.');
+  assert.ok(finalContract.includes('background: var(--dashboard-control-selected'), 'Active filter background must be neutral, not brand red.');
+  assert.ok(finalContract.includes('color: var(--text);'), 'Active project filter label must use neutral text.');
+  assert.ok(finalContract.includes('border-radius: 8px;'), 'Card action links must be rounded rectangles, not pill buttons.');
+  assert.ok(finalContract.includes('padding-top: 16px;'), 'Recorded Time must retain explicit top spacing.');
+  assert.ok(controls.includes('.ams-dashboard-control--filter[aria-pressed="true"]'));
+  assert.ok(finalContract.includes('.ams-dashboard-project-service-filter'));
+  assert.ok(finalContract.includes('.ams-dashboard-task-queue-filter'));
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');
