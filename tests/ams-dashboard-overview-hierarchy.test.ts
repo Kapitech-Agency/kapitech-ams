@@ -515,9 +515,10 @@ test('Dashboard card actions, Recorded time controls, calendar navigation and Ac
     '.ams-dashboard-finance-panel .ams-finance-movement-card',
     '.ams-dashboard-activity-tools'
   ]) assert.ok(styles.includes(selector), 'Missing focused Dashboard style: ' + selector);
-  assert.ok(styles.includes('grid-template-columns: minmax(220px, 1.4fr) 132px minmax(160px, 1fr) 142px auto;'));
-  assert.ok(styles.includes('@media (max-width: 1199px)'));
-  assert.ok(styles.includes('grid-template-columns: minmax(0, 1.35fr) minmax(120px, .8fr) minmax(150px, 1fr);'));
+  const finalLayer = styles.slice(styles.lastIndexOf('/* Dashboard final layout contract — 27 October 2026. */'));
+  assert.ok(finalLayer.includes('grid-template-columns: minmax(220px, 1.4fr) minmax(116px, .72fr) minmax(150px, 1fr) minmax(122px, .75fr) auto auto;'));
+  assert.ok(finalLayer.includes('@media (max-width: 1199px)'));
+  assert.ok(finalLayer.includes('grid-template-columns: minmax(0, 1.25fr) minmax(120px, .8fr) minmax(145px, 1fr);'));
   assert.ok(styles.includes('grid-template-columns: repeat(2, minmax(0, 1fr));'));
   assert.ok(dashboard.includes('<AdminTablePagination'));
   assert.ok(overview.includes('Open Time Logs'));
@@ -1501,9 +1502,11 @@ test('Dashboard header provides aligned quick actions and tabs without a duplica
   assert.ok(header.includes('ams-dashboard-header-action--refresh'));
   assert.ok(header.includes('ams-dashboard-header-utility-actions'));
   assert.ok(styles.includes('.ams-dashboard-page-header .ams-dashboard-header-actions .ams-dashboard-control'));
-  assert.ok(styles.includes('height:36px; min-height:36px;'));
-  assert.ok(styles.includes('.ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs'));
-  assert.ok(styles.includes('overflow-x:visible;'));
+  const finalLayer = styles.slice(styles.lastIndexOf('/* Dashboard final layout contract — 27 October 2026. */'));
+  assert.ok(finalLayer.includes('.ams-dashboard-page-header .ams-dashboard-header-actions .ams-dashboard-control'));
+  assert.ok(finalLayer.includes('height: 36px;') && finalLayer.includes('min-height: 36px;'));
+  assert.ok(finalLayer.includes('.ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs'));
+  assert.ok(finalLayer.includes('overflow-x: clip;'), 'Dashboard tabs use clipping/wrapping instead of a horizontal scroll strip.');
   assert.ok(header.includes("canCreateInvoice?'Create invoice':'Invoices'"));
   assert.equal(header.includes('New task'), false);
   assert.ok(header.includes("canCreateProject?'New project':'Projects'"));
@@ -1676,6 +1679,25 @@ test('Dashboard refresh warnings keep the main status concise and preserve sourc
 });
 
 
+test('Dashboard date controls stay local to Finance, Recorded Time, Deadlines and Activity', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  assert.equal(overview.includes('aria-label="Reporting date range"'), false);
+  assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
+  for (const label of [
+    'Finance reporting period',
+    'Recorded time reporting period',
+    'Filter activity by time window',
+    'Filter deadlines by custom date range'
+  ]) assert.ok(overview.includes('ariaLabel="' + label + '"') || overview.includes('aria-label="' + label + '"'), 'Missing card-local date control: ' + label);
+  assert.ok(overview.includes('aria-label="Deadline start date"'));
+  assert.ok(overview.includes('aria-label="Deadline end date"'));
+  assert.ok(overview.includes('aria-label="Recent activity start date"'));
+  assert.ok(overview.includes('aria-label="Recent activity end date"'));
+});
+
 test('Dashboard calendar filters are dropdowns with card-local periods and accessible date selection', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
@@ -1703,7 +1725,7 @@ test('Dashboard calendar filters are dropdowns with card-local periods and acces
   assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
   assert.ok(styles.includes('.ams-portal-root .ams-calendar-period-filter__panel'));
   assert.ok(styles.includes('.ams-portal-root .ams-dashboard-activity-calendar-panel'));
-  assert.ok(styles.includes('overflow-y:auto;'));
+  assert.match(styles, /overflow-y:\s*auto;/);
   assert.doesNotMatch(overview, /overflow-x-auto/, 'Dashboard Overview must not introduce horizontal scroll strips.');
   assert.ok(dashboard.includes('ariaExpanded={open}'));
   assert.ok(dashboard.includes('anchorRef={triggerRef}'));
@@ -1741,14 +1763,13 @@ test('Dashboard Overview uses compact source states and custom controls without 
 
 test('Dashboard lead row aligns Projects to Finance and avoids conflicting card heights', async () => {
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
-  const row = styles.match(/\.ams-shell \.ams-dashboard \.ams-overview-card-row\s*\{([^}]*)\}/);
-  const financeRow = styles.match(/\.ams-shell \.ams-dashboard \.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*\{([^}]*)\}/);
-  const projectsSection = styles.match(/\.ams-shell \.ams-dashboard \.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*>\s*section\[data-ams-feature-slug="dashboard-project-portfolio"\]\s*\{([^}]*)\}/);
-  assert.ok(row && /align-items:\s*stretch;/.test(row[1]) && /gap:\s*14px;/.test(row[1]));
-  assert.ok(financeRow && /align-items:\s*stretch;/.test(financeRow[1]) && /gap:\s*12px;/.test(financeRow[1]));
-  assert.ok(projectsSection && /align-self:\s*stretch;/.test(projectsSection[1]) && /display:\s*flex;/.test(projectsSection[1]));
-  assert.match(styles, /\.ams-dashboard-projects-panel\s*\{[^}]*height:\s*100%;/s);
-});;
+  const finalLayer = styles.slice(styles.lastIndexOf('/* Dashboard final layout contract — 27 October 2026. */'));
+  assert.ok(finalLayer.includes('.ams-overview-card-row[aria-label="Finance and project overview"]'));
+  assert.ok(finalLayer.includes('align-items: stretch;'));
+  assert.match(finalLayer, /section\[data-ams-feature-slug="dashboard-finance-overview"\],[\s\S]*section\[data-ams-feature-slug="dashboard-project-portfolio"\]\s*\{\s*display: flex;/);
+  assert.match(finalLayer, /\.ams-dashboard-finance-panel,[\s\S]*\.ams-dashboard-projects-panel\s*\{[\s\S]*height: 100%;/);
+  assert.match(finalLayer, /\.ams-dashboard-projects-body > \.ams-project-portfolio-body\s*\{[\s\S]*flex: 1 1 auto;/);
+});
 
 
 test('Overview action buttons, panel headers, dropdown states, and filter rows share one visual contract', async () => {
