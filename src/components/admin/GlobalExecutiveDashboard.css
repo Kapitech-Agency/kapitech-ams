@@ -7761,7 +7761,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) { heigh
 }
 
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__count,
-.ams-shell .ams-dashboard .ams-dashboard-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__count,
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__count,
 .ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter[aria-pressed="true"] .ams-dashboard-control__count,
 .ams-shell .ams-dashboard .ams-dashboard-task-filter-toolbar .ams-dashboard-task-queue-filter .ams-dashboard-control--filter.is-active .ams-dashboard-control__count {
   border-color: var(--dashboard-card-border, var(--line));
