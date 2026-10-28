@@ -844,7 +844,7 @@ const PerformanceView: React.FC<{
       </section>
 
       <section className="grid gap-4 min-[1100px]:grid-cols-2" data-ams-feature-slug="dashboard-performance-primary">
-        <AdminPanel
+        <AdminPanel headerDivider={false}
           title="Task status in scope"
           description="Task status mix for the selected period."
           actions={(
@@ -891,7 +891,7 @@ const PerformanceView: React.FC<{
           )}
         </AdminPanel>
 
-        <AdminPanel
+        <AdminPanel headerDivider={false}
           title="Projects needing attention"
           description="Active projects with an explicit risk flag or target dates before today, limited to projects in the selected reporting scope."
           bodyClassName="p-0"
@@ -927,7 +927,7 @@ const PerformanceView: React.FC<{
         </AdminPanel>
       </section>
 
-      <AdminPanel title="Recorded time" bodyClassName="p-4 sm:p-5">
+      <AdminPanel headerDivider={false} title="Recorded time" bodyClassName="p-4 sm:p-5">
         {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking source did not return records." /> : scopedTimeLogs.length === 0 ? (
           <p className="py-8 text-center text-xs text-muted" role="status">{allTimeLogs.length > 0 ? 'No time entries in the selected period.' : 'No time entries recorded.'}</p>
         ) : (
@@ -1163,7 +1163,7 @@ const AnalyticsView: React.FC<{
 
       {report === 'financial-movement' ? (
         <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-financial-report" aria-label="Financial movement report">
-          <AdminPanel
+          <AdminPanel headerDivider={false}
             title="Issued invoices vs recorded expenses"
             description="Issued invoices vs recorded expenses by date; difference is not posted profit."
             actions={(
@@ -1263,7 +1263,7 @@ const AnalyticsView: React.FC<{
         </section>
       ) : report === 'receivables' ? (
         <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-receivables-report" aria-label="Receivables report">
-          <AdminPanel
+          <AdminPanel headerDivider={false}
             title="Outstanding receivables"
             description="Current outstanding balance from issued invoices."
             actions={(
@@ -1301,7 +1301,7 @@ const AnalyticsView: React.FC<{
         </section>
       ) : report === 'inquiry-pipeline' ? (
         <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report" aria-label="Inquiry pipeline report">
-          <AdminPanel
+          <AdminPanel headerDivider={false}
             title="Inquiry pipeline"
             description="Current inquiry status and requested service demand."
             actions={canOpenInbox ? (
@@ -1440,7 +1440,7 @@ const AnalyticsView: React.FC<{
         </section>
       ) : (
         <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-project-status-report" aria-label="Project status report">
-          <AdminPanel
+          <AdminPanel headerDivider={false}
             title="Project status"
             description="Current status distribution from the canonical project register."
             actions={(
@@ -2648,7 +2648,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <section className="ams-overview-card-row ams-dashboard-delivery-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project delivery and exceptions">
             {canOpenProjects ? (
               <section className="ams-dashboard-project-progress-section min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-project-progress" aria-label="Projects in progress">
-                <AdminPanel
+                <AdminPanel headerDivider={false}
                   title="Projects in progress"
                   className="h-full flex flex-col ams-overview-panel ams-overview-panel--list ams-dashboard-project-progress-panel"
                   bodyClassName="p-0"
@@ -2718,7 +2718,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ) : null}
 
             <section className={['ams-dashboard-attention-section', 'min-w-0', canOpenProjects ? 'min-[1100px]:col-span-5' : 'min-[1100px]:col-span-12'].join(' ')} data-ams-feature-slug="dashboard-attention-center" aria-label="Needs attention">
-              <AdminPanel
+              <AdminPanel headerDivider={false}
                 title="Needs attention"
                 className="h-full flex flex-col ams-overview-panel ams-overview-panel--attention ams-dashboard-attention-panel"
                 bodyClassName="p-0"
@@ -2858,7 +2858,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
 <section className="ams-overview-card-row ams-dashboard-delivery-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Task queue and delivery deadlines">
             <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-delivery-desk" aria-label="Task delivery queue">
-              <AdminPanel
+              <AdminPanel headerDivider={false}
                 title="Task queue"
                 className="h-full ams-overview-panel ams-overview-panel--list ams-dashboard-task-queue-panel"
                 bodyClassName="ams-dashboard-task-queue-body p-0"
@@ -2934,7 +2934,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </section>
 
             <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-delivery-commitments" aria-label="Upcoming delivery deadlines">
-              <AdminPanel
+              <AdminPanel headerDivider={false}
                 title="Upcoming deadlines"
                 className="h-full ams-overview-panel ams-overview-panel--list ams-dashboard-deadlines-panel"
                 bodyClassName="ams-dashboard-deadlines-body p-0"
@@ -3063,7 +3063,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 data-ams-feature-slug="dashboard-finance-overview"
                 aria-label="Finance overview"
               >
-                <AdminPanel
+                <AdminPanel headerDivider={false}
                   title="Finance"
                   className="h-full ams-overview-panel ams-overview-panel--finance ams-dashboard-finance-panel"
                   bodyClassName="ams-dashboard-finance-body p-4 sm:p-5"
@@ -3338,7 +3338,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 data-ams-feature-slug="dashboard-project-portfolio"
                 aria-label="Project portfolio"
               >
-                <AdminPanel
+                <AdminPanel headerDivider={false}
                   title="Projects"
                   className="h-full ams-overview-panel ams-overview-panel--projects ams-dashboard-projects-panel"
                   bodyClassName="ams-dashboard-projects-body p-4 sm:p-5"
@@ -3437,7 +3437,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
 <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Team and client delivery">
             <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-team-workload" aria-label="Team workload">
-              <AdminPanel
+              <AdminPanel headerDivider={false}
                 title="Team workload"
                 className="h-full ams-overview-panel ams-dashboard-team-panel"
                 bodyClassName="p-4 sm:p-5 ams-dashboard-team-body"
@@ -3536,7 +3536,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
             {canOpenProjects ? (
               <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-client-delivery-focus" aria-label="Client delivery focus">
-                <AdminPanel
+                <AdminPanel headerDivider={false}
                   title="Client delivery focus"
                   className="h-full ams-overview-panel ams-overview-panel--list"
                   bodyClassName="p-0"
@@ -3621,7 +3621,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Recent activity">
             {canViewAuditLogs ? (
               <section className="min-w-0 min-[1100px]:col-span-12" data-ams-feature-slug="dashboard-recent-activity" data-ams-slug="dashboard-recent-activity" aria-label="Recent activity">
-                <AdminPanel
+                <AdminPanel headerDivider={false}
                   title="Recent activity"
                   className="h-full ams-overview-panel ams-overview-panel--list ams-overview-panel--activity ams-dashboard-activity-panel"
                   bodyClassName="p-0"
@@ -3765,6 +3765,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           itemLabel="matching loaded events"
                           pageSizeOptions={[5, 10, 20]}
                           pageSizeAriaLabel="Recent activity rows per page"
+                          showTopDivider={false}
                           slug="dashboard-recent-activity-pagination"
                         />
                       ) : null}

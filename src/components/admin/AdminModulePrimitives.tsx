@@ -590,6 +590,7 @@ export interface AdminPanelProps {
   className?: string;
   bodyClassName?: string;
   slug?: string;
+  headerDivider?: boolean;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -599,11 +600,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   children,
   className,
   bodyClassName,
-  slug
+  slug,
+  headerDivider = true
 }) => (
   <section data-ams-slug={slug} className={cn('rounded-card border border-line bg-panel', className)}>
     {(title || description || actions) && (
-      <div className="flex flex-col gap-3 border-b border-line px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+      <div className={cn('flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5', headerDivider ? 'border-b border-line' : '')}>
         <div className="min-w-0">
           {title && <h2 className="text-sm font-semibold text-fg">{title}</h2>}
           {description && <p className="mt-1 text-xs leading-5 text-muted">{description}</p>}
@@ -648,6 +650,7 @@ export interface AdminTablePaginationProps {
   slug?: string;
   secondaryLabel?: React.ReactNode;
   pageSizeAriaLabel?: string;
+  showTopDivider?: boolean;
 }
 
 export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
@@ -660,7 +663,8 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
   pageSizeOptions = [10, 25, 50],
   slug,
   secondaryLabel,
-  pageSizeAriaLabel = 'Rows per page'
+  pageSizeAriaLabel = 'Rows per page',
+  showTopDivider = true
 }) => {
   const normalizedPageSize = Math.max(1, pageSize);
   const totalPages = Math.max(1, Math.ceil(Math.max(0, total) / normalizedPageSize));
@@ -686,7 +690,7 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
     <nav
       aria-label="Table pagination"
       data-ams-slug={slug}
-      className="ams-table-pagination border-t border-line bg-panel px-4 py-3 sm:px-5"
+      className={cn('ams-table-pagination bg-panel px-4 py-3 sm:px-5', showTopDivider ? 'border-t border-line' : '')}
     >
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
