@@ -192,7 +192,7 @@ test('Recent Activity reuses AMS pagination while keeping date, severity, actor,
   assert.ok(activity.includes('page={currentActivityPage}'));
   assert.ok(activity.includes('pageSize={activityPageSize}'));
   assert.ok(activity.includes('pageSizeOptions={[5, 10, 20]}'));
-  assert.ok(primitives.includes('className="ams-table-pagination border-t border-line bg-panel px-4 py-3 sm:px-5"'));
+  assert.ok(primitives.includes("className={cn('ams-table-pagination bg-panel px-4 py-3 sm:px-5', showTopDivider ? 'border-t border-line' : '')}"), 'Shared pagination uses an opt-in divider rather than a forced top border.');
   assert.ok(activity.includes('Search recent activity'));
   assert.ok(activity.includes('Filter activity by actor'));
   assert.ok(activity.includes('Filter activity by severity'));
