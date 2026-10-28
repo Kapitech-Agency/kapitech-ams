@@ -9821,17 +9821,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   overflow-wrap: anywhere;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-team-task-action {
-  flex: 0 0 auto;
-  align-self: flex-start;
-  height: 30px;
-  min-height: 30px;
-  padding: 0 9px;
-  border-radius: 8px;
-  font-size: 10px;
-  line-height: 13px;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-owner-list {
   display: grid;
   min-width: 0;
@@ -10062,7 +10051,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   .ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body { padding: 13px 12px; }
   .ams-shell .ams-dashboard .ams-dashboard-team-tasks__header,
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header { align-items: flex-start; gap: 9px; }
-  .ams-shell .ams-dashboard .ams-dashboard-team-task-action { height: 28px; min-height: 28px; padding-inline: 8px; }
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header { flex-direction: column; }
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions,
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions > .ams-card-period-controls,

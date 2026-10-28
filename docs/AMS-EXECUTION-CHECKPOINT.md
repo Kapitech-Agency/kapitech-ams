@@ -862,3 +862,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Kept the existing Recent Activity feature set: searchable audit rows, severity and actor filters, date presets/custom range, sorting, CSV export and pagination. The changes here are visual alignment and responsive behavior, not new source fields or API calls.
 - Project service-line controls use compact pill dimensions and match the Project Registry action baseline. The Finance/Projects row stretches both cards to the same desktop height; the cards stack naturally on narrow screens.
 - Validation will run on the exact commit. The existing dependency-audit finding (body-parser@1.20.6, GHSA-27r3-jxmh-p828) is outside this frontend-only task and is not changed here.
+
+
+## 0.6 Dashboard card-action consistency — 28 October 2026
+
+- The Project registry button is now the explicit visual baseline for card-header and card-body actions: a consistent compact 32px control, matching icon/label/arrow alignment, border, radius, type scale, and hover/focus treatment. The baseline is defined at the end of the shared Dashboard control stylesheet so generic standard sizing cannot stretch card actions back to 36px.
+- Converted Team Workload's “View tasks” plain link to the shared `DashboardControl` component and removed its separate 28px override. Project registry, Open planning, Open Projects, Open project delivery, View tasks, Open Finance, quotation ledger and related card actions use the same compact size; global Dashboard quick actions keep their distinct 36px header baseline.
+- Added regression coverage for the shared CTA component, size and visual styling. No source data, route destinations, access checks, date filters, Finance calculations or backend behavior changed.

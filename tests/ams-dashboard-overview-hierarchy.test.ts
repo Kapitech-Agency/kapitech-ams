@@ -344,7 +344,7 @@ test('Project service-line filters are a single shared segmented control aligned
   assert.ok(projectCard.includes("{value:'creative',label:'Creative',count:activeDashboardProjectFilterCounts.creative}"));
   assert.ok(projectCard.includes("{value:'technology',label:'IT',count:activeDashboardProjectFilterCounts.technology}"));
   assert.doesNotMatch(projectCard, /<button\b/, 'Service-line options must not be recreated as separate custom buttons.');
-  assert.ok(projectCard.includes('size="standard" icon={<FolderKanban'), 'Project Registry uses the standard action size.');
+  assert.ok(projectCard.includes('size="compact" icon={<FolderKanban'), 'Project Registry establishes the shared compact action size.');
   const groupRuleStart = contract.lastIndexOf('.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter,');
   const groupRuleEnd = contract.indexOf('\n}', groupRuleStart) + 2;
   const groupRule = contract.slice(groupRuleStart, groupRuleEnd);
@@ -2047,3 +2047,36 @@ test('Dashboard final responsive contract aligns header, Projects, local date fi
   assert.ok(overview.includes('pageSizeAriaLabel="Recent activity rows per page"'));
 });
 
+
+ 
+test('Dashboard card actions use the same compact visual contract as Project registry', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const controls = await read('src/components/admin/DashboardControls.css');
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  const tasksStart = overview.indexOf('data-ams-feature-slug="dashboard-task-load-by-owner"');
+  const recordedTimeStart = overview.indexOf('data-ams-feature-slug="dashboard-recorded-time-by-person"', tasksStart);
+  const taskOwnerHeader = overview.slice(tasksStart, recordedTimeStart);
+
+  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart);
+  assert.ok(overview.includes('className="ams-project-registry-action ams-dashboard-card-action"'));
+  for (const action of [
+    'size="compact" icon={<CalendarDays size={14}/>} className="ams-dashboard-card-action">Open planning</DashboardControl>',
+    'size="compact" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open Projects</DashboardControl>',
+    'size="compact" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open project delivery</DashboardControl>'
+  ]) assert.ok(overview.includes(action), 'Card action should match the Project registry contract: ' + action);
+  assert.ok(taskOwnerHeader.includes('<DashboardControl to="/admin/tasks" variant="action" size="compact" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action" ariaLabel="Open Tasks" title="Open the Tasks workspace">View tasks</DashboardControl>'));
+  assert.equal(taskOwnerHeader.includes('<Link to="/admin/tasks"'), false);
+
+  const marker = controls.lastIndexOf('/* Dashboard card-action baseline: Project registry is the visual reference. */');
+  const contract = controls.slice(marker);
+  assert.ok(marker >= 0, 'Shared card-action sizing must live in the Dashboard control system.');
+  assert.ok(contract.includes('height: 32px;'));
+  assert.ok(contract.includes('min-height: 32px;'));
+  assert.ok(contract.includes('padding: 0 10px;'));
+  assert.ok(contract.includes('border-radius: 8px;'));
+  assert.ok(contract.includes('font-size: 10px;'));
+  assert.ok(contract.includes('background: var(--dashboard-control-surface, var(--panel));'));
+  assert.ok(contract.includes('color: var(--muted);'));
+});
