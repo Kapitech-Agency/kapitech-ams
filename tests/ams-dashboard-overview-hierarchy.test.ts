@@ -2109,7 +2109,7 @@ test('Dashboard final UI layer keeps responsive card and control geometry cohere
   assert.ok(finalLayer.includes('@media (max-width: 1359px)'));
   assert.ok(finalLayer.includes('@media (max-width: 599px)'));
 
-  const overviewStart = dashboard.indexOf("\\n      {view === 'overview' ? (");
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.equal(overview.includes('aria-label="Reporting date range"'), false);

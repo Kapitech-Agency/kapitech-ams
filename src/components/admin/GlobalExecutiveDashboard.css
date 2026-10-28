@@ -10067,8 +10067,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 
-/* Dashboard final responsive composition contract — 28 October 2026.
-   This is the single final layout layer for the Overview controls and focus cards.
+/* Dashboard final responsive composition contract — 28 October 2026. */
+/* Single final layout layer for Overview controls and focus cards. Keep data, routes and permissions in existing components. */
    All state, route, data, authorization, and calculation behavior remains in the existing components. */
 
 /* Shared dashboard surface and sizing tokens. */
@@ -11210,7 +11210,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   min-width: 0;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   padding: 14px 16px 16px;
 }
 
@@ -11220,6 +11220,17 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+/* Team Workload rhythm: the sections use spacing, not a divider rule. */
+.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body > .ams-dashboard-team-tasks {
+  padding-bottom: 10px;
+  border-bottom: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-body > .ams-dashboard-team-time {
+  padding-top: 10px;
+  border-top: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-team-tasks__header,
