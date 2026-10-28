@@ -11663,3 +11663,74 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   border-collapse: separate;
   border-spacing: 0 4px;
 }
+
+
+/* Dashboard card divider-free contract — 28 October 2026.
+   Remove interior separator rules across Dashboard cards; retain each card outline,
+   interactive control borders, metric-tile outlines, and other meaningful affordances. */
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child,
+.ams-shell .ams-dashboard section.rounded-card.bg-panel > div:first-child {
+  border-bottom: 0;
+}
+
+/* Tailwind utility-based separators. Keep padding and vertical rhythm while removing only their lines. */
+.ams-shell .ams-dashboard .ams-overview-panel [class~="border-t"],
+.ams-shell .ams-dashboard .ams-overview-panel [class~="border-b"],
+.ams-shell .ams-dashboard .ams-overview-panel [class~="border-y"],
+.ams-shell .ams-dashboard section.rounded-card.bg-panel [class~="border-t"],
+.ams-shell .ams-dashboard section.rounded-card.bg-panel [class~="border-b"],
+.ams-shell .ams-dashboard section.rounded-card.bg-panel [class~="border-y"] {
+  border-top-width: 0;
+  border-bottom-width: 0;
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .divide-y > :not([hidden]) ~ :not([hidden]),
+.ams-shell .ams-dashboard section.rounded-card.bg-panel .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-top: 0;
+}
+
+/* Component-authored separators not represented by Tailwind divider utilities. */
+.ams-shell .ams-dashboard .ams-dashboard-attention-panel .ams-dashboard-attention-item,
+.ams-shell .ams-dashboard .ams-dashboard-attention-panel .ams-dashboard-inbox-triage,
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-control-links,
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-trend-region,
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-movement,
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up,
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row,
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel .ams-project-workload,
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-tasks,
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-time,
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-owner-row,
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-recorded-time-row,
+.ams-shell .ams-dashboard .ams-dashboard-deadline-summary,
+.ams-shell .ams-dashboard .ams-dashboard-activity-tools,
+.ams-shell .ams-dashboard .ams-dashboard-activity-table thead th,
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td,
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr {
+  border-top: 0;
+  border-bottom: 0;
+}
+
+/* Activity keeps its table geometry and row spacing, not horizontal grid lines. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-table {
+  border-collapse: separate;
+  border-spacing: 0 4px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table thead th {
+  background: color-mix(in srgb, var(--bg) 30%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr td {
+  border-top: 0;
+  border-bottom: 0;
+}
+
+@media (max-width: 759px) {
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child,
+  .ams-shell .ams-dashboard section.rounded-card.bg-panel > div:first-child {
+    border-bottom: 0;
+  }
+}

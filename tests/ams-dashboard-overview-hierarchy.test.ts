@@ -2009,6 +2009,29 @@ test('Dashboard cards use whitespace and soft row surfaces instead of legacy div
   assert.ok(dashboard.includes('showTopDivider={false}'));
 });
 
+test('Dashboard cards remove interior divider lines without removing card/control outlines', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const marker = '/* Dashboard card divider-free contract — 28 October 2026.';
+  const finalLayer = styles.slice(styles.lastIndexOf(marker));
+  assert.ok(finalLayer.includes('section.rounded-card.bg-panel > div:first-child'));
+  assert.ok(finalLayer.includes('[class~="border-t"]'));
+  assert.ok(finalLayer.includes('[class~="border-b"]'));
+  assert.ok(finalLayer.includes('[class~="border-y"]'));
+  assert.ok(finalLayer.includes('.divide-y > :not([hidden]) ~ :not([hidden])'));
+  for (const selector of [
+    '.ams-dashboard-attention-panel .ams-dashboard-inbox-triage',
+    '.ams-dashboard-finance-panel .ams-finance-trend-region',
+    '.ams-dashboard-finance-panel .ams-quotation-follow-up',
+    '.ams-dashboard-projects-panel .ams-project-workload',
+    '.ams-dashboard-team-panel .ams-dashboard-owner-row',
+    '.ams-dashboard-activity-table thead th',
+    '.ams-dashboard-activity-table tbody td'
+  ]) assert.ok(finalLayer.includes(selector), 'Missing divider cleanup for: ' + selector);
+  assert.ok(finalLayer.includes('border-collapse: separate;'));
+  assert.ok(finalLayer.includes('border-spacing: 0 4px;'));
+  assert.ok(finalLayer.includes('Keep each card outline'));
+});
+
 test('Dashboard Overview uses one spacing token for all horizontal and vertical card gutters', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');

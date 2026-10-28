@@ -877,3 +877,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Preserved card-local time filters for Finance, recorded time, deadlines, and Recent Activity; removed no card-specific filtering. No global reporting date-range control was introduced into the tabs toolbar.
 - Recent Activity keeps its existing functional search, actor/severity filters, sorting, custom date window, CSV export, and shared pagination. This pass changes only presentation/layout rules; route access, source data, business calculations and backend code remain untouched.
 - Verification must be reported against this exact commit. AMS CI currently has an unrelated dependency-audit finding for `body-parser@1.20.6`; don't change backend dependencies as part of this frontend task.
+
+
+## 0.5 Dashboard card dividers removed — 28 October 2026
+
+- Added a final Dashboard-scoped CSS contract to remove interior divider lines across all cards, including card-header separators, utility-based border/divide rows, Finance sub-sections, Inbox triage, Team Workload rows, deadline summaries, and Recent Activity table rows.
+- Kept outer card outlines, input/button/badge borders, metric tile outlines, content spacing, and Recent Activity's readable row spacing. The result uses whitespace and subtle surfaces instead of horizontal rules.
+- Added a regression test that verifies the final cascade covers the named card families and keeps table spacing.
+- Frontend-only. No source records, routes, data filters, permission checks, APIs, database, or business logic were changed.
