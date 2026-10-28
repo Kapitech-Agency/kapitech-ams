@@ -401,7 +401,8 @@ test('Dashboard card-local calendars sit in card headers, dropdown widths are st
   assert.ok(styles.includes('.ams-dashboard-finance-panel .ams-finance-control-links'));
   assert.ok(styles.includes('.ams-finance-chart-empty-state'));
   assert.ok(styles.includes('align-items: stretch;'));
-  assert.ok(styles.includes('.ams-dashboard-toolbar > .ams-dashboard-view-tabs::-webkit-scrollbar'));
+  assert.ok(styles.includes('.ams-dashboard-view-tabs'), 'Dashboard tabs must use the shared wrap/no-scroll layout.');
+  assert.doesNotMatch(styles, /\.ams-dashboard-toolbar > \.ams-dashboard-view-tabs::?-webkit-scrollbar/, 'Tabs must not rely on a horizontal scroll strip or scrollbar styling.');
   assert.ok(styles.includes('.ams-project-progress-header-actions .ams-project-registry-action'));
 });
 
