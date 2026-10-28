@@ -10067,9 +10067,9 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 
-/* Dashboard final responsive composition contract — 28 October 2026. */
-/* Single final layout layer for Overview controls and focus cards. Keep data, routes and permissions in existing components. */
-   All state, route, data, authorization, and calculation behavior remains in the existing components. */
+/* Dashboard final responsive composition contract — 28 October 2026.
+   Single final layout layer for Overview controls and focus cards.
+   Data, routes, permissions and calculations remain in existing components. */
 
 /* Shared dashboard surface and sizing tokens. */
 .ams-shell .ams-dashboard {
