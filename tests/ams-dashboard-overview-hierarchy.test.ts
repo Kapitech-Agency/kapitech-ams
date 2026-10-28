@@ -1714,7 +1714,8 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
   assert.ok(styles.includes('.ams-finance-movement-card__axis-labels'));
   assert.ok(styles.includes('align-items: flex-end;'));
   assert.ok(styles.includes('justify-content: space-between;'));
-  assert.ok(styles.includes('.ams-dashboard-period-controls'));
+  assert.equal(styles.includes('.ams-dashboard-period-controls'), false);
+  assert.ok(styles.includes('.ams-calendar-period-filter__trigger'));
   assert.equal(overview.includes('Priority 01'), false);
 });
 
@@ -1887,7 +1888,7 @@ test('Dashboard Overview uses compact source states and custom controls without 
   assert.equal(overview.includes('min-h-[220px]'), false, 'Unavailable Finance charts must not reserve a chart-height blank panel.');
   assert.equal(overview.includes('min-h-[250px]'), false, 'An empty project source must not reserve a large blank portfolio area.');
   assert.ok(styles.includes('.ams-dashboard-state--compact'));
-  assert.ok(styles.includes('.ams-dashboard-state--empty .ams-dashboard-state__icon'));
+  assert.equal(styles.includes('.ams-dashboard-state--empty .ams-dashboard-state__icon'), false);
   assert.ok(styles.includes('@media (max-width: 599px)'));
 });
 
@@ -1929,10 +1930,10 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
   assert.ok(styles.includes('height: 58px;'));
   assert.ok(styles.includes('.ams-dashboard-card-action'));
   assert.ok(styles.includes('height: 32px;'));
-  assert.ok(styles.includes('.ams-dashboard-filter-pills'));
+  assert.ok(styles.includes('.ams-dashboard-filter-group--segmented'));
   assert.ok(styles.includes('.ams-dashboard-select-trigger[aria-expanded="true"]'));
   assert.ok(styles.includes('.ams-dropdown-item[data-active="true"]:not([data-selected="true"])'));
-  assert.ok(styles.includes('.ams-dashboard-filter-pill[aria-pressed="true"]'));
+  assert.ok(styles.includes('.ams-dashboard-control--filter[aria-pressed="true"]'));
   assert.equal(styles.includes('--dashboard-active-bg:#641326'), false);
   const activeTabsLayer = styles.slice(styles.lastIndexOf('/* Dashboard interaction and alignment contract — final layer, 27 October 2026. */'));
   assert.ok(activeTabsLayer.includes('background: var(--accent);'), 'Selected tabs retain their crimson active state.');
@@ -1984,6 +1985,28 @@ test('All Dashboard buttons, filters, and calendar controls share the same compo
   assert.ok(pageStyles.includes('.ams-dashboard-team-time__header-actions'));
 });
 
+
+test('Dashboard cards use whitespace and soft row surfaces instead of legacy divider styling', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  const controls = await read('src/components/admin/DashboardControls.css');
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+  assert.ok(overview.includes('<AdminPanel headerDivider={false}'));
+  for (const c of ['ams-dashboard-project-delivery-list','ams-dashboard-attention-list__rows','ams-dashboard-inbox-list','ams-dashboard-task-queue-list','ams-dashboard-deadline-list','ams-finance-quotation-rows','ams-dashboard-client-delivery-list']) assert.ok(overview.includes(c), 'Missing list wrapper: ' + c);
+  assert.doesNotMatch(overview, /divide-y divide-line|border-(?:t|b|l|r) border-line/);
+  assert.ok(primitives.includes('headerDivider?: boolean;'));
+  assert.ok(primitives.includes('showTopDivider?: boolean;'));
+  for (const obsolete of ['ams-overview-scope','ams-overview-panel--shortcuts','ams-overview-panel--money','ams-overview-panel--client-delivery','ams-dashboard-period-controls','ams-dashboard-date-select','ams-dashboard-activity-row__meta','ams-dashboard-activity-pagination','ams-dashboard-filter-pills','ams-dashboard-filter-pill','ams-dashboard-state--empty']) assert.equal(styles.includes('.' + obsolete), false, 'Legacy CSS selector remains: ' + obsolete);
+  assert.doesNotMatch(styles, /\.ams-dashboard-view-tabs[^}]*overflow-x:\\s*(?:auto|scroll)/);
+  assert.doesNotMatch(styles, /\.ams-dashboard-view-tabs::?-webkit-scrollbar/);
+  assert.ok(styles.includes('border-spacing: 0 4px;'));
+  assert.ok(styles.includes('.ams-dashboard-activity-table tbody td:first-child'));
+  assert.ok(controls.includes('.ams-dashboard-control--filter[aria-pressed="true"]'));
+  assert.ok(dashboard.includes('showTopDivider={false}'));
+});
 
 test('Dashboard Overview uses one spacing token for all horizontal and vertical card gutters', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
