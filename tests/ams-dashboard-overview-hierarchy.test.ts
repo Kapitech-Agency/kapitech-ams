@@ -536,9 +536,10 @@ test('Dashboard card actions, Recorded time controls, calendar navigation and Ac
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
 
   assert.ok(dashboard.includes("filter((year) => /^\\d{4}$/.test(year))"), 'Calendar year navigation should match four-digit years.');
-  assert.ok(dashboard.includes('dashboardActivityActorFilterWidth'));
-  assert.ok(dashboard.includes('longestLabel * 6.8 + 44'));
-  assert.ok(dashboard.includes("style={{ '--activity-actor-filter-width': dashboardActivityActorFilterWidth } as React.CSSProperties}"));
+  assert.equal(dashboard.includes('dashboardActivityActorFilterWidth'), false, 'Actor filter width should follow the available grid track, not the longest actor label.');
+  assert.equal(dashboard.includes('longestLabel * 6.8 + 44'), false);
+  assert.equal(dashboard.includes("style={{ '--activity-actor-filter-width': dashboardActivityActorFilterWidth } as React.CSSProperties}"), false);
+  assert.ok(dashboard.includes("const searchableText = (action + ' ' + actor + ' ' + severity).toLowerCase();"));
   assert.ok(dashboard.includes('ams-dashboard-activity-filter--actor'));
   assert.ok(dashboard.includes('ams-dashboard-activity-filter--severity'));
   assert.ok(dashboard.includes('ams-dashboard-activity-filter--order'));
@@ -550,7 +551,9 @@ test('Dashboard card actions, Recorded time controls, calendar navigation and Ac
   const activity = overview.slice(activityStart);
   assert.ok(activity.includes('Search recent activity'));
   assert.ok(activity.includes('Filter activity by actor'));
-  assert.ok(activity.includes("className=\"ams-dashboard-activity-filter ams-dashboard-activity-filter--actor\" style={{ width: dashboardActivityActorFilterWidth, maxWidth: '100%' }}"));
+  assert.ok(activity.includes('className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor"'));
+  assert.ok(!activity.includes('dashboardActivityActorFilterWidth'));
+  assert.ok(activity.includes('className="ams-dashboard-activity-tool-actions"'));
 
   for (const selector of [
     '.ams-overview-panel .ams-dashboard-card-header-actions .ams-dashboard-card-action',
