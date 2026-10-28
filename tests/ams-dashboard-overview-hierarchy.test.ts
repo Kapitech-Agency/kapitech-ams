@@ -210,6 +210,39 @@ test('Recent Activity reuses AMS pagination while keeping date, severity, actor,
   ]) assert.ok(styles.includes(selector), 'Missing responsive Recent Activity rule: ' + selector);
 });
 
+test('Recent Activity uses a stable responsive filter toolbar and distinct row surfaces', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  const end = dashboard.indexOf('</AdminPanel>', start);
+  const activity = dashboard.slice(start, end);
+
+  assert.ok(activity.includes('className="ams-dashboard-activity-tool-actions"'));
+  assert.ok(activity.includes('Search event, actor or severity'));
+  assert.ok(dashboard.includes("const searchableText = (action + ' ' + actor + ' ' + severity).toLowerCase();"));
+  assert.ok(dashboard.includes('if (query && !searchableText.includes(query)) return false;'));
+  assert.ok(activity.includes('Filter activity by severity'));
+  assert.ok(activity.includes('Filter activity by actor'));
+  assert.ok(activity.includes('Filter activity by time window'));
+  assert.ok(activity.includes('Sort recent activity'));
+  assert.ok(activity.includes('Export filtered recent activity as CSV'));
+  assert.ok(activity.includes('<table className="ams-dashboard-activity-table">'));
+  assert.ok(activity.includes('<th scope="col">Actor</th>'));
+  assert.ok(activity.includes('<th scope="col">Date &amp; time (UTC)</th>'));
+  assert.ok(activity.includes('<th scope="col">Severity</th>'));
+  assert.ok(activity.includes('<AdminTablePagination'));
+
+  for (const rule of [
+    'grid-template-areas: "search severity actor order actions";',
+    '"severity actor order actions"',
+    '.ams-dashboard-activity-tool-actions',
+    '.ams-dashboard-activity-table tbody tr td {',
+    'background: color-mix(in srgb, var(--bg) 24%, var(--panel));',
+    'border-spacing: 0 5px;',
+    '@container (max-width: 479px)'
+  ]) assert.ok(styles.includes(rule), 'Missing Recent Activity layout rule: ' + rule);
+});
+
 test('Dashboard cards use soft surfaces and whitespace instead of decorative divider lines', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');

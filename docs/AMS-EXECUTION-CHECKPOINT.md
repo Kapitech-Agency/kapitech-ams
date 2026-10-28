@@ -885,3 +885,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Kept outer card outlines, input/button/badge borders, metric tile outlines, content spacing, and Recent Activity's readable row spacing. The result uses whitespace and subtle surfaces instead of horizontal rules.
 - Added a regression test that verifies the final cascade covers the named card families and keeps table spacing.
 - Frontend-only. No source records, routes, data filters, permission checks, APIs, database, or business logic were changed.
+
+
+## Recent Activity card refinement — 28 October 2026
+
+- Scope was narrowed to the Recent Activity card only. Existing source-backed date presets/custom range, severity and actor filters, sorting, CSV export and shared AMS pagination are retained.
+- Search now matches the saved activity action, actor and normalized severity. Actor filter width is responsive to the available card width instead of the longest actor name.
+- Filter controls and Reset/Export are grouped into named grid areas. The table uses soft row surfaces, clearer column proportions, hover feedback, and a mobile actor fallback. No extra audit fields or columns are invented.
+- No backend/API/database/permission changes. Verify Quality Gate and AMS CI on the exact commit; CI may separately fail on the existing dependency audit.

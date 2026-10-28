@@ -11734,3 +11734,370 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     border-bottom: 0;
   }
 }
+
+
+/* Recent Activity final refinement — 28 October 2026.
+   Keep search/filter controls in a stable grid and give each record row a readable surface.
+   All presentation is card-scoped; audit records, permission checks and export scope stay canonical. */
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-panel {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-filter {
+  flex: 0 1 auto;
+  width: 154px;
+  min-width: 140px;
+  max-width: 100%;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-trigger {
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  justify-content: space-between;
+  border-radius: 9px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-card-action {
+  height: 36px;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) minmax(120px, .78fr) minmax(150px, 1fr) minmax(128px, .86fr) max-content;
+  grid-template-areas: "search severity actor order actions";
+  align-items: end;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 18px 13px;
+  border: 0;
+  background: transparent;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search {
+  grid-area: search;
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  gap: 9px;
+  padding: 0 11px;
+  border-color: var(--dashboard-card-border);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bg) 20%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search svg {
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search input {
+  font-size: 11px;
+  line-height: 15px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter {
+  width: 100%;
+  min-width: 0;
+  gap: 5px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter--severity { grid-area: severity; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter--actor { grid-area: actor; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter--order { grid-area: order; }
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter > span {
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter .ams-dashboard-select-trigger {
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  padding-inline: 10px;
+  border-color: var(--dashboard-card-border);
+  border-radius: 9px;
+  font-size: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions {
+  grid-area: actions;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: end;
+  flex-wrap: nowrap;
+  gap: 7px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-reset,
+.ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-export {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 36px;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 10px;
+  border-radius: 9px;
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
+  padding: 0 18px 14px;
+  overflow: visible;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0 5px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table thead th {
+  padding: 8px 12px 7px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 650;
+  letter-spacing: .045em;
+  white-space: normal;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 45%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2) { width: 18%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 25%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 12%; }
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr td {
+  border: 0;
+  background: color-mix(in srgb, var(--bg) 24%, var(--panel));
+  padding: 12px;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr td:first-child {
+  border-radius: 10px 0 0 10px;
+  padding-left: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr td:last-child {
+  border-radius: 0 10px 10px 0;
+  padding-right: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr:hover td {
+  background: var(--dashboard-hover-surface);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__action {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor {
+  display: none;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__actor,
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__time {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__severity {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 66px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 13px;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr {
+  transition: background-color 140ms ease;
+}
+
+@container (max-width: 1099px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1fr) max-content;
+    grid-template-areas:
+      "search search search search"
+      "severity actor order actions";
+    gap: 10px;
+    padding-inline: 16px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions {
+    gap: 6px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-reset,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-export {
+    padding-inline: 9px;
+  }
+}
+
+@container (max-width: 759px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-panel > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 14px 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-filter {
+    width: auto;
+    min-width: 148px;
+    flex: 1 1 160px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "search search"
+      "severity actor"
+      "order order"
+      "actions actions";
+    padding: 12px 14px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
+    padding: 0 10px 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2),
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table td:nth-child(2) {
+    display: none;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 54%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 30%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 16%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor { display: block; }
+}
+
+@container (max-width: 479px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-panel > div:first-child {
+    padding: 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "search"
+      "severity"
+      "actor"
+      "order"
+      "actions";
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-reset,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-export {
+    flex: 1 1 0;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
+    padding-inline: 8px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table td {
+    padding-inline: 6px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 52%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 31%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 17%; }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr td:first-child {
+    padding-left: 8px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr td:last-child {
+    padding-right: 6px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table__time {
+    font-size: 9px;
+    line-height: 13px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table__severity {
+    min-width: 0;
+    padding-inline: 5px;
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools *,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions * {
+    transition-duration: .01ms;
+  }
+}

@@ -1982,14 +1982,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     ],
     [dashboardActivityActors]
   );
-  const dashboardActivityActorFilterWidth = useMemo(() => {
-    const longestLabel = dashboardActivityActorOptions.reduce(
-      (longest, option) => Math.max(longest, String(option.label || option.value).length),
-      'All actors'.length
-    );
-    return Math.min(260, Math.max(168, Math.ceil(longestLabel * 6.8 + 44))) + 'px';
-  }, [dashboardActivityActorOptions]);
-
   const isActivityCustomRangeInvalid = Boolean(activityStartDate && activityEndDate && activityStartDate > activityEndDate);
   const isActivityCustomRangeUnselected = activityTimeFilter === 'custom' && !activityStartDate && !activityEndDate;
   const filteredDashboardRecentActivity = useMemo(() => {
@@ -2000,9 +1992,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       .filter((activity) => {
         const action = String(activity.action || 'Recorded audit event');
         const actor = String(activity.actor || 'System');
-        if (query && !(action + ' ' + actor).toLowerCase().includes(query)) return false;
+        const severity = getDashboardActivitySeverity(activity.severity);
+        const searchableText = (action + ' ' + actor + ' ' + severity).toLowerCase();
+        if (query && !searchableText.includes(query)) return false;
         if (activityActorFilter !== '__all_actors__' && actor !== activityActorFilter) return false;
-        if (activitySeverityFilter !== 'all' && getDashboardActivitySeverity(activity.severity) !== activitySeverityFilter) return false;
+        if (activitySeverityFilter !== 'all' && severity !== activitySeverityFilter) return false;
         const timestamp = activity.timestamp ? new Date(activity.timestamp).getTime() : Number.NaN;
         if (activityTimeFilter === 'custom') {
           if (!Number.isFinite(timestamp)) return false;
@@ -3665,23 +3659,23 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="ams-dashboard-activity-tools" style={{ '--activity-actor-filter-width': dashboardActivityActorFilterWidth } as React.CSSProperties} role="search" aria-label="Filter recent activity">
+                      <div className="ams-dashboard-activity-tools" role="search" aria-label="Filter recent activity">
                         <label className="ams-dashboard-activity-search">
-                          <span className="sr-only">Search event or actor</span>
+                          <span className="sr-only">Search event, actor or severity</span>
                           <Search size={14} aria-hidden="true" />
                           <input
                             type="search"
                             aria-label="Search recent activity"
                             value={activitySearch}
                             onChange={(event) => { setActivitySearch(event.target.value); setActivityPage(1); }}
-                            placeholder="Search event or actor"
+                            placeholder="Search event, actor or severity"
                           />
                         </label>
                         <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--severity">
                           <span>Severity</span>
 <CustomSelect aria-label="Filter activity by severity" value={activitySeverityFilter} onChange={(value) => { setActivitySeverityFilter(value as DashboardActivitySeverityFilter); setActivityPage(1); }} options={[{ value: 'all', label: 'All levels' }, { value: 'critical', label: 'Critical' }, { value: 'warning', label: 'Warning' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[126px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
-                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor" style={{ width: dashboardActivityActorFilterWidth, maxWidth: '100%' }}>
+                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor">
                           <span>Actor</span>
                           <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
@@ -3690,8 +3684,45 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                           <span>Order</span>
                           <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'severity', label: 'Highest severity' }, { value: 'actor', label: 'Actor A–Z' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
                         </label>
-                        {hasActivityFilters ? <DashboardControl type="button" variant="action" size="standard" icon={<RefreshCw size={13}/>} showArrow={false} className="ams-dashboard-activity-reset" onClick={() => { setActivitySearch(''); setActivityActorFilter('__all_actors__'); setActivitySeverityFilter('all'); setActivityTimeFilter('30'); setActivityStartDate(''); setActivityEndDate(''); setActivitySortOrder('newest'); setActivityCalendarOpen(false); setActivityPage(1); }}>Reset filters</DashboardControl> : null}
-                        <DashboardControl type="button" variant="action" size="standard" icon={<Download size={13}/>} showArrow={false} className="ams-dashboard-activity-export" onClick={exportFilteredDashboardActivity} disabled={filteredDashboardRecentActivity.length===0} title="Export all matching loaded events as a CSV file" ariaLabel="Export filtered recent activity as CSV">Export CSV</DashboardControl>
+                        <div className="ams-dashboard-activity-tool-actions" role="group" aria-label="Recent activity actions">
+                          {hasActivityFilters ? (
+                            <DashboardControl
+                              type="button"
+                              variant="action"
+                              size="standard"
+                              icon={<RefreshCw size={13} />}
+                              showArrow={false}
+                              className="ams-dashboard-activity-reset"
+                              onClick={() => {
+                                setActivitySearch('');
+                                setActivityActorFilter('__all_actors__');
+                                setActivitySeverityFilter('all');
+                                setActivityTimeFilter('30');
+                                setActivityStartDate('');
+                                setActivityEndDate('');
+                                setActivitySortOrder('newest');
+                                setActivityCalendarOpen(false);
+                                setActivityPage(1);
+                              }}
+                            >
+                              Reset filters
+                            </DashboardControl>
+                          ) : null}
+                          <DashboardControl
+                            type="button"
+                            variant="action"
+                            size="standard"
+                            icon={<Download size={13} />}
+                            showArrow={false}
+                            className="ams-dashboard-activity-export"
+                            onClick={exportFilteredDashboardActivity}
+                            disabled={filteredDashboardRecentActivity.length === 0}
+                            title="Export all matching loaded events as a CSV file"
+                            ariaLabel="Export filtered recent activity as CSV"
+                          >
+                            Export CSV
+                          </DashboardControl>
+                        </div>
                       </div>
 
                       {filteredDashboardRecentActivity.length === 0 ? (
