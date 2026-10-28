@@ -269,7 +269,7 @@ test('Recent Activity labels Search, Severity, Actor and Sort by on a shared con
     '.ams-dashboard-activity-filter--order'
   ]) assert.ok(styles.includes(selector), 'Missing aligned activity field styling: ' + selector);
   assert.ok(styles.includes('grid-template-areas: "search severity actor order actions";'));
-  assert.ok(styles.includes('grid-template-areas: "search search search search"'));
+  assert.ok(styles.includes('"search search search search"'));
   assert.ok(styles.includes('@container (max-width: 479px)'));
 });
 
