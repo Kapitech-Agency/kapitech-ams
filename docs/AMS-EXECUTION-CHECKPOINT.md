@@ -893,3 +893,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Search now matches the saved activity action, actor and normalized severity. Actor filter width is responsive to the available card width instead of the longest actor name.
 - Filter controls and Reset/Export are grouped into named grid areas. The table uses soft row surfaces, clearer column proportions, hover feedback, and a mobile actor fallback. No extra audit fields or columns are invented.
 - No backend/API/database/permission changes. Verify Quality Gate and AMS CI on the exact commit; CI may separately fail on the existing dependency audit.
+
+
+## Recent Activity filter composition correction — 28 October 2026
+
+- Added a visible Search label so Search, Severity, Actor and Sort by share the same label/control baseline, grid spacing, and 36px control geometry. Changed the vague visible “Order” label to “Sort by”; the existing sort choices and sorting behavior are unchanged.
+- Kept the existing date window control, actor/severity filters, searchable loaded audit rows, CSV export, and AMS pagination. The filter grid becomes four balanced fields/actions on medium card widths, a two-column arrangement on compact cards, and a single column on narrow cards.
+- The card's table uses an explicit Activity / Actor / Date & time / Severity width system; the Severity header and badges align consistently. Actor remains available on mobile beneath the Activity cell when its separate table column is hidden.
+- This is a presentation and accessibility-label correction only. No API, permission, backend, database, audit schema, filtering semantics or export scope changes.

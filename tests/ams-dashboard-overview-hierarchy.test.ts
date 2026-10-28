@@ -203,6 +203,8 @@ test('Recent Activity reuses AMS pagination while keeping date, severity, actor,
   assert.equal(activity.includes('Page {currentActivityPage} of {activityPageCount}'), false);
   for (const selector of [
     '.ams-dashboard-activity-tools',
+    '.ams-dashboard-activity-search-field',
+    '.ams-dashboard-activity-field__label',
     '.ams-dashboard-activity-search',
     '.ams-dashboard-activity-filter--actor',
     '.ams-dashboard-activity-table',
@@ -218,6 +220,9 @@ test('Recent Activity uses a stable responsive filter toolbar and distinct row s
   const activity = dashboard.slice(start, end);
 
   assert.ok(activity.includes('className="ams-dashboard-activity-tool-actions"'));
+  assert.ok(activity.includes('className="ams-dashboard-activity-search-field"'));
+  assert.ok(activity.includes('htmlFor="dashboard-recent-activity-search">Search</label>'));
+  assert.ok(activity.includes('<span>Sort by</span>'));
   assert.ok(activity.includes('Search event, actor or severity'));
   assert.ok(dashboard.includes("const searchableText = (action + ' ' + actor + ' ' + severity).toLowerCase();"));
   assert.ok(dashboard.includes('if (query && !searchableText.includes(query)) return false;'));
@@ -241,6 +246,31 @@ test('Recent Activity uses a stable responsive filter toolbar and distinct row s
     'border-spacing: 0 5px;',
     '@container (max-width: 479px)'
   ]) assert.ok(styles.includes(rule), 'Missing Recent Activity layout rule: ' + rule);
+});
+
+test('Recent Activity labels Search, Severity, Actor and Sort by on a shared control baseline', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  const end = dashboard.indexOf('</AdminPanel>', start);
+  assert.ok(start >= 0 && end > start);
+  const activity = dashboard.slice(start, end);
+  assert.ok(activity.includes('className="ams-dashboard-activity-search-field"'));
+  assert.ok(activity.includes('htmlFor="dashboard-recent-activity-search">Search</label>'));
+  assert.ok(activity.includes('<span>Severity</span>'));
+  assert.ok(activity.includes('<span>Actor</span>'));
+  assert.ok(activity.includes('<span>Sort by</span>'));
+  assert.ok(activity.includes('aria-label="Sort recent activity"'));
+  for (const selector of [
+    '.ams-dashboard-activity-search-field',
+    '.ams-dashboard-activity-field__label',
+    '.ams-dashboard-activity-filter--severity',
+    '.ams-dashboard-activity-filter--actor',
+    '.ams-dashboard-activity-filter--order'
+  ]) assert.ok(styles.includes(selector), 'Missing aligned activity field styling: ' + selector);
+  assert.ok(styles.includes('grid-template-areas: "search severity actor order actions";'));
+  assert.ok(styles.includes('grid-template-areas: "search search search search"'));
+  assert.ok(styles.includes('@container (max-width: 479px)'));
 });
 
 test('Dashboard cards use soft surfaces and whitespace instead of decorative divider lines', async () => {
