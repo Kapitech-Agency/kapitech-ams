@@ -869,3 +869,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - The Project registry button is now the explicit visual baseline for card-header and card-body actions: a consistent compact 32px control, matching icon/label/arrow alignment, border, radius, type scale, and hover/focus treatment. The baseline is defined at the end of the shared Dashboard control stylesheet so generic standard sizing cannot stretch card actions back to 36px.
 - Converted Team Workload's “View tasks” plain link to the shared `DashboardControl` component and removed its separate 28px override. Project registry, Open planning, Open Projects, Open project delivery, View tasks, Open Finance, quotation ledger and related card actions use the same compact size; global Dashboard quick actions keep their distinct 36px header baseline.
 - Added regression coverage for the shared CTA component, size and visual styling. No source data, route destinations, access checks, date filters, Finance calculations or backend behavior changed.
+
+
+## Dashboard UI polish — 28 October 2026
+
+- Replaced the final Dashboard CSS override layer with a single coherent responsive layout contract for the header and quick actions, non-scrolling Overview tabs, uniform card-action sizes, aligned Project service-line filters, equal-height Finance and Projects cards, Team Workload rows, and the Recent Activity filter grid/table.
+- Preserved card-local time filters for Finance, recorded time, deadlines, and Recent Activity; removed no card-specific filtering. No global reporting date-range control was introduced into the tabs toolbar.
+- Recent Activity keeps its existing functional search, actor/severity filters, sorting, custom date window, CSV export, and shared pagination. This pass changes only presentation/layout rules; route access, source data, business calculations and backend code remain untouched.
+- Verification must be reported against this exact commit. AMS CI currently has an unrelated dependency-audit finding for `body-parser@1.20.6`; don't change backend dependencies as part of this frontend task.

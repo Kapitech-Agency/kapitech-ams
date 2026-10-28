@@ -2080,3 +2080,45 @@ test('Dashboard card actions use the same compact visual contract as Project reg
   assert.ok(contract.includes('background: var(--dashboard-control-surface, var(--panel));'));
   assert.ok(contract.includes('color: var(--muted);'));
 });
+
+
+test('Dashboard final UI layer keeps responsive card and control geometry coherent', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const marker = '/* Dashboard final responsive composition contract — 28 October 2026.';
+  const finalLayer = styles.slice(styles.lastIndexOf(marker));
+
+  assert.ok(finalLayer.includes('--ams-dashboard-control-height: 36px;'));
+  assert.ok(finalLayer.includes('--ams-dashboard-card-control-height: 32px;'));
+  assert.ok(finalLayer.includes('--ams-dashboard-filter-height: 26px;'));
+  assert.ok(finalLayer.includes('overflow-x: visible;'), 'Tabs should wrap and must not create a scroll strip.');
+  assert.match(finalLayer, /\.ams-dashboard-view-tab\[aria-current="page"\]\s*\{[^}]*background: var\(--accent\);/s);
+  assert.doesNotMatch(finalLayer, /\.ams-dashboard-view-tab\[aria-current="page"\]\s*\{[^}]*border-bottom:\s*2px/s);
+  assert.ok(finalLayer.includes('.ams-dashboard-header-primary-actions'));
+  assert.ok(finalLayer.includes('.ams-dashboard-header-utility-actions'));
+  assert.ok(finalLayer.includes('.ams-dashboard-project-service-filter'));
+  assert.ok(finalLayer.includes('height: 26px;'));
+  assert.ok(finalLayer.includes('.ams-dashboard-finance-panel'));
+  assert.ok(finalLayer.includes('.ams-dashboard-projects-panel'));
+  assert.ok(finalLayer.includes('grid-auto-rows: 1fr;'));
+  assert.ok(finalLayer.includes('.ams-dashboard-team-body'));
+  assert.ok(finalLayer.includes('.ams-dashboard-owner-row'));
+  assert.ok(finalLayer.includes('.ams-dashboard-recorded-time-row'));
+  assert.ok(finalLayer.includes('.ams-dashboard-activity-tools'));
+  assert.ok(finalLayer.includes('.ams-dashboard-activity-table'));
+  assert.ok(finalLayer.includes('@media (max-width: 1359px)'));
+  assert.ok(finalLayer.includes('@media (max-width: 599px)'));
+
+  const overviewStart = dashboard.indexOf("\\n      {view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  assert.equal(overview.includes('aria-label="Reporting date range"'), false);
+  for (const label of [
+    'Finance reporting period',
+    'Recorded time reporting period',
+    'Filter activity by time window',
+    'Filter deadlines by custom date range'
+  ]) assert.ok(overview.includes('ariaLabel="' + label + '"') || overview.includes('aria-label="' + label + '"'));
+  assert.ok(overview.includes('Export filtered recent activity as CSV'));
+  assert.ok(overview.includes('pageSizeAriaLabel="Recent activity rows per page"'));
+});

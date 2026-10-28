@@ -10067,9 +10067,45 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 
-/* Dashboard final responsive composition contract — 28 October 2026. */
+/* Dashboard final responsive composition contract — 28 October 2026.
+   This is the single final layout layer for the Overview controls and focus cards.
+   All state, route, data, authorization, and calculation behavior remains in the existing components. */
 
-/* Header layout and shared quick-action baseline. */
+/* Shared dashboard surface and sizing tokens. */
+.ams-shell .ams-dashboard {
+  --ams-dashboard-gap: 12px;
+  --ams-dashboard-control-height: 36px;
+  --ams-dashboard-card-control-height: 32px;
+  --ams-dashboard-filter-height: 26px;
+  --ams-dashboard-card-border: color-mix(in srgb, var(--line) 82%, transparent);
+  --ams-dashboard-hover: color-mix(in srgb, var(--text) 4%, var(--panel));
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.ams-shell .ams-dashboard .ams-overview-card-row {
+  display: grid;
+  min-width: 0;
+  align-items: stretch;
+  gap: var(--ams-dashboard-gap);
+  row-gap: var(--ams-dashboard-gap);
+  column-gap: var(--ams-dashboard-gap);
+}
+
+.ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
+  margin-top: 0;
+  margin-block-start: 0;
+}
+
+.ams-shell .ams-dashboard .ams-overview-card-row > section {
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+}
+
+/* Header: one title area and a coherent, right-aligned quick-action cluster. */
 .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
@@ -10078,16 +10114,30 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   width: 100%;
   min-width: 0;
   margin: 0;
-  padding: 0 0 8px;
+  padding: 0 0 10px;
   border: 0;
 }
-.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:first-child { min-width: 0; max-width: 100%; }
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:first-child {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header h1 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 32px;
+  letter-spacing: -.035em;
+  font-weight: 650;
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:first-child > p {
-  max-width: 52ch;
+  max-width: 54ch;
   margin-top: 4px;
   font-size: 11px;
   line-height: 16px;
 }
+
 .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:last-child {
   display: flex;
   width: auto;
@@ -10096,6 +10146,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   justify-self: end;
   align-items: center;
 }
+
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions {
   display: flex;
   width: auto;
@@ -10105,8 +10156,9 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 7px;
 }
+
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-primary-actions,
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts,
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions {
@@ -10118,50 +10170,134 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   align-items: center;
   gap: 6px;
 }
+
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts {
   margin-left: 2px;
   padding-left: 10px;
-  border-left: 1px solid var(--dashboard-card-border, var(--line));
+  border-left: 1px solid var(--ams-dashboard-card-border);
 }
+
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions {
+  margin-left: 1px;
+  padding-left: 9px;
+  border-left: 1px solid var(--ams-dashboard-card-border);
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions .ams-dashboard-control,
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts .ams-dashboard-control,
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions > a,
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions > button {
   box-sizing: border-box;
   display: inline-flex;
-  height: 36px;
-  min-height: 36px;
+  height: var(--ams-dashboard-control-height);
+  min-height: var(--ams-dashboard-control-height);
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding-block: 0;
+  padding: 0 11px;
   border-radius: 8px;
+  font-size: 11px;
   line-height: 14px;
+  font-weight: 550;
   white-space: nowrap;
+  text-decoration: none;
 }
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--invoice.bg-accent,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--invoice.bg-accent:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--project,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--refresh,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-shortcut {
+  border-color: var(--ams-dashboard-card-border);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--project:hover,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--refresh:hover,
+.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-shortcut:hover {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--ams-dashboard-hover);
+  color: var(--text);
+}
+
 @media (min-width: 1360px) {
   .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions,
   .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-primary-actions,
   .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts,
-  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions { flex-wrap: nowrap; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions {
+    flex-wrap: nowrap;
+  }
 }
+
 @media (max-width: 1359px) {
   .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header {
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
     row-gap: 10px;
   }
-  .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:last-child { width: 100%; justify-self: start; }
-  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions { width: 100%; justify-content: flex-start; }
-  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts {
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:last-child {
+    width: 100%;
+    justify-self: start;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts,
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions {
     margin-left: 0;
     padding-left: 0;
     border-left: 0;
   }
 }
 
-/* Tabs wrap naturally; there is no horizontally scrollable tab strip. */
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header h1 {
+    font-size: 23px;
+    line-height: 29px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions {
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-primary-actions,
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts,
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions .ams-dashboard-control,
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts .ams-dashboard-control {
+    padding-inline: 9px;
+  }
+}
+
+/* Tabs: compact, wrapped navigation with a clear active state and no scroll strip. */
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 0 12px;
+  overflow: visible;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs {
   display: flex;
   width: fit-content;
@@ -10179,151 +10315,1346 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   scrollbar-width: none;
   white-space: normal;
 }
-.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs::-webkit-scrollbar { display: none; }
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs::-webkit-scrollbar {
+  display: none;
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab {
   box-sizing: border-box;
   display: inline-flex;
   width: auto;
   min-width: 0;
-  height: 36px;
-  min-height: 36px;
+  height: var(--ams-dashboard-control-height);
+  min-height: var(--ams-dashboard-control-height);
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  padding: 0 13px;
+  border: 1px solid var(--ams-dashboard-card-border);
   border-radius: 8px;
+  border-bottom-width: 1px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 550;
+  white-space: nowrap;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab:hover {
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--line));
+  background: var(--ams-dashboard-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
+  border-color: var(--accent);
+  border-bottom-width: 1px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 650;
+  box-shadow: none;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 5px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab {
+    height: 34px;
+    min-height: 34px;
+    padding-inline: 10px;
+    font-size: 10px;
+  }
+}
+
+/* Card headers share one baseline; card-local controls share 32px geometry. */
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--ams-dashboard-card-border);
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child h2 {
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 19px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-header-actions,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-header-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-reset,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-export {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--ams-dashboard-card-control-height);
+  min-height: var(--ams-dashboard-card-control-height);
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 550;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-action:hover,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-reset:hover,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-export:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--ams-dashboard-hover);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-reset:disabled,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-export:disabled {
+  cursor: not-allowed;
+  opacity: .4;
+}
+
+/* Finance reporting period and Recent Activity date window align with their adjacent card action. */
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-header-actions .ams-calendar-period-filter__trigger,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-calendar-trigger {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--ams-dashboard-card-control-height);
+  min-height: var(--ams-dashboard-card-control-height);
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 10px;
+  line-height: 13px;
   white-space: nowrap;
 }
-@media (max-width: 599px) {
-  .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs { width: 100%; justify-content: flex-start; gap: 5px; }
-  .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab { height: 34px; min-height: 34px; padding-inline: 10px; }
+
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-card-header-actions .ams-calendar-period-filter__trigger:hover,
+.ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-activity-calendar-trigger:hover {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--ams-dashboard-hover);
 }
 
-/* Projects portfolio and Finance are sibling cards with matching desktop height. */
+/* Projects row: matching height, without leaving either child stretched awkwardly. */
 @media (min-width: 1100px) {
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] { align-items: stretch; grid-auto-rows: 1fr; }
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {
+    align-items: stretch;
+    grid-auto-rows: 1fr;
+  }
+
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
-    display: flex; min-width: 0; min-height: 0; align-self: stretch;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    align-self: stretch;
   }
+
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-finance-panel,
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-panel {
-    display: flex; width: 100%; min-width: 0; height: 100%; min-height: 0; flex: 1 1 auto; flex-direction: column;
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
   }
+
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-finance-body,
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-body {
-    display: flex; min-width: 0; min-height: 0; flex: 1 1 auto; flex-direction: column;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
   }
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-body > .ams-project-portfolio-body {
-    display: flex; min-height: 100%; flex: 1 1 auto; flex-direction: column; justify-content: space-between;
+
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-project-portfolio-body {
+    display: flex;
+    min-width: 0;
+    min-height: 100%;
+    flex: 1 1 auto;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
   }
 }
 
-/* Project service-line filter and Project registry action share a compact 32px baseline. */
+/* Project service-line filter and Project registry action share a single compact baseline. */
+.ams-shell .ams-dashboard .ams-dashboard-project-progress-panel > div:first-child > div:last-child {
+  min-width: 0;
+}
+
 .ams-shell .ams-dashboard .ams-project-progress-header-actions {
-  display: flex; min-width: 0; max-width: 100%; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px;
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
 }
+
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter {
-  display: inline-flex; box-sizing: border-box; width: fit-content; min-width: 0;
-  height: 32px; min-height: 32px; flex: 0 1 auto; flex-wrap: nowrap;
-  align-items: center; justify-content: center; gap: 2px; padding: 2px;
-  border: 1px solid var(--dashboard-control-border, var(--dashboard-card-border, var(--line)));
-  border-radius: 8px; background: color-mix(in srgb, var(--bg) 38%, var(--panel));
+  display: inline-flex;
+  box-sizing: border-box;
+  width: fit-content;
+  min-width: 0;
+  height: var(--ams-dashboard-card-control-height);
+  min-height: var(--ams-dashboard-card-control-height);
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 42%, var(--panel));
 }
+
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter {
-  box-sizing: border-box; display: inline-flex; height: 26px; min-height: 26px; min-width: 0;
-  flex: 0 0 auto; align-items: center; justify-content: center; gap: 5px; padding: 0 8px;
-  border-radius: 6px; font-size: 10px; line-height: 13px;
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--ams-dashboard-filter-height);
+  min-height: var(--ams-dashboard-filter-height);
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 13px;
+  white-space: nowrap;
 }
+
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action,
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action.ams-dashboard-control {
-  box-sizing: border-box; display: inline-flex; height: 32px; min-height: 32px; align-self: center;
-  align-items: center; justify-content: center; padding-inline: 10px; border-radius: 8px;
-  font-size: 10px; line-height: 13px; white-space: nowrap;
+  box-sizing: border-box;
+  display: inline-flex;
+  height: var(--ams-dashboard-card-control-height);
+  min-height: var(--ams-dashboard-card-control-height);
+  flex: 0 0 auto;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 13px;
+  white-space: nowrap;
 }
 
-/* Team Workload: keep task ownership and recorded-time analysis as two tidy sections. */
-.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body {
-  display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 0; padding: 15px 16px 16px;
+@media (max-width: 799px) {
+  .ams-shell .ams-dashboard .ams-project-progress-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
-.ams-shell .ams-dashboard .ams-dashboard-team-tasks,
-.ams-shell .ams-dashboard .ams-dashboard-team-time { min-width: 0; margin: 0; }
-.ams-shell .ams-dashboard .ams-dashboard-team-tasks { padding-bottom: 15px; border-bottom: 1px solid var(--dashboard-card-border, var(--line)); }
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-project-progress-header-actions {
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+/* Needs Attention: priority rows, severity filter and Inbox triage share a compact rhythm. */
+.ams-shell .ams-dashboard .ams-dashboard-attention-panel {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-header-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-header-filter {
+  width: 118px;
+  flex: 0 0 118px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-header-actions .ams-dashboard-select-trigger {
+  height: var(--ams-dashboard-card-control-height);
+  min-height: var(--ams-dashboard-card-control-height);
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-counts {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-empty-indicator {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 5px;
+  color: var(--success);
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item {
+  padding: 11px 15px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__heading {
+  align-items: center;
+  gap: 6px 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__heading > p {
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 600;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__description {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-attention-item__action {
+  min-height: 24px;
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage {
+  margin-top: auto;
+  border-top: 1px solid var(--ams-dashboard-card-border);
+  background: color-mix(in srgb, var(--bg) 26%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-triage__header {
+  min-height: 43px;
+  padding: 10px 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  padding: 0 14px 12px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metric {
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 9px;
+  background: var(--panel);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metric > p:first-child {
+  font-size: 9px;
+  line-height: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-metric > p:last-child {
+  margin-top: 3px;
+  font-size: 17px;
+  line-height: 21px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-inbox-item {
+  min-height: 50px;
+  padding: 9px 14px;
+}
+
+/* Finance: compact headline metrics, one well-proportioned trend and supporting movement. */
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-header-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 0 0, color-mix(in srgb, var(--accent) 6%, transparent), transparent 68%), color-mix(in srgb, var(--bg) 42%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__label > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__icon {
+  display: inline-grid;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__value {
+  margin-top: 10px;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.16;
+  letter-spacing: -.04em;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-finance-primary-metric__context {
+  margin-top: 5px;
+  max-width: 44ch;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-control-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-finance-control-links a {
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 7px;
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-region {
+  min-width: 0;
+  padding: 14px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+  border-left: 0;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-heading h3 {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-heading > span {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-trend-region .ams-trend-chart__plot {
+  min-width: 0;
+  min-height: 170px;
+  height: auto;
+  aspect-ratio: 2.1 / 1;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement {
+  min-width: 0;
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement__heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 9px;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement__heading h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 650;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(88px, .9fr);
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--bg) 36%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card__copy,
+.ams-shell .ams-dashboard .ams-finance-movement-card__chart {
+  min-width: 0;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card__copy > p.text-lg {
+  font-size: clamp(16px, 1.3vw, 20px);
+  line-height: 24px;
+  letter-spacing: -.025em;
+}
+
+.ams-shell .ams-dashboard .ams-finance-movement-card .ams-money-movement-sparkline {
+  height: 44px;
+  gap: 4px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up {
+  min-width: 0;
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up h3 {
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row {
+  gap: 10px;
+  padding: 11px 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-finance-quotation-row > div:last-child {
+  min-width: 100px;
+  flex: 0 0 auto;
+}
+
+@media (min-width: 1280px) {
+  .ams-shell .ams-dashboard .ams-finance-primary-grid {
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    gap: 16px;
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-primary-metric {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-trend-region {
+    padding: 2px 0 0 16px;
+    border-top: 0;
+    border-left: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-trend-region .ams-trend-chart__plot {
+    min-height: 160px;
+    aspect-ratio: 1.95 / 1;
+  }
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-finance-body {
+    padding: 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-primary-metric {
+    padding: 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-movement__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-movement-card {
+    grid-template-columns: minmax(0, 1fr) minmax(92px, .9fr);
+    gap: 9px;
+  }
+
+  .ams-shell .ams-dashboard .ams-finance-trend-region .ams-trend-chart__plot {
+    min-height: 145px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-finance-header-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Projects: three compact metrics, labelled portfolio distribution, then service-line load. */
+.ams-shell .ams-dashboard .ams-dashboard-projects-panel {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-projects-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.ams-shell .ams-dashboard .ams-project-portfolio-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item {
+  display: grid;
+  min-width: 0;
+  min-height: 72px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  column-gap: 7px;
+  row-gap: 4px;
+  padding: 9px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 35%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item__icon {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--line) 58%, var(--panel));
+  color: var(--muted);
+  grid-row: 1;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item p {
+  align-self: center;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item strong {
+  grid-column: 1 / -1;
+  color: var(--text);
+  font-size: 21px;
+  line-height: 25px;
+  font-weight: 650;
+  letter-spacing: -.035em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-project-summary-item--danger strong { color: var(--danger); }
+.ams-shell .ams-dashboard .ams-project-summary-item--danger .ams-project-summary-item__icon {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--panel));
+}
+.ams-shell .ams-dashboard .ams-project-summary-item--tasks .ams-project-summary-item__icon {
+  color: var(--series-3);
+  background: color-mix(in srgb, var(--series-3) 9%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-section,
+.ams-shell .ams-dashboard .ams-project-workload {
+  min-width: 0;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-section__heading,
+.ams-shell .ams-dashboard .ams-project-workload__heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  margin-bottom: 9px;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-section__heading h3,
+.ams-shell .ams-dashboard .ams-project-workload__heading h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 650;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-section__heading > span,
+.ams-shell .ams-dashboard .ams-project-workload__heading > span {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 13px;
+  text-align: right;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-layout {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 128px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-layout .ams-donut-chart--maven .ams-donut-chart__ring {
+  width: 128px;
+  height: 128px;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-row > span:first-child {
+  min-width: 0;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-project-risk-row > span:last-child {
+  flex: 0 0 auto;
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-project-workload {
+  padding-top: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+}
+
+.ams-shell .ams-dashboard .ams-project-workload__heading { margin-bottom: 11px; }
+
+.ams-shell .ams-dashboard .ams-project-workstream {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.ams-shell .ams-dashboard .ams-project-workstream > div:first-child > span:first-child {
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-project-workstream > div:first-child > span:last-child {
+  font-size: 10px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-project-workstream .h-2 { height: 7px; }
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-project-summary-grid { gap: 5px; }
+  .ams-shell .ams-dashboard .ams-project-summary-item { min-height: 66px; padding: 7px 6px; column-gap: 5px; }
+  .ams-shell .ams-dashboard .ams-project-summary-item strong { font-size: 18px; line-height: 22px; }
+  .ams-shell .ams-dashboard .ams-project-risk-layout { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .ams-shell .ams-dashboard .ams-project-risk-layout > .ams-donut-chart--maven { justify-self: center; }
+  .ams-shell .ams-dashboard .ams-project-risk-section__heading,
+  .ams-shell .ams-dashboard .ams-project-workload__heading { align-items: flex-start; }
+  .ams-shell .ams-dashboard .ams-project-risk-section__heading > span,
+  .ams-shell .ams-dashboard .ams-project-workload__heading > span { text-align: left; }
+}
+
+/* Team Workload: clear owner ranking and record-time section without cramped rows or dividers. */
+.ams-shell .ams-dashboard .ams-dashboard-team-panel {
+  display: flex;
+  min-width: 0;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  padding: 14px 16px 16px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-tasks,
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-time {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-team-tasks__header,
 .ams-shell .ams-dashboard .ams-dashboard-team-time__header {
-  display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 9px 12px; margin-bottom: 11px;
-}
-.ams-shell .ams-dashboard .ams-dashboard-team-time { padding-top: 15px; border-top: 0; }
-.ams-shell .ams-dashboard .ams-dashboard-team-time__header > div:first-child { min-width: 0; }
-.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions {
-  display: flex; min-width: 0; max-width: 100%; flex: 0 1 208px; align-items: center; justify-content: flex-end;
-}
-.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-card-period-controls,
-.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter {
-  width: 208px; min-width: 0; max-width: 100%; flex: 1 1 auto; margin: 0;
-}
-@media (max-width: 799px) {
-  .ams-shell .ams-dashboard .ams-project-progress-header-actions { width: 100%; justify-content: flex-start; }
-}
-@media (max-width: 599px) {
-  .ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body { padding: 13px 12px; }
-  .ams-shell .ams-dashboard .ams-dashboard-team-time__header { align-items: flex-start; flex-direction: column; }
-  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions,
-  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-card-period-controls,
-  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter { width: 100%; max-width: 100%; flex: 1 1 auto; }
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-bottom: 10px;
 }
 
-/* Recent Activity filters and table use a stable responsive grid. */
+.ams-shell .ams-dashboard .ams-dashboard-team-section-caption {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-list,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-list {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 10px 11px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 34%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__heading,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__heading {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px 9px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__heading > span:first-child,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__count {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__count strong {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__track,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track {
+  display: block;
+  width: 100%;
+  height: 6px;
+  min-height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 76%, var(--panel));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__fill,
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 180ms ease;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 2px 6px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-risk {
+  border-color: color-mix(in srgb, var(--danger) 20%, var(--line));
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+  color: var(--danger);
+}
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-warning {
+  border-color: color-mix(in srgb, var(--warning) 20%, var(--line));
+  background: color-mix(in srgb, var(--warning) 7%, var(--panel));
+  color: var(--warning);
+}
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-review {
+  border-color: color-mix(in srgb, var(--info) 20%, var(--line));
+  background: color-mix(in srgb, var(--info) 7%, var(--panel));
+  color: var(--info);
+}
+.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-clear {
+  border-color: var(--ams-dashboard-card-border);
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__value {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__entries {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 200px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter__trigger {
+  height: var(--ams-dashboard-card-control-height);
+  min-height: var(--ams-dashboard-card-control-height);
+  max-width: 100%;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body {
+    padding: 12px;
+    gap: 14px;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header {
+    align-items: flex-start;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter,
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter__trigger {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Recent Activity: compact filter grid, legible table columns, and no horizontal overflow. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-panel {
+  min-width: 0;
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions {
-  display: flex; min-width: 0; max-width: 100%; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px;
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
 }
-.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-filter { min-width: 0; max-width: 100%; flex: 0 1 172px; }
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-filter {
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
-  display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(116px, .72fr) minmax(150px, 1fr) minmax(122px, .75fr) auto auto;
-  align-items: end; gap: 10px; padding: 12px 16px;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(200px, 1.45fr) minmax(112px, .72fr) minmax(142px, 1fr) minmax(124px, .8fr) auto auto;
+  align-items: end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ams-dashboard-card-border);
+  background: color-mix(in srgb, var(--bg) 20%, var(--panel));
 }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap { width: 100%; min-width: 0; padding: 0 16px 12px; }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table { width: 100%; min-width: 0; table-layout: fixed; }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table thead th { padding: 9px 12px; color: var(--muted); font-size: 10px; line-height: 14px; font-weight: 650; }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td { padding: 11px 12px; vertical-align: middle; overflow-wrap: anywhere; }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table__action { font-size: 12px; line-height: 17px; }
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  height: var(--ams-dashboard-card-control-height);
+  min-height: var(--ams-dashboard-card-control-height);
+  padding: 0 10px;
+  border: 1px solid var(--ams-dashboard-card-border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search svg {
+  flex: 0 0 auto;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-search input::placeholder {
+  color: var(--muted);
+  opacity: .85;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter > span {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 12px;
+  font-weight: 550;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-filter .ams-dashboard-select-trigger {
+  width: 100%;
+  height: var(--ams-dashboard-card-control-height);
+  min-height: var(--ams-dashboard-card-control-height);
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
+  width: 100%;
+  min-width: 0;
+  padding: 0 16px 12px;
+  overflow-x: visible;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--ams-dashboard-card-border);
+  background: color-mix(in srgb, var(--bg) 30%, var(--panel));
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 13px;
+  font-weight: 650;
+  letter-spacing: .055em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 43%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2) { width: 19%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 26%; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 12%; }
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+  color: var(--text);
+  font-size: 11px;
+  line-height: 16px;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr:last-child td { border-bottom: 0; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr:hover td { background: var(--ams-dashboard-hover); }
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__action {
+  margin: 0;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__actor,
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__time {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__severity {
+  min-width: 0;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor { display: none; }
+
 @media (max-width: 1199px) {
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search { grid-column: 1 / -1; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search {
+    grid-column: 1 / -1;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-control {
+    width: auto;
+  }
 }
+
 @media (max-width: 759px) {
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 12px; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search { grid-column: 1 / -1; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap { padding-inline: 8px; overflow-x: visible; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    padding: 11px 12px;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search {
+    grid-column: 1 / -1;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
+    padding: 0 8px 10px;
+  }
   .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2),
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table td:nth-child(2) { display: none; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table td:nth-child(2) {
+    display: none;
+  }
   .ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor { display: block; }
   .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 50%; }
   .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 32%; }
   .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 18%; }
 }
+
 @media (max-width: 599px) {
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools { grid-template-columns: minmax(0, 1fr); }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search { grid-column: auto; }
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
+    min-height: 0;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .ams-shell .ams-dashboard .ams-overview-panel > div:first-child > div:last-child {
+    max-width: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search {
+    grid-column: auto;
+  }
+
   .ams-shell .ams-dashboard .ams-dashboard-activity-filter,
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-control { width: 100%; max-width: 100%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-control {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table td {
+    padding: 9px 6px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table__time {
+    font-size: 9px;
+    line-height: 13px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table__severity {
+    padding-inline: 4px;
+    font-size: 9px;
+  }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .ams-shell .ams-dashboard .ams-dashboard-page-header *,
   .ams-shell .ams-dashboard .ams-dashboard-view-tabs *,
+  .ams-shell .ams-dashboard .ams-dashboard-header-actions *,
   .ams-shell .ams-dashboard .ams-project-progress-header-actions *,
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr { transition-duration: 0.01ms; }
-}
-
-
-/* Team Workload: remove the separator between task assignments and recorded time.
-   Spacing still separates the two groups, so the card does not depend on a divider line. */
-.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body > .ams-dashboard-team-tasks {
-  padding-bottom: 10px;
-  border-bottom: 0;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-body > .ams-dashboard-team-time {
-  padding-top: 10px;
-  border-top: 0;
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr,
+  .ams-shell .ams-dashboard .ams-dashboard-owner-row__fill,
+  .ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track > span {
+    transition-duration: 0.01ms;
+  }
 }
