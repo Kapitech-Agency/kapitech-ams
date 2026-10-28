@@ -2556,7 +2556,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         eyebrow={view === 'overview' ? undefined : 'Agency operations'}
         title="Dashboard"
         description={view === 'overview'
-          ? undefined
+          ? 'Delivery priorities, client commitments and agency operations.'
           : view === 'performance'
             ? 'Compare delivery progress, bottlenecks, and recorded team effort over the selected period.'
             : 'Explore supported trends across financial movement, inquiry demand, and portfolio status.'}

@@ -1990,3 +1990,45 @@ test('Dashboard Overview uses one spacing token for all horizontal and vertical 
   }
   assert.ok(finalLayer.includes('.ams-overview-card-row > section'));
 });
+
+
+test('Dashboard final responsive contract aligns header, Projects, local date filters and Recent Activity', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = styles.lastIndexOf('/* Dashboard final responsive composition contract — 28 October 2026. */');
+  const finalLayer = styles.slice(start);
+  assert.ok(start >= 0, 'A final scoped responsive contract should resolve the previous cascade.');
+  assert.ok(dashboard.includes('Delivery priorities, client commitments and agency operations.'));
+  assert.ok(finalLayer.includes('grid-template-columns: minmax(0, 1fr) minmax(0, max-content);'));
+  assert.ok(finalLayer.includes('height: 36px;'));
+  assert.ok(finalLayer.includes('overflow-x: visible;'));
+  assert.ok(finalLayer.includes('.ams-dashboard-projects-panel'));
+  assert.ok(finalLayer.includes('height: 100%;'));
+  assert.ok(finalLayer.includes('height: 32px;'));
+  assert.ok(finalLayer.includes('height: 26px;'));
+  assert.ok(finalLayer.includes('.ams-dashboard-activity-tools'));
+  assert.ok(finalLayer.includes('.ams-dashboard-activity-table'));
+  assert.ok(finalLayer.includes('@media (max-width: 1359px)'));
+  assert.ok(finalLayer.includes('@media (max-width: 599px)'));
+
+  const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overview = dashboard.slice(overviewStart, overviewEnd);
+  assert.equal(overview.includes('aria-label="Reporting date range"'), false);
+  for (const label of [
+    'Finance reporting period',
+    'Recorded time reporting period',
+    'Filter activity by time window',
+    'Filter deadlines by custom date range'
+  ]) assert.ok(overview.includes('ariaLabel="' + label + '"') || overview.includes('aria-label="' + label + '"'));
+  for (const feature of [
+    'dashboard-attention-center',
+    'dashboard-finance-overview',
+    'dashboard-project-portfolio',
+    'dashboard-team-workload',
+    'dashboard-recent-activity'
+  ]) assert.ok(overview.includes('data-ams-feature-slug="' + feature + '"'));
+  assert.ok(overview.includes('Export filtered recent activity as CSV'));
+  assert.ok(overview.includes('pageSizeAriaLabel="Recent activity rows per page"'));
+});
+

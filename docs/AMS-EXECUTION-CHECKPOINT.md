@@ -854,3 +854,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Recorded-time rows align person, logged duration, progress track and count of recorded entries. Its period selector remains local to Recorded Time. The two subsections use a predictable spacing system and reflow on narrow screens.
 - Added focused regression coverage for the card structure, meaningful status indicators, recorded entry counts and responsive layout.
 - No API/database/authentication/permission changes or task/time calculations changed. Confirm Quality Gate on the resulting commit.
+
+
+## 0.5 Dashboard responsive alignment pass — 28 October 2026
+
+- Added a final scoped responsive layout contract for the Dashboard header, view tabs, Projects/Finance sibling sizing, Project delivery filters, Team Workload spacing, and Recent Activity filter/table grid. The Overview header now states its purpose in one short line; date selection remains local to Finance, Recorded Time, Deadlines, and Recent Activity, not a global toolbar.
+- Kept the existing Recent Activity feature set: searchable audit rows, severity and actor filters, date presets/custom range, sorting, CSV export and pagination. The changes here are visual alignment and responsive behavior, not new source fields or API calls.
+- Project service-line controls use compact pill dimensions and match the Project Registry action baseline. The Finance/Projects row stretches both cards to the same desktop height; the cards stack naturally on narrow screens.
+- Validation will run on the exact commit. The existing dependency-audit finding (body-parser@1.20.6, GHSA-27r3-jxmh-p828) is outside this frontend-only task and is not changed here.

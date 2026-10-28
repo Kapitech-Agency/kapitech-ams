@@ -10077,3 +10077,252 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   .ams-shell .ams-dashboard .ams-dashboard-owner-row__fill,
   .ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track > span { transition-duration: 0.01ms; }
 }
+
+
+/* Dashboard final responsive composition contract — 28 October 2026. */
+
+/* Header layout and shared quick-action baseline. */
+.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+  align-items: center;
+  gap: 12px 20px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 8px;
+  border: 0;
+}
+.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:first-child { min-width: 0; max-width: 100%; }
+.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:first-child > p {
+  max-width: 52ch;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 16px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:last-child {
+  display: flex;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  justify-self: end;
+  align-items: center;
+}
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions {
+  display: flex;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-primary-actions,
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts,
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts {
+  margin-left: 2px;
+  padding-left: 10px;
+  border-left: 1px solid var(--dashboard-card-border, var(--line));
+}
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions .ams-dashboard-control,
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts .ams-dashboard-control,
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions > a,
+.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions > button {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 36px;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding-block: 0;
+  border-radius: 8px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+@media (min-width: 1360px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions,
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-primary-actions,
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts,
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions { flex-wrap: nowrap; }
+}
+@media (max-width: 1359px) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    row-gap: 10px;
+  }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:last-child { width: 100%; justify-self: start; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions { width: 100%; justify-content: flex-start; }
+  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+/* Tabs wrap naturally; there is no horizontally scrollable tab strip. */
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs {
+  display: flex;
+  width: fit-content;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  overflow: visible;
+  overflow-x: visible;
+  overflow-y: visible;
+  scrollbar-width: none;
+  white-space: normal;
+}
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs::-webkit-scrollbar { display: none; }
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs { width: 100%; justify-content: flex-start; gap: 5px; }
+  .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab { height: 34px; min-height: 34px; padding-inline: 10px; }
+}
+
+/* Projects portfolio and Finance are sibling cards with matching desktop height. */
+@media (min-width: 1100px) {
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] { align-items: stretch; grid-auto-rows: 1fr; }
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
+    display: flex; min-width: 0; min-height: 0; align-self: stretch;
+  }
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-finance-panel,
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-panel {
+    display: flex; width: 100%; min-width: 0; height: 100%; min-height: 0; flex: 1 1 auto; flex-direction: column;
+  }
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-finance-body,
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-body {
+    display: flex; min-width: 0; min-height: 0; flex: 1 1 auto; flex-direction: column;
+  }
+  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-body > .ams-project-portfolio-body {
+    display: flex; min-height: 100%; flex: 1 1 auto; flex-direction: column; justify-content: space-between;
+  }
+}
+
+/* Project service-line filter and Project registry action share a compact 32px baseline. */
+.ams-shell .ams-dashboard .ams-project-progress-header-actions {
+  display: flex; min-width: 0; max-width: 100%; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px;
+}
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter {
+  display: inline-flex; box-sizing: border-box; width: fit-content; min-width: 0;
+  height: 32px; min-height: 32px; flex: 0 1 auto; flex-wrap: nowrap;
+  align-items: center; justify-content: center; gap: 2px; padding: 2px;
+  border: 1px solid var(--dashboard-control-border, var(--dashboard-card-border, var(--line)));
+  border-radius: 8px; background: color-mix(in srgb, var(--bg) 38%, var(--panel));
+}
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-project-service-filter .ams-dashboard-control--filter {
+  box-sizing: border-box; display: inline-flex; height: 26px; min-height: 26px; min-width: 0;
+  flex: 0 0 auto; align-items: center; justify-content: center; gap: 5px; padding: 0 8px;
+  border-radius: 6px; font-size: 10px; line-height: 13px;
+}
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action,
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-project-registry-action.ams-dashboard-control {
+  box-sizing: border-box; display: inline-flex; height: 32px; min-height: 32px; align-self: center;
+  align-items: center; justify-content: center; padding-inline: 10px; border-radius: 8px;
+  font-size: 10px; line-height: 13px; white-space: nowrap;
+}
+
+/* Team Workload: keep task ownership and recorded-time analysis as two tidy sections. */
+.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body {
+  display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 0; padding: 15px 16px 16px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks,
+.ams-shell .ams-dashboard .ams-dashboard-team-time { min-width: 0; margin: 0; }
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks { padding-bottom: 15px; border-bottom: 1px solid var(--dashboard-card-border, var(--line)); }
+.ams-shell .ams-dashboard .ams-dashboard-team-tasks__header,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header {
+  display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 9px 12px; margin-bottom: 11px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-team-time { padding-top: 15px; border-top: 0; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header > div:first-child { min-width: 0; }
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions {
+  display: flex; min-width: 0; max-width: 100%; flex: 0 1 208px; align-items: center; justify-content: flex-end;
+}
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-card-period-controls,
+.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter {
+  width: 208px; min-width: 0; max-width: 100%; flex: 1 1 auto; margin: 0;
+}
+@media (max-width: 799px) {
+  .ams-shell .ams-dashboard .ams-project-progress-header-actions { width: 100%; justify-content: flex-start; }
+}
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body { padding: 13px 12px; }
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header { align-items: flex-start; flex-direction: column; }
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions,
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-card-period-controls,
+  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter { width: 100%; max-width: 100%; flex: 1 1 auto; }
+}
+
+/* Recent Activity filters and table use a stable responsive grid. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions {
+  display: flex; min-width: 0; max-width: 100%; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-filter { min-width: 0; max-width: 100%; flex: 0 1 172px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-tools {
+  display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(116px, .72fr) minmax(150px, 1fr) minmax(122px, .75fr) auto auto;
+  align-items: end; gap: 10px; padding: 12px 16px;
+}
+.ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap { width: 100%; min-width: 0; padding: 0 16px 12px; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table { width: 100%; min-width: 0; table-layout: fixed; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table thead th { padding: 9px 12px; color: var(--muted); font-size: 10px; line-height: 14px; font-weight: 650; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td { padding: 11px 12px; vertical-align: middle; overflow-wrap: anywhere; }
+.ams-shell .ams-dashboard .ams-dashboard-activity-table__action { font-size: 12px; line-height: 17px; }
+@media (max-width: 1199px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search { grid-column: 1 / -1; }
+}
+@media (max-width: 759px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 12px; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search { grid-column: 1 / -1; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap { padding-inline: 8px; overflow-x: visible; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2),
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table td:nth-child(2) { display: none; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor { display: block; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 50%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 32%; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 18%; }
+}
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools { grid-template-columns: minmax(0, 1fr); }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search { grid-column: auto; }
+  .ams-shell .ams-dashboard .ams-dashboard-activity-filter,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-control { width: 100%; max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-dashboard .ams-dashboard-page-header *,
+  .ams-shell .ams-dashboard .ams-dashboard-view-tabs *,
+  .ams-shell .ams-dashboard .ams-project-progress-header-actions *,
+  .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr { transition-duration: 0.01ms; }
+}
