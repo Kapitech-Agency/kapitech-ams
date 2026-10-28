@@ -32,7 +32,7 @@
   line-height: 16px;
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope__chip {
+.ams-shell .ams-dashboard .ams-retired-overview-scope__chip {
   min-height: 30px;
   padding-inline: 11px;
   border-color: var(--dashboard-card-border);
@@ -41,7 +41,7 @@
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope__chip:hover {
+.ams-shell .ams-dashboard .ams-retired-overview-scope__chip:hover {
   color: var(--text);
   border-color: color-mix(in srgb, var(--accent) 18%, var(--line));
   background: color-mix(in srgb, var(--accent) 4%, var(--panel));
@@ -306,12 +306,12 @@
   min-width: 0;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-date-select__icon {
+.ams-shell .ams-dashboard .ams-retired-dashboard-date-select__icon {
   z-index: 1;
   color: var(--muted);
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-date-select__input {
+.ams-shell .ams-dashboard .ams-retired-dashboard-date-select__input {
   padding-left: 34px;
 }
 
@@ -665,14 +665,14 @@
   background: color-mix(in srgb, var(--panel) 88%, var(--bg));
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope__meta {
+.ams-shell .ams-dashboard .ams-retired-overview-scope__meta {
   display: flex;
   align-items: center;
   gap: 11px;
   min-width: 0;
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope__icon {
+.ams-shell .ams-dashboard .ams-retired-overview-scope__icon {
   display: inline-flex;
   width: 36px;
   height: 36px;
@@ -685,14 +685,14 @@
   color: var(--muted);
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope__label {
+.ams-shell .ams-dashboard .ams-retired-overview-scope__label {
   color: var(--muted);
   font-size: 10px;
   line-height: 14px;
   font-weight: 500;
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope__value {
+.ams-shell .ams-dashboard .ams-retired-overview-scope__value {
   margin-top: 2px;
   color: var(--text);
   font-size: 13px;
@@ -701,7 +701,7 @@
   letter-spacing: -0.01em;
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope__chips {
+.ams-shell .ams-dashboard .ams-retired-overview-scope__chips {
   justify-content: flex-end;
 }
 
@@ -757,7 +757,7 @@
     padding: 12px;
   }
 
-  .ams-shell .ams-dashboard .ams-overview-scope__chips {
+  .ams-shell .ams-dashboard .ams-retired-overview-scope__chips {
     justify-content: flex-start;
   }
 
@@ -1697,14 +1697,14 @@
   width: 64px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls [role="group"] {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls [role="group"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls [role="group"] > button {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls [role="group"] > button {
   display: inline-flex;
   min-height: 32px;
   align-items: center;
@@ -1717,12 +1717,12 @@
   font-size: 10px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls [role="group"] > button:disabled {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls [role="group"] > button:disabled {
   opacity: .4;
   cursor: not-allowed;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls [role="group"] > span {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls [role="group"] > span {
   color: var(--muted);
   font-size: 10px;
   font-variant-numeric: tabular-nums;
@@ -1740,7 +1740,7 @@
     min-width: 0;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls [role="group"] {
+  .ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls [role="group"] {
     gap: 4px;
   }
 }
@@ -2178,11 +2178,11 @@
   font-size: 10px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls label > span {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls label > span {
   color: var(--muted);
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls label .ams-dashboard-custom-select {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls label .ams-dashboard-custom-select {
   min-width: 88px;
 }
 
@@ -2461,7 +2461,7 @@
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] > span,
-.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count {
+.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill[aria-pressed="true"] .ams-retired-dashboard-filter-pill__count {
   border-color: color-mix(in srgb, #fff 30%, var(--accent));
   background: color-mix(in srgb, #fff 13%, var(--accent));
   color: #fff;
@@ -2792,7 +2792,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   white-space: nowrap;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-filter-pill__count {
+.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill__count {
   display: inline-flex;
   min-width: 18px;
   height: 18px;
@@ -3984,8 +3984,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   color: var(--text);
 }
 
-.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count,
-.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] .ams-dashboard-filter-pill__count {
+.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill[aria-pressed="true"] .ams-retired-dashboard-filter-pill__count,
+.ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] .ams-retired-dashboard-filter-pill__count {
   border-color: color-mix(in srgb, var(--line) 70%, var(--muted));
   background: color-mix(in srgb, var(--line) 75%, var(--panel));
   color: var(--text);
@@ -4803,7 +4803,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   font-weight: 650;
 }
 
-.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-filter-pill__count {
+.ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-retired-dashboard-filter-pill__count {
   padding: 0 2px;
   border: 0;
   background: transparent;
@@ -5942,7 +5942,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   min-width: 0;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls {
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
@@ -5951,7 +5951,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   gap: 10px 14px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls > label {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls > label {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -5959,7 +5959,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   font-size: 10px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls .ams-dashboard-select-trigger {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls .ams-dashboard-select-trigger {
   width: 88px;
   min-width: 88px;
 }
@@ -6566,7 +6566,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   font-variant-numeric: tabular-nums;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls,
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls,
 .ams-shell .ams-dashboard .ams-dashboard-activity-page-buttons {
   display: flex;
   min-width: 0;
@@ -6575,7 +6575,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   gap: 8px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls label {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls label {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -6583,7 +6583,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   font-size: 10px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls .ams-dashboard-select-trigger {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls .ams-dashboard-select-trigger {
   height: 32px;
   min-height: 32px;
 }
@@ -6665,7 +6665,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     padding: 12px;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls {
+  .ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls {
     width: 100%;
     justify-content: space-between;
   }
@@ -6686,7 +6686,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     width: 100%;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-pagination__controls {
+  .ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination__controls {
     align-items: flex-start;
     flex-direction: column;
   }
