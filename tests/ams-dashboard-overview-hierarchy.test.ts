@@ -2029,7 +2029,7 @@ test('Dashboard cards remove interior divider lines without removing card/contro
   ]) assert.ok(finalLayer.includes(selector), 'Missing divider cleanup for: ' + selector);
   assert.ok(finalLayer.includes('border-collapse: separate;'));
   assert.ok(finalLayer.includes('border-spacing: 0 4px;'));
-  assert.ok(finalLayer.includes('Keep each card outline'));
+  assert.ok(finalLayer.includes('retain each card outline'));
 });
 
 test('Dashboard Overview uses one spacing token for all horizontal and vertical card gutters', async () => {
