@@ -6329,7 +6329,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   white-space: nowrap;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-dashboard-view-tabs::-webkit-scrollbar {
+.ams-shell .ams-dashboard .ams-dashboard-toolbar > .ams-retired-dashboard-view-tabs::-webkit-scrollbar {
   display: none;
 }
 
@@ -8287,7 +8287,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   white-space: normal;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs::-webkit-scrollbar {
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-retired-dashboard-view-tabs::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
@@ -9238,7 +9238,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   white-space: normal;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs::-webkit-scrollbar {
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-retired-dashboard-view-tabs::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
@@ -10303,7 +10303,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   white-space: normal;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs::-webkit-scrollbar {
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-retired-dashboard-view-tabs::-webkit-scrollbar {
   display: none;
 }
 
