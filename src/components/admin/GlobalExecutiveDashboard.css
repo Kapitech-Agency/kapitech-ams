@@ -19,14 +19,14 @@
   height: auto;
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope > div:first-child > p:first-child {
+.ams-shell .ams-dashboard .ams-retired-overview-scope > div:first-child > p:first-child {
   font-size: 13px;
   line-height: 18px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
-.ams-shell .ams-dashboard .ams-overview-scope > div:first-child > p:last-child {
+.ams-shell .ams-dashboard .ams-retired-overview-scope > div:first-child > p:last-child {
   max-width: 62ch;
   font-size: 11px;
   line-height: 16px;
@@ -133,7 +133,7 @@
   filter: drop-shadow(0 0 2px color-mix(in srgb, var(--accent) 45%, transparent));
 }
 
-.ams-shell .ams-dashboard .ams-overview-panel--shortcuts a {
+.ams-shell .ams-dashboard .ams-retired-overview-panel--shortcuts a {
   min-height: 42px;
   border-radius: 12px;
   background: color-mix(in srgb, var(--bg) 72%, var(--panel));
@@ -141,7 +141,7 @@
   transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
 }
 
-.ams-shell .ams-dashboard .ams-overview-panel--shortcuts a:hover {
+.ams-shell .ams-dashboard .ams-retired-overview-panel--shortcuts a:hover {
   color: var(--text);
   border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
   background: color-mix(in srgb, var(--accent) 5%, var(--panel));
@@ -300,7 +300,7 @@
   transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-date-select {
+.ams-shell .ams-dashboard .ams-retired-dashboard-date-select {
   position: relative;
   display: block;
   min-width: 0;
@@ -488,7 +488,7 @@
 }
 
 @media (max-width: 599px) {
-  .ams-shell .ams-dashboard .ams-overview-panel--money .ams-money-movement-card {
+  .ams-shell .ams-dashboard .ams-retired-overview-panel--money .ams-money-movement-card {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
   }
@@ -497,7 +497,7 @@
     height: 54px;
   }
 
-  .ams-shell .ams-dashboard .ams-overview-panel--money {
+  .ams-shell .ams-dashboard .ams-retired-overview-panel--money {
     min-height: 0;
   }
 }
@@ -655,7 +655,7 @@
 
 /* Dashboard Overview: data-first scope and balanced visual summary cards. */
 
-.ams-shell .ams-dashboard .ams-overview-scope {
+.ams-shell .ams-dashboard .ams-retired-overview-scope {
   border: 1px solid var(--dashboard-card-border);
   border-radius: var(--radius-dashboard-card);
   box-shadow: var(--dashboard-card-shadow);
@@ -752,7 +752,7 @@
 }
 
 @media (max-width: 599px) {
-  .ams-shell .ams-dashboard .ams-overview-scope {
+  .ams-shell .ams-dashboard .ams-retired-overview-scope {
     align-items: stretch;
     padding: 12px;
   }
@@ -805,7 +805,7 @@
   color: var(--warning);
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-state--empty .ams-dashboard-state__icon {
+.ams-shell .ams-dashboard .ams-retired-dashboard-state--empty .ams-dashboard-state__icon {
   border-color: var(--dashboard-card-border);
   background: color-mix(in srgb, var(--text) 3%, var(--panel));
   color: var(--muted);
@@ -1416,7 +1416,7 @@
   font-weight: 550;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-row__meta {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-row__meta {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -1457,7 +1457,7 @@
     grid-column: 1;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-row__meta {
+  .ams-shell .ams-dashboard .ams-retired-dashboard-activity-row__meta {
     grid-column: 1;
     grid-row: 2;
     flex-direction: row;
@@ -1674,7 +1674,7 @@
 /* Recent Activity: searchable source-backed table with filters and local pagination. */
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-filter select,
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination select {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination select {
   box-sizing: border-box;
   height: 36px;
   min-height: 36px;
@@ -1692,7 +1692,7 @@
   text-align: center;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination select {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination select {
   min-width: 64px;
   width: 64px;
 }
@@ -1899,7 +1899,7 @@
 .ams-shell .ams-dashboard .ams-quotation-follow-up button,
 .ams-shell .ams-dashboard .ams-finance-control-links a,
 .ams-shell .ams-dashboard .ams-project-registry-action,
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination button {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination button {
   border-radius: 8px;
   box-shadow: none;
   transition: background-color 120ms ease,color 120ms ease,border-color 120ms ease;
@@ -1922,7 +1922,7 @@
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button:focus-visible,
 .ams-shell .ams-dashboard .ams-dashboard-deadline-filter:focus-visible,
 .ams-shell .ams-dashboard .ams-dashboard-activity-reset:focus-visible,
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination button:focus-visible {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination button:focus-visible {
   outline: none;
   border-color: var(--accent);
   box-shadow: none;
@@ -2461,7 +2461,7 @@
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] > span,
-.ams-shell .ams-dashboard .ams-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count {
+.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count {
   border-color: color-mix(in srgb, #fff 30%, var(--accent));
   background: color-mix(in srgb, #fff 13%, var(--accent));
   color: #fff;
@@ -2528,7 +2528,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ams-shell .ams-dashboard .ams-dashboard-header-actions *,
   .ams-shell .ams-dashboard .ams-dashboard-card-action,
-  .ams-shell .ams-dashboard .ams-dashboard-filter-pill {
+  .ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill {
     transition-duration: .01ms;
   }
 }
@@ -2726,7 +2726,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter,
-.ams-shell .ams-dashboard .ams-dashboard-filter-pills {
+.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pills {
   min-width: 0;
   flex-wrap: wrap;
   overflow: visible;
@@ -2776,7 +2776,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   background: color-mix(in srgb,var(--bg) 22%,var(--panel));
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-filter-pill {
+.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill {
   flex: 0 0 auto;
   box-sizing: border-box;
   display: inline-flex;
@@ -3220,7 +3220,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"],
 .ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"],
-.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-retired-dashboard-filter-pill[aria-pressed="true"],
 .ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"],
 .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets button[aria-pressed="true"],
 .ams-shell .ams-dashboard .ams-calendar-period-filter__group button[aria-pressed="true"] {
@@ -3232,7 +3232,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"]:hover:not(:disabled),
-.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard button.ams-retired-dashboard-filter-pill[aria-pressed="true"]:hover:not(:disabled),
 .ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"]:hover:not(:disabled) {
   border-color: var(--muted);
   background: color-mix(in srgb,var(--line) 82%,var(--panel));
@@ -3745,7 +3745,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   color: var(--text);
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-filter-pills {
+.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pills {
   padding: 0;
   display: flex;
   min-width: 0;
@@ -3755,7 +3755,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   overflow: visible;
 }
 
-.ams-shell .ams-dashboard button.ams-dashboard-filter-pill {
+.ams-shell .ams-dashboard button.ams-retired-dashboard-filter-pill {
   box-sizing: border-box;
   display: inline-flex;
   height: var(--dashboard-control-compact-height);
@@ -3775,7 +3775,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   white-space: nowrap;
 }
 
-.ams-shell .ams-dashboard button.ams-dashboard-filter-pill:hover:not(:disabled) {
+.ams-shell .ams-dashboard button.ams-retired-dashboard-filter-pill:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
   background: var(--dashboard-control-hover);
   color: var(--text);
@@ -3968,7 +3968,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"],
 .ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"],
-.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-retired-dashboard-filter-pill[aria-pressed="true"],
 .ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"] {
   border-color: var(--line);
   background: var(--dashboard-control-selected);
@@ -3979,12 +3979,12 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] *,
 .ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"] *,
-.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"] *,
+.ams-shell .ams-dashboard button.ams-retired-dashboard-filter-pill[aria-pressed="true"] *,
 .ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"] * {
   color: var(--text);
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count,
+.ams-shell .ams-dashboard .ams-retired-dashboard-filter-pill[aria-pressed="true"] .ams-dashboard-filter-pill__count,
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"] .ams-dashboard-filter-pill__count {
   border-color: color-mix(in srgb, var(--line) 70%, var(--muted));
   background: color-mix(in srgb, var(--line) 75%, var(--panel));
@@ -4491,7 +4491,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   line-height: 14px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up .ams-dashboard-filter-pills {
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up .ams-retired-dashboard-filter-pills {
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
@@ -4500,7 +4500,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   margin-top: 12px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-finance-panel button.ams-dashboard-filter-pill {
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel button.ams-retired-dashboard-filter-pill {
   height: 30px;
   min-height: 30px;
   padding-inline: 9px;
@@ -4538,7 +4538,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   overflow-wrap: anywhere;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up .ams-dashboard-filter-pills + div {
+.ams-shell .ams-dashboard .ams-dashboard-finance-panel .ams-quotation-follow-up .ams-retired-dashboard-filter-pills + div {
   border-top: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
 }
 
@@ -4850,7 +4850,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard [data-ams-feature-slug="dashboard-project-progress"] .divide-y > article,
 .ams-shell .ams-dashboard .ams-dashboard-attention-list__rows > article,
 .ams-shell .ams-dashboard .ams-dashboard-inbox-triage .divide-y > article,
-.ams-shell .ams-dashboard .ams-overview-panel--client-delivery .divide-y > article {
+.ams-shell .ams-dashboard .ams-retired-overview-panel--client-delivery .divide-y > article {
   border: 0;
   border-radius: 10px;
   background: color-mix(in srgb, var(--bg) 24%, var(--panel));
@@ -4859,7 +4859,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard [data-ams-feature-slug="dashboard-project-progress"] .divide-y > article:hover,
 .ams-shell .ams-dashboard .ams-dashboard-attention-list__rows > article:hover,
 .ams-shell .ams-dashboard .ams-dashboard-inbox-triage .divide-y > article:hover,
-.ams-shell .ams-dashboard .ams-overview-panel--client-delivery .divide-y > article:hover {
+.ams-shell .ams-dashboard .ams-retired-overview-panel--client-delivery .divide-y > article:hover {
   background: var(--dashboard-hover-surface);
 }
 
@@ -5933,12 +5933,12 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   line-height: 13px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination {
   margin: 0;
   border: 0;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination > p {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination > p {
   min-width: 0;
 }
 
@@ -6546,7 +6546,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   white-space: nowrap;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination {
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
@@ -6558,7 +6558,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   background: color-mix(in srgb, var(--bg) 18%, var(--panel));
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-pagination > p {
+.ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination > p {
   margin: 0;
   color: var(--muted);
   font-size: 10px;
@@ -6659,7 +6659,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     font-size: 9px;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-pagination {
+  .ams-shell .ams-dashboard .ams-retired-dashboard-activity-pagination {
     align-items: flex-start;
     flex-direction: column;
     padding: 12px;
@@ -7507,7 +7507,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-portal-root .ams-dashboard-control--filter.is-active,
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"],
 .ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"],
-.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"],
+.ams-shell .ams-dashboard button.ams-retired-dashboard-filter-pill[aria-pressed="true"],
 .ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"],
 .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets button[aria-pressed="true"],
 .ams-shell .ams-dashboard .ams-calendar-period-filter__group button[aria-pressed="true"],
@@ -7528,7 +7528,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-portal-root .ams-dashboard-control--filter.is-active:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-segmented-filter button[aria-pressed="true"]:hover:not(:disabled),
 .ams-shell .ams-dashboard button.ams-dashboard-project-filter[aria-pressed="true"]:hover:not(:disabled),
-.ams-shell .ams-dashboard button.ams-dashboard-filter-pill[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell .ams-dashboard button.ams-retired-dashboard-filter-pill[aria-pressed="true"]:hover:not(:disabled),
 .ams-shell .ams-dashboard button.ams-dashboard-deadline-filter[aria-pressed="true"]:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-activity-calendar-presets button[aria-pressed="true"]:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-calendar-period-filter__group button[aria-pressed="true"]:hover:not(:disabled),
@@ -11655,4 +11655,11 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   .ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track > span {
     transition-duration: 0.01ms;
   }
+}
+
+
+/* Approved final table rhythm. Recent Activity is a compact, filterable data table. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-table {
+  border-collapse: separate;
+  border-spacing: 0 4px;
 }

@@ -614,7 +614,7 @@ test('CMS headers are text-only and directory tables share a unified pagination 
   }
 
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
-  assert.match(primitives, /className="ams-table-pagination border-t border-line bg-panel/);
+  assert.match(primitives, /className=\{cn\('ams-table-pagination bg-panel px-4 py-3 sm:px-5', showTopDivider \? 'border-t border-line' : ''\)\}/);
   assert.match(primitives, /Rows per page/);
   assert.match(primitives, /role="group" aria-label="Page navigation"/);
 
