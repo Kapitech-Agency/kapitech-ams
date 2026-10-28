@@ -776,6 +776,21 @@ test('Dashboard Team Workload aligns owner assignment signals and recorded-time 
   ]) assert.ok(styles.includes(selector), 'Missing Team Workload layout rule: ' + selector);
 });
 
+test('Dashboard Team Workload separates task ownership and recorded time without a divider line', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const tasksSelector = '.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body > .ams-dashboard-team-tasks {';
+  const timeSelector = '.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-body > .ams-dashboard-team-time {';
+  const tasksStart = styles.lastIndexOf(tasksSelector);
+  const timeStart = styles.lastIndexOf(timeSelector);
+  assert.ok(tasksStart >= 0 && timeStart > tasksStart, 'The final Team Workload rules must explicitly remove both sides of the divider.');
+  const tasksRule = styles.slice(tasksStart, styles.indexOf('}', tasksStart));
+  const timeRule = styles.slice(timeStart, styles.indexOf('}', timeStart));
+  assert.match(tasksRule, /border-bottom:\s*0;/);
+  assert.match(timeRule, /border-top:\s*0;/);
+  assert.match(tasksRule, /padding-bottom:\s*10px;/);
+  assert.match(timeRule, /padding-top:\s*10px;/);
+});
+
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const modelStart = dashboard.indexOf('const clientDeliveryFocus = useMemo<DashboardClientDeliveryFocus[]>(() =>');

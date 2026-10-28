@@ -10326,3 +10326,16 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   .ams-shell .ams-dashboard .ams-project-progress-header-actions *,
   .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr { transition-duration: 0.01ms; }
 }
+
+
+/* Team Workload: remove the separator between task assignments and recorded time.
+   Spacing still separates the two groups, so the card does not depend on a divider line. */
+.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body > .ams-dashboard-team-tasks {
+  padding-bottom: 10px;
+  border-bottom: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-body > .ams-dashboard-team-time {
+  padding-top: 10px;
+  border-top: 0;
+}
