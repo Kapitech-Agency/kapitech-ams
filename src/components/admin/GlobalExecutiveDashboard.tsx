@@ -24,7 +24,7 @@ import {
   ReceiptText,
   Users,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge, AdminTablePagination } from './AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminPanel, AdminStatusBadge, AdminTablePagination } from './AdminModulePrimitives';
 import { DashboardControl, DashboardFilterGroup } from './DashboardControls';
 import { CustomSelect } from '../ui/CustomSelect';
 import { DropdownPortal } from '../ui/DropdownPortal';
@@ -651,7 +651,9 @@ const PerformanceView: React.FC<{
   reportPeriodEnabled: boolean;
   reportPeriodValue: string;
   reportPeriodMode: ReportingPeriodMode;
-}> = ({ snapshot, matchesDate, matchesInterval, reportPeriodLabel, reportPeriodEnabled, reportPeriodValue, reportPeriodMode }) => {
+  canOpenTasks: boolean;
+  canOpenProjects: boolean;
+}> = ({ snapshot, matchesDate, matchesInterval, reportPeriodLabel, reportPeriodEnabled, reportPeriodValue, reportPeriodMode, canOpenTasks, canOpenProjects }) => {
   const allTasks = snapshot.tasks || [];
   const allProjects = snapshot.projects || [];
   const allTimeLogs = snapshot.timeLogs || [];
@@ -681,7 +683,6 @@ const PerformanceView: React.FC<{
     const due = dateKey(task.dueDate || task.deadline);
     return due && due < today && !isFinishedWork(task.status);
   }).length;
-  const taskCount = snapshot.tasks !== null ? tasks.length : null;
   const completionValue = snapshot.tasks !== null && tasks.length ? Math.round(completedTasks / tasks.length * 100) + '%' : '—';
   const blockedValue = snapshot.tasks !== null ? String(blockedTasks) : '—';
   const overdueValue = snapshot.tasks !== null ? String(overdueTasks) : '—';
@@ -789,201 +790,352 @@ const PerformanceView: React.FC<{
     { id: 'other-open', label: 'Other open tasks', count: otherOpenTasks, tone: 'bg-info' },
   ];
 
-  if (snapshot.loading) return <DashboardUnavailable title="Loading performance data" description="Project, task, and time records are being loaded from AMS." />;
+  const completionPercent = snapshot.tasks !== null && tasks.length > 0
+    ? Math.round(completedTasks / tasks.length * 100)
+    : null;
 
   return (
     <div className="space-y-4" data-ams-feature-slug="dashboard-performance-workspace">
       <section
-        className="space-y-2 rounded-card border border-line bg-panel p-4 sm:p-5"
-        data-ams-feature-slug="dashboard-performance-scope"
-        aria-label="Performance reporting scope"
+        className="ams-overview-card-row ams-dashboard-performance-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12"
+        aria-label="Delivery performance summary"
       >
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-fg">Performance snapshot</p>
-            <p className="mt-1 text-xs text-muted">Reporting period: {reportPeriodLabel}</p>
-          </div>
-          <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-bg px-2.5 text-[11px] text-muted">
-            {reportPeriodEnabled ? 'Period filter active' : 'All dates'}
-          </span>
-        </div>
-        <p className="text-[11px] leading-4 text-muted">Tasks use due dates, projects use scheduled overlap, and time uses logged dates. Statuses are current snapshots, not history.</p>
-      </section>
-
-      <section data-ams-feature-slug="dashboard-performance-supporting-metrics" aria-label="Performance summary metrics">
-        <AdminMetricStrip slug="dashboard-performance-kpis" metrics={[
-          {
-            id: 'performance-completion',
-            label: 'Task completion',
-            value: completionValue,
-            icon: <CheckCircle2 size={15} />,
-            toneClassName: completedTasks > 0 && completedTasks === tasks.length ? 'text-success' : undefined,
-            context: snapshot.tasks === null ? 'Task source unavailable' : tasks.length ? completedTasks + ' of ' + tasks.length + ' in-scope tasks completed' : 'No task records in scope'
-          },
-          {
-            id: 'performance-overdue',
-            label: 'Overdue tasks',
-            value: overdueValue,
-            icon: <CalendarDays size={15} />,
-            toneClassName: 'text-danger',
-            context: snapshot.tasks !== null ? 'Open tasks past their due date' : 'Task source unavailable'
-          },
-          {
-            id: 'performance-blocked',
-            label: 'Blocked tasks',
-            value: blockedValue,
-            icon: <AlertTriangle size={15} />,
-            toneClassName: 'text-warning',
-            context: snapshot.tasks !== null ? 'Current blocked status in scope' : 'Task source unavailable'
-          },
-          {
-            id: 'performance-projects',
-            label: 'Active projects',
-            value: activeProjectValue,
-            icon: <FolderKanban size={15} />,
-            context: snapshot.projects !== null ? 'Current projects overlapping the period' : 'Project source unavailable'
-          },
-        ]} />
-      </section>
-
-      <section className="grid gap-4 min-[1100px]:grid-cols-2" data-ams-feature-slug="dashboard-performance-primary">
-        <AdminPanel headerDivider={false}
-          title="Task status in scope"
-          description="Task status mix for the selected period."
-          actions={(
-            <Link to="/admin/tasks" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
-              Open Tasks <ArrowUpRight size={13} />
-            </Link>
-          )}
-          bodyClassName="p-4 sm:p-5"
-        >
-          {snapshot.tasks === null ? <DashboardUnavailable title="Task status unavailable" description="The task service did not return data for the current role." /> : tasks.length === 0 ? (
-            <div className="py-8 text-center" role="status">
-              <p className="text-xs font-medium text-fg">{allTasks.length === 0 ? 'No task records returned' : 'No task records match the selected reporting scope'}</p>
-              <p className="mt-1 text-xs text-muted">{allTasks.length === 0 ? 'The task source returned no records.' : 'Change the shared reporting period to inspect another date scope. Rows without usable dates remain visible.'}</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold text-fg">Current task distribution</p>
-                  <p className="mt-1 text-[11px] text-muted">{tasks.length} task records in the selected scope</p>
+        <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-performance-summary" aria-label="Delivery performance indicators">
+          <AdminPanel
+            headerDivider={false}
+            title="Delivery performance"
+            description="Task completion and delivery risk for the selected reporting scope."
+            className="h-full ams-overview-panel ams-dashboard-performance-summary"
+            bodyClassName="p-4 sm:p-5"
+            actions={canOpenTasks ? (
+              <DashboardControl to="/admin/tasks" variant="action" size="compact" icon={<CheckCircle2 size={14} />} className="ams-dashboard-card-action" ariaLabel="Open Tasks" title="Open the Tasks workspace">Open tasks</DashboardControl>
+            ) : null}
+          >
+            <div className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-5" data-ams-feature-slug="dashboard-performance-indicators" aria-label="Performance indicators">
+              <article className="col-span-2 min-w-0 rounded-control border border-line bg-bg p-3 sm:p-4" data-ams-feature-slug="dashboard-performance-completion">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium text-muted">Task completion</p>
+                    <p className="mt-2 break-words text-2xl font-semibold tracking-tight tabular-nums text-fg sm:text-3xl">{completionValue}</p>
+                    <p className="mt-1 text-[11px] leading-4 text-muted">
+                      {snapshot.loading
+                        ? 'Loading task records'
+                        : snapshot.tasks === null
+                          ? 'Task source unavailable'
+                          : tasks.length > 0
+                            ? completedTasks + ' of ' + tasks.length + ' tasks completed'
+                            : allTasks.length === 0
+                              ? 'No task records returned'
+                              : 'No tasks match the reporting scope'}
+                    </p>
+                  </div>
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-control border border-line bg-panel text-muted" aria-hidden="true">
+                    <CheckCircle2 size={15} />
+                  </span>
                 </div>
-                <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-bg px-2.5 text-[10px] text-muted">
-                  Current status · not status history
-                </span>
+                {completionPercent !== null ? (
+                  <div
+                    className="mt-4 h-2 overflow-hidden rounded-full bg-line"
+                    role="img"
+                    aria-label={completionPercent + '% of ' + tasks.length + ' in-scope tasks completed'}
+                  >
+                    <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: completionPercent + '%' }} />
+                  </div>
+                ) : null}
+              </article>
+
+              <article className="min-w-0 rounded-control border border-line bg-bg p-3" data-ams-feature-slug="dashboard-performance-overdue">
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <p className="text-[11px] font-medium text-muted">Overdue tasks</p>
+                  <CalendarDays size={14} className="shrink-0 text-danger" aria-hidden="true" />
+                </div>
+                <p className="mt-3 text-xl font-semibold tabular-nums text-danger">{overdueValue}</p>
+                <p className="mt-1 text-[10px] leading-4 text-muted">{snapshot.loading ? 'Loading records' : snapshot.tasks === null ? 'Task source unavailable' : 'Open tasks past due date'}</p>
+              </article>
+
+              <article className="min-w-0 rounded-control border border-line bg-bg p-3" data-ams-feature-slug="dashboard-performance-blocked">
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <p className="text-[11px] font-medium text-muted">Blocked tasks</p>
+                  <AlertTriangle size={14} className="shrink-0 text-warning" aria-hidden="true" />
+                </div>
+                <p className="mt-3 text-xl font-semibold tabular-nums text-warning">{blockedValue}</p>
+                <p className="mt-1 text-[10px] leading-4 text-muted">{snapshot.loading ? 'Loading records' : snapshot.tasks === null ? 'Task source unavailable' : 'Current blocked status'}</p>
+              </article>
+
+              <article className="min-w-0 rounded-control border border-line bg-bg p-3" data-ams-feature-slug="dashboard-performance-active-projects">
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <p className="text-[11px] font-medium text-muted">Active projects</p>
+                  <FolderKanban size={14} className="shrink-0 text-muted" aria-hidden="true" />
+                </div>
+                <p className="mt-3 text-xl font-semibold tabular-nums text-fg">{activeProjectValue}</p>
+                <p className="mt-1 text-[10px] leading-4 text-muted">{snapshot.loading ? 'Loading records' : snapshot.projects === null ? 'Project source unavailable' : 'Projects in selected scope'}</p>
+              </article>
+            </div>
+            <p className="mt-4 text-[11px] leading-4 text-muted">
+              Tasks use due dates with the existing created-date fallback. Project scope follows scheduled overlap. Status values describe the current snapshot, not status history.
+            </p>
+          </AdminPanel>
+        </section>
+
+        <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-performance-status-distribution" aria-label="Task status distribution">
+          <AdminPanel
+            headerDivider={false}
+            title="Task status distribution"
+            description="Current status mix across the filtered task set."
+            className="h-full ams-overview-panel ams-dashboard-performance-status-panel"
+            bodyClassName="p-4 sm:p-5"
+            actions={canOpenTasks ? (
+              <DashboardControl to="/admin/tasks" variant="action" size="compact" icon={<CheckCircle2 size={14} />} className="ams-dashboard-card-action" ariaLabel="Open Tasks" title="Open the Tasks workspace">View tasks</DashboardControl>
+            ) : null}
+          >
+            {snapshot.loading ? (
+              <DashboardUnavailable title="Loading task status" description="Current task records are loading from AMS." compact />
+            ) : snapshot.tasks === null ? (
+              <DashboardUnavailable title="Task status unavailable" description="The task service did not return records for the current role." compact />
+            ) : tasks.length === 0 ? (
+              <DashboardEmptyState
+                eyebrow="TASK STATUS"
+                icon={<CheckCircle2 size={17} aria-hidden="true" />}
+                title={allTasks.length === 0 ? 'No task records returned' : 'No task records match the selected reporting scope'}
+                description={allTasks.length === 0 ? 'The task source returned no records.' : 'Change the shared reporting period to inspect another date scope.'}
+                action={canOpenTasks ? <DashboardControl to="/admin/tasks" variant="action" size="compact" className="ams-dashboard-card-action">Open tasks</DashboardControl> : undefined}
+              />
+            ) : (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-2xl font-semibold tracking-tight tabular-nums text-fg">{tasks.length}</p>
+                    <p className="mt-1 text-[11px] text-muted">Task records in scope</p>
+                  </div>
+                  <AdminStatusBadge tone="neutral">Current status</AdminStatusBadge>
+                </div>
+                <div className="space-y-4" aria-label="Current task status proportions">
+                  {taskStatusBreakdown.map((status) => {
+                    const percentage = tasks.length ? Math.round(status.count / tasks.length * 100) : 0;
+                    return (
+                      <div key={status.id} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                          <span className="text-muted">{status.label}</span>
+                          <span className="shrink-0 font-medium tabular-nums text-fg">{status.count} <span className="font-normal text-muted">({percentage}%)</span></span>
+                        </div>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-line" role="img" aria-label={status.label + ': ' + status.count + ' tasks, ' + percentage + ' percent of the selected task set'}>
+                          <div className={'h-full rounded-full ' + status.tone} style={{ width: percentage + '%' }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] leading-4 text-muted">Completion, blocked, and other open tasks use the same filtered task total.</p>
               </div>
-              <div className="space-y-3" aria-label="Task status distribution">
-                {taskStatusBreakdown.map((status) => {
-                  const percentage = tasks.length ? Math.round(status.count / tasks.length * 100) : 0;
+            )}
+          </AdminPanel>
+        </section>
+      </section>
+
+      <section
+        className="ams-overview-card-row ams-dashboard-performance-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12"
+        aria-label="Projects needing attention"
+      >
+        <section className="min-w-0 min-[1100px]:col-span-12" data-ams-feature-slug="dashboard-performance-project-queue" aria-label="At-risk project queue">
+          <AdminPanel
+            headerDivider={false}
+            title="Projects needing attention"
+            description="Active projects with a recorded risk flag or a target date before today."
+            className="h-full ams-overview-panel ams-dashboard-performance-project-panel"
+            bodyClassName="p-0"
+            actions={canOpenProjects ? (
+              <DashboardControl to="/admin/projects" variant="action" size="compact" icon={<FolderKanban size={14} />} className="ams-dashboard-card-action" ariaLabel="Open Projects" title="Open the Projects workspace">Open projects</DashboardControl>
+            ) : null}
+          >
+            {snapshot.loading ? (
+              <div className="p-4"><DashboardUnavailable title="Loading project status" description="Current project records are loading from AMS." compact /></div>
+            ) : snapshot.projects === null ? (
+              <div className="p-4"><DashboardUnavailable title="Project status unavailable" description="Project risk cannot be assessed because live project records were not returned." compact /></div>
+            ) : scopedProjects.length === 0 ? (
+              <div className="p-4">
+                <DashboardEmptyState
+                  eyebrow="PROJECT DELIVERY"
+                  icon={<FolderKanban size={17} aria-hidden="true" />}
+                  title={allProjects.length === 0 ? 'No project records returned' : 'No projects match the selected reporting scope'}
+                  description={allProjects.length === 0 ? 'The Projects source returned no records.' : 'Change the shared reporting period to inspect another date scope.'}
+                  action={canOpenProjects ? <DashboardControl to="/admin/projects" variant="action" size="compact" className="ams-dashboard-card-action">Open projects</DashboardControl> : undefined}
+                />
+              </div>
+            ) : needsAttention.length === 0 ? (
+              <div className="p-4">
+                <DashboardEmptyState
+                  eyebrow="PROJECT DELIVERY"
+                  icon={<CheckCircle2 size={17} aria-hidden="true" />}
+                  title="No active project exceptions"
+                  description="No recorded risk flags or overdue target dates were found in this scope."
+                  tone="success"
+                  action={canOpenProjects ? <DashboardControl to="/admin/projects" variant="action" size="compact" className="ams-dashboard-card-action">Open projects</DashboardControl> : undefined}
+                />
+              </div>
+            ) : (
+              <div className="ams-dashboard-performance-project-list divide-y divide-line">
+                {needsAttention.map((project: any) => {
+                  const signals = projectAttentionSignals(project);
+                  const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
+                  const projectHref = getDashboardProjectHref(project);
+                  const projectName = String(project.name || project.title || 'Untitled project');
+                  const clientName = String(project.clientName || project.client || 'Client not linked');
+                  const status = String(project.status || project.health || 'Status not set');
+                  const signalSummary = [
+                    signals.overdue ? 'Target date passed' : null,
+                    signals.flagged ? 'Status flagged for attention' : null
+                  ].filter(Boolean).join(' · ');
                   return (
-                    <div key={status.id} className="space-y-1.5">
-                      <div className="flex items-center justify-between gap-3 text-xs">
-                        <span className="text-muted">{status.label}</span>
-                        <span className="shrink-0 font-medium tabular-nums text-fg">{status.count} <span className="font-normal text-muted">({percentage}%)</span></span>
+                    <article key={String(project.id || project.slug || project.name)} className="flex min-w-0 items-start justify-between gap-4 px-4 py-3.5 sm:px-5">
+                      <div className="min-w-0">
+                        {canOpenProjects && projectHref ? (
+                          <Link to={projectHref} className="break-words text-xs font-semibold text-fg hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                            {projectName} <ArrowUpRight size={11} className="inline" aria-hidden="true" />
+                          </Link>
+                        ) : (
+                          <p className="break-words text-xs font-semibold text-fg">{projectName}</p>
+                        )}
+                        <p className="mt-1 break-words text-[11px] text-muted">{clientName} · {status}</p>
+                        <p className="mt-1 break-words text-[11px] text-muted">
+                          {signalSummary || 'Review project status'}
+                          {isValidDashboardDate(due) ? ' · Target ' + formatDashboardDate(due) : ''}
+                        </p>
                       </div>
-                      <div className="h-3 overflow-hidden rounded-full bg-line">
-                        <div className={'h-full rounded-full ' + status.tone} style={{ width: percentage + '%' }} />
+                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                        {signals.overdue ? <AdminStatusBadge tone="danger">Overdue</AdminStatusBadge> : <AdminStatusBadge tone="warning">At risk</AdminStatusBadge>}
+                        {signals.overdue && signals.flagged ? <AdminStatusBadge tone="warning">Status flagged</AdminStatusBadge> : null}
                       </div>
-                    </div>
+                    </article>
                   );
                 })}
+                {attentionProjects.length > needsAttention.length ? (
+                  <p className="px-4 py-3 text-[11px] text-muted sm:px-5">
+                    Showing 8 of {attentionProjects.length} projects with attention signals in this scope.
+                  </p>
+                ) : null}
               </div>
-              <p className="text-[10px] leading-4 text-muted">Current status · selected date scope</p>
-            </div>
-          )}
-        </AdminPanel>
-
-        <AdminPanel headerDivider={false}
-          title="Projects needing attention"
-          description="Active projects with an explicit risk flag or target dates before today, limited to projects in the selected reporting scope."
-          bodyClassName="p-0"
-          actions={(
-            <Link to="/admin/projects" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
-              Open Projects <ArrowUpRight size={13} />
-            </Link>
-          )}
-        >
-          {snapshot.projects === null ? <div className="p-4"><DashboardUnavailable title="Project status unavailable" description="Project risk cannot be assessed because live project records were not returned." /></div> : scopedProjects.length === 0 ? (
-            <p className="px-4 py-8 text-center text-xs text-muted" role="status">{allProjects.length === 0 ? 'No project records returned' : 'No projects match the selected reporting scope.'}</p>
-          ) : needsAttention.length === 0 ? (
-            <p className="px-4 py-8 text-center text-xs text-muted" role="status">No explicit project risk flags or overdue target dates were found in this scope.</p>
-          ) : (
-            <div className="divide-y divide-line">
-              {needsAttention.map((project: any) => {
-                const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
-                const overdue = Boolean(due && due < today);
-                return (
-                  <div key={String(project.id || project.slug || project.name)} className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-0">
-                      <p className="break-words text-xs font-medium text-fg">{project.name || project.title || 'Untitled project'}</p>
-                      <p className="mt-1 break-words text-[10px] text-muted">{project.clientName || project.client || 'Client not linked'} · {project.status || project.health || 'Status not set'}</p>
-                      {due && <p className="mt-1 text-[10px] tabular-nums text-muted">Target {due}</p>}
-                    </div>
-                    <AdminStatusBadge tone={overdue ? 'danger' : 'warning'}>{overdue ? 'Overdue' : 'At risk'}</AdminStatusBadge>
-                  </div>
-                );
-              })}
-              {attentionProjects.length > needsAttention.length && <div className="px-4 py-3 text-[10px] text-muted">Showing 8 of {attentionProjects.length} projects with attention signals in this scope.</div>}
-            </div>
-          )}
-        </AdminPanel>
+            )}
+          </AdminPanel>
+        </section>
       </section>
 
-      <AdminPanel headerDivider={false} title="Recorded time" bodyClassName="p-4 sm:p-5">
-        {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking source did not return records." /> : scopedTimeLogs.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted" role="status">{allTimeLogs.length > 0 ? 'No time entries in the selected period.' : 'No time entries recorded.'}</p>
-        ) : (
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-muted">{reportPeriodEnabled ? reportPeriodLabel : 'All dates'} · hours by period and contributor</p>
-              <div className="flex flex-wrap gap-2">
-                <div className="rounded-control border border-line bg-bg px-3 py-2"><p className="text-[10px] text-muted">Total hours</p><p className="mt-0.5 text-lg font-semibold tabular-nums text-fg">{(totalTrackedMinutes / 60).toLocaleString('en-US', { maximumFractionDigits: 1 })}h</p></div>
-                <div className="rounded-control border border-line bg-bg px-3 py-2"><p className="text-[10px] text-muted">Entries</p><p className="mt-0.5 text-lg font-semibold tabular-nums text-fg">{trackedTimeEntryCount}</p></div>
-              </div>
-            </div>
-            <div className="grid min-w-0 gap-6 min-[1100px]:grid-cols-12">
-              <section className="min-w-0 min-[1100px]:col-span-7" aria-label="Recorded hours over time">
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><h3 className="text-xs font-semibold text-fg">Hours over time</h3><span className="text-[10px] text-muted">{timeTrendModel.chartScope}</span></div>
-                {timeTrendModel.points.length ? (
-                  <>
-                    <TrendChart data={timeTrendModel.points} primaryLabel="Logged hours" primaryFormat={(value) => (Math.round(value * 10) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 }) + 'h'} ariaLabel={'Recorded hours over time for ' + timeTrendModel.chartScope + '. Exact values are available in the period table.'} />
-                    <details className="mt-3 rounded-control border border-line bg-bg px-3 py-2">
-                      <summary className="cursor-pointer text-xs font-medium text-fg">View exact period values</summary>
-                      <div className="mt-2 overflow-x-auto">
-                        <table className="w-full min-w-[240px] text-xs">
-                          <thead className="text-muted"><tr><th className="py-2 text-left font-medium">Period</th><th className="py-2 text-right font-medium">Hours</th><th className="py-2 text-right font-medium">Entries</th></tr></thead>
-                          <tbody>{timeTrendModel.rows.map((row) => <tr key={row.key} className="border-t border-line"><th scope="row" className="py-2 text-left font-medium text-fg">{row.label}</th><td className="py-2 text-right tabular-nums text-fg">{(row.minutes / 60).toLocaleString('en-US', { maximumFractionDigits: 2 })}h</td><td className="py-2 text-right tabular-nums text-muted">{row.entries}</td></tr>)}</tbody>
-                        </table>
-                      </div>
-                    </details>
-                  </>
-                ) : (
-                  <div className="rounded-control border border-line bg-bg px-3 py-4" role="status"><p className="text-xs font-medium text-fg">No dated time entries in this chart window</p><p className="mt-1 text-[11px] text-muted">Total hours still covers the selected scope outside this chart window.</p></div>
-                )}
-                {timeTrendModel.entriesWithoutUsableDate > 0 ? <p className="mt-2 text-[10px] leading-4 text-muted">{timeTrendModel.entriesWithoutUsableDate} entries without a usable date remain in total hours but are not plotted.</p> : null}
-              </section>
-              <section className="min-w-0 min-[1100px]:col-span-5" aria-label="Recorded time by contributor">
-                <h3 className="mb-3 text-xs font-semibold text-fg">By contributor</h3>
-                {workload.length === 0 ? <p className="text-xs text-muted" role="status">No contributor totals to compare.</p> : (
-                  <div className="space-y-4">
-                    {workload.map((member) => {
-                      const shareWidth = Math.max(0, Math.min(100, (member.minutes / maxMemberTimeMinutes) * 100));
-                      return <div key={member.name} className="min-w-0 space-y-1.5">
-                        <div className="flex min-w-0 items-start justify-between gap-3"><span className="min-w-0 break-words text-xs font-medium text-fg">{member.name}</span><span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span></div>
-                        <div className="h-2.5 overflow-hidden rounded-full bg-line" role="img" aria-label={member.name + ': ' + Math.floor(member.minutes / 60) + ' hours and ' + member.minutes % 60 + ' minutes recorded'}><div className="h-full rounded-full bg-series-3 transition-[width]" style={{ width: shareWidth + '%' }} /></div>
-                      </div>;
-                    })}
+      <section
+        className="ams-overview-card-row ams-dashboard-performance-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12"
+        aria-label="Recorded time comparison"
+      >
+        <section className="min-w-0 min-[1100px]:col-span-12" data-ams-feature-slug="dashboard-performance-recorded-time" aria-label="Recorded time comparison">
+          <AdminPanel
+            headerDivider={false}
+            title="Recorded time comparison"
+            description="Compare saved hours over the reporting window and the contributors with the most recorded time."
+            className="h-full ams-overview-panel ams-dashboard-performance-time-panel"
+            bodyClassName="p-4 sm:p-5"
+          >
+            {snapshot.loading ? (
+              <DashboardUnavailable title="Loading time records" description="Recorded time entries are loading from AMS." compact />
+            ) : snapshot.timeLogs === null ? (
+              <DashboardUnavailable title="Time records unavailable" description="The time tracking source did not return records." compact />
+            ) : scopedTimeLogs.length === 0 ? (
+              <DashboardEmptyState
+                eyebrow="RECORDED TIME"
+                icon={<Clock3 size={17} aria-hidden="true" />}
+                title={allTimeLogs.length > 0 ? 'No time entries in the selected period' : 'No time entries recorded'}
+                description={allTimeLogs.length > 0 ? 'Change the reporting period to inspect another date scope.' : 'Recorded time will appear here when eligible entries exist.'}
+              />
+            ) : (
+              <div className="grid min-w-0 gap-6 min-[1100px]:grid-cols-12">
+                <section className="min-w-0 min-[1100px]:col-span-7" aria-label="Recorded hours over time">
+                  <div className="grid max-w-lg grid-cols-2 gap-3" aria-label="Recorded time totals">
+                    <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                      <p className="text-[11px] text-muted">Total hours</p>
+                      <p className="mt-1 break-words text-xl font-semibold tabular-nums text-fg">{(totalTrackedMinutes / 60).toLocaleString('en-US', { maximumFractionDigits: 1 })}h</p>
+                    </div>
+                    <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                      <p className="text-[11px] text-muted">Entries</p>
+                      <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{trackedTimeEntryCount}</p>
+                    </div>
                   </div>
-                )}
-                <p className="mt-3 text-[10px] leading-4 text-muted">Top eight contributors by recorded time. Bars compare within this list only.</p>
-              </section>
-            </div>
-          </div>
-        )}
-      </AdminPanel>
+                  <div className="mb-2 mt-5 flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-fg">Hours over time</h3>
+                    <span className="text-[11px] text-muted">{timeTrendModel.chartScope}</span>
+                  </div>
+                  {timeTrendModel.points.length ? (
+                    <>
+                      <TrendChart
+                        data={timeTrendModel.points}
+                        primaryLabel="Logged hours"
+                        primaryFormat={(value) => (Math.round(value * 10) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 }) + 'h'}
+                        ariaLabel={'Recorded hours over time for ' + timeTrendModel.chartScope + '. Exact values are available in the period table.'}
+                        presentation="maven"
+                      />
+                      <details className="mt-3 rounded-control border border-line bg-bg px-3 py-2">
+                        <summary className="cursor-pointer text-xs font-medium text-fg">View exact period values</summary>
+                        <div className="mt-2 overflow-x-auto">
+                          <table className="w-full min-w-[280px] text-xs">
+                            <thead className="text-muted">
+                              <tr><th className="py-2 text-left font-medium">Period</th><th className="py-2 text-right font-medium">Hours</th><th className="py-2 text-right font-medium">Entries</th></tr>
+                            </thead>
+                            <tbody>
+                              {timeTrendModel.rows.map((row) => (
+                                <tr key={row.key} className="border-t border-line">
+                                  <th scope="row" className="py-2 text-left font-medium text-fg">{row.label}</th>
+                                  <td className="py-2 text-right tabular-nums text-fg">{(row.minutes / 60).toLocaleString('en-US', { maximumFractionDigits: 2 })}h</td>
+                                  <td className="py-2 text-right tabular-nums text-muted">{row.entries}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </details>
+                    </>
+                  ) : (
+                    <DashboardEmptyState
+                      eyebrow="RECORDED TIME TREND"
+                      icon={<Clock3 size={17} aria-hidden="true" />}
+                      title="No dated time entries in this chart window"
+                      description="Total hours still covers the selected scope outside this chart window."
+                      compact
+                    />
+                  )}
+                  {timeTrendModel.entriesWithoutUsableDate > 0 ? (
+                    <p className="mt-3 text-[11px] leading-4 text-muted">
+                      {timeTrendModel.entriesWithoutUsableDate} entries without a usable date remain in total hours but are not plotted.
+                    </p>
+                  ) : null}
+                </section>
 
-
+                <section className="min-w-0 min-[1100px]:col-span-5 min-[1100px]:border-l min-[1100px]:border-line min-[1100px]:pl-5" aria-label="Recorded time by contributor">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-fg">By contributor</h3>
+                    <AdminStatusBadge tone="neutral">Top 8</AdminStatusBadge>
+                  </div>
+                  {workload.length === 0 ? (
+                    <p className="text-xs text-muted" role="status">No contributor totals to compare.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {workload.map((member) => {
+                        const shareWidth = Math.max(0, Math.min(100, (member.minutes / maxMemberTimeMinutes) * 100));
+                        return (
+                          <div key={member.name} className="min-w-0 space-y-1.5">
+                            <div className="flex min-w-0 items-start justify-between gap-3">
+                              <span className="min-w-0 break-words text-xs font-medium text-fg">{member.name}</span>
+                              <span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={member.name + ': ' + Math.floor(member.minutes / 60) + ' hours and ' + member.minutes % 60 + ' minutes recorded'}>
+                              <div className="h-full rounded-full bg-series-3 transition-[width]" style={{ width: shareWidth + '%' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <p className="mt-3 text-[11px] leading-4 text-muted">Top eight contributors by recorded time. Bars compare within this list only.</p>
+                </section>
+              </div>
+            )}
+          </AdminPanel>
+        </section>
+      </section>
     </div>
   );
 };
@@ -2550,13 +2702,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
       <AdminModuleHeader slug="dashboard-header"
         className="mb-0 ams-dashboard-page-header"
-        eyebrow={view === 'overview' ? undefined : 'Agency operations'}
         title="Dashboard"
-        description={view === 'overview'
-          ? 'Delivery priorities, client commitments and agency operations.'
-          : view === 'performance'
-            ? 'Compare delivery progress, bottlenecks, and recorded team effort over the selected period.'
-            : 'Explore supported trends across financial movement, inquiry demand, and portfolio status.'}
+        description="Delivery priorities, client commitments and agency operations."
         actions={(
           <div
             className="ams-dashboard-header-actions flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end"
@@ -2571,7 +2718,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               <DashboardControl to={canCreateProject?'/admin/projects?create=1':'/admin/projects'} variant="action" size="standard" icon={<FolderKanban size={14}/>} className="ams-dashboard-header-action ams-dashboard-header-action--project" ariaLabel={canCreateProject?'Create project':'Open projects'} title={canCreateProject?'Create a new project':'Open the Projects workspace'}>{canCreateProject?'New project':'Projects'}</DashboardControl>
             ) : null}
             </div>
-            {view === 'overview' ? (
               <nav className="ams-dashboard-header-shortcuts flex min-w-0 flex-wrap items-center gap-1.5" data-ams-feature-slug="dashboard-workspace-shortcuts" aria-label="Dashboard workspace shortcuts">
                 {[
                   { label: 'Tasks', icon: <CheckCircle2 size={13} aria-hidden="true" />, href: '/admin/tasks' },
@@ -2581,7 +2727,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <DashboardControl to={action.href} variant="shortcut" size="standard" icon={action.icon} showArrow={false} className="ams-dashboard-header-shortcut" ariaLabel={'Open '+action.label} title={'Open '+action.label}>{action.label}</DashboardControl>
                 ))}
               </nav>
-            ) : null}
             <div className="ams-dashboard-header-utility-actions" role="group" aria-label="Dashboard utility actions">
               <DashboardControl type="button" onClick={() => setRefreshRequest((current)=>current+1)} disabled={isRefreshing} variant="action" size="standard" icon={<RefreshCw size={14} className={isRefreshing?'animate-spin':''}/>} className="ams-dashboard-header-action ams-dashboard-header-action--refresh" ariaLabel="Refresh dashboard data" title="Refresh dashboard data" showArrow={false}>{isRefreshing?'Refreshing…':'Refresh'}</DashboardControl>
             </div>
@@ -3843,6 +3988,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           reportPeriodEnabled={reportPeriodEnabled}
           reportPeriodValue={reportPeriodValue}
           reportPeriodMode={reportPeriodMode}
+          canOpenTasks={canOpenTasks}
+          canOpenProjects={canOpenProjects}
         />
       ) : (
         <AnalyticsView

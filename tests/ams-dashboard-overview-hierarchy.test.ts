@@ -1242,63 +1242,57 @@ test('Dashboard Analytics does not infer zero financial trends from empty or cur
   assert.ok(analytics.includes('Financial trend unavailable'));
 });
 
-test('Dashboard Performance scopes source-backed delivery records to the shared reporting period', async () => {
+test('Dashboard Performance follows Overview panel composition and preserves source-backed delivery metrics', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('const PerformanceView: React.FC');
   const end = dashboard.indexOf('type DashboardAnalyticsReport', start);
   assert.ok(start >= 0 && end > start, 'Performance workspace should have a bounded source section');
   const performance = dashboard.slice(start, end);
-  const scope = performance.indexOf('data-ams-feature-slug="dashboard-performance-scope"');
-  const supportingMetrics = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"');
-  const primary = performance.indexOf('data-ams-feature-slug="dashboard-performance-primary"');
-  const taskStatus = performance.indexOf('title="Task status in scope"', primary);
-  const projectExceptions = performance.indexOf('title="Projects needing attention"', taskStatus);
-  const trackedTime = performance.indexOf('title="Recorded time"', projectExceptions);
-  assert.ok(scope >= 0 && supportingMetrics > scope && primary > supportingMetrics && taskStatus > primary && projectExceptions > taskStatus && trackedTime > projectExceptions,
-    'Reporting scope and decision KPIs must lead, then task/project analysis and recorded-time context.');
-  assert.ok(performance.includes("label: 'Task completion'"), 'Completion rate should be visible before detailed distribution.');
+  const summary = performance.indexOf('data-ams-feature-slug="dashboard-performance-summary"');
+  const distribution = performance.indexOf('data-ams-feature-slug="dashboard-performance-status-distribution"');
+  const projectQueue = performance.indexOf('data-ams-feature-slug="dashboard-performance-project-queue"');
+  const recordedTime = performance.indexOf('data-ams-feature-slug="dashboard-performance-recorded-time"');
+
+  assert.ok(summary >= 0 && distribution > summary && projectQueue > distribution && recordedTime > projectQueue,
+    'Performance should follow Overview’s 12-column card rhythm: summary, task distribution, risk queue, then recorded-time analysis.');
+  assert.ok(performance.includes('className="h-full ams-overview-panel ams-dashboard-performance-summary"'));
+  assert.ok(performance.includes('className="h-full ams-overview-panel ams-dashboard-performance-status-panel"'));
+  assert.ok(performance.includes('className="h-full ams-overview-panel ams-dashboard-performance-project-panel"'));
+  assert.ok(performance.includes('className="h-full ams-overview-panel ams-dashboard-performance-time-panel"'));
+  assert.equal(performance.includes('data-ams-feature-slug="dashboard-performance-scope"'), false, 'Reporting scope should not occupy a duplicate standalone card.');
+  assert.equal(performance.includes('<AdminMetricStrip'), false, 'Do not recreate the generic KPI strip removed from Overview.');
+  assert.ok(performance.includes('<DashboardControl'), 'Actions must use the shared Dashboard control.');
+  assert.ok(performance.includes('<TrendChart'), 'Recorded time must retain a source-backed trend visualization.');
+  assert.ok(performance.includes('presentation="maven"'), 'Recorded time charts must use the same Overview presentation.');
+  assert.ok(performance.includes('View exact period values'));
+  assert.ok(performance.includes('Top eight contributors by recorded time. Bars compare within this list only.'));
   assert.ok(performance.includes('const maxMemberTimeMinutes = Math.max(1, ...workload.map((member) => member.minutes))'));
   assert.ok(performance.includes('const totalTrackedMinutes = scopedTimeLogs.reduce'));
   assert.ok(performance.includes('const timeTrendModel = useMemo(() =>'));
-  assert.ok(performance.includes('Recent 12 months'));
-  assert.ok(performance.includes('<TrendChart'));
-  assert.ok(performance.includes('View exact period values'));
-  assert.ok(performance.includes('data-ams-feature-slug="dashboard-performance-supporting-metrics"'));
-  assert.ok(performance.includes('role="img" aria-label={member.name +'));
   assert.match(performance, /matchesInterval\(dueDate, dueDate, task\.createdAt\)/);
   assert.match(performance, /matchesInterval\([\s\S]*project\.startDate \|\| project\.start[\s\S]*project\.createdAt[\s\S]*\)/);
   assert.match(performance, /matchesDate\(log\.date \|\| log\.createdAt\)/);
-  assert.match(performance, /Missing usable dates remain visible/);
-  assert.match(performance, /Current status · not status history/);
+  assert.match(performance, /Current status mix across the filtered task set/);
   assert.match(performance, /No task records match the selected reporting scope/);
-  assert.match(performance, /Current status · selected date scope/);
-  assert.match(performance, /Other open tasks/);
   assert.match(performance, /status\.count \/ tasks\.length \* 100/);
-  assert.match(performance, /label: 'Active projects'/);
-  assert.match(performance, /label: 'Task completion'/);
-  assert.match(performance, /Total hours/);
-  assert.match(performance, /Entries/);
-});
-
-test('Dashboard Performance puts decision KPIs first and visualizes recorded time as a comparison', async () => {
-  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf('const PerformanceView: React.FC');
-  const end = dashboard.indexOf('type DashboardAnalyticsReport', start);
-  const performance = dashboard.slice(start, end);
-  const scope = performance.indexOf('data-ams-feature-slug="dashboard-performance-scope"');
-  const kpis = performance.indexOf('data-ams-feature-slug="dashboard-performance-supporting-metrics"');
-  const taskProjects = performance.indexOf('data-ams-feature-slug="dashboard-performance-primary"');
-  const time = performance.indexOf('title="Recorded time"');
-  assert.ok(scope >= 0 && kpis > scope && taskProjects > kpis && time > taskProjects);
-  assert.ok(performance.includes("label: 'Task completion'"));
-  assert.ok(performance.includes("label: 'Overdue tasks'"));
-  assert.ok(performance.includes("label: 'Blocked tasks'"));
+  assert.ok(performance.includes('Active projects'));
   assert.ok(performance.includes('Total hours'));
   assert.ok(performance.includes('Entries'));
-  assert.ok(performance.includes('const maxMemberTimeMinutes = Math.max(1, ...workload.map((member) => member.minutes))'));
-  assert.ok(performance.includes('Top eight contributors by recorded time. Bars compare within this list only.'));
-  assert.ok(performance.includes('const timeTrendModel = useMemo(() =>'));
-  assert.ok(performance.includes("style={{ width: shareWidth + '%' }}"));
+});
+
+test('Dashboard Performance header and reporting period follow the shared Overview shell', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const headerStart = dashboard.indexOf('<AdminModuleHeader slug="dashboard-header"');
+  const headerEnd = dashboard.indexOf('<section className="ams-dashboard-toolbar', headerStart);
+  assert.ok(headerStart >= 0 && headerEnd > headerStart);
+  const header = dashboard.slice(headerStart, headerEnd);
+  assert.ok(header.includes('title="Dashboard"'));
+  assert.ok(header.includes('description="Delivery priorities, client commitments and agency operations."'));
+  assert.ok(header.includes('data-ams-feature-slug="dashboard-workspace-shortcuts"'));
+  assert.equal(header.includes("view === 'overview' ?"), false, 'Quick shortcuts and header layout must not change between Dashboard tabs.');
+  assert.ok(dashboard.includes('reportPeriodMode={reportPeriodMode}'));
+  assert.ok(dashboard.includes('canOpenTasks={canOpenTasks}'));
+  assert.ok(dashboard.includes('canOpenProjects={canOpenProjects}'));
 });
 
 test('Dashboard Analytics exposes report-first hierarchy and a single focused work surface', async () => {
