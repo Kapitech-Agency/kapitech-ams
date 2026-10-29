@@ -859,7 +859,7 @@ test('Dashboard Team Workload aligns owner assignment signals and recorded-time 
   ]) assert.ok(styles.includes(selector), 'Missing Team Workload layout rule: ' + selector);
 });
 
-test('Dashboard Team Workload separates task ownership and recorded time with a subtle divider', async () => {
+test('Dashboard Team Workload gives Recorded time inset padding without a divider', async () => {
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const teamBlockStart = styles.lastIndexOf('/* Team Workload: simple comparison lists, consistent section rhythm, and a compact per-card time filter. */');
   const teamBlockEnd = styles.indexOf('@media (max-width: 599px)', teamBlockStart);
@@ -873,10 +873,13 @@ test('Dashboard Team Workload separates task ownership and recorded time with a 
   assert.ok(tasksStart >= 0 && timeStart > tasksStart, 'The final Team Workload rules must define the two-section layout.');
   const tasksRule = teamStyles.slice(tasksStart, teamStyles.indexOf('}', tasksStart));
   const timeRule = teamStyles.slice(timeStart, teamStyles.indexOf('}', timeStart));
-  assert.match(tasksRule, /border-bottom:.*1px solid color-mix/);
+  assert.match(tasksRule, /border-bottom:\s*0;/);
+  assert.doesNotMatch(tasksRule, /border-bottom:.*1px solid/);
   assert.match(timeRule, /border-top:\s*0;/);
   assert.match(tasksRule, /padding:.*0 0 16px;/);
-  assert.match(timeRule, /padding:.*16px 0 0;/);
+  assert.match(timeRule, /padding:\s*16px 14px 14px;/);
+  assert.ok(teamStyles.includes('background: color-mix(in srgb, var(--text) 2.5%, var(--panel));'),
+    'Recorded time keeps its subtle grey surface with content inset from the edges.');
 
   const finalRowsStart = teamStyles.indexOf('.ams-shell .ams-dashboard .ams-dashboard-owner-row,\n.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row {');
   assert.ok(finalRowsStart > tasksStart, 'Owner and recorded-time rows should share the final clean-list layout.');

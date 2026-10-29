@@ -12458,13 +12458,13 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   margin: 0;
   padding: 0 0 16px;
   border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-bottom: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-body > .ams-dashboard-team-time {
   min-width: 0;
   margin: 0;
-  padding: 16px 0 0;
+  padding: 16px 14px 14px;
   border: 0;
   border-top: 0;
 }
