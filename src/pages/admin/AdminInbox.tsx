@@ -632,38 +632,28 @@ export const AdminInbox: React.FC = () => {
         title={activeInboxTab === 'messages' ? 'All Messages' : activeInboxTab === 'client' ? 'Sales Inquiries' : activeInboxTab === 'unread' ? 'Unread Messages' : 'Starred'}
         description={
           activeInboxTab === 'messages'
-            ? (language === 'id'
-              ? 'Tinjau pesan masuk, filter antrean, dan buka detail record untuk menentukan langkah berikutnya.'
-              : 'Review inbound messages, narrow the queue, and open a record to decide the next action.')
+            ? (language === 'id' ? 'Tinjau dan tindak lanjuti pesan masuk dalam satu antrean.' : 'Review and triage inbound messages from one source-backed queue.')
             : activeInboxTab === 'client'
-              ? (language === 'id'
-                ? 'Tinjau inquiry calon klien, status, prioritas, dan konteks kebutuhan mereka.'
-                : 'Review prospective-client inquiries, status, priority, and request context.')
+              ? (language === 'id' ? 'Tinjau inquiry calon klien dan konteks kebutuhan mereka.' : 'Review prospective-client inquiries and their request context.')
               : activeInboxTab === 'unread'
-                ? (language === 'id'
-                  ? 'Record berstatus New yang belum masuk ke tahap peninjauan berikutnya.'
-                  : 'Records in New status that have not moved into the next review stage.')
-                : (language === 'id'
-                  ? 'Buka kembali record yang disimpan untuk perhatian tim.'
-                  : 'Revisit records saved for team attention.')
+                ? (language === 'id' ? 'Pesan berstatus New yang masih menunggu peninjauan.' : 'New messages that still need review.')
+                : (language === 'id' ? 'Pesan yang disimpan untuk perhatian tim.' : 'Messages saved for team attention.')
         }
         actions={(
           <>
-            <span className="text-[11px] tabular-nums text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Data tidak tersedia' : 'Unavailable') : activeTabItems.length + ' total inbound'}</span>
+            <span className="ams-inbox-record-count text-[11px] tabular-nums text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Data tidak tersedia' : 'Unavailable') : activeTabItems.length + ' records'}</span>
             {canManageCrm && <Link to="/admin/cms/careers?tab=applicants" className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">{language === 'id' ? 'Pelamar Careers' : 'Careers Applicants'}</Link>}
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
-            {metrics.newCount > 0 && (activeInboxTab === 'client' || activeInboxTab === 'starred') && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
-            {activeTabItems.length > 0 && (activeInboxTab === 'client' || activeInboxTab === 'starred') && <button type="button" onClick={handleExportCSV} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Download size={14} /><span>Export CSV</span></button>}
           </>
         )}
       />
 
-      <>
-        <>
+      <div className="ams-inbox-view-navigation" data-ams-feature-slug="inbox-navigation">
+        <div className="ams-inbox-category-navigation">
           <AdminSectionTabs
             ariaLabel="Message categories"
-            activeKey={activeInboxTab === 'client' ? 'sales-inquiries' : activeInboxTab === 'messages' ? 'all-messages' : ''}
-            className="w-full border-b border-line pb-2"
+            activeKey={activeInboxTab === 'client' ? 'sales-inquiries' : 'all-messages'}
+            className="ams-inbox-category-tabs"
             items={[
               { key: 'all-messages', label: 'All Messages', to: '/admin/inbox?view=messages' },
               { key: 'sales-inquiries', label: 'Sales Inquiries', to: '/admin/inbox?view=client' },
@@ -671,10 +661,14 @@ export const AdminInbox: React.FC = () => {
               { key: 'project-support', label: 'Project & Support', to: '/admin/inbox', available: false },
             ]}
           />
+        </div>
+        <div className="ams-inbox-saved-views">
+          <span className="ams-inbox-saved-views__label">{language === 'id' ? 'Tampilan tersimpan' : 'Saved views'}</span>
           <AdminSectionTabs
             ariaLabel="Message saved views"
             activeKey={activeInboxTab === 'unread' || activeInboxTab === 'starred' ? activeInboxTab : ''}
-            className="w-full pb-1"
+            className="ams-inbox-saved-tabs"
+            variant="secondary"
             items={[
               { key: 'unread', label: 'Unread', to: '/admin/inbox?view=unread' },
               { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred' },
@@ -682,9 +676,8 @@ export const AdminInbox: React.FC = () => {
               { key: 'archived', label: 'Archived', to: '/admin/inbox?view=archived', available: false },
             ]}
           />
-        </>
-      </>
-
+        </div>
+      </div>
       {loadError && (
         <div className="flex flex-col gap-3 rounded-card border border-warning/25 bg-warning/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="inbox-load-unavailable">
           <div className="min-w-0">
@@ -718,166 +711,76 @@ export const AdminInbox: React.FC = () => {
         </div>
       )}
 
-      {/* 3. TAB-SPECIFIC CONTROLS */}
-      {activeInboxTab === 'messages' || activeInboxTab === 'unread' ? (
-        <AdminFilterBar
-          slug="inbox-message-controls"
-          searchValue={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchPlaceholder="Search inbound, company, or slug..."
-          searchLabel="Search inbound"
-          actions={(
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
-              {activeInboxTab === 'messages' && (
+      <AdminFilterBar
+        slug={activeInboxTab === 'starred' ? 'inbox-starred-controls' : activeInboxTab === 'client' ? 'inbox-client-controls' : 'inbox-message-controls'}
+        className="ams-inbox-filter-bar"
+        searchClassName="ams-inbox-search-field"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={activeInboxTab === 'client' ? 'Search company, contact, service, budget, or brief…' : activeInboxTab === 'starred' ? 'Search saved messages, contact, or company…' : 'Search messages, sender, company, or brief…'}
+        searchLabel={activeInboxTab === 'client' ? 'Search sales inquiries' : activeInboxTab === 'starred' ? 'Search saved messages' : 'Search inbound messages'}
+        actions={(
+          <div className="ams-inbox-toolbar-actions" data-ams-feature-slug="inbox-message-actions">
+            <button type="button" onClick={() => void refreshInbox()} disabled={loading} aria-busy={loading || undefined} className="ams-inbox-toolbar-action inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:bg-panel hover:text-fg disabled:cursor-wait disabled:opacity-60">
+              <RefreshCw size={13} aria-hidden="true" />{loading ? (language === 'id' ? 'Memuat…' : 'Refreshing') : (language === 'id' ? 'Refresh' : 'Refresh')}
+            </button>
+            {metrics.newCount > 0 ? (
+              <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm || isUpdating || confirmActionLoading} className="ams-inbox-toolbar-action inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40">
+                <Check size={13} aria-hidden="true" />
+                <span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span>
+              </button>
+            ) : null}
+            <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="ams-inbox-toolbar-action inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40">
+              <Download size={13} aria-hidden="true" />Export CSV
+            </button>
+            <div role="group" aria-label="Message register view" className="ams-inbox-view-switch inline-flex h-9 min-h-9 items-center rounded-control border border-line bg-bg p-0.5">
+              {activeInboxTab === 'starred' ? (
                 <>
-                  <div className="w-[150px] shrink-0">
-                    <CustomSelect
-                      value={filterStatus}
-                      onChange={setFilterStatus}
-                      options={inboxStatusOptions}
-                      aria-label="Filter messages by status"
-                      slug="inbox-message-status-filter"
-                    />
-                  </div>
-                  <div className="w-[150px] shrink-0">
-                    <CustomSelect value={filterPriority} onChange={setFilterPriority} options={[
-                      { value: 'all', label: 'All priorities' }, { value: 'urgent', label: 'Urgent' },
-                      { value: 'high', label: 'High' }, { value: 'normal', label: 'Normal' }, { value: 'low', label: 'Low' },
-                    ]} aria-label="Filter messages by priority" slug="inbox-message-priority-filter" />
-                  </div>
-                  <div className="w-[150px] shrink-0">
-                    <CustomSelect value={filterOwner} onChange={setFilterOwner} options={inboxOwnerOptions} aria-label="Filter messages by owner" slug="inbox-message-owner-filter" />
-                  </div>
-                  <div className="w-[150px] shrink-0">
-                    <CustomSelect value={filterChannel} onChange={setFilterChannel} options={inboxChannelOptions} aria-label="Filter messages by channel" slug="inbox-message-channel-filter" />
-                  </div>
+                  <button type="button" aria-pressed={viewMode === 'queue'} onClick={() => setViewMode('queue')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'queue' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><Star size={13} aria-hidden="true" />Queue</button>
+                  <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><User size={13} aria-hidden="true" />Review</button>
+                </>
+              ) : (
+                <>
+                  <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><LayoutGrid size={13} aria-hidden="true" />Review</button>
+                  <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><TableIcon size={13} aria-hidden="true" />Table</button>
                 </>
               )}
-              <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg">
-                <RefreshCw size={13} />Refresh
-              </button>
-              {activeInboxTab === 'messages' && (
-                <Link
-                  to="/admin/inbox?view=unread"
-                  className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                  <Mail size={13} />Unread
-                </Link>
-              )}
-              {activeInboxTab === 'unread' && (
-                <Link
-                  to="/admin/inbox?view=messages"
-                  className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                  <Inbox size={13} />All Messages
-                </Link>
-              )}
-              {activeInboxTab === 'messages' && (
-                <Link
-                  to="/admin/inbox?view=starred"
-                  className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                  <Star size={13} />Starred
-                </Link>
-              )}
-              {metrics.newCount > 0 && (
-                <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
-                  <Check size={13} />
-                  <span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span>
-                </button>
-              )}
-              <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
-                <Download size={13} />Export
-              </button>
-              {activeInboxTab === 'messages' || activeInboxTab === 'unread' ? (
-                <div role="group" aria-label="Message register view" className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
-                  <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><User size={13} />Review</button>
-                  <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><TableIcon size={13} />Table</button>
-                </div>
-              ) : null}
-              <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all' && filterOwner === 'all' && filterChannel === 'all'} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">Reset</button>
             </div>
-          )}
-          footer={(
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[10px] text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Jumlah record belum tersedia.' : 'Inbound record count unavailable.') : filteredItems.length + ' matching inbound records · updates automatically every 30 seconds.'}</p>
-              <span className={'inline-flex min-h-7 items-center gap-1.5 rounded-badge border px-2 text-[10px] font-medium ' + (loading ? 'border-info/20 bg-info/10 text-info' : loadError ? 'border-warning/20 bg-warning/10 text-warning' : 'border-success/20 bg-success/10 text-success')}>
-                <span className={'h-1.5 w-1.5 rounded-full ' + (loading ? 'bg-info' : loadError ? 'bg-warning' : 'bg-success')} />
-                {loading ? (submissions.length > 0 ? (language === 'id' ? 'Memperbarui' : 'Refreshing') : (language === 'id' ? 'Memuat' : 'Loading')) : loadError ? (submissions.length > 0 ? (language === 'id' ? 'Data lama' : 'Stale') : (language === 'id' ? 'Tidak tersedia' : 'Unavailable')) : 'Live'}
-              </span>
-            </div>
-          )}
-        />
-      ) : activeInboxTab === 'starred' ? (
-        <AdminFilterBar
-          slug="inbox-starred-controls"
-          searchValue={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchPlaceholder="Search saved records, company, contact, or slug..."
-          searchLabel="Search starred records"
-          actions={(
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
-              <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
-              <div role="group" aria-label="Starred record view" className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
-                <button type="button" aria-pressed={viewMode === 'queue'} onClick={() => setViewMode('queue')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'queue' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><Star size={13}/>Queue</button>
-                <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><User size={13}/>Review</button>
-              </div>
-            </div>
-          )}
-        />
-      ) : (
-        <AdminFilterBar
-          slug="inbox-client-controls"
-          searchValue={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchPlaceholder="Search company, contact, service, budget, or brief..."
-          searchLabel="Search client inquiries"
-          actions={(
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
-              <div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div>
-              <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
-              <div className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
-                <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><LayoutGrid size={13}/>Review</button>
-                <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><TableIcon size={13}/>Table</button>
-              </div>
-            </div>
-          )}
-        />
-      )}
-
-      {/* ------------------------------------------------------------- */}
-      {/* Client pipeline context card */}
-      {activeInboxTab === 'client' && viewMode === 'split' && (
-        <section data-ams-feature-slug="inbox-client-pipeline" data-ams-slug="inbox-client-pipeline" className="rounded-card border border-line bg-panel p-3.5">
-          <div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Inquiry status</h3><p className="mt-0.5 text-[11px] text-muted">Track client inquiries by status and follow-up stage.</p></div><span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inquiries</span></div>
-          <div className="grid grid-cols-2 gap-2 min-[1100px]:grid-cols-4">
-            {[
-              {key:'new',label:'New'},{key:'in-review',label:'In review'},{key:'contacted',label:'Contacted'},{key:'closed',label:'Closed'}
-            ].map((stage)=>{
-              const count=activeTabItems.filter((item)=>item.status===stage.key).length;
-              const active = filterStatus === stage.key;
-              return <button
-                type="button"
-                key={stage.key}
-                onClick={() => setFilterStatus(active ? 'all' : stage.key)}
-                aria-pressed={active}
-                className={'group rounded-card border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
-                  active
-                    ? 'border-accent/25 bg-accent/10'
-                    : 'border-line bg-bg hover:border-muted hover:bg-panel'
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className={'text-[10px] font-medium ' + (active ? 'text-fg' : 'text-muted')}>{stage.label}</span>
-                  <span className={'rounded-badge border px-1.5 py-0.5 text-[10px] font-medium tabular-nums ' + (active ? 'border-accent/20 bg-bg text-fg' : 'border-line bg-panel text-muted')}>{count}</span>
-                </div>
-                <p className={'mt-2 text-[11px] font-medium ' + (active ? 'text-fg' : 'text-muted')}>{count} {count === 1 ? 'inquiry' : 'inquiries'}</p>
-              </button>;
-            })}
+            <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); setPage(1); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all' && filterOwner === 'all' && filterChannel === 'all'} className="ams-inbox-toolbar-action inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-transparent bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40">
+              <X size={12} aria-hidden="true" />Reset
+            </button>
           </div>
-        </section>
-      )}
-
+        )}
+        footer={(
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Jumlah record belum tersedia.' : 'Inbound record count unavailable.') : filteredItems.length + ' matching ' + (filteredItems.length === 1 ? 'record' : 'records') + ' · updates automatically every 30 seconds.'}</p>
+            <span className={'inline-flex min-h-7 items-center gap-1.5 rounded-badge border px-2 text-[10px] font-medium ' + (loading ? 'border-info/20 bg-info/10 text-info' : loadError ? 'border-warning/20 bg-warning/10 text-warning' : 'border-success/20 bg-success/10 text-success')} role="status" aria-live="polite">
+              <span className={'h-1.5 w-1.5 rounded-full ' + (loading ? 'bg-info' : loadError ? 'bg-warning' : 'bg-success')} aria-hidden="true" />
+              {loading ? (submissions.length > 0 ? (language === 'id' ? 'Memperbarui' : 'Refreshing') : (language === 'id' ? 'Memuat' : 'Loading')) : loadError ? (submissions.length > 0 ? (language === 'id' ? 'Data lama' : 'Stale') : (language === 'id' ? 'Tidak tersedia' : 'Unavailable')) : 'Live'}
+            </span>
+          </div>
+        )}
+      >
+        {activeInboxTab === 'messages' || activeInboxTab === 'starred' || activeInboxTab === 'client' ? (
+          <div className="ams-inbox-filter-selects" data-ams-feature-slug="inbox-message-filter-selects">
+            {activeInboxTab === 'messages' ? (
+              <>
+                <div className="ams-inbox-filter-control"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} aria-label="Filter messages by status" slug="inbox-message-status-filter" /></div>
+                <div className="ams-inbox-filter-control"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} aria-label="Filter messages by priority" slug="inbox-message-priority-filter" /></div>
+                <div className="ams-inbox-filter-control"><CustomSelect value={filterOwner} onChange={setFilterOwner} options={inboxOwnerOptions} aria-label="Filter messages by owner" slug="inbox-message-owner-filter" /></div>
+                <div className="ams-inbox-filter-control"><CustomSelect value={filterChannel} onChange={setFilterChannel} options={inboxChannelOptions} aria-label="Filter messages by channel" slug="inbox-message-channel-filter" /></div>
+              </>
+            ) : activeInboxTab === 'client' ? (
+              <>
+                <div className="ams-inbox-filter-control"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} aria-label="Filter sales inquiries by status" /></div>
+                <div className="ams-inbox-filter-control"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} aria-label="Filter sales inquiries by priority" /></div>
+              </>
+            ) : (
+              <div className="ams-inbox-filter-control"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} aria-label="Filter saved messages by priority" /></div>
+            )}
+          </div>
+        ) : null}
+      </AdminFilterBar>
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'queue' ? (
@@ -1046,19 +949,30 @@ export const AdminInbox: React.FC = () => {
           <AdminTablePagination total={filteredItems.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel={language === 'id' ? 'record inbound' : 'inbound records'} slug={'inbox-' + activeInboxTab + '-pagination'} />
         </div>
       ) : loading ? (
-        <div className="rounded-card border border-line bg-panel p-4" role="status" aria-label="Loading inbox records">
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div key={item} className="flex items-center gap-3 border-b border-line py-3 last:border-b-0">
-                <Skeleton className="h-8 w-8 shrink-0 rounded-control" />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <Skeleton className="h-3.5 w-56 max-w-full" />
-                  <Skeleton className="h-3 w-80 max-w-full" />
+        <div className="ams-inbox-workspace ams-inbox-loading-workspace grid min-w-0 grid-cols-1 items-start gap-3 min-[1100px]:grid-cols-12">
+          <section className="ams-inbox-message-list-panel min-w-0 overflow-hidden rounded-card border border-line bg-panel min-[1100px]:col-span-5" aria-label="Loading inbound messages" role="status">
+            <header className="ams-inbox-message-list-header flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+              <div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Pesan masuk' : 'Inbound messages'}</h2><p className="mt-1 text-[11px] text-muted">{language === 'id' ? 'Memuat daftar pesan…' : 'Loading the current message list…'}</p></div>
+              <Skeleton className="h-5 w-12 rounded-badge" />
+            </header>
+            <div className="ams-inbox-message-list ams-inbox-skeleton-list">
+              {[1, 2, 3, 4, 5].map((item) => (
+                <div key={item} className="ams-inbox-skeleton-row flex flex-col gap-2 px-4 py-4">
+                  <div className="flex items-center justify-between gap-3"><Skeleton className="h-3.5 w-32 max-w-full" /><Skeleton className="h-3 w-12" /></div>
+                  <Skeleton className="h-3 w-44 max-w-full" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-3/4 max-w-full" />
                 </div>
-                <Skeleton className="hidden h-3 w-20 sm:block" />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </section>
+          <section className="ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 min-[1100px]:col-span-7" aria-label="Loading selected message">
+            <div className="flex items-start gap-3 border-b border-line pb-4">
+              <Skeleton className="h-11 w-11 shrink-0 rounded-card" />
+              <div className="min-w-0 flex-1 space-y-2"><Skeleton className="h-4 w-48 max-w-full" /><Skeleton className="h-3 w-64 max-w-full" /></div>
+            </div>
+            <div className="mt-5 space-y-3"><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-11/12 max-w-full" /><Skeleton className="h-3 w-4/5 max-w-full" /></div>
+          </section>
         </div>
       ) : (
         /* SPLIT MASTER-DETAIL VIEW (when items exist) */
@@ -1070,72 +984,63 @@ export const AdminInbox: React.FC = () => {
             data-ams-slug="inbox-message-list"
             aria-label="Inbound messages"
             className={[
-              'min-w-0 min-[1100px]:col-span-5 overflow-hidden rounded-card border border-line bg-panel',
+              'ams-inbox-message-list-panel min-w-0 min-[1100px]:col-span-5 overflow-hidden rounded-card border border-line bg-panel',
               selectedSubmission ? 'hidden min-[1100px]:block' : 'block'
             ].join(' ')}
           >
-            <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
-              <div className="min-w-0">
-                <div className="flex min-w-0 items-center gap-2">
-                  <h2 className="truncate text-sm font-semibold text-fg">
-                    {activeInboxTab === 'client' ? 'Sales inquiries' : activeInboxTab === 'unread' ? 'Unread messages' : activeInboxTab === 'starred' ? 'Saved messages' : 'Message queue'}
-                  </h2>
-                  <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted">
-                    {loading && submissions.length === 0 ? '—' : filteredItems.length}
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] leading-4 text-muted">
-                  {activeInboxTab === 'client' ? 'Newest inquiries first. Review the brief and ownership before the next step.' : 'Newest first. Select a message to inspect its context and supported actions.'}
-                </p>
+            <header className="ams-inbox-message-list-header flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <h2 className="truncate text-sm font-semibold text-fg">{activeInboxTab === 'client' ? 'Sales inquiries' : activeInboxTab === 'unread' ? 'Unread messages' : activeInboxTab === 'starred' ? 'Saved messages' : 'Messages'}</h2>
+                <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted">{loading && submissions.length === 0 ? '—' : filteredItems.length}</span>
               </div>
-              <span className={'inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-badge border px-2 text-[10px] font-medium ' + (loading ? 'border-info/20 bg-info/10 text-info' : loadError ? 'border-warning/20 bg-warning/10 text-warning' : 'border-success/20 bg-success/10 text-success')} role="status" aria-live="polite">
-                <span className={'h-1.5 w-1.5 rounded-full ' + (loading ? 'bg-info' : loadError ? 'bg-warning' : 'bg-success')} aria-hidden="true" />
-                {loading ? (submissions.length > 0 ? 'Updating' : 'Loading') : loadError ? (submissions.length > 0 ? 'Stale' : 'Unavailable') : 'Live'}
-              </span>
+              <span className="ams-inbox-sort-label inline-flex shrink-0 items-center gap-1.5 text-[11px] text-muted"><span className="h-1.5 w-1.5 rounded-full bg-muted" aria-hidden="true" />Newest first</span>
             </header>
             {inboxListItems.length > 0 ? (
-              <div className="divide-y divide-line">
+              <div className="ams-inbox-message-list">
                 {inboxListItems.map((item) => {
                   const isSelected = selectedSubmission?.id === item.id;
                   return (
-                    <article key={item.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start border-b border-line last:border-b-0">
+                    <article key={item.id} className="ams-inbox-message-row grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-stretch">
                       <button
                         type="button"
                         aria-pressed={isSelected}
+                        aria-label={(language === 'id' ? 'Pilih pesan dari ' : 'Select message from ') + (item.fullName || item.email || 'Unknown contact')}
                         onClick={() => handleSelectSubmission(item)}
-                        className={'min-w-0 w-full border-l-2 px-3.5 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent ' + (isSelected ? 'border-l-accent bg-accent/5' : 'border-l-transparent hover:bg-panel-hover')}
+                        className={'ams-inbox-message-select min-w-0 w-full text-left transition-colors focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent ' + (isSelected ? 'is-selected' : '')}
                       >
-                        <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="ams-inbox-message-row__identity flex min-w-0 items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-[13px] font-semibold leading-5 text-fg">{item.fullName || 'Anonymous'}</p>
+                            <p className="mt-0.5 truncate text-xs leading-4 text-muted">{item.company || item.email || (language === 'id' ? 'Kontak tidak tersedia' : 'Contact details unavailable')}</p>
+                          </div>
+                          <span className="shrink-0 pt-0.5 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
+                        </div>
+                        <p className="ams-inbox-message-row__preview line-clamp-2 text-xs leading-[18px] text-muted">{item.message || (language === 'id' ? 'Tidak ada isi pesan yang disertakan.' : 'No message content provided.')}</p>
+                        <div className="ams-inbox-message-row__meta flex min-w-0 items-center justify-between gap-2">
                           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                             {renderChannelBadge(item.type)}
                             {renderStatusBadge(item.status)}
                             {renderPriorityBadge(item.priority)}
                           </div>
-                          <span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
-                        </div>
-                        <p className="mt-1.5 truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous'}</p>
-                        <p className="mt-0.5 truncate text-[10px] text-muted">{item.company || item.email || 'Contact details unavailable'}</p>
-                        <p className="mt-1.5 line-clamp-2 text-[11px] leading-4 text-muted">{item.message || 'No brief content provided.'}</p>
-                        <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
-                          <span className="min-w-0 truncate font-mono text-[10px] text-muted/70">/{getSubmissionSlug(item)}</span>
-                          {activeInboxTab === 'client' && item.budget ? <span className="shrink-0 text-[10px] font-medium tabular-nums text-fg">{item.budget}</span> : null}
-                          <span className="min-w-0 truncate text-[10px] text-muted">{item.assignedTo || (language === 'id' ? 'Belum ditugaskan' : 'Unassigned')}</span>
+                          <span className="ams-inbox-message-owner min-w-0 truncate text-[11px] text-muted">{item.assignedTo || (language === 'id' ? 'Belum ditugaskan' : 'Unassigned')}</span>
                         </div>
                         {activeInboxTab === 'client' && item.services?.length ? (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {item.services.filter(Boolean).slice(0, 3).map((service, index) => (
+                          <div className="ams-inbox-message-services flex flex-wrap gap-1.5">
+                            {item.services.filter(Boolean).slice(0, 2).map((service, index) => (
                               <span key={service + index} className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">{service}</span>
                             ))}
+                            {item.services.filter(Boolean).length > 2 ? <span className="text-[10px] text-muted">+{item.services.filter(Boolean).length - 2}</span> : null}
                           </div>
                         ) : null}
+                        {activeInboxTab === 'client' && item.budget ? <p className="text-[11px] font-medium text-fg">{language === 'id' ? 'Anggaran tercatat' : 'Captured budget'} · {item.budget}</p> : null}
                       </button>
                       <button
                         type="button"
                         onClick={(event) => handleToggleStar(event, item.id, item.starred)}
                         disabled={!canManageCrm}
-                        aria-label={item.starred ? 'Remove saved message' : 'Save message'}
+                        aria-label={item.starred ? (language === 'id' ? 'Hapus simpanan pesan' : 'Remove saved message') : (language === 'id' ? 'Simpan pesan' : 'Save message')}
                         aria-pressed={Boolean(item.starred)}
-                        className="m-1.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-transparent text-muted transition-colors hover:border-line hover:bg-bg hover:text-warning focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40"
+                        className="ams-inbox-message-star inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-transparent text-muted transition-colors hover:border-line hover:bg-bg hover:text-warning focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Star size={13} className={item.starred ? 'fill-warning text-warning' : ''} aria-hidden="true" />
                       </button>
@@ -1165,15 +1070,12 @@ export const AdminInbox: React.FC = () => {
                 ) : null}
               </div>
             )}
-            <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-bg/50 px-4 py-2.5">
-              <p className="text-[10px] leading-4 text-muted">{filteredItems.length} matching {filteredItems.length === 1 ? 'record' : 'records'}{loading ? ' · refreshing' : ''}</p>
-              <span className="text-[10px] text-muted">Updated automatically every 30 seconds</span>
-            </footer>
+
           </section>
 
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
-            <div className="ams-inbox-reader-pane min-w-0 min-[1100px]:col-span-7 rounded-card border border-line bg-panel p-4 sm:p-5 min-[1100px]:sticky min-[1100px]:top-4 min-[1100px]:min-h-[calc(100vh-250px)]">
+            <div className="ams-inbox-reader-pane min-w-0 min-[1100px]:col-span-7 rounded-card border border-line bg-panel p-4 sm:p-5 min-[1100px]:sticky min-[1100px]:top-3" data-ams-feature-slug="inbox-message-reader">
               <div>
                 
                 {/* Mobile Back Button */}
@@ -1183,7 +1085,7 @@ export const AdminInbox: React.FC = () => {
                     className="flex items-center gap-2 text-xs font-sans text-muted hover:text-fg transition-colors min-h-[44px]"
                   >
                     <ArrowLeft size={16} />
-                    <span>{language === 'id' ? 'Kembali ke Daftar Pesan' : 'Back to Briefs List'}</span>
+                    <span>{language === 'id' ? 'Kembali ke daftar pesan' : 'Back to messages'}</span>
                   </button>
                 </div>
 
@@ -1206,7 +1108,7 @@ export const AdminInbox: React.FC = () => {
                         {selectedSubmission.fullName}
                       </h2>
 
-                      <p className="text-xs text-success font-sans mt-0.5 font-semibold flex items-center gap-1.5">
+                      <p className="text-xs text-muted font-sans mt-0.5 font-medium flex items-center gap-1.5">
                         <Building2 size={12} />
                         <span>
                           {selectedSubmission.company || 'Individual Client'}
@@ -1506,9 +1408,10 @@ export const AdminInbox: React.FC = () => {
                       </label>
                       <CustomSelect
                         disabled={!canManageCrm}
-                        value={selectedSubmission.assignedTo || 'Lead Full-Stack Tech'}
+                        value={selectedSubmission.assignedTo || ''}
                         onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)}
                         options={[
+                          { value: '', label: language === 'id' ? 'Belum ditugaskan' : 'Unassigned' },
                           { value: 'Lead Full-Stack Tech', label: 'Lead Full-Stack Tech (Engineering)' },
                           { value: 'Senior UI/UX Designer', label: 'Senior UI/UX Designer (Design)' },
                           { value: 'Technical Project Manager', label: 'Technical Project Manager (Scoping)' },
@@ -1561,14 +1464,14 @@ export const AdminInbox: React.FC = () => {
             </div>
           ) : (
             /* Empty State on Desktop when no submission is selected */
-            <div className="hidden min-[1100px]:flex min-w-0 min-[1100px]:col-span-7 min-h-[260px] flex-col items-center justify-center rounded-card border border-line bg-panel px-6 py-8 text-center">
-              <div className="w-16 h-16 rounded-card bg-panel border border-line flex items-center justify-center text-line mb-4">
+            <div className="ams-inbox-reader-empty hidden min-[1100px]:flex min-w-0 min-[1100px]:col-span-7 flex-col items-center justify-center rounded-card border border-line bg-panel px-6 py-8 text-center" data-ams-feature-slug="inbox-reader-empty-state">
+              <div className="ams-inbox-reader-empty__icon mb-4 flex h-12 w-12 items-center justify-center rounded-card border border-line bg-bg text-muted">
                 <Inbox size={32} />
               </div>
-              <h3 className="text-fg font-medium mb-1 font-sans text-base">
+              <h3 className="text-fg font-semibold mb-1 font-sans text-sm">
                 {language === 'id' ? 'Pilih pesan untuk ditinjau' : 'Select a message to review'}
               </h3>
-              <p className="text-xs text-muted max-w-sm font-sans leading-relaxed">
+              <p className="max-w-sm text-xs leading-5 text-muted">
                 {language === 'id'
                   ? 'Pilih record dari daftar untuk melihat konteks pengirim, detail permintaan, kepemilikan, catatan internal, dan tindakan yang tersedia.'
                   : 'Choose a record from the list to review sender context, request details, ownership, internal notes, and supported actions.'}

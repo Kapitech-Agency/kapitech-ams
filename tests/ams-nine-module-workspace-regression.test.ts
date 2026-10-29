@@ -199,7 +199,8 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   const app = await read('src/App.tsx');
   assert.match(inbox, /featureSlug="inbox-module"/);
   assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
-  assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
+  assert.ok(inbox.includes('className="ams-inbox-view-navigation"'));
+  assert.ok(inbox.includes('className="ams-inbox-filter-bar"'));
   assert.match(inbox, /loading \? 'border-info\/20 bg-info\/10 text-info' : loadError \? 'border-warning\/20 bg-warning\/10 text-warning' : 'border-success\/20 bg-success\/10 text-success'/);
   assert.match(inbox, /language === 'id' \? 'Memperbarui' : 'Refreshing'/);
   assert.match(inbox, /language === 'id' \? 'Memuat' : 'Loading'/);
@@ -208,7 +209,8 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   assert.match(inbox, /The last successfully loaded records remain visible/);
   assert.match(inbox, /Inbox is unavailable/);
   assert.match(inbox, /case 'client':\s*\/\/ Keep Sales Inquiries scoped to actual inquiry records\.[\s\S]*?return submissions\.filter\(\(item\) => !item\.type \|\| item\.type === 'inquiry'\)/);
-  assert.match(inbox, /case 'overview':\s*case 'messages': return submissions;/);
+  assert.match(inbox, /case 'messages': return submissions;/);
+  assert.doesNotMatch(inbox, /case 'overview':|activeInboxTab === 'overview'/);
   assert.match(inbox, /case 'starred': return submissions\.filter\(\(item\) => !!item\.starred\)/);
   assert.doesNotMatch(inbox, /Candidate pipeline|Starred candidate work|inbox-jobs-board/);
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
@@ -773,14 +775,14 @@ test('Vendor Skills & Service Matrix link reuses the existing Admin-only route p
 });
 
 
-test('Inbox inquiry status cards follow canonical responsive breakpoints', async () => {
+test('Inbox uses the message reader as the primary workspace without a redundant inquiry KPI card', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  const pipeline = inbox.indexOf('data-ams-feature-slug="inbox-client-pipeline"');
-  const statusGrid = inbox.indexOf('className="grid grid-cols-2 gap-2 min-[1100px]:grid-cols-4"', pipeline);
-  assert.ok(pipeline >= 0 && statusGrid > pipeline,
-    'The inquiry status summary should remain two columns until the canonical 1100px breakpoint.');
-  assert.equal(inbox.includes('className="grid grid-cols-2 gap-2 sm:grid-cols-4"'), false,
-    'The status summary must not switch to four columns at the generic 640px breakpoint.');
+  assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-list"'));
+  assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-reader"'));
+  assert.ok(inbox.includes('ams-inbox-message-row'));
+  assert.equal(inbox.includes('inbox-client-pipeline'), false,
+    'Sales inquiry status context stays in the selected record and filterable list, not a duplicate summary strip.');
+  assert.ok(inbox.includes('min-[1100px]:col-span-5') && inbox.includes('min-[1100px]:col-span-7'));
 });
 
 
@@ -865,7 +867,7 @@ test('Inbox defaults directly to Messages and uses a compact master-detail hiera
 
 test('Inbox All Messages exposes source-backed status and priority filters before the register', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  const controls = inbox.indexOf('slug="inbox-message-controls"');
+  const controls = inbox.indexOf("'inbox-message-controls'");
   const messageFilterGate = inbox.indexOf("{activeInboxTab === 'messages' && (", controls);
   const statusFilter = inbox.indexOf('slug="inbox-message-status-filter"', controls);
   const priorityFilter = inbox.indexOf('slug="inbox-message-priority-filter"', controls);

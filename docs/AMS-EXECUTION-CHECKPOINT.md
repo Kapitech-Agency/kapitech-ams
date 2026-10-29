@@ -72,6 +72,16 @@
 - Scope remains visual only: no source records, calculations, period semantics, navigation, permissions, API/backend, authentication, or Finance business logic changed. Fresh CI/Quality Gate validation is required for this slice; authenticated rendered browser review remains **NOT VERIFIED**.
 
 
+
+## 0.1 Inbox Messages workspace visual rebuild · 29 October 2026
+
+- Current scope: remove the separate Overview concept and refine the Messages landing using Dashboard Overview only as a visual reference. Keep the Inbox task-first; no cloned KPI strip.
+- Structural changes: category tabs and saved views share one responsive navigation band; search, source-backed filters, refresh/bulk status/export/view-mode actions share one filter/toolbar surface; the duplicate Sales Inquiry status-summary card is removed.
+- Main workspace uses a compact 5:7 canonical message list and record reader at the 1100px breakpoint, with matching two-pane loading skeletons, selected-row emphasis, restrained metadata hierarchy and responsive single-column behavior. Exact values remain in the selected record; table view is preserved.
+- Existing lead source, 30-second refresh, canonical query state, message actions, status/priority/owner changes, internal notes, WhatsApp/email/template actions and role permissions remain unchanged. The unassigned owner selector no longer visually substitutes an unrelated default owner. No due/SLA fields, follow-up records or fake data added.
+- Regression tests, scoped styles and Inbox implementation guidance updated with this slice. Exact-SHA Quality Gate and CI need to be verified. Authenticated rendered review and responsive browser evidence remain **NOT VERIFIED**.
+
+
 ## 0. Latest bounded slice — 26 October 2026
 
 - Authenticated production Dashboard was inspected at the browser's native desktop width only (~1440px equivalent), using two no-mutation loads. The earlier inspection saw the long refresh warning; a later single-load inspection confirmed the concise status plus “View refresh details” disclosure. Finance and Projects still show unavailable-source states, and all expected Overview card headings are present below the fold. The browser report is inconsistent about the precise height/layout of composite unavailable panels, so do not treat every compact-state style as confirmed in production. Native viewport resizing was not supported; 1440, 1280, 1024, 900, 768, 390 and 320px, keyboard/focus, 200% zoom, screen reader and WCAG acceptance remain unverified.

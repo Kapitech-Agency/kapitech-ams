@@ -820,3 +820,292 @@
   }
 }
 
+
+/* Inbox Messages workspace — Dashboard-inspired hierarchy with compact records and a balanced master/detail. */
+.ams-shell .ams-inbox-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ams-shell .ams-inbox-page > .ams-page-header {
+  margin-block-end: 0;
+}
+.ams-shell .ams-inbox-view-navigation {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ams-shell .ams-inbox-category-navigation {
+  flex: 1 1 520px;
+  min-width: 0;
+}
+.ams-shell .ams-inbox-saved-views {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 350px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--line);
+}
+.ams-shell .ams-inbox-saved-views__label {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 600;
+}
+.ams-shell .ams-inbox-view-navigation .ams-topnav-scroll {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  overflow: visible;
+  overscroll-behavior: auto;
+  scrollbar-width: none;
+}
+.ams-shell .ams-inbox-view-navigation .ams-topnav-scroll::-webkit-scrollbar {
+  display: none;
+}
+.ams-shell .ams-inbox-view-navigation .ams-topnav-scroll > a,
+.ams-shell .ams-inbox-view-navigation .ams-topnav-scroll > span {
+  min-height: 32px;
+  white-space: nowrap;
+}
+.ams-shell .ams-inbox-view-navigation .ams-topnav-scroll > a[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  color: var(--text);
+}
+.ams-shell .ams-inbox-filter-bar > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.ams-shell .ams-inbox-filter-bar > div:first-child > div:first-child {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ams-shell .ams-inbox-filter-bar .ams-inbox-search-field {
+  min-width: min(100%, 220px);
+  max-width: 360px;
+  flex: 1 1 260px;
+}
+.ams-shell .ams-inbox-filter-selects {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 400px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ams-shell .ams-inbox-filter-control {
+  min-width: 138px;
+  max-width: 190px;
+  flex: 1 1 138px;
+}
+.ams-shell .ams-inbox-filter-control > * {
+  width: 100%;
+  min-width: 0;
+}
+.ams-shell .ams-inbox-filter-bar > div:first-child > div:last-child {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+.ams-shell .ams-inbox-toolbar-actions {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ams-shell .ams-inbox-toolbar-action {
+  white-space: nowrap;
+}
+.ams-shell .ams-inbox-view-switch > button {
+  min-width: 0;
+  white-space: nowrap;
+}
+.ams-shell .ams-inbox-message-list-panel,
+.ams-shell .ams-inbox-reader-pane {
+  min-width: 0;
+  min-height: 0;
+  border-radius: 12px;
+}
+.ams-shell .ams-inbox-message-list-panel {
+  display: flex;
+  flex-direction: column;
+}
+.ams-shell .ams-inbox-message-list-header {
+  min-height: 64px;
+  background: color-mix(in srgb, var(--bg) 22%, var(--panel));
+}
+.ams-shell .ams-inbox-sort-label {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ams-shell .ams-inbox-message-list {
+  min-width: 0;
+}
+.ams-shell .ams-inbox-message-row {
+  min-width: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+}
+.ams-shell .ams-inbox-message-row:last-child {
+  border-bottom: 0;
+}
+.ams-shell .ams-inbox-message-select {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 14px 12px;
+  border-inline-start: 2px solid transparent;
+  background: transparent;
+}
+.ams-shell .ams-inbox-message-select:hover {
+  background: var(--panel-hover);
+}
+.ams-shell .ams-inbox-message-select.is-selected {
+  border-inline-start-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+}
+.ams-shell .ams-inbox-message-row__identity {
+  align-items: flex-start;
+}
+.ams-shell .ams-inbox-message-row__preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+.ams-shell .ams-inbox-message-row__meta {
+  align-items: flex-end;
+}
+.ams-shell .ams-inbox-message-owner {
+  flex: 0 1 auto;
+  max-width: 46%;
+  text-align: end;
+}
+.ams-shell .ams-inbox-message-star {
+  margin: 6px;
+  align-self: flex-start;
+}
+.ams-shell .ams-inbox-message-star[aria-pressed="true"] {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 8%, var(--panel));
+}
+.ams-shell .ams-inbox-message-empty {
+  display: flex;
+  min-height: 240px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+.ams-shell .ams-inbox-reader-pane {
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-color: var(--line);
+  background: var(--panel);
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+.ams-shell .ams-inbox-reader-pane > div:first-child > .border-b {
+  padding-block-end: 16px;
+  margin-block-end: 16px;
+}
+.ams-shell .ams-inbox-reader-pane .rounded-card.border.border-line.bg-panel {
+  border-color: color-mix(in srgb, var(--line) 84%, transparent);
+  background: color-mix(in srgb, var(--bg) 22%, var(--panel));
+}
+.ams-shell .ams-inbox-reader-empty {
+  min-height: 360px;
+  gap: 8px;
+  padding: 24px;
+}
+.ams-shell .ams-inbox-reader-empty__icon {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--bg) 60%, var(--panel));
+}
+@media (min-width: 1100px) {
+  .ams-shell .ams-inbox-message-list {
+    max-height: min(64vh, 680px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+  }
+  .ams-shell .ams-inbox-reader-pane {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 96px);
+  }
+}
+@media (max-width: 1099px) {
+  .ams-shell .ams-inbox-saved-views {
+    justify-content: flex-start;
+    flex-basis: 100%;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+  .ams-shell .ams-inbox-reader-pane {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .ams-shell .ams-inbox-message-list {
+    max-height: none;
+    overflow: visible;
+  }
+}
+@media (max-width: 599px) {
+  .ams-shell .ams-inbox-view-navigation {
+    gap: 8px;
+  }
+  .ams-shell .ams-inbox-saved-views {
+    gap: 6px;
+  }
+  .ams-shell .ams-inbox-filter-bar {
+    padding: 12px;
+  }
+  .ams-shell .ams-inbox-filter-control {
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 calc(50% - 4px);
+  }
+  .ams-shell .ams-inbox-toolbar-actions {
+    gap: 6px;
+  }
+  .ams-shell .ams-inbox-toolbar-action {
+    padding-inline: 10px;
+  }
+  .ams-shell .ams-inbox-message-select {
+    padding: 12px 10px;
+  }
+  .ams-shell .ams-inbox-reader-empty {
+    min-height: 280px;
+    padding: 20px;
+  }
+}

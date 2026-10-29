@@ -659,7 +659,9 @@ Use the approved Dashboard Overview as a **visual reference**, not a content tem
 - Sales Inquiries may add requested services and captured budget text; never parse a free-text budget as a money amount.
 - Selecting a row marks the selected state and opens the existing reader. Saving/unsaving remains an independent, permission-gated action, not a nested action inside the selection control.
 
-Use compact rows rather than a separate large card for each message. Status colors must remain paired with text; avoid all-red unread cards or prominent decorative metrics. Retain a fully accessible table presentation as an alternative.
+Use compact rows rather than a separate large card for each message. The row hierarchy is sender/company + received time, a two-line message preview, then channel/status/priority and owner; show services/budget only in Sales Inquiries. Keep exactly one border per row, no duplicated list footer, and a clear selected edge/background. Status colors must remain paired with text; avoid all-red unread cards or prominent decorative metrics. Retain a fully accessible table presentation as an alternative.
+
+The category tabs and saved views should share one responsive navigation band, and search/filters/actions should be coordinated by one shared filter surface rather than three separate toolbars. Bulk processing, export, refresh and view mode stay in this shared action region; do not duplicate them in the module header. The main list and reader should use a balanced 5:7 composition at 1100px and matched skeleton geometry while loading. On desktop, constrain the list and selected-record reader to their own scroll regions; on compact screens use natural document flow and retain a clear back-to-list action.
 
 ### Data and state contract
 

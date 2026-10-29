@@ -62,11 +62,19 @@ test('Inbox opens on a source-backed Messages master-detail workspace without an
   assert.doesNotMatch(source, /Follow-ups due/i, 'Do not invent due-date or SLA data.');
 });
 
-test('Inbox actions stay in the owning toolbar without Overview duplicates', async () => {
+test('Inbox keeps bulk actions and export in one shared toolbar without Overview duplicates', async () => {
   const source = await read('src/pages/admin/AdminInbox.tsx');
-  assert.ok(source.includes('slug="inbox-message-controls"'));
+  assert.ok(source.includes("'inbox-message-controls'"));
+  assert.ok(source.includes('data-ams-feature-slug="inbox-message-actions"'));
+  assert.ok(source.includes('ams-inbox-filter-bar'));
   assert.doesNotMatch(source, /inbox-overview-controls|inbox-overview-workspace|activeInboxTab === 'overview'|viewMode === 'overview'/);
-  const exportButtons = [...source.matchAll(/onClick=\{handleExportCSV\}/g)];
-  assert.ok(exportButtons.length >= 2, 'Export remains available in Messages and secondary inquiry/saved views.');
+  const headerStart = source.indexOf('<AdminModuleHeader slug="inbox-header"');
+  const headerEnd = source.indexOf('\n      />', headerStart);
+  const header = source.slice(headerStart, headerEnd);
+  assert.doesNotMatch(header, /handleMarkAllRead|handleExportCSV/);
+  const toolbarStart = source.indexOf('data-ams-feature-slug="inbox-message-actions"');
+  const toolbarEnd = source.indexOf('      {/* 4. MAIN CONTENT VIEW', toolbarStart);
+  const toolbar = source.slice(toolbarStart, toolbarEnd);
+  assert.equal((toolbar.match(/onClick=\{handleExportCSV\}/g) || []).length, 1);
   assert.ok(source.includes("activeInboxTab === 'messages' || activeInboxTab === 'unread'"));
 });

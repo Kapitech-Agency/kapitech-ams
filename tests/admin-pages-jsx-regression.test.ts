@@ -1009,12 +1009,18 @@ test('Inbox landing removes the redundant Overview and keeps record actions in t
   const headerEnd = inbox.indexOf('\n      />', headerStart);
   const header = inbox.slice(headerStart, headerEnd);
   assert.ok(headerStart >= 0 && headerEnd > headerStart);
-  assert.ok(header.includes("(activeInboxTab === 'client' || activeInboxTab === 'starred')"));
-  assert.ok(inbox.includes("activeTabItems.length + ' total inbound'"));
-  assert.ok(inbox.includes('slug="inbox-message-controls"'));
+  assert.doesNotMatch(header, /handleMarkAllRead|handleExportCSV/,
+    'Record bulk actions and export belong in the filter/action toolbar, not the module header.');
+  assert.ok(inbox.includes("activeTabItems.length + ' records'"));
+  assert.ok(inbox.includes("'inbox-message-controls'"));
+  assert.ok(inbox.includes('ams-inbox-toolbar-actions'));
+  assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-reader"'));
   assert.doesNotMatch(inbox, /inbox-overview-controls|inbox-overview-workspace|activeInboxTab === 'overview'|viewMode === 'overview'/);
-  const exportButtons = [...inbox.matchAll(/onClick=\{handleExportCSV\}/g)];
-  assert.ok(exportButtons.length >= 2, 'CSV export remains available in the owning controls.');
+  const toolbarStart = inbox.indexOf('data-ams-feature-slug="inbox-message-actions"');
+  const toolbarEnd = inbox.indexOf('      {/* 4. MAIN CONTENT VIEW', toolbarStart);
+  const toolbar = inbox.slice(toolbarStart, toolbarEnd);
+  assert.ok(toolbar.includes('onClick={handleExportCSV}'));
+  assert.equal((toolbar.match(/onClick=\{handleExportCSV\}/g) || []).length, 1, 'Export appears once in the shared toolbar.');
 });
 
 
