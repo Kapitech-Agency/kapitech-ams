@@ -94,9 +94,9 @@ test('Dashboard Analytics reuses the approved Overview empty-state and unavailab
   assert.ok(start >= 0 && end > start, 'AnalyticsView should be identifiable.');
   const analytics = source.slice(start, end);
 
-  assert.ok((analytics.match(/<DashboardEmptyState\\b/g) || []).length >= 8,
+  assert.ok((analytics.match(/<DashboardEmptyState\b/g) || []).length >= 8,
     'No-record conditions should reuse DashboardEmptyState, which is already used in the approved Overview.');
-  assert.ok((analytics.match(/<DashboardUnavailable\\b[\\s\\S]*?\\/>/g) || []).every((tag) => /\\bcompact\\b/.test(tag)),
+  assert.ok((analytics.match(/<DashboardUnavailable\b[\s\S]*?\/>/g) || []).every((tag) => /\bcompact\b/.test(tag)),
     'Loading or unavailable sources should use the compact status-row presentation from Overview.');
   assert.doesNotMatch(analytics, /rounded-control border border-line bg-bg px-4 py-5/,
     'Avoid one-off bordered empty boxes in Analytics.');

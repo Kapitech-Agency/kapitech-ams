@@ -1336,17 +1336,17 @@ test('Dashboard Analytics reuses approved Overview rows, proportions, panels and
   assert.ok(analytics.includes('Financial trend unavailable'));
   assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
   assert.ok(analytics.includes('Projects by current status'));
-  assert.ok((analytics.match(/<DashboardEmptyState\\b/g) || []).length >= 8,
+  assert.ok((analytics.match(/<DashboardEmptyState\b/g) || []).length >= 8,
     'Analytics no-data states must reuse the shared empty-state component from Overview.');
-  assert.match(analytics, /eyebrow="FINANCIAL MOVEMENT"[\\s\\S]*?title=\\{financialSourceRecordsReturned/);
-  assert.match(analytics, /eyebrow="RECEIVABLES"[\\s\\S]*?title="No invoice records returned"/);
-  assert.match(analytics, /eyebrow="PROJECT STATUS"[\\s\\S]*?title="No project records returned"/);
-  assert.match(analytics, /eyebrow="INQUIRY PIPELINE"[\\s\\S]*?title="No sales inquiry records"/);
+  assert.match(analytics, /eyebrow="FINANCIAL MOVEMENT"[\s\S]*?title=\{financialSourceRecordsReturned/);
+  assert.match(analytics, /eyebrow="RECEIVABLES"[\s\S]*?title="No invoice records returned"/);
+  assert.match(analytics, /eyebrow="PROJECT STATUS"[\s\S]*?title="No project records returned"/);
+  assert.match(analytics, /eyebrow="INQUIRY PIPELINE"[\s\S]*?title="No sales inquiry records"/);
   assert.doesNotMatch(analytics, /rounded-control border border-line bg-bg px-4 py-5/,
     'Analytics must not retain one-off boxed empty states that differ from Overview.');
   assert.doesNotMatch(analytics, /flex min-h-32 flex-col items-center justify-center rounded-control border border-line bg-panel/,
     'Date-chart empty states must use the shared Overview empty-state presentation.');
-  assert.ok((analytics.match(/<DashboardUnavailable\\b[\\s\\S]*?\\/>/g) || []).every((tag) => /\\bcompact\\b/.test(tag)),
+  assert.ok((analytics.match(/<DashboardUnavailable\b[\s\S]*?\/>/g) || []).every((tag) => /\bcompact\b/.test(tag)),
     'Source-unavailable states use the compact status-row treatment from Overview.');
   assert.ok(analytics.includes('role="img" aria-label={group.status +'));
   assert.ok(analytics.includes('Current labels'));
@@ -2211,7 +2211,7 @@ test('Dashboard cards use whitespace and soft row surfaces instead of legacy div
   assert.ok(primitives.includes('headerDivider?: boolean;'));
   assert.ok(primitives.includes('showTopDivider?: boolean;'));
   for (const obsolete of ['ams-overview-scope','ams-overview-panel--shortcuts','ams-overview-panel--money','ams-overview-panel--client-delivery','ams-dashboard-period-controls','ams-dashboard-date-select','ams-dashboard-activity-row__meta','ams-dashboard-activity-pagination','ams-dashboard-filter-pills','ams-dashboard-filter-pill','ams-dashboard-state--empty']) assert.equal(styles.includes('.' + obsolete), false, 'Legacy CSS selector remains: ' + obsolete);
-  assert.doesNotMatch(styles, /\.ams-dashboard-view-tabs[^}]*overflow-x:\\s*(?:auto|scroll)/);
+  assert.doesNotMatch(styles, /\.ams-dashboard-view-tabs[^}]*overflow-x:\s*(?:auto|scroll)/);
   assert.doesNotMatch(styles, /\.ams-dashboard-view-tabs::?-webkit-scrollbar/);
   assert.ok(styles.includes('border-spacing: 0 4px;'));
   assert.ok(styles.includes('.ams-dashboard-activity-table tbody td:first-child'));
