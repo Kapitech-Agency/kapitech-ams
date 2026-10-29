@@ -1332,6 +1332,27 @@ test('Dashboard Analytics exposes report-first hierarchy and a single focused wo
 });
 
 
+test('Dashboard Analytics outer spacing follows the shared 12px Dashboard card gutter', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('const AnalyticsView: React.FC');
+  const end = dashboard.indexOf('type DashboardCalendarPeriodFilterProps', start);
+  assert.ok(start >= 0 && end > start, 'Analytics workspace should have a bounded source section.');
+  const analytics = dashboard.slice(start, end);
+
+  assert.ok(analytics.includes('<div className="ams-dashboard-analytics-workspace" data-ams-feature-slug="dashboard-analytics-workspace">'));
+  assert.equal(analytics.includes('<div className="space-y-4" data-ams-feature-slug="dashboard-analytics-workspace">'), false,
+    'Analytics outer spacing must be controlled by its workspace layout, not the generic margin utility.');
+
+  const marker = '/* Analytics workspace rhythm: use the shared Dashboard card gutter. */';
+  const spacing = styles.slice(styles.lastIndexOf(marker));
+  assert.ok(spacing.length > 0);
+  assert.match(spacing, /\.ams-dashboard-analytics-workspace\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;[\s\S]*?gap:\s*var\(--ams-dashboard-gap,\s*12px\);/);
+  assert.match(styles, /\.ams-shell \.ams-dashboard\s*\{[\s\S]*?--ams-dashboard-gap:\s*12px;/,
+    'Analytics must reuse the Dashboard spacing token instead of defining a competing value.');
+});
+
+
 test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox access is allowed', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const charts = await read('src/components/charts/DashboardCharts.tsx');
