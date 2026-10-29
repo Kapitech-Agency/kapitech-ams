@@ -13045,7 +13045,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   outline-offset: 2px;
 }
 
-/* Analytics workspace rhythm: use the shared Dashboard card gutter. */
+/* Dashboard Analytics reuses the approved Overview rows and panel rhythm. */
 .ams-shell .ams-dashboard .ams-dashboard-analytics-workspace {
   display: flex;
   min-width: 0;
@@ -13053,51 +13053,17 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   gap: var(--ams-dashboard-gap, 12px);
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-analytics-workspace > [data-ams-feature-slug] {
+.ams-shell .ams-dashboard .ams-dashboard-analytics-workspace > .ams-overview-card-row {
   min-width: 0;
   margin: 0;
+  margin-block-start: 0;
 }
 
-
-
-/* Analytics report cards follow the Overview panel and 12px grid-gutter system. */
-.ams-shell .ams-dashboard .ams-dashboard-analytics-report-grid {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  align-items: start;
-  gap: var(--ams-dashboard-gap, 12px);
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-analytics-card {
-  min-width: 0;
-  align-self: start;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-analytics-card--financial,
-.ams-shell .ams-dashboard .ams-dashboard-analytics-card--inquiry {
-  grid-column: 1 / -1;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-analytics-card--receivables {
-  grid-column: span 5;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-analytics-card--projects {
-  grid-column: span 7;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-analytics-panel {
+.ams-shell .ams-dashboard .ams-dashboard-analytics-workspace .ams-overview-panel {
   min-width: 0;
   width: 100%;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-analytics-panel > div:first-child {
-  gap: 12px;
-}
-
-@media (max-width: 899px) {
-  .ams-shell .ams-dashboard .ams-dashboard-analytics-card {
-    grid-column: 1 / -1;
-  }
+.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Financial movement and receivables"] > section[data-ams-feature-slug="dashboard-analytics-receivables-report"] .ams-overview-panel {
+  height: auto;
 }

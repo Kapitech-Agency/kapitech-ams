@@ -1243,16 +1243,14 @@ const AnalyticsView: React.FC<{
   return (
     <div className="ams-dashboard-analytics-workspace" data-ams-feature-slug="dashboard-analytics-workspace">
 
-      <div className="ams-dashboard-analytics-report-grid" data-ams-feature-slug="dashboard-analytics-report-grid">
-        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--financial" data-ams-feature-slug="dashboard-analytics-financial-report" aria-label="Financial movement report">
+      <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Financial movement and receivables">
+        <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-analytics-financial-report" aria-label="Financial movement report">
           <AdminPanel headerDivider={false}
             title="Issued invoices vs recorded expenses"
-            className="ams-overview-panel ams-dashboard-analytics-panel ams-dashboard-analytics-panel--financial"
+            className="h-full ams-overview-panel"
             description="Issued invoices vs recorded expenses by date; difference is not posted profit."
             actions={(
-              <Link to="/admin/finance?tab=chart-of-accounts" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
-                Open Transactions & Cash <ArrowUpRight size={13} />
-              </Link>
+              <DashboardControl to="/admin/finance?tab=chart-of-accounts" variant="action" size="compact" icon={<CircleDollarSign size={14}/>} className="ams-dashboard-card-action">Open Transactions & Cash</DashboardControl>
             )}
             bodyClassName="p-4 sm:p-5"
           >
@@ -1344,15 +1342,13 @@ const AnalyticsView: React.FC<{
             )}
           </AdminPanel>
         </section>
-        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--receivables" data-ams-feature-slug="dashboard-analytics-receivables-report" aria-label="Receivables report">
+        <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-analytics-receivables-report" aria-label="Receivables report">
           <AdminPanel headerDivider={false}
             title="Outstanding receivables"
-            className="ams-overview-panel ams-dashboard-analytics-panel ams-dashboard-analytics-panel--receivables"
+            className="ams-overview-panel"
             description="Current outstanding balance from issued invoices."
             actions={(
-              <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
-                Open Accounts Receivable <ArrowUpRight size={13} />
-              </Link>
+              <DashboardControl to="/admin/finance?tab=accounts-receivable" variant="action" size="compact" icon={<ReceiptText size={14}/>} className="ams-dashboard-card-action">Open Accounts Receivable</DashboardControl>
             )}
             bodyClassName="p-4 sm:p-5"
           >
@@ -1388,15 +1384,15 @@ const AnalyticsView: React.FC<{
             )}
           </AdminPanel>
         </section>
-        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--projects" data-ams-feature-slug="dashboard-analytics-project-status-report" aria-label="Project status report">
+      </section>
+      <section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project status and inquiry pipeline">
+        <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-analytics-project-status-report" aria-label="Project status report">
           <AdminPanel headerDivider={false}
             title="Project status"
-            className="ams-overview-panel ams-dashboard-analytics-panel ams-dashboard-analytics-panel--projects"
+            className="h-full ams-overview-panel"
             description="Current status distribution from the canonical project register."
             actions={(
-              <Link to="/admin/projects" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
-                Open Projects <ArrowUpRight size={13} />
-              </Link>
+              <DashboardControl to="/admin/projects" variant="action" size="compact" icon={<FolderKanban size={14}/>} className="ams-dashboard-card-action">Open Projects</DashboardControl>
             )}
             bodyClassName="p-4 sm:p-5"
           >
@@ -1456,16 +1452,14 @@ const AnalyticsView: React.FC<{
         </section>
 
       {canOpenInbox ? (
-        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--inquiry" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report" aria-label="Inquiry pipeline report">
+        <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report" aria-label="Inquiry pipeline report">
           <AdminPanel headerDivider={false}
             title="Inquiry pipeline"
-            className="ams-overview-panel ams-dashboard-analytics-panel ams-dashboard-analytics-panel--inquiry"
+            className="h-full ams-overview-panel"
             description="Current inquiry status and requested service demand."
-            actions={canOpenInbox ? (
-              <Link to="/admin/inbox" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
-                Open Inbox <ArrowUpRight size={13} />
-              </Link>
-            ) : undefined}
+            actions={(
+              <DashboardControl to="/admin/inbox" variant="action" size="compact" icon={<Users size={14}/>} className="ams-dashboard-card-action">Open Inbox</DashboardControl>
+            )}
             bodyClassName="p-4 sm:p-5"
           >
             {snapshot.inboxLeads === null ? (
@@ -1594,8 +1588,7 @@ const AnalyticsView: React.FC<{
           </AdminPanel>
         </section>
       ) : null}
-
-      </div>
+      </section>
     </div>
   );
 };

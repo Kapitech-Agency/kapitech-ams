@@ -561,7 +561,7 @@ Explain task inclusion, timezone/date basis, comparison, unit, and material sour
 
 ## 4.4 Analytics workspace
 
-Present the supported report cards together in one Overview-inspired analytical workspace; remove the nested report selector. Use a responsive grid with full-width Financial Movement, a balanced Receivables + Project Status row, and full-width Inquiry Pipeline only when the existing Inbox access gate allows it. Keep each report independent, source-truthful and visually concise. The shared reporting-period control scopes time trends only; receivables and project status remain current snapshots.
+Remove the nested report selector, then reuse the approved Overview composition literally rather than inventing a new grid. Row 1 uses the shared `ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12` wrapper with Financial Movement at 7 columns and Receivables at 5. Row 2 uses the same wrapper with Project Status at 5 columns and Inquiry Pipeline at 7, rendered only behind the existing Inbox access gate. Every panel uses the shared `ams-overview-panel` shell and `DashboardControl` action styling. Do not add Analytics-specific column rules. The shared reporting-period control scopes time trends only; receivables and project status remain current snapshots.
 
 ### Inquiry Pipeline
 - Valid period.
@@ -609,7 +609,7 @@ Show service demand or campaign outcomes only when sourced. Include objective, p
 
 ### Dashboard acceptance
 - Overview, Performance, and Analytics have distinct purposes.
-- Analytics presents Financial Movement, Receivables, Project Status and the permission-gated Inquiry Pipeline together in one responsive card grid; no nested report-selection tabs remain.
+- Analytics uses the same two `ams-overview-card-row` wrappers as Overview: Financial Movement 7/Receivables 5, then Project Status 5/Inquiry Pipeline 7; the Inquiry Pipeline remains permission-gated. The same `ams-overview-panel` and `DashboardControl` primitives are reused, with no Analytics-specific grid or nested report tabs.
 - Overview row order prioritizes project delivery/needs-attention, then task queue/deadlines, then Finance/Project Portfolio, team/client context, and recent activity; no artificial priority numbering.
 - Date filters are card-local on Overview: Finance and Recorded Time have independent period selectors; task queue/deadline controls remain within their operational card. No global date selector is shown on Overview.
 - Finance trend values come from canonical issued-invoice and eligible-expense records, with source and period semantics clear; no arithmetic difference is described as posted profit or cash flow.

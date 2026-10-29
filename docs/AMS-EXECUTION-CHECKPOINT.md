@@ -10,13 +10,14 @@
 > This checkpoint is an evidence snapshot, not live branch state. Refresh `main`, current workflow status, and source/tests on every resume. Section 1 is the prior source/test snapshot; the latest warning-state slice and browser findings are recorded in Section 0.
 
 
-## 0.3 Latest bounded slice — Dashboard Analytics visual redesign · 29 October 2026
+## 0.3 Corrective slice — Dashboard Analytics uses the approved Overview row system · 29 October 2026
 
-- Requested direction: remove the nested report selector inside Analytics while keeping the top-level Dashboard navigation tab. Show the existing source-backed Financial Movement, Receivables, Project Status, and Inbox-authorized Inquiry Pipeline reports together in an Overview-inspired responsive card grid.
-- Composition: Financial Movement spans the main width and retains its exact period-value table; Receivables and Project Status share a balanced 5/7-column row; Inquiry Pipeline spans the full width only when the existing Inbox access gate permits it. All report panels reuse the Overview panel treatment and shared 12px Dashboard gutter.
-- Scope guard: preserve canonical source records, reporting-period semantics, current-state labels, exact values, routes, permissions and Finance formulas. No placeholder data, API/backend/database/auth/RBAC changes or new dependencies.
-- Required validation: exact-SHA Quality Gate/CI, authenticated visual review using real source data, responsive review from desktop through mobile, keyboard/focus and chart/table accessibility. Runtime and visual checks remain **NOT VERIFIED** until performed; do not claim sign-off from source changes alone.
-- Dashboard remains the only active module until explicit user visual sign-off; do not start Inbox or other module redesigns.
+- The prior Analytics proposal used a bespoke 12-column grid and custom card classes; the user rejected that direction because it did not faithfully follow the already-approved Overview. This corrective slice removes that custom grid.
+- Exact layout: Overview row 1, Financial Movement at 7 columns + Receivables at 5; Overview row 2, Project Status at 5 + Inquiry Pipeline at 7 when Inbox access is permitted. Both rows use `ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12`, the standard 1100px breakpoint, shared `ams-overview-panel` cards and `DashboardControl` actions.
+- The nested Analytics report selector remains removed. Source records, reporting-period semantics, exact values, current-state labels, Finance formulas, routes and permission checks are unchanged. No placeholder data, backend/API/database/auth/RBAC changes or new dependencies.
+- Quality Gate previously passed typecheck/tests/build for commit [362de168](https://github.com/Kapitech-Agency/kapitech-ams/commit/362de168e842295e3f7bb787313360630c579d50); AMS CI failed only at the existing dependency audit advisory for `body-parser@1.20.6` [GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828). This corrected layout requires fresh exact-SHA checks.
+- Authenticated visual review of Analytics and responsive/accessibility review remain **NOT VERIFIED**. Do not claim user sign-off until actual browser output is inspected. Dashboard remains the only active module until explicit sign-off.
+
 
 ## 0. Latest bounded slice — 26 October 2026
 

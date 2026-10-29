@@ -1298,7 +1298,7 @@ test('Dashboard Performance header and reporting period follow the shared Overvi
   assert.ok(dashboard.includes('canOpenProjects={canOpenProjects}'));
 });
 
-test('Dashboard Analytics uses an Overview-inspired report grid without nested report tabs', async () => {
+test('Dashboard Analytics reuses approved Overview rows, proportions, panels and controls', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const start = dashboard.indexOf('const AnalyticsView: React.FC');
@@ -1306,24 +1306,27 @@ test('Dashboard Analytics uses an Overview-inspired report grid without nested r
   assert.ok(start >= 0 && end > start, 'Analytics workspace should have a bounded source section.');
   const analytics = dashboard.slice(start, end);
 
-  const grid = analytics.indexOf('className="ams-dashboard-analytics-report-grid"');
+  const rowOne = analytics.indexOf('<section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Financial movement and receivables">');
   const financial = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-financial-report"');
   const receivables = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-receivables-report"');
+  const rowTwo = analytics.indexOf('<section className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12" aria-label="Project status and inquiry pipeline">');
   const projects = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
   const inquiry = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
-  assert.ok(grid >= 0 && financial > grid && receivables > financial && projects > receivables && inquiry > projects,
-    'Analytics should show all supported reports in an Overview-like card order.');
-  assert.equal(analytics.includes('data-ams-feature-slug="dashboard-analytics-controls"'), false,
-    'The nested report-selector panel must be removed.');
-  assert.equal(dashboard.includes('type DashboardAnalyticsReport'), false);
+  assert.ok(rowOne >= 0 && financial > rowOne && receivables > financial && rowTwo > receivables && projects > rowTwo && inquiry > projects,
+    'Analytics must use the two approved Overview-style card rows.');
+  assert.match(analytics, /<section className="min-w-0 min-\[1100px\]:col-span-7" data-ams-feature-slug="dashboard-analytics-financial-report"/);
+  assert.match(analytics, /<section className="min-w-0 min-\[1100px\]:col-span-5" data-ams-feature-slug="dashboard-analytics-receivables-report"/);
+  assert.match(analytics, /<section className="min-w-0 min-\[1100px\]:col-span-5" data-ams-feature-slug="dashboard-analytics-project-status-report"/);
+  assert.match(analytics, /<section className="min-w-0 min-\[1100px\]:col-span-7" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"/);
+  assert.equal(analytics.includes('data-ams-feature-slug="dashboard-analytics-controls"'), false, 'Nested report-selection tabs stay removed.');
+  assert.equal(analytics.includes('data-ams-feature-slug="dashboard-analytics-report-grid"'), false, 'Analytics must not retain an invented custom grid.');
   assert.equal(dashboard.includes('DASHBOARD_ANALYTICS_REPORT_OPTIONS'), false);
   assert.equal(analytics.includes('setReport('), false);
-  for (const className of [
-    'ams-dashboard-analytics-card--financial',
-    'ams-dashboard-analytics-card--receivables',
-    'ams-dashboard-analytics-card--projects',
-    'ams-dashboard-analytics-card--inquiry'
-  ]) assert.ok(analytics.includes(className), 'Missing Analytics card layout class: ' + className);
+  assert.equal((analytics.match(/className="h-full ams-overview-panel"/g) || []).length, 3,
+    'Financial Movement, Project Status and Inquiry Pipeline follow Overview full-height card composition.');
+  assert.ok(analytics.includes('className="ams-overview-panel"'), 'Receivables should retain natural height beside the taller financial report.');
+  assert.ok((analytics.match(/<DashboardControl to="\/admin\//g) || []).length >= 4,
+    'Report drill-down actions must use shared DashboardControl styling.');
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'));
   assert.ok(analytics.includes('not posted profit'));
@@ -1331,13 +1334,12 @@ test('Dashboard Analytics uses an Overview-inspired report grid without nested r
   assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
   assert.ok(analytics.includes('Projects by current status'));
   assert.ok(analytics.includes('role="img" aria-label={group.status +'));
-  assert.ok(analytics.includes('Current labels'), 'Project status remains a current-state grouping.');
-  assert.doesNotMatch(analytics, /dashboard-analytics-kpis/, 'Do not introduce mixed-period duplicate KPI summaries.');
-  assert.equal(analytics.includes('DashboardTrendRangePicker'), false, 'Analytics continues to use the shared period control.');
-  assert.match(styles, /\.ams-dashboard-analytics-report-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(12,\s*minmax\(0,\s*1fr\)\);[\s\S]*?gap:\s*var\(--ams-dashboard-gap,\s*12px\);/);
-  assert.match(styles, /\.ams-dashboard-analytics-card--receivables\s*\{\s*grid-column:\s*span 5;/);
-  assert.match(styles, /\.ams-dashboard-analytics-card--projects\s*\{\s*grid-column:\s*span 7;/);
-  assert.match(styles, /@media\s*\(max-width:\s*899px\)[\s\S]*?\.ams-dashboard-analytics-card\s*\{\s*grid-column:\s*1\s*\/\s*-1;/);
+  assert.ok(analytics.includes('Current labels'));
+  assert.doesNotMatch(analytics, /dashboard-analytics-kpis/);
+  assert.equal(analytics.includes('DashboardTrendRangePicker'), false);
+  assert.match(styles, /\.ams-shell \.ams-dashboard \.ams-dashboard-analytics-workspace > \.ams-overview-card-row\s*\{[\s\S]*?margin-block-start:\s*0;/);
+  assert.doesNotMatch(styles, /\.ams-dashboard-analytics-report-grid\s*\{|\.ams-dashboard-analytics-card--/,
+    'No custom Analytics grid may override the approved Overview row system.');
 });
 
 
@@ -1353,10 +1355,12 @@ test('Dashboard Analytics outer spacing follows the shared 12px Dashboard card g
   assert.equal(analytics.includes('<div className="space-y-4" data-ams-feature-slug="dashboard-analytics-workspace">'), false,
     'Analytics outer spacing must be controlled by its workspace layout, not the generic margin utility.');
 
-  const marker = '/* Analytics workspace rhythm: use the shared Dashboard card gutter. */';
+  const marker = '/* Dashboard Analytics reuses the approved Overview rows and panel rhythm. */';
   const spacing = styles.slice(styles.lastIndexOf(marker));
   assert.ok(spacing.length > 0);
   assert.match(spacing, /\.ams-dashboard-analytics-workspace\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;[\s\S]*?gap:\s*var\(--ams-dashboard-gap,\s*12px\);/);
+  assert.ok(analytics.includes('className="ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12"'));
+  assert.match(spacing, /\.ams-dashboard-analytics-workspace\s*>\s*\.ams-overview-card-row\s*\{[\s\S]*?margin:\s*0;[\s\S]*?margin-block-start:\s*0;/);
   assert.match(styles, /\.ams-shell \.ams-dashboard\s*\{[\s\S]*?--ams-dashboard-gap:\s*12px;/,
     'Analytics must reuse the Dashboard spacing token instead of defining a competing value.');
 });
@@ -1371,10 +1375,10 @@ test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox
   const analytics = dashboard.slice(start, end);
   const projectStart = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
   const inquiryStart = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
-  assert.ok(projectStart >= 0 && inquiryStart > projectStart, 'Project status should precede the full-width inquiry report.');
+  assert.ok(projectStart >= 0 && inquiryStart > projectStart, 'Project Status and Inquiry Pipeline should share the second Overview-style row.');
   const inquiry = analytics.slice(inquiryStart);
 
-  assert.ok(analytics.includes(`      {canOpenInbox ? (\n        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--inquiry"`),
+  assert.ok(analytics.includes(`      {canOpenInbox ? (\n        <section className="min-w-0 min-[1100px]:col-span-7" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"`),
     'The inquiry report must render only when the existing Inbox access gate allows it.');
   assert.equal(analytics.includes('setReport('), false, 'The nested report-selector state must be removed.');
   assert.ok(analytics.includes("record.type === 'inquiry'"));

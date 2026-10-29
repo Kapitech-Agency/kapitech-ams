@@ -7,28 +7,35 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Dashboard Analytics presents supported reports together without nested selector tabs', async () => {
+test('Dashboard Analytics follows the approved Overview row pattern without nested selector tabs', async () => {
   const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const start = source.indexOf('const AnalyticsView: React.FC');
   const end = source.indexOf('type DashboardCalendarPeriodFilterProps', start);
-  assert.ok(start >= 0 && end > start, 'AnalyticsView should be identifiable');
+  assert.ok(start >= 0 && end > start, 'AnalyticsView should be identifiable.');
   const analytics = source.slice(start, end);
-  const grid = analytics.indexOf('className="ams-dashboard-analytics-report-grid"');
+  const rowOne = analytics.indexOf('aria-label="Financial movement and receivables"');
   const financial = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-financial-report"');
   const receivables = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-receivables-report"');
+  const rowTwo = analytics.indexOf('aria-label="Project status and inquiry pipeline"');
   const projects = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
   const inquiry = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
-  assert.ok(grid >= 0 && financial > grid && receivables > financial && projects > receivables && inquiry > projects,
-    'Analytics reports should use the Overview-inspired report order.');
+  assert.ok(rowOne >= 0 && financial > rowOne && receivables > financial && rowTwo > receivables && projects > rowTwo && inquiry > projects,
+    'Analytics cards should follow the two-row Overview composition.');
+  assert.match(analytics, /min-\[1100px\]:col-span-7" data-ams-feature-slug="dashboard-analytics-financial-report"/);
+  assert.match(analytics, /min-\[1100px\]:col-span-5" data-ams-feature-slug="dashboard-analytics-receivables-report"/);
+  assert.match(analytics, /min-\[1100px\]:col-span-5" data-ams-feature-slug="dashboard-analytics-project-status-report"/);
+  assert.match(analytics, /min-\[1100px\]:col-span-7" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"/);
   assert.equal(analytics.includes('data-ams-feature-slug="dashboard-analytics-controls"'), false);
   assert.equal(analytics.includes('aria-label="Analytics report"'), false);
   assert.equal(source.includes('DASHBOARD_ANALYTICS_REPORT_OPTIONS'), false);
   assert.equal(analytics.includes('setReport('), false);
-  assert.ok(analytics.includes('ams-dashboard-analytics-card--receivables'));
-  assert.ok(analytics.includes('ams-dashboard-analytics-card--projects'));
-  assert.ok(analytics.includes(`      {canOpenInbox ? (\n        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--inquiry"`),
-    'Inquiry Pipeline must remain gated by current Inbox access.');
-  assert.equal(analytics.includes('dashboard-analytics-kpis'), false, 'Mixed-scope KPI strip must not be introduced.');
+  assert.ok(analytics.includes('className="h-full ams-overview-panel"'));
+  assert.ok(analytics.includes('<DashboardControl to="/admin/finance?tab=chart-of-accounts"'));
+  assert.equal(styles.includes('.ams-dashboard-analytics-report-grid'), false, 'Analytics must not have a custom grid.');
+  assert.ok(styles.includes('.ams-dashboard-analytics-workspace > .ams-overview-card-row'));
+  assert.ok(analytics.includes('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"'));
+  assert.equal(analytics.includes('dashboard-analytics-kpis'), false);
 });
 
 test('Dashboard Analytics financial movement exposes exact values, date windows, and definitions', async () => {
@@ -68,8 +75,6 @@ test('Dashboard Analytics distinguishes balance and status snapshots from period
   const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const analytics = source.slice(source.indexOf('const AnalyticsView: React.FC'), source.indexOf('type DashboardCalendarPeriodFilterProps'));
   assert.ok(analytics.includes('Current status distribution'));
-  assert.ok(analytics.includes('This current snapshot is not filtered by the selected financial trend period'));
-  assert.ok(analytics.includes('not trends for the selected financial period'));
   assert.ok(analytics.includes('This current snapshot is not filtered by the selected financial trend period'));
   assert.ok(analytics.includes('not trends for the selected financial period'));
   assert.ok(analytics.includes('to="/admin/finance?tab=chart-of-accounts"'));
