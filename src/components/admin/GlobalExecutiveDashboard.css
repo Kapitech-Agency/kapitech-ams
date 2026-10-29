@@ -13022,3 +13022,26 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     gap: 24px;
   }
 }
+
+/* Dashboard view tabs: remove the stale divider and active-tab underline. */
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] {
+  border-bottom: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > nav.ams-dashboard-view-tabs {
+  border: 0;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > nav.ams-dashboard-view-tabs .ams-dashboard-view-tab,
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > nav.ams-dashboard-view-tabs .ams-dashboard-view-tab.is-active,
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > nav.ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"] {
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > nav.ams-dashboard-view-tabs .ams-dashboard-view-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
