@@ -284,7 +284,7 @@ test('Recent Activity keeps Search separate and groups compact, unlabeled dropdo
     'Severity, Actor and Sort by must appear together in one refinement group.');
   assert.ok(activity.includes('aria-label="Recent activity filters and sorting"'));
   assert.ok(activity.includes('aria-label="Severity, actor and sort controls"'));
-  assert.ok(activity.includes('htmlFor="dashboard-recent-activity-search">Search</label>'));
+  assert.ok(activity.includes('className="sr-only" htmlFor="dashboard-recent-activity-search">Search recent activity</label>'));
   assert.equal(activity.includes('<span>Severity</span>'), false);
   assert.equal(activity.includes('<span>Actor</span>'), false);
   assert.equal(activity.includes('<span>Sort by</span>'), false);
