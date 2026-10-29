@@ -275,7 +275,8 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(dashboard.includes('Task queue unavailable'));
   assert.ok(dashboard.includes('Task queue unavailable for this role or source.'));
   assert.ok(dashboard.includes('Time-log source unavailable'));
-  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(analyticsView.includes('buildFinancialTrendForReportingPeriod(financialPeriodMode, financialPeriodValue, inCurrencyInvoices, inCurrencyExpenses)'));
+  assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(overviewFinancePeriodMode, overviewFinancePeriodValue'));
   assert.ok(dashboard.includes('buildRecentFinancialTrend(issuedInvoicesInSelectedCurrency, financeExpenseRows)'));
   assert.ok(dashboard.includes('The difference is an arithmetic comparison, not posted profit.'));
   assert.ok(dashboard.includes("const [financialPeriodMode, setFinancialPeriodMode] = useState<ReportingPeriodMode>('month')"));

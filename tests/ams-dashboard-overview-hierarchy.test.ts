@@ -1149,7 +1149,7 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(dashboard.includes('useReportingPeriod()'));
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(financialPeriodMode, financialPeriodValue'));
   assert.ok(analytics.includes('buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)'));
-  assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
+  assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(financialTrend, Boolean(financialPeriodRange), financialPeriodLabel)'));
   assert.ok(dashboard.includes('Recent 30-day default window'));
   assert.equal(analytics.includes('All dates defaults to the recent 30 days.'), false,
     'Analytics no longer duplicates the shared reporting-period scope in a nested selector card.');
