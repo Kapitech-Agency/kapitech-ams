@@ -795,7 +795,7 @@ const PerformanceView: React.FC<{
     : null;
 
   return (
-    <div className="space-y-4" data-ams-feature-slug="dashboard-performance-workspace">
+    <div className="ams-dashboard-performance-workspace" data-ams-feature-slug="dashboard-performance-workspace">
       <section
         className="ams-overview-card-row ams-dashboard-performance-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12"
         aria-label="Delivery performance summary"

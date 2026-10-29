@@ -13003,3 +13003,22 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     transition-duration: .01ms;
   }
 }
+
+/* Dashboard Performance outer rhythm: match the Overview page-shell and card gutters. */
+.ams-shell .ams-dashboard .ams-dashboard-performance-workspace {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-performance-workspace > .ams-dashboard-performance-row {
+  min-width: 0;
+  margin: 0;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-performance-workspace {
+    gap: 24px;
+  }
+}
