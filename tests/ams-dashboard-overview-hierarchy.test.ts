@@ -1150,7 +1150,10 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(analytics.includes('buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)'));
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(dashboard.includes('Recent 30-day default window'));
-  assert.ok(analytics.includes('All dates defaults to the recent 30 days.'));
+  assert.equal(analytics.includes('All dates defaults to the recent 30 days.'), false,
+    'Analytics no longer duplicates the shared reporting-period scope in a nested selector card.');
+  assert.ok(analytics.includes('const inquiryVolumeTrend = buildInquiryVolumeTrend('),
+    'Inquiry volume retains its own source-backed period scope.');
   assert.equal(overview.includes('dashboard-overview-reporting-scope'), false);
   assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
   assert.equal(dashboard.includes('ams-dashboard-period-controls'), false);
@@ -1245,7 +1248,7 @@ test('Dashboard Analytics does not infer zero financial trends from empty or cur
 test('Dashboard Performance follows Overview panel composition and preserves source-backed delivery metrics', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf('const PerformanceView: React.FC');
-  const end = dashboard.indexOf('type DashboardAnalyticsReport', start);
+  const end = dashboard.indexOf('const AnalyticsView: React.FC', start);
   assert.ok(start >= 0 && end > start, 'Performance workspace should have a bounded source section');
   const performance = dashboard.slice(start, end);
   const summary = performance.indexOf('data-ams-feature-slug="dashboard-performance-summary"');
@@ -2407,7 +2410,7 @@ test('Dashboard Performance outer spacing matches Overview shell and card gutter
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const start = dashboard.indexOf('const PerformanceView: React.FC');
-  const end = dashboard.indexOf('type DashboardAnalyticsReport', start);
+  const end = dashboard.indexOf('const AnalyticsView: React.FC', start);
   assert.ok(start >= 0 && end > start);
   const performance = dashboard.slice(start, end);
   assert.ok(performance.includes('<div className="ams-dashboard-performance-workspace" data-ams-feature-slug="dashboard-performance-workspace">'));
