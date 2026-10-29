@@ -3443,7 +3443,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="ams-dashboard-team-tasks__header mb-3 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="text-xs font-semibold text-fg">Open tasks by owner</h3>
-                      <p className="ams-dashboard-team-section-caption">Prioritised by overdue, blocked, then total tasks</p>
+                      <p className="ams-dashboard-team-section-caption">Ranked by overdue, blocked and open task count</p>
                     </div>
                     {canOpenTasks ? <DashboardControl to="/admin/tasks" variant="action" size="compact" icon={<CheckCircle2 size={14}/>} className="ams-dashboard-card-action" ariaLabel="Open Tasks" title="Open the Tasks workspace">View tasks</DashboardControl> : null}
                   </div>
@@ -3472,7 +3472,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             {owner.overdue > 0 ? <span className="is-risk">{owner.overdue} overdue</span> : null}
                             {owner.blocked > 0 ? <span className="is-warning">{owner.blocked} blocked</span> : null}
                             {owner.review > 0 ? <span className="is-review">{owner.review} in review</span> : null}
-                            {owner.overdue === 0 && owner.blocked === 0 ? <span className="is-clear">No overdue or blocked tasks</span> : null}
+                            {owner.overdue === 0 && owner.blocked === 0 ? <span className="is-clear">No overdue / blocked</span> : null}
                           </div>
                         </div>
                       ))}
@@ -3484,7 +3484,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                   <div className="ams-dashboard-team-time__header mb-3 flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="text-xs font-semibold text-fg">Recorded time</h3>
-                      <p className="ams-dashboard-team-section-caption">Actual logged hours · not team capacity</p>
+                      <p className="ams-dashboard-team-section-caption">Saved hours only · not team capacity</p>
                     </div>
                     {canOpenTimeLogs ? (
                       <div className="ams-dashboard-team-time__header-actions">

@@ -920,3 +920,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Recent Activity search and card-local filter controls are reduced from 36px to 32px, with tighter toolbar padding and matching compact action buttons. Existing loaded-data search, actor/severity filters, time range, sort, reset, CSV export and pagination remain intact.
 - Date controls remain local to cards that need their own range: Finance movement, Team recorded time, Recent Activity, and deadlines; the global Dashboard tabs area remains free of a global date selector.
 - Changes are presentation and regression-test updates only. TypeScript, tests/build and AMS CI must be checked on the exact follow-up commit; production screenshot review remains outstanding.
+
+
+## 0.5 Team Workload refinement — 29 October 2026
+
+- Reworked the Team Workload card's final scoped CSS contract to remove the stacked nested-card look from each owner/time row, align labels and values on a shared baseline, use lightweight separators, keep risk badges compact, and constrain the Recorded Time period selector to the available card width.
+- Shortened redundant captions and the no-risk label. Existing task-owner ranking, overdue/blocked/review counts, per-card reporting-period control, recorded time totals, routes and permission gates are unchanged.
+- Added regression assertions for the cleaner list layout. This slice is considered validated only after the exact commit's Quality Gate passes.

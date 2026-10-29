@@ -837,13 +837,13 @@ test('Dashboard Team Workload aligns owner assignment signals and recorded-time 
   const team = dashboard.slice(start, end);
 
   assert.ok(team.includes('ams-dashboard-team-tasks__header'));
-  assert.ok(team.includes('Prioritised by overdue, blocked, then total tasks'));
+  assert.ok(team.includes('Ranked by overdue, blocked and open task count'));
   assert.ok(team.includes('ams-dashboard-owner-list'));
   assert.ok(team.includes('ams-dashboard-owner-row__track'));
   assert.ok(team.includes('owner.overdue > 0 ?'));
   assert.ok(team.includes('owner.blocked > 0 ?'));
   assert.ok(team.includes('owner.review > 0 ?'));
-  assert.ok(team.includes('No overdue or blocked tasks'));
+  assert.ok(team.includes('No overdue / blocked'));
   assert.ok(team.includes('ams-dashboard-recorded-time-list'));
   assert.ok(team.includes('person.entries'));
   assert.ok(team.includes('Recorded time reporting period'));
@@ -865,14 +865,23 @@ test('Dashboard Team Workload separates task ownership and recorded time with a 
   const timeSelector = '.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-body > .ams-dashboard-team-time {';
   const tasksStart = styles.lastIndexOf(tasksSelector);
   const timeStart = styles.lastIndexOf(timeSelector);
-  assert.ok(tasksStart >= 0 && timeStart > tasksStart, 'The final Team Workload rules must explicitly remove both sides of the divider.');
+  assert.ok(tasksStart >= 0 && timeStart > tasksStart, 'The final Team Workload rules must define the two-section layout.');
   const tasksRule = styles.slice(tasksStart, styles.indexOf('}', tasksStart));
   const timeRule = styles.slice(timeStart, styles.indexOf('}', timeStart));
-  assert.match(tasksRule, /border-bottom:\s*1px solid color-mix\(in srgb, var\(--line\) 80%, transparent\);/);
-  assert.match(timeRule, /border-top:\s*0;/);
-  assert.match(tasksRule, /padding:\s*0 0 16px;/);
-  assert.match(timeRule, /padding:\s*16px 0 0;/);
+  assert.match(tasksRule, /border-bottom:\\s*1px solid color-mix\\(in srgb, var\\(--line\\) 80%, transparent\\);/);
+  assert.match(timeRule, /border-top:\\s*0;/);
+  assert.match(tasksRule, /padding:\\s*0 0 16px;/);
+  assert.match(timeRule, /padding:\\s*16px 0 0;/);
+
+  const finalRowsStart = styles.lastIndexOf('.ams-shell .ams-dashboard .ams-dashboard-owner-row,\n.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row {');
+  assert.ok(finalRowsStart > tasksStart, 'Owner and recorded-time rows should share the final clean-list layout.');
+  const rowRule = styles.slice(finalRowsStart, styles.indexOf('}', finalRowsStart));
+  assert.match(rowRule, /border:\\s*0;/);
+  assert.match(rowRule, /border-radius:\\s*0;/);
+  assert.match(rowRule, /background:\\s*transparent;/);
+  assert.ok(styles.includes('.ams-dashboard-team-time__header-actions .ams-calendar-period-filter__trigger'));
 });
+
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
