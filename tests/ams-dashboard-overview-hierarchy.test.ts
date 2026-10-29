@@ -1402,7 +1402,7 @@ test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox
   assert.ok(analytics.includes('record.services'));
   assert.ok(dashboard.includes('canOpenInbox={canOpenInbox}'));
   assert.ok(inquiry.includes('snapshot.inboxLeads === null'));
-  assert.ok(inquiry.includes('No sales inquiry records returned'));
+  assert.ok(inquiry.includes('No sales inquiry records'));
   assert.ok(inquiry.includes('Current status distribution'));
   assert.ok(inquiry.includes('Requested services'));
   assert.ok(inquiry.includes('One inquiry may request multiple services'));

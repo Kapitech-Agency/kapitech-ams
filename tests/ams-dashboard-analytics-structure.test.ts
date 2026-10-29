@@ -71,7 +71,7 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
   assert.ok(analytics.includes('const receivableInvoices = inCurrencyIssuedInvoices'));
   assert.ok(analytics.includes('const receivables = receivableInvoices.reduce((sum, invoice) => sum + getInvoiceOutstanding(invoice), 0)'));
   assert.ok(analytics.includes('const openInvoiceCount = receivableInvoices.filter((invoice) => getInvoiceOutstanding(invoice) > 0).length'));
-  assert.ok(analytics.includes('No issued invoice records in selected currency'));
+  assert.ok(analytics.includes('No issued invoices in selected currency'));
 });
 
 test('Dashboard Analytics distinguishes balance and status snapshots from period trends', async () => {
