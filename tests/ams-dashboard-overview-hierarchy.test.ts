@@ -870,7 +870,7 @@ test('Dashboard Team Workload separates task ownership and recorded time with a 
   const timeRule = styles.slice(timeStart, styles.indexOf('}', timeStart));
   assert.match(tasksRule, /border-bottom:\s*1px solid color-mix\(in srgb, var\(--line\) 80%, transparent\);/);
   assert.match(timeRule, /border-top:\s*0;/);
-  assert.match(tasksRule, /padding-bottom:\s*16px;/);
+  assert.match(tasksRule, /padding:\s*0 0 16px;/);
   assert.match(timeRule, /padding:\s*16px 0 0;/);
 });
 
