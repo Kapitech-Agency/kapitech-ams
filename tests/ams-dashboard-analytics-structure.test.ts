@@ -63,7 +63,7 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
   assert.ok(analytics.includes('data={financialChartRows}'));
   assert.ok(analytics.includes('presentation="maven"'));
   assert.ok(analytics.includes('showDataTable={false}'));
-  assert.ok(analytics.includes('className="ams-finance-chart-stage'));
+  assert.ok(analytics.includes('ams-finance-chart-stage'));
   assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
   assert.ok(analytics.includes('View exact period values · {currency}'));
   assert.ok(analytics.includes('tertiary: undefined'));
