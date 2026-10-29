@@ -90,8 +90,9 @@ export const TrendChart: React.FC<{
   primaryFormat?: (value: number) => string;
   axisFormat?: (value: number) => string;
   presentation?: 'default' | 'maven';
+  showDataTable?: boolean;
   ariaLabel: string;
-}> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, axisFormat, presentation = 'default', ariaLabel }) => {
+}> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, axisFormat, presentation = 'default', showDataTable = true, ariaLabel }) => {
   const [hover, setHover] = useState<{ index: number; x: number; percent: number; yPercent: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const gradientId = `dashboard-trend-${useId().replace(/:/g, '')}`;
@@ -327,6 +328,7 @@ export const TrendChart: React.FC<{
         </div>
       </div>
 
+      {showDataTable ? (
       <details className="mt-2">
         <summary className="ams-trend-chart__data-toggle cursor-pointer text-[11px] text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View data table</summary>
         <div className="mt-2 overflow-x-auto rounded-control border border-line">
@@ -352,6 +354,7 @@ export const TrendChart: React.FC<{
           </table>
         </div>
       </details>
+      ) : null}
     </div>
   );
 };

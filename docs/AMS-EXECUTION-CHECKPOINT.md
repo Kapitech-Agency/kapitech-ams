@@ -20,6 +20,15 @@
 
 
 
+
+## 0.6 Financial trend is visual-first and mirrors Overview · 29 October 2026
+
+- The “Issued invoices vs recorded expenses” Analytics card now follows Overview's “Invoices vs expenses” pattern: when the source is available, always render the Maven-style two-series line chart using the selected period buckets. When no eligible values exist, show the chart's zero-line scaffold with the existing `ams-finance-chart-empty-state` overlay rather than replacing the chart with a text block.
+- Source-unavailable remains a compact unavailable row (not an empty-data claim). The empty overlay message is short and context-aware. Keep invoices and expenses as the two chart series; the arithmetic difference remains in exact values, not an extra chart line.
+- Reduce persistent copy to a compact period/currency row. Move the exact-date values table and accounting note into one collapsed disclosure. Add an opt-out for TrendChart's built-in data table only for this card so users do not get duplicate tables; the shared chart keeps its default data table for other views.
+- Regression tests and the implementation guide updated. The source records, Finance formulas, period selection, permissions, routes, API/backend/authentication behavior remain unchanged. Exact-SHA Quality Gate and CI validation required; authenticated browser render remains **NOT VERIFIED**.
+
+
 ## 0.5 Dashboard Analytics empty states follow approved Overview · 29 October 2026
 
 - Correct the inconsistent Analytics no-data UI by reusing the shared `DashboardEmptyState` component and its existing Overview styles for missing records, unchartable trends, and empty report sections.

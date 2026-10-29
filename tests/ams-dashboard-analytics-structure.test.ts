@@ -56,10 +56,17 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
   assert.ok(analytics.includes('!financialDataAvailable'));
   assert.ok(analytics.includes('inCurrencyIssuedInvoices.length === 0'));
   assert.ok(analytics.includes('inCurrencyExpenses.length === 0'));
-  assert.ok(analytics.includes('A zero-value invoice series is not inferred.'));
-  assert.ok(analytics.includes('A zero-value expense series is not inferred.'));
   assert.ok(analytics.includes('!financialRecordsReturned'));
-  assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
+  assert.ok(analytics.includes('financialTrendHasRecords'));
+  assert.ok(analytics.includes('financialTrendEmptyTitle'));
+  assert.ok(analytics.includes('financialTrendEmptyDescription'));
+  assert.ok(analytics.includes('data={financialChartRows}'));
+  assert.ok(analytics.includes('presentation="maven"'));
+  assert.ok(analytics.includes('showDataTable={false}'));
+  assert.ok(analytics.includes('className="ams-finance-chart-stage'));
+  assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
+  assert.ok(analytics.includes('View exact period values · {currency}'));
+  assert.ok(analytics.includes('tertiary: undefined'));
   assert.ok(analytics.includes('const inCurrencyExpenseRows = expenseRows.filter((row) => String(row.currency || \'IDR\').toUpperCase() === currency)'));
   assert.ok(analytics.includes('const inCurrencyExpenses = inCurrencyExpenseRows.filter(isDashboardExpenseEligible)'));
   assert.ok(analytics.includes('const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0'));
@@ -109,4 +116,16 @@ test('Dashboard Analytics reuses the approved Overview empty-state and unavailab
   assert.match(analytics, /eyebrow="REQUESTED SERVICES"/);
   assert.ok(styles.includes('.ams-dashboard-empty--compact'),
     'Analytics relies on the existing Overview empty-state styles rather than a new Analytics style.');
+});
+
+
+test('TrendChart keeps its data table by default while Analytics uses one collapsed exact-value table', async () => {
+  const chartSource = await read('src/components/charts/DashboardCharts.tsx');
+  const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const analytics = source.slice(source.indexOf('const AnalyticsView: React.FC'), source.indexOf('type DashboardCalendarPeriodFilterProps'));
+  assert.match(chartSource, /showDataTable\?: boolean/);
+  assert.match(chartSource, /showDataTable = true/);
+  assert.match(chartSource, /\{showDataTable \? \(/);
+  assert.ok(analytics.includes('showDataTable={false}'));
+  assert.match(analytics, /<details className="mt-3 rounded-control border border-line bg-bg px-3 py-2" data-ams-feature-slug="dashboard-analytics-exact-values">/);
 });

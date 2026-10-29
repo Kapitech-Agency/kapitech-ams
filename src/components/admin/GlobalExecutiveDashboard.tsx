@@ -1219,6 +1219,32 @@ const AnalyticsView: React.FC<{
   const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0;
   const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0;
   const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel);
+  const financialChartBuckets = trend.length
+    ? trend
+    : reportPeriodEnabled
+      ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, [], [])
+      : buildRecentFinancialTrend([], []);
+  const financialTrendHasRecords = trend.some((point) => point.primary > 0 || (point.secondary ?? 0) > 0);
+  const financialChartRows = financialChartBuckets.map((point) => ({
+    ...point,
+    primary: financialTrendHasRecords ? point.primary : 0,
+    secondary: financialTrendHasRecords ? (point.secondary ?? 0) : 0,
+    tertiary: undefined,
+  }));
+  const financialTrendEmptyTitle = !financialSourceRecordsReturned
+    ? 'No eligible financial records'
+    : !selectedCurrencyFinancialRowsReturned
+      ? 'No records in selected currency'
+      : !financialRecordsReturned
+        ? 'No eligible financial records'
+        : 'No financial movement in selected period';
+  const financialTrendEmptyDescription = !financialSourceRecordsReturned
+    ? 'No invoice or eligible expense values were recorded in this period.'
+    : !selectedCurrencyFinancialRowsReturned
+      ? 'No invoice or expense records match ' + currency + '.'
+      : !financialRecordsReturned
+        ? 'Records were returned, but none qualifies as an issued invoice or eligible expense in ' + currency + '.'
+        : 'No invoice or eligible expense values were recorded in this period.';
   const formatReportDate = (value: string) => {
     const date = new Date(value + 'T00:00:00');
     return Number.isFinite(date.getTime())
@@ -1231,8 +1257,8 @@ const AnalyticsView: React.FC<{
     date.setDate(date.getDate() - 1);
     return localDateKey(date);
   };
-  const selectedPeriodDescription = trend.length
-    ? formatReportDate(trend[0].startDate) + ' – ' + formatReportDate(inclusiveEndDate(trend[trend.length - 1].endDate))
+  const selectedPeriodDescription = financialChartBuckets.length
+    ? formatReportDate(financialChartBuckets[0].startDate) + ' – ' + formatReportDate(inclusiveEndDate(financialChartBuckets[financialChartBuckets.length - 1].endDate))
     : 'Period unavailable';
   const periodInvoicedTotal = trend.reduce((sum, point) => sum + point.primary, 0);
   const periodExpenseTotal = trend.reduce((sum, point) => sum + (point.secondary ?? 0), 0);
@@ -1248,113 +1274,85 @@ const AnalyticsView: React.FC<{
           <AdminPanel headerDivider={false}
             title="Issued invoices vs recorded expenses"
             className="h-full ams-overview-panel"
-            description="Issued invoices vs recorded expenses by date; difference is not posted profit."
             actions={(
               <DashboardControl to="/admin/finance?tab=chart-of-accounts" variant="action" size="compact" icon={<CircleDollarSign size={14}/>} className="ams-dashboard-card-action">Open Transactions & Cash</DashboardControl>
             )}
             bodyClassName="p-4 sm:p-5"
           >
-            <div className="mb-4 flex flex-col gap-2 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-medium text-fg">{selectedRangeLabel}</p>
-                <p className="mt-1 text-xs text-muted">{selectedPeriodDescription}</p>
-              </div>
-              <p className="text-xs text-muted">Source: AMS invoice and expense records · Currency: {currency}</p>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
+              <p className="text-[11px] font-medium text-fg">{selectedRangeLabel}</p>
+              <p className="text-[10px] tabular-nums text-muted">{selectedPeriodDescription} · {currency}</p>
             </div>
 
             {!financialDataAvailable ? (
-              <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." compact />
-            ) : !financialRecordsReturned ? (
-              <DashboardEmptyState
-                eyebrow="FINANCIAL MOVEMENT"
-                icon={<CircleDollarSign size={17} aria-hidden="true" />}
-                title={financialSourceRecordsReturned
-                  ? selectedCurrencyFinancialRowsReturned
-                    ? 'No usable financial records in selected currency'
-                    : 'No financial records in selected currency'
-                  : 'No financial records returned'}
-                description={financialSourceRecordsReturned
-                  ? selectedCurrencyFinancialRowsReturned
-                    ? 'Rows match ' + currency + ', but include only quotations or non-issued invoices and/or cancelled, voided, or deleted expenses. These records do not form a financial trend.'
-                    : 'The invoice and expense sources returned records, but none match ' + currency + '. A zero-value trend is not inferred from another currency.'
-                  : 'The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source.'}
-              />
-            ) : inCurrencyIssuedInvoices.length === 0 ? (
-              <DashboardEmptyState
-                eyebrow="INVOICE HISTORY"
-                icon={<ReceiptText size={17} aria-hidden="true" />}
-                title="No issued invoices to chart"
-                description={'The invoice source returned no issued invoice records in ' + currency + '. A zero-value invoice series is not inferred.'}
-              />
-            ) : inCurrencyExpenses.length === 0 ? (
-              <DashboardEmptyState
-                eyebrow="EXPENSE HISTORY"
-                icon={<ReceiptText size={17} aria-hidden="true" />}
-                title="No eligible expenses to chart"
-                description={'The expense source returned no usable records in ' + currency + '. A zero-value expense series is not inferred.'}
-              />
-            ) : trend.length < 2 ? (
-              <DashboardEmptyState
-                eyebrow="FINANCIAL MOVEMENT"
-                icon={<CircleDollarSign size={17} aria-hidden="true" />}
-                title="No usable period trend"
-                description="The selected sources did not return a usable period series. Values are not estimated."
-              />
+              <DashboardUnavailable title="Financial movement unavailable" description="Invoice and expense sources are not both available to this role or service." compact />
             ) : (
               <>
-                <TrendChart
-                  data={trend}
-                  primaryLabel="Invoices issued"
-                  secondaryLabel="Recorded expenses"
-                  tertiaryLabel="Difference"
-                  primaryFormat={(value) => formatLiveMoney(value, currency)}
-                  ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. Exact values are listed in the table below.'}
-                />
-                <div className="mt-5 space-y-2" data-ams-feature-slug="dashboard-analytics-exact-values">
-                  <div>
-                    <h3 className="text-sm font-semibold text-fg">Exact period values</h3>
-                    <p className="mt-1 text-[11px] text-muted">Exact values behind the chart.</p>
-                  </div>
-                  <div className="overflow-x-auto rounded-control border border-line" role="region" aria-label="Exact invoice and expense values by period" tabIndex={0}>
-                    <table className="w-full min-w-[680px] border-collapse text-left text-xs" aria-label="Exact invoice and expense values by period">
-                      <thead className="bg-bg text-muted">
-                        <tr className="border-b border-line">
-                          <th className="px-3 py-2.5 font-medium" scope="col">Period</th>
-                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Invoices issued · {currency}</th>
-                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Expenses recorded · {currency}</th>
-                          <th className="px-3 py-2.5 text-right font-medium" scope="col">Difference · not profit</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {trend.map((point) => {
-                          const endDate = inclusiveEndDate(point.endDate);
-                          return (
-                            <tr key={point.startDate + '-' + point.endDate} className="border-b border-line last:border-0">
-                              <th className="px-3 py-3 font-medium text-fg" scope="row">
-                                <span className="block">{point.label}</span>
-                                <span className="mt-1 block text-[11px] font-normal text-muted">{formatReportDate(point.startDate)} – {formatReportDate(endDate)}</span>
-                              </th>
-                              <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.primary, currency)}</td>
-                              <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.secondary ?? 0, currency)}</td>
-                              <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.tertiary ?? 0, currency)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                      <tfoot className="bg-bg">
-                        <tr className="border-t border-line">
-                          <th className="px-3 py-3 font-semibold text-fg" scope="row">Selected period total</th>
-                          <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodInvoicedTotal, currency)}</td>
-                          <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodExpenseTotal, currency)}</td>
-                          <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodDifferenceTotal, currency)}</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
+                <div className={['ams-finance-chart-stage', financialTrendHasRecords ? '' : 'is-empty'].filter(Boolean).join(' ')}>
+                  <TrendChart
+                    data={financialChartRows}
+                    primaryLabel="Invoices issued"
+                    secondaryLabel="Recorded expenses"
+                    tertiaryLabel=""
+                    primaryFormat={(value) => formatLiveMoney(value, currency)}
+                    axisFormat={(value) => new Intl.NumberFormat('en-US', { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 1 }).format(value)}
+                    presentation="maven"
+                    showDataTable={false}
+                    ariaLabel={'Issued invoice values and recorded expenses for ' + selectedRangeLabel + '. The chart shows two series only; the difference is not posted profit.'}
+                  />
+                  {!financialTrendHasRecords ? (
+                    <div className="ams-finance-chart-empty-state" role="status">
+                      <div className="ams-finance-chart-empty-state__copy">
+                        <CircleDollarSign size={17} aria-hidden="true" />
+                        <p>{financialTrendEmptyTitle}</p>
+                        <span>{financialTrendEmptyDescription}</span>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
-                <p className="mt-4 text-xs leading-5 text-muted">
-                  Invoice buckets use issue date; Expense buckets use recorded date. The difference is an arithmetic comparison, not posted profit.
-                </p>
+
+                {financialTrendHasRecords && trend.length > 0 ? (
+                  <details className="mt-3 rounded-control border border-line bg-bg px-3 py-2" data-ams-feature-slug="dashboard-analytics-exact-values">
+                    <summary className="cursor-pointer text-[11px] font-medium text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View exact period values · {currency}</summary>
+                    <div className="mt-2 overflow-x-auto rounded-control border border-line" role="region" aria-label="Exact invoice and expense values by period" tabIndex={0}>
+                      <table className="w-full min-w-[680px] border-collapse text-left text-xs" aria-label="Exact invoice and expense values by period">
+                        <thead className="bg-bg text-muted">
+                          <tr className="border-b border-line">
+                            <th className="px-3 py-2.5 font-medium" scope="col">Period</th>
+                            <th className="px-3 py-2.5 text-right font-medium" scope="col">Invoices issued · {currency}</th>
+                            <th className="px-3 py-2.5 text-right font-medium" scope="col">Expenses recorded · {currency}</th>
+                            <th className="px-3 py-2.5 text-right font-medium" scope="col">Difference · not profit</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {trend.map((point) => {
+                            const endDate = inclusiveEndDate(point.endDate);
+                            return (
+                              <tr key={point.startDate + '-' + point.endDate} className="border-b border-line last:border-0">
+                                <th className="px-3 py-3 font-medium text-fg" scope="row">
+                                  <span className="block">{point.label}</span>
+                                  <span className="mt-1 block text-[11px] font-normal text-muted">{formatReportDate(point.startDate)} – {formatReportDate(endDate)}</span>
+                                </th>
+                                <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.primary, currency)}</td>
+                                <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.secondary ?? 0, currency)}</td>
+                                <td className="px-3 py-3 text-right tabular-nums text-fg">{formatLiveMoney(point.tertiary ?? 0, currency)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        <tfoot className="bg-bg">
+                          <tr className="border-t border-line">
+                            <th className="px-3 py-3 font-semibold text-fg" scope="row">Selected period total</th>
+                            <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodInvoicedTotal, currency)}</td>
+                            <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodExpenseTotal, currency)}</td>
+                            <td className="px-3 py-3 text-right font-semibold tabular-nums text-fg">{formatLiveMoney(periodDifferenceTotal, currency)}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                    <p className="mt-3 text-[10px] leading-4 text-muted">Invoices use issue date; expenses use recorded date. Difference is an arithmetic comparison, not posted profit.</p>
+                  </details>
+                ) : null}
               </>
             )}
           </AdminPanel>

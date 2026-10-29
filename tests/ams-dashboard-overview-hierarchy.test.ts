@@ -1333,8 +1333,14 @@ test('Dashboard Analytics reuses approved Overview rows, proportions, panels and
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'));
   assert.ok(analytics.includes('not posted profit'));
-  assert.ok(analytics.includes('Financial trend unavailable'));
-  assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
+  assert.ok(analytics.includes('Financial movement unavailable'));
+  assert.ok(analytics.includes('data={financialChartRows}'));
+  assert.ok(analytics.includes('className="ams-finance-chart-stage'));
+  assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
+  assert.ok(analytics.includes('No eligible financial records'));
+  assert.ok(analytics.includes('View exact period values · {currency}'));
+  assert.ok(analytics.includes('presentation="maven"'));
+  assert.ok(analytics.includes('showDataTable={false}'));
   assert.ok(analytics.includes('Projects by current status'));
   assert.ok((analytics.match(/<DashboardEmptyState\b/g) || []).length >= 8,
     'Analytics no-data states must reuse the shared empty-state component from Overview.');
