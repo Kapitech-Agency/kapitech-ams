@@ -12765,7 +12765,17 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   }
 }
 
-/* Recent Activity control grouping: Search is independent; Severity, Actor and Sort by share one panel. */
+/* Recent Activity control grouping — compact, values-only filters and header export. */
+.ams-shell .ams-dashboard .ams-dashboard-activity-panel .ams-dashboard-activity-header-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .ams-shell .ams-dashboard .ams-dashboard-activity-panel .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-trigger,
 .ams-shell .ams-dashboard .ams-dashboard-activity-panel .ams-dashboard-activity-header-actions .ams-dashboard-card-action {
   box-sizing: border-box;
@@ -12773,42 +12783,49 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   min-height: 32px;
   max-height: 32px;
   align-self: center;
+  padding-inline: 9px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-panel .ams-dashboard-activity-header-actions .ams-dashboard-activity-export {
+  border: 1px solid var(--dashboard-card-border);
+  background: var(--dashboard-control-surface, var(--panel));
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-panel .ams-dashboard-activity-header-actions .ams-dashboard-activity-export:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--line));
+  background: var(--dashboard-hover-surface);
+  color: var(--text);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-activity-panel .ams-dashboard-activity-header-actions .ams-dashboard-activity-export:disabled {
+  opacity: .42;
+  cursor: not-allowed;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
   display: grid;
-  grid-template-columns: minmax(210px, .8fr) minmax(0, 1.8fr) max-content;
+  grid-template-columns: minmax(180px, .78fr) minmax(0, 1.85fr) max-content;
   grid-template-areas: "search filters actions";
-  align-items: stretch;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--dashboard-card-border);
-  background: color-mix(in srgb, var(--bg) 18%, var(--panel));
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-search-field {
   grid-area: search;
-  display: flex;
+  display: block;
   min-width: 0;
   width: 100%;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  padding: 11px 12px 12px;
-  border: 1px solid var(--dashboard-card-border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--panel) 86%, var(--bg));
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-field__label,
-.ams-shell .ams-dashboard .ams-dashboard-activity-filter > span {
-  display: block;
-  min-height: 12px;
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-search {
@@ -12820,13 +12837,13 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   min-height: 32px;
   max-height: 32px;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   margin: 0;
-  padding: 0 10px;
+  padding: 0 9px;
   overflow: hidden;
   border: 1px solid var(--dashboard-card-border);
-  border-radius: 9px;
-  background: var(--bg);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 45%, var(--panel));
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-search svg {
@@ -12855,56 +12872,28 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-filter-panel {
   grid-area: filters;
-  display: flex;
+  display: block;
   min-width: 0;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 12px 11px;
-  border: 1px solid var(--dashboard-card-border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--bg) 38%, var(--panel));
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-filter-panel__heading {
-  display: flex;
-  min-width: 0;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-filter-panel__heading > span:first-child {
-  color: var(--text);
-  font-size: 10px;
-  font-weight: 650;
-  line-height: 13px;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-filter-panel__heading > span:last-child {
-  min-width: 0;
-  color: var(--muted);
-  font-size: 9px;
-  line-height: 12px;
-  text-align: right;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-filter-group {
   display: grid;
-  grid-template-columns: minmax(96px, .82fr) minmax(128px, 1.08fr) minmax(120px, .94fr);
-  align-items: end;
-  gap: 9px;
+  grid-template-columns: minmax(0, .92fr) minmax(0, 1.05fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-filter-group .ams-dashboard-activity-filter {
-  display: flex;
-  grid-area: auto;
+  display: block;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  flex-direction: column;
-  gap: 5px;
+  margin: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-filter .ams-dashboard-custom-select,
@@ -12921,9 +12910,9 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-filter .ams-dashboard-select-trigger {
   justify-content: space-between;
-  gap: 6px;
-  padding-inline: 9px;
-  border-radius: 9px;
+  gap: 5px;
+  padding-inline: 8px;
+  border-radius: 8px;
   font-size: 10px;
 }
 
@@ -12931,22 +12920,21 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   grid-area: actions;
   display: flex;
   min-width: 0;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
-  align-self: end;
+  align-self: center;
   flex-wrap: wrap;
-  gap: 7px;
-  padding-bottom: 1px;
+  gap: 5px;
+  padding: 0;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-reset,
-.ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-export {
+.ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-reset {
   box-sizing: border-box;
   height: 32px;
   min-height: 32px;
   max-height: 32px;
   padding-inline: 9px;
-  border-radius: 9px;
+  border-radius: 8px;
   font-size: 10px;
   line-height: 13px;
 }
@@ -12961,8 +12949,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     grid-template-areas:
       "search search"
       "filters actions";
-    gap: 10px;
-    padding: 12px 14px;
+    gap: 8px;
+    padding: 10px 14px;
   }
 }
 
@@ -12973,64 +12961,45 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
       "search"
       "filters"
       "actions";
-    gap: 9px;
-    padding: 11px 12px;
+    gap: 8px;
+    padding: 10px 12px;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-activity-filter-group {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-filter-group .ams-dashboard-activity-filter--order {
-    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions {
-    width: 100%;
     justify-content: flex-start;
-    align-items: center;
-    flex-wrap: wrap;
   }
 }
 
 @container (max-width: 479px) {
   .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
-    padding: 10px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-filter-panel {
-    padding: 10px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-filter-panel__heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-filter-panel__heading > span:last-child {
-    text-align: left;
+    padding: 9px 10px;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-activity-filter-group {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-activity-filter-group .ams-dashboard-activity-filter--order {
-    grid-column: auto;
+    grid-column: 1 / -1;
   }
+}
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-reset,
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tool-actions .ams-dashboard-activity-export {
-    flex: 0 1 auto;
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ams-shell .ams-dashboard .ams-dashboard-activity-tools *,
-  .ams-shell .ams-dashboard .ams-dashboard-activity-filter-panel,
-  .ams-shell .ams-dashboard .ams-dashboard-activity-search {
-    transition-duration: 0.01ms;
+  .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions * {
+    transition-duration: .01ms;
   }
 }

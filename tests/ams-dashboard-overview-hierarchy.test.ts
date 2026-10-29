@@ -221,8 +221,8 @@ test('Recent Activity uses a stable responsive filter toolbar and distinct row s
 
   assert.ok(activity.includes('className="ams-dashboard-activity-tool-actions"'));
   assert.ok(activity.includes('className="ams-dashboard-activity-search-field"'));
-  assert.ok(activity.includes('htmlFor="dashboard-recent-activity-search">Search</label>'));
-  assert.ok(activity.includes('<span>Sort by</span>'));
+  assert.ok(activity.includes('className="sr-only" htmlFor="dashboard-recent-activity-search">Search recent activity</label>'));
+  assert.equal(activity.includes('<span>Sort by</span>'), false);
   assert.ok(activity.includes('Search event, actor or severity'));
   assert.ok(dashboard.includes("const searchableText = (action + ' ' + actor + ' ' + severity).toLowerCase();"));
   assert.ok(dashboard.includes('if (query && !searchableText.includes(query)) return false;'));
@@ -240,7 +240,6 @@ test('Recent Activity uses a stable responsive filter toolbar and distinct row s
   for (const rule of [
     'grid-template-areas: "search filters actions";',
     '"filters actions"',
-    '.ams-dashboard-activity-filter-panel__heading',
     '.ams-dashboard-activity-tool-actions',
     '.ams-dashboard-activity-table tbody tr td {',
     'background: color-mix(in srgb, var(--bg) 24%, var(--panel));',
@@ -265,7 +264,7 @@ test('Recent Activity normalizes actor names consistently and keeps timestamps r
   assert.equal((styles.match(/\/\* Recent Activity — single source of truth/g) || []).length, 1);
 });
 
-test('Recent Activity keeps Search separate and groups Severity, Actor and Sort by together', async () => {
+test('Recent Activity keeps Search separate and groups compact, unlabeled dropdown filters together', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
@@ -286,14 +285,13 @@ test('Recent Activity keeps Search separate and groups Severity, Actor and Sort 
   assert.ok(activity.includes('aria-label="Recent activity filters and sorting"'));
   assert.ok(activity.includes('aria-label="Severity, actor and sort controls"'));
   assert.ok(activity.includes('htmlFor="dashboard-recent-activity-search">Search</label>'));
-  assert.ok(activity.includes('<span>Severity</span>'));
-  assert.ok(activity.includes('<span>Actor</span>'));
-  assert.ok(activity.includes('<span>Sort by</span>'));
+  assert.equal(activity.includes('<span>Severity</span>'), false);
+  assert.equal(activity.includes('<span>Actor</span>'), false);
+  assert.equal(activity.includes('<span>Sort by</span>'), false);
   assert.ok(activity.includes('aria-label="Sort recent activity"'));
   for (const selector of [
     '.ams-dashboard-activity-search-field',
     '.ams-dashboard-activity-filter-panel',
-    '.ams-dashboard-activity-filter-panel__heading',
     '.ams-dashboard-activity-filter-group',
     '.ams-dashboard-activity-filter--severity',
     '.ams-dashboard-activity-filter--actor',
@@ -303,6 +301,34 @@ test('Recent Activity keeps Search separate and groups Severity, Actor and Sort 
   assert.ok(styles.includes('"filters actions"'));
   assert.ok(styles.includes('"search"'));
   assert.ok(styles.includes('@container (max-width: 479px)'));
+});
+
+test('Recent Activity filter toolbar is compact, omits redundant headings, and keeps CSV export in the card header', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
+  const end = dashboard.indexOf('</AdminPanel>', start);
+  assert.ok(start >= 0 && end > start);
+  const activity = dashboard.slice(start, end);
+  const toolsStart = activity.indexOf('className="ams-dashboard-activity-tools"');
+  const tableStart = activity.indexOf('className="ams-dashboard-activity-table"', toolsStart);
+  assert.ok(toolsStart >= 0 && tableStart > toolsStart);
+  const toolsContent = activity.slice(toolsStart, tableStart);
+  const cardHeader = activity.slice(0, toolsStart);
+
+  assert.ok(cardHeader.includes('className="ams-dashboard-card-action ams-dashboard-activity-export"'));
+  assert.ok(cardHeader.includes('onClick={exportFilteredDashboardActivity}'));
+  assert.ok(cardHeader.includes('Export CSV'));
+  assert.ok(cardHeader.includes('ariaLabel="Export filtered recent activity as CSV"'));
+  assert.equal(toolsContent.includes('Export CSV'), false);
+  assert.equal(toolsContent.includes('ams-dashboard-activity-export'), false);
+  assert.doesNotMatch(toolsContent, /<span>(?:Filters &amp; sorting|Refine loaded events|Severity|Actor|Sort by)<\/span>/);
+  assert.ok(toolsContent.includes('aria-label="Filter activity by severity"'));
+  assert.ok(toolsContent.includes('aria-label="Filter activity by actor"'));
+  assert.ok(toolsContent.includes('aria-label="Sort recent activity"'));
+  assert.ok(styles.includes('grid-template-columns: minmax(0, .92fr) minmax(0, 1.05fr) minmax(0, 1fr);'));
+  assert.ok(styles.includes('gap: 6px;'));
+  assert.ok(styles.includes('background: transparent;'));
 });
 
 test('Dashboard cards use soft surfaces and whitespace instead of decorative divider lines', async () => {

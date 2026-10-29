@@ -934,3 +934,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Split Recent Activity controls into a standalone Search surface, a visually grouped “Filters & sorting” panel containing Severity, Actor and Sort by, and a separate utility-action area for Reset/Export.
 - Kept existing search, filter, sort, date-window, reset, CSV export and pagination behavior intact. Responsive container rules preserve the same grouping while stacking regions at narrow widths.
 - Presentation and regression tests only; no API, audit data, permissions or business logic changed.
+
+
+## 0.6 Recent Activity controls compacted — 29 October 2026
+
+- Removed visible "Filters & sorting", "Refine loaded events", and separate Severity/Actor/Sort by labels. The selected value in each dropdown now carries the visible filter state; accessible aria labels remain.
+- Tightened Recent Activity toolbar spacing and removed its nested filter panel border/background so the search field, three dropdowns and Reset filters share one compact row where space allows, then reflow at narrow container widths.
+- Moved Export CSV out of the filter toolbar into the Recent Activity card header next to time-window and audit-log actions. Export still uses current matching loaded events and is disabled when the source is unavailable or no rows match.
+- UI-only changes. Source permissions, audit data access, filter/search/sort behavior, CSV escaping and pagination semantics remain intact.

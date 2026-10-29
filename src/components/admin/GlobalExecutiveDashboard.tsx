@@ -3652,6 +3652,20 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                                   </DropdownPortal>
                                                 ) : null}
                                               </div>
+                      <DashboardControl
+                        type="button"
+                        variant="action"
+                        size="compact"
+                        icon={<Download size={13} />}
+                        showArrow={false}
+                        className="ams-dashboard-card-action ams-dashboard-activity-export"
+                        onClick={exportFilteredDashboardActivity}
+                        disabled={!dashboardOverview.recentActivityDataAvailable || filteredDashboardRecentActivity.length === 0}
+                        title="Export the matching loaded audit events as a CSV file"
+                        ariaLabel="Export filtered recent activity as CSV"
+                      >
+                        Export CSV
+                      </DashboardControl>
                       <DashboardControl to="/admin/settings?tab=audit" variant="action" size="compact" icon={<Eye size={14}/>} className="ams-dashboard-card-action">View audit log</DashboardControl>
                     </div>
                   )}
@@ -3664,7 +3678,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <>
                       <div className="ams-dashboard-activity-tools" aria-label="Recent activity controls">
                         <div className="ams-dashboard-activity-search-field" role="search" aria-label="Search recent activity">
-                          <label className="ams-dashboard-activity-field__label" htmlFor="dashboard-recent-activity-search">Search</label>
+                          <label className="sr-only" htmlFor="dashboard-recent-activity-search">Search recent activity</label>
                           <label className="ams-dashboard-activity-search">
                             <span className="sr-only">Search event, actor or severity</span>
                             <Search size={14} aria-hidden="true" />
@@ -3680,23 +3694,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                         </div>
 
                         <div className="ams-dashboard-activity-filter-panel" role="group" aria-label="Recent activity filters and sorting">
-                          <div className="ams-dashboard-activity-filter-panel__heading">
-                            <span>Filters &amp; sorting</span>
-                            <span>Refine loaded events</span>
-                          </div>
                           <div className="ams-dashboard-activity-filter-group" role="group" aria-label="Severity, actor and sort controls">
-                            <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--severity">
-                              <span>Severity</span>
+                            <div className="ams-dashboard-activity-filter ams-dashboard-activity-filter--severity">
                               <CustomSelect aria-label="Filter activity by severity" value={activitySeverityFilter} onChange={(value) => { setActivitySeverityFilter(value as DashboardActivitySeverityFilter); setActivityPage(1); }} options={[{ value: 'all', label: 'All levels' }, { value: 'critical', label: 'Critical' }, { value: 'warning', label: 'Warning' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
-                            </label>
-                            <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor">
-                              <span>Actor</span>
+                            </div>
+                            <div className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor">
                               <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
-                            </label>
-                            <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--order">
-                              <span>Sort by</span>
+                            </div>
+                            <div className="ams-dashboard-activity-filter ams-dashboard-activity-filter--order">
                               <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'severity', label: 'Highest severity' }, { value: 'actor', label: 'Actor A–Z' }]} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
-                            </label>
+                            </div>
                           </div>
                         </div>
 
@@ -3724,20 +3731,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                               Reset filters
                             </DashboardControl>
                           ) : null}
-                          <DashboardControl
-                            type="button"
-                            variant="action"
-                            size="standard"
-                            icon={<Download size={13} />}
-                            showArrow={false}
-                            className="ams-dashboard-activity-export"
-                            onClick={exportFilteredDashboardActivity}
-                            disabled={filteredDashboardRecentActivity.length === 0}
-                            title="Export all matching loaded events as a CSV file"
-                            ariaLabel="Export filtered recent activity as CSV"
-                          >
-                            Export CSV
-                          </DashboardControl>
+
                         </div>
                       </div>
 
