@@ -2389,7 +2389,8 @@ test('Dashboard Performance outer spacing matches Overview shell and card gutter
   const spacingMarker = '/* Dashboard Performance outer rhythm: match the Overview page-shell and card gutters. */';
   const spacing = styles.slice(styles.lastIndexOf(spacingMarker));
   assert.ok(spacing.length > 0);
-  assert.match(spacing, /\.ams-dashboard-performance-workspace\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;[\s\S]*?gap:\s*24px;/);
+  assert.match(spacing, /\.ams-dashboard-performance-workspace\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;[\s\S]*?gap:\s*12px;/);
+  assert.match(spacing, /@media\s*\(max-width:\s*599px\)[\s\S]*?\.ams-dashboard-performance-workspace\s*\{[\s\S]*?gap:\s*12px;/, 'Mobile card rows should use the same compact 12px rhythm.');
   assert.match(spacing, /\.ams-dashboard-performance-workspace\s*>\s*\.ams-dashboard-performance-row\s*\{[\s\S]*?margin:\s*0;/);
   assert.match(styles, /\.ams-shell \.ams-dashboard \.ams-overview-card-row\s*\{[\s\S]*?column-gap:\s*12px;[\s\S]*?row-gap:\s*12px;/);
 });
