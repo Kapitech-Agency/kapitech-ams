@@ -2414,7 +2414,8 @@ test('Dashboard Performance outer spacing matches Overview shell and card gutter
   assert.ok(start >= 0 && end > start);
   const performance = dashboard.slice(start, end);
   assert.ok(performance.includes('<div className="ams-dashboard-performance-workspace" data-ams-feature-slug="dashboard-performance-workspace">'));
-  assert.equal(performance.includes('className="space-y-4"'), false, 'The generic vertical-margin utility must not collapse against the row margin reset.');
+  assert.equal(performance.includes('<div className="space-y-4" data-ams-feature-slug="dashboard-performance-workspace">'), false,
+    'The Performance workspace wrapper must use its dedicated gutter, while local content spacing remains allowed.');
 
   const spacingMarker = '/* Dashboard Performance outer rhythm: match the Overview page-shell and card gutters. */';
   const spacing = styles.slice(styles.lastIndexOf(spacingMarker));
