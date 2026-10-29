@@ -13045,3 +13045,16 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   outline-offset: 2px;
 }
 
+/* Analytics workspace rhythm: use the shared Dashboard card gutter. */
+.ams-shell .ams-dashboard .ams-dashboard-analytics-workspace {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ams-dashboard-gap, 12px);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-workspace > [data-ams-feature-slug] {
+  min-width: 0;
+  margin: 0;
+}
+
