@@ -878,7 +878,7 @@ test('Dashboard Team Workload gives Recorded time inset padding without a divide
   assert.match(timeRule, /border-top:\s*0;/);
   assert.match(tasksRule, /padding:.*0 0 16px;/);
   assert.match(timeRule, /padding:\s*16px 14px 14px;/);
-  assert.ok(teamStyles.includes('background: color-mix(in srgb, var(--text) 2.5%, var(--panel));'),
+  assert.ok(styles.includes('background: color-mix(in srgb, var(--text) 2.5%, var(--panel));'),
     'Recorded time keeps its subtle grey surface with content inset from the edges.');
 
   const finalRowsStart = teamStyles.indexOf('.ams-shell .ams-dashboard .ams-dashboard-owner-row,\n.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row {');
@@ -2281,8 +2281,9 @@ test('Dashboard header controls, tabs, project filters, Team Workload and Recent
   assert.match(finalLayer, /\.ams-dashboard-project-service-filter \.ams-dashboard-control--filter\s*\{[\s\S]*?height:\s*24px;[\s\S]*?max-height:\s*24px;/);
   assert.match(finalLayer, /\.ams-project-registry-action[\s\S]*?height:\s*32px;[\s\S]*?max-height:\s*32px;/);
   assert.match(finalLayer, /\.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*\{[\s\S]*?align-items:\s*stretch;[\s\S]*?grid-auto-rows:\s*minmax\(0, 1fr\);/);
-  assert.match(finalLayer, /\.ams-dashboard-team-panel > \.ams-dashboard-team-body > \.ams-dashboard-team-tasks\s*\{[\s\S]*?border-bottom:\s*1px solid/);
-  assert.match(finalLayer, /\.ams-dashboard-team-panel \.ams-dashboard-team-body > \.ams-dashboard-team-time\s*\{[\s\S]*?padding:\s*16px 0 0;/);
+  assert.match(finalLayer, /\.ams-dashboard-team-panel > \.ams-dashboard-team-body > \.ams-dashboard-team-tasks\s*\{[\s\S]*?border-bottom:\s*0;/);
+  assert.doesNotMatch(finalLayer, /\.ams-dashboard-team-panel > \.ams-dashboard-team-body > \.ams-dashboard-team-tasks\s*\{[\s\S]*?border-bottom:\s*1px solid/);
+  assert.match(finalLayer, /\.ams-dashboard-team-panel \.ams-dashboard-team-body > \.ams-dashboard-team-time\s*\{[\s\S]*?padding:\s*16px 14px 14px;/);
   assert.match(finalLayer, /\.ams-dashboard-activity-search\s*\{[\s\S]*?height:\s*32px;[\s\S]*?min-height:\s*32px;[\s\S]*?max-height:\s*32px;/);
   assert.match(finalLayer, /\.ams-dashboard-activity-search input\s*\{[\s\S]*?min-height:\s*0;[\s\S]*?max-height:\s*100%;/);
   assert.match(finalLayer, /\.ams-dashboard-activity-filter \.ams-dashboard-select-trigger\s*\{[\s\S]*?height:\s*32px;[\s\S]*?max-height:\s*32px;/);
