@@ -13009,7 +13009,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-performance-workspace > .ams-dashboard-performance-row {
@@ -13019,7 +13019,7 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 @media (max-width: 599px) {
   .ams-shell .ams-dashboard .ams-dashboard-performance-workspace {
-    gap: 24px;
+    gap: 12px;
   }
 }
 
