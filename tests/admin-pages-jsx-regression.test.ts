@@ -1010,7 +1010,8 @@ test('Inbox Overview keeps queue actions with queue controls and avoids duplicat
   assert.ok(header.includes("activeInboxTab !== 'overview'"));
   assert.ok(inbox.includes("activeTabItems.length + ' total inbound'"));
   assert.ok(inbox.includes("metrics.newCount > 0 && activeInboxTab !== 'overview'"));
-  assert.ok(inbox.includes("metrics.newCount > 0 && (\n                <button type=\"button\" onClick={handleMarkAllRead}"));
+  assert.ok(inbox.includes("metrics.newCount > 0 && activeInboxTab !== 'overview' && (\n                <button type=\"button\" onClick={handleMarkAllRead}"),
+    'Bulk status processing remains available in Messages views but is not duplicated on Overview.');
   const exportButtons = [...inbox.matchAll(/onClick=\{handleExportCSV\}/g)];
   assert.ok(exportButtons.length >= 2, 'CSV export remains available in the header context and queue toolbar');
 });

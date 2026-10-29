@@ -859,10 +859,13 @@ test('Inbox Overview prioritizes triage and selected-record review without dupli
   assert.doesNotMatch(overview, /label: 'New', value: filteredItems\.filter/);
   assert.doesNotMatch(overview, /label: 'Priority', value: filteredItems\.filter/);
   assert.doesNotMatch(overview, /label: 'Saved', value: filteredItems\.filter/);
-  assert.match(overview, /No selection/);
-  assert.match(overview, /Select an inbound record/);
-  assert.match(inbox, /min-\[1100px\]:grid-cols-\[minmax\(0,1\.15fr\)_minmax\(360px,0\.85fr\)\]/);
-  assert.doesNotMatch(overview, /lg:grid-cols-\[minmax\(0,1\.15fr\)_minmax\(360px,0\.85fr\)\]/);
+  assert.match(overview, /Recent inbound/);
+  assert.match(overview, /recentInboundItems\.map\(\(item\) =>/);
+  assert.match(overview, /Everything matching is in the triage queue/);
+  assert.match(overview, /min-\[1100px\]:grid-cols-12/);
+  assert.match(overview, /min-\[1100px\]:col-span-7/);
+  assert.match(overview, /min-\[1100px\]:col-span-5/);
+  assert.doesNotMatch(overview, /grid-cols-\[minmax\(0,1\.15fr\)_minmax\(360px,0\.85fr\)\]/);
 });
 
 
@@ -889,7 +892,7 @@ test('Inbox All Messages exposes source-backed status and priority filters befor
 test('Inbox Overview exposes a source-backed Unassigned triage scope', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   assert.match(inbox, /type TriageScope = 'action' \| 'unassigned' \| 'priority' \| 'saved'/);
-  assert.match(inbox, /key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems\.filter\(isInboxUnassigned\)\.length/);
+  assert.match(inbox, /key: 'unassigned', label: 'Unassigned', count: filteredItems\.filter\(isInboxUnassigned\)\.length/);
   assert.ok(inbox.includes("? isInboxUnassigned(item)"), "The Unassigned scope should use the shared open-record predicate.");
   assert.match(inbox, /No unassigned records/);
   assert.match(inbox, /Every current record in this queue has an assigned owner/);
