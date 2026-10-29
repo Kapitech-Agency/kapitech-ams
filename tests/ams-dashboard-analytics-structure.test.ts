@@ -7,29 +7,33 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Dashboard Analytics selects one business report before presenting its work surface', async () => {
+test('Dashboard Analytics presents supported reports together without nested selector tabs', async () => {
   const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = source.indexOf('type DashboardAnalyticsReport');
-  const end = source.indexOf('export const GlobalExecutiveDashboard', start);
-  assert.ok(start >= 0 && end > start, 'AnalyticsView and its report contract should be identifiable');
+  const start = source.indexOf('const AnalyticsView: React.FC');
+  const end = source.indexOf('type DashboardCalendarPeriodFilterProps', start);
+  assert.ok(start >= 0 && end > start, 'AnalyticsView should be identifiable');
   const analytics = source.slice(start, end);
-  const controls = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-controls"');
+  const grid = analytics.indexOf('className="ams-dashboard-analytics-report-grid"');
   const financial = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-financial-report"');
-  assert.ok(controls >= 0 && financial > controls, 'Report and scope controls should precede the active report');
-  for (const label of ['Financial movement', 'Receivables', 'Project status']) {
-    assert.ok(analytics.includes("label: '" + label + "'"), 'Missing report option: ' + label);
-  }
-  assert.ok(analytics.includes('aria-label="Analytics report"'));
-  assert.ok(analytics.includes('aria-pressed={active}'));
-  assert.ok(analytics.includes('setReport(option.value)'));
-  assert.ok(analytics.includes('data-ams-feature-slug="dashboard-analytics-receivables-report"'));
-  assert.ok(analytics.includes('data-ams-feature-slug="dashboard-analytics-project-status-report"'));
-  assert.equal(analytics.includes('dashboard-analytics-kpis'), false, 'Unrelated, mixed-scope KPI strip should not follow the reports');
+  const receivables = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-receivables-report"');
+  const projects = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
+  const inquiry = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
+  assert.ok(grid >= 0 && financial > grid && receivables > financial && projects > receivables && inquiry > projects,
+    'Analytics reports should use the Overview-inspired report order.');
+  assert.equal(analytics.includes('data-ams-feature-slug="dashboard-analytics-controls"'), false);
+  assert.equal(analytics.includes('aria-label="Analytics report"'), false);
+  assert.equal(source.includes('DASHBOARD_ANALYTICS_REPORT_OPTIONS'), false);
+  assert.equal(analytics.includes('setReport('), false);
+  assert.ok(analytics.includes('ams-dashboard-analytics-card--receivables'));
+  assert.ok(analytics.includes('ams-dashboard-analytics-card--projects'));
+  assert.ok(analytics.includes(`      {canOpenInbox ? (\n        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--inquiry"`),
+    'Inquiry Pipeline must remain gated by current Inbox access.');
+  assert.equal(analytics.includes('dashboard-analytics-kpis'), false, 'Mixed-scope KPI strip must not be introduced.');
 });
 
 test('Dashboard Analytics financial movement exposes exact values, date windows, and definitions', async () => {
   const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const analytics = source.slice(source.indexOf('type DashboardAnalyticsReport'), source.indexOf('export const GlobalExecutiveDashboard'));
+  const analytics = source.slice(source.indexOf('const AnalyticsView: React.FC'), source.indexOf('type DashboardCalendarPeriodFilterProps'));
   assert.ok(source.includes('startDate: spec.start, endDate: spec.end'), 'Trend buckets need date boundaries for exact-value inspection');
   assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'));
   assert.ok(analytics.includes('Selected period total'));
@@ -62,9 +66,10 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
 
 test('Dashboard Analytics distinguishes balance and status snapshots from period trends', async () => {
   const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const analytics = source.slice(source.indexOf('type DashboardAnalyticsReport'), source.indexOf('export const GlobalExecutiveDashboard'));
-  assert.ok(analytics.includes('Current invoice balances'));
-  assert.ok(analytics.includes('Current project register'));
+  const analytics = source.slice(source.indexOf('const AnalyticsView: React.FC'), source.indexOf('type DashboardCalendarPeriodFilterProps'));
+  assert.ok(analytics.includes('Current status distribution'));
+  assert.ok(analytics.includes('This current snapshot is not filtered by the selected financial trend period'));
+  assert.ok(analytics.includes('not trends for the selected financial period'));
   assert.ok(analytics.includes('This current snapshot is not filtered by the selected financial trend period'));
   assert.ok(analytics.includes('not trends for the selected financial period'));
   assert.ok(analytics.includes('to="/admin/finance?tab=chart-of-accounts"'));
