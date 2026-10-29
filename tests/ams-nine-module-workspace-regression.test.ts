@@ -160,7 +160,7 @@ test('Inbox toast feedback follows the stable page header instead of shifting it
 
 test('Inbox heading identifies the active topbar workspace', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  assert.match(inbox, /title=\{activeInboxTab === 'overview' \? 'Inbox Overview' : activeInboxTab === 'messages' \? 'All Messages' : activeInboxTab === 'client' \? 'Sales Inquiries' : activeInboxTab === 'unread' \? 'Unread Messages' : 'Starred'\}/);
+  assert.match(inbox, /title=\{activeInboxTab === 'messages' \? 'All Messages' : activeInboxTab === 'client' \? 'Sales Inquiries' : activeInboxTab === 'unread' \? 'Unread Messages' : 'Starred'\}/);
 });
 
 test('Inbox table labels and empty state reflect the inquiry-only workspace', async () => {
@@ -846,32 +846,26 @@ test('Vendor & Freelancers keeps the canonical directory primary and independent
 });
 
 
-test('Inbox Overview prioritizes triage and selected-record review without duplicate monitor KPIs', async () => {
+test('Inbox defaults directly to Messages and uses a compact master-detail hierarchy', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  const overviewStart = inbox.indexOf('data-ams-feature-slug="inbox-overview-workspace"');
-  const overviewEnd = inbox.indexOf(") : viewMode === 'queue' ?", overviewStart);
-  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, 'Inbox Overview should have a bounded workspace');
-  const overview = inbox.slice(overviewStart, overviewEnd);
-  const triage = overview.indexOf('Triage queue');
-  const review = overview.indexOf('Record review');
-  assert.ok(triage >= 0 && review > triage, 'Triage queue should lead the selected-record review panel');
-  assert.doesNotMatch(overview, /Live intake monitor/);
-  assert.doesNotMatch(overview, /label: 'New', value: filteredItems\.filter/);
-  assert.doesNotMatch(overview, /label: 'Priority', value: filteredItems\.filter/);
-  assert.doesNotMatch(overview, /label: 'Saved', value: filteredItems\.filter/);
-  assert.match(overview, /Recent inbound/);
-  assert.match(overview, /recentInboundItems\.map\(\(item\) =>/);
-  assert.match(overview, /Everything matching is in the triage queue/);
-  assert.match(overview, /min-\[1100px\]:grid-cols-12/);
-  assert.match(overview, /min-\[1100px\]:col-span-7/);
-  assert.match(overview, /min-\[1100px\]:col-span-5/);
-  assert.doesNotMatch(overview, /grid-cols-\[minmax\(0,1\.15fr\)_minmax\(360px,0\.85fr\)\]/);
+  assert.doesNotMatch(inbox, /Inbox Overview|activeInboxTab === 'overview'|viewMode === 'overview'|inbox-overview-workspace|inbox-overview-controls/);
+  assert.match(inbox, /supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred'\]/);
+  assert.ok(inbox.includes(": 'messages';"));
+  assert.ok(inbox.includes("canonicalParams.delete('view')"));
+  assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-list"'));
+  assert.ok(inbox.includes('inboxListItems.map((item) =>'));
+  assert.ok(inbox.includes('aria-pressed={isSelected}'));
+  assert.ok(inbox.includes('min-[1100px]:col-span-5') && inbox.includes('min-[1100px]:col-span-7'));
+  assert.ok(inbox.includes('data-ams-feature-slug="inbox-leads-directory"'));
+  assert.ok(inbox.includes('Inbox unavailable'));
+  assert.ok(inbox.includes('No matching messages'));
+  assert.doesNotMatch(inbox, /Follow-ups due/i);
 });
 
 
 test('Inbox All Messages exposes source-backed status and priority filters before the register', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  const controls = inbox.indexOf('slug="inbox-overview-controls"');
+  const controls = inbox.indexOf('slug="inbox-message-controls"');
   const messageFilterGate = inbox.indexOf("{activeInboxTab === 'messages' && (", controls);
   const statusFilter = inbox.indexOf('slug="inbox-message-status-filter"', controls);
   const priorityFilter = inbox.indexOf('slug="inbox-message-priority-filter"', controls);
@@ -889,27 +883,11 @@ test('Inbox All Messages exposes source-backed status and priority filters befor
 });
 
 
-test('Inbox Overview exposes a source-backed Unassigned triage scope', async () => {
+test('Inbox does not invent unsupported follow-up timing or actions', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  assert.match(inbox, /type TriageScope = 'action' \| 'unassigned' \| 'priority' \| 'saved'/);
-  assert.match(inbox, /key: 'unassigned', label: 'Unassigned', count: filteredItems\.filter\(isInboxUnassigned\)\.length/);
-  assert.ok(inbox.includes("? isInboxUnassigned(item)"), "The Unassigned scope should use the shared open-record predicate.");
-  assert.match(inbox, /No unassigned records/);
-  assert.match(inbox, /Every current record in this queue has an assigned owner/);
-  assert.match(inbox, /aria-pressed=\{triageScope === scope\.key\}/);
-  assert.ok(inbox.includes("count: filteredItems.filter(isInboxActionable).length"));
-  assert.ok(inbox.includes("count: filteredItems.filter(isInboxHighPriority).length"));
-});
-
-
-test('Inbox triage reports the full matching count and avoids an inferred follow-up action', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  assert.match(inbox, /const visibleTriageItems = triageItems\.slice\(0, 8\)/);
-  assert.match(inbox, /Showing \${visibleTriageItems\.length} of \${triageItems\.length} matching records/);
-  assert.match(inbox, /visibleTriageItems\.map\(\(item\) =>/);
-  assert.doesNotMatch(inbox, /Showing the next 8 records/);
-  assert.doesNotMatch(inbox, /Next follow-up/);
-  assert.match(inbox, /triageItems\.length > visibleTriageItems\.length/);
+  assert.doesNotMatch(inbox, /Follow-ups due|Next follow-up|dueDate:.*ContactSubmission/);
+  assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-list"'));
+  assert.ok(inbox.includes('Updated automatically every 30 seconds'));
 });
 
 

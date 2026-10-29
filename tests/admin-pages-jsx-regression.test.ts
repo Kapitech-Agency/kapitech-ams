@@ -643,7 +643,8 @@ test('Inbox opens with contextual controls and its triage workspace, without a r
   assert.ok(inbox.includes('to="/admin/inbox?view=unread"'), 'Unread stays reachable as a saved view from Messages.');
   assert.ok(inbox.includes("case 'unread': return submissions.filter((item) => item.status === 'new')"));
   assert.match(inbox, /<AdminFilterBar\b/);
-  assert.match(inbox, /data-ams-slug="inbox-overview-workspace"/);
+  assert.match(inbox, /data-ams-slug="inbox-message-list"/);
+  assert.doesNotMatch(inbox, /inbox-overview-workspace|viewMode === 'overview'/);
   assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);
   assert.ok(inbox.includes('to="/admin/cms/careers?tab=applicants"'));
 });
@@ -1002,18 +1003,18 @@ test('Team Directory automatically uses cards on compact viewports and keeps the
 });
 
 
-test('Inbox Overview keeps queue actions with queue controls and avoids duplicate header actions', () => {
+test('Inbox landing removes the redundant Overview and keeps record actions in their owning controls', () => {
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
   const headerStart = inbox.indexOf('<AdminModuleHeader slug="inbox-header"');
-  const overviewControls = inbox.indexOf('slug="inbox-overview-controls"');
-  const header = inbox.slice(headerStart, overviewControls);
-  assert.ok(header.includes("activeInboxTab !== 'overview'"));
+  const headerEnd = inbox.indexOf('\n      />', headerStart);
+  const header = inbox.slice(headerStart, headerEnd);
+  assert.ok(headerStart >= 0 && headerEnd > headerStart);
+  assert.ok(header.includes("(activeInboxTab === 'client' || activeInboxTab === 'starred')"));
   assert.ok(inbox.includes("activeTabItems.length + ' total inbound'"));
-  assert.ok(inbox.includes("metrics.newCount > 0 && activeInboxTab !== 'overview'"));
-  assert.ok(inbox.includes("metrics.newCount > 0 && activeInboxTab !== 'overview' && (\n                <button type=\"button\" onClick={handleMarkAllRead}"),
-    'Bulk status processing remains available in Messages views but is not duplicated on Overview.');
+  assert.ok(inbox.includes('slug="inbox-message-controls"'));
+  assert.doesNotMatch(inbox, /inbox-overview-controls|inbox-overview-workspace|activeInboxTab === 'overview'|viewMode === 'overview'/);
   const exportButtons = [...inbox.matchAll(/onClick=\{handleExportCSV\}/g)];
-  assert.ok(exportButtons.length >= 2, 'CSV export remains available in the header context and queue toolbar');
+  assert.ok(exportButtons.length >= 2, 'CSV export remains available in the owning controls.');
 });
 
 

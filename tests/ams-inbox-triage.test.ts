@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { isInboxActionable, isInboxHighPriority, isInboxUnassigned } from '../src/lib/inboxTriage';
 
-test('Inbox Overview default queue includes new, unassigned, and urgent or high-priority open records', () => {
+test('Inbox triage predicate includes new, unassigned, and urgent or high-priority open records', () => {
   assert.equal(isInboxActionable({ status: 'new', assignedTo: 'Rey', priority: 'normal' }), true);
   assert.equal(isInboxActionable({ status: 'in-review', assignedTo: '', priority: 'normal' }), true);
   assert.equal(isInboxActionable({ status: 'contacted', assignedTo: 'Fikri', priority: 'urgent' }), true);
