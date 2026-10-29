@@ -527,6 +527,30 @@ export const AdminInbox: React.FC = () => {
   }, [filteredItems, triageScope]);
   const visibleTriageItems = triageItems.slice(0, 8);
 
+  const triageScopeCards = useMemo(() => {
+    const total = filteredItems.length;
+    const scopes: Array<{ key: TriageScope; label: string; count: number; icon: React.ReactNode }> = [
+      { key: 'action', label: 'Needs action', count: filteredItems.filter(isInboxActionable).length, icon: <Inbox size={15} aria-hidden="true" /> },
+      { key: 'unassigned', label: 'Unassigned', count: filteredItems.filter(isInboxUnassigned).length, icon: <Users size={15} aria-hidden="true" /> },
+      { key: 'priority', label: 'Priority', count: filteredItems.filter(isInboxHighPriority).length, icon: <AlertCircle size={15} aria-hidden="true" /> },
+      { key: 'saved', label: 'Saved', count: filteredItems.filter((item) => !!item.starred).length, icon: <Star size={15} aria-hidden="true" /> }
+    ];
+    return scopes.map((scope) => ({
+      ...scope,
+      total,
+      share: total > 0 ? Math.round((scope.count / total) * 100) : 0
+    }));
+  }, [filteredItems]);
+
+  const recentInboundItems = useMemo(() => {
+    const queuedIds = new Set(triageItems.map((item) => item.id));
+    return filteredItems
+      .filter((item) => !queuedIds.has(item.id))
+      .slice()
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 4);
+  }, [filteredItems, triageItems]);
+
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
   useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
@@ -813,23 +837,23 @@ export const AdminInbox: React.FC = () => {
                   <Star size={13} />Starred
                 </Link>
               )}
-              {metrics.newCount > 0 && (
+              {metrics.newCount > 0 && activeInboxTab !== 'overview' && (
                 <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
                   <Check size={13} />
                   <span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span>
                 </button>
               )}
-              <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
-                <Download size={13} />Export
-              </button>
+              {activeInboxTab !== 'overview' && (
+                <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">
+                  <Download size={13} />Export
+                </button>
+              )}
               {activeInboxTab === 'messages' || activeInboxTab === 'unread' ? (
                 <div role="group" aria-label="Message register view" className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
                   <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><User size={13} />Review</button>
                   <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><TableIcon size={13} />Table</button>
                 </div>
-              ) : (
-                <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Open review workspace"><User size={13} />Review</button>
-              )}
+              ) : null}
               <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all' && filterOwner === 'all' && filterChannel === 'all'} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">Reset</button>
             </div>
           )}
@@ -916,49 +940,64 @@ export const AdminInbox: React.FC = () => {
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 min-[1100px]:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
-          <div className="overflow-hidden rounded-card border border-line bg-panel">
-            <div className="border-b border-line px-4 py-3.5">
-              <div className="flex items-start justify-between gap-3">
+        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="space-y-3">
+          <div data-ams-feature-slug="inbox-overview-summary" className="grid min-w-0 grid-cols-2 gap-3 min-[900px]:grid-cols-4" aria-label="Inbox operational summary">
+            {triageScopeCards.map((scope) => (
+              <button
+                key={scope.key}
+                type="button"
+                aria-pressed={triageScope === scope.key}
+                onClick={() => {
+                  setTriageScope(scope.key);
+                  setSelectedSubmission(null);
+                }}
+                className={[
+                  'min-w-0 rounded-card border p-4 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                  triageScope === scope.key ? 'border-line bg-bg ring-1 ring-line' : 'border-line bg-panel hover:bg-bg'
+                ].join(' ')}
+              >
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <span className="min-w-0 break-words text-xs font-medium text-muted">{scope.label}</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">{scope.icon}</span>
+                </div>
+                <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-fg">{scope.count}</p>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={scope.label + ': ' + scope.count + ' of ' + scope.total + ' matching inbound records'}>
+                  <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: scope.share + '%' }} />
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="grid min-w-0 grid-cols-1 items-stretch gap-3 min-[1100px]:grid-cols-12">
+          <div className="min-w-0 min-[1100px]:col-span-7 h-full overflow-hidden rounded-card border border-line bg-panel">
+            <div className="border-b border-line px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-fg">Triage queue</h3>
                     <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted">{triageItems.length}</span>
                   </div>
-                  <p className="mt-1 max-w-xl text-[11px] leading-4 text-muted">New, unassigned, and urgent/high-priority records appear here first. Use the scopes to focus the queue.</p>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Sorted by priority and age · {triageScopeCards.find((scope) => scope.key === triageScope)?.label || 'Needs action'}</p>
                 </div>
-                <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel">
+                <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                   <Inbox size={12} />Open full inbox
                 </button>
               </div>
-              <div className="mt-3 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
-                {[
-                  { key: 'action' as TriageScope, label: 'Needs action', count: filteredItems.filter(isInboxActionable).length },
-                  { key: 'unassigned' as TriageScope, label: 'Unassigned', count: filteredItems.filter(isInboxUnassigned).length },
-                  { key: 'priority' as TriageScope, label: 'Priority', count: filteredItems.filter(isInboxHighPriority).length },
-                  { key: 'saved' as TriageScope, label: 'Saved', count: filteredItems.filter((item) => !!item.starred).length }
-                ].map((scope) => (
-                  <button
-                    key={scope.key}
-                    type="button"
-                    aria-pressed={triageScope === scope.key}
-                    onClick={() => {
-                      setTriageScope(scope.key);
-                      setSelectedSubmission(null);
-                    }}
-                    className={
-                      'inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' +
-                      (triageScope === scope.key ? 'border-accent/30 bg-accent/10 text-accent-text' : 'border-line bg-bg text-muted hover:text-fg')
-                    }
-                  >
-                    <span>{scope.label}</span><span className="tabular-nums">{scope.count}</span>
-                  </button>
-                ))}
-              </div>
             </div>
-
             <div className="divide-y divide-line">
-              {triageItems.length === 0 ? (
+              {loading && submissions.length === 0 ? (
+                <div className="space-y-3 px-4 py-5" role="status" aria-label="Loading Inbox triage">
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} className="flex items-center gap-3 border-b border-line pb-3 last:border-b-0">
+                      <Skeleton className="h-10 w-1 shrink-0" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <Skeleton className="h-3.5 w-44 max-w-full" />
+                        <Skeleton className="h-3 w-72 max-w-full" />
+                        <Skeleton className="h-2.5 w-52 max-w-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : triageItems.length === 0 ? (
                 <div className="min-h-[180px] px-4 py-6">
                   <div className="rounded-control border border-line bg-bg p-4">
                     <div className="flex items-center gap-3">
@@ -966,8 +1005,8 @@ export const AdminInbox: React.FC = () => {
                         <Check size={15} className="text-success" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-fg">{loadError && submissions.length === 0 ? (language === 'id' ? 'Inbox tidak tersedia' : 'Inbox unavailable') : triageScope === 'action' ? 'No records need action' : triageScope === 'unassigned' ? 'No unassigned records' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}</p>
-                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Sumber data gagal dimuat. Coba lagi untuk memverifikasi antrean.' : 'The inbox source failed to load. Retry to verify this queue.') : triageScope === 'action' ? 'No new, unassigned, or urgent/high-priority records need attention.' : triageScope === 'unassigned' ? 'Every current record in this queue has an assigned owner.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
+                        <p className="text-xs font-medium text-fg">{loadError && submissions.length === 0 ? (language === 'id' ? 'Inbox tidak tersedia' : 'Inbox unavailable') : submissions.length === 0 ? 'No inbound records yet' : filteredItems.length === 0 ? 'No matching records' : triageScope === 'action' ? 'No records need action' : triageScope === 'unassigned' ? 'No unassigned records' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}</p>
+                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Sumber data gagal dimuat. Coba lagi untuk memverifikasi antrean.' : 'The inbox source failed to load. Retry to verify this queue.') : submissions.length === 0 ? 'New inbound records will appear here as they arrive.' : filteredItems.length === 0 ? 'Try another search or reset the active filters.' : triageScope === 'action' ? 'No new, unassigned, or urgent/high-priority records need attention.' : triageScope === 'unassigned' ? 'Every current record in this queue has an assigned owner.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
                       </div>
                     </div>
                   </div>
@@ -1018,7 +1057,7 @@ export const AdminInbox: React.FC = () => {
 
             <div className="border-t border-line bg-bg/50 px-4 py-2.5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-[10px] leading-4 text-muted">{triageItems.length > visibleTriageItems.length ? `Showing ${visibleTriageItems.length} of ${triageItems.length} matching records, ordered by priority and age.` : triageItems.length > 0 ? `${visibleTriageItems.length} matching records, ordered by priority and age.` : 'The queue updates automatically as new inbound records arrive.'}</p>
+                <p className="text-[10px] leading-4 text-muted">{triageItems.length > visibleTriageItems.length ? `Showing ${visibleTriageItems.length} of ${triageItems.length} matching records.` : triageItems.length > 0 ? `${visibleTriageItems.length} matching records.` : loading && submissions.length === 0 ? 'Loading inbound records.' : loadError && submissions.length === 0 ? 'Queue totals are unavailable until the source recovers.' : filteredItems.length === 0 && submissions.length > 0 ? 'No inbound records match the current filters.' : 'No records match the selected queue scope.'}</p>
                 <button type="button" onClick={() => { setViewMode('split'); setFilterStatus('new'); }} className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg">
                   <Filter size={11} />Open filtered list
                 </button>
@@ -1026,14 +1065,14 @@ export const AdminInbox: React.FC = () => {
             </div>
           </div>
 
-          <aside className="flex min-h-[420px] flex-col overflow-hidden rounded-card border border-line bg-panel">
-            <div className="border-b border-line px-4 py-3.5">
-              <div className="flex items-start justify-between gap-3">
+          <aside className="min-w-0 min-[1100px]:col-span-5 flex min-h-[420px] h-full flex-col overflow-hidden rounded-card border border-line bg-panel">
+            <div className="border-b border-line px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-fg">Record review</h3>
-                  <p className="mt-1 text-[11px] leading-4 text-muted">Select a record in the triage queue to inspect its identity, status, ownership, brief, and available actions.</p>
+                  <h3 className="text-sm font-semibold text-fg">{selectedSubmission ? 'Record review' : 'Recent inbound'}</h3>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">{selectedSubmission ? 'Current source details and supported actions.' : 'Latest matching records outside the active triage queue.'}</p>
                 </div>
-                <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{selectedSubmission ? 'Selected' : 'No selection'}</span>
+                <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] tabular-nums text-muted">{selectedSubmission ? 'Selected' : recentInboundItems.length + ' records'}</span>
               </div>
             </div>
 
@@ -1102,14 +1141,74 @@ export const AdminInbox: React.FC = () => {
                   </div>
                 </div>
               </div>
+            ) : loading && submissions.length === 0 ? (
+              <div className="space-y-4 px-4 py-5" role="status" aria-label="Loading recent inbound records">
+                {[1, 2, 3].map((item) => (
+                  <div key={item} className="space-y-2 border-b border-line pb-3 last:border-b-0">
+                    <Skeleton className="h-3.5 w-36 max-w-full" />
+                    <Skeleton className="h-3 w-56 max-w-full" />
+                    <Skeleton className="h-2.5 w-full" />
+                  </div>
+                ))}
+              </div>
+            ) : loadError && submissions.length === 0 ? (
+              <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-8 text-center" role="status">
+                <span className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><AlertCircle size={18} aria-hidden="true" /></span>
+                <p className="mt-3 text-xs font-semibold text-fg">Inbox unavailable</p>
+                <p className="mt-1 max-w-xs text-[11px] leading-4 text-muted">Recent inbound records cannot be verified until the source recovers. Use Retry above to try again.</p>
+              </div>
+            ) : submissions.length === 0 ? (
+              <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-8 text-center" role="status">
+                <span className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Inbox size={18} aria-hidden="true" /></span>
+                <p className="mt-3 text-xs font-semibold text-fg">No inbound records yet</p>
+                <p className="mt-1 max-w-xs text-[11px] leading-4 text-muted">New messages will appear here as they arrive.</p>
+              </div>
+            ) : filteredItems.length === 0 ? (
+              <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-8 text-center" role="status">
+                <span className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Filter size={18} aria-hidden="true" /></span>
+                <p className="mt-3 text-xs font-semibold text-fg">No matching records</p>
+                <p className="mt-1 max-w-xs text-[11px] leading-4 text-muted">Try another search or reset the active filters.</p>
+              </div>
+            ) : recentInboundItems.length === 0 ? (
+              <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-8 text-center" role="status">
+                <span className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Check size={18} aria-hidden="true" /></span>
+                <p className="mt-3 text-xs font-semibold text-fg">Everything matching is in the triage queue</p>
+                <p className="mt-1 max-w-xs text-[11px] leading-4 text-muted">Choose another scope above or select a queue record to review its details.</p>
+              </div>
             ) : (
-              <div className="flex min-h-[420px] flex-1 flex-col items-center justify-center px-8 py-12 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-card border border-line bg-bg text-muted"><Inbox size={20} /></div>
-                <p className="mt-3 text-sm font-medium text-fg">Select an inbound record</p>
-                <p className="mt-1 max-w-xs text-[11px] leading-5 text-muted">Choose a record from the queue to see its status, ownership, brief, and next action here.</p>
+              <div className="divide-y divide-line">
+                {recentInboundItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleSelectSubmission(item)}
+                    aria-label={'Review ' + (item.fullName || 'inbound record')}
+                    className="w-full px-4 py-3 text-left transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-accent"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {renderChannelBadge(item.type)}
+                          {renderStatusBadge(item.status)}
+                          {renderPriorityBadge(item.priority)}
+                          {item.starred ? <Star size={11} className="fill-warning text-warning" aria-label="Saved" /> : null}
+                        </div>
+                        <p className="mt-1.5 truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous'}</p>
+                        <p className="mt-0.5 truncate text-[10px] text-muted">{item.company || item.email || 'Contact details unavailable'}</p>
+                      </div>
+                      <span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-[11px] leading-4 text-muted">{item.message || 'No brief content provided.'}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-[10px] text-muted">{item.assignedTo || 'Unassigned'}</span>
+                      <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-medium text-muted">Review record <ChevronRight size={11} aria-hidden="true" /></span>
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
           </aside>
+          </div>
         </section>
       ) : viewMode === 'queue' ? (
         <section data-ams-feature-slug="inbox-starred-queue" data-ams-slug="inbox-starred-queue" className="space-y-3">

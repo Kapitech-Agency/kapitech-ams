@@ -672,6 +672,13 @@ Inbox manages incoming communication requiring triage, assignment, response, fol
 
 Do not place a duplicate full Messages table in Overview.
 
+
+### Current Overview presentation contract
+
+The current Inbox Overview adapts the Dashboard's quiet card rhythm to Inbox's primary job rather than copying Finance/Projects content: four selectable, source-backed scope cards (Needs action, Unassigned, Priority, Saved) use the same predicates as the existing queue and show a proportional bar against the current matching inbound set. The main row pairs the priority-and-age ordered Triage Queue (seven of twelve columns at the wide breakpoint) with a Recent Inbound / Record Review panel (five of twelve). Recent records are selected from the current filtered collection, ordered by saved `createdAt`, and exclude records already shown in the active triage queue; selecting one opens the existing record details/actions. Empty source, no filter matches, queue-clear and loading states are distinct.
+
+The record contract does not include a canonical follow-up due date or configured SLA field. Do not create a mock “Follow-ups Due” number, date, or completion action in this Overview. Keep that requirement unavailable until a canonical follow-up model/workflow is approved. Export and bulk status operations remain in the owning Messages views so the Overview can stay focused on triage and inspection.
+
 ## 5.3 Messages workspace
 
 ### Filters
