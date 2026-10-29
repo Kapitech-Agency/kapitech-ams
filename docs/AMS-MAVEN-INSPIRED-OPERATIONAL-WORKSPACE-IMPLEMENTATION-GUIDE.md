@@ -561,7 +561,7 @@ Explain task inclusion, timezone/date basis, comparison, unit, and material sour
 
 ## 4.4 Analytics workspace
 
-Remove the nested report selector, then reuse the approved Overview composition literally rather than inventing a new grid. Row 1 uses the shared `ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12` wrapper with Financial Movement at 7 columns and Receivables at 5. Row 2 uses the same wrapper with Project Status at 5 columns and Inquiry Pipeline at 7, rendered only behind the existing Inbox access gate. Every panel uses the shared `ams-overview-panel` shell and `DashboardControl` action styling. Do not add Analytics-specific column rules. The shared reporting-period control scopes time trends only; receivables and project status remain current snapshots.
+Remove the nested report selector, then reuse the approved Overview composition literally rather than inventing a new grid. Row 1 uses the shared `ams-overview-card-row grid min-w-0 gap-4 min-[1100px]:grid-cols-12` wrapper with Financial Movement at 7 columns and Receivables at 5. Row 2 uses the same wrapper with Project Status at 5 columns and Inquiry Pipeline at 7, rendered only behind the existing Inbox access gate. Every panel uses the shared `ams-overview-panel` shell and `DashboardControl` action styling. Financial Movement and Outstanding Receivables share the same row height; Receivables must stretch with its row rather than keep a shorter natural height. Do not add Analytics-specific column rules. The shared reporting-period control scopes time trends only; receivables and project status remain current snapshots.
 
 ### Inquiry Pipeline
 - Valid period.

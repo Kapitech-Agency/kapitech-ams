@@ -30,7 +30,10 @@ test('Dashboard Analytics follows the approved Overview row pattern without nest
   assert.equal(analytics.includes('aria-label="Analytics report"'), false);
   assert.equal(source.includes('DASHBOARD_ANALYTICS_REPORT_OPTIONS'), false);
   assert.equal(analytics.includes('setReport('), false);
-  assert.ok(analytics.includes('className="h-full ams-overview-panel"'));
+  assert.match(analytics, /title="Outstanding receivables"\s+className="h-full ams-overview-panel"/,
+    'Outstanding Receivables and Financial Movement must share the same row height.');
+  assert.doesNotMatch(styles, /\.ams-overview-card-row\[aria-label="Financial movement and receivables"\] > section\[data-ams-feature-slug="dashboard-analytics-receivables-report"\] \.ams-overview-panel\s*\{\s*height:\s*auto;/,
+    'The Receivables card must not be forced to natural height.');
   assert.ok(analytics.includes('<DashboardControl to="/admin/finance?tab=chart-of-accounts"'));
   assert.equal(styles.includes('.ams-dashboard-analytics-report-grid'), false, 'Analytics must not have a custom grid.');
   assert.ok(styles.includes('.ams-dashboard-analytics-workspace > .ams-overview-card-row'));

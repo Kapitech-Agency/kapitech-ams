@@ -19,6 +19,14 @@
 - Authenticated visual review of Analytics and responsive/accessibility review remain **NOT VERIFIED**. Do not claim user sign-off until actual browser output is inspected. Dashboard remains the only active module until explicit sign-off.
 
 
+## 0.4 Card-height alignment — Outstanding Receivables · 29 October 2026
+
+- User requested the Outstanding Receivables card to be the same height as “Issued invoices vs recorded expenses” in Analytics row 1.
+- Set the Receivables `AdminPanel` to `h-full ams-overview-panel`, matching the Financial Movement card and allowing the Overview grid row to stretch both panels evenly.
+- Removed the CSS exception that forced Receivables to `height: auto`. Added regression coverage for the shared height behavior in the Dashboard hierarchy and Analytics structure tests.
+- Scope remains visual only: no source records, calculations, period semantics, navigation, permissions, API/backend, authentication, or Finance business logic changed. Fresh CI/Quality Gate validation is required for this slice; authenticated rendered browser review remains **NOT VERIFIED**.
+
+
 ## 0. Latest bounded slice — 26 October 2026
 
 - Authenticated production Dashboard was inspected at the browser's native desktop width only (~1440px equivalent), using two no-mutation loads. The earlier inspection saw the long refresh warning; a later single-load inspection confirmed the concise status plus “View refresh details” disclosure. Finance and Projects still show unavailable-source states, and all expected Overview card headings are present below the fold. The browser report is inconsistent about the precise height/layout of composite unavailable panels, so do not treat every compact-state style as confirmed in production. Native viewport resizing was not supported; 1440, 1280, 1024, 900, 768, 390 and 320px, keyboard/focus, 200% zoom, screen reader and WCAG acceptance remain unverified.

@@ -13064,6 +13064,3 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   width: 100%;
 }
 
-.ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Financial movement and receivables"] > section[data-ams-feature-slug="dashboard-analytics-receivables-report"] .ams-overview-panel {
-  height: auto;
-}

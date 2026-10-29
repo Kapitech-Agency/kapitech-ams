@@ -1345,7 +1345,7 @@ const AnalyticsView: React.FC<{
         <section className="min-w-0 min-[1100px]:col-span-5" data-ams-feature-slug="dashboard-analytics-receivables-report" aria-label="Receivables report">
           <AdminPanel headerDivider={false}
             title="Outstanding receivables"
-            className="ams-overview-panel"
+            className="h-full ams-overview-panel"
             description="Current outstanding balance from issued invoices."
             actions={(
               <DashboardControl to="/admin/finance?tab=accounts-receivable" variant="action" size="compact" icon={<ReceiptText size={14}/>} className="ams-dashboard-card-action">Open Accounts Receivable</DashboardControl>

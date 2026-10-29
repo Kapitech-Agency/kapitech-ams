@@ -1322,9 +1322,12 @@ test('Dashboard Analytics reuses approved Overview rows, proportions, panels and
   assert.equal(analytics.includes('data-ams-feature-slug="dashboard-analytics-report-grid"'), false, 'Analytics must not retain an invented custom grid.');
   assert.equal(dashboard.includes('DASHBOARD_ANALYTICS_REPORT_OPTIONS'), false);
   assert.equal(analytics.includes('setReport('), false);
-  assert.equal((analytics.match(/className="h-full ams-overview-panel"/g) || []).length, 3,
-    'Financial Movement, Project Status and Inquiry Pipeline follow Overview full-height card composition.');
-  assert.ok(analytics.includes('className="ams-overview-panel"'), 'Receivables should retain natural height beside the taller financial report.');
+  assert.equal((analytics.match(/className="h-full ams-overview-panel"/g) || []).length, 4,
+    'All four Analytics cards should use the Overview full-height composition within their grid rows.');
+  assert.match(analytics, /title="Outstanding receivables"\s+className="h-full ams-overview-panel"/,
+    'Outstanding Receivables must stretch to the same height as Financial Movement.');
+  assert.doesNotMatch(styles, /\.ams-overview-card-row\[aria-label="Financial movement and receivables"\] > section\[data-ams-feature-slug="dashboard-analytics-receivables-report"\] \.ams-overview-panel\s*\{\s*height:\s*auto;/,
+    'No CSS override may shrink Outstanding Receivables back to natural height.');
   assert.ok((analytics.match(/<DashboardControl to="\/admin\//g) || []).length >= 4,
     'Report drill-down actions must use shared DashboardControl styling.');
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
