@@ -248,6 +248,22 @@ test('Recent Activity uses a stable responsive filter toolbar and distinct row s
   ]) assert.ok(styles.includes(rule), 'Missing Recent Activity layout rule: ' + rule);
 });
 
+test('Recent Activity normalizes actor names consistently and keeps timestamps readable in narrow cards', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  assert.ok(dashboard.includes("const normalizeDashboardActivityActor = (value: unknown): string =>"));
+  assert.ok(dashboard.includes('normalizeDashboardActivityActor(activity.actor)'));
+  assert.ok(dashboard.includes('normalizeDashboardActivityActor(left.actor).localeCompare(normalizeDashboardActivityActor(right.actor))'));
+  assert.ok(dashboard.includes('className="ams-dashboard-activity-table__time-full"'));
+  assert.ok(dashboard.includes('className="ams-dashboard-activity-table__time-compact"'));
+  assert.ok(dashboard.includes('title={timestampLabel}'));
+  assert.ok(styles.includes('.ams-dashboard-activity-table__time-compact'));
+  assert.ok(styles.includes('.ams-dashboard-activity-table__time-full'));
+  assert.equal((styles.match(/\/\* Recent Activity final refinement/g) || []).length, 0,
+    'Repeated final override blocks should be consolidated into the single Recent Activity contract.');
+  assert.equal((styles.match(/\/\* Recent Activity — single source of truth/g) || []).length, 1);
+});
+
 test('Recent Activity labels Search, Severity, Actor and Sort by on a shared control baseline', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');

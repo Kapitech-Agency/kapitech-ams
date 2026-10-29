@@ -314,6 +314,9 @@ const getDashboardActivitySeverity = (value: unknown): 'critical' | 'warning' | 
   return 'info';
 };
 
+const normalizeDashboardActivityActor = (value: unknown): string =>
+  String(value ?? '').trim() || 'System';
+
 const getDashboardSavedProgress = (project: any): number | null => {
   const rawValue = project?.progressPercent;
   if (rawValue === null || rawValue === undefined || (typeof rawValue === 'string' && !rawValue.trim())) return null;
@@ -1972,7 +1975,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
   const dashboardActivityActors = useMemo(() => {
     const actors = new Set<string>((dashboardOverview.recentActivity || [])
-      .map((activity) => String(activity.actor || 'System').trim() || 'System'));
+      .map((activity) => normalizeDashboardActivityActor(activity.actor)));
     return Array.from(actors).sort((left, right) => left.localeCompare(right));
   }, [dashboardOverview.recentActivity]);
   const dashboardActivityActorOptions = useMemo(
@@ -1991,7 +1994,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     return (dashboardOverview.recentActivity || [])
       .filter((activity) => {
         const action = String(activity.action || 'Recorded audit event');
-        const actor = String(activity.actor || 'System');
+        const actor = normalizeDashboardActivityActor(activity.actor);
         const severity = getDashboardActivitySeverity(activity.severity);
         const searchableText = (action + ' ' + actor + ' ' + severity).toLowerCase();
         if (query && !searchableText.includes(query)) return false;
@@ -2027,7 +2030,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           return severityDifference || newestFirst();
         }
         if (activitySortOrder === 'actor') {
-          const actorDifference = String(left.actor || 'System').localeCompare(String(right.actor || 'System'));
+          const actorDifference = normalizeDashboardActivityActor(left.actor).localeCompare(normalizeDashboardActivityActor(right.actor));
           return actorDifference || newestFirst();
         }
         if (!Number.isFinite(leftTime) && !Number.isFinite(rightTime)) return 0;
@@ -2054,7 +2057,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       const timestampValue = timestamp && !Number.isNaN(timestamp.getTime()) ? timestamp.toISOString() : '';
       const severity = getDashboardActivitySeverity(activity.severity);
       const severityLabel = severity === 'critical' ? 'Critical' : severity === 'warning' ? 'Warning' : 'Info';
-      return [activity.action || 'Recorded audit event', activity.actor || 'System', timestampValue, severityLabel];
+      return [activity.action || 'Recorded audit event', normalizeDashboardActivityActor(activity.actor), timestampValue, severityLabel];
     });
     const csv = [
       ['Activity', 'Actor', 'Timestamp (UTC)', 'Severity'],
@@ -3768,7 +3771,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                 const timestampLabel = timestampValid && timestamp
                                   ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(timestamp) + ' UTC'
                                   : 'Time not recorded';
-                                const actor = activity.actor ? activity.actor : 'System';
+                                const timestampCompactLabel = timestampValid && timestamp
+                                  ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }).format(timestamp)
+                                  : 'No time';
+                                const actor = normalizeDashboardActivityActor(activity.actor);
                                 return (
                                   <tr key={String(activity.id || activity.timestamp || index)}>
                                     <td>
@@ -3777,7 +3783,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                                     </td>
                                     <td className="ams-dashboard-activity-table__actor">{actor}</td>
                                     <td>
-                                      <time className="ams-dashboard-activity-table__time" dateTime={timestampValid && timestamp ? timestamp.toISOString() : undefined}>{timestampLabel}</time>
+                                      <time
+                                        className="ams-dashboard-activity-table__time"
+                                        dateTime={timestampValid && timestamp ? timestamp.toISOString() : undefined}
+                                        aria-label={timestampLabel}
+                                        title={timestampLabel}
+                                      >
+                                        <span className="ams-dashboard-activity-table__time-full">{timestampLabel}</span>
+                                        <span className="ams-dashboard-activity-table__time-compact">{timestampCompactLabel}</span>
+                                      </time>
                                     </td>
                                     <td>
                                       <span className={'ams-dashboard-activity-table__severity inline-flex items-center justify-center rounded-badge border px-2 py-1 text-[10px] font-medium ' + severityClasses}>{severityLabel}</span>

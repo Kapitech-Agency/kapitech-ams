@@ -901,3 +901,13 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Kept the existing date window control, actor/severity filters, searchable loaded audit rows, CSV export, and AMS pagination. The filter grid becomes four balanced fields/actions on medium card widths, a two-column arrangement on compact cards, and a single column on narrow cards.
 - The card's table uses an explicit Activity / Actor / Date & time / Severity width system; the Severity header and badges align consistently. Actor remains available on mobile beneath the Activity cell when its separate table column is hidden.
 - This is a presentation and accessibility-label correction only. No API, permission, backend, database, audit schema, filtering semantics or export scope changes.
+
+
+## 0.5 Recent Activity table refinement — 29 October 2026
+
+- Kept Recent Activity within its existing permission-gated audit feed and added no guessed event categories or destinations.
+- Consolidated the duplicated final Recent Activity CSS overrides into one scoped component contract for the date-window trigger, labelled search/filter grid, aligned actions, table columns and container-responsive layout.
+- Made timestamps compact at narrow card widths while retaining the full UTC timestamp in the accessible label and tooltip.
+- Normalized actor names consistently for the actor filter, sort, displayed table, and CSV export so whitespace-only differences do not make filtering inconsistent.
+- Existing search, severity filter, actor filter, date presets/custom range, sorting, CSV export and shared pagination remain connected to the loaded source.
+- Validation must be read from the exact commit's Quality Gate; full CI has a separate existing dependency-audit failure noted in the previous checkpoint.
