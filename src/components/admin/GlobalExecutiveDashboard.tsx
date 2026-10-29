@@ -1255,7 +1255,7 @@ const AnalyticsView: React.FC<{
   if (snapshot.loading) return <DashboardUnavailable title="Loading analytics" description="Invoice, expense, and portfolio records are being loaded from AMS." />;
 
   return (
-    <div className="space-y-4" data-ams-feature-slug="dashboard-analytics-workspace">
+    <div className="ams-dashboard-analytics-workspace" data-ams-feature-slug="dashboard-analytics-workspace">
       <section
         className="rounded-card border border-line bg-panel p-4 sm:p-5"
         data-ams-feature-slug="dashboard-analytics-controls"
