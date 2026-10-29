@@ -1336,6 +1336,18 @@ test('Dashboard Analytics reuses approved Overview rows, proportions, panels and
   assert.ok(analytics.includes('Financial trend unavailable'));
   assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
   assert.ok(analytics.includes('Projects by current status'));
+  assert.ok((analytics.match(/<DashboardEmptyState\\b/g) || []).length >= 8,
+    'Analytics no-data states must reuse the shared empty-state component from Overview.');
+  assert.match(analytics, /eyebrow="FINANCIAL MOVEMENT"[\\s\\S]*?title=\\{financialSourceRecordsReturned/);
+  assert.match(analytics, /eyebrow="RECEIVABLES"[\\s\\S]*?title="No invoice records returned"/);
+  assert.match(analytics, /eyebrow="PROJECT STATUS"[\\s\\S]*?title="No project records returned"/);
+  assert.match(analytics, /eyebrow="INQUIRY PIPELINE"[\\s\\S]*?title="No sales inquiry records"/);
+  assert.doesNotMatch(analytics, /rounded-control border border-line bg-bg px-4 py-5/,
+    'Analytics must not retain one-off boxed empty states that differ from Overview.');
+  assert.doesNotMatch(analytics, /flex min-h-32 flex-col items-center justify-center rounded-control border border-line bg-panel/,
+    'Date-chart empty states must use the shared Overview empty-state presentation.');
+  assert.ok((analytics.match(/<DashboardUnavailable\\b[\\s\\S]*?\\/>/g) || []).every((tag) => /\\bcompact\\b/.test(tag)),
+    'Source-unavailable states use the compact status-row treatment from Overview.');
   assert.ok(analytics.includes('role="img" aria-label={group.status +'));
   assert.ok(analytics.includes('Current labels'));
   assert.doesNotMatch(analytics, /dashboard-analytics-kpis/);

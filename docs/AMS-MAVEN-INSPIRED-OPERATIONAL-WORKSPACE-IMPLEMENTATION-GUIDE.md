@@ -79,6 +79,12 @@ When an intended screen depends on an unavailable source, model, provider, permi
 
 A contextual summary may show source-backed fields from another module. Editing and lifecycle actions must remain with the canonical owner and follow existing authorization.
 
+
+### 2.2 Dashboard Analytics empty-state contract
+
+Dashboard Analytics must reuse the same `DashboardEmptyState` component and `ams-dashboard-empty` styles used by the approved Dashboard Overview for genuine no-record conditions. Keep the small uppercase context label, neutral feature icon, concise title, and explanatory sentence. Use the existing feature icon from its source domain; do not create one-off bordered boxes, oversized centered empty panels, or plain inline empty paragraphs. Loading and source-unavailable conditions are distinct from genuine empty data: use the existing `DashboardUnavailable` component with its `compact` presentation, matching Overview's icon-and-copy status row. Preserve the existing unavailable-versus-empty semantics, all source records, calculations, and access checks.
+
+
 ## 3. Global page and component contract
 
 ### 3.1 Page header

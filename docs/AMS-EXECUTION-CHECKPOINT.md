@@ -19,6 +19,15 @@
 - Authenticated visual review of Analytics and responsive/accessibility review remain **NOT VERIFIED**. Do not claim user sign-off until actual browser output is inspected. Dashboard remains the only active module until explicit sign-off.
 
 
+
+## 0.5 Dashboard Analytics empty states follow approved Overview · 29 October 2026
+
+- Correct the inconsistent Analytics no-data UI by reusing the shared `DashboardEmptyState` component and its existing Overview styles for missing records, unchartable trends, and empty report sections.
+- Replace one-off bordered boxes, plain empty paragraphs, and the tall centered date-trend empty block. Use domain icons and short contextual labels for Financial Movement, Receivables, Project Status, Inquiry Pipeline, Inquiry Volume, Inquiry Status, and Requested Services.
+- Loading/source-unavailable conditions remain distinct and now use `DashboardUnavailable compact`, matching Overview's compact icon-and-copy row. Empty does not imply a confirmed zero; unavailable does not imply an empty dataset.
+- Updated Dashboard regression tests and implementation guidance. No data source, Finance formulas, report periods, navigation, route, permissions, backend/API, authentication, or business logic changed. Exact-SHA Quality Gate and CI must be checked after this commit. Authenticated rendered visual review remains **NOT VERIFIED**.
+
+
 ## 0.4 Card-height alignment — Outstanding Receivables · 29 October 2026
 
 - User requested the Outstanding Receivables card to be the same height as “Issued invoices vs recorded expenses” in Analytics row 1.

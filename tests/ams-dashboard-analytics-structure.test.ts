@@ -84,3 +84,29 @@ test('Dashboard Analytics distinguishes balance and status snapshots from period
   assert.ok(analytics.includes('to="/admin/finance?tab=accounts-receivable"'));
   assert.ok(analytics.includes('to="/admin/projects"'));
 });
+
+
+test('Dashboard Analytics reuses the approved Overview empty-state and unavailable-state components', async () => {
+  const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = source.indexOf('const AnalyticsView: React.FC');
+  const end = source.indexOf('type DashboardCalendarPeriodFilterProps', start);
+  assert.ok(start >= 0 && end > start, 'AnalyticsView should be identifiable.');
+  const analytics = source.slice(start, end);
+
+  assert.ok((analytics.match(/<DashboardEmptyState\\b/g) || []).length >= 8,
+    'No-record conditions should reuse DashboardEmptyState, which is already used in the approved Overview.');
+  assert.ok((analytics.match(/<DashboardUnavailable\\b[\\s\\S]*?\\/>/g) || []).every((tag) => /\\bcompact\\b/.test(tag)),
+    'Loading or unavailable sources should use the compact status-row presentation from Overview.');
+  assert.doesNotMatch(analytics, /rounded-control border border-line bg-bg px-4 py-5/,
+    'Avoid one-off bordered empty boxes in Analytics.');
+  assert.doesNotMatch(analytics, /flex min-h-32 flex-col items-center justify-center rounded-control border border-line bg-panel/,
+    'Avoid a custom oversized centered empty state for the inquiry trend.');
+  assert.match(analytics, /eyebrow="FINANCIAL MOVEMENT"/);
+  assert.match(analytics, /eyebrow="RECEIVABLES"/);
+  assert.match(analytics, /eyebrow="PROJECT STATUS"/);
+  assert.match(analytics, /eyebrow="INQUIRY PIPELINE"/);
+  assert.match(analytics, /eyebrow="REQUESTED SERVICES"/);
+  assert.ok(styles.includes('.ams-dashboard-empty--compact'),
+    'Analytics relies on the existing Overview empty-state styles rather than a new Analytics style.');
+});

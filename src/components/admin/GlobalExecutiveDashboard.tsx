@@ -1238,7 +1238,7 @@ const AnalyticsView: React.FC<{
   const periodExpenseTotal = trend.reduce((sum, point) => sum + (point.secondary ?? 0), 0);
   const periodDifferenceTotal = trend.reduce((sum, point) => sum + (point.tertiary ?? 0), 0);
 
-  if (snapshot.loading) return <DashboardUnavailable title="Loading analytics" description="Invoice, expense, and portfolio records are being loaded from AMS." />;
+  if (snapshot.loading) return <DashboardUnavailable title="Loading analytics" description="Invoice, expense, and portfolio records are being loaded from AMS." compact />;
 
   return (
     <div className="ams-dashboard-analytics-workspace" data-ams-feature-slug="dashboard-analytics-workspace">
@@ -1263,9 +1263,11 @@ const AnalyticsView: React.FC<{
             </div>
 
             {!financialDataAvailable ? (
-              <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." />
+              <DashboardUnavailable title="Financial trend unavailable" description="The invoice or expense source did not return data for the current role. Values are not estimated." compact />
             ) : !financialRecordsReturned ? (
-              <DashboardUnavailable
+              <DashboardEmptyState
+                eyebrow="FINANCIAL MOVEMENT"
+                icon={<CircleDollarSign size={17} aria-hidden="true" />}
                 title={financialSourceRecordsReturned
                   ? selectedCurrencyFinancialRowsReturned
                     ? 'No usable financial records in selected currency'
@@ -1278,11 +1280,26 @@ const AnalyticsView: React.FC<{
                   : 'The invoice and expense sources returned no records. A zero-value trend is not inferred from an empty source.'}
               />
             ) : inCurrencyIssuedInvoices.length === 0 ? (
-              <DashboardUnavailable title="Invoice history unavailable" description={'The invoice source returned no usable records in ' + currency + '. A zero-value invoice series is not inferred.'} />
+              <DashboardEmptyState
+                eyebrow="INVOICE HISTORY"
+                icon={<ReceiptText size={17} aria-hidden="true" />}
+                title="No issued invoices to chart"
+                description={'The invoice source returned no issued invoice records in ' + currency + '. A zero-value invoice series is not inferred.'}
+              />
             ) : inCurrencyExpenses.length === 0 ? (
-              <DashboardUnavailable title="Expense history unavailable" description={'The expense source returned no usable records in ' + currency + '. A zero-value expense series is not inferred.'} />
+              <DashboardEmptyState
+                eyebrow="EXPENSE HISTORY"
+                icon={<ReceiptText size={17} aria-hidden="true" />}
+                title="No eligible expenses to chart"
+                description={'The expense source returned no usable records in ' + currency + '. A zero-value expense series is not inferred.'}
+              />
             ) : trend.length < 2 ? (
-              <DashboardUnavailable title="Financial trend unavailable" description="The selected sources did not return a usable period series. Values are not estimated." />
+              <DashboardEmptyState
+                eyebrow="FINANCIAL MOVEMENT"
+                icon={<CircleDollarSign size={17} aria-hidden="true" />}
+                title="No usable period trend"
+                description="The selected sources did not return a usable period series. Values are not estimated."
+              />
             ) : (
               <>
                 <TrendChart
@@ -1353,14 +1370,21 @@ const AnalyticsView: React.FC<{
             bodyClassName="p-4 sm:p-5"
           >
             {snapshot.invoices === null ? (
-              <DashboardUnavailable title="Receivables unavailable" description="The invoice source did not return data for the current role." />
+              <DashboardUnavailable title="Receivables unavailable" description="The invoice source did not return data for the current role." compact />
             ) : invoiceRows.length === 0 ? (
-              <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
-                <p className="text-xs font-medium text-fg">No invoice records returned</p>
-                <p className="mt-1 text-xs text-muted">An empty source is not represented as a confirmed zero balance.</p>
-              </div>
+              <DashboardEmptyState
+                eyebrow="RECEIVABLES"
+                icon={<ReceiptText size={17} aria-hidden="true" />}
+                title="No invoice records returned"
+                description="An empty source is not represented as a confirmed zero balance."
+              />
             ) : inCurrencyIssuedInvoices.length === 0 ? (
-              <DashboardUnavailable title="No issued invoice records in selected currency" description={'The invoice source returned no issued invoice records in ' + currency + '. Quotations and non-issued invoice rows are excluded from receivables.'} />
+              <DashboardEmptyState
+                eyebrow="RECEIVABLES"
+                icon={<ReceiptText size={17} aria-hidden="true" />}
+                title="No issued invoices in selected currency"
+                description={'The invoice source returned no issued invoice records in ' + currency + '. Quotations and non-issued invoice rows are excluded from receivables.'}
+              />
             ) : (
               <div className="space-y-3">
                 <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
@@ -1397,12 +1421,14 @@ const AnalyticsView: React.FC<{
             bodyClassName="p-4 sm:p-5"
           >
             {snapshot.projects === null ? (
-              <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." />
+              <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." compact />
             ) : snapshot.projects.length === 0 ? (
-              <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
-                <p className="text-xs font-medium text-fg">No project records returned</p>
-                <p className="mt-1 text-xs text-muted">The current source contains no project rows to group by status.</p>
-              </div>
+              <DashboardEmptyState
+                eyebrow="PROJECT STATUS"
+                icon={<FolderKanban size={17} aria-hidden="true" />}
+                title="No project records returned"
+                description="The current source contains no project rows to group by status."
+              />
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-3">
@@ -1463,16 +1489,16 @@ const AnalyticsView: React.FC<{
             bodyClassName="p-4 sm:p-5"
           >
             {snapshot.inboxLeads === null ? (
-              <DashboardUnavailable title="Inquiry pipeline unavailable" description="The Inbox source did not return records for the current role. An unavailable source is not interpreted as an empty pipeline." />
+              <DashboardUnavailable title="Inquiry pipeline unavailable" description="The Inbox source did not return records for the current role. An unavailable source is not interpreted as an empty pipeline." compact />
             ) : inquiryRecords.length === 0 ? (
-              <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
-                <p className="text-xs font-medium text-fg">No sales inquiry records returned</p>
-                <p className="mt-1 text-xs leading-5 text-muted">
-                  {inquiryRows.length > 0
-                    ? 'The source returned submissions, but none has the canonical inquiry type. Other submission types are not counted in this report.'
-                    : 'The Inbox source returned no inquiry submissions.'}
-                </p>
-              </div>
+              <DashboardEmptyState
+                eyebrow="INQUIRY PIPELINE"
+                icon={<Users size={17} aria-hidden="true" />}
+                title="No sales inquiry records"
+                description={inquiryRows.length > 0
+                  ? 'The source returned submissions, but none has the canonical inquiry type. Other submission types are not counted in this report.'
+                  : 'The Inbox source returned no inquiry submissions.'}
+              />
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-3">
@@ -1510,11 +1536,12 @@ const AnalyticsView: React.FC<{
                       ariaLabel={'New inquiry count by date bucket for ' + inquiryVolumeTrend.scopeLabel + '. The chart uses saved inquiry submission dates.'}
                     />
                   ) : (
-                    <div className="flex min-h-32 flex-col items-center justify-center rounded-control border border-line bg-panel px-4 py-6 text-center" role="status">
-                      <CalendarDays size={18} className="text-muted" aria-hidden="true" />
-                      <p className="mt-2 text-xs font-semibold text-fg">Inquiry volume trend unavailable</p>
-                      <p className="mt-1 max-w-md text-[11px] leading-5 text-muted">No usable submission dates are available for the inquiry records. The current status totals remain available above.</p>
-                    </div>
+                    <DashboardEmptyState
+                      eyebrow="INQUIRY VOLUME"
+                      icon={<CalendarDays size={17} aria-hidden="true" />}
+                      title="No dated inquiries to chart"
+                      description="No usable submission dates are available for the inquiry records. The current status totals remain available above."
+                    />
                   )}
                   <p className="text-[11px] leading-5 text-muted">
                     {undatedInquiryCount > 0
@@ -1543,7 +1570,12 @@ const AnalyticsView: React.FC<{
                         ariaLabel={'Current inquiry status distribution: ' + inquiryStatusChartData.map((item) => item.label + ' ' + item.value).join(', ')}
                       />
                     ) : (
-                      <p className="rounded-control border border-line bg-panel px-3 py-3 text-xs text-muted" role="status">No current status values are available to chart.</p>
+                      <DashboardEmptyState
+                        eyebrow="INQUIRY STATUS"
+                        icon={<Users size={17} aria-hidden="true" />}
+                        title="No current status values to chart"
+                        description="The available inquiry records do not contain current status values for this visualization."
+                      />
                     )}
                   </section>
                   <section
@@ -1576,7 +1608,12 @@ const AnalyticsView: React.FC<{
                         })}
                       </div>
                     ) : (
-                      <p className="rounded-control border border-line bg-panel px-3 py-3 text-xs text-muted" role="status">No requested service categories were recorded for these inquiries.</p>
+                      <DashboardEmptyState
+                        eyebrow="REQUESTED SERVICES"
+                        icon={<FileText size={17} aria-hidden="true" />}
+                        title="No service categories recorded"
+                        description="No requested service categories were recorded for these inquiries."
+                      />
                     )}
                   </section>
                 </div>
