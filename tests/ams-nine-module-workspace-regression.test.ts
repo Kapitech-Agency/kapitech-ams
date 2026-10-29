@@ -640,23 +640,27 @@ test('CMS editor headers share the same spacing ownership', async () => {
 });
 
 
-test('Dashboard header context follows the selected Overview, Performance, or Analytics workspace', async () => {
+test('Dashboard header stays consistent with the Overview shell across workspaces', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  assert.match(dashboard, /eyebrow=\{view === 'overview' \? undefined : 'Agency operations'\}/);
-  assert.doesNotMatch(dashboard, /Finance, project delivery, deadlines, and team workload in one operational view/);
-  assert.match(dashboard, /Compare delivery progress, bottlenecks, and recorded team effort over the selected period/);
-  assert.match(dashboard, /Explore supported trends across financial movement, inquiry demand, and portfolio status/);
+  assert.doesNotMatch(dashboard, /eyebrow=\{view === 'overview' \? undefined : 'Agency operations'\}/);
+  assert.match(dashboard, /description="Delivery priorities, client commitments and agency operations\."/);
+  assert.doesNotMatch(dashboard, /Compare delivery progress, bottlenecks, and recorded team effort over the selected period/);
+  assert.doesNotMatch(dashboard, /Explore supported trends across financial movement, inquiry demand, and portfolio status/);
   assert.match(dashboard, /aria-label="Dashboard views"/);
   assert.match(dashboard, /ariaCurrent=\{view === tab\.key \? 'page' : undefined\}/);
   assert.doesNotMatch(dashboard, /aria-label="Reporting date range"/);
   assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
   assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
+  const headerStart = dashboard.indexOf('<AdminModuleHeader slug="dashboard-header"');
+  const headerEnd = dashboard.indexOf('<section className="ams-dashboard-toolbar', headerStart);
+  assert.ok(headerStart >= 0 && headerEnd > headerStart);
+  const header = dashboard.slice(headerStart, headerEnd);
+  assert.ok(header.includes('data-ams-feature-slug="dashboard-workspace-shortcuts"'));
+  assert.equal(header.includes("view === 'overview' ?"), false, 'Header shortcuts must remain available across Dashboard tabs.');
   const adminLayout = await read('src/pages/admin/AdminLayout.tsx');
   assert.ok(adminLayout.includes('const isDashboardOverview ='));
   assert.ok(adminLayout.includes('{!isDashboardOverview ? <AdminReportingPeriodBar /> : null}'));
   assert.doesNotMatch(dashboard, /aria-label="Reporting period type"/);
-  assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
-  assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
 });
 
 test('Dashboard invalid workspace query values normalize to Overview', async () => {
