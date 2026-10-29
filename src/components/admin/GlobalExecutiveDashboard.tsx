@@ -1232,12 +1232,12 @@ const AnalyticsView: React.FC<{
     tertiary: undefined,
   }));
   const financialTrendEmptyTitle = !financialSourceRecordsReturned
-    ? 'No eligible financial records'
+    ? 'No financial records returned'
     : !selectedCurrencyFinancialRowsReturned
-      ? 'No records in selected currency'
+      ? 'No financial records in selected currency'
       : !financialRecordsReturned
-        ? 'No eligible financial records'
-        : 'No financial movement in selected period';
+        ? 'No usable financial records in selected currency'
+        : 'No eligible financial records in selected period';
   const financialTrendEmptyDescription = !financialSourceRecordsReturned
     ? 'No invoice or eligible expense values were recorded in this period.'
     : !selectedCurrencyFinancialRowsReturned
@@ -1350,7 +1350,7 @@ const AnalyticsView: React.FC<{
                         </tfoot>
                       </table>
                     </div>
-                    <p className="mt-3 text-[10px] leading-4 text-muted">Invoices use issue date; expenses use recorded date. Difference is an arithmetic comparison, not posted profit.</p>
+                    <p className="mt-3 text-[10px] leading-4 text-muted">Invoice buckets use issue date; Expense buckets use recorded date. The difference is an arithmetic comparison, not posted profit.</p>
                   </details>
                 ) : null}
               </>

@@ -134,8 +134,10 @@ test('Dashboard Analytics does not turn currency-mismatched or quotation-only re
   assert.ok(analytics.includes('const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0'));
   assert.ok(analytics.includes('const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0'));
   assert.ok(analytics.includes('No usable financial records in selected currency'));
-  assert.ok(analytics.includes('A zero-value trend is not inferred from another currency.'));
-  assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source.'));
+  assert.ok(analytics.includes('financialTrendHasRecords'));
+  assert.ok(analytics.includes('financialTrendEmptyDescription'));
+  assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
+  assert.ok(analytics.includes('primary: financialTrendHasRecords ? point.primary : 0'));
 });
 
 

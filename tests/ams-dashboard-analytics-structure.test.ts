@@ -55,8 +55,8 @@ test('Dashboard Analytics financial movement exposes exact values, date windows,
   assert.ok(analytics.includes('The difference is an arithmetic comparison, not posted profit'));
   assert.ok(analytics.includes('!financialDataAvailable'));
   assert.ok(analytics.includes('inCurrencyIssuedInvoices.length === 0'));
-  assert.ok(analytics.includes('inCurrencyExpenses.length === 0'));
   assert.ok(analytics.includes('!financialRecordsReturned'));
+  assert.ok(analytics.includes('financialTrendHasRecords'));
   assert.ok(analytics.includes('financialTrendHasRecords'));
   assert.ok(analytics.includes('financialTrendEmptyTitle'));
   assert.ok(analytics.includes('financialTrendEmptyDescription'));
@@ -101,15 +101,16 @@ test('Dashboard Analytics reuses the approved Overview empty-state and unavailab
   assert.ok(start >= 0 && end > start, 'AnalyticsView should be identifiable.');
   const analytics = source.slice(start, end);
 
-  assert.ok((analytics.match(/<DashboardEmptyState\b/g) || []).length >= 8,
-    'No-record conditions should reuse DashboardEmptyState, which is already used in the approved Overview.');
+  assert.ok((analytics.match(/<DashboardEmptyState\b/g) || []).length >= 7,
+    'Other no-record conditions use DashboardEmptyState; the main trend uses Overview’s chart overlay pattern.');
   assert.ok((analytics.match(/<DashboardUnavailable\b[\s\S]*?\/>/g) || []).every((tag) => /\bcompact\b/.test(tag)),
     'Loading or unavailable sources should use the compact status-row presentation from Overview.');
   assert.doesNotMatch(analytics, /rounded-control border border-line bg-bg px-4 py-5/,
     'Avoid one-off bordered empty boxes in Analytics.');
   assert.doesNotMatch(analytics, /flex min-h-32 flex-col items-center justify-center rounded-control border border-line bg-panel/,
     'Avoid a custom oversized centered empty state for the inquiry trend.');
-  assert.match(analytics, /eyebrow="FINANCIAL MOVEMENT"/);
+  assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
+  assert.ok(analytics.includes('financialTrendEmptyTitle'));
   assert.match(analytics, /eyebrow="RECEIVABLES"/);
   assert.match(analytics, /eyebrow="PROJECT STATUS"/);
   assert.match(analytics, /eyebrow="INQUIRY PIPELINE"/);

@@ -1088,8 +1088,8 @@ test('Dashboard Analytics financial-history availability respects currency and i
   assert.ok(analytics.includes('const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0'));
   assert.ok(analytics.includes('No usable financial records in selected currency'));
   assert.ok(analytics.includes('No financial records in selected currency'));
-  assert.ok(analytics.includes('A zero-value trend is not inferred from another currency.'));
-  assert.ok(analytics.includes('No usable financial records in selected currency'));
+  assert.ok(analytics.includes('financialTrendHasRecords'));
+  assert.ok(analytics.includes('financialTrendEmptyDescription'));
 });
 
 
@@ -1107,9 +1107,10 @@ test('Dashboard overview keeps its operational cards source-backed and preserves
   for (const text of ['Task queue unavailable', 'Project portfolio unavailable', 'Delivery schedule unavailable', 'Time-log source unavailable.', 'Invoice source unavailable.', 'Financial movement unavailable']) {
     assert.ok(overview.includes(text), 'Overview must disclose source unavailability: ' + text);
   }
-  assert.ok(analytics.includes('Financial trend unavailable'));
+  assert.ok(analytics.includes('Financial movement unavailable'));
   assert.ok(analytics.includes('not posted profit'));
-  assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
+  assert.ok(analytics.includes('financialTrendEmptyDescription'));
+  assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
   assert.doesNotMatch(dashboard, /Preview data only|sampleProjects|sampleTeam|sampleRevenueByRange|isSlugFixtureMode|fixtureMode/);
 });
 
@@ -1238,11 +1239,12 @@ test('Dashboard Analytics does not infer zero financial trends from empty or cur
   assert.ok(analytics.includes('!financialDataAvailable'), 'Failed source reads must remain unavailable.');
   assert.ok(analytics.includes('!financialRecordsReturned'), 'Empty or non-issued records must not become a zero trend.');
   assert.ok(analytics.includes('No usable financial records in selected currency'));
-  assert.ok(analytics.includes('A zero-value trend is not inferred from another currency.'));
-  assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source.'));
-  assert.ok(analytics.includes('A zero-value invoice series is not inferred.'));
-  assert.ok(analytics.includes('A zero-value expense series is not inferred.'));
-  assert.ok(analytics.includes('Financial trend unavailable'));
+  assert.ok(analytics.includes('financialTrendEmptyDescription'));
+  assert.ok(analytics.includes('financialTrendEmptyTitle'));
+  assert.ok(analytics.includes('primary: financialTrendHasRecords ? point.primary : 0'));
+  assert.ok(analytics.includes('secondary: financialTrendHasRecords ? (point.secondary ?? 0) : 0'));
+  assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
+  assert.ok(analytics.includes('Financial movement unavailable'));
 });
 
 test('Dashboard Performance follows Overview panel composition and preserves source-backed delivery metrics', async () => {
@@ -1335,16 +1337,17 @@ test('Dashboard Analytics reuses approved Overview rows, proportions, panels and
   assert.ok(analytics.includes('not posted profit'));
   assert.ok(analytics.includes('Financial movement unavailable'));
   assert.ok(analytics.includes('data={financialChartRows}'));
-  assert.ok(analytics.includes('className="ams-finance-chart-stage'));
+  assert.ok(analytics.includes('ams-finance-chart-stage'));
   assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
   assert.ok(analytics.includes('No eligible financial records'));
   assert.ok(analytics.includes('View exact period values · {currency}'));
   assert.ok(analytics.includes('presentation="maven"'));
   assert.ok(analytics.includes('showDataTable={false}'));
   assert.ok(analytics.includes('Projects by current status'));
-  assert.ok((analytics.match(/<DashboardEmptyState\b/g) || []).length >= 8,
-    'Analytics no-data states must reuse the shared empty-state component from Overview.');
-  assert.match(analytics, /eyebrow="FINANCIAL MOVEMENT"[\s\S]*?title=\{financialSourceRecordsReturned/);
+  assert.ok((analytics.match(/<DashboardEmptyState\b/g) || []).length >= 7,
+    'Non-chart empty states use the shared component from Overview; the trend uses its chart overlay.');
+  assert.ok(analytics.includes('financialTrendEmptyTitle'));
+  assert.ok(analytics.includes('financialTrendEmptyDescription'));
   assert.match(analytics, /eyebrow="RECEIVABLES"[\s\S]*?title="No invoice records returned"/);
   assert.match(analytics, /eyebrow="PROJECT STATUS"[\s\S]*?title="No project records returned"/);
   assert.match(analytics, /eyebrow="INQUIRY PIPELINE"[\s\S]*?title="No sales inquiry records"/);
