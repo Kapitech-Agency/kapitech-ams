@@ -1147,7 +1147,7 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   assert.ok(dashboard.includes('enabled: reportPeriodEnabled,'));
   assert.equal(dashboard.includes('setValue: setReportingPeriodValue'), false);
   assert.ok(dashboard.includes('useReportingPeriod()'));
-  assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(financialPeriodMode, financialPeriodValue'));
   assert.ok(analytics.includes('buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)'));
   assert.ok(analytics.includes('const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel)'));
   assert.ok(dashboard.includes('Recent 30-day default window'));
@@ -1332,7 +1332,7 @@ test('Dashboard Analytics reuses approved Overview rows, proportions, panels and
     'No CSS override may shrink Outstanding Receivables back to natural height.');
   assert.ok((analytics.match(/<DashboardControl to="\/admin\//g) || []).length >= 4,
     'Report drill-down actions must use shared DashboardControl styling.');
-  assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
+  assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(financialPeriodMode, financialPeriodValue'));
   assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'));
   assert.ok(analytics.includes('not posted profit'));
   assert.ok(analytics.includes('Financial movement unavailable'));
@@ -1341,6 +1341,8 @@ test('Dashboard Analytics reuses approved Overview rows, proportions, panels and
   assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
   assert.ok(analytics.includes('No eligible financial records'));
   assert.ok(analytics.includes('View exact period values · {currency}'));
+  assert.ok(analytics.includes('ariaLabel="Financial movement reporting period"'));
+  assert.ok(analytics.includes('caption="Period"'));
   assert.ok(analytics.includes('presentation="maven"'));
   assert.ok(analytics.includes('showDataTable={false}'));
   assert.ok(analytics.includes('Projects by current status'));

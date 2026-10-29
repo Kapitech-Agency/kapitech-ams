@@ -130,3 +130,25 @@ test('TrendChart keeps its data table by default while Analytics uses one collap
   assert.ok(analytics.includes('showDataTable={false}'));
   assert.match(analytics, /<details className="mt-3 rounded-control border border-line bg-bg px-3 py-2" data-ams-feature-slug="dashboard-analytics-exact-values">/);
 });
+
+
+test('Analytics financial chart has an independent calendar filter and remains visual-first', async () => {
+  const source = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = source.indexOf('const AnalyticsView: React.FC');
+  const end = source.indexOf('type DashboardCalendarPeriodFilterProps', start);
+  const analytics = source.slice(start, end);
+
+  assert.match(analytics, /const \[financialPeriodMode, setFinancialPeriodMode\] = useState<ReportingPeriodMode>\('month'\)/);
+  assert.match(analytics, /const \[financialPeriodValue, setFinancialPeriodValue\] = useState\(\(\) => getCurrentDashboardPeriodValue\('month'\)\)/);
+  assert.ok(analytics.includes('ariaLabel="Financial movement reporting period"'));
+  assert.ok(analytics.includes('caption="Period"'));
+  assert.ok(analytics.includes('options={financialPeriodOptions}'));
+  assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(financialPeriodMode, financialPeriodValue, inCurrencyInvoices, inCurrencyExpenses)'));
+  assert.ok(analytics.includes('buildInquiryVolumeTrend(\n    inquiryRecords,\n    reportPeriodMode,\n    reportPeriodValue,\n    reportPeriodEnabled,\n    reportPeriodLabel'));
+  assert.ok(analytics.includes('data={financialChartRows}'));
+  assert.ok(analytics.includes('className="ams-finance-chart-empty-state"'));
+  assert.ok(analytics.includes('showDataTable={false}'));
+  assert.match(styles, /\.ams-dashboard-analytics-financial-actions > \.ams-card-period-controls/);
+  assert.match(styles, /\.ams-dashboard-analytics-financial-chart \.ams-trend-chart__plot/);
+});

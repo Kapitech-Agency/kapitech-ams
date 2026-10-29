@@ -278,6 +278,7 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(dashboard.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
   assert.ok(dashboard.includes('buildRecentFinancialTrend(issuedInvoicesInSelectedCurrency, financeExpenseRows)'));
   assert.ok(dashboard.includes('The difference is an arithmetic comparison, not posted profit.'));
+  assert.ok(dashboard.includes("const [financialPeriodMode, setFinancialPeriodMode] = useState<ReportingPeriodMode>('month')"));
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
   const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);

@@ -21,6 +21,14 @@
 
 
 
+
+## 0.7 Card-local calendar and financial chart polish · 29 October 2026
+
+- Added a dedicated month/quarter/year `DashboardCalendarPeriodFilter` to the Analytics “Issued invoices vs recorded expenses” card header, aligned with its existing Transactions & Cash drill-down action. The selection is local to this card and independent from the global period still used by Inquiry Volume.
+- The card now surfaces a compact date-range row with a small currency pill, refines chart plot/empty-overlay surfaces and aligns controls for narrow widths. The chart remains the leading visual; exact period values stay in a collapsed disclosure and the visible empty overlay is preserved.
+- No backend/API/auth/permissions, invoice/expense sources, Finance formulas, or posting behavior changed. Quality Gate and CI must be validated on the resulting commit; authenticated browser inspection remains **NOT VERIFIED**.
+
+
 ## 0.6 Financial trend is visual-first and mirrors Overview · 29 October 2026
 
 - The “Issued invoices vs recorded expenses” Analytics card now follows Overview's “Invoices vs expenses” pattern: when the source is available, always render the Maven-style two-series line chart using the selected period buckets. When no eligible values exist, show the chart's zero-line scaffold with the existing `ams-finance-chart-empty-state` overlay rather than replacing the chart with a text block.

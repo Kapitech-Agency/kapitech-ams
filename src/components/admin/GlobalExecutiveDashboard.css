@@ -13064,3 +13064,135 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   width: 100%;
 }
 
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions {
+  gap: 6px;
+  align-items: center;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions > .ams-card-period-controls {
+  display: flex;
+  width: 174px;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 174px;
+  align-items: center;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions .ams-calendar-period-filter {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions .ams-calendar-period-filter__trigger,
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions .ams-dashboard-card-action {
+  box-sizing: border-box;
+  height: 36px;
+  min-height: 36px;
+  align-self: center;
+  margin: 0;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions .ams-calendar-period-filter__trigger {
+  width: 100%;
+  gap: 6px;
+  padding-inline: 8px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions .ams-calendar-period-filter__trigger-label {
+  font-size: 9px;
+  line-height: 12px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions .ams-calendar-period-filter__trigger-value {
+  max-width: 102px;
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions .ams-dashboard-card-action {
+  flex: 0 0 auto;
+  padding-inline: 10px;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  padding: 0 2px 9px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 62%, transparent);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-meta > span:first-child {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-meta > span:first-child svg {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-meta__currency {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid var(--dashboard-card-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--panel) 75%, var(--bg));
+  font-size: 9px;
+  line-height: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-chart {
+  margin-inline: -2px;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 18% 0%, color-mix(in srgb, var(--series-3) 5%, transparent), transparent 55%);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-chart .ams-trend-chart__plot {
+  border-color: color-mix(in srgb, var(--line) 86%, transparent);
+  border-radius: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 42%, transparent), color-mix(in srgb, var(--bg) 76%, transparent));
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-financial-chart.is-empty .ams-trend-chart__plot {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 34%, transparent), color-mix(in srgb, var(--bg) 84%, transparent));
+}
+
+@media (max-width: 639px) {
+  .ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 7px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions > .ams-card-period-controls {
+    width: min(174px, 100%);
+    flex: 0 1 174px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-analytics-financial-actions .ams-dashboard-card-action {
+    max-width: 100%;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-analytics-financial-meta {
+    gap: 7px;
+  }
+}
+

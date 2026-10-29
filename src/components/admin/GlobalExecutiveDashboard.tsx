@@ -1149,15 +1149,20 @@ const AnalyticsView: React.FC<{
   currency: string;
   canOpenInbox: boolean;
 }> = ({ snapshot, reportPeriodMode, reportPeriodValue, reportPeriodLabel, reportPeriodEnabled, currency, canOpenInbox }) => {
+  const [financialPeriodMode, setFinancialPeriodMode] = useState<ReportingPeriodMode>('month');
+  const [financialPeriodValue, setFinancialPeriodValue] = useState(() => getCurrentDashboardPeriodValue('month'));
+  const financialPeriodRange = useMemo(() => getReportingPeriodRange(financialPeriodValue, financialPeriodMode, 'en-GB'), [financialPeriodMode, financialPeriodValue]);
+  const financialPeriodOptions = useMemo(() => getDashboardReportingPeriodOptions(financialPeriodMode, financialPeriodValue), [financialPeriodMode, financialPeriodValue]);
+  const financialPeriodLabel = financialPeriodRange?.label || 'Selected period';
   const invoiceRows = snapshot.invoices || [];
   const expenseRows = snapshot.expenses || [];
   const inCurrencyInvoices = invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
   const inCurrencyIssuedInvoices = inCurrencyInvoices.filter(isIssuedInvoice);
   const inCurrencyExpenseRows = expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
   const inCurrencyExpenses = inCurrencyExpenseRows.filter(isDashboardExpenseEligible);
-  const trend = snapshot.invoices !== null && snapshot.expenses !== null
-    ? reportPeriodEnabled
-      ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, inCurrencyInvoices, inCurrencyExpenses)
+  const financialTrend = snapshot.invoices !== null && snapshot.expenses !== null
+    ? financialPeriodRange
+      ? buildFinancialTrendForReportingPeriod(financialPeriodMode, financialPeriodValue, inCurrencyInvoices, inCurrencyExpenses)
       : buildRecentFinancialTrend(inCurrencyInvoices, inCurrencyExpenses)
     : [];
   const receivableInvoices = inCurrencyIssuedInvoices;
@@ -1218,13 +1223,13 @@ const AnalyticsView: React.FC<{
   const financialSourceRecordsReturned = invoiceRows.length > 0 || expenseRows.length > 0;
   const financialRecordsReturned = inCurrencyIssuedInvoices.length > 0 || inCurrencyExpenses.length > 0;
   const selectedCurrencyFinancialRowsReturned = inCurrencyInvoices.length > 0 || inCurrencyExpenseRows.length > 0;
-  const selectedRangeLabel = describeFinancialTrendScope(trend, reportPeriodEnabled, reportPeriodLabel);
-  const financialChartBuckets = trend.length
-    ? trend
-    : reportPeriodEnabled
-      ? buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue, [], [])
+  const selectedRangeLabel = describeFinancialTrendScope(financialTrend, Boolean(financialPeriodRange), financialPeriodLabel);
+  const financialChartBuckets = financialTrend.length
+    ? financialTrend
+    : financialPeriodRange
+      ? buildFinancialTrendForReportingPeriod(financialPeriodMode, financialPeriodValue, [], [])
       : buildRecentFinancialTrend([], []);
-  const financialTrendHasRecords = trend.some((point) => point.primary > 0 || (point.secondary ?? 0) > 0);
+  const financialTrendHasRecords = financialTrend.some((point) => point.primary > 0 || (point.secondary ?? 0) > 0);
   const financialChartRows = financialChartBuckets.map((point) => ({
     ...point,
     primary: financialTrendHasRecords ? point.primary : 0,
@@ -1260,9 +1265,9 @@ const AnalyticsView: React.FC<{
   const selectedPeriodDescription = financialChartBuckets.length
     ? formatReportDate(financialChartBuckets[0].startDate) + ' – ' + formatReportDate(inclusiveEndDate(financialChartBuckets[financialChartBuckets.length - 1].endDate))
     : 'Period unavailable';
-  const periodInvoicedTotal = trend.reduce((sum, point) => sum + point.primary, 0);
-  const periodExpenseTotal = trend.reduce((sum, point) => sum + (point.secondary ?? 0), 0);
-  const periodDifferenceTotal = trend.reduce((sum, point) => sum + (point.tertiary ?? 0), 0);
+  const periodInvoicedTotal = financialTrend.reduce((sum, point) => sum + point.primary, 0);
+  const periodExpenseTotal = financialTrend.reduce((sum, point) => sum + (point.secondary ?? 0), 0);
+  const periodDifferenceTotal = financialTrend.reduce((sum, point) => sum + (point.tertiary ?? 0), 0);
 
   if (snapshot.loading) return <DashboardUnavailable title="Loading analytics" description="Invoice, expense, and portfolio records are being loaded from AMS." compact />;
 
@@ -1275,20 +1280,34 @@ const AnalyticsView: React.FC<{
             title="Issued invoices vs recorded expenses"
             className="h-full ams-overview-panel"
             actions={(
-              <DashboardControl to="/admin/finance?tab=chart-of-accounts" variant="action" size="compact" icon={<CircleDollarSign size={14}/>} className="ams-dashboard-card-action">Open Transactions & Cash</DashboardControl>
+              <div className="ams-dashboard-card-header-actions ams-dashboard-analytics-financial-actions">
+                <div className="ams-card-period-controls">
+                  <DashboardCalendarPeriodFilter
+                    ariaLabel="Financial movement reporting period"
+                    caption="Period"
+                    mode={financialPeriodMode}
+                    value={financialPeriodValue}
+                    periodLabel={financialPeriodLabel}
+                    options={financialPeriodOptions}
+                    onModeChange={(mode, value) => { setFinancialPeriodMode(mode); setFinancialPeriodValue(value); }}
+                    onValueChange={setFinancialPeriodValue}
+                  />
+                </div>
+                <DashboardControl to="/admin/finance?tab=chart-of-accounts" variant="action" size="compact" icon={<CircleDollarSign size={14}/>} className="ams-dashboard-card-action">Open Transactions & Cash</DashboardControl>
+              </div>
             )}
             bodyClassName="p-4 sm:p-5"
           >
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
-              <p className="text-[11px] font-medium text-fg">{selectedRangeLabel}</p>
-              <p className="text-[10px] tabular-nums text-muted">{selectedPeriodDescription} · {currency}</p>
+            <div className="ams-dashboard-analytics-financial-meta" aria-label="Selected financial reporting range">
+              <span><CalendarDays size={12} aria-hidden="true" />{selectedPeriodDescription}</span>
+              <span className="ams-dashboard-analytics-financial-meta__currency">{currency}</span>
             </div>
 
             {!financialDataAvailable ? (
               <DashboardUnavailable title="Financial movement unavailable" description="Invoice and expense sources are not both available to this role or service." compact />
             ) : (
               <>
-                <div className={['ams-finance-chart-stage', financialTrendHasRecords ? '' : 'is-empty'].filter(Boolean).join(' ')}>
+                <div className={['ams-finance-chart-stage', 'ams-dashboard-analytics-financial-chart', financialTrendHasRecords ? '' : 'is-empty'].filter(Boolean).join(' ')}>
                   <TrendChart
                     data={financialChartRows}
                     primaryLabel="Invoices issued"
@@ -1311,7 +1330,7 @@ const AnalyticsView: React.FC<{
                   ) : null}
                 </div>
 
-                {financialTrendHasRecords && trend.length > 0 ? (
+                {financialTrendHasRecords && financialTrend.length > 0 ? (
                   <details className="mt-3 rounded-control border border-line bg-bg px-3 py-2" data-ams-feature-slug="dashboard-analytics-exact-values">
                     <summary className="cursor-pointer text-[11px] font-medium text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View exact period values · {currency}</summary>
                     <div className="mt-2 overflow-x-auto rounded-control border border-line" role="region" aria-label="Exact invoice and expense values by period" tabIndex={0}>
@@ -1325,7 +1344,7 @@ const AnalyticsView: React.FC<{
                           </tr>
                         </thead>
                         <tbody>
-                          {trend.map((point) => {
+                          {financialTrend.map((point) => {
                             const endDate = inclusiveEndDate(point.endDate);
                             return (
                               <tr key={point.startDate + '-' + point.endDate} className="border-b border-line last:border-0">
