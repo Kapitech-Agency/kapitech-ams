@@ -678,7 +678,7 @@ test('Dashboard active tabs, shared filter states, aligned card bodies, compact 
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
 
-  assert.ok(dashboard.includes('aria-current={view === tab.key ? \'page\' : undefined}'));
+  assert.ok(dashboard.includes("ariaCurrent={view === tab.key ? 'page' : undefined}"));
   assert.ok(styles.includes('.ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs .ams-dashboard-view-tab[aria-current="page"]'));
   assert.ok(styles.includes('overflow-x: visible;'));
   assert.ok(styles.includes('.ams-dashboard-task-queue-filter .ams-dashboard-control--filter[aria-pressed="true"]'));
@@ -1812,7 +1812,8 @@ test('Dashboard header provides aligned quick actions and tabs without a duplica
   assert.equal(toolbar.includes('aria-label="Previous reporting period"'), false);
   assert.equal(toolbar.includes('aria-label="Next reporting period"'), false);
   assert.equal(toolbar.includes('clearReportingPeriodFilter'), false);
-  assert.ok(toolbar.includes("view === tab.key ? 'is-active border-accent bg-transparent text-fg'"));
+  assert.ok(toolbar.includes('active={view === tab.key}'));
+  assert.ok(toolbar.includes("view === tab.key ? 'border-accent bg-transparent text-fg'"));
 });
 
 

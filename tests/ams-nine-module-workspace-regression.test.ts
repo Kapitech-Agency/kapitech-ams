@@ -647,7 +647,7 @@ test('Dashboard header context follows the selected Overview, Performance, or An
   assert.match(dashboard, /Compare delivery progress, bottlenecks, and recorded team effort over the selected period/);
   assert.match(dashboard, /Explore supported trends across financial movement, inquiry demand, and portfolio status/);
   assert.match(dashboard, /aria-label="Dashboard views"/);
-  assert.match(dashboard, /aria-current=\{view === tab\.key \? 'page' : undefined\}/);
+  assert.match(dashboard, /ariaCurrent=\{view === tab\.key \? 'page' : undefined\}/);
   assert.doesNotMatch(dashboard, /aria-label="Reporting date range"/);
   assert.ok(dashboard.includes('ariaLabel="Finance reporting period"'));
   assert.ok(dashboard.includes('ariaLabel="Recorded time reporting period"'));
