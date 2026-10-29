@@ -753,7 +753,7 @@ export const AdminInbox: React.FC = () => {
         )}
         footer={(
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Jumlah record belum tersedia.' : 'Inbound record count unavailable.') : filteredItems.length + ' matching ' + (filteredItems.length === 1 ? 'record' : 'records') + ' · updates automatically every 30 seconds.'}</p>
+            <p className="text-[11px] text-muted">{loadError && submissions.length === 0 ? (language === 'id' ? 'Jumlah record belum tersedia.' : 'Inbound record count unavailable.') : filteredItems.length + ' matching ' + (filteredItems.length === 1 ? 'record' : 'records') + ' · Updated automatically every 30 seconds.'}</p>
             <span className={'inline-flex min-h-7 items-center gap-1.5 rounded-badge border px-2 text-[10px] font-medium ' + (loading ? 'border-info/20 bg-info/10 text-info' : loadError ? 'border-warning/20 bg-warning/10 text-warning' : 'border-success/20 bg-success/10 text-success')} role="status" aria-live="polite">
               <span className={'h-1.5 w-1.5 rounded-full ' + (loading ? 'bg-info' : loadError ? 'bg-warning' : 'bg-success')} aria-hidden="true" />
               {loading ? (submissions.length > 0 ? (language === 'id' ? 'Memperbarui' : 'Refreshing') : (language === 'id' ? 'Memuat' : 'Loading')) : loadError ? (submissions.length > 0 ? (language === 'id' ? 'Data lama' : 'Stale') : (language === 'id' ? 'Tidak tersedia' : 'Unavailable')) : 'Live'}

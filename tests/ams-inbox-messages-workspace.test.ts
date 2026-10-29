@@ -41,9 +41,8 @@ test('All Messages has explicit accessible Review and Table view controls', asyn
   assert.ok(source.includes('role="group" aria-label="Message register view"'));
   assert.ok(source.includes("aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')}"));
   assert.ok(source.includes("aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')}"));
-  assert.ok(source.includes("activeInboxTab === 'messages' || activeInboxTab === 'unread'"));
+  assert.ok(source.includes("activeInboxTab === 'starred' ? ("));
 });
-
 
 test('Inbox opens on a source-backed Messages master-detail workspace without an Overview tab', async () => {
   const source = await read('src/pages/admin/AdminInbox.tsx');
@@ -76,5 +75,5 @@ test('Inbox keeps bulk actions and export in one shared toolbar without Overview
   const toolbarEnd = source.indexOf('      {/* 4. MAIN CONTENT VIEW', toolbarStart);
   const toolbar = source.slice(toolbarStart, toolbarEnd);
   assert.equal((toolbar.match(/onClick=\{handleExportCSV\}/g) || []).length, 1);
-  assert.ok(source.includes("activeInboxTab === 'messages' || activeInboxTab === 'unread'"));
+  assert.ok(source.includes('role="group" aria-label="Message register view"'));
 });

@@ -1480,7 +1480,7 @@ test('Dashboard Overview adds a permission-gated Inbox triage card from the cano
   assert.ok(inboxTriage.includes("item.status === 'new'"));
   assert.ok(inboxTriage.includes('isInboxUnassigned(item)'));
   assert.ok(inboxPage.includes(".filter((item) => item.type !== 'career')"));
-  assert.ok(inboxPage.includes('isInboxActionable(item)'));
+  assert.ok(inboxPage.includes("case 'unread': return submissions.filter((item) => item.status === 'new')"));
 });
 
 

@@ -38,7 +38,6 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' },
   ],
   inbox: [
-    { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview', slug: 'inbox-workspace-overview' },
     { key: 'messages', label: 'Messages', to: '/admin/inbox?view=messages', slug: 'inbox-workspace-messages' },
     { key: 'follow-ups', label: 'Follow-ups', to: '/admin/inbox', available: false },
     { key: 'routing-templates', label: 'Routing & Templates', to: '/admin/inbox', available: false },
@@ -137,11 +136,9 @@ export function isAmsModuleSubnavigationItemActive(
 
   if (path === '/admin/finance/quotations') return itemKey === 'receivables';
   if (path === '/admin/inbox') {
-    const requestedView = params.get('view') || 'overview';
-    const selectedView = ['overview', 'messages', 'client', 'unread', 'starred'].includes(requestedView)
-      ? requestedView
-      : 'overview';
-    return itemKey === (selectedView === 'overview' ? 'overview' : 'messages');
+    // Messages is the sole functional Inbox workspace. Category and saved views
+    // remain inside the page; unsupported or legacy views resolve to Messages.
+    return itemKey === 'messages';
   }
   if (path === '/admin/documents') return itemKey === 'library';
   if (path === '/admin/finance') {

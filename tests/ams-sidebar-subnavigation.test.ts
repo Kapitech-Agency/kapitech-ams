@@ -95,34 +95,31 @@ test('Inbox exposes only approved workspaces and keeps unavailable destinations 
 });
 
 
-test('Inbox routes activate their owning workspace and unsupported target views fall back to Overview', async () => {
+test('Inbox has no Overview subnavigation and unsupported views resolve to Messages', async () => {
   const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
-  const overview = inbox.find((item) => item.key === 'overview')!;
-  const messages = inbox.find((item) => item.key === 'messages')!;
-  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=overview'), true);
+  const messages = inbox.find((item) => item.key === 'messages');
+  assert.ok(messages, 'Messages is the single functional Inbox workspace.');
+  assert.equal(inbox.some((item) => item.key === 'overview'), false, 'Inbox must not expose a separate Overview subnavigation item.');
   for (const supportedView of ['messages', 'client', 'unread', 'starred']) {
     assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + supportedView), true,
-      supportedView + ' must remain owned by Messages');
-    assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + supportedView), false);
+      supportedView + ' remains owned by the Messages workspace.');
   }
-  for (const unsupportedView of ['client-requests', 'project-support', 'resolved', 'archived', 'unsupported']) {
-    assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + unsupportedView), true,
-      unsupportedView + ' is not implemented and must follow the Inbox page fallback to Overview');
-    assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + unsupportedView), false,
-      unsupportedView + ' must not falsely activate Messages');
+  for (const unsupportedView of ['overview', 'client-requests', 'project-support', 'resolved', 'archived', 'unsupported']) {
+    assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + unsupportedView), true,
+      unsupportedView + ' resolves to Messages rather than activating a nonfunctional tab.');
   }
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'follow-ups')!, '/admin/inbox', '?view=follow-ups'), false,
     'target-only workspaces never appear as active functional workspaces');
 
   const inboxSource = await read('src/pages/admin/AdminInbox.tsx');
-  assert.match(inboxSource, /type InboxTab = 'overview' \| 'messages' \| 'client' \| 'unread' \| 'starred'/);
+  assert.match(inboxSource, /type InboxTab = 'messages' \| 'client' \| 'unread' \| 'starred'/);
   assert.match(inboxSource, /const \[searchParams, setSearchParams\] = useSearchParams\(\)/);
-  assert.match(inboxSource, /const supportedInboxViews: readonly string\[\] = \['overview', 'messages', 'client', 'unread', 'starred'\]/);
+  assert.match(inboxSource, /const supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred'\]/);
   assert.match(inboxSource, /if \(!hasViewParameter \|\| isSupportedInboxView\) return;/);
   assert.match(inboxSource, /new URLSearchParams\(searchParams\)/);
-  assert.match(inboxSource, /canonicalParams\.set\('view', 'overview'\)/);
+  assert.match(inboxSource, /canonicalParams\.delete\('view'\)/);
   assert.match(inboxSource, /setSearchParams\(canonicalParams, \{ replace: true \}\)/);
+  assert.doesNotMatch(inboxSource, /key: 'overview', label: 'Overview', to: '\/admin\/inbox/);
   assert.match(inboxSource, /ariaLabel="Message categories"/);
   assert.match(inboxSource, /ariaLabel="Message saved views"/);
   assert.match(inboxSource, /label: 'Resolved', to: '\/admin\/inbox\?view=resolved', available: false/);
@@ -137,10 +134,10 @@ test('Inbox routes activate their owning workspace and unsupported target views 
     'Starred belongs to saved views and must not be part of message categories.');
   assert.doesNotMatch(inboxSource, /key: 'resolved-archived'/,
     'Resolved and Archived belong to status filters, not a combined worksheet tab.');
-  assert.ok(inboxSource.includes('to="/admin/inbox?view=starred"'),
-    'The existing Starred view remains reachable from Messages controls.');
-  assert.ok(inboxSource.includes('to="/admin/inbox?view=unread"'),
-    'Unread is a saved view on canonical New-status records.');
+  assert.ok(inboxSource.includes("to: '/admin/inbox?view=starred'"),
+    'Starred remains reachable as a saved view.');
+  assert.ok(inboxSource.includes("to: '/admin/inbox?view=unread'"),
+    'Unread remains a saved view on canonical New-status records.');
   assert.match(inboxSource, /case 'unread': return submissions\.filter\(\(item\) => item\.status === 'new'\)/);
   assert.ok(inboxSource.includes("unread: 'unread_messages'"));
   assert.match(inboxSource, /\['messages', 'client', 'unread', 'starred'\] as InboxTab\[\]/);

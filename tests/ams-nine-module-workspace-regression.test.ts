@@ -173,7 +173,7 @@ test('Inbox table labels and empty state reflect the inquiry-only workspace', as
   assert.ok(table.includes("{language === 'id' ? 'Layanan Diminta' : 'Requested Services'}"));
   assert.ok(table.includes("{language === 'id' ? 'Anggaran' : 'Budget'}"));
   assert.doesNotMatch(table, /Services \/ Specialty|Layanan \/ Spesialisasi|Budget \/ Experience|Anggaran \/ Pengalaman|Value \/ Experience/);
-  assert.ok(inbox.includes("'New inquiries will appear here as they arrive.'"));
+  assert.ok(inbox.includes('No matching messages'));
   assert.equal(inbox.includes("'New inquiries and applications will appear here as they arrive.'"), false);
 
   // Applicant records remain excluded at the source boundary and managed in CMS Careers.
@@ -868,7 +868,7 @@ test('Inbox defaults directly to Messages and uses a compact master-detail hiera
 test('Inbox All Messages exposes source-backed status and priority filters before the register', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   const controls = inbox.indexOf("'inbox-message-controls'");
-  const messageFilterGate = inbox.indexOf("{activeInboxTab === 'messages' && (", controls);
+  const messageFilterGate = inbox.indexOf("{activeInboxTab === 'messages' ? (", controls);
   const statusFilter = inbox.indexOf('slug="inbox-message-status-filter"', controls);
   const priorityFilter = inbox.indexOf('slug="inbox-message-priority-filter"', controls);
   const ownerFilter = inbox.indexOf('slug="inbox-message-owner-filter"', controls);
