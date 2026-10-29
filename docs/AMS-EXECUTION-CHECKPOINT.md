@@ -942,3 +942,11 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Tightened Recent Activity toolbar spacing and removed its nested filter panel border/background so the search field, three dropdowns and Reset filters share one compact row where space allows, then reflow at narrow container widths.
 - Moved Export CSV out of the filter toolbar into the Recent Activity card header next to time-window and audit-log actions. Export still uses current matching loaded events and is disabled when the source is unavailable or no rows match.
 - UI-only changes. Source permissions, audit data access, filter/search/sort behavior, CSV escaping and pagination semantics remain intact.
+
+
+## Dashboard shared button padding contract — 29 October 2026
+
+- Extended the existing `DashboardControl` shared component so its Link and native-button outputs apply the same all-side padding by semantic size: compact 4px, standard 6px, roomy 5px. This inline contract prevents older per-card CSS declarations from widening left/right padding independently of top/bottom padding.
+- `DashboardFilterGroup` already composes its options through `DashboardControl`; the Overview's action/filter controls and the Dashboard view tabs now use the same component contract.
+- Added regression coverage for the padding map, both component render paths, shared segmented-filter composition and Dashboard view-tab usage.
+- Presentation-only change. No data sources, API/DB, business rules, permissions, or routes were changed.

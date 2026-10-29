@@ -2596,17 +2596,21 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             { key: 'performance', label: 'Performance' },
             { key: 'analytics', label: 'Analytics' }
           ] as Array<{ key: DashboardWorkspaceView; label: string }>).map((tab) => (
-            <Link
+            <DashboardControl
               key={tab.key}
               to={tab.key === 'overview' ? '/admin/dashboard' : '/admin/dashboard?view=' + tab.key}
-              aria-current={view === tab.key ? 'page' : undefined}
+              variant="quiet"
+              size="standard"
+              showArrow={false}
+              active={view === tab.key}
+              ariaCurrent={view === tab.key ? 'page' : undefined}
               className={[
-                'ams-dashboard-view-tab inline-flex min-h-10 shrink-0 items-center border border-transparent px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                view === tab.key ? 'is-active border-accent bg-transparent text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-transparent hover:text-fg'
+                'ams-dashboard-view-tab shrink-0 border border-transparent text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                view === tab.key ? 'border-accent bg-transparent text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-transparent hover:text-fg'
               ].join(' ')}
             >
               {tab.label}
-            </Link>
+            </DashboardControl>
           ))}
         </nav>
       </section>

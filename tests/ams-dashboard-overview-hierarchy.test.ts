@@ -2127,6 +2127,32 @@ test('All Dashboard buttons, filters, and calendar controls share the same compo
 });
 
 
+test('Dashboard Overview action and filter controls use the shared symmetric-padding component', async () => {
+  const shared = await read('src/components/admin/DashboardControls.tsx');
+  const controlsCss = await read('src/components/admin/DashboardControls.css');
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const start = dashboard.indexOf("\n      {view === 'overview' ? (");
+  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const overview = dashboard.slice(start, end);
+
+  assert.ok(shared.includes('const DASHBOARD_CONTROL_PADDING_BY_SIZE: Record<DashboardControlSize, string> = {'));
+  assert.ok(shared.includes("compact: '4px'"));
+  assert.ok(shared.includes("standard: '6px'"));
+  assert.ok(shared.includes("roomy: '5px'"));
+  assert.ok(shared.includes('const controlPaddingStyle: React.CSSProperties = { padding: DASHBOARD_CONTROL_PADDING_BY_SIZE[size] };'));
+  assert.equal((shared.match(/style={controlPaddingStyle}/g) || []).length, 2,
+    'The same symmetric padding style must apply to both Link actions and native buttons.');
+  assert.ok(shared.includes('export const DashboardFilterGroup'));
+  assert.ok(shared.includes('<DashboardControl key={o.value}'), 'Every segmented filter option is rendered through DashboardControl.');
+
+  assert.ok(dashboard.includes('<DashboardControl\n              key={tab.key}'), 'Dashboard view tabs must use the shared control.');
+  assert.ok(overview.includes('<DashboardControl'));
+  assert.ok(overview.includes('<DashboardFilterGroup'));
+  assert.doesNotMatch(overview, /<button\b/, 'Overview action/filter buttons must not bypass the shared component.');
+  assert.ok(controlsCss.includes('--dashboard-control-padding-standard-x: 12px;'),
+    'Legacy CSS may define fallback geometry, but rendered button padding is owned by the shared component.');
+});
+
 test('Dashboard cards use whitespace and soft row surfaces instead of legacy divider styling', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
