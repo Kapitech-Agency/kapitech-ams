@@ -238,8 +238,9 @@ test('Recent Activity uses a stable responsive filter toolbar and distinct row s
   assert.ok(activity.includes('<AdminTablePagination'));
 
   for (const rule of [
-    'grid-template-areas: "search severity actor order actions";',
-    '"severity actor order actions"',
+    'grid-template-areas: "search filters actions";',
+    '"filters actions"',
+    '.ams-dashboard-activity-filter-panel__heading',
     '.ams-dashboard-activity-tool-actions',
     '.ams-dashboard-activity-table tbody tr td {',
     'background: color-mix(in srgb, var(--bg) 24%, var(--panel));',
@@ -264,14 +265,26 @@ test('Recent Activity normalizes actor names consistently and keeps timestamps r
   assert.equal((styles.match(/\/\* Recent Activity — single source of truth/g) || []).length, 1);
 });
 
-test('Recent Activity labels Search, Severity, Actor and Sort by on a shared control baseline', async () => {
+test('Recent Activity keeps Search separate and groups Severity, Actor and Sort by together', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const start = dashboard.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
   const end = dashboard.indexOf('</AdminPanel>', start);
   assert.ok(start >= 0 && end > start);
   const activity = dashboard.slice(start, end);
-  assert.ok(activity.includes('className="ams-dashboard-activity-search-field"'));
+  const search = activity.indexOf('className="ams-dashboard-activity-search-field"');
+  const filterPanel = activity.indexOf('className="ams-dashboard-activity-filter-panel"');
+  const filterGroup = activity.indexOf('className="ams-dashboard-activity-filter-group"');
+  const severity = activity.indexOf('className="ams-dashboard-activity-filter ams-dashboard-activity-filter--severity"');
+  const actor = activity.indexOf('className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor"');
+  const order = activity.indexOf('className="ams-dashboard-activity-filter ams-dashboard-activity-filter--order"');
+  const actions = activity.indexOf('className="ams-dashboard-activity-tool-actions"');
+  assert.ok(search >= 0 && filterPanel > search && filterGroup > filterPanel && actions > filterGroup,
+    'Search, grouped filters and utility actions must be separate visual regions.');
+  assert.ok(severity > filterGroup && actor > severity && order > actor && actions > order,
+    'Severity, Actor and Sort by must appear together in one refinement group.');
+  assert.ok(activity.includes('aria-label="Recent activity filters and sorting"'));
+  assert.ok(activity.includes('aria-label="Severity, actor and sort controls"'));
   assert.ok(activity.includes('htmlFor="dashboard-recent-activity-search">Search</label>'));
   assert.ok(activity.includes('<span>Severity</span>'));
   assert.ok(activity.includes('<span>Actor</span>'));
@@ -279,13 +292,16 @@ test('Recent Activity labels Search, Severity, Actor and Sort by on a shared con
   assert.ok(activity.includes('aria-label="Sort recent activity"'));
   for (const selector of [
     '.ams-dashboard-activity-search-field',
-    '.ams-dashboard-activity-field__label',
+    '.ams-dashboard-activity-filter-panel',
+    '.ams-dashboard-activity-filter-panel__heading',
+    '.ams-dashboard-activity-filter-group',
     '.ams-dashboard-activity-filter--severity',
     '.ams-dashboard-activity-filter--actor',
     '.ams-dashboard-activity-filter--order'
-  ]) assert.ok(styles.includes(selector), 'Missing aligned activity field styling: ' + selector);
-  assert.ok(styles.includes('grid-template-areas: "search severity actor order actions";'));
-  assert.ok(styles.includes('"search search search search"'));
+  ]) assert.ok(styles.includes(selector), 'Missing grouped activity filter styling: ' + selector);
+  assert.ok(styles.includes('grid-template-areas: "search filters actions";'));
+  assert.ok(styles.includes('"filters actions"'));
+  assert.ok(styles.includes('"search"'));
   assert.ok(styles.includes('@container (max-width: 479px)'));
 });
 

@@ -3662,8 +3662,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="ams-dashboard-activity-tools" role="search" aria-label="Filter recent activity">
-                        <div className="ams-dashboard-activity-search-field">
+                      <div className="ams-dashboard-activity-tools" aria-label="Recent activity controls">
+                        <div className="ams-dashboard-activity-search-field" role="search" aria-label="Search recent activity">
                           <label className="ams-dashboard-activity-field__label" htmlFor="dashboard-recent-activity-search">Search</label>
                           <label className="ams-dashboard-activity-search">
                             <span className="sr-only">Search event, actor or severity</span>
@@ -3678,19 +3678,28 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                             />
                           </label>
                         </div>
-                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--severity">
-                          <span>Severity</span>
-<CustomSelect aria-label="Filter activity by severity" value={activitySeverityFilter} onChange={(value) => { setActivitySeverityFilter(value as DashboardActivitySeverityFilter); setActivityPage(1); }} options={[{ value: 'all', label: 'All levels' }, { value: 'critical', label: 'Critical' }, { value: 'warning', label: 'Warning' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[126px]" menuClassName="ams-dashboard-dropdown-menu" />
-                        </label>
-                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor">
-                          <span>Actor</span>
-                          <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
-                        </label>
-                        
-                        <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--order">
-                          <span>Sort by</span>
-                          <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'severity', label: 'Highest severity' }, { value: 'actor', label: 'Actor A–Z' }]} size="xs" className="ams-dashboard-custom-select w-full sm:w-auto" triggerClassName="ams-dashboard-select-trigger w-full sm:w-[128px]" menuClassName="ams-dashboard-dropdown-menu" />
-                        </label>
+
+                        <div className="ams-dashboard-activity-filter-panel" role="group" aria-label="Recent activity filters and sorting">
+                          <div className="ams-dashboard-activity-filter-panel__heading">
+                            <span>Filters &amp; sorting</span>
+                            <span>Refine loaded events</span>
+                          </div>
+                          <div className="ams-dashboard-activity-filter-group" role="group" aria-label="Severity, actor and sort controls">
+                            <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--severity">
+                              <span>Severity</span>
+                              <CustomSelect aria-label="Filter activity by severity" value={activitySeverityFilter} onChange={(value) => { setActivitySeverityFilter(value as DashboardActivitySeverityFilter); setActivityPage(1); }} options={[{ value: 'all', label: 'All levels' }, { value: 'critical', label: 'Critical' }, { value: 'warning', label: 'Warning' }, { value: 'info', label: 'Info' }]} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
+                            </label>
+                            <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--actor">
+                              <span>Actor</span>
+                              <CustomSelect aria-label="Filter activity by actor" value={activityActorFilter} onChange={(value) => { setActivityActorFilter(value); setActivityPage(1); }} options={dashboardActivityActorOptions} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
+                            </label>
+                            <label className="ams-dashboard-activity-filter ams-dashboard-activity-filter--order">
+                              <span>Sort by</span>
+                              <CustomSelect aria-label="Sort recent activity" value={activitySortOrder} onChange={(value) => { setActivitySortOrder(value as DashboardActivitySortOrder); setActivityPage(1); }} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'severity', label: 'Highest severity' }, { value: 'actor', label: 'Actor A–Z' }]} size="xs" className="ams-dashboard-custom-select w-full" triggerClassName="ams-dashboard-select-trigger w-full" menuClassName="ams-dashboard-dropdown-menu" />
+                            </label>
+                          </div>
+                        </div>
+
                         <div className="ams-dashboard-activity-tool-actions" role="group" aria-label="Recent activity actions">
                           {hasActivityFilters ? (
                             <DashboardControl

@@ -927,3 +927,10 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Reworked the Team Workload card's final scoped CSS contract to remove the stacked nested-card look from each owner/time row, align labels and values on a shared baseline, use lightweight separators, keep risk badges compact, and constrain the Recorded Time period selector to the available card width.
 - Shortened redundant captions and the no-risk label. Existing task-owner ranking, overdue/blocked/review counts, per-card reporting-period control, recorded time totals, routes and permission gates are unchanged.
 - Added regression assertions for the cleaner list layout. This slice is considered validated only after the exact commit's Quality Gate passes.
+
+
+## 0.6 Recent Activity control grouping — 29 October 2026
+
+- Split Recent Activity controls into a standalone Search surface, a visually grouped “Filters & sorting” panel containing Severity, Actor and Sort by, and a separate utility-action area for Reset/Export.
+- Kept existing search, filter, sort, date-window, reset, CSV export and pagination behavior intact. Responsive container rules preserve the same grouping while stacking regions at narrow widths.
+- Presentation and regression tests only; no API, audit data, permissions or business logic changed.
