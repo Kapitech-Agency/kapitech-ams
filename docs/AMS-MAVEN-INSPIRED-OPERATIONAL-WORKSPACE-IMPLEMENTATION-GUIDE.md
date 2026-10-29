@@ -634,74 +634,43 @@ Show service demand or campaign outcomes only when sourced. Include objective, p
 
 ## 5.1 Purpose and workspaces
 
-Inbox manages incoming communication requiring triage, assignment, response, follow-up, or resolution. Retain Overview, Messages, Follow-ups, and Routing & Templates.
+Inbox manages incoming communication requiring triage, assignment, response, follow-up, or resolution. Messages is the default landing. Follow-ups and Routing & Templates remain separate workspaces only when their canonical source and workflow are available. Do not expose a separate Overview tab.
 
-## 5.2 Overview cards and queue
+## 5.2 Messages workspace (default landing)
 
-**Card A: New Messages**
-- Count using existing unread/new semantics.
-- Scope/source and snapshot context.
-- Link to filtered queue.
+Use the approved Dashboard Overview as a **visual reference**, not a content template. Match its clear hierarchy, quiet card surfaces, controlled spacing, compact controls, restrained status accents and reliable empty/loading states. Keep Inbox task-first: a message register and the selected record are the main working area, not summary KPI cards.
 
-**Card B: Unassigned Messages**
-- Count of records without a valid owner.
-- Priority context if available.
-- Link to unassigned view.
+### Page composition
 
-**Card C: Urgent Requests**
-- Count using a configured priority rule.
-- Definition and scope.
-- Link to the relevant queue.
+1. Module header with a direct purpose, total inbound context, notification configuration and only actions that belong in the header.
+2. Message-category and saved-view navigation: All Messages, Sales Inquiries, Client Requests and Project & Support (unavailable categories remain disabled); Unread, Starred, Resolved and Archived stay inside the same canonical message workspace.
+3. Search plus source-backed status, priority, owner/PIC and channel filters where the view supports them.
+4. Compact record list and selected-record reader in a single 12-column row at the 1100px breakpoint: list five columns, detail seven. Narrow screens use one column and an explicit back-to-list action.
+5. The reader shows current sender/company context, message/brief, requested services and captured budget when relevant, current status/priority, ownership, internal notes, and supported/permission-aware actions.
 
-**Card D: Follow-ups Due**
-- Count of genuine due/overdue follow-ups.
-- Owner context.
-- Link to canonical follow-up records.
-- Omit or show unavailable if lifecycle/data is unsupported.
+### Message list row
 
-**Actionable Queue**
-- Subject/request.
-- Sender/client.
-- Category/channel.
-- Priority and state.
-- Owner.
-- Received date.
-- Configured SLA/due information.
-- Related client/project.
-- Direct record link and supported next action.
+- Sender/contact name and company or email.
+- Received time.
+- Channel/source, status, priority and saved indicator.
+- Short message preview.
+- Current owner/PIC or an honest Unassigned label.
+- Slug or canonical record context where useful.
+- Sales Inquiries may add requested services and captured budget text; never parse a free-text budget as a money amount.
+- Selecting a row marks the selected state and opens the existing reader. Saving/unsaving remains an independent, permission-gated action, not a nested action inside the selection control.
 
-Do not place a duplicate full Messages table in Overview.
+Use compact rows rather than a separate large card for each message. Status colors must remain paired with text; avoid all-red unread cards or prominent decorative metrics. Retain a fully accessible table presentation as an alternative.
 
+### Data and state contract
 
-### Current Overview presentation contract
+- Keep the existing canonical submissions source, filters, route/query behavior, 30-second refresh, mutations, permission checks and detail reader.
+- Show loading, unavailable/stale, empty-source and filtered-empty states distinctly. Do not replace unknown counts with zero or hide the last loaded records without accurately communicating source freshness.
+- There is no canonical `ContactSubmission` due date/SLA or persisted follow-up workflow in the current contract. Do not invent “Follow-ups Due”, aging, due badges or completion controls.
+- Careers applicants remain under Website CMS → Careers → Applicants.
+- Keep bulk status processing and CSV export in the owning view controls without duplicating them between the title bar and filter toolbar.
+- The legacy `/admin/inbox?view=overview` URL resolves safely to the Messages landing and removes the unsupported `view` value. Existing Messages, Sales Inquiries, Unread and Starred destinations continue to work.
 
-The current Inbox Overview adapts the Dashboard's quiet card rhythm to Inbox's primary job rather than copying Finance/Projects content: four selectable, source-backed scope cards (Needs action, Unassigned, Priority, Saved) use the same predicates as the existing queue and show a proportional bar against the current matching inbound set. The main row pairs the priority-and-age ordered Triage Queue (seven of twelve columns at the wide breakpoint) with a Recent Inbound / Record Review panel (five of twelve). Recent records are selected from the current filtered collection, ordered by saved `createdAt`, and exclude records already shown in the active triage queue; selecting one opens the existing record details/actions. Empty source, no filter matches, queue-clear and loading states are distinct.
-
-The record contract does not include a canonical follow-up due date or configured SLA field. Do not create a mock “Follow-ups Due” number, date, or completion action in this Overview. Keep that requirement unavailable until a canonical follow-up model/workflow is approved. Export and bulk status operations remain in the owning Messages views so the Overview can stay focused on triage and inspection.
-
-## 5.3 Messages workspace
-
-### Filters
-Search, All Messages, Sales Inquiries, Client Requests, Project & Support, and supported status/priority/owner/channel/date filters and saved views. These are views over canonical message records.
-
-### Register row
-- Sender or subject.
-- Channel/source.
-- Received date.
-- Category.
-- Status.
-- Priority.
-- Owner.
-- SLA/due context if configured.
-- Related client/project.
-- Unread/starred state if supported.
-
-### Selected-thread detail
-Group identity/current state, sender and linked context, chronological conversation, attachments, internal notes, ownership, workflow state, and authorized actions. Use a split-pane on wide screens only when it remains readable. On mobile, provide a clear detail/back path.
-
-Resolved and Archived have different meanings. Do not claim that a message was sent/delivered without provider confirmation.
-
-## 5.4 Follow-ups workspace
+## 5.3 Follow-ups workspace
 
 Internal views: Due Today, Upcoming, Overdue, Completed.
 
@@ -714,9 +683,9 @@ Each record shows:
 - Status.
 - Supported next action.
 
-If the source workflow is not implemented, do not create mock follow-ups or local-only completion.
+If the canonical reminder/due-at source or workflow is not present, keep Follow-ups unavailable. Never create mock rows or local-only completion behavior.
 
-## 5.5 Routing & Templates
+## 5.4 Routing & Templates
 
 ### Routing Rules
 Each rule contains its name, enabled state, supported conditions, destination/owner, category/priority behavior, rule order, conflicts, updated context if recorded, and supported preview/test/edit/disable actions.
@@ -725,8 +694,6 @@ Each rule contains its name, enabled state, supported conditions, destination/ow
 Each template contains name, channel/context, category, content preview, supported variables, version/update when available, actual state, and supported edit/preview action.
 
 No invented variables, routing engine behavior, send success, or provider status.
-
----
 
 # 6. Module 03: Projects
 

@@ -4,7 +4,7 @@
 **Delivery branch:** `main`  
 **Canonical roadmap:** [AMS End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md)  
 **Recovery protocol:** [AMS Resume After Timeout or Interruption Protocol](AMS-RESUME-AFTER-INTERRUPTION.md)  
-**Current task:** Stage 4 Dashboard Overview card-content alignment to the user-supplied Fynix Behance reference and contextual empty-state redesign, then Stage 5 authenticated rendered review and user sign-off. Latest scoped implementation slice moves operational exceptions, task queue, and deadlines ahead of finance/portfolio context; workspace shortcuts are promoted into the Dashboard header and removed from the lower content rows. Latest UI source/test slice: [94c9f87f](https://github.com/Kapitech-Agency/kapitech-ams/commit/94c9f87f0200b0619122576f0ff6522a3d9dda8f), a bounded layout correction to compact the Overview card gutters and prevent the Projects portfolio card from stretching into unused vertical space beside the taller Finance card. The latest CI/Quality Gate runs for this SHA were still in progress at checkpoint refresh; verify their final outcomes before claiming a pass. Production data-backed visual review is blocked because the available browser profile did not contain a saved sign-in, so Finance/Projects/task/time-log visualizations were not available to inspect. No backend/API/auth/permission/data changes were made. The user explicitly authorized a bounded Stage 4 transition to Inbox → Overview; Dashboard's authenticated visual sign-off remains unverified and no broader downstream implementation is inferred.
+**Current task:** Stage 4 Inbox content redesign. The user explicitly rejected the Inbox Overview tab and requested a ground-up, top-tier Messages landing, using Dashboard Overview only as the visual reference. Remove the separate Overview view and use All Messages as the default `/admin/inbox` destination with a compact 5:7 master-detail workspace. Keep source/API, query-driven saved views, authorization, message actions and canonical records unchanged; do not invent due/SLA fields or follow-up workflow. Authenticated rendered review and Stage 5 sign-off remain unverified.
 
 
 > This checkpoint is an evidence snapshot, not live branch state. Refresh `main`, current workflow status, and source/tests on every resume. Section 1 is the prior source/test snapshot; the latest warning-state slice and browser findings are recorded in Section 0.
@@ -29,6 +29,14 @@
 - No backend/API/auth/permissions, invoice/expense sources, Finance formulas, or posting behavior changed. Quality Gate and CI must be validated on the resulting commit; authenticated browser inspection remains **NOT VERIFIED**.
 
 
+
+## 0.9 Inbox removes the Overview landing and redesigns Messages · 29 October 2026
+
+- User rejected the separate Inbox Overview tab and requested a ground-up redesign for Kapitech's agency workflow, using Dashboard Overview as a visual reference rather than copying its KPI dashboard.
+- `/admin/inbox` now defaults to All Messages. The dedicated `viewMode === 'overview'` branch and its summary cards/triage/recent-record panel are removed; legacy `?view=overview` links normalize back to Messages.
+- Messages uses a compact canonical list and selected-record reader with a 5:7 layout at the established 1100px breakpoint and a single-column/back-to-list flow on narrow screens. Filters and record actions remain in their owning controls.
+- The same source, `ContactSubmission` fields, saved-view destinations, 30-second refresh, permission checks, table alternative and existing selected-record actions are retained. Do not invent follow-up due dates, SLA data or completion controls.
+- Frontend tests and architecture/gap docs updated for the new landing. Exact-SHA Quality Gate and CI must be checked after this documentation commit. Authenticated visual, keyboard and responsive browser review remains **NOT VERIFIED**.
 
 ## 0.8 Inbox Overview visual alignment · 29 October 2026
 

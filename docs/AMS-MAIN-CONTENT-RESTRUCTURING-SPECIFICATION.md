@@ -192,26 +192,32 @@ Period and supported grouping/filter → reports grouped by business question �
 
 ## 4.2 Inbox
 
-**Question:** Which incoming conversation needs triage, assignment, response, follow-up or resolution?  
-**Views:** Overview, Messages, Follow-ups, Routing & Templates. Categories and saved/status views stay within their owning workspace.
+**Question:** Which incoming conversation needs review, assignment, response, or a supported next action?  
+**Views:** Messages (default landing), Follow-ups, Routing & Templates. Message categories and saved/status views stay inside Messages.
 
-### Overview
-The first work surface is the actionable incoming queue: new, unassigned or urgent items and due/overdue follow-ups only where real source data supports them. Counts must have clear meanings and link to the corresponding filtered view. Do not duplicate the complete Messages register.
+### Messages (default landing)
 
-### Messages
-Controls first: search; All Messages, Sales Inquiries, Client Requests and Project & Support views; supported status/priority/owner/channel/date filters and saved views. Register fields: recognizable sender/contact or subject, channel/source, received date, category, status/priority, owner/PIC, configured due/SLA and linked client/project. A selected thread may use an existing split-pane on wide screens; compact mode needs a clear detail/back path. Detail groups conversation history, attachments, internal notes, current ownership/state and authorized actions. Unread, Starred, Resolved and Archived are views of the same canonical records. Resolved and Archived have different meanings.
+Opening `/admin/inbox` goes directly to All Messages; there is no separate Inbox Overview tab or dashboard-style landing. Use Dashboard Overview only as a reference for calm surfaces, consistent spacing, clear hierarchy, and restrained status accents. Do not copy its cross-module KPI strip into Inbox.
+
+Primary composition: message categories and saved views → search and supported filters → compact canonical message list → selected-record detail and permitted actions. At the 1100px breakpoint, the message list occupies five of twelve columns and the reader occupies seven. At narrower widths, list and selected detail use one column, with an explicit back-to-list action. Keep the list dominant enough for fast scanning and keep record details out of repeated large cards.
+
+Message list fields: recognizable sender/contact, company or contact context, received time, category/channel, status, priority, short message preview, owner/PIC, saved indicator and source slug when useful. Sales Inquiries may add requested services and the captured budget text. Do not convert a free-text budget into a numeric amount. Keep status, priority, and owner/channel filters source-backed. Unread, Starred, Resolved and Archived remain views over the same canonical records. Resolved and Archived are distinct; unsupported saved views stay disabled.
+
+The selected-record surface groups sender/contact, request/brief, current status and priority, ownership, internal notes, and existing authorized actions. Keep the clear mobile back path. Never claim a message was sent/delivered without provider confirmation, and never invent an SLA or due date.
 
 ### Follow-ups
-Views: Due Today, Upcoming, Overdue and Completed. Each item links to its source thread and exposes owner, due date, status and next supported action. If follow-up/notification source/workflow is missing, mark it unavailable and track dependency instead of faking records.
+
+Views: Due Today, Upcoming, Overdue and Completed. Each item links to its source thread and exposes owner, due date, status and next supported action. If follow-up/notification source/workflow is missing, mark it unavailable and track the dependency instead of faking records.
 
 ### Routing & Templates
+
 Use an internal section switcher:
 - Routing Rules: actual rule name/state, supported conditions, destination/owner/category, priority/order, conflicts and allowed preview/test/edit/disable actions.
 - Response Templates: identity, channel/context, supported variables, version/update, preview and allowed edit/retire actions.
 
-Do not claim a message was sent before provider confirmation. Job applicants live under Website CMS → Careers → Applicants, not Inbox sales queues.
+Do not promote categories into new sidebar items. Job applicants live under Website CMS → Careers → Applicants, not Inbox sales queues.
 
-**Acceptance:** One canonical thread; accurate filtered queue; no duplicate lead/request; honest SLA/sending state; permissions preserved; failure is recoverable.
+**Acceptance:** All Messages is the default landing; one canonical thread; accurate filters and saved views; compact master-detail layout; no duplicate lead/request; honest source/empty/error states; permissions preserved; failure is recoverable.
 
 ## 4.3 Projects
 

@@ -174,77 +174,30 @@ Do not combine revenue, issued invoices, cash received, profit, and account bala
 
 ### 5.1 Structure
 
-Inbox uses four direct workspace entries. Message categories and personal/status views must be grouped inside their owning workspace instead of becoming separate sidebar submenus.
+Inbox uses three direct workspace entries. The default `/admin/inbox` route opens Messages. Message categories and personal/status views are grouped inside Messages instead of a separate Overview tab or additional sidebar submenus.
 
-1. **Overview**
-   - Source-backed summary of incoming messages and work requiring attention.
-   - Show actionable counts, upcoming/overdue follow-ups, and recent activity only when the data is available and permitted.
+1. **Messages (default landing)**
+   - Canonical All Messages register with a compact, selectable row list and a selected-record reader.
+   - Worksheets: All Messages, Sales Inquiries, Client Requests, Project & Support.
+   - Filters / saved views: Unread, Starred, Resolved, Archived.
+   - Shared filters include supported search, priority, status, owner/PIC, channel and date range.
+   - At the 1100px breakpoint the source-backed list and record reader use a 5:7 composition; on narrower screens they use one column and a clear back-to-list path.
+   - Message categories, status filters and saved views refer to the same canonical records; they do not create duplicate datasets or independent workflows.
+   - Resolved and Archived remain distinct. Unsupported categories or states remain unavailable until their canonical contract exists.
 
-2. **Messages**
-   - **Worksheets:** All Messages, Sales Inquiries, Client Requests, Project & Support.
-   - **Filters / saved views:** Unread, Starred, Resolved, Archived.
-   - **Shared message workspace:** Search, priority, status, owner/PIC, channel, date range and other supported filters belong in this workspace rather than creating more sidebar items.
-   - Message categories, status filters and saved views must refer to the same canonical message/thread records. They must not create duplicate datasets or independent message workflows.
-   - Resolved and Archived remain distinct statuses. Grouping them in the same workspace does not combine their business meaning.
-
-3. **Follow-ups**
-   - **Views:** Due Today, Upcoming, Overdue, Completed.
+2. **Follow-ups**
+   - Views: Due Today, Upcoming, Overdue, Completed.
    - Present the related message/thread, owner/PIC, due date, status and supported next action.
-   - These are views of the existing follow-up records, not new records or a duplicate task system.
+   - These views depend on an existing follow-up record/workflow, not the creation of a duplicate task system.
 
-4. **Routing & Templates**
-   - **Routing Rules:** Existing, supported rules for category, channel, ownership/PIC and message distribution.
-   - **Response Templates:** Manage and use supported response templates.
-   - Use internal tabs or a clear section switcher for these two areas. Do not expose each as a separate direct Inbox submenu.
+3. **Routing & Templates**
+   - Routing Rules: existing supported rules for category, channel, ownership/PIC and distribution.
+   - Response Templates: supported templates and actual variables/actions.
+   - Use internal tabs or a clear section switcher.
 
-**Navigation rule:** The Inbox sidebar/submenu must contain only Overview, Messages, Follow-ups, and Routing & Templates. All other message categories and views belong within these workspaces as worksheets, filters or saved views.
+**Navigation rule:** Inbox direct workspace navigation contains only Messages, Follow-ups, and Routing & Templates. Message categories and saved/status views belong within Messages. A legacy `?view=overview` URL resolves to Messages without retaining the unsupported query value.
 
 Job applications are not sales leads and must not be managed in Inbox; they belong in Website CMS → Careers → Applicants. Website inquiries may enter Inbox.
-
-### 5.2 Core Capabilities
-
-Each message/thread should have the following fields as appropriate to its source:
-
-- Source/channel and external reference.
-- Name/contact data and links to an account, lead, client, or project when identifiable.
-- Received time, status, priority, category, assigned owner/PIC, due date/SLA.
-- Conversation history, internal notes, attachment references, and related-record links.
-- Star/favorite, follow-up due date, resolution reason, archive/reopen status.
-- Duplicate detection and the ability to merge or link existing records.
-- Routing by category, channel, ownership, or approved rules.
-- Maintainable response templates.
-
-### 5.3 Workflow
-
-1. A message/inquiry arrives through a genuinely connected channel.
-2. The system securely stores the message and external reference.
-3. Initial classification may be rule-assisted; users can correct it.
-4. The system identifies possible existing lead/client/project records to prevent duplication.
-5. The message is assigned to a PIC/owner with a clear priority and due date.
-6. The owner responds, requests more information, creates a follow-up, or links/creates a lead or client request.
-7. A message can be resolved only when the relevant resolution requirements are met.
-8. Resolved threads can be reopened when a new response arrives.
-9. Archiving does not mean permanent deletion. Retention follows the data policy.
-
-### 5.4 Acceptance Criteria
-
-- A lead is created only once when the same message is retried.
-- Each thread has a direct link to its related record.
-- SLA is displayed only when the required rules, working calendar, and timestamps are available.
-- Do not claim a message was sent unless the provider confirms it.
-- Starred, follow-up, archive, resolve, and routing actions must have real effects, not be decorative.
-
----
-
-## 6. Legacy CRM, quotation and approval compatibility boundary
-
-The standalone CRM UI and sales-pipeline module are outside the approved navigation. Existing CRM/deal records, stable IDs, APIs, audit history and current consumers remain intact. The old `/crm` and `/admin/crm` routes redirect to Clients. Do not reintroduce a standalone sales pipeline or duplicate client/account/contact store.
-
-Clients owns supported client identity, directory, onboarding, retainers, SLA and related contracts. Inbox remains the owner of inbound communication and inquiry state. Legacy lead/deal records may still be referenced by existing consumers; preserving this data does not create a primary UI requirement.
-
-The standalone Proposal menu is retired. The existing quotation UI/API remains under Finance at `/admin/finance/quotations`, and `/admin/proposals` redirects there. Keep quotation records, versions, status transitions, numbering, history, permissions and quote-to-invoice conversion unchanged. Do not add a second quote store or workflow.
-
-The generic Approval item is absent from primary/contextual navigation. Keep existing workflow-specific maker-checker, posting, period-close, request history, API and audit behavior. The current `/admin/approvals` route remains protected but unlinked as `DEPRECATED_PENDING`, because its consumers and safe owning workflows have not yet been proven complete. Do not claim full retirement until that dependency review is complete.
 
 ## 7. Module 03 — Projects
 
