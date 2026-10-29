@@ -859,7 +859,7 @@ test('Dashboard Team Workload aligns owner assignment signals and recorded-time 
   ]) assert.ok(styles.includes(selector), 'Missing Team Workload layout rule: ' + selector);
 });
 
-test('Dashboard Team Workload separates task ownership and recorded time without a divider line', async () => {
+test('Dashboard Team Workload separates task ownership and recorded time with a subtle divider', async () => {
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const tasksSelector = '.ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body > .ams-dashboard-team-tasks {';
   const timeSelector = '.ams-shell .ams-dashboard .ams-dashboard-team-panel .ams-dashboard-team-body > .ams-dashboard-team-time {';
@@ -868,10 +868,10 @@ test('Dashboard Team Workload separates task ownership and recorded time without
   assert.ok(tasksStart >= 0 && timeStart > tasksStart, 'The final Team Workload rules must explicitly remove both sides of the divider.');
   const tasksRule = styles.slice(tasksStart, styles.indexOf('}', tasksStart));
   const timeRule = styles.slice(timeStart, styles.indexOf('}', timeStart));
-  assert.match(tasksRule, /border-bottom:\s*0;/);
+  assert.match(tasksRule, /border-bottom:\s*1px solid color-mix\(in srgb, var\(--line\) 80%, transparent\);/);
   assert.match(timeRule, /border-top:\s*0;/);
-  assert.match(tasksRule, /padding-bottom:\s*10px;/);
-  assert.match(timeRule, /padding-top:\s*10px;/);
+  assert.match(tasksRule, /padding-bottom:\s*16px;/);
+  assert.match(timeRule, /padding:\s*16px 0 0;/);
 });
 
 test('Dashboard Client Delivery Focus prioritizes agency delivery risk before portfolio size', async () => {
@@ -2251,3 +2251,33 @@ test('Dashboard final UI layer keeps responsive card and control geometry cohere
   assert.ok(overview.includes('Export filtered recent activity as CSV'));
   assert.ok(overview.includes('pageSizeAriaLabel="Recent activity rows per page"'));
 });
+
+
+test('Dashboard header controls, tabs, project filters, Team Workload and Recent Activity use final compact alignment', async () => {
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const finalLayer = styles.slice(styles.lastIndexOf('/* Dashboard control normalization — 29 October 2026. */'));
+  assert.ok(finalLayer.length > 0, 'The final alignment layer must be present.');
+
+  assert.match(finalLayer, /\.ams-dashboard-header-actions \.ams-dashboard-control,[\s\S]*?height:\s*36px;[\s\S]*?min-height:\s*36px;[\s\S]*?max-height:\s*36px;/);
+  assert.match(finalLayer, /nav\.ams-dashboard-view-tabs\s*\{[\s\S]*?flex-wrap:\s*wrap;[\s\S]*?overflow-x:\s*visible;/);
+  assert.match(finalLayer, /\.ams-dashboard-project-service-filter\s*\{[\s\S]*?height:\s*32px;[\s\S]*?max-height:\s*32px;/);
+  assert.match(finalLayer, /\.ams-dashboard-project-service-filter \.ams-dashboard-control--filter\s*\{[\s\S]*?height:\s*24px;[\s\S]*?max-height:\s*24px;/);
+  assert.match(finalLayer, /\.ams-project-registry-action[\s\S]*?height:\s*32px;[\s\S]*?max-height:\s*32px;/);
+  assert.match(finalLayer, /\.ams-overview-card-row\[aria-label="Finance and project overview"\]\s*\{[\s\S]*?align-items:\s*stretch;[\s\S]*?grid-auto-rows:\s*minmax\(0, 1fr\);/);
+  assert.match(finalLayer, /\.ams-dashboard-team-panel > \.ams-dashboard-team-body > \.ams-dashboard-team-tasks\s*\{[\s\S]*?border-bottom:\s*1px solid/);
+  assert.match(finalLayer, /\.ams-dashboard-team-panel \.ams-dashboard-team-body > \.ams-dashboard-team-time\s*\{[\s\S]*?padding:\s*16px 0 0;/);
+  assert.match(finalLayer, /\.ams-dashboard-activity-search\s*\{[\s\S]*?height:\s*32px;[\s\S]*?min-height:\s*32px;[\s\S]*?max-height:\s*32px;/);
+  assert.match(finalLayer, /\.ams-dashboard-activity-search input\s*\{[\s\S]*?min-height:\s*0;[\s\S]*?max-height:\s*100%;/);
+  assert.match(finalLayer, /\.ams-dashboard-activity-filter \.ams-dashboard-select-trigger\s*\{[\s\S]*?height:\s*32px;[\s\S]*?max-height:\s*32px;/);
+
+  const toolbarStart = dashboard.indexOf('<section className="ams-dashboard-toolbar');
+  const toolbarEnd = dashboard.indexOf('</section>', toolbarStart);
+  const toolbar = dashboard.slice(toolbarStart, toolbarEnd);
+  assert.doesNotMatch(toolbar, /DashboardCalendarPeriodFilter|Reporting date range|ams-card-period-controls/,
+    'Date selectors remain inside the relevant cards, not on a global toolbar.');
+  assert.ok(dashboard.includes('ariaLabel="Filter activity by time window"'));
+  assert.ok(dashboard.includes('aria-label="Search recent activity"'));
+  assert.ok(dashboard.includes('Export filtered recent activity as CSV'));
+});
+

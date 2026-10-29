@@ -911,3 +911,12 @@ Do not use “done” or “verified” as a substitute for test, workflow or ru
 - Normalized actor names consistently for the actor filter, sort, displayed table, and CSV export so whitespace-only differences do not make filtering inconsistent.
 - Existing search, severity filter, actor filter, date presets/custom range, sorting, CSV export and shared pagination remain connected to the loaded source.
 - Validation must be read from the exact commit's Quality Gate; full CI has a separate existing dependency-audit failure noted in the previous checkpoint.
+
+
+## 0.5 Dashboard header, controls and compact search alignment — 29 October 2026
+
+- Reasserted one shared 36px height for header quick actions; Dashboard tabs wrap and stay non-scrolling; Projects in Progress service-line filters are reduced within a 32px shell aligned to Project Registry.
+- Finance and Project Portfolio stretch to the same row height at desktop widths. Team Workload has a more deliberate split between task-owner signals and recorded-time rows.
+- Recent Activity search and card-local filter controls are reduced from 36px to 32px, with tighter toolbar padding and matching compact action buttons. Existing loaded-data search, actor/severity filters, time range, sort, reset, CSV export and pagination remain intact.
+- Date controls remain local to cards that need their own range: Finance movement, Team recorded time, Recent Activity, and deadlines; the global Dashboard tabs area remains free of a global date selector.
+- Changes are presentation and regression-test updates only. TypeScript, tests/build and AMS CI must be checked on the exact follow-up commit; production screenshot review remains outstanding.
