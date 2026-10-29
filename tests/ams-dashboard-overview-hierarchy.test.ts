@@ -1295,40 +1295,46 @@ test('Dashboard Performance header and reporting period follow the shared Overvi
   assert.ok(dashboard.includes('canOpenProjects={canOpenProjects}'));
 });
 
-test('Dashboard Analytics exposes report-first hierarchy and a single focused work surface', async () => {
+test('Dashboard Analytics uses an Overview-inspired report grid without nested report tabs', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  const start = dashboard.indexOf('type DashboardAnalyticsReport');
-  const end = dashboard.indexOf('export const GlobalExecutiveDashboard', start);
-  assert.ok(start >= 0 && end > start, 'Analytics workspace should have a bounded source section');
+  const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
+  const start = dashboard.indexOf('const AnalyticsView: React.FC');
+  const end = dashboard.indexOf('type DashboardCalendarPeriodFilterProps', start);
+  assert.ok(start >= 0 && end > start, 'Analytics workspace should have a bounded source section.');
   const analytics = dashboard.slice(start, end);
-  const controls = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-controls"');
+
+  const grid = analytics.indexOf('className="ams-dashboard-analytics-report-grid"');
   const financial = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-financial-report"');
   const receivables = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-receivables-report"');
-  const inquiry = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
   const projects = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
-  assert.ok(controls >= 0 && financial > controls && receivables > controls && inquiry > controls && projects > controls,
-    'Report and scope controls must precede each selectable report surface.');
-  assert.ok(analytics.includes('reportPeriodMode: ReportingPeriodMode'));
-  assert.ok(analytics.includes('reportPeriodValue: string'));
-  assert.ok(analytics.includes('reportPeriodEnabled: boolean'));
+  const inquiry = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
+  assert.ok(grid >= 0 && financial > grid && receivables > financial && projects > receivables && inquiry > projects,
+    'Analytics should show all supported reports in an Overview-like card order.');
+  assert.equal(analytics.includes('data-ams-feature-slug="dashboard-analytics-controls"'), false,
+    'The nested report-selector panel must be removed.');
+  assert.equal(dashboard.includes('type DashboardAnalyticsReport'), false);
+  assert.equal(dashboard.includes('DASHBOARD_ANALYTICS_REPORT_OPTIONS'), false);
+  assert.equal(analytics.includes('setReport('), false);
+  for (const className of [
+    'ams-dashboard-analytics-card--financial',
+    'ams-dashboard-analytics-card--receivables',
+    'ams-dashboard-analytics-card--projects',
+    'ams-dashboard-analytics-card--inquiry'
+  ]) assert.ok(analytics.includes(className), 'Missing Analytics card layout class: ' + className);
   assert.ok(analytics.includes('buildFinancialTrendForReportingPeriod(reportPeriodMode, reportPeriodValue'));
-  assert.ok(analytics.includes('Shared reporting period'));
-  assert.equal(analytics.includes('DashboardTrendRangePicker'), false, 'Analytics must use the single topbar period control.');
-  assert.doesNotMatch(analytics, /dashboard-analytics-kpis/, 'Mixed-period summary metrics should not appear after the selected report.');
-  assert.match(analytics, /not posted profit/);
-  assert.match(analytics, /Financial trend unavailable/);
-  assert.match(analytics, /A zero-value trend is not inferred from an empty source/);
-  assert.match(analytics, /Current invoice balances/);
-  assert.match(analytics, /Current project register/);
-  assert.ok(analytics.includes('Analytics reports'));
-  assert.ok(analytics.includes('min-[900px]:grid-cols-4'), 'Report choices should have a consistent responsive grid.');
-  assert.ok(analytics.includes('min-h-12 min-w-0 items-center'), 'Report selection should favor compact visual labels over explanatory text.');
-  assert.equal(analytics.includes('option.description'), false, 'Report tiles should not repeat explanatory copy.');
-  assert.ok(analytics.includes('const projectStatusMaximum = Math.max(1, ...projectStatusGroups.map((group) => group.count))'));
-  assert.ok(analytics.includes('data-ams-feature-slug="dashboard-analytics-project-status-report"'));
+  assert.ok(analytics.includes('aria-label="Exact invoice and expense values by period"'));
+  assert.ok(analytics.includes('not posted profit'));
+  assert.ok(analytics.includes('Financial trend unavailable'));
+  assert.ok(analytics.includes('A zero-value trend is not inferred from an empty source'));
   assert.ok(analytics.includes('Projects by current status'));
   assert.ok(analytics.includes('role="img" aria-label={group.status +'));
-  assert.ok(analytics.includes('Current labels'), 'Project status summary should remain current-state and source-backed.');
+  assert.ok(analytics.includes('Current labels'), 'Project status remains a current-state grouping.');
+  assert.doesNotMatch(analytics, /dashboard-analytics-kpis/, 'Do not introduce mixed-period duplicate KPI summaries.');
+  assert.equal(analytics.includes('DashboardTrendRangePicker'), false, 'Analytics continues to use the shared period control.');
+  assert.match(styles, /\.ams-dashboard-analytics-report-grid\s*\{[\s\S]*?grid-template-columns:\s*repeat\(12,\s*minmax\(0,\s*1fr\)\);[\s\S]*?gap:\s*var\(--ams-dashboard-gap,\s*12px\);/);
+  assert.match(styles, /\.ams-dashboard-analytics-card--receivables\s*\{\s*grid-column:\s*span 5;/);
+  assert.match(styles, /\.ams-dashboard-analytics-card--projects\s*\{\s*grid-column:\s*span 7;/);
+  assert.match(styles, /@media\s*\(max-width:\s*899px\)[\s\S]*?\.ams-dashboard-analytics-card\s*\{\s*grid-column:\s*1\s*\/\s*-1;/);
 });
 
 
@@ -1360,14 +1366,14 @@ test('Dashboard Analytics exposes the canonical inquiry pipeline only when Inbox
   const end = dashboard.indexOf('export const GlobalExecutiveDashboard', start);
   assert.ok(start >= 0 && end > start, 'Analytics workspace should be bounded.');
   const analytics = dashboard.slice(start, end);
+  const projectStart = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
   const inquiryStart = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
-  const projectsStart = analytics.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"', inquiryStart);
-  assert.ok(inquiryStart >= 0 && projectsStart > inquiryStart, 'Inquiry analysis should be a distinct selectable report before project status.');
-  const inquiry = analytics.slice(inquiryStart, projectsStart);
+  assert.ok(projectStart >= 0 && inquiryStart > projectStart, 'Project status should precede the full-width inquiry report.');
+  const inquiry = analytics.slice(inquiryStart);
 
-  assert.ok(dashboard.includes("{ value: 'inquiry-pipeline', label: 'Inquiry pipeline' }"));
-  assert.ok(analytics.includes("option.value !== 'inquiry-pipeline' || canOpenInbox"));
-  assert.ok(analytics.includes("if (!canOpenInbox && report === 'inquiry-pipeline') setReport('financial-movement')"));
+  assert.ok(analytics.includes(`      {canOpenInbox ? (\n        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--inquiry"`),
+    'The inquiry report must render only when the existing Inbox access gate allows it.');
+  assert.equal(analytics.includes('setReport('), false, 'The nested report-selector state must be removed.');
   assert.ok(analytics.includes("record.type === 'inquiry'"));
   assert.ok(analytics.includes("record.status !== 'closed'"));
   assert.ok(analytics.includes("Boolean(String(record.convertedClientId || '').trim())"));

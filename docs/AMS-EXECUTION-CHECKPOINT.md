@@ -10,6 +10,14 @@
 > This checkpoint is an evidence snapshot, not live branch state. Refresh `main`, current workflow status, and source/tests on every resume. Section 1 is the prior source/test snapshot; the latest warning-state slice and browser findings are recorded in Section 0.
 
 
+## 0.3 Latest bounded slice — Dashboard Analytics visual redesign · 29 October 2026
+
+- Requested direction: remove the nested report selector inside Analytics while keeping the top-level Dashboard navigation tab. Show the existing source-backed Financial Movement, Receivables, Project Status, and Inbox-authorized Inquiry Pipeline reports together in an Overview-inspired responsive card grid.
+- Composition: Financial Movement spans the main width and retains its exact period-value table; Receivables and Project Status share a balanced 5/7-column row; Inquiry Pipeline spans the full width only when the existing Inbox access gate permits it. All report panels reuse the Overview panel treatment and shared 12px Dashboard gutter.
+- Scope guard: preserve canonical source records, reporting-period semantics, current-state labels, exact values, routes, permissions and Finance formulas. No placeholder data, API/backend/database/auth/RBAC changes or new dependencies.
+- Required validation: exact-SHA Quality Gate/CI, authenticated visual review using real source data, responsive review from desktop through mobile, keyboard/focus and chart/table accessibility. Runtime and visual checks remain **NOT VERIFIED** until performed; do not claim sign-off from source changes alone.
+- Dashboard remains the only active module until explicit user visual sign-off; do not start Inbox or other module redesigns.
+
 ## 0. Latest bounded slice — 26 October 2026
 
 - Authenticated production Dashboard was inspected at the browser's native desktop width only (~1440px equivalent), using two no-mutation loads. The earlier inspection saw the long refresh warning; a later single-load inspection confirmed the concise status plus “View refresh details” disclosure. Finance and Projects still show unavailable-source states, and all expected Overview card headings are present below the fold. The browser report is inconsistent about the precise height/layout of composite unavailable panels, so do not treat every compact-state style as confirmed in production. Native viewport resizing was not supported; 1440, 1280, 1024, 900, 768, 390 and 320px, keyboard/focus, 200% zoom, screen reader and WCAG acceptance remain unverified.

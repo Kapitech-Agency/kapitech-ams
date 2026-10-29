@@ -561,7 +561,7 @@ Explain task inclusion, timezone/date basis, comparison, unit, and material sour
 
 ## 4.4 Analytics workspace
 
-Keep one focused report surface at a time, using a consistent accessible report selector.
+Present the supported report cards together in one Overview-inspired analytical workspace; remove the nested report selector. Use a responsive grid with full-width Financial Movement, a balanced Receivables + Project Status row, and full-width Inquiry Pipeline only when the existing Inbox access gate allows it. Keep each report independent, source-truthful and visually concise. The shared reporting-period control scopes time trends only; receivables and project status remain current snapshots.
 
 ### Inquiry Pipeline
 - Valid period.
@@ -609,6 +609,7 @@ Show service demand or campaign outcomes only when sourced. Include objective, p
 
 ### Dashboard acceptance
 - Overview, Performance, and Analytics have distinct purposes.
+- Analytics presents Financial Movement, Receivables, Project Status and the permission-gated Inquiry Pipeline together in one responsive card grid; no nested report-selection tabs remain.
 - Overview row order prioritizes project delivery/needs-attention, then task queue/deadlines, then Finance/Project Portfolio, team/client context, and recent activity; no artificial priority numbering.
 - Date filters are card-local on Overview: Finance and Recorded Time have independent period selectors; task queue/deadline controls remain within their operational card. No global date selector is shown on Overview.
 - Finance trend values come from canonical issued-invoice and eligible-expense records, with source and period semantics clear; no arithmetic difference is described as posted profit or cash flow.

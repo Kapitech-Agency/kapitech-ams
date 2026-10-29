@@ -13058,3 +13058,46 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   margin: 0;
 }
 
+
+
+/* Analytics report cards follow the Overview panel and 12px grid-gutter system. */
+.ams-shell .ams-dashboard .ams-dashboard-analytics-report-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--ams-dashboard-gap, 12px);
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-card {
+  min-width: 0;
+  align-self: start;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-card--financial,
+.ams-shell .ams-dashboard .ams-dashboard-analytics-card--inquiry {
+  grid-column: 1 / -1;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-card--receivables {
+  grid-column: span 5;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-card--projects {
+  grid-column: span 7;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-panel {
+  min-width: 0;
+  width: 100%;
+}
+
+.ams-shell .ams-dashboard .ams-dashboard-analytics-panel > div:first-child {
+  gap: 12px;
+}
+
+@media (max-width: 899px) {
+  .ams-shell .ams-dashboard .ams-dashboard-analytics-card {
+    grid-column: 1 / -1;
+  }
+}

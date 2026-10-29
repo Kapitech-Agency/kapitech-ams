@@ -1140,15 +1140,6 @@ const PerformanceView: React.FC<{
   );
 };
 
-type DashboardAnalyticsReport = 'financial-movement' | 'receivables' | 'inquiry-pipeline' | 'project-status';
-
-const DASHBOARD_ANALYTICS_REPORT_OPTIONS: Array<{ value: DashboardAnalyticsReport; label: string }> = [
-  { value: 'financial-movement', label: 'Financial movement' },
-  { value: 'receivables', label: 'Receivables' },
-  { value: 'inquiry-pipeline', label: 'Inquiry pipeline' },
-  { value: 'project-status', label: 'Project status' },
-];
-
 const AnalyticsView: React.FC<{
   snapshot: DashboardOperationalSnapshot;
   reportPeriodMode: ReportingPeriodMode;
@@ -1158,11 +1149,6 @@ const AnalyticsView: React.FC<{
   currency: string;
   canOpenInbox: boolean;
 }> = ({ snapshot, reportPeriodMode, reportPeriodValue, reportPeriodLabel, reportPeriodEnabled, currency, canOpenInbox }) => {
-  const [report, setReport] = useState<DashboardAnalyticsReport>('financial-movement');
-  useEffect(() => {
-    if (!canOpenInbox && report === 'inquiry-pipeline') setReport('financial-movement');
-  }, [canOpenInbox, report]);
-
   const invoiceRows = snapshot.invoices || [];
   const expenseRows = snapshot.expenses || [];
   const inCurrencyInvoices = invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency);
@@ -1256,70 +1242,12 @@ const AnalyticsView: React.FC<{
 
   return (
     <div className="ams-dashboard-analytics-workspace" data-ams-feature-slug="dashboard-analytics-workspace">
-      <section
-        className="rounded-card border border-line bg-panel p-4 sm:p-5"
-        data-ams-feature-slug="dashboard-analytics-controls"
-        aria-label="Analytics report controls"
-      >
-        <div className="flex flex-col gap-4 min-[900px]:flex-row min-[900px]:items-end min-[900px]:justify-between">
-          <div className="min-w-0 flex-1 space-y-3">
-            <div>
-              <p className="text-xs font-semibold text-fg">Analytics reports</p>
-            </div>
-            <div role="group" aria-label="Analytics report" className="grid min-w-0 grid-cols-2 gap-2 min-[900px]:grid-cols-4">
-              {DASHBOARD_ANALYTICS_REPORT_OPTIONS.filter((option) => option.value !== 'inquiry-pipeline' || canOpenInbox).map((option) => {
-                const active = report === option.value;
-                const ReportIcon = option.value === 'financial-movement'
-                  ? CircleDollarSign
-                  : option.value === 'receivables'
-                    ? ReceiptText
-                    : option.value === 'inquiry-pipeline'
-                      ? Users
-                      : FolderKanban;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setReport(option.value)}
-                    className={[
-                      'ams-dashboard-period-option flex min-h-12 min-w-0 items-center gap-2.5 rounded-control border px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                      active ? 'border-accent/35 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg',
-                    ].join(' ')}
-                  >
-                    <span className={[
-                      'ams-dashboard-period-option__icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border',
-                      active ? 'border-accent/25 bg-accent/10 text-accent-text' : 'border-line bg-panel text-muted',
-                    ].join(' ')}>
-                      <ReportIcon size={15} aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block break-words text-xs font-semibold leading-4">{option.label}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          {report === 'financial-movement' ? (
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-muted">Shared reporting period</p>
-              <p className="mt-1 text-xs text-fg">{selectedRangeLabel}</p>
-            </div>
-          ) : (
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-muted">Scope</p>
-              <p className="mt-1 text-xs text-fg">{report === 'receivables' ? 'Current invoice balances' : report === 'inquiry-pipeline' ? 'Current inquiry pipeline' : 'Current project register'}</p>
-            </div>
-          )}
-        </div>
-        <p className="mt-3 border-t border-line pt-3 text-[10px] leading-4 text-muted">Trend charts follow the reporting period; All dates defaults to the recent 30 days. Receivables and status remain current.</p>
-      </section>
 
-      {report === 'financial-movement' ? (
-        <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-financial-report" aria-label="Financial movement report">
+      <div className="ams-dashboard-analytics-report-grid" data-ams-feature-slug="dashboard-analytics-report-grid">
+        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--financial" data-ams-feature-slug="dashboard-analytics-financial-report" aria-label="Financial movement report">
           <AdminPanel headerDivider={false}
             title="Issued invoices vs recorded expenses"
+            className="ams-overview-panel ams-dashboard-analytics-panel ams-dashboard-analytics-panel--financial"
             description="Issued invoices vs recorded expenses by date; difference is not posted profit."
             actions={(
               <Link to="/admin/finance?tab=chart-of-accounts" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
@@ -1416,10 +1344,10 @@ const AnalyticsView: React.FC<{
             )}
           </AdminPanel>
         </section>
-      ) : report === 'receivables' ? (
-        <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-receivables-report" aria-label="Receivables report">
+        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--receivables" data-ams-feature-slug="dashboard-analytics-receivables-report" aria-label="Receivables report">
           <AdminPanel headerDivider={false}
             title="Outstanding receivables"
+            className="ams-overview-panel ams-dashboard-analytics-panel ams-dashboard-analytics-panel--receivables"
             description="Current outstanding balance from issued invoices."
             actions={(
               <Link to="/admin/finance?tab=accounts-receivable" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
@@ -1438,11 +1366,17 @@ const AnalyticsView: React.FC<{
             ) : inCurrencyIssuedInvoices.length === 0 ? (
               <DashboardUnavailable title="No issued invoice records in selected currency" description={'The invoice source returned no issued invoice records in ' + currency + '. Quotations and non-issued invoice rows are excluded from receivables.'} />
             ) : (
-              <div className="space-y-4">
-                <div className="rounded-control border border-line bg-bg p-4">
-                  <p className="text-xs text-muted">Open invoice balance · {currency}</p>
-                  <p className="mt-2 text-2xl font-semibold tabular-nums text-fg">{formatLiveMoney(receivables, currency)}</p>
-                  <p className="mt-1 text-xs text-muted">{openInvoiceCount} open invoice records</p>
+              <div className="space-y-3">
+                <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="min-w-0 rounded-control border border-line bg-bg p-3 sm:p-4">
+                    <p className="text-[11px] text-muted">Open invoice balance · {currency}</p>
+                    <p className="mt-2 break-words text-2xl font-semibold tabular-nums text-fg">{formatLiveMoney(receivables, currency)}</p>
+                  </div>
+                  <div className="min-w-0 rounded-control border border-line bg-bg p-3 sm:p-4">
+                    <p className="text-[11px] text-muted">Open invoice records</p>
+                    <p className="mt-2 text-2xl font-semibold tabular-nums text-fg">{openInvoiceCount}</p>
+                    <p className="mt-1 text-[11px] leading-4 text-muted">Issued invoices with an outstanding balance</p>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-xs font-medium text-fg">Definition and source</h3>
@@ -1454,10 +1388,78 @@ const AnalyticsView: React.FC<{
             )}
           </AdminPanel>
         </section>
-      ) : report === 'inquiry-pipeline' ? (
-        <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report" aria-label="Inquiry pipeline report">
+        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--projects" data-ams-feature-slug="dashboard-analytics-project-status-report" aria-label="Project status report">
+          <AdminPanel headerDivider={false}
+            title="Project status"
+            className="ams-overview-panel ams-dashboard-analytics-panel ams-dashboard-analytics-panel--projects"
+            description="Current status distribution from the canonical project register."
+            actions={(
+              <Link to="/admin/projects" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
+                Open Projects <ArrowUpRight size={13} />
+              </Link>
+            )}
+            bodyClassName="p-4 sm:p-5"
+          >
+            {snapshot.projects === null ? (
+              <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." />
+            ) : snapshot.projects.length === 0 ? (
+              <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
+                <p className="text-xs font-medium text-fg">No project records returned</p>
+                <p className="mt-1 text-xs text-muted">The current source contains no project rows to group by status.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-3">
+                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] leading-4 text-muted">Active projects</p>
+                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{activeProjects}</p>
+                    <p className="mt-1 text-[10px] text-muted">Current portfolio</p>
+                  </div>
+                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] leading-4 text-muted">Project records</p>
+                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{projectStatusTotal}</p>
+                    <p className="mt-1 text-[10px] text-muted">All saved states</p>
+                  </div>
+                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] leading-4 text-muted">Status groups</p>
+                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{projectStatusGroups.length}</p>
+                    <p className="mt-1 text-[10px] text-muted">Current labels</p>
+                  </div>
+                </div>
+                <div className="space-y-3" aria-label="Project distribution by current status">
+                  <div>
+                    <h3 className="text-sm font-semibold text-fg">Projects by current status</h3>
+                    <p className="mt-1 text-[11px] text-muted">Each project appears in one saved status group.</p>
+                  </div>
+                  {projectStatusGroups.map((group) => {
+                    const percentage = projectStatusTotal > 0 ? Math.round((group.count / projectStatusTotal) * 100) : 0;
+                    const width = Math.max(0, Math.min(100, (group.count / projectStatusMaximum) * 100));
+                    return (
+                      <div key={group.status} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="min-w-0 break-words text-xs font-medium text-fg">{group.status}</span>
+                          <span className="shrink-0 text-xs tabular-nums text-muted">{group.count} <span className="text-[10px]">· {percentage}%</span></span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={group.status + ': ' + group.count + ' projects, ' + percentage + ' percent of current project records'}>
+                          <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: width + '%' }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="border-t border-line pt-3 text-[11px] leading-5 text-muted">
+                  Source: current project records. Status counts are current-state groupings, not trends for the selected financial period. Records without a status use the existing health field, then “Not set”.
+                </p>
+              </div>
+            )}
+          </AdminPanel>
+        </section>
+
+      {canOpenInbox ? (
+        <section className="ams-dashboard-analytics-card ams-dashboard-analytics-card--inquiry" data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report" aria-label="Inquiry pipeline report">
           <AdminPanel headerDivider={false}
             title="Inquiry pipeline"
+            className="ams-overview-panel ams-dashboard-analytics-panel ams-dashboard-analytics-panel--inquiry"
             description="Current inquiry status and requested service demand."
             actions={canOpenInbox ? (
               <Link to="/admin/inbox" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
@@ -1466,9 +1468,7 @@ const AnalyticsView: React.FC<{
             ) : undefined}
             bodyClassName="p-4 sm:p-5"
           >
-            {!canOpenInbox ? (
-              <DashboardUnavailable title="Inquiry analytics restricted" description="This report requires existing permission to open Inbox." />
-            ) : snapshot.inboxLeads === null ? (
+            {snapshot.inboxLeads === null ? (
               <DashboardUnavailable title="Inquiry pipeline unavailable" description="The Inbox source did not return records for the current role. An unavailable source is not interpreted as an empty pipeline." />
             ) : inquiryRecords.length === 0 ? (
               <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
@@ -1529,7 +1529,7 @@ const AnalyticsView: React.FC<{
                   </p>
                 </section>
 
-                <div className="grid grid-cols-1 gap-4 min-[900px]:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 min-[900px]:grid-cols-2">
                   <section
                     className="min-w-0 space-y-3 rounded-card border border-line bg-bg p-3 sm:p-4"
                     data-ams-feature-slug="dashboard-analytics-inquiry-status-visualization"
@@ -1593,73 +1593,9 @@ const AnalyticsView: React.FC<{
             )}
           </AdminPanel>
         </section>
-      ) : (
-        <section className="space-y-3" data-ams-feature-slug="dashboard-analytics-project-status-report" aria-label="Project status report">
-          <AdminPanel headerDivider={false}
-            title="Project status"
-            description="Current status distribution from the canonical project register."
-            actions={(
-              <Link to="/admin/projects" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
-                Open Projects <ArrowUpRight size={13} />
-              </Link>
-            )}
-            bodyClassName="p-4 sm:p-5"
-          >
-            {snapshot.projects === null ? (
-              <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." />
-            ) : snapshot.projects.length === 0 ? (
-              <div className="rounded-control border border-line bg-bg px-4 py-5" role="status">
-                <p className="text-xs font-medium text-fg">No project records returned</p>
-                <p className="mt-1 text-xs text-muted">The current source contains no project rows to group by status.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-2 min-[600px]:grid-cols-3">
-                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
-                    <p className="text-[10px] leading-4 text-muted">Active projects</p>
-                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{activeProjects}</p>
-                    <p className="mt-1 text-[10px] text-muted">Current portfolio</p>
-                  </div>
-                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
-                    <p className="text-[10px] leading-4 text-muted">Project records</p>
-                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{projectStatusTotal}</p>
-                    <p className="mt-1 text-[10px] text-muted">All saved states</p>
-                  </div>
-                  <div className="min-w-0 rounded-control border border-line bg-bg p-3">
-                    <p className="text-[10px] leading-4 text-muted">Status groups</p>
-                    <p className="mt-1 text-xl font-semibold tabular-nums text-fg">{projectStatusGroups.length}</p>
-                    <p className="mt-1 text-[10px] text-muted">Current labels</p>
-                  </div>
-                </div>
-                <div className="space-y-3" aria-label="Project distribution by current status">
-                  <div>
-                    <h3 className="text-sm font-semibold text-fg">Projects by current status</h3>
-                    <p className="mt-1 text-[11px] text-muted">Each project appears in one saved status group.</p>
-                  </div>
-                  {projectStatusGroups.map((group) => {
-                    const percentage = projectStatusTotal > 0 ? Math.round((group.count / projectStatusTotal) * 100) : 0;
-                    const width = Math.max(0, Math.min(100, (group.count / projectStatusMaximum) * 100));
-                    return (
-                      <div key={group.status} className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="min-w-0 break-words text-xs font-medium text-fg">{group.status}</span>
-                          <span className="shrink-0 text-xs tabular-nums text-muted">{group.count} <span className="text-[10px]">· {percentage}%</span></span>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={group.status + ': ' + group.count + ' projects, ' + percentage + ' percent of current project records'}>
-                          <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: width + '%' }} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="border-t border-line pt-3 text-[11px] leading-5 text-muted">
-                  Source: current project records. Status counts are current-state groupings, not trends for the selected financial period. Records without a status use the existing health field, then “Not set”.
-                </p>
-              </div>
-            )}
-          </AdminPanel>
-        </section>
-      )}
+      ) : null}
+
+      </div>
     </div>
   );
 };
