@@ -56,6 +56,8 @@ test('Inbox Overview uses source-backed summary cards and a balanced triage/rece
   assert.ok(overview.includes('aria-label="Inbox operational summary"'));
   assert.ok(overview.includes('triageScopeCards.map((scope)'));
   assert.ok(overview.includes('aria-pressed={triageScope === scope.key}'));
+  assert.ok(overview.includes("loading && submissions.length === 0 ? '—' : scope.count"));
+  assert.ok(overview.includes("'Loading ' + scope.label.toLowerCase() + ' count'"));
   assert.ok(source.includes("count: filteredItems.filter(isInboxActionable).length"));
   assert.ok(source.includes("count: filteredItems.filter(isInboxUnassigned).length"));
   assert.ok(source.includes("count: filteredItems.filter(isInboxHighPriority).length"));

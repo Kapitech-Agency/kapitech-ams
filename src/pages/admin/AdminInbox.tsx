@@ -960,8 +960,8 @@ export const AdminInbox: React.FC = () => {
                   <span className="min-w-0 break-words text-xs font-medium text-muted">{scope.label}</span>
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">{scope.icon}</span>
                 </div>
-                <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-fg">{scope.count}</p>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={scope.label + ': ' + scope.count + ' of ' + scope.total + ' matching inbound records'}>
+                <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-fg">{loading && submissions.length === 0 ? '—' : scope.count}</p>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-line" role="img" aria-label={loading && submissions.length === 0 ? 'Loading ' + scope.label.toLowerCase() + ' count' : scope.label + ': ' + scope.count + ' of ' + scope.total + ' matching inbound records'}>
                   <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: scope.share + '%' }} />
                 </div>
               </button>
