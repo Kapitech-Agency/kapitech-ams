@@ -251,14 +251,18 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(dashboard.includes('<PerformanceView') && dashboard.includes('matchesDate={matchesDate}') && dashboard.includes('reportPeriodLabel={reportPeriodLabel}'));
   assert.ok(dashboard.includes('<AnalyticsView') && dashboard.includes('reportPeriodMode={reportPeriodMode}') && dashboard.includes('reportPeriodValue={reportPeriodValue}') && dashboard.includes('reportPeriodLabel={reportPeriodLabel}') && dashboard.includes('currency={financeCurrency}'));
   const analyticsView = dashboard.slice(dashboard.indexOf('const AnalyticsView:'), dashboard.indexOf('export const GlobalExecutiveDashboard'));
-  assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-controls"'), 'Analytics report selection and scope controls must precede report content.');
-  assert.ok(analyticsView.includes('aria-label="Analytics report"'), 'Analytics must expose accessible report selection controls.');
-  assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-financial-report"'));
-  assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-receivables-report"'));
-  assert.ok(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-project-status-report"'));
+  assert.ok(analyticsView.includes('className="ams-dashboard-analytics-report-grid"'), 'Analytics should use the Overview-inspired multi-report grid.');
+  assert.equal(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-controls"'), false, 'Nested report-selection tabs are removed.');
+  assert.equal(analyticsView.includes('aria-label="Analytics report"'), false, 'The nested report selector is no longer rendered.');
+  const analyticsFinancial = analyticsView.indexOf('data-ams-feature-slug="dashboard-analytics-financial-report"');
+  const analyticsReceivables = analyticsView.indexOf('data-ams-feature-slug="dashboard-analytics-receivables-report"');
+  const analyticsProjects = analyticsView.indexOf('data-ams-feature-slug="dashboard-analytics-project-status-report"');
+  const analyticsInquiry = analyticsView.indexOf('data-ams-feature-slug="dashboard-analytics-inquiry-pipeline-report"');
+  assert.ok(analyticsFinancial >= 0 && analyticsReceivables > analyticsFinancial && analyticsProjects > analyticsReceivables && analyticsInquiry > analyticsProjects,
+    'Analytics cards must follow Financial Movement → Receivables → Project Status → Inquiry Pipeline.');
+  assert.ok(analyticsView.includes('ams-dashboard-analytics-card--receivables') && analyticsView.includes('ams-dashboard-analytics-card--projects'));
   assert.ok(analyticsView.includes('aria-label="Exact invoice and expense values by period"'), 'The chart must have an exact-value table alternative.');
-  assert.doesNotMatch(analyticsView, /dashboard-analytics-kpis/, 'Mixed-scope KPI cards must not trail unrelated reports.');
-  assert.ok(analyticsView.indexOf('dashboard-analytics-controls') < analyticsView.indexOf('dashboard-analytics-financial-report'));
+  assert.doesNotMatch(analyticsView, /dashboard-analytics-kpis/, 'Mixed-scope KPI cards must not be introduced.');
   assert.ok(analyticsView.includes('Open Transactions & Cash') && analyticsView.includes('Open Accounts Receivable') && analyticsView.includes('Open Projects'), 'Each report must drill down to its owning module.');
   assert.doesNotMatch(dashboard, /Preview data only|sampleProjects|sampleTeam|sampleRevenueByRange|isSlugFixtureMode|fixtureMode/);
   assert.ok(dashboard.includes('Task queue unavailable'));
