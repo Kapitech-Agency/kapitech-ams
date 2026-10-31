@@ -25,7 +25,7 @@ test('each module root tab follows the approved Master Structure Guide', () => {
     'Overview', 'Performance', 'Analytics',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('inbox', 'Admin').map((item) => item.label), [
-    'Overview', 'Messages', 'Follow-ups', 'Routing & Templates',
+    'Messages', 'Follow-ups', 'Routing & Templates',
   ]);
   assert.deepEqual(getAmsModuleSubnavigation('projects', 'Admin').map((item) => item.label), [
     'Overview', 'Project Registry', 'Tasks & Execution', 'Planning & Delivery',
@@ -66,7 +66,7 @@ test('each module root tab follows the approved Master Structure Guide', () => {
 
 test('Inbox exposes only approved workspaces and keeps unavailable destinations non-interactive', async () => {
   const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
-  assert.deepEqual(inbox.map((item) => item.label), ['Overview', 'Messages', 'Follow-ups', 'Routing & Templates']);
+  assert.deepEqual(inbox.map((item) => item.label), ['Messages', 'Follow-ups', 'Routing & Templates']);
   for (const key of ['follow-ups', 'routing-templates']) {
     assert.equal(inbox.find((item) => item.key === key)?.available, false, key + ' must remain target-only until implemented');
   }
@@ -124,7 +124,7 @@ test('Inbox has no Overview subnavigation and unsupported views resolve to Messa
   assert.match(inboxSource, /ariaLabel="Message saved views"/);
   assert.match(inboxSource, /label: 'Resolved', to: '\/admin\/inbox\?view=resolved', available: false/);
   assert.match(inboxSource, /label: 'Archived', to: '\/admin\/inbox\?view=archived', available: false/);
-  assert.match(inboxSource, /\['messages', 'client', 'unread', 'starred'\] as InboxTab\[\]/);
+  assert.match(inboxSource, /supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred'\]/);
   assert.match(inboxSource, /label: 'Project & Support'.*available: false/);
   const messageCategoriesStart = inboxSource.indexOf('ariaLabel="Message categories"');
   const messageSavedViewsStart = inboxSource.indexOf('ariaLabel="Message saved views"');
@@ -140,7 +140,7 @@ test('Inbox has no Overview subnavigation and unsupported views resolve to Messa
     'Unread remains a saved view on canonical New-status records.');
   assert.match(inboxSource, /case 'unread': return submissions\.filter\(\(item\) => item\.status === 'new'\)/);
   assert.ok(inboxSource.includes("unread: 'unread_messages'"));
-  assert.match(inboxSource, /\['messages', 'client', 'unread', 'starred'\] as InboxTab\[\]/);
+  assert.match(inboxSource, /supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred'\]/);
   assert.match(inboxSource, /case 'messages': return submissions/);
   assert.match(inboxSource, /\.filter\(\(item\) => item\.type !== 'career'\)/);
   const app = await read('src/App.tsx');
@@ -325,7 +325,7 @@ test('role-specific workspace destinations remain permitted and primary links ac
 
   const cases: Array<[AmsRole, string, string, string]> = [
     ['Admin', 'dashboard-hub', 'dashboard', 'overview'],
-    ['Admin', 'inbox', 'inbox', 'overview'],
+    ['Admin', 'inbox', 'inbox', 'messages'],
     ['Admin', 'project-hub', 'projects', 'registry'],
     ['Finance', 'project-hub', 'projects', 'tasks'],
     ['Creative', 'project-hub', 'projects', 'tasks'],

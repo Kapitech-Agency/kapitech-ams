@@ -128,6 +128,8 @@ The user-selected Maven / Orbix reference informs information hierarchy, concise
 - **Interactions:** header actions and date selectors use shared Dashboard control geometry; related filters use `DashboardFilterGroup`, never separately hand-built button rows. Overview/Performance/Analytics tabs wrap without horizontal scrolling. Keep quiet hover/focus borders and short transitions. Lists and workload bars get a restrained hover response. Honor `prefers-reduced-motion`; preserve visible keyboard focus.
 - **Scope boundary:** CSS and chart presentation props are scoped to Dashboard Overview. Do not modify the global theme, navigation, API, permission policy, source records or Finance formulas to imitate the reference.
 
+Inbox Messages may reuse the existing `DashboardControl` action geometry through the explicit `.ams-inbox-message-redesign` consumer selectors in `DashboardControls.css`. This shares the original component declarations rather than duplicating control CSS. It does not opt Inbox into Dashboard card/chart geometry, typography variants or data composition; Inbox panels retain the canonical 12px radius and message register/reader contract.
+
 ### 2.7 Tailwind v4 setup (copy-paste)
 
 Put this in the app's main CSS file (usually `src/index.css`). Merge with what exists rather than replacing it.

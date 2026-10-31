@@ -1,0 +1,96 @@
+/* Inbox uses Overview's quiet hierarchy and shared controls, with canonical 12px panels. */
+.ams-message-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; color: var(--text); font-size: 13px; line-height: 18px; }
+.ams-message-workspace * { min-width: 0; }
+.ams-message-register, .ams-message-reader { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--panel); overflow: hidden; }
+.ams-message-panel-heading, .ams-message-section-heading, .ams-message-reader-utilities, .ams-message-row-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ams-message-panel-heading { padding: 16px; }
+.ams-message-workspace h2, .ams-message-workspace h3 { font-size: 14px; line-height: 20px; font-weight: 600; }
+.ams-message-panel-heading > span, .ams-message-secondary, .ams-message-company, .ams-message-owner, .ams-message-received, .ams-message-section-heading > span { color: var(--muted); font-size: 12px; line-height: 16px; }
+.ams-message-row { position: relative; display: flex; align-items: flex-start; padding: 4px; border-top: 1px solid var(--line); }
+.ams-message-row:hover { background: color-mix(in srgb, var(--text) 4%, transparent); }
+.ams-message-row.is-selected { background: color-mix(in srgb, var(--accent) 8%, var(--panel)); box-shadow: inset 2px 0 var(--accent); }
+.ams-message-row-select { display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 12px; text-align: left; cursor: pointer; border-radius: var(--radius-control); }
+.ams-message-row-top { align-items: flex-start; flex-wrap: wrap; gap: 4px 12px; }
+.ams-message-row-top strong { overflow-wrap: anywhere; font-weight: 600; }
+.ams-message-row-top time { color: var(--muted); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ams-message-company { overflow-wrap: anywhere; }
+.ams-message-preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); line-height: 20px; overflow-wrap: anywhere; }
+.ams-message-row-context { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.ams-message-status { display: inline-flex; padding: 4px 8px; border-radius: var(--radius-badge); font-size: 12px; line-height: 16px; background: var(--bg); color: var(--muted); }
+.ams-message-status.is-new { background: color-mix(in srgb, var(--info) 14%, transparent); color: var(--info); }
+.ams-message-status.is-in-review { background: color-mix(in srgb, var(--warning) 14%, transparent); color: var(--warning); }
+.ams-message-status.is-closed { background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
+.ams-message-priority { font-weight: 600; color: var(--warning); }
+.ams-message-priority.is-urgent { color: var(--danger); }
+.ams-message-owner { display: flex; align-items: center; gap: 4px; overflow-wrap: anywhere; }
+.ams-message-star { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 36px; min-height: 36px; color: var(--muted); border-radius: var(--radius-control); }
+.ams-message-star:hover { background: var(--bg); color: var(--warning); }
+.ams-message-star.is-saved { color: var(--warning); }
+.ams-message-star.is-saved svg { fill: currentColor; }
+.ams-message-workspace button:disabled, .ams-message-workspace textarea:disabled { opacity: .5; cursor: not-allowed; }
+.ams-message-workspace :is(button, a, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ams-message-workspace h2:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ams-message-reader-header, .ams-message-reader-content, .ams-message-reader-footer { padding: 16px; }
+.ams-message-reader-header { display: flex; flex-direction: column; gap: 16px; }
+.ams-message-reader-utilities { flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+.ams-message-reader-utilities > span { margin-left: auto; }
+.ams-message-sender { display: flex; align-items: center; gap: 12px; }
+.ams-message-avatar { display: flex; align-items: center; justify-content: center; flex: 0 0 48px; height: 48px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--bg); font-size: 20px; font-weight: 500; }
+.ams-message-sender h2 { overflow-wrap: anywhere; }
+.ams-message-sender p { display: flex; align-items: center; gap: 4px; margin-top: 4px; color: var(--muted); overflow-wrap: anywhere; }
+.ams-message-contact, .ams-message-received { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.ams-message-contact a { display: inline-flex; align-items: center; gap: 8px; overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 4px; }
+.ams-message-contact svg, .ams-message-sender svg { flex-shrink: 0; color: var(--muted); }
+.ams-message-reader-content { display: flex; flex-direction: column; gap: 24px; }
+.ams-message-reader-content h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ams-message-brief > p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 24px; max-width: 72ch; }
+.ams-message-scope { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px; background: var(--bg); border-radius: var(--radius-control); }
+.ams-message-scope dt, .ams-message-handling-fields > div > span, .ams-message-notes label { display: block; color: var(--muted); font-size: 12px; line-height: 16px; margin-bottom: 8px; }
+.ams-message-scope dd { overflow-wrap: anywhere; }
+.ams-message-service-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.ams-message-service-tags > span { padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius-badge); font-size: 12px; }
+.ams-message-handling-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ams-message-handling-fields > div:last-child { grid-column: 1 / -1; }
+.ams-message-handling-fields button { max-width: 100%; }
+.ams-message-section-heading { align-items: flex-start; flex-wrap: wrap; }
+.ams-message-notes textarea { width: 100%; min-height: 88px; padding: 12px; resize: vertical; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--bg); color: var(--text); font: inherit; }
+.ams-message-notes textarea::placeholder { color: var(--muted); }
+.ams-message-notes-action { display: flex; justify-content: flex-end; margin-top: 8px; }
+.ams-message-reader-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ams-message-next-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ams-message-client-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: underline; }
+.ams-message-state { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; padding: 48px 24px; text-align: center; }
+.ams-message-state > svg, .ams-message-state > span, .ams-message-state p { color: var(--muted); }
+.ams-message-state p { max-width: 45ch; line-height: 20px; }
+.ams-message-placeholder-icon { display: flex; justify-content: center; align-items: center; width: 48px; height: 48px; background: var(--bg); border-radius: var(--radius-card); }
+.ams-message-reading-guide { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; padding-top: 16px; color: var(--muted); font-size: 12px; }
+.ams-message-reading-guide > span { display: inline-flex; align-items: center; gap: 8px; }
+.ams-message-loading-row { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-top: 1px solid var(--line); }
+.ams-message-table-scroll { overflow-x: auto; }
+.ams-message-table { width: 100%; text-align: left; }
+.ams-message-table :is(th, td) { padding: 8px 12px; vertical-align: top; }
+.ams-message-table th { height: 40px; color: var(--muted); font-size: 12px; font-weight: 500; }
+.ams-message-table td { border-top: 1px solid var(--line); }
+.ams-message-table time { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ams-message-table .ams-message-preview { white-space: normal; max-width: 72ch; }
+.ams-message-text-link { min-height: 36px; text-align: left; text-decoration: underline; text-underline-offset: 4px; font-weight: 600; }
+.ams-message-secondary { display: block; }
+.ams-message-reader { display: none; }
+.ams-message-workspace.has-selection > .ams-message-register { display: none; }
+.ams-message-workspace.has-selection > .ams-message-reader { display: block; }
+@media (min-width: 600px) { .ams-message-scope { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+/* A wrapped search label must not inherit the desktop 260px flex basis as its height. */
+@media (max-width: 1099px) {
+  .ams-shell .ams-inbox-message-redesign .ams-inbox-filter-bar .ams-inbox-search-field { flex: 0 1 auto; width: 100%; min-width: 0; max-width: none; }
+}
+@media (max-width: 899px) { .ams-message-star { width: 40px; min-height: 40px; } .ams-message-workspace .ams-dashboard-control { min-height: 40px; } }
+@media (min-width: 1100px) {
+  .ams-message-workspace { grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: stretch; }
+  .ams-message-register, .ams-message-workspace.has-selection > .ams-message-register { grid-column: span 5; display: flex; flex-direction: column; }
+  .ams-message-reader, .ams-message-workspace.has-selection > .ams-message-reader { grid-column: span 7; display: flex; flex-direction: column; }
+  .ams-message-rows, .ams-message-loading { max-height: 100vh; overflow-y: auto; scrollbar-gutter: stable; }
+  .ams-message-reader-content { max-height: 100vh; overflow-y: auto; scrollbar-gutter: stable; }
+  .ams-message-reader-placeholder { flex: 1; }
+  .ams-message-workspace.is-table > .ams-message-register { grid-column: 1 / -1; }
+  .ams-message-workspace.is-table > .ams-message-reader { display: none; }
+}

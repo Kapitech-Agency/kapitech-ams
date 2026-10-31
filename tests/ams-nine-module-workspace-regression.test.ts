@@ -152,26 +152,22 @@ test('Dashboard Overview prioritizes Finance and Projects as distinct cards', as
 });
 
 test('Inbox toast feedback follows the stable page header instead of shifting it', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
   const header = inbox.indexOf('<AdminModuleHeader slug="inbox-header"');
   const toast = inbox.indexOf('{/* Toast Notification */}');
   assert.ok(header >= 0 && toast > header, 'toast feedback should render after the module header');
 });
 
 test('Inbox heading identifies the active topbar workspace', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
   assert.match(inbox, /title=\{activeInboxTab === 'messages' \? 'All Messages' : activeInboxTab === 'client' \? 'Sales Inquiries' : activeInboxTab === 'unread' \? 'Unread Messages' : 'Starred'\}/);
 });
 
 test('Inbox table labels and empty state reflect the inquiry-only workspace', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
-  const tableStart = inbox.indexOf('/* DENSE SPREADSHEET TABLE VIEW */');
-  const tableEnd = inbox.indexOf('/* SPLIT MASTER-DETAIL VIEW', tableStart);
-  assert.ok(tableStart >= 0 && tableEnd > tableStart, 'missing Inbox register view boundary');
-  const table = inbox.slice(tableStart, tableEnd);
-
-  assert.ok(table.includes("{language === 'id' ? 'Layanan Diminta' : 'Requested Services'}"));
-  assert.ok(table.includes("{language === 'id' ? 'Anggaran' : 'Budget'}"));
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
+  const table = await read('src/components/admin/inbox/MessageWorkspace.tsx');
+  assert.ok(table.includes("t('Requested services', 'Layanan diminta')"));
+  assert.ok(table.includes("t('Budget', 'Anggaran')"));
   assert.doesNotMatch(table, /Services \/ Specialty|Layanan \/ Spesialisasi|Budget \/ Experience|Anggaran \/ Pengalaman|Value \/ Experience/);
   assert.ok(inbox.includes('No matching messages'));
   assert.equal(inbox.includes("'New inquiries and applications will appear here as they arrive.'"), false);
@@ -181,7 +177,7 @@ test('Inbox table labels and empty state reflect the inquiry-only workspace', as
 });
 
 test('Inbox keeps Careers applicant presentation in the canonical CMS workspace', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
   const app = await read('src/App.tsx');
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
 
@@ -190,12 +186,12 @@ test('Inbox keeps Careers applicant presentation in the canonical CMS workspace'
   assert.match(inbox, /to="\/admin\/cms\/careers\?tab=applicants"/);
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
   assert.match(careers, /pagedApplicants\.map\(applicant/);
-  assert.ok(inbox.includes("{ value: 'in-review', label: 'In Review' }"));
-  assert.ok(inbox.includes("{ value: 'contacted', label: 'Contacted' }"));
+  assert.ok(inbox.includes("{ value: 'in-review', label: 'Status: In Review' }"));
+  assert.ok(inbox.includes("{ value: 'contacted', label: 'Status: Contacted' }"));
 });
 
 test('Inbox remains an inquiry workspace and star state remains accessible', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
   const app = await read('src/App.tsx');
   assert.match(inbox, /featureSlug="inbox-module"/);
   assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
@@ -207,7 +203,7 @@ test('Inbox remains an inquiry workspace and star state remains accessible', asy
   assert.match(inbox, /const \[loadError, setLoadError\] = useState<string \| null>\(null\)/);
   assert.match(inbox, /Inbox data unavailable/);
   assert.match(inbox, /The last successfully loaded records remain visible/);
-  assert.match(inbox, /Inbox is unavailable/);
+  assert.match(inbox, /Inbox unavailable/);
   assert.match(inbox, /case 'client':\s*\/\/ Keep Sales Inquiries scoped to actual inquiry records\.[\s\S]*?return submissions\.filter\(\(item\) => !item\.type \|\| item\.type === 'inquiry'\)/);
   assert.match(inbox, /case 'messages': return submissions;/);
   assert.doesNotMatch(inbox, /case 'overview':|activeInboxTab === 'overview'/);
@@ -776,13 +772,13 @@ test('Vendor Skills & Service Matrix link reuses the existing Admin-only route p
 
 
 test('Inbox uses the message reader as the primary workspace without a redundant inquiry KPI card', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
   assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-list"'));
-  assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-reader"'));
-  assert.ok(inbox.includes('ams-inbox-message-row'));
+  assert.ok(inbox.includes('id="message-workspace-reader"'));
+  assert.ok(inbox.includes('ams-message-row'));
   assert.equal(inbox.includes('inbox-client-pipeline'), false,
     'Sales inquiry status context stays in the selected record and filterable list, not a duplicate summary strip.');
-  assert.ok(inbox.includes('min-[1100px]:col-span-5') && inbox.includes('min-[1100px]:col-span-7'));
+  assert.ok(inbox.includes('grid-column: span 5') && inbox.includes('grid-column: span 7'));
 });
 
 
@@ -849,15 +845,15 @@ test('Vendor & Freelancers keeps the canonical directory primary and independent
 
 
 test('Inbox defaults directly to Messages and uses a compact master-detail hierarchy', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
   assert.doesNotMatch(inbox, /Inbox Overview|activeInboxTab === 'overview'|viewMode === 'overview'|inbox-overview-workspace|inbox-overview-controls/);
   assert.match(inbox, /supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred'\]/);
   assert.ok(inbox.includes(": 'messages';"));
   assert.ok(inbox.includes("canonicalParams.delete('view')"));
   assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-list"'));
-  assert.ok(inbox.includes('inboxListItems.map((item) =>'));
-  assert.ok(inbox.includes('aria-pressed={isSelected}'));
-  assert.ok(inbox.includes('min-[1100px]:col-span-5') && inbox.includes('min-[1100px]:col-span-7'));
+  assert.ok(inbox.includes('pageItems.map((item) =>'));
+  assert.ok(inbox.includes('aria-pressed={selected?.id === item.id}'));
+  assert.ok(inbox.includes('grid-column: span 5') && inbox.includes('grid-column: span 7'));
   assert.ok(inbox.includes('data-ams-feature-slug="inbox-leads-directory"'));
   assert.ok(inbox.includes('Inbox unavailable'));
   assert.ok(inbox.includes('No matching messages'));
@@ -866,18 +862,18 @@ test('Inbox defaults directly to Messages and uses a compact master-detail hiera
 
 
 test('Inbox All Messages exposes source-backed status and priority filters before the register', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
   const controls = inbox.indexOf("'inbox-message-controls'");
   const messageFilterGate = inbox.indexOf("{activeInboxTab === 'messages' ? (", controls);
   const statusFilter = inbox.indexOf('slug="inbox-message-status-filter"', controls);
   const priorityFilter = inbox.indexOf('slug="inbox-message-priority-filter"', controls);
   const ownerFilter = inbox.indexOf('slug="inbox-message-owner-filter"', controls);
   const channelFilter = inbox.indexOf('slug="inbox-message-channel-filter"', controls);
-  const register = inbox.indexOf('data-ams-feature-slug="inbox-leads-directory"', controls);
+  const register = inbox.indexOf('<MessageWorkspace', controls);
   assert.ok(controls >= 0 && messageFilterGate > controls && statusFilter > messageFilterGate && priorityFilter > statusFilter && ownerFilter > priorityFilter && channelFilter > ownerFilter && register > channelFilter,
     'Status and priority filters belong to All Messages controls before the register.');
   assert.match(inbox, /value=\{filterStatus\}[\s\S]{0,180}options=\{inboxStatusOptions\}/);
-  assert.match(inbox, /value=\{filterPriority\}[\s\S]{0,450}value: 'urgent'[\s\S]{0,120}value: 'high'/);
+  assert.match(inbox, /value=\{filterPriority\}[\s\S]{0,450}value:\s*'urgent'[\s\S]{0,120}value:\s*'high'/);
   assert.ok(inbox.includes('[activeTabItems, filterStatus, filterPriority, filterOwner, filterChannel, searchQuery, matchesDate]'));
   assert.doesNotMatch(inbox, /activeInboxTab === 'overview' && \([\s\S]{0,180}inbox-message-status-filter/);
   assert.match(inbox, /value=\{filterOwner\}[\s\S]{0,160}options=\{inboxOwnerOptions\}/);
@@ -886,7 +882,7 @@ test('Inbox All Messages exposes source-backed status and priority filters befor
 
 
 test('Inbox does not invent unsupported follow-up timing or actions', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = (await Promise.all(['src/pages/admin/AdminInbox.tsx', 'src/components/admin/inbox/MessageWorkspace.tsx', 'src/components/admin/inbox/MessageWorkspace.css'].map(read))).join('\n');
   assert.doesNotMatch(inbox, /Follow-ups due|Next follow-up|dueDate:.*ContactSubmission/);
   assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-list"'));
   assert.ok(inbox.includes('Updated automatically every 30 seconds'));

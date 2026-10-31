@@ -22,18 +22,16 @@ test('All Messages owner and channel filters are applied to the canonical filter
 
 test('All Messages table emphasizes source and owner while Sales Inquiries retains services and budget', async () => {
   const source = await read('src/pages/admin/AdminInbox.tsx');
-  const tableStart = source.indexOf('/* DENSE SPREADSHEET TABLE VIEW */');
-  const tableEnd = source.indexOf(") : loading ?", tableStart);
-  assert.ok(tableStart >= 0 && tableEnd > tableStart, 'The Inbox register must have a bounded table workspace');
-  const table = source.slice(tableStart, tableEnd);
-  assert.ok(table.includes("activeInboxTab === 'client' ?"), 'The table should retain a separate commercial inquiry presentation');
-  assert.ok(table.includes('Requested Services'));
+  const table = await read('src/components/admin/inbox/MessageWorkspace.tsx');
+  assert.ok(source.includes("commercial={activeInboxTab === 'client'}"));
+  assert.ok(table.includes('p.commercial ?'));
+  assert.ok(table.includes('Requested services'));
   assert.ok(table.includes('Budget'));
   assert.ok(table.includes('Source'));
-  assert.ok(table.includes('Owner / PIC'));
+  assert.ok(table.includes("t('Owner', 'PIC')"));
   assert.ok(table.includes('item.source ||'));
   assert.ok(table.includes('item.assignedTo'));
-  assert.ok(table.includes("language === 'id' ? 'Belum ditugaskan' : 'Unassigned'"));
+  assert.ok(table.includes("t('Unassigned', 'Belum ditugaskan')"));
 });
 
 test('All Messages has explicit accessible Review and Table view controls', async () => {
@@ -41,23 +39,25 @@ test('All Messages has explicit accessible Review and Table view controls', asyn
   assert.ok(source.includes('role="group" aria-label="Message register view"'));
   assert.ok(source.includes("aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')}"));
   assert.ok(source.includes("aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')}"));
-  assert.ok(source.includes("activeInboxTab === 'starred' ? ("));
+  assert.ok(source.includes("const [viewMode, setViewMode] = useState<'split' | 'table'>('split')"));
 });
 
 test('Inbox opens on a source-backed Messages master-detail workspace without an Overview tab', async () => {
   const source = await read('src/pages/admin/AdminInbox.tsx');
+  const workspace = await read('src/components/admin/inbox/MessageWorkspace.tsx');
+  const css = await read('src/components/admin/inbox/MessageWorkspace.css');
   assert.ok(source.includes("type InboxTab = 'messages' | 'client' | 'unread' | 'starred'"));
   assert.ok(source.includes(": 'messages';"), 'An unqualified Inbox route should land on All Messages.');
   assert.ok(source.includes("canonicalParams.delete('view')"), 'Legacy and unsupported views normalize to Messages.');
   assert.doesNotMatch(source, /Inbox Overview|activeInboxTab === 'overview'|viewMode === 'overview'|inbox-overview-(workspace|summary|controls)/);
-  assert.ok(source.includes('data-ams-feature-slug="inbox-message-list"'));
-  assert.ok(source.includes('aria-label="Inbound messages"'));
-  assert.ok(source.includes('aria-pressed={isSelected}'));
+  assert.ok(workspace.includes('data-ams-feature-slug="inbox-message-list"'));
+  assert.ok(workspace.includes("aria-label={t('Message register', 'Daftar pesan')}"));
+  assert.ok(workspace.includes('aria-pressed={selected?.id === item.id}'));
   assert.ok(source.includes('const inboxListItems = useMemo('));
-  assert.ok(source.includes('data-ams-feature-slug="inbox-leads-directory"'), 'The canonical table view remains available.');
-  assert.ok(source.includes('min-[1100px]:col-span-5') && source.includes('min-[1100px]:col-span-7'));
-  assert.ok(source.includes('No matching messages'));
-  assert.ok(source.includes('Inbox unavailable'));
+  assert.ok(workspace.includes('data-ams-feature-slug="inbox-leads-directory"'), 'The canonical table view remains available.');
+  assert.ok(css.includes('grid-column: span 5') && css.includes('grid-column: span 7'));
+  assert.ok(workspace.includes('No matching messages'));
+  assert.ok(workspace.includes('Inbox unavailable'));
   assert.doesNotMatch(source, /Follow-ups due/i, 'Do not invent due-date or SLA data.');
 });
 

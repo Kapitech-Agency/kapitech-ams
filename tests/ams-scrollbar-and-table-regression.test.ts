@@ -71,14 +71,15 @@ test('table geometry variants use scoped selectors rather than important overrid
 
 
 test('Inbox star action is keyboard-accessible and announces its current state', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
-
-  assert.match(inbox, /onClick=\{\(event\) => void handleToggleStar\(event, item\.id, item\.starred\)\}/);
+  const inbox = await read('src/components/admin/inbox/MessageWorkspace.tsx');
+  const parent = await read('src/pages/admin/AdminInbox.tsx');
+  const css = await read('src/components/admin/inbox/MessageWorkspace.css');
+  assert.match(inbox, /p.onStar\(event, item.id, item.starred\)/);
   assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
-  assert.match(inbox, /aria-label=\{item\.starred[\s\S]{0,260}Remove star from/);
-  assert.match(inbox, /disabled=\{!canManageCrm\}/);
-  assert.match(inbox, /focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed/);
-  assert.doesNotMatch(inbox, /<td className="p-3 text-center" onClick=\{\(e\) => handleToggleStar/);
+  assert.match(inbox, /aria-label=\{.*item\.starred.*Unstar/);
+  assert.match(inbox, /disabled=\{!p\.canManage\}/);
+  assert.match(parent, /canManage=\{canManageCrm\}/);
+  assert.match(css, /:focus-visible.*outline: 2px solid var\(--accent\)/);
 });
 
 test('Inbox leaves Careers applicant review in the canonical CMS workspace', async () => {
@@ -94,8 +95,9 @@ test('Inbox leaves Careers applicant review in the canonical CMS workspace', asy
   assert.match(app, /if \(query\.get\('view'\) === 'jobs'\)/);
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
   assert.match(careers, /pagedApplicants\.map\(applicant/);
-  assert.match(inbox, /className="ams-table-scroll overflow-x-auto custom-scrollbar" tabIndex=\{0\} role="region" aria-label="Scrollable inbox inquiry register">\s*<div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="min-w-0"><table/);
-  assert.doesNotMatch(inbox, /data-ams-feature-slug="inbox-leads-directory"[^>]*className="overflow-x-auto"/);
+  const workspace = await read('src/components/admin/inbox/MessageWorkspace.tsx');
+  assert.match(workspace, /role="region" tabIndex=\{0\} aria-label=\{t\('Scrollable message table'/);
+  assert.match(workspace, /<table data-ams-feature-slug="inbox-leads-directory"/);
 });
 
 
@@ -219,7 +221,7 @@ test('primary data surfaces remain named and keyboard-accessible across all nine
   const checks: Array<[string, RegExp, string]> = [
     ['src/components/admin/GlobalExecutiveDashboard.tsx', /data-ams-feature-slug="dashboard-delivery-desk"[\s\S]*ariaLabel="Task queue filters"[\s\S]*onChange=\{\(value\)=>setOverviewTaskFilter\(value as DashboardTaskFilter\)\}/, 'Dashboard'],
     ['src/components/admin/DashboardControls.tsx', /role="group" aria-label=\{ariaLabel\}/, 'Dashboard shared filter component'],
-    ['src/pages/admin/AdminInbox.tsx', /aria-label="Scrollable inbox inquiry register"/, 'Inbox'],
+    ['src/components/admin/inbox/MessageWorkspace.tsx', /role="region" tabIndex=\{0\} aria-label=\{t\('Scrollable message table'/, 'Inbox'],
     ['src/pages/admin/AdminProjects.tsx', /aria-label="Scrollable project register table"/, 'Projects'],
     ['src/components/admin/TasksWorkspace.tsx', /aria-label="Scrollable task register"/, 'Tasks'],
     ['src/pages/admin/AdminClients.tsx', /aria-label="Scrollable client directory"|aria-label=\{statusScope === 'lead' \? 'Scrollable onboarding account register' : 'Scrollable client directory'\}/, 'Clients'],

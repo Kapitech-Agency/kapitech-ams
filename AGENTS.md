@@ -89,6 +89,8 @@ Never describe a target submenu as an existing feature merely because it appears
 
 Production deployments are sourced from **main** as configured for Kapitech. Commit/push to main only when that is explicitly requested or clearly authorized by the current task and repository workflow. Never force-push or bypass release gates.
 
+**Standing user delivery instruction (31 October 2026):** For every authorized task in this repository, commit and push the completed changes directly to `main` before reporting delivery. The user has explicitly authorized this workflow; do not repeatedly ask for push confirmation. Refresh remote `main`, preserve concurrent work, run applicable checks, and report known failures accurately. Do not force-push or bypass branch protections. A successful push does not itself verify deployment or production readiness.
+
 ## 6. Finance rules are high risk
 
 - Read **docs/FINANCE-EXCEL-ALIGNMENT.md** and inspect actual Finance code/tests before changing financial workflows.

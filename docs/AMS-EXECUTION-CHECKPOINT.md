@@ -1,5 +1,18 @@
 # AMS Execution Checkpoint
 
+## Delivery instruction — 31 October 2026
+
+The user explicitly requires every authorized task to be committed and pushed directly to `main`. This standing instruction is recorded in `AGENTS.md`. The previously local Inbox Messages redesign is now authorized for commit/push. Remote `main` was fetched and matches baseline `4a30bbcb3c23e6e2784499045fa868dffea12e2c`; the working tree contains the previously reviewed UI/tests/docs changes only, plus this delivery instruction. Prior lint/build and 107/108 focused-test results remain as recorded below; the unchanged Documents assertion is a known baseline failure. Push/CI outcomes must be verified against the resulting commit; no deployment success is implied. The local/uncommitted descriptions below record the preceding handoff, before this explicit push instruction.
+
+## Local Inbox Messages redesign — 31 October 2026
+
+- Scope: user-requested Stage 4 `VIEW-INBOX-MESSAGES`; all supported category/saved views share the replacement register/reader. See [the view contract and change record](AMS-INBOX-MESSAGE-REDESIGN.md). Baseline main: `4a30bbcb3c23e6e2784499045fa868dffea12e2c`. Changes are local/uncommitted; no remote SHA or deployment is claimed.
+- Removed the old queue/table/reader JSX and its badge renderers. New `MessageWorkspace.tsx` / `.css` prioritize brief, requested services and captured budget, triage/ownership and internal notes. Preserve parent API handlers, canonical records, existing permissions, category queries, reporting period and 30-second refresh. Review/Table now present the same records in every supported category/saved view.
+- Reuse existing Dashboard controls by extending their stylesheet consumer scope; original Dashboard selectors/declarations are retained. Inbox keeps canonical 12px panels and a 5:7 desktop split. Fixed narrow-screen search flex sizing and added reader/list focus management. CSV tooltip explicitly describes the existing category-wide export scope; it does not claim filtered export. No backend/API/DB/auth/RBAC/finance/integration/dependency changes.
+- Validation: `npm run lint` and `npm run build` passed. Five focused suites (`ams-inbox-messages-workspace`, `ams-sidebar-subnavigation`, `ams-nine-module-workspace-regression`, `ams-scrollbar-and-table-regression`, `ams-message-redesign`) ran 108 tests: 107 pass, one unchanged Documents unavailable-vault assertion fails. Unchanged baseline ran the original four suites: 96/102 pass, six fail; five Inbox expectations were stale and have been corrected against the new/current presentation and already implemented Messages navigation. The unrelated Documents failure remains outside this task.
+- Browser scope: isolated exported preview of the actual component, explicitly labelled synthetic sample data, mutation controls read-only. Checked split/stack behavior and page width at 1440, 1280, 1100, 1024, 900, 899, 768, 600, 599, 390 and 320 CSS px; no page-wide horizontal overflow observed. Table scroll is contained. Selection moves focus to the reader and Back restores it to the originating message. Search/no-match/reset and light/dark presentation checked. This is not authenticated production evidence or full WCAG/200% text-resize/screen-reader certification.
+- Next action: review the exported UI and then validate Inbox in an authenticated full-shell session with real data, including existing mutation outcomes. Stage 5 visual acceptance remains pending. Do not begin backend/workflow work or push/deploy main without the user's applicable instruction.
+
 **Repository:** `Kapitech-Agency/kapitech-ams`  
 **Delivery branch:** `main`  
 **Canonical roadmap:** [AMS End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md)  
