@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+const root = fileURLToPath(new URL('..', import.meta.url));
 
 test('invoice financial validation uses cent precision', async () => {
   const source = await fs.readFile(path.join(root, 'server/postgres-invoice-repository.ts'), 'utf8');

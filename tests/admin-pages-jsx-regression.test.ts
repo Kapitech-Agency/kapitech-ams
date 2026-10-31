@@ -626,6 +626,7 @@ test('Content-first CMS registers use their working area instead of repeated KPI
 
 test('Inbox opens with contextual controls and its triage workspace, without a redundant KPI dashboard', () => {
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const workspace = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/inbox/MessageWorkspace.tsx'), 'utf8');
   assert.match(inbox, /<AdminModuleHeader\b/);
   assert.match(inbox, /<AdminSectionTabs\b/);
   assert.match(inbox, /ariaLabel="Message categories"/);
@@ -643,7 +644,8 @@ test('Inbox opens with contextual controls and its triage workspace, without a r
   assert.ok(inbox.includes("to: '/admin/inbox?view=unread'"), 'Unread stays reachable as a saved view from Messages.');
   assert.ok(inbox.includes("case 'unread': return submissions.filter((item) => item.status === 'new')"));
   assert.match(inbox, /<AdminFilterBar\b/);
-  assert.match(inbox, /data-ams-slug="inbox-message-list"/);
+  assert.match(inbox, /<MessageWorkspace\s+items=\{inboxListItems\}/);
+  assert.match(workspace, /data-ams-slug="inbox-message-list"/);
   assert.doesNotMatch(inbox, /inbox-overview-workspace|viewMode === 'overview'/);
   assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);
   assert.ok(inbox.includes('to="/admin/cms/careers?tab=applicants"'));
@@ -1005,6 +1007,7 @@ test('Team Directory automatically uses cards on compact viewports and keeps the
 
 test('Inbox landing removes the redundant Overview and keeps record actions in their owning controls', () => {
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const workspace = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/inbox/MessageWorkspace.tsx'), 'utf8');
   const headerStart = inbox.indexOf('<AdminModuleHeader slug="inbox-header"');
   const headerEnd = inbox.indexOf('\n      />', headerStart);
   const header = inbox.slice(headerStart, headerEnd);
@@ -1014,7 +1017,8 @@ test('Inbox landing removes the redundant Overview and keeps record actions in t
   assert.ok(inbox.includes("activeTabItems.length + ' records'"));
   assert.ok(inbox.includes("'inbox-message-controls'"));
   assert.ok(inbox.includes('ams-inbox-toolbar-actions'));
-  assert.ok(inbox.includes('data-ams-feature-slug="inbox-message-reader"'));
+  assert.match(inbox, /selected=\{selectedSubmission\}/);
+  assert.ok(workspace.includes('data-ams-feature-slug="inbox-message-reader"'));
   assert.doesNotMatch(inbox, /inbox-overview-controls|inbox-overview-workspace|activeInboxTab === 'overview'|viewMode === 'overview'/);
   const toolbarStart = inbox.indexOf('data-ams-feature-slug="inbox-message-actions"');
   const toolbarEnd = inbox.indexOf('      {/* 4. MAIN CONTENT VIEW', toolbarStart);

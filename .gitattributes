@@ -1,0 +1,2 @@
+# Source-inspection regression tests use LF boundaries on every platform.
+* text=auto eol=lf

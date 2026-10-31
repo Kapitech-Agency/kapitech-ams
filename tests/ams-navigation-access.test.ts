@@ -152,7 +152,7 @@ test('contextual navigation preserves the default view of each module', () => {
 test('module workspace navigation respects ownership and role-specific scope', () => {
   assert.deepEqual(subnav('dashboard', 'Admin').map((item) => item.key), ['overview', 'performance', 'analytics']);
   assert.deepEqual(subnav('crm', 'Admin'), []);
-  assert.deepEqual(subnav('inbox', 'Admin').map((item) => item.key), ['overview', 'messages', 'follow-ups', 'routing-templates']);
+  assert.deepEqual(subnav('inbox', 'Admin').map((item) => item.key), ['messages', 'follow-ups', 'routing-templates']);
   assert.equal(subnav('inbox', 'Admin').find((item) => item.key === 'follow-ups')?.available, false);
   assert.equal(subnav('inbox', 'Admin').find((item) => item.key === 'routing-templates')?.available, false);
 
@@ -180,16 +180,15 @@ test('contextual active states follow URL query state and Inbox fallbacks mirror
   assert.equal(isAmsModuleSubnavigationItemActive(dashboard.find((item) => item.key === 'analytics')!, '/admin/dashboard', '?view=analytics'), true);
 
   const inbox = subnav('inbox', 'Admin');
-  const overview = inbox.find((item) => item.key === 'overview')!;
-  const messages = inbox.find((item) => item.key === 'messages')!;
-  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox'), true);
+  assert.equal(inbox.find((item) => item.key === 'overview'), undefined);
+  const messages = inbox.find((item) => item.key === 'messages');
+  assert.ok(messages, 'Messages is the canonical Inbox landing workspace.');
+  assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox'), true);
   for (const view of ['messages', 'client', 'unread', 'starred']) {
     assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + view), true);
-    assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + view), false);
   }
-  for (const view of ['client-requests', 'project-support', 'resolved', 'archived', 'unsupported']) {
-    assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/inbox', '?view=' + view), true);
-    assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + view), false);
+  for (const view of ['overview', 'client-requests', 'project-support', 'resolved', 'archived', 'unsupported']) {
+    assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=' + view), true);
   }
 
   const projects = subnav('projects', 'Admin');
