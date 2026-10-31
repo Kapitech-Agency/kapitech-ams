@@ -7,11 +7,10 @@ import { Link } from 'react-router-dom';
 import { DropdownPortal } from '../../ui/DropdownPortal';
 import type { InboxCategory } from './inboxPresentation';
 
-export function InboxMessageNavigation({ category, saved, preview, table = false }: { category: InboxCategory; saved: string; preview: boolean; table?: boolean }) {
+export function InboxMessageNavigation({ category, saved, table = false }: { category: InboxCategory; saved: string; table?: boolean }) {
   const href = (view: InboxCategory, state = 'all') => {
     const query = new URLSearchParams({ view });
     if (state !== 'all') query.set('saved', state);
-    if (preview || view === 'client-requests' || view === 'project-support') query.set('preview', '1');
     if (table) query.set('layout', 'table');
     return '/admin/inbox?' + query;
   };
@@ -37,7 +36,7 @@ type Props = {
   owner: string; onOwner: (value: string) => void; owners: SelectOption[];
   channel: string; onChannel: (value: string) => void; channels: SelectOption[];
   table: boolean; onView: (table: boolean) => void;
-  loading: boolean; preview: boolean; canManage: boolean; busy: boolean;
+  loading: boolean; canManage: boolean; busy: boolean;
   newCount: number; canExport: boolean;
   onRefresh: () => void; onReset: () => void; onExport: () => void; onProcess: () => void;
 };
@@ -61,12 +60,12 @@ export const InboxMessageToolbar: React.FC<Props> = (p) => {
           { value: 'split', label: <><LayoutGrid size={14} /><span>Review</span></> },
           { value: 'table', label: <><TableIcon size={14} /><span>Table</span></> },
         ]} onChange={(value) => p.onView(value === 'table')} />
-        <DashboardControl variant="icon" ariaLabel="Refresh messages" title={p.preview ? 'Design preview uses sample data' : 'Refresh messages'} icon={<RefreshCw size={16} />} onClick={p.onRefresh} disabled={p.loading || p.preview} />
+        <DashboardControl variant="icon" ariaLabel="Refresh messages" title="Refresh messages" icon={<RefreshCw size={16} />} onClick={p.onRefresh} disabled={p.loading} />
         <DashboardControl buttonRef={moreButton} ariaLabel="More message actions" ariaExpanded={moreOpen} ariaControls="inbox-more-actions" onClick={() => setMoreOpen(!moreOpen)} trailingIcon={<ChevronDown size={14} />}>More</DashboardControl>
         <DropdownPortal open={moreOpen} anchorRef={moreButton} onClose={() => setMoreOpen(false)} align="right" className="ams-inbox2-more-content">
           <div id="inbox-more-actions">
-            <button type="button" onClick={() => { setMoreOpen(false); p.onExport(); }} disabled={!p.canExport || p.preview} title="Exports all records in the current category; search and filters are not applied."><Download size={16} />Export CSV</button>
-            <button type="button" onClick={() => { setMoreOpen(false); p.onProcess(); }} disabled={!p.canManage || p.busy || p.preview || !p.newCount}><Check size={16} />Mark new as in review</button>
+            <button type="button" onClick={() => { setMoreOpen(false); p.onExport(); }} disabled={!p.canExport} title="Exports all records in the current category; search and filters are not applied."><Download size={16} />Export CSV</button>
+            <button type="button" onClick={() => { setMoreOpen(false); p.onProcess(); }} disabled={!p.canManage || p.busy || !p.newCount}><Check size={16} />Mark new as in review</button>
             <span className="ams-inbox2-more-label">Other saved views</span>
             <button type="button" disabled title="A canonical resolved-message workflow is not connected.">Resolved · Not connected</button>
             <button type="button" disabled title="A canonical archive workflow is not connected.">Archived · Not connected</button>

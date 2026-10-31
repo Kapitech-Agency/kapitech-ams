@@ -18,7 +18,6 @@ interface CannedResponsesModalProps {
   isOpen: boolean;
   onClose: () => void;
   submission: ContactSubmission;
-  preview?: boolean;
   onSelectTemplate?: (text: string) => void;
 }
 
@@ -26,7 +25,6 @@ export const CannedResponsesModal: React.FC<CannedResponsesModalProps> = ({
   isOpen,
   onClose,
   submission,
-  preview = false,
   onSelectTemplate
 }) => {
   const { language } = useLanguage();
@@ -215,7 +213,7 @@ https://kapitech.id`
       onClose={onClose}
       size="xl"
       title={language === 'id' ? 'Template respons' : 'Response templates'}
-      description={preview ? 'Design preview · Sample recipient · Sending is disabled.' : language === 'id' ? `Disesuaikan untuk: ${clientName}` : `Personalized for: ${clientName}`}
+      description={language === 'id' ? `Disesuaikan untuk: ${clientName}` : `Personalized for: ${clientName}`}
       footer={
         <div className="flex w-full items-center justify-between gap-3 text-xs text-muted">
           <span>{language === 'id' ? 'Format teks otomatis menyertakan identitas brief.' : 'Templates auto-merge client brief variables.'}</span>
@@ -262,7 +260,7 @@ https://kapitech.id`
                     </button>
 
                     {/* Email Mailto Action */}
-                    {preview ? <button type="button" disabled className="min-h-10 px-2.5 rounded-control border border-line text-xs text-muted" title="Sending is disabled in design preview">Email</button> : <a
+                    <a
                       href={`mailto:${submission.email}?subject=${encodeURIComponent(tpl.subject)}&body=${encodeURIComponent(tpl.body)}`}
                       onClick={onClose}
                       className="min-h-10 px-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors flex items-center gap-1.5"
@@ -270,10 +268,10 @@ https://kapitech.id`
                     >
                       <Send size={12} />
                       <span>Email</span>
-                    </a>}
+                    </a>
 
                     {/* WhatsApp Action if phone available */}
-                    {!preview && submission.phone && cleanPhoneForWhatsApp(submission.phone) && (
+                    {submission.phone && cleanPhoneForWhatsApp(submission.phone) && (
                       <a
                         href={`https://wa.me/${cleanPhoneForWhatsApp(submission.phone)}?text=${encodeURIComponent(tpl.body)}`}
                         target="_blank"

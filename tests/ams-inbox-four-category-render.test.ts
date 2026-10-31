@@ -5,7 +5,7 @@ import test from 'node:test';
 import { buildSync } from 'esbuild';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { getInboxDesignPreview, type InboxCategory } from '../src/components/admin/inbox/inboxPresentation';
+import { type InboxCategory } from '../src/components/admin/inbox/inboxPresentation';
 
 const root = process.cwd();
 const compiled = { exports: {} as any };
@@ -43,58 +43,56 @@ test('same-path query tabs expose exactly one current link in section and topbar
   }
 });
 
-test('all four Inbox category routes render navigable distinct design views and exclusive active states', () => {
-  const cases: Array<[InboxCategory, string, string]> = [
-    ['messages', 'All Messages', 'Brand identity &amp; digital launch'],
-    ['client', 'Sales Inquiries', 'Customer portal &amp; API integration'],
-    ['client-requests', 'Client Requests', 'Feedback on campaign key visuals'],
-    ['project-support', 'Project &amp; Support', 'Checkout issue on a narrow viewport'],
-  ];
-  for (const [view, label, subject] of cases) {
-    const html = renderPage('/admin/inbox?view=' + view + '&preview=1');
+test('all four Inbox categories remain navigable without a design mode or sample records', () => {
+  const cases: Array<[InboxCategory, string]> = [['messages', 'All Messages'], ['client', 'Sales Inquiries'], ['client-requests', 'Client Requests'], ['project-support', 'Project &amp; Support']];
+  for (const [view, label] of cases) {
+    const html = renderPage('/admin/inbox?view=' + view);
     const tabs = navigation(html, 'Message categories');
     assert.equal((tabs.match(/<a\b/g) || []).length, 4);
     assert.equal((tabs.match(/aria-current="page"/g) || []).length, 1);
     assert.ok(tabs.includes(label));
-    assert.ok(html.includes(subject));
-    assert.match(html, /data-ams-slug="inbox-design-preview-notice"/);
-    assert.match(html, /Sample messages for reviewing the layout. No changes are saved./);
-    if (view === 'client-requests' || view === 'project-support') assert.doesNotMatch(html, /Brand identity &amp; digital launch/);
+    assert.doesNotMatch(html, /Design preview|Exit preview|Sample messages|ams-ui-preview-|preview=1/);
   }
 });
 
-test('unsupported data sources show a preview entry rather than fictional production counts or records', () => {
+test('unconnected categories provide an honest state and a path to real messages', () => {
   for (const view of ['client-requests', 'project-support']) {
     const html = renderPage('/admin/inbox?view=' + view);
-    assert.match(html, /Preview this workspace/);
-    assert.doesNotMatch(html, /data-message-id="ams-ui-preview-/);
-    assert.doesNotMatch(html, /class="ams-message-count"/);
-    assert.doesNotMatch(html, /No changes are saved./);
+    assert.match(html, /messages are not available here yet/);
+    assert.match(html, /href="\/admin\/inbox\?view=messages"[^>]*>.*?View all messages/);
+    assert.doesNotMatch(html, /data-message-id=|class="ams-message-count"|Preview this workspace|Explore the design/);
   }
 });
 
-test('saved views compose with their category instead of selecting every same-path navigation link', () => {
-  const html = renderPage('/admin/inbox?view=client-requests&saved=starred&preview=1&layout=table');
+test('saved and table views compose with the category without introducing sample data', () => {
+  const html = renderPage('/admin/inbox?view=client-requests&saved=starred&layout=table');
   assert.equal((navigation(html, 'Message categories').match(/aria-current="page"/g) || []).length, 1);
   assert.equal((navigation(html, 'Message saved views').match(/aria-current="page"/g) || []).length, 1);
+  assert.match(html, /saved=starred/);
   assert.match(html, /layout=table/);
-  assert.match(html, /Scrollable message table/);
-  assert.match(html, /Feedback on campaign key visuals/);
-  assert.doesNotMatch(html, /Review the next content batch/);
+  assert.doesNotMatch(html, /preview=|Sample messages|data-message-id=/);
 });
 
-test('design previews cannot expose live mutations even when passed management permissions', () => {
-  const record = getInboxDesignPreview('client-requests')[0];
+test('existing source records retain real reply actions and permission-gated editing', () => {
+  const record = { id: 'test-only-record', fullName: 'Test sender', email: 'test@example.invalid', message: 'Creative and engineering brief.', status: 'new', createdAt: '2026-11-01T00:00:00Z', starred: true };
   const noop = () => {};
-  const props = { items: [record], selected: record, language: 'en', category: 'client-requests', preview: true, loading: false, unavailable: false, sourceEmpty: false, table: false, page: 1, pageSize: 10, onPage: noop, onPageSize: noop, onSelect: noop, onBack: noop, onReset: noop, onRetry: noop, onStar: noop, canManage: true, canConvert: true, converting: false, onConvert: noop, onDelete: noop, onTemplates: noop, note: '', onNote: noop, savingNote: false, onSaveNote: noop, statusControl: 'New', priorityControl: 'High', ownerControl: 'Sample owner' };
+  const props = { items: [record], selected: record, language: 'en', category: 'messages', loading: false, unavailable: false, sourceEmpty: false, table: false, page: 1, pageSize: 10, onPage: noop, onPageSize: noop, onSelect: noop, onBack: noop, onReset: noop, onRetry: noop, onStar: noop, canManage: false, canConvert: false, converting: false, onConvert: noop, onDelete: noop, onTemplates: noop, note: '', onNote: noop, savingNote: false, onSaveNote: noop, statusControl: 'New', priorityControl: 'Normal', ownerControl: 'Unassigned' };
   const html = renderToStaticMarkup(element(MemoryRouter, null, element(MessageWorkspace, props)));
-  assert.doesNotMatch(html, /Convert to client|Delete message|href="mailto:|href="tel:/);
+  assert.match(html, /href="mailto:test@example.invalid"/);
+  assert.match(html, /Reply by email|Response templates/);
   assert.match(html, /<textarea[^>]*disabled/);
   assert.match(html, /class="ams-message-star is-saved" disabled/);
-  assert.match(html, /Sample content · No changes saved/);
-  assert.match(html, /Preview a response/);
-  const templates = renderWithStorage(element(LanguageProvider, null, element(CannedResponsesModal, { isOpen: true, onClose: noop, submission: record, preview: true })));
-  assert.doesNotMatch(templates, /href="mailto:|href="https:\/\/wa.me/);
-  assert.match(templates, /Sending is disabled/);
-  assert.match(templates, /disabled[^>]*[^]*?Email/);
+  assert.doesNotMatch(html, /Convert to client|Delete message|Sample content|Preview a response/);
+  const table = renderToStaticMarkup(element(MemoryRouter, null, element(MessageWorkspace, { ...props, selected: null, table: true })));
+  assert.match(table, /Scrollable message table/);
+  assert.match(table, /Test sender/);
+  assert.match(table, /Creative and engineering brief/);
+});
+
+test('retired preview query parameters cannot activate examples or disable real actions', () => {
+  for (const view of ['messages', 'client', 'client-requests', 'project-support']) {
+    const html = renderPage('/admin/inbox?view=' + view + '&preview=1');
+    assert.doesNotMatch(html, /Design preview|Sample messages|ams-ui-preview-|Preview this workspace/);
+    assert.doesNotMatch(navigation(html, 'Message categories'), /preview=/);
+  }
 });

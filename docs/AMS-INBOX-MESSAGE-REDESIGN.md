@@ -1,3 +1,5 @@
+> **Current instruction — 1 November 2026:** Design preview is removed. There are no production sample records, design toggle/banner, sample response action or design-mode category links. Existing canonical messages and permission-gated actions are retained. Dedicated Client Requests/Project & Support sources remain unavailable and show an honest full-width state with View all messages. Legacy preview URLs return to the normal workspace. Earlier preview descriptions below are historical and superseded. See the current execution checkpoint for verification.
+
 > **1 November 2026 polish:** compact message rows and independent star alignment; clearer panel/reader boundaries; flat service context; sticky Table headings; balanced two-column phone categories; compact preview notice. Existing source/routing/handlers/permissions and shared Dashboard Overview tokens remain unchanged. Actual-component dark/light and responsive review completed; see execution checkpoint. User visual acceptance remains pending.
 
 # Inbox four-category design revision — 31 October 2026

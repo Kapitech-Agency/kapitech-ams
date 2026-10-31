@@ -25,7 +25,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { AdminFilterBar, AdminModuleHeader, AdminSectionTabs, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { InboxMessageNavigation, InboxMessageToolbar } from '../../components/admin/inbox/InboxMessageToolbar';
 import { DashboardControl } from '../../components/admin/DashboardControls';
-import { INBOX_CATEGORY_CONTENT, getInboxDesignPreview, type InboxCategory } from '../../components/admin/inbox/inboxPresentation';
+import type { InboxCategory } from '../../components/admin/inbox/inboxPresentation';
 import { MessageWorkspace } from '../../components/admin/inbox/MessageWorkspace';
 export const AdminInbox: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
@@ -44,15 +44,15 @@ export const AdminInbox: React.FC = () => {
   const categoryView: InboxCategory = activeInboxTab === 'unread' || activeInboxTab === 'starred' ? 'messages' : activeInboxTab;
   const requestedSavedView = searchParams.get('saved');
   const savedView = activeInboxTab === 'unread' || activeInboxTab === 'starred' ? activeInboxTab : requestedSavedView === 'unread' || requestedSavedView === 'starred' ? requestedSavedView : 'all';
-  const isDesignPreview = searchParams.get('preview') === '1';
   const isUnavailableCategory = categoryView === 'client-requests' || categoryView === 'project-support';
-  const categoryContent = INBOX_CATEGORY_CONTENT[categoryView];
-  const setDesignPreview = (enabled: boolean) => {
-    const next = new URLSearchParams(searchParams);
-    if (enabled) next.set('preview', '1'); else next.delete('preview');
-    setSearchParams(next);
-  };
 
+  // Retired design-mode links must return to the canonical workspace.
+  useEffect(() => {
+    if (!searchParams.has('preview')) return;
+    const canonicalParams = new URLSearchParams(searchParams);
+    canonicalParams.delete('preview');
+    setSearchParams(canonicalParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!hasViewParameter || isSupportedInboxView) return;
@@ -127,7 +127,6 @@ export const AdminInbox: React.FC = () => {
 
 
   const activeTabItems = useMemo(() => {
-    if (isDesignPreview) return getInboxDesignPreview(categoryView);
     switch (activeInboxTab) {
       case 'messages': return submissions;
       case 'unread': return submissions.filter((item) => item.status === 'new');
@@ -137,10 +136,10 @@ export const AdminInbox: React.FC = () => {
         // Legacy records without a type retain their historical inquiry behavior.
         return submissions.filter((item) => !item.type || item.type === 'inquiry');
       case 'client-requests':
-      case 'project-support': return []; // Design routes have no canonical record contract yet.
+      case 'project-support': return []; // Dedicated categories have no canonical record contract yet.
       default: return submissions;
     }
-  }, [activeInboxTab, submissions, isDesignPreview, categoryView]);
+  }, [activeInboxTab, submissions, categoryView]);
 
   const inboxChannelOptions = [
     { value: 'all', label: language === 'id' ? 'Semua kanal' : 'All channels' },
@@ -176,7 +175,7 @@ export const AdminInbox: React.FC = () => {
     setFilterChannel('all');
     setSearchQuery('');
     setViewMode(layoutFromUrl);
-  }, [activeInboxTab, savedView, isDesignPreview]);
+  }, [activeInboxTab, savedView]);
 
   useEffect(() => { setViewMode(layoutFromUrl); }, [layoutFromUrl]);
 
@@ -199,7 +198,7 @@ export const AdminInbox: React.FC = () => {
   };
 
   const handleConvertToClient = async (submission: ContactSubmission) => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (!canManageClients || (submission.type && submission.type !== 'inquiry') || convertingSubmissionId) return;
     setConvertingSubmissionId(submission.id);
     try {
@@ -238,7 +237,7 @@ export const AdminInbox: React.FC = () => {
 
   // Status update
   const handleStatusChange = async (id: string, newStatus: ContactSubmission['status']) => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (!canManageCrm) {
       setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -264,7 +263,7 @@ export const AdminInbox: React.FC = () => {
 
   // Priority update
   const handlePriorityChange = async (id: string, newPriority: ContactSubmission['priority']) => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (!canManageCrm) {
       setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -287,7 +286,7 @@ export const AdminInbox: React.FC = () => {
 
   // Assignee update
   const handleAssigneeChange = async (id: string, assignee: string) => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (!canManageCrm) {
       setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -310,7 +309,7 @@ export const AdminInbox: React.FC = () => {
 
   // Star toggle
   const handleToggleStar = async (e: React.MouseEvent, id: string, currentStarred?: boolean) => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (!canManageCrm) {
       setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -334,7 +333,7 @@ export const AdminInbox: React.FC = () => {
 
   // Save internal notes
   const handleSaveInternalNote = async () => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (!selectedSubmission || !canManageCrm) return;
     setIsSavingNote(true);
     try {
@@ -360,7 +359,7 @@ export const AdminInbox: React.FC = () => {
 
   // Delete submission
   const handleDelete = async (id: string) => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (!canManageCrm) return;
     setConfirmAction({ type: 'delete', id });
   };
@@ -393,7 +392,7 @@ export const AdminInbox: React.FC = () => {
 
   // Mark all new as the next triage stage for the active inbox.
   const handleMarkAllRead = async () => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (!canManageCrm) return;
     const count = activeTabItems.filter((item) => item.status === 'new').length;
     if (count > 0) {
@@ -499,9 +498,9 @@ export const AdminInbox: React.FC = () => {
         (item.specialty || '').toLowerCase().includes(queryLower)
       );
 
-      return matchesStatus && matchesPriority && matchesOwner && matchesChannel && matchesStarred && matchesUnread && matchesSearch && (isDesignPreview || matchesDate(item.createdAt));
+      return matchesStatus && matchesPriority && matchesOwner && matchesChannel && matchesStarred && matchesUnread && matchesSearch && matchesDate(item.createdAt);
     });
-  }, [activeTabItems, filterStatus, filterPriority, filterOwner, filterChannel, searchQuery, matchesDate, savedView, isDesignPreview]);
+  }, [activeTabItems, filterStatus, filterPriority, filterOwner, filterChannel, searchQuery, matchesDate, savedView]);
 
   const inboxListItems = useMemo(
     () => filteredItems.slice().sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()),
@@ -512,12 +511,6 @@ export const AdminInbox: React.FC = () => {
     if (selectedSubmission && !filteredItems.some((item) => item.id === selectedSubmission.id)) setSelectedSubmission(null);
   }, [filteredItems]);
 
-  // Populate the desktop design review on entry; this never changes read/status records.
-  useEffect(() => {
-    if (isDesignPreview && layoutFromUrl !== 'table' && window.matchMedia('(min-width: 1100px)').matches && inboxListItems[0]) handleSelectSubmission(inboxListItems[0]);
-  }, [isDesignPreview, categoryView, savedView]);
-
-
     const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
   useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
@@ -525,7 +518,7 @@ export const AdminInbox: React.FC = () => {
 
   // Export CSV
   const handleExportCSV = () => {
-    if (isDesignPreview || isUnavailableCategory) return;
+    if (isUnavailableCategory) return;
     if (submissions.length === 0) return;
     const headers = ['ID', 'Slug', 'Date', 'Type', 'Status', 'Priority', 'Full Name', 'Email', 'Company', 'Phone', 'Services', 'Budget', 'Message', 'Source'];
     const rows = activeTabItems.map(s => [
@@ -561,13 +554,11 @@ export const AdminInbox: React.FC = () => {
       <AdminModuleHeader slug="inbox-header" className="mb-0" title="Inbox"
         description="Conversations, creative briefs and technical requests."
         actions={<>
-          <DashboardControl variant="action" className="ams-inbox2-preview-trigger" active={isDesignPreview} ariaPressed={isDesignPreview} onClick={() => setDesignPreview(!isDesignPreview)} disabled={isUpdating || isSavingNote || Boolean(convertingSubmissionId)}>Design preview</DashboardControl>
           <DashboardControl icon={<Mail size={14} />} onClick={() => setIsEmailModalOpen(true)}>Email alerts</DashboardControl>
         </>}
       />
-      <InboxMessageNavigation category={categoryView} saved={savedView} preview={isDesignPreview} table={viewMode === 'table'} />
-      {isDesignPreview && <div className="ams-inbox2-preview-note" role="status" data-ams-slug="inbox-design-preview-notice"><div><strong>Design preview</strong><span>Sample messages for reviewing the layout. No changes are saved.</span></div><DashboardControl variant="quiet" onClick={() => setDesignPreview(false)}>Exit preview</DashboardControl></div>}
-      {loadError && !isDesignPreview && !isUnavailableCategory && (
+      <InboxMessageNavigation category={categoryView} saved={savedView} table={viewMode === 'table'} />
+      {loadError && !isUnavailableCategory && (
         <div className="flex flex-col gap-3 rounded-card border border-warning/25 bg-warning/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="inbox-load-unavailable">
           <div className="min-w-0">
             <p className="text-xs font-semibold text-fg">{language === 'id' ? 'Data Inbox tidak tersedia' : 'Inbox data unavailable'}</p>
@@ -613,10 +604,10 @@ export const AdminInbox: React.FC = () => {
           setViewMode(table ? 'table' : 'split');
           setSearchParams(next);
         }}
-        loading={loading && !isDesignPreview} preview={isDesignPreview}
-        canManage={canManageCrm && !isDesignPreview && !isUnavailableCategory}
+        loading={loading}
+        canManage={canManageCrm && !isUnavailableCategory}
         busy={isUpdating || confirmActionLoading} newCount={metrics.newCount}
-        canExport={activeTabItems.length > 0 && !loadError && !isDesignPreview && !isUnavailableCategory}
+        canExport={activeTabItems.length > 0 && !loadError && !isUnavailableCategory}
         onRefresh={() => void refreshInbox()} onReset={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); setPage(1); }}
         onExport={handleExportCSV} onProcess={handleMarkAllRead}
       />
@@ -625,13 +616,12 @@ export const AdminInbox: React.FC = () => {
       <MessageWorkspace
           items={inboxListItems}
           selected={selectedSubmission}
-          loading={loading && !isDesignPreview && !isUnavailableCategory}
-          unavailable={Boolean(loadError) && submissions.length === 0 && !isDesignPreview && !isUnavailableCategory}
+          loading={loading && !isUnavailableCategory}
+          unavailable={Boolean(loadError) && submissions.length === 0 && !isUnavailableCategory}
           sourceEmpty={activeTabItems.length === 0}
           language={language}
-          category={categoryView} preview={isDesignPreview}
-          sourceUnavailable={isUnavailableCategory && !isDesignPreview}
-          onPreview={() => setDesignPreview(true)}
+          category={categoryView}
+          sourceUnavailable={isUnavailableCategory}
           whatsAppHref={selectedSubmission?.phone ? `https://wa.me/${cleanPhoneForWhatsApp(selectedSubmission.phone)}` : undefined}
           table={viewMode === 'table'}
           commercial={activeInboxTab === 'client'}
@@ -641,17 +631,17 @@ export const AdminInbox: React.FC = () => {
           onReset={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); setPage(1); }}
           onRetry={() => void refreshInbox()}
           onStar={handleToggleStar}
-          canManage={canManageCrm && !isDesignPreview && !isUnavailableCategory}
-          canConvert={canManageClients && !isDesignPreview && !isUnavailableCategory}
+          canManage={canManageCrm && !isUnavailableCategory}
+          canConvert={canManageClients && !isUnavailableCategory}
           converting={Boolean(convertingSubmissionId)}
           onConvert={() => selectedSubmission && void handleConvertToClient(selectedSubmission)}
           onDelete={() => selectedSubmission && void handleDelete(selectedSubmission.id)}
           onTemplates={() => setIsCannedModalOpen(true)}
           note={internalNoteDraft} onNote={setInternalNoteDraft}
           savingNote={isSavingNote} onSaveNote={handleSaveInternalNote}
-          statusControl={selectedSubmission && <CustomSelect aria-label="Message status" disabled={isUpdating || !canManageCrm || isDesignPreview || isUnavailableCategory} value={selectedSubmission.status} onChange={(value) => handleStatusChange(selectedSubmission.id, value as ContactSubmission['status'])} options={inboxStatusOptions.filter((option) => option.value !== 'all').map((option) => ({ ...option, label: option.label.replace(/^Status: /, '') }))} />}
-          priorityControl={selectedSubmission && <CustomSelect aria-label="Message priority" disabled={!canManageCrm || isDesignPreview || isUnavailableCategory} value={selectedSubmission.priority || 'normal'} onChange={(value) => handlePriorityChange(selectedSubmission.id, value as ContactSubmission['priority'])} options={[{ value: 'urgent', label: 'Urgent' }, { value: 'high', label: 'High' }, { value: 'normal', label: 'Normal' }, { value: 'low', label: 'Low' }]} />}
-          ownerControl={selectedSubmission && <CustomSelect aria-label="Message owner" disabled={!canManageCrm || isDesignPreview || isUnavailableCategory} value={selectedSubmission.assignedTo || ''} onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)} options={[{ value: '', label: 'Unassigned' }, ...inboxOwnerOptions.filter((option) => !['all', '__no_owner__'].includes(option.value)), ...['Lead Full-Stack Tech', 'Senior UI/UX Designer', 'Technical Project Manager', 'Business Director'].filter((owner) => !inboxOwnerOptions.some((option) => option.value === owner)).map((owner) => ({ value: owner, label: owner }))]} />}
+          statusControl={selectedSubmission && <CustomSelect aria-label="Message status" disabled={isUpdating || !canManageCrm || isUnavailableCategory} value={selectedSubmission.status} onChange={(value) => handleStatusChange(selectedSubmission.id, value as ContactSubmission['status'])} options={inboxStatusOptions.filter((option) => option.value !== 'all').map((option) => ({ ...option, label: option.label.replace(/^Status: /, '') }))} />}
+          priorityControl={selectedSubmission && <CustomSelect aria-label="Message priority" disabled={!canManageCrm || isUnavailableCategory} value={selectedSubmission.priority || 'normal'} onChange={(value) => handlePriorityChange(selectedSubmission.id, value as ContactSubmission['priority'])} options={[{ value: 'urgent', label: 'Urgent' }, { value: 'high', label: 'High' }, { value: 'normal', label: 'Normal' }, { value: 'low', label: 'Low' }]} />}
+          ownerControl={selectedSubmission && <CustomSelect aria-label="Message owner" disabled={!canManageCrm || isUnavailableCategory} value={selectedSubmission.assignedTo || ''} onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)} options={[{ value: '', label: 'Unassigned' }, ...inboxOwnerOptions.filter((option) => !['all', '__no_owner__'].includes(option.value)), ...['Lead Full-Stack Tech', 'Senior UI/UX Designer', 'Technical Project Manager', 'Business Director'].filter((owner) => !inboxOwnerOptions.some((option) => option.value === owner)).map((owner) => ({ value: owner, label: owner }))]} />}
         />
       {/* ------------------------------------------------------------- */}
       {/* 5. MODALS & DIALOGS */}
@@ -708,7 +698,6 @@ export const AdminInbox: React.FC = () => {
           isOpen={isCannedModalOpen}
           onClose={() => setIsCannedModalOpen(false)}
           submission={selectedSubmission}
-          preview={isDesignPreview}
         />
       )}
 

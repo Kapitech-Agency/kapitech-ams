@@ -12,7 +12,7 @@ test('All Messages owner and channel filters are applied to the canonical filter
   const source = readInboxPresentation();
   assert.ok(source.includes("const matchesOwner = filterOwner === 'all'"));
   assert.ok(source.includes("const matchesChannel = filterChannel === 'all' || (item.type || 'inquiry') === filterChannel"));
-  assert.ok(source.includes('matchesStatus && matchesPriority && matchesOwner && matchesChannel && matchesStarred && matchesUnread && matchesSearch && (isDesignPreview || matchesDate(item.createdAt))'));
+  assert.ok(source.includes('matchesStatus && matchesPriority && matchesOwner && matchesChannel && matchesStarred && matchesUnread && matchesSearch && matchesDate(item.createdAt)'));
   assert.ok(source.includes('slug="inbox-message-owner-filter"'));
   assert.ok(source.includes('slug="inbox-message-channel-filter"'));
   assert.ok(source.includes('owners={inboxOwnerOptions}') && source.includes('options={p.owners}'));

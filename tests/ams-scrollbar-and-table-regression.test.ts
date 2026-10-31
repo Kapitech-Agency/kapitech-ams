@@ -78,8 +78,8 @@ test('Inbox star action is keyboard-accessible and announces its current state',
   assert.match(inbox, /p.onStar\(event, item.id, item.starred\)/);
   assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
   assert.match(inbox, /aria-label=\{.*item\.starred.*Unstar/);
-  assert.match(inbox, /disabled=\{!p\.canManage \|\| p\.preview\}/);
-  assert.match(parent, /canManage=\{canManageCrm && !isDesignPreview && !isUnavailableCategory\}/);
+  assert.match(inbox, /disabled=\{!p\.canManage\}/);
+  assert.match(parent, /canManage=\{canManageCrm && !isUnavailableCategory\}/);
   assert.match(css, /:focus-visible.*outline: 2px solid var\(--accent\)/);
 });
 

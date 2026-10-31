@@ -1,5 +1,13 @@
 # AMS Execution Checkpoint
 
+## Remove Inbox Design preview — 1 November 2026
+
+- Latest user correction: remove Design preview; keep Inbox focused on usable design for Kapitech, without backend/business-logic work. Standing instruction requires push to main for every task.
+- Baseline main `0be195045dd5eefc353cb6cc305a5298fe4a3c5b`; AMS CI 41246255910 and Quality Gate 41246256010 verified successful. Remove the toggle/banner, production examples/helper, sample-specific UI branches/styles, automatic sample selection, sample response and preview sending restrictions. Retired preview URLs normalize to canonical navigation.
+- Existing All Messages/Sales Inquiries source, reporting-period filter, source errors, saved views, Review/Table/drawer, permissions and operational handlers remain. All four categories remain navigable. Client Requests/Project & Support still lack dedicated data contracts: show one full-width availability state and View all messages, no fake records/counts, no classification guessed from inquiry text.
+- Local regression verification: 935 tests, 915 passed, zero failed, 20 conditional PostgreSQL skips. TypeScript and production build passed. Actual-component local browser checks confirmed all four category links, no design controls, cleanup of legacy preview URLs, and no page overflow at 320/390/1100/1280px. Browser harness used an isolated empty API response, not authenticated production data. Exact-SHA remote CI is recorded in delivery. No backend/API/schema/dependency/auth/Finance changes.
+- Next gate: authenticated real-data visual review/user acceptance; no broader backend workflow implementation authorized.
+
 ## Inbox visual polish — 1 November 2026
 
 - User requested another polish pass on the same four-category Inbox UI. Baseline main `ed2845be12c29057db8aa21037639ae6d88fe2ad`; both AMS CI 41215878886 and Quality Gate 41215878882 verified successful before changes.

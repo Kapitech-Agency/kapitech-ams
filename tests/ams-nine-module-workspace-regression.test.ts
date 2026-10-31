@@ -204,7 +204,7 @@ const inbox = readInboxPresentation();
   assert.match(inbox, /case 'client':[\s\S]*?return submissions.filter\(\(item\) => !item.type \|\| item.type === 'inquiry'\)/);
   assert.match(inbox, /case 'messages': return submissions;/);
   assert.match(inbox, /case 'starred': return submissions.filter\(\(item\) => !!item.starred\)/);
-  assert.match(inbox, /isDesignPreview \|\| isUnavailableCategory/);
+  assert.match(inbox, /if \(isUnavailableCategory\) return;/);
   assert.doesNotMatch(inbox, /Candidate pipeline|Starred candidate work|inbox-jobs-board/);
 });
 
