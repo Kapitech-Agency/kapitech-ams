@@ -1,5 +1,13 @@
 # AMS Execution Checkpoint
 
+## Inbox visual polish — 1 November 2026
+
+- User requested another polish pass on the same four-category Inbox UI. Baseline main `ed2845be12c29057db8aa21037639ae6d88fe2ad`; both AMS CI 41215878886 and Quality Gate 41215878882 verified successful before changes.
+- Presentation-only CSS slice: denser message rows, consistent independent star placement and reserved text space, clearer register/reader header and footer boundaries, flatter service/engagement context, sticky Table column headings, compact preview guidance and balanced two-column category navigation on phones. Removed obsolete details-menu styles; retained shared DropdownPortal, canonical 12px/1100px/5:7 layout, tokens and existing active-state semantics.
+- No source records, routing, API, backend, mutation handlers, permissions, schema, dependencies or business logic changed. Design preview remains explicitly labelled and read-only.
+- Verification: TypeScript passed; full regression suite 934 tests / 914 passed / zero failed / 20 conditional PostgreSQL skips. Production build passed. Actual-component offline browser review checked all four categories, light/dark, desktop/mobile and widths 320/390/599/600/899/1100/1280 without page overflow. This is not authenticated production/full-shell or real-write evidence. Exact-SHA post-push CI is reported in delivery.
+- Next gate: user visual acceptance and authenticated real-data review; do not expand into backend work. Standing instruction remains commit/push each task to main.
+
 ## Inbox four-category visual revision — 31 October 2026
 
 - Active user scope: redo and polish All Messages, Sales Inquiries, Client Requests, Project & Support using approved Dashboard Overview; correct active states and organize controls. UI/presentation/routing only. User explicitly requires every completed task pushed to main. Prior first-pass appearance was rejected; do not treat it as approved.

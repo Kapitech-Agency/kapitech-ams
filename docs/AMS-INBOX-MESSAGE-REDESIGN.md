@@ -1,3 +1,5 @@
+> **1 November 2026 polish:** compact message rows and independent star alignment; clearer panel/reader boundaries; flat service context; sticky Table headings; balanced two-column phone categories; compact preview notice. Existing source/routing/handlers/permissions and shared Dashboard Overview tokens remain unchanged. Actual-component dark/light and responsive review completed; see execution checkpoint. User visual acceptance remains pending.
+
 # Inbox four-category design revision — 31 October 2026
 
 Status: frontend implementation for visual review; user acceptance pending. Baseline: main `5c81dcc209b4ec68fc02fc05c197549b14633d96`. The user rejected the earlier appearance and explicitly requested all four subtab designs, corrected active states, usable controls and a further polish pass. The existing instruction authorizes committing/pushing completed tasks directly to main.
