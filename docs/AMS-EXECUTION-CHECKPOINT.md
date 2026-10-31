@@ -1,5 +1,14 @@
 # AMS Execution Checkpoint
 
+## Inbox Follow-ups frontend workspace — 1 November 2026
+
+- User accepted the preceding direction and requested Follow-ups next. Keep existing UI-only/routing scope, approved Overview components, no Design preview/sample records, no backend/business logic. Standing instruction requires push to main.
+- Baseline main `3bc623a9c53e1d2b9a048234823f026cd5fca529`; AMS CI 41252687593 and Quality Gate 41252687601 verified green. Existing contracts/API client/server search confirms no persisted follow-up/due-at/reminder source. Existing submission dates/statuses are not a reminder lifecycle.
+- Add a dedicated presentation route `?view=follow-ups`, with `followup=today|upcoming|overdue|completed`. Enable its module navigation and exclusive active state; leave Routing & Templates unavailable. The AdminInbox router mounts Follow-ups separately from the existing Messages component, so message-only data hooks/handlers do not run in this view. Existing message category/query behavior and role/access policy remain unchanged.
+- Layout: shared header and Open messages action, four internal view controls, Follow-up/Conversation/Client-contact/Owner/Due-date/Status/Next-action register anatomy, explicit Unavailable badge and shared Overview compact empty state with Review messages. No phantom rows, zero counts, fabricated due dates, create/complete/snooze actions, notifications or local persistence. Mobile hides visual-only column labels and uses two-column internal controls. UI is navigable; operational scheduling remains unavailable.
+- Verification: TypeScript and production build passed; full suite 938 tests / 918 passed / zero failures / 20 conditional PostgreSQL skips. New actual-component render tests cover all four views, default/unknown scopes, source honesty and absence of message controls/fake actions. Existing navigation tests updated for the new presentation route, keeping access and still-unimplemented routing rules checks.
+- Browser verification uses actual Inbox and actual module navigation primitives in an isolated local empty-response harness: four view/active-state transitions, Review messages and return, default/invalid-scope/retired-preview normalization, and no page overflow at 320/390/599/600/899/900/1100/1280px. Not authenticated production or sidebar/full-shell evidence. Exact-SHA CI is reported after push. Next gate: user visual acceptance; canonical scheduling/reminder backend requires a separate authorized stage.
+
 ## Inbox empty states follow approved Overview — 1 November 2026
 
 - User rejected the Inbox empty-state styling because it did not follow Dashboard Overview. Baseline main `492dd850e9b553562e0c0a546cf414f657dec177`; AMS CI 41252200440 and Quality Gate 41252200427 verified successful before this slice.

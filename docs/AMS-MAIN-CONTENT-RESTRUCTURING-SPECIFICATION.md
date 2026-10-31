@@ -209,7 +209,7 @@ The selected-record surface groups sender/contact, request/brief, current status
 
 ### Follow-ups
 
-Views: Due Today, Upcoming, Overdue and Completed. Each item links to its source thread and exposes owner, due date, status and next supported action. If follow-up/notification source/workflow is missing, mark it unavailable and track the dependency instead of faking records.
+Views: Due Today, Upcoming, Overdue and Completed. The frontend presentation is navigable at `/admin/inbox?view=follow-ups`, with `followup=today|upcoming|overdue|completed` for its internal views (user instruction, 1 November 2026). Register anatomy: follow-up, source conversation, client/contact, owner/PIC, due date, status and supported next action. If the follow-up/notification source is missing, show the approved Overview unavailable state, without fabricated rows/counts or a false all-clear/completed claim. Hide purely visual column labels on compact layouts while unavailable. Operational scheduling/completion remains unimplemented; do not derive reminders from message age or mutate message status as completion.
 
 ### Routing & Templates
 

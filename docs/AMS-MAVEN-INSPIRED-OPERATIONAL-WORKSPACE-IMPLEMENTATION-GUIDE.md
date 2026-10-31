@@ -685,7 +685,7 @@ Each record shows:
 - Status.
 - Supported next action.
 
-If the canonical reminder/due-at source or workflow is not present, keep Follow-ups unavailable. Never create mock rows or local-only completion behavior.
+Per the user’s 1 November 2026 instruction to continue the frontend design of Follow-ups, its dedicated presentation route may be navigable with Due Today/Upcoming/Overdue/Completed controls and the specified register anatomy. When the canonical reminder/due-at source or workflow is absent, mark the queue unavailable using the approved Overview empty state. Do not infer due dates from message age, render mock records/counts, expose fake completion/snooze, or persist local-only follow-ups. Operational scheduling remains unavailable until its canonical contract is authorized and implemented.
 
 ## 5.4 Routing & Templates
 

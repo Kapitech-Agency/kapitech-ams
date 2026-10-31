@@ -39,7 +39,7 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
   ],
   inbox: [
     { key: 'messages', label: 'Messages', to: '/admin/inbox?view=messages', slug: 'inbox-workspace-messages' },
-    { key: 'follow-ups', label: 'Follow-ups', to: '/admin/inbox', available: false },
+    { key: 'follow-ups', label: 'Follow-ups', to: '/admin/inbox?view=follow-ups', slug: 'inbox-workspace-follow-ups' },
     { key: 'routing-templates', label: 'Routing & Templates', to: '/admin/inbox', available: false },
   ],
   crm: [],
@@ -136,9 +136,9 @@ export function isAmsModuleSubnavigationItemActive(
 
   if (path === '/admin/finance/quotations') return itemKey === 'receivables';
   if (path === '/admin/inbox') {
-    // Messages is the sole functional Inbox workspace. Category and saved views
-    // remain inside the page; unsupported or legacy views resolve to Messages.
-    return itemKey === 'messages';
+    // Follow-ups has a dedicated presentation route; categories and saved views
+    // remain in Messages. This does not imply a connected reminder workflow.
+    return itemKey === (params.get('view') === 'follow-ups' ? 'follow-ups' : 'messages');
   }
   if (path === '/admin/documents') return itemKey === 'library';
   if (path === '/admin/finance') {

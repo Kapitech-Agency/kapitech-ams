@@ -153,7 +153,7 @@ test('module workspace navigation respects ownership and role-specific scope', (
   assert.deepEqual(subnav('dashboard', 'Admin').map((item) => item.key), ['overview', 'performance', 'analytics']);
   assert.deepEqual(subnav('crm', 'Admin'), []);
   assert.deepEqual(subnav('inbox', 'Admin').map((item) => item.key), ['messages', 'follow-ups', 'routing-templates']);
-  assert.equal(subnav('inbox', 'Admin').find((item) => item.key === 'follow-ups')?.available, false);
+  assert.equal(subnav('inbox', 'Admin').find((item) => item.key === 'follow-ups')?.to, '/admin/inbox?view=follow-ups');
   assert.equal(subnav('inbox', 'Admin').find((item) => item.key === 'routing-templates')?.available, false);
 
   assert.deepEqual(subnav('projects', 'Admin').map((item) => item.key), ['overview', 'registry', 'tasks', 'planning-delivery', 'content-campaigns', 'resources', 'controls']);

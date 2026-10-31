@@ -96,3 +96,29 @@ test('retired preview query parameters cannot activate examples or disable real 
     assert.doesNotMatch(navigation(html, 'Message categories'), /preview=/);
   }
 });
+
+test('Follow-ups renders four distinct navigable views with Overview states and no fictional records', () => {
+  for (const [scope, label] of [['today', 'Due Today'], ['upcoming', 'Upcoming'], ['overdue', 'Overdue'], ['completed', 'Completed']]) {
+    const html = renderPage('/admin/inbox?view=follow-ups&followup=' + scope);
+    const tabs = navigation(html, 'Follow-up views');
+    assert.equal((tabs.match(/<a\b/g) || []).length, 4);
+    assert.equal((tabs.match(/aria-current="page"/g) || []).length, 1);
+    assert.match(html, new RegExp('id="inbox-follow-ups-register-title">' + label));
+    assert.match(html, /data-source-status="unavailable"/);
+    assert.match(html, /ams-dashboard-empty ams-dashboard-empty--compact/);
+    assert.match(html, /Follow-ups are not available yet/);
+    assert.match(html, /href="\/admin\/inbox\?view=messages"/);
+    for (const column of ['Follow-up', 'Conversation', 'Client / contact', 'Owner / PIC', 'Due date', 'Status', 'Next action']) assert.ok(html.includes(column));
+    assert.doesNotMatch(html, /Message categories|Search inbound messages|data-message-id=|ams-message-count|Design preview|No follow-ups due|Mark complete|Snooze/);
+  }
+});
+
+test('Follow-ups defaults to Due Today without treating an unknown scope as real records', () => {
+  for (const query of ['', '&followup=not-a-view']) {
+    const html = renderPage('/admin/inbox?view=follow-ups' + query);
+    assert.match(html, /id="inbox-follow-ups-register-title">Due Today/);
+    assert.match(html, /Follow-ups are not available yet/);
+    assert.equal((navigation(html, 'Follow-up views').match(/aria-current="page"/g) || []).length, 1);
+    assert.doesNotMatch(html, /Design preview|data-message-id=/);
+  }
+});

@@ -27,7 +27,14 @@ import { InboxMessageNavigation, InboxMessageToolbar } from '../../components/ad
 import { DashboardControl } from '../../components/admin/DashboardControls';
 import type { InboxCategory } from '../../components/admin/inbox/inboxPresentation';
 import { MessageWorkspace } from '../../components/admin/inbox/MessageWorkspace';
+import { InboxFollowUps } from '../../components/admin/inbox/InboxFollowUps';
+/** Route presentation before mounting message-only data hooks. */
 export const AdminInbox: React.FC = () => {
+  const [params] = useSearchParams();
+  return params.get('view') === 'follow-ups' ? <InboxFollowUps /> : <AdminInboxMessages />;
+};
+
+const AdminInboxMessages: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
