@@ -1,3 +1,4 @@
+import { readInboxPresentation } from './helpers/inboxPresentation';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs/promises';
@@ -111,10 +112,10 @@ test('Inbox has no Overview subnavigation and unsupported views resolve to Messa
   assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'follow-ups')!, '/admin/inbox', '?view=follow-ups'), false,
     'target-only workspaces never appear as active functional workspaces');
 
-  const inboxSource = await read('src/pages/admin/AdminInbox.tsx');
-  assert.match(inboxSource, /type InboxTab = 'messages' \| 'client' \| 'unread' \| 'starred'/);
+  const inboxSource = readInboxPresentation();
+  assert.match(inboxSource, /type InboxTab = 'messages' \| 'client' \| 'unread' \| 'starred' \| 'client-requests' \| 'project-support'/);
   assert.match(inboxSource, /const \[searchParams, setSearchParams\] = useSearchParams\(\)/);
-  assert.match(inboxSource, /const supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred'\]/);
+  assert.match(inboxSource, /const supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred', 'client-requests', 'project-support'\]/);
   assert.match(inboxSource, /if \(!hasViewParameter \|\| isSupportedInboxView\) return;/);
   assert.match(inboxSource, /new URLSearchParams\(searchParams\)/);
   assert.match(inboxSource, /canonicalParams\.delete\('view'\)/);
@@ -122,10 +123,10 @@ test('Inbox has no Overview subnavigation and unsupported views resolve to Messa
   assert.doesNotMatch(inboxSource, /key: 'overview', label: 'Overview', to: '\/admin\/inbox/);
   assert.match(inboxSource, /ariaLabel="Message categories"/);
   assert.match(inboxSource, /ariaLabel="Message saved views"/);
-  assert.match(inboxSource, /label: 'Resolved', to: '\/admin\/inbox\?view=resolved', available: false/);
-  assert.match(inboxSource, /label: 'Archived', to: '\/admin\/inbox\?view=archived', available: false/);
-  assert.match(inboxSource, /supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred'\]/);
-  assert.match(inboxSource, /label: 'Project & Support'.*available: false/);
+  assert.match(inboxSource, /<button type="button" disabled[^>]*>Resolved · Not connected/);
+  assert.match(inboxSource, /<button type="button" disabled[^>]*>Archived · Not connected/);
+  assert.match(inboxSource, /supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred', 'client-requests', 'project-support'\]/);
+  assert.match(inboxSource, /key: 'project-support', label: 'Project & Support', to: href\('project-support'\)/);
   const messageCategoriesStart = inboxSource.indexOf('ariaLabel="Message categories"');
   const messageSavedViewsStart = inboxSource.indexOf('ariaLabel="Message saved views"');
   assert.ok(messageCategoriesStart >= 0 && messageSavedViewsStart > messageCategoriesStart);
@@ -134,13 +135,13 @@ test('Inbox has no Overview subnavigation and unsupported views resolve to Messa
     'Starred belongs to saved views and must not be part of message categories.');
   assert.doesNotMatch(inboxSource, /key: 'resolved-archived'/,
     'Resolved and Archived belong to status filters, not a combined worksheet tab.');
-  assert.ok(inboxSource.includes("to: '/admin/inbox?view=starred'"),
+  assert.ok(inboxSource.includes("href(category, 'starred')"),
     'Starred remains reachable as a saved view.');
-  assert.ok(inboxSource.includes("to: '/admin/inbox?view=unread'"),
+  assert.ok(inboxSource.includes("href(category, 'unread')"),
     'Unread remains a saved view on canonical New-status records.');
   assert.match(inboxSource, /case 'unread': return submissions\.filter\(\(item\) => item\.status === 'new'\)/);
   assert.ok(inboxSource.includes("unread: 'unread_messages'"));
-  assert.match(inboxSource, /supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred'\]/);
+  assert.match(inboxSource, /supportedInboxViews: readonly string\[\] = \['messages', 'client', 'unread', 'starred', 'client-requests', 'project-support'\]/);
   assert.match(inboxSource, /case 'messages': return submissions/);
   assert.match(inboxSource, /\.filter\(\(item\) => item\.type !== 'career'\)/);
   const app = await read('src/App.tsx');

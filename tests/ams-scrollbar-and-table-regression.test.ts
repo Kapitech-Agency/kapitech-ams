@@ -1,3 +1,4 @@
+import { readInboxPresentation } from './helpers/inboxPresentation';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -77,13 +78,13 @@ test('Inbox star action is keyboard-accessible and announces its current state',
   assert.match(inbox, /p.onStar\(event, item.id, item.starred\)/);
   assert.match(inbox, /aria-pressed=\{Boolean\(item\.starred\)\}/);
   assert.match(inbox, /aria-label=\{.*item\.starred.*Unstar/);
-  assert.match(inbox, /disabled=\{!p\.canManage\}/);
-  assert.match(parent, /canManage=\{canManageCrm\}/);
+  assert.match(inbox, /disabled=\{!p\.canManage \|\| p\.preview\}/);
+  assert.match(parent, /canManage=\{canManageCrm && !isDesignPreview && !isUnavailableCategory\}/);
   assert.match(css, /:focus-visible.*outline: 2px solid var\(--accent\)/);
 });
 
 test('Inbox leaves Careers applicant review in the canonical CMS workspace', async () => {
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = readInboxPresentation();
   const app = await read('src/App.tsx');
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
 

@@ -643,7 +643,7 @@ Use the approved Dashboard Overview as a **visual reference**, not a content tem
 ### Page composition
 
 1. Module header with a direct purpose, total inbound context, notification configuration and only actions that belong in the header.
-2. Message-category and saved-view navigation: All Messages, Sales Inquiries, Client Requests and Project & Support (unavailable categories remain disabled); Unread, Starred, Resolved and Archived stay inside the same canonical message workspace.
+2. Message-category and saved-view navigation: All Messages, Sales Inquiries, Client Requests and Project & Support are navigable for design review per the user's 31 October 2026 correction. Unconnected categories use explicitly labelled, read-only design preview or source-unavailable guidance; no production records are inferred. All/Unread/Starred compose with the current category. Resolved and Archived remain disabled in More until their canonical workflows exist. All remain inside Messages.
 3. Search plus source-backed status, priority, owner/PIC and channel filters where the view supports them.
 4. Compact record list and selected-record reader in a single 12-column row at the 1100px breakpoint: list five columns, detail seven. Narrow screens use one column and an explicit back-to-list action.
 5. The reader shows current sender/company context, message/brief, requested services and captured budget when relevant, current status/priority, ownership, internal notes, and supported/permission-aware actions.

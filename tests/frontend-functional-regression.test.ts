@@ -1,3 +1,4 @@
+import { readInboxPresentation } from './helpers/inboxPresentation';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -657,7 +658,7 @@ test('AMS UI defaults no longer override component focus, form sizing, or compac
 
 test('Careers tabs, filters, and modal fields use consistent AMS interactions', async () => {
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
-  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const inbox = readInboxPresentation();
   const app = await read('src/App.tsx');
   assert.match(careers, /role="tablist"/);
   assert.match(careers, /role="tab"/);

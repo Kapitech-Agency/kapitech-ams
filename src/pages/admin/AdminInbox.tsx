@@ -23,21 +23,36 @@ import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
 import { AdminFilterBar, AdminModuleHeader, AdminSectionTabs, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { InboxMessageNavigation, InboxMessageToolbar } from '../../components/admin/inbox/InboxMessageToolbar';
+import { DashboardControl } from '../../components/admin/DashboardControls';
+import { INBOX_CATEGORY_CONTENT, getInboxDesignPreview, type InboxCategory } from '../../components/admin/inbox/inboxPresentation';
 import { MessageWorkspace } from '../../components/admin/inbox/MessageWorkspace';
 export const AdminInbox: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
   const canManageClients = hasAdminPermission('canManageClients');
-  type InboxTab = 'messages' | 'client' | 'unread' | 'starred';
+  type InboxTab = 'messages' | 'client' | 'unread' | 'starred' | 'client-requests' | 'project-support';
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get('view') as InboxTab | null;
-  const supportedInboxViews: readonly string[] = ['messages', 'client', 'unread', 'starred'];
+  const supportedInboxViews: readonly string[] = ['messages', 'client', 'unread', 'starred', 'client-requests', 'project-support'];
   const hasViewParameter = searchParams.has('view');
   const isSupportedInboxView = requestedTab === null || supportedInboxViews.includes(requestedTab);
   const activeInboxTab: InboxTab = requestedTab && supportedInboxViews.includes(requestedTab)
     ? requestedTab
     : 'messages';
+  const categoryView: InboxCategory = activeInboxTab === 'unread' || activeInboxTab === 'starred' ? 'messages' : activeInboxTab;
+  const requestedSavedView = searchParams.get('saved');
+  const savedView = activeInboxTab === 'unread' || activeInboxTab === 'starred' ? activeInboxTab : requestedSavedView === 'unread' || requestedSavedView === 'starred' ? requestedSavedView : 'all';
+  const isDesignPreview = searchParams.get('preview') === '1';
+  const isUnavailableCategory = categoryView === 'client-requests' || categoryView === 'project-support';
+  const categoryContent = INBOX_CATEGORY_CONTENT[categoryView];
+  const setDesignPreview = (enabled: boolean) => {
+    const next = new URLSearchParams(searchParams);
+    if (enabled) next.set('preview', '1'); else next.delete('preview');
+    setSearchParams(next);
+  };
+
 
   useEffect(() => {
     if (!hasViewParameter || isSupportedInboxView) return;
@@ -59,7 +74,8 @@ export const AdminInbox: React.FC = () => {
   const [filterOwner, setFilterOwner] = useState<string>('all');
   const [filterChannel, setFilterChannel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'split' | 'table'>('split');
+  const layoutFromUrl = searchParams.get('layout') === 'table' ? 'table' : 'split';
+  const [viewMode, setViewMode] = useState<'split' | 'table'>(layoutFromUrl);
 
   // Selection & Panels
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
@@ -111,6 +127,7 @@ export const AdminInbox: React.FC = () => {
 
 
   const activeTabItems = useMemo(() => {
+    if (isDesignPreview) return getInboxDesignPreview(categoryView);
     switch (activeInboxTab) {
       case 'messages': return submissions;
       case 'unread': return submissions.filter((item) => item.status === 'new');
@@ -119,9 +136,11 @@ export const AdminInbox: React.FC = () => {
         // Keep Sales Inquiries scoped to actual inquiry records.
         // Legacy records without a type retain their historical inquiry behavior.
         return submissions.filter((item) => !item.type || item.type === 'inquiry');
+      case 'client-requests':
+      case 'project-support': return []; // Design routes have no canonical record contract yet.
       default: return submissions;
     }
-  }, [activeInboxTab, submissions]);
+  }, [activeInboxTab, submissions, isDesignPreview, categoryView]);
 
   const inboxChannelOptions = [
     { value: 'all', label: language === 'id' ? 'Semua kanal' : 'All channels' },
@@ -156,8 +175,10 @@ export const AdminInbox: React.FC = () => {
     setFilterOwner('all');
     setFilterChannel('all');
     setSearchQuery('');
-    setViewMode('split');
-  }, [activeInboxTab]);
+    setViewMode(layoutFromUrl);
+  }, [activeInboxTab, savedView, isDesignPreview]);
+
+  useEffect(() => { setViewMode(layoutFromUrl); }, [layoutFromUrl]);
 
   // Keep selected submission in sync with store
   useEffect(() => {
@@ -178,6 +199,7 @@ export const AdminInbox: React.FC = () => {
   };
 
   const handleConvertToClient = async (submission: ContactSubmission) => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (!canManageClients || (submission.type && submission.type !== 'inquiry') || convertingSubmissionId) return;
     setConvertingSubmissionId(submission.id);
     try {
@@ -216,6 +238,7 @@ export const AdminInbox: React.FC = () => {
 
   // Status update
   const handleStatusChange = async (id: string, newStatus: ContactSubmission['status']) => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (!canManageCrm) {
       setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -241,6 +264,7 @@ export const AdminInbox: React.FC = () => {
 
   // Priority update
   const handlePriorityChange = async (id: string, newPriority: ContactSubmission['priority']) => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (!canManageCrm) {
       setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -263,6 +287,7 @@ export const AdminInbox: React.FC = () => {
 
   // Assignee update
   const handleAssigneeChange = async (id: string, assignee: string) => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (!canManageCrm) {
       setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -285,6 +310,7 @@ export const AdminInbox: React.FC = () => {
 
   // Star toggle
   const handleToggleStar = async (e: React.MouseEvent, id: string, currentStarred?: boolean) => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (!canManageCrm) {
       setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -308,6 +334,7 @@ export const AdminInbox: React.FC = () => {
 
   // Save internal notes
   const handleSaveInternalNote = async () => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (!selectedSubmission || !canManageCrm) return;
     setIsSavingNote(true);
     try {
@@ -333,6 +360,7 @@ export const AdminInbox: React.FC = () => {
 
   // Delete submission
   const handleDelete = async (id: string) => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (!canManageCrm) return;
     setConfirmAction({ type: 'delete', id });
   };
@@ -365,6 +393,7 @@ export const AdminInbox: React.FC = () => {
 
   // Mark all new as the next triage stage for the active inbox.
   const handleMarkAllRead = async () => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (!canManageCrm) return;
     const count = activeTabItems.filter((item) => item.status === 'new').length;
     if (count > 0) {
@@ -454,7 +483,8 @@ export const AdminInbox: React.FC = () => {
       const assignedOwner = String(item.assignedTo || '').trim();
       const matchesOwner = filterOwner === 'all' || (filterOwner === '__no_owner__' ? !assignedOwner : assignedOwner === filterOwner);
       const matchesChannel = filterChannel === 'all' || (item.type || 'inquiry') === filterChannel;
-      const matchesStarred = activeInboxTab === 'starred' ? !!item.starred : true;
+      const matchesStarred = savedView === 'starred' ? !!item.starred : true;
+      const matchesUnread = savedView === 'unread' ? item.status === 'new' : true;
 
       const queryLower = searchQuery.toLowerCase().trim();
       const matchesSearch = !queryLower || (
@@ -469,14 +499,24 @@ export const AdminInbox: React.FC = () => {
         (item.specialty || '').toLowerCase().includes(queryLower)
       );
 
-      return matchesStatus && matchesPriority && matchesOwner && matchesChannel && matchesStarred && matchesSearch && matchesDate(item.createdAt);
+      return matchesStatus && matchesPriority && matchesOwner && matchesChannel && matchesStarred && matchesUnread && matchesSearch && (isDesignPreview || matchesDate(item.createdAt));
     });
-  }, [activeTabItems, filterStatus, filterPriority, filterOwner, filterChannel, searchQuery, matchesDate]);
+  }, [activeTabItems, filterStatus, filterPriority, filterOwner, filterChannel, searchQuery, matchesDate, savedView, isDesignPreview]);
 
   const inboxListItems = useMemo(
     () => filteredItems.slice().sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()),
     [filteredItems]
   );
+
+  useEffect(() => {
+    if (selectedSubmission && !filteredItems.some((item) => item.id === selectedSubmission.id)) setSelectedSubmission(null);
+  }, [filteredItems]);
+
+  // Populate the desktop design review on entry; this never changes read/status records.
+  useEffect(() => {
+    if (isDesignPreview && layoutFromUrl !== 'table' && window.matchMedia('(min-width: 1100px)').matches && inboxListItems[0]) handleSelectSubmission(inboxListItems[0]);
+  }, [isDesignPreview, categoryView, savedView]);
+
 
     const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
@@ -485,6 +525,7 @@ export const AdminInbox: React.FC = () => {
 
   // Export CSV
   const handleExportCSV = () => {
+    if (isDesignPreview || isUnavailableCategory) return;
     if (submissions.length === 0) return;
     const headers = ['ID', 'Slug', 'Date', 'Type', 'Status', 'Priority', 'Full Name', 'Email', 'Company', 'Phone', 'Services', 'Budget', 'Message', 'Source'];
     const rows = activeTabItems.map(s => [
@@ -508,7 +549,7 @@ export const AdminInbox: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'kapitech_' + ({ messages: 'all_messages', client: 'sales_inquiries', unread: 'unread_messages', starred: 'starred' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
+    link.setAttribute('download', 'kapitech_' + ({ messages: 'all_messages', client: 'sales_inquiries', unread: 'unread_messages', starred: 'starred', 'client-requests': 'client_requests', 'project-support': 'project_support' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -517,58 +558,16 @@ export const AdminInbox: React.FC = () => {
   return (
     <AdminPageShell featureSlug="inbox-module" className="ams-inbox-page ams-inbox-message-redesign">
       
-      <AdminModuleHeader slug="inbox-header"
-        className="mb-0"
-        title={activeInboxTab === 'messages' ? 'All Messages' : activeInboxTab === 'client' ? 'Sales Inquiries' : activeInboxTab === 'unread' ? 'Unread Messages' : 'Starred'}
-        description={
-          activeInboxTab === 'messages'
-            ? (language === 'id' ? 'Tinjau dan tindak lanjuti pesan masuk dalam satu antrean.' : 'Review and triage inbound messages from one source-backed queue.')
-            : activeInboxTab === 'client'
-              ? (language === 'id' ? 'Tinjau inquiry calon klien dan konteks kebutuhan mereka.' : 'Review prospective-client inquiries and their request context.')
-              : activeInboxTab === 'unread'
-                ? (language === 'id' ? 'Pesan berstatus New yang masih menunggu peninjauan.' : 'New messages that still need review.')
-                : (language === 'id' ? 'Pesan yang disimpan untuk perhatian tim.' : 'Messages saved for team attention.')
-        }
-        actions={(
-          <>
-            <span className="ams-inbox-record-count text-[11px] tabular-nums text-muted">{loading && submissions.length === 0 ? (language === 'id' ? 'Memuat…' : 'Loading…') : loadError && submissions.length === 0 ? (language === 'id' ? 'Data tidak tersedia' : 'Unavailable') : activeTabItems.length + ' records'}</span>
-            {canManageCrm && <Link to="/admin/cms/careers?tab=applicants" className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">{language === 'id' ? 'Pelamar Careers' : 'Careers Applicants'}</Link>}
-            <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
-          </>
-        )}
+      <AdminModuleHeader slug="inbox-header" className="mb-0" title="Inbox"
+        description="Conversations, creative briefs and technical requests."
+        actions={<>
+          <DashboardControl variant="action" className="ams-inbox2-preview-trigger" active={isDesignPreview} ariaPressed={isDesignPreview} onClick={() => setDesignPreview(!isDesignPreview)} disabled={isUpdating || isSavingNote || Boolean(convertingSubmissionId)}>Design preview</DashboardControl>
+          <DashboardControl icon={<Mail size={14} />} onClick={() => setIsEmailModalOpen(true)}>Email alerts</DashboardControl>
+        </>}
       />
-
-      <div className="ams-inbox-view-navigation" data-ams-feature-slug="inbox-navigation">
-        <div className="ams-inbox-category-navigation">
-          <AdminSectionTabs
-            ariaLabel="Message categories"
-            activeKey={activeInboxTab === 'client' ? 'sales-inquiries' : 'all-messages'}
-            className="ams-inbox-category-tabs"
-            items={[
-              { key: 'all-messages', label: 'All Messages', to: '/admin/inbox?view=messages' },
-              { key: 'sales-inquiries', label: 'Sales Inquiries', to: '/admin/inbox?view=client' },
-              { key: 'client-requests', label: 'Client Requests', to: '/admin/inbox', available: false },
-              { key: 'project-support', label: 'Project & Support', to: '/admin/inbox', available: false },
-            ]}
-          />
-        </div>
-        <div className="ams-inbox-saved-views">
-          <span className="ams-inbox-saved-views__label">{language === 'id' ? 'Tampilan tersimpan' : 'Saved views'}</span>
-          <AdminSectionTabs
-            ariaLabel="Message saved views"
-            activeKey={activeInboxTab === 'unread' || activeInboxTab === 'starred' ? activeInboxTab : ''}
-            className="ams-inbox-saved-tabs"
-            variant="secondary"
-            items={[
-              { key: 'unread', label: 'Unread', to: '/admin/inbox?view=unread' },
-              { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred' },
-              { key: 'resolved', label: 'Resolved', to: '/admin/inbox?view=resolved', available: false },
-              { key: 'archived', label: 'Archived', to: '/admin/inbox?view=archived', available: false },
-            ]}
-          />
-        </div>
-      </div>
-      {loadError && (
+      <InboxMessageNavigation category={categoryView} saved={savedView} preview={isDesignPreview} table={viewMode === 'table'} />
+      {isDesignPreview && <div className="ams-inbox2-preview-note" role="status" data-ams-slug="inbox-design-preview-notice"><div><strong>Design preview</strong><span>Sample messages for reviewing the layout. No changes are saved.</span></div><DashboardControl variant="quiet" onClick={() => setDesignPreview(false)}>Exit preview</DashboardControl></div>}
+      {loadError && !isDesignPreview && !isUnavailableCategory && (
         <div className="flex flex-col gap-3 rounded-card border border-warning/25 bg-warning/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="inbox-load-unavailable">
           <div className="min-w-0">
             <p className="text-xs font-semibold text-fg">{language === 'id' ? 'Data Inbox tidak tersedia' : 'Inbox data unavailable'}</p>
@@ -601,76 +600,38 @@ export const AdminInbox: React.FC = () => {
         </div>
       )}
 
-      <AdminFilterBar
-        slug={activeInboxTab === 'starred' ? 'inbox-starred-controls' : activeInboxTab === 'client' ? 'inbox-client-controls' : 'inbox-message-controls'}
-        className="ams-inbox-filter-bar"
-        searchClassName="ams-inbox-search-field"
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder={activeInboxTab === 'client' ? 'Search company, contact, service, budget, or brief…' : activeInboxTab === 'starred' ? 'Search saved messages, contact, or company…' : 'Search messages, sender, company, or brief…'}
-        searchLabel={activeInboxTab === 'client' ? 'Search sales inquiries' : activeInboxTab === 'starred' ? 'Search saved messages' : 'Search inbound messages'}
-        actions={(
-          <div className="ams-inbox-toolbar-actions" data-ams-feature-slug="inbox-message-actions">
-            <button type="button" onClick={() => void refreshInbox()} disabled={loading} aria-busy={loading || undefined} className="ams-inbox-toolbar-action inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:bg-panel hover:text-fg disabled:cursor-wait disabled:opacity-60">
-              <RefreshCw size={13} aria-hidden="true" />{loading ? (language === 'id' ? 'Memuat…' : 'Refreshing') : (language === 'id' ? 'Refresh' : 'Refresh')}
-            </button>
-            {metrics.newCount > 0 ? (
-              <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm || isUpdating || confirmActionLoading} className="ams-inbox-toolbar-action inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40">
-                <Check size={13} aria-hidden="true" />
-                <span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai ditinjau' : 'Mark in review')}</span>
-              </button>
-            ) : null}
-            <button type="button" onClick={handleExportCSV} title={language === 'id' ? 'Ekspor seluruh record dalam kategori ini; pencarian dan filter tidak diterapkan.' : 'Export all records in this category; search and filters are not applied.'} disabled={activeTabItems.length === 0} className="ams-inbox-toolbar-action inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40">
-              <Download size={13} aria-hidden="true" />Export CSV
-            </button>
-            <div role="group" aria-label="Message register view" className="ams-inbox-view-switch inline-flex h-9 min-h-9 items-center rounded-control border border-line bg-bg p-0.5">
-                  <button type="button" aria-pressed={viewMode === 'split'} onClick={() => setViewMode('split')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'split' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><LayoutGrid size={13} aria-hidden="true" />Review</button>
-                  <button type="button" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors ' + (viewMode === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}><TableIcon size={13} aria-hidden="true" />Table</button>
-            </div>
-            <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); setPage(1); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all' && filterOwner === 'all' && filterChannel === 'all'} className="ams-inbox-toolbar-action inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-transparent bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40">
-              <X size={12} aria-hidden="true" />Reset
-            </button>
-          </div>
-        )}
-        footer={(
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] text-muted">{loading && submissions.length === 0 ? (language === 'id' ? 'Memuat pesan…' : 'Loading messages…') : loadError && submissions.length === 0 ? (language === 'id' ? 'Jumlah record belum tersedia.' : 'Inbound record count unavailable.') : filteredItems.length + ' matching ' + (filteredItems.length === 1 ? 'record' : 'records') + ' · Updated automatically every 30 seconds.'}</p>
-            <span className={'inline-flex min-h-7 items-center gap-1.5 rounded-badge border px-2 text-[10px] font-medium ' + (loading ? 'border-info/20 bg-info/10 text-info' : loadError ? 'border-warning/20 bg-warning/10 text-warning' : 'border-success/20 bg-success/10 text-success')} role="status" aria-live="polite">
-              <span className={'h-1.5 w-1.5 rounded-full ' + (loading ? 'bg-info' : loadError ? 'bg-warning' : 'bg-success')} aria-hidden="true" />
-              {loading ? (submissions.length > 0 ? (language === 'id' ? 'Memperbarui' : 'Refreshing') : (language === 'id' ? 'Memuat' : 'Loading')) : loadError ? (submissions.length > 0 ? (language === 'id' ? 'Data lama' : 'Stale') : (language === 'id' ? 'Tidak tersedia' : 'Unavailable')) : 'Live'}
-            </span>
-          </div>
-        )}
-      >
-        {activeInboxTab === 'messages' || activeInboxTab === 'starred' || activeInboxTab === 'client' ? (
-          <div className="ams-inbox-filter-selects" data-ams-feature-slug="inbox-message-filter-selects">
-            {activeInboxTab === 'messages' ? (
-              <>
-                <div className="ams-inbox-filter-control"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} aria-label="Filter messages by status" slug="inbox-message-status-filter" /></div>
-                <div className="ams-inbox-filter-control"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} aria-label="Filter messages by priority" slug="inbox-message-priority-filter" /></div>
-                <div className="ams-inbox-filter-control"><CustomSelect value={filterOwner} onChange={setFilterOwner} options={inboxOwnerOptions} aria-label="Filter messages by owner" slug="inbox-message-owner-filter" /></div>
-                <div className="ams-inbox-filter-control"><CustomSelect value={filterChannel} onChange={setFilterChannel} options={inboxChannelOptions} aria-label="Filter messages by channel" slug="inbox-message-channel-filter" /></div>
-              </>
-            ) : activeInboxTab === 'client' ? (
-              <>
-                <div className="ams-inbox-filter-control"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} aria-label="Filter sales inquiries by status" /></div>
-                <div className="ams-inbox-filter-control"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} aria-label="Filter sales inquiries by priority" /></div>
-              </>
-            ) : (
-              <div className="ams-inbox-filter-control"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} aria-label="Filter saved messages by priority" /></div>
-            )}
-          </div>
-        ) : null}
-      </AdminFilterBar>
+      <InboxMessageToolbar
+        search={searchQuery} onSearch={setSearchQuery}
+        status={filterStatus} onStatus={setFilterStatus} statuses={inboxStatusOptions}
+        priority={filterPriority} onPriority={setFilterPriority}
+        owner={filterOwner} onOwner={setFilterOwner} owners={inboxOwnerOptions}
+        channel={filterChannel} onChannel={setFilterChannel} channels={inboxChannelOptions}
+        table={viewMode === 'table'} onView={(table) => {
+          const next = new URLSearchParams(searchParams);
+          if (table) next.set('layout', 'table'); else next.delete('layout');
+          setSelectedSubmission(null);
+          setViewMode(table ? 'table' : 'split');
+          setSearchParams(next);
+        }}
+        loading={loading && !isDesignPreview} preview={isDesignPreview}
+        canManage={canManageCrm && !isDesignPreview && !isUnavailableCategory}
+        busy={isUpdating || confirmActionLoading} newCount={metrics.newCount}
+        canExport={activeTabItems.length > 0 && !loadError && !isDesignPreview && !isUnavailableCategory}
+        onRefresh={() => void refreshInbox()} onReset={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); setPage(1); }}
+        onExport={handleExportCSV} onProcess={handleMarkAllRead}
+      />
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       <MessageWorkspace
           items={inboxListItems}
           selected={selectedSubmission}
-          loading={loading}
-          unavailable={Boolean(loadError) && submissions.length === 0}
-          sourceEmpty={submissions.length === 0}
+          loading={loading && !isDesignPreview && !isUnavailableCategory}
+          unavailable={Boolean(loadError) && submissions.length === 0 && !isDesignPreview && !isUnavailableCategory}
+          sourceEmpty={activeTabItems.length === 0}
           language={language}
+          category={categoryView} preview={isDesignPreview}
+          sourceUnavailable={isUnavailableCategory && !isDesignPreview}
+          onPreview={() => setDesignPreview(true)}
           whatsAppHref={selectedSubmission?.phone ? `https://wa.me/${cleanPhoneForWhatsApp(selectedSubmission.phone)}` : undefined}
           table={viewMode === 'table'}
           commercial={activeInboxTab === 'client'}
@@ -680,17 +641,17 @@ export const AdminInbox: React.FC = () => {
           onReset={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); setFilterOwner('all'); setFilterChannel('all'); setPage(1); }}
           onRetry={() => void refreshInbox()}
           onStar={handleToggleStar}
-          canManage={canManageCrm}
-          canConvert={canManageClients}
+          canManage={canManageCrm && !isDesignPreview && !isUnavailableCategory}
+          canConvert={canManageClients && !isDesignPreview && !isUnavailableCategory}
           converting={Boolean(convertingSubmissionId)}
           onConvert={() => selectedSubmission && void handleConvertToClient(selectedSubmission)}
           onDelete={() => selectedSubmission && void handleDelete(selectedSubmission.id)}
           onTemplates={() => setIsCannedModalOpen(true)}
           note={internalNoteDraft} onNote={setInternalNoteDraft}
           savingNote={isSavingNote} onSaveNote={handleSaveInternalNote}
-          statusControl={selectedSubmission && <CustomSelect aria-label="Message status" disabled={isUpdating || !canManageCrm} value={selectedSubmission.status} onChange={(value) => handleStatusChange(selectedSubmission.id, value as ContactSubmission['status'])} options={inboxStatusOptions.filter((option) => option.value !== 'all')} />}
-          priorityControl={selectedSubmission && <CustomSelect aria-label="Message priority" disabled={!canManageCrm} value={selectedSubmission.priority || 'normal'} onChange={(value) => handlePriorityChange(selectedSubmission.id, value as ContactSubmission['priority'])} options={[{ value: 'urgent', label: 'Urgent' }, { value: 'high', label: 'High' }, { value: 'normal', label: 'Normal' }, { value: 'low', label: 'Low' }]} />}
-          ownerControl={selectedSubmission && <CustomSelect aria-label="Message owner" disabled={!canManageCrm} value={selectedSubmission.assignedTo || ''} onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)} options={[{ value: '', label: 'Unassigned' }, ...inboxOwnerOptions.filter((option) => !['all', '__no_owner__'].includes(option.value)), ...['Lead Full-Stack Tech', 'Senior UI/UX Designer', 'Technical Project Manager', 'Business Director'].filter((owner) => !inboxOwnerOptions.some((option) => option.value === owner)).map((owner) => ({ value: owner, label: owner }))]} />}
+          statusControl={selectedSubmission && <CustomSelect aria-label="Message status" disabled={isUpdating || !canManageCrm || isDesignPreview || isUnavailableCategory} value={selectedSubmission.status} onChange={(value) => handleStatusChange(selectedSubmission.id, value as ContactSubmission['status'])} options={inboxStatusOptions.filter((option) => option.value !== 'all').map((option) => ({ ...option, label: option.label.replace(/^Status: /, '') }))} />}
+          priorityControl={selectedSubmission && <CustomSelect aria-label="Message priority" disabled={!canManageCrm || isDesignPreview || isUnavailableCategory} value={selectedSubmission.priority || 'normal'} onChange={(value) => handlePriorityChange(selectedSubmission.id, value as ContactSubmission['priority'])} options={[{ value: 'urgent', label: 'Urgent' }, { value: 'high', label: 'High' }, { value: 'normal', label: 'Normal' }, { value: 'low', label: 'Low' }]} />}
+          ownerControl={selectedSubmission && <CustomSelect aria-label="Message owner" disabled={!canManageCrm || isDesignPreview || isUnavailableCategory} value={selectedSubmission.assignedTo || ''} onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)} options={[{ value: '', label: 'Unassigned' }, ...inboxOwnerOptions.filter((option) => !['all', '__no_owner__'].includes(option.value)), ...['Lead Full-Stack Tech', 'Senior UI/UX Designer', 'Technical Project Manager', 'Business Director'].filter((owner) => !inboxOwnerOptions.some((option) => option.value === owner)).map((owner) => ({ value: owner, label: owner }))]} />}
         />
       {/* ------------------------------------------------------------- */}
       {/* 5. MODALS & DIALOGS */}
@@ -747,6 +708,7 @@ export const AdminInbox: React.FC = () => {
           isOpen={isCannedModalOpen}
           onClose={() => setIsCannedModalOpen(false)}
           submission={selectedSubmission}
+          preview={isDesignPreview}
         />
       )}
 

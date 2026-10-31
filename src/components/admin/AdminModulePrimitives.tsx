@@ -1,6 +1,6 @@
 import React, { useId } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, HelpCircle, X } from '../../lib/untitled-ui-icon-bridge';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
@@ -135,7 +135,7 @@ export const AdminTopbarTabs: React.FC<AdminTopbarTabsProps> = ({
           );
         }
         return (
-          <NavLink
+          <Link
             key={item.key}
             to={item.to}
             ref={active ? activeTabRef : null}
@@ -149,7 +149,7 @@ export const AdminTopbarTabs: React.FC<AdminTopbarTabsProps> = ({
             )}
           >
             {item.label}
-          </NavLink>
+          </Link>
         );
       })}
     </nav>
@@ -212,7 +212,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
         );
       }
       return (
-        <NavLink
+        <Link
           key={item.key}
           to={item.to}
           ref={active ? activeTabRef : null}
@@ -232,7 +232,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
           )}
         >
           {item.label}
-        </NavLink>
+        </Link>
       );
     })}
   </nav>

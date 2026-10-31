@@ -1,5 +1,13 @@
 # AMS Execution Checkpoint
 
+## Inbox four-category visual revision — 31 October 2026
+
+- Active user scope: redo and polish All Messages, Sales Inquiries, Client Requests, Project & Support using approved Dashboard Overview; correct active states and organize controls. UI/presentation/routing only. User explicitly requires every completed task pushed to main. Prior first-pass appearance was rejected; do not treat it as approved.
+- Baseline main: `5c81dcc209b4ec68fc02fc05c197549b14633d96`; prior CI recovery passed both workflows. Current revision source: AdminInbox, InboxMessageToolbar, inboxPresentation, MessageWorkspace/CSS, CannedResponsesModal preview safety, shared query-tab Link semantics and scoped DashboardControls CSS.
+- All four category routes and composed saved/table routes are reviewable. Explicit read-only Design preview supplies sample creative/IT briefs; unconnected live categories remain source-unavailable. No backend/API/schema/auth/Finance/dependency changes. Existing operational handlers remain guarded by their permissions; preview additionally blocks writes and send actions.
+- Browser evidence: actual AdminInbox offline sample harness; four categories, exclusive active links, filter/reset, More/Escape, Table/detail Drawer, mobile detail/back and response templates. Ten canonical widths (320 through 1440) checked without page-wide overflow. Mobile header flex-basis defect corrected. Authenticated production session is unavailable (Dashboard redirects to login); no production visual/deployment claim.
+- Local final verification: `npm run lint` passed; `npm test` ran 934 tests, 914 passed, zero failed, 20 conditional PostgreSQL skips; `npm run build` passed. Exact-SHA remote CI is recorded in task delivery. See [revision contract](AMS-INBOX-MESSAGE-REDESIGN.md). Next required gate is user visual acceptance and authenticated real-data/full-shell review, not backend expansion.
+
 ## CI recovery — 31 October 2026
 
 - Baseline: pushed main `adee9513fb1e031b8bc7177ae031780f7117009c`. Both [Quality Gate 41211299047](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/41211299047) and [AMS CI 41211299046](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/41211299046) failed on the same four regression assertions: two still inspected removed inline Inbox JSX, and two still expected the removed Inbox Overview workspace.

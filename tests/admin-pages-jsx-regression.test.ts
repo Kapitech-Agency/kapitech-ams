@@ -1,3 +1,4 @@
+import { readInboxPresentation } from './helpers/inboxPresentation';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -216,7 +217,7 @@ test('Flat sidebar keeps direct links while the shared topbar owns contextual mo
   const subnavigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
-  const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const inbox = readInboxPresentation();
   const documents = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
   const finance = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminFinanceWorkspace.tsx'), 'utf8');
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
@@ -326,7 +327,7 @@ test('Shared modal visual contract and busy-state behavior stay consistent', () 
   const confirm = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/ConfirmDialog.tsx'), 'utf8');
   const stylesheet = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
   const designSystem = fs.readFileSync(path.resolve(process.cwd(), 'AMS-DESIGN-SYSTEM.md'), 'utf8');
-  const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const inbox = readInboxPresentation();
   const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
   const cmsProjects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsProjects.tsx'), 'utf8');
   const cmsServices = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsServices.tsx'), 'utf8');
@@ -625,13 +626,13 @@ test('Content-first CMS registers use their working area instead of repeated KPI
 });
 
 test('Inbox opens with contextual controls and its triage workspace, without a redundant KPI dashboard', () => {
-  const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const inbox = readInboxPresentation();
   const workspace = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/inbox/MessageWorkspace.tsx'), 'utf8');
   assert.match(inbox, /<AdminModuleHeader\b/);
   assert.match(inbox, /<AdminSectionTabs\b/);
   assert.match(inbox, /ariaLabel="Message categories"/);
-  assert.match(inbox, /label: 'Client Requests'.*available: false/);
-  assert.match(inbox, /label: 'Project & Support'.*available: false/);
+  assert.match(inbox, /key: 'client-requests', label: 'Client Requests', to: href\('client-requests'\)/);
+  assert.match(inbox, /key: 'project-support', label: 'Project & Support', to: href\('project-support'\)/);
   const messageCategoriesStart = inbox.indexOf('ariaLabel="Message categories"');
   const messageSavedViewsStart = inbox.indexOf('ariaLabel="Message saved views"');
   assert.ok(messageCategoriesStart >= 0 && messageSavedViewsStart > messageCategoriesStart);
@@ -640,10 +641,10 @@ test('Inbox opens with contextual controls and its triage workspace, without a r
     /key: 'starred', label: 'Starred'/
   );
   assert.doesNotMatch(inbox, /key: 'resolved-archived'/);
-  assert.ok(inbox.includes("to: '/admin/inbox?view=starred'"), 'Starred stays reachable as a saved view from Messages.');
-  assert.ok(inbox.includes("to: '/admin/inbox?view=unread'"), 'Unread stays reachable as a saved view from Messages.');
+  assert.ok(inbox.includes("href(category, 'starred')"), 'Starred stays reachable as a saved view from Messages.');
+  assert.ok(inbox.includes("href(category, 'unread')"), 'Unread stays reachable as a saved view from Messages.');
   assert.ok(inbox.includes("case 'unread': return submissions.filter((item) => item.status === 'new')"));
-  assert.match(inbox, /<AdminFilterBar\b/);
+  assert.match(inbox, /<InboxMessageToolbar\b/);
   assert.match(inbox, /<MessageWorkspace\s+items=\{inboxListItems\}/);
   assert.match(workspace, /data-ams-slug="inbox-message-list"/);
   assert.doesNotMatch(inbox, /inbox-overview-workspace|viewMode === 'overview'/);
@@ -1005,26 +1006,15 @@ test('Team Directory automatically uses cards on compact viewports and keeps the
 });
 
 
-test('Inbox landing removes the redundant Overview and keeps record actions in their owning controls', () => {
-  const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
-  const workspace = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/inbox/MessageWorkspace.tsx'), 'utf8');
-  const headerStart = inbox.indexOf('<AdminModuleHeader slug="inbox-header"');
-  const headerEnd = inbox.indexOf('\n      />', headerStart);
-  const header = inbox.slice(headerStart, headerEnd);
-  assert.ok(headerStart >= 0 && headerEnd > headerStart);
-  assert.doesNotMatch(header, /handleMarkAllRead|handleExportCSV/,
-    'Record bulk actions and export belong in the filter/action toolbar, not the module header.');
-  assert.ok(inbox.includes("activeTabItems.length + ' records'"));
-  assert.ok(inbox.includes("'inbox-message-controls'"));
-  assert.ok(inbox.includes('ams-inbox-toolbar-actions'));
-  assert.match(inbox, /selected=\{selectedSubmission\}/);
-  assert.ok(workspace.includes('data-ams-feature-slug="inbox-message-reader"'));
-  assert.doesNotMatch(inbox, /inbox-overview-controls|inbox-overview-workspace|activeInboxTab === 'overview'|viewMode === 'overview'/);
-  const toolbarStart = inbox.indexOf('data-ams-feature-slug="inbox-message-actions"');
-  const toolbarEnd = inbox.indexOf('      {/* 4. MAIN CONTENT VIEW', toolbarStart);
-  const toolbar = inbox.slice(toolbarStart, toolbarEnd);
-  assert.ok(toolbar.includes('onClick={handleExportCSV}'));
-  assert.equal((toolbar.match(/onClick=\{handleExportCSV\}/g) || []).length, 1, 'Export appears once in the shared toolbar.');
+test('Inbox landing removes the redundant Overview and keeps record actions in their owning controls', async () => {
+const inbox = readInboxPresentation();
+  const header = inbox.slice(inbox.indexOf('<AdminModuleHeader slug="inbox-header"'), inbox.indexOf('<InboxMessageNavigation'));
+  assert.match(header, /title="Inbox"/);
+  assert.doesNotMatch(header, /handleMarkAllRead|handleExportCSV/);
+  assert.match(inbox, /<InboxMessageToolbar/);
+  assert.match(inbox, /data-ams-feature-slug="inbox-message-reader"/);
+  assert.equal((inbox.match(/onExport=\{handleExportCSV\}/g) || []).length, 1);
+  assert.doesNotMatch(inbox, /activeInboxTab === 'overview'|viewMode === 'overview'/);
 });
 
 

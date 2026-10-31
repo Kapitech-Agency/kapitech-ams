@@ -591,6 +591,8 @@ Build responsive (1440 / 1024 / 768 / 390), support both themes, and finish by r
 
 ## Global reporting period across AMS modules and tabs
 
+Inbox Messages review variant (31 October 2026): reuse Dashboard Overview's shared action/filter controls and semantic theme tokens. Category and saved query links must use explicitly computed active keys, with exactly one `aria-current` per group; pathname-only automatic NavLink state cannot identify query views. Keep 12px Inbox panels and the 1100px 5:7 register/reader. Desktop pane height may fit the measured viewport space, with internal list/body scrolling and a visible response footer; fall back to natural flow when less than a readable row remains. Compact headers must use content-based flex sizing, not a horizontal basis interpreted as vertical height. Table detail uses the canonical Drawer, and menus use DropdownPortal. Explicit design preview is separately labelled and cannot enable writes or send actions.
+
 - Keep the shared reporting-period control as a compact **Filter** action in the authenticated AMS topbar beside the notification and profile actions. Do not render a separate full-width card or extra content row above each module.
 - Open the Month / Quarter / Year picker in a small anchored popover only when the user clicks Filter. Include the current selection, exact inclusive date range, quick actions for the current and previous period, and a one-click reset to `All dates`.
 - Keep the initial filter disabled (`All dates`) until a user selects a period. Persist the user's selection across module navigation and internal tabs; show a subtle active indicator on the Filter button when a period is applied.
