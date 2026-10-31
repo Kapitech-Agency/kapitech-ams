@@ -599,3 +599,8 @@ Inbox Messages review variant (31 October 2026): reuse Dashboard Overview's shar
 - A selected period filters date-stamped operational lists and supported reports. Records without usable dates stay visible so legacy or master records are not silently removed. Current-state KPIs and configuration forms remain current-state, not historical snapshots.
 - Date-specific workflows such as a monthly closing checklist can retain their own narrower operational period where needed. Do not use a quarter/year selection to trigger a posting or closing action.
 - Use the shared Month / Quarter / Year vocabulary and existing custom select component. Keep the control unobtrusive and consistent in both desktop and mobile headers; avoid a duplicate page-level filter bar.
+
+
+## Inbox uses the approved Overview empty state
+
+Inbox empty, filtered-empty, unavailable and unselected-reader presentation uses the shared `DashboardEmptyState` extracted from Overview with identical compact markup/defaults. Apply the approved final Overview icon, dashed border, quiet surface, typography and action geometry; do not create a large centered hero or reader onboarding checklist. Use a compact natural-height register when empty and hide redundant reader content. Keep empty versus unavailable source meanings and permitted Retry/Reset/navigation actions distinct. Dashboard's approved stylesheet and rendered appearance remain unchanged by the extraction. This 1 November 2026 user correction supersedes earlier Inbox empty-state examples.

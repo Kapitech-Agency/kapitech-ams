@@ -104,19 +104,8 @@
 .ams-message-delete { color: var(--danger); }
 .ams-message-reader-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; background: var(--panel); border-top: 1px solid var(--line); }
 .ams-message-footer-note { color: var(--muted); font-size: 12px; }
-.ams-message-state { display: flex; align-items: flex-start; flex-direction: column; gap: 12px; padding: 32px 24px; }
-.ams-message-state p { color: var(--muted); max-width: 45ch; line-height: 20px; }
-.ams-message-state-icon { display: inline-flex; justify-content: center; align-items: center; width: 48px; height: 48px; background: var(--bg); border-radius: var(--radius-card); color: var(--muted); }
-.ams-message-reader-placeholder { display: flex; flex-direction: column; gap: 32px; padding: 32px; }
-.ams-message-placeholder-top { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
-.ams-message-placeholder-top > span:not(:first-child), .ams-message-placeholder-top p, .ams-message-placeholder-tip { color: var(--muted); font-size: 12px; line-height: 20px; }
-.ams-message-placeholder-top p { max-width: 45ch; }
-.ams-message-reading-guide { display: flex; flex-direction: column; gap: 24px; }
-.ams-message-reading-guide > div { display: flex; align-items: flex-start; gap: 12px; }
-.ams-message-reading-guide > div > svg { flex-shrink: 0; color: var(--muted); }
-.ams-message-reading-guide > div > span { display: flex; flex-direction: column; gap: 4px; }
-.ams-message-reading-guide strong { font-weight: 500; }
-.ams-message-reading-guide strong + span { color: var(--muted); font-size: 12px; }
+.ams-message-state { padding: 16px; }
+.ams-message-reader-placeholder { padding: 16px; }
 .ams-message-loading-row { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
 .ams-message-table-scroll { overflow-x: auto; }
 .ams-message-table { width: 100%; text-align: left; }
@@ -139,7 +128,6 @@
   .ams-inbox2-toolbar-row { flex-direction: column; align-items: stretch; }
   .ams-inbox2-toolbar-controls { justify-content: space-between; }
   .ams-inbox2-filter-panel { grid-template-columns: minmax(0, 1fr); }
-  .ams-message-reader-placeholder { padding: 24px; }
   .ams-message-row-person { flex: 1 1 100%; }
   .ams-message-sender { flex-wrap: wrap; }
   .ams-message-sender > time { flex-basis: 100%; }
@@ -161,13 +149,15 @@
 .ams-message-workspace:not(.is-table) .ams-message-register .ams-table-pagination > div { flex-direction: column; align-items: stretch; gap: 8px; }
 .ams-message-register .ams-table-pagination > div > div:last-child { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
 .ams-message-register .ams-table-pagination [aria-label="Page navigation"] { flex-wrap: nowrap; }
-.ams-message-reader-placeholder { overflow-y: auto; min-height: 0; padding: 24px; gap: 24px; }
+.ams-message-reader-placeholder { overflow-y: auto; min-height: 0; }
 .ams-message-reader--drawer { display: flex; flex-direction: column; height: auto; max-height: none; border: 0; border-radius: 0; overflow: visible; }
 .ams-message-reader-footer.is-drawer-footer { padding: 0; border-top: 0; }
 .ams-message-reader h2 { font-size: 14px; line-height: 20px; font-weight: 600; }
 .ams-message-reader .ams-message-subject { font-size: 20px; line-height: 28px; }
 
 /* Unconnected categories have one clear state and a route back to real messages. */
-.ams-message-workspace.has-unavailable-source > .ams-message-register { grid-column: 1 / -1; height: auto; }
-.ams-message-workspace.has-unavailable-source > .ams-message-reader { display: none; }
-.ams-message-workspace.has-unavailable-source .ams-message-state { align-items: center; padding: 48px 24px; text-align: center; }
+
+/* Overview empty states are compact content, not full-height blank workspaces. */
+.ams-message-workspace.has-empty-state > .ams-message-register { grid-column: 1 / -1; height: auto; }
+.ams-message-workspace.has-empty-state > .ams-message-reader { display: none; }
+.ams-message-workspace:not(.has-selection) > .ams-message-reader { height: auto; }

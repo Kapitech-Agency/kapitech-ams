@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { ContactSubmission } from '../../../lib/submissions';
 import { AdminTablePagination } from '../AdminModulePrimitives';
 import { DashboardControl } from '../DashboardControls';
+import { DashboardEmptyState } from '../DashboardEmptyState';
 import { Drawer } from '../../ui/Drawer';
 import { Skeleton } from '../../ui/Skeleton';
 import { INBOX_CATEGORY_CONTENT, getInboxMessageSubject, getInboxMessageContext, type InboxCategory } from './inboxPresentation';
@@ -80,10 +81,13 @@ export const MessageWorkspace: React.FC<Props> = (p) => {
   const star = (item: ContactSubmission) => <button type="button" className={'ams-message-star' + (item.starred ? ' is-saved' : '')} disabled={!p.canManage} aria-pressed={Boolean(item.starred)} aria-label={`${item.starred ? t('Unstar', 'Hapus bintang') : t('Star', 'Beri bintang')} ${item.fullName || item.email}`} onClick={(event) => p.onStar(event, item.id, item.starred)}><Star size={16} aria-hidden="true" /></button>;
   const badges = (item: ContactSubmission) => <><span className={'ams-message-status is-' + item.status}>{status(item)}</span>{item.priority === 'urgent' || item.priority === 'high' ? <span className={'ams-message-priority is-' + item.priority}>{item.priority === 'urgent' ? t('Urgent', 'Mendesak') : t('High priority', 'Prioritas tinggi')}</span> : null}</>;
   const state = <div className="ams-message-state">
-    <span className="ams-message-state-icon"><Inbox size={24} aria-hidden="true" /></span>
-    <h3>{p.sourceUnavailable ? content.title : p.unavailable ? t('Inbox unavailable', 'Inbox tidak tersedia') : p.sourceEmpty ? t('Your next conversation starts here', 'Percakapan berikutnya dimulai di sini') : t('No matching messages', 'Tidak ada pesan yang sesuai')}</h3>
-    <p>{p.sourceUnavailable ? content.empty : p.unavailable ? t('Messages could not be loaded. Retry to check the inbox.', 'Pesan gagal dimuat. Coba lagi untuk memeriksa inbox.') : p.sourceEmpty ? content.empty : t('Try a different search or reset the filters to see more messages.', 'Ubah pencarian atau reset filter untuk melihat pesan lainnya.')}</p>
-    {p.sourceUnavailable ? <DashboardControl to="/admin/inbox?view=messages" showArrow={false}>View all messages</DashboardControl> : p.unavailable ? <DashboardControl onClick={p.onRetry}>{t('Retry', 'Coba lagi')}</DashboardControl> : !p.sourceEmpty ? <DashboardControl onClick={p.onReset}>{t('Reset filters', 'Reset filter')}</DashboardControl> : null}
+    <DashboardEmptyState
+      eyebrow={content.title}
+      icon={<Inbox size={17} aria-hidden="true" />}
+      title={p.sourceUnavailable ? content.title : p.unavailable ? t('Inbox unavailable', 'Inbox tidak tersedia') : p.sourceEmpty ? t('Your next conversation starts here', 'Percakapan berikutnya dimulai di sini') : t('No matching messages', 'Tidak ada pesan yang sesuai')}
+      description={p.sourceUnavailable ? content.empty : p.unavailable ? t('Messages could not be loaded. Retry to check the inbox.', 'Pesan gagal dimuat. Coba lagi untuk memeriksa inbox.') : p.sourceEmpty ? content.empty : t('Try a different search or reset the filters to see more messages.', 'Ubah pencarian atau reset filter untuk melihat pesan lainnya.')}
+      action={p.sourceUnavailable ? <DashboardControl to="/admin/inbox?view=messages" showArrow={false}>View all messages</DashboardControl> : p.unavailable ? <DashboardControl onClick={p.onRetry}>{t('Retry', 'Coba lagi')}</DashboardControl> : !p.sourceEmpty ? <DashboardControl onClick={p.onReset}>{t('Reset filters', 'Reset filter')}</DashboardControl> : undefined}
+    />
   </div>;
 
   const readerFooter = selected ? (<footer className={'ams-message-reader-footer' + (p.table ? ' is-drawer-footer' : '')}><div className="ams-message-next-actions"><DashboardControl variant="primary" to={`mailto:${selected.email}`} showArrow={false} icon={<Mail size={14} />}>Reply by email</DashboardControl><DashboardControl onClick={p.onTemplates} icon={<FileText size={14} />}>{t('Response templates', 'Template balasan')}</DashboardControl></div><span className="ams-message-footer-note">Replies open in your email app</span></footer>) : null;
@@ -105,10 +109,11 @@ export const MessageWorkspace: React.FC<Props> = (p) => {
           {(p.canManage || p.canConvert) && <div className="ams-message-record-actions">{selected.convertedClientId && p.canConvert ? <Link className="ams-message-client-link" to={`/admin/clients?client=${encodeURIComponent(selected.convertedClientId)}`}>{t('View linked client', 'Lihat klien terhubung')}<ArrowUpRight size={14} /></Link> : p.canConvert && (!selected.type || selected.type === 'inquiry') ? <DashboardControl onClick={p.onConvert} disabled={p.converting}>{p.converting ? t('Converting…', 'Mengonversi…') : t('Convert to client', 'Konversi ke klien')}</DashboardControl> : null}{p.canManage && <DashboardControl variant="quiet" className="ams-message-delete" onClick={p.onDelete} icon={<Trash2 size={14} />} ariaLabel={t('Delete message', 'Hapus pesan')}>{t('Delete message', 'Hapus pesan')}</DashboardControl>}</div>}
         </div>
         {!p.table && readerFooter}
-      </> : <div className="ams-message-reader-placeholder"><div className="ams-message-placeholder-top"><span className="ams-message-state-icon"><MessageSquare size={24} aria-hidden="true" /></span><span>{content.title}</span><h2>{t('Select a conversation', 'Pilih percakapan')}</h2><p>{t('Read the brief, understand the context and decide the next step.', 'Baca brief, pahami konteks, dan tentukan langkah berikutnya.')}</p></div><div className="ams-message-reading-guide"><div><MessageSquare size={16} /><span><strong>Review the request</strong><span>Creative direction, scope or technical questions.</span></span></div><div><User size={16} /><span><strong>Keep ownership clear</strong><span>Status, priority and the person responsible.</span></span></div><div><FileText size={16} /><span><strong>Keep the team in context</strong><span>Internal notes and the next agreed step.</span></span></div></div><span className="ams-message-placeholder-tip">Choose a message from the list</span></div>}
+      </> : <div className="ams-message-reader-placeholder"><DashboardEmptyState eyebrow={t('Message detail', 'Detail pesan')} icon={<MessageSquare size={17} aria-hidden="true" />} title={t('Select a conversation', 'Pilih percakapan')} description={t('Read the brief, understand the context and decide the next step.', 'Baca brief, pahami konteks, dan tentukan langkah berikutnya.')} /></div>}
+
     </section>);
 
-  return <div ref={workspace} className={'ams-message-workspace' + (selected ? ' has-selection' : '') + (p.table ? ' is-table' : '') + (p.sourceUnavailable ? ' has-unavailable-source' : '')} data-ams-feature-slug="message-workspace">
+  return <div ref={workspace} className={'ams-message-workspace' + (selected ? ' has-selection' : '') + (p.table ? ' is-table' : '') + (!p.loading && p.items.length === 0 ? ' has-empty-state' : '')} data-ams-feature-slug="message-workspace">
     <section ref={register} className="ams-message-register" aria-label={t('Message register', 'Daftar pesan')}>
       <header className="ams-message-panel-heading"><div className="ams-message-queue-title"><h2>{content.title}</h2>{!p.loading && !p.unavailable && !p.sourceUnavailable && <span className="ams-message-count">{p.items.length}</span>}</div><span>{!p.sourceUnavailable && t('Newest first', 'Terbaru dahulu')}</span></header>
       {p.loading ? <div role="status" aria-label={t('Loading messages', 'Memuat pesan')} className="ams-message-loading">{[0, 1, 2, 3, 4].map((row) => <div key={row} className="ams-message-loading-row"><Skeleton className="h-4 w-1/2" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-1/3" /></div>)}</div>

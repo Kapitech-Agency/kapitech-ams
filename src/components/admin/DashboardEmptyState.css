@@ -1,0 +1,124 @@
+/* Inbox consumes the approved Overview empty-state geometry and final typography.
+   Dashboard keeps its existing stylesheet and rendered presentation unchanged. */
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 16px;
+  border: 1px dashed color-mix(in srgb, var(--line) 92%, transparent);
+  border-radius: 13px;
+  background: radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 68%),
+    color-mix(in srgb, var(--bg) 42%, var(--panel));
+  text-align: left;
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty--compact {
+  padding: 13px 12px;
+  gap: 10px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--bg) 54%, var(--panel));
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 15%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+  color: var(--muted);
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__eyebrow {
+  margin: 0 0 3px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__title {
+  margin: 0;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__description {
+  font-size: 11px;
+  line-height: 16px;
+  max-width: 56ch;
+  margin: 4px 0 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__action {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__action a {
+  min-height: 30px;
+  border-radius: 8px;
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__action a:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-inbox-message-redesign .ams-dashboard-empty {
+    gap: 9px;
+    padding: 13px 11px;
+  }
+
+  .ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ams-shell .ams-inbox-message-redesign .ams-dashboard-empty *,
+  .ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__action a {
+    transition-duration: 0.01ms;
+  }
+}
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty--success .ams-dashboard-empty__icon {
+  border-color: color-mix(in srgb, var(--success) 22%, var(--line));
+  background: color-mix(in srgb, var(--success) 7%, var(--panel));
+  color: var(--success);
+}
+
+
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__action {
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.ams-shell .ams-inbox-message-redesign .ams-dashboard-empty__action .ams-dashboard-control {
+  box-sizing: border-box;
+  height: var(--ams-dashboard-control-height, 36px);
+  min-height: var(--ams-dashboard-control-height, 36px);
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 14px;
+}

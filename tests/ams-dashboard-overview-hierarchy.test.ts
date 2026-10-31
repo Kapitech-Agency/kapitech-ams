@@ -68,9 +68,9 @@ test('Dashboard Overview empty states are contextual, action-aware and distinct 
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
   const end = dashboard.indexOf(") : view === 'performance' ? (", start);
   const overview = dashboard.slice(start, end);
-  assert.ok(dashboard.includes('type DashboardEmptyStateProps = {'));
-  assert.ok(dashboard.includes('eyebrow: string;'));
-  assert.ok(dashboard.includes("tone?: 'neutral' | 'success';"));
+  assert.ok((await read('src/components/admin/DashboardEmptyState.tsx')).includes('type DashboardEmptyStateProps = {'));
+  assert.ok((await read('src/components/admin/DashboardEmptyState.tsx')).includes('eyebrow: string;'));
+  assert.ok((await read('src/components/admin/DashboardEmptyState.tsx')).includes("tone?: 'neutral' | 'success';"));
   assert.ok(styles.includes('.ams-dashboard-empty--success .ams-dashboard-empty__icon'));
   for (const label of [
     'PROJECT DELIVERY', 'INBOX TRIAGE', 'TASK QUEUE',
@@ -2080,7 +2080,7 @@ test('Dashboard Overview uses compact source states and custom controls without 
     'Exception data unavailable'
   ]) assert.ok(overview.includes(title), 'Missing truthful Dashboard state: ' + title);
   assert.ok(overview.includes('ams-dashboard-state--compact'));
-  assert.ok(dashboard.includes('ams-dashboard-empty'));
+  assert.ok((await read('src/components/admin/DashboardEmptyState.tsx')).includes('ams-dashboard-empty'));
   assert.equal(overview.includes('min-h-[220px]'), false, 'Unavailable Finance charts must not reserve a chart-height blank panel.');
   assert.equal(overview.includes('min-h-[250px]'), false, 'An empty project source must not reserve a large blank portfolio area.');
   assert.ok(styles.includes('.ams-dashboard-state--compact'));

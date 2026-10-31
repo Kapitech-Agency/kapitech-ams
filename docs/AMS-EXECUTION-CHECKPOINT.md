@@ -1,5 +1,13 @@
 # AMS Execution Checkpoint
 
+## Inbox empty states follow approved Overview — 1 November 2026
+
+- User rejected the Inbox empty-state styling because it did not follow Dashboard Overview. Baseline main `492dd850e9b553562e0c0a546cf414f657dec177`; AMS CI 41252200440 and Quality Gate 41252200427 verified successful before this slice.
+- Extract the existing Overview `DashboardEmptyState` into a shared component without changing its markup/defaults or the approved Dashboard stylesheet. Both Dashboard and Inbox now consume the same component. Inbox CSS applies Overview's existing compact geometry, final 10/12/11px meta/title/description typography, dashed boundary, quiet surface, small icon and action geometry. These are inherited approved values, not a new design variant.
+- Replace Inbox's large-icon/centered empty state and multi-step reader placeholder. Empty, no-match, unavailable and unselected-reader states use the shared anatomy and retain their truthful descriptions and existing Retry/Reset/View all messages actions. Empty registers use natural compact height/full width; the redundant empty reader is hidden. No data, API, routing, business handlers, auth/permissions, schema or dependency changes. Design preview remains removed.
+- Local checks: TypeScript and production build passed; full existing suite 935 tests / 915 passed / zero failures / 20 conditional PostgreSQL skips; an additional focused shared-component regression brought the Message suite to 7/7 passed. Dashboard source assertions now inspect the extracted component's unchanged contract. Exact-SHA remote CI follows push.
+- Browser: actual Inbox in isolated local empty-response harness, all four categories share the Overview compact class, no design toggle, no page overflow at 320/390/599/600/1100/1280px. Not authenticated production evidence. Next gate remains user visual acceptance and real-data/full-shell review, not backend expansion. Push this task to main under standing user instruction.
+
 ## Remove Inbox Design preview — 1 November 2026
 
 - Latest user correction: remove Design preview; keep Inbox focused on usable design for Kapitech, without backend/business-logic work. Standing instruction requires push to main for every task.

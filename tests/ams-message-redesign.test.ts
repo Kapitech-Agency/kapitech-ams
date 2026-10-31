@@ -84,3 +84,23 @@ test('desktop split and narrow-screen back flow remain scoped to the new Message
   assert.match(css, /overflow-wrap: anywhere/);
   assert.doesNotMatch(css, /!important|#[\da-f]{3,8}\b/i);
 });
+
+test('Inbox empty and unselected states reuse the approved Overview component and compact anatomy', () => {
+  const dashboard = readFileSync(path.join(root, 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
+  const inbox = readFileSync(path.join(root, 'src/components/admin/inbox/MessageWorkspace.tsx'), 'utf8');
+  assert.match(dashboard, /import \{ DashboardEmptyState \} from '.\/DashboardEmptyState'/);
+  assert.match(inbox, /import \{ DashboardEmptyState \} from '..\/DashboardEmptyState'/);
+  for (const overrides of [{ items: [], sourceEmpty: true }, { items: [], sourceEmpty: false }, { items: [], unavailable: true }, { items: [], sourceUnavailable: true }, {}]) {
+    const html = render(overrides);
+    assert.match(html, /ams-dashboard-empty ams-dashboard-empty--compact/);
+    assert.match(html, /ams-dashboard-empty__icon/);
+    assert.match(html, /ams-dashboard-empty__eyebrow/);
+    assert.match(html, /ams-dashboard-empty__title/);
+    assert.match(html, /ams-dashboard-empty__description/);
+    assert.match(html, /role="status"/);
+    assert.doesNotMatch(html, /ams-message-state-icon|ams-message-reading-guide|Design preview/);
+  }
+  const noMatch = render({ items: [], sourceEmpty: false });
+  assert.match(noMatch, /ams-dashboard-empty__action/);
+  assert.match(noMatch, /Reset filters/);
+});

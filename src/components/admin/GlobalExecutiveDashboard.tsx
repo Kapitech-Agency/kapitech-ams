@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './GlobalExecutiveDashboard.css';
+import { DashboardEmptyState } from './DashboardEmptyState';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -592,40 +593,6 @@ const getInquiryStatusTone = (status: string): DonutPoint['tone'] => {
   if (normalized === 'rejected') return 'danger';
   return 'muted';
 };
-
-type DashboardEmptyStateProps = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  icon?: React.ReactNode;
-  action?: React.ReactNode;
-  compact?: boolean;
-  tone?: 'neutral' | 'success';
-};
-
-const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = ({
-  eyebrow,
-  title,
-  description,
-  icon = <FileText size={17} aria-hidden="true" />,
-  action,
-  compact = true,
-  tone = 'neutral'
-}) => (
-  <div className={[
-    'ams-dashboard-empty',
-    compact ? 'ams-dashboard-empty--compact' : '',
-    tone === 'success' ? 'ams-dashboard-empty--success' : ''
-  ].filter(Boolean).join(' ')} role="status">
-    <span className="ams-dashboard-empty__icon" aria-hidden="true">{icon}</span>
-    <div className="ams-dashboard-empty__content">
-      <p className="ams-dashboard-empty__eyebrow">{eyebrow}</p>
-      <p className="ams-dashboard-empty__title">{title}</p>
-      <p className="ams-dashboard-empty__description">{description}</p>
-      {action ? <div className="ams-dashboard-empty__action">{action}</div> : null}
-    </div>
-  </div>
-);
 
 const DashboardUnavailable: React.FC<{ title: string; description: string; compact?: boolean }> = ({ title, description, compact = false }) => (
   <div
