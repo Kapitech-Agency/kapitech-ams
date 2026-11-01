@@ -22,6 +22,7 @@ export const InboxRoutingTemplates: React.FC = () => {
   const detailTitle = useRef<HTMLHeadingElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const lastSelected = useRef<string | null>(null);
+  const restoreListFocus = useRef(false);
   const selected = section === 'templates' ? templates.find((item) => item.key === templateKey) : undefined;
   const categories = Array.from(new Set(templates.map((item) => item.category)));
   const filtered = templates.filter((item) => (category === 'all' || item.category === category) &&
@@ -45,10 +46,13 @@ export const InboxRoutingTemplates: React.FC = () => {
       lastSelected.current = selected.key;
       detailTitle.current?.focus({ preventScroll: true });
     } else if (lastSelected.current) {
-      const button = root.current?.querySelector<HTMLButtonElement>(`[data-template-key="${lastSelected.current}"]`);
-      button?.focus({ preventScroll: true });
+      if (restoreListFocus.current) {
+        const button = root.current?.querySelector<HTMLButtonElement>(`[data-template-key="${lastSelected.current}"]`);
+        button?.focus({ preventScroll: true });
+      }
       lastSelected.current = null;
     }
+    restoreListFocus.current = false;
   }, [selected?.key, section]);
 
   const selectTemplate = (key?: string) => {
@@ -112,7 +116,7 @@ export const InboxRoutingTemplates: React.FC = () => {
         <section id="inbox-template-detail" className="ams-template-detail" aria-label="Response template detail">
           {selected ? <>
             <header className="ams-template-detail-header">
-              <div className="ams-template-detail-actions"><DashboardControl variant="quiet" icon={<ArrowLeft size={14} />} onClick={() => selectTemplate()}>Back to templates</DashboardControl><span className="ams-routing-source-label">Built-in · Read-only</span><DashboardControl icon={copiedKey === selected.key ? <Check size={14} /> : <Copy size={14} />} onClick={() => void copyResponse()}>{copiedKey === selected.key ? 'Copied' : 'Copy response'}</DashboardControl></div>
+              <div className="ams-template-detail-actions"><DashboardControl variant="quiet" icon={<ArrowLeft size={14} />} onClick={() => { restoreListFocus.current = true; selectTemplate(); }}>Back to templates</DashboardControl><span className="ams-routing-source-label">Built-in · Read-only</span><DashboardControl icon={copiedKey === selected.key ? <Check size={14} /> : <Copy size={14} />} onClick={() => void copyResponse()}>{copiedKey === selected.key ? 'Copied' : 'Copy response'}</DashboardControl></div>
               <h2 ref={detailTitle} tabIndex={-1}>{selected.title}</h2><p>{selected.category}</p>{copyError && <p role="alert">Could not copy the response. Select and copy the response text instead.</p>}
             </header>
             <div className="ams-template-detail-body">
