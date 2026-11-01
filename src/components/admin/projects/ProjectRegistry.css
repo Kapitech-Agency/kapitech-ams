@@ -1,11 +1,5 @@
 /* Delivery register composition; primitives, controls and empty states remain shared. */
 .ams-shell .ams-registry-panel { min-width:0; overflow:hidden; }
-.ams-shell .ams-registry-filters { margin:4px 16px 12px; padding:12px; }
-.ams-shell .ams-registry-filters > div:first-child { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:10px; }
-.ams-shell .ams-registry-filters > div:first-child > div:first-child { display:grid; min-width:0; gap:10px; }
-.ams-shell .ams-registry-search { width:100%; }
-.ams-shell .ams-registry-filter-fields { display:grid; min-width:0; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-.ams-shell .ams-registry-filter-fields > * { min-width:0; width:100%; }
 .ams-shell .ams-registry-result-context { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 16px; padding:0 16px 14px; color:var(--muted); font-size:11px; line-height:16px; }
 .ams-shell .ams-registry-result-context > span:last-child { max-width:70ch; }
 .ams-shell .ams-registry-identity { display:grid; min-width:0; gap:4px; }
@@ -60,9 +54,6 @@
   .ams-shell .ams-registry-compact-records { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:4px 16px 16px; }
 }
 @media(max-width:599px) {
-  .ams-shell .ams-registry-filters { margin-inline:12px; }
-  .ams-shell .ams-registry-filters > div:first-child { grid-template-columns:minmax(0,1fr); }
-  .ams-shell .ams-registry-filter-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .ams-shell .ams-registry-compact-records { grid-template-columns:minmax(0,1fr); padding-inline:12px; }
   .ams-shell .ams-registry-card-heading { flex-wrap:wrap; }
   .ams-shell .ams-registry-card-heading .ams-registry-state { flex-direction:row; flex-wrap:wrap; width:100%; }

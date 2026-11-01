@@ -1,13 +1,6 @@
 /* Projects consumes Dashboard Overview geometry. List heights remain equal on desktop. */
-.ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header { align-items:center; border-bottom:0; padding-bottom:8px; }
-.ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header > div:first-child { flex:1; }
-.ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header h1 { font-size:26px; line-height:32px; font-weight:650; letter-spacing:-.035em; }
-.ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header > div:first-child > p { font-size:12px; line-height:18px; max-width:66ch; }
 .ams-shell .ams-projects-overview-grid { align-items:stretch; }
 .ams-shell .ams-projects-overview-panel { display:flex; flex-direction:column; min-width:0; height:100%; border-radius:12px; overflow:hidden; box-shadow:none; }
-.ams-shell :is(.ams-projects-overview-panel, .ams-registry-panel) > div:first-child { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; flex-shrink:0; padding:13px 16px; min-height:58px; border-bottom:0; }
-.ams-shell :is(.ams-projects-overview-panel, .ams-registry-panel) > div:first-child > div:last-child:not(:first-child) { width:auto; display:flex; align-items:center; }
-.ams-shell :is(.ams-projects-overview-panel, .ams-registry-panel) h2 { margin:0; font-size:14px; line-height:19px; font-weight:650; letter-spacing:-.015em; }
 .ams-shell .ams-projects-overview-body { display:flex; flex-direction:column; flex:1; min-height:0; }
 .ams-shell .ams-projects-overview-state { display:grid; gap:8px; padding:4px 16px 16px; }
 .ams-shell .ams-projects-overview-count { color:var(--muted); font-size:11px; line-height:16px; white-space:nowrap; }
@@ -53,18 +46,9 @@
   .ams-shell .ams-projects-overview-list { max-height:360px; }
 }
 @media(max-width:639px) {
-  .ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header { align-items:stretch; }
-  .ams-shell :is(.ams-projects-overview-panel, .ams-registry-panel) > div:first-child { padding:12px; }
   .ams-shell .ams-projects-overview-state { padding:4px 12px 12px; }
   .ams-shell .ams-projects-overview-record { gap:8px; }
 }
 @media(prefers-reduced-motion:reduce) {
   .ams-shell .ams-projects-overview :is(.ams-projects-overview-record,.ams-projects-overview-status-row) { transition:none; }
 }
-/* Navigation uses the same solid current-state treatment as approved Overview tabs. */
-.ams-shell nav.ams-topnav-scroll.ams-projects-module-tabs > a { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:36px; min-height:36px; padding:6px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--muted); font-size:11px; line-height:14px; font-weight:550; white-space:nowrap; box-shadow:none; }
-.ams-shell nav.ams-topnav-scroll.ams-projects-module-tabs > a:hover { background:color-mix(in srgb,var(--text) 4%,var(--panel)); color:var(--text); }
-.ams-shell nav.ams-topnav-scroll.ams-projects-module-tabs > a[aria-current="page"],
-.ams-shell nav.ams-topnav-scroll.ams-projects-module-tabs > a[aria-current="page"]:hover { border-color:var(--accent); background:var(--accent); color:white; font-weight:650; }
-.ams-shell nav.ams-topnav-scroll.ams-projects-module-tabs > a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-@media(max-width:899px) { .ams-shell nav.ams-topnav-scroll.ams-projects-module-tabs > a { height:40px; min-height:40px; } }

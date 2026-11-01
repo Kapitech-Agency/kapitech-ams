@@ -16,7 +16,13 @@ import {
   Search,
   Tag,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from './AdminModulePrimitives';
+import { DashboardControl } from './DashboardControls';
+import { DashboardEmptyState } from './DashboardEmptyState';
+import { TaskExecutionCard, TaskExecutionList, TaskProjectQueues, TaskBlockedWork, type TaskExecutionRecord } from './tasks/TaskExecutionViews';
+import { resolveTaskExecutionLayout, buildTaskExecutionLayoutHref, type TaskExecutionLayout } from '../../lib/taskExecutionNavigation';
+import { getAmsWorkspaceNavigationModule } from '../../lib/amsModuleSubnavigation';
+import './tasks/TaskExecution.css';
+import { AdminFilterBar, AdminStatusBadge, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { Drawer } from '../ui/Drawer';
@@ -32,26 +38,7 @@ type TaskSortKey = 'title' | 'projectName' | 'assignee' | 'priority' | 'status' 
 
 type TaskProject = { id: string; name: string; clientName: string };
 
-type TaskRecord = {
-  id: string;
-  title: string;
-  description: string;
-  projectId: string;
-  projectName: string;
-  projectSlug: string;
-  clientName: string;
-  assigneeId: string;
-  assignee: string;
-  priority: TaskPriority;
-  status: TaskStatus;
-  dueDate: string;
-  tags: string[];
-  blocked: boolean;
-  slug: string;
-  createdAt: string;
-  updatedAt?: string;
-  subtasks: Array<{ id: string; title: string; completed: boolean }>;
-};
+type TaskRecord = TaskExecutionRecord;
 
 const isUnknownMutationOutcome = (response: { success: boolean; status?: number }) =>
   !response.success && (response.status === undefined || response.status >= 500);
@@ -68,8 +55,8 @@ const TASK_TABS = [
 const TASK_WORKSPACE_VIEWS = [
   { key: 'board', label: 'Board / Kanban' },
   { key: 'list', label: 'List' },
-  { key: 'task-lists', label: 'Task Lists', available: false },
-  { key: 'dependencies', label: 'Dependencies', available: false },
+  { key: 'projects', label: 'Project Queues' },
+  { key: 'blockers', label: 'Blocked Work' },
 ] as const;
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -164,10 +151,10 @@ export const TasksWorkspace: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const taskScope = scopeLabels[searchParams.get('taskscope') || 'all'] ? (searchParams.get('taskscope') || 'all') : 'all';
   const requestedLayout = searchParams.get('layout');
-  const supportedTaskLayouts: readonly string[] = ['board', 'list'];
+  const supportedTaskLayouts: readonly string[] = ['board', 'list', 'projects', 'blockers'];
   const hasLayoutParameter = searchParams.has('layout');
   const isSupportedTaskLayout = requestedLayout === null || supportedTaskLayouts.includes(requestedLayout);
-  const layout: 'list' | 'board' = requestedLayout === 'board' ? 'board' : 'list';
+  const layout = resolveTaskExecutionLayout(requestedLayout);
   const currentUser = getAdminSession()?.user;
   const currentRole = getAmsRole(currentUser);
   const canManageTasks = hasAdminPermission('canManageKanbanTasks');
@@ -175,14 +162,17 @@ export const TasksWorkspace: React.FC = () => {
   useEffect(() => {
     if (!hasLayoutParameter || isSupportedTaskLayout) return;
     const canonicalParams = new URLSearchParams(searchParams);
-    canonicalParams.set('layout', 'list');
+    canonicalParams.set('layout', layout);
     setSearchParams(canonicalParams, { replace: true });
-  }, [hasLayoutParameter, isSupportedTaskLayout, searchParams, setSearchParams]);
+  }, [hasLayoutParameter, isSupportedTaskLayout, layout, searchParams, setSearchParams]);
 
-  const getTaskLayoutHref = (nextLayout: 'list' | 'board') => {
-    const params = new URLSearchParams(searchParams);
-    params.set('layout', nextLayout);
-    return '/admin/tasks?' + params.toString();
+  const getTaskLayoutHref = (nextLayout: TaskExecutionLayout) => buildTaskExecutionLayoutHref(searchParams, nextLayout);
+
+  const getProjectDeliveryHref = (task: TaskRecord) => {
+    if (!task.projectId) return undefined;
+    const target = '/admin/projects?projects=sprint&project=' + encodeURIComponent(task.projectId);
+    const url = new URL(target, 'https://ams.kapitech.local');
+    return canAccessAmsRoute(currentRole, url.pathname, url.search) ? target : undefined;
   };
 
   const getTaskScopeHref = (nextScope: string) => {
@@ -621,8 +611,15 @@ export const TasksWorkspace: React.FC = () => {
     setSelectedIds([]);
   }, [taskScope, query, projectFilter, priorityFilter, statusFilter, assigneeFilter, sortKey, sortDirection, reportPeriodValue, reportPeriodEnabled]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
-  const pagedRecords = filteredRecords.slice((page - 1) * pageSize, page * pageSize);
+  const viewRecords = useMemo(() => layout === 'blockers' ? filteredRecords.filter(task => task.blocked) : filteredRecords, [filteredRecords, layout]);
+  useEffect(() => {
+    setPage(1);
+    setSelectedIds([]);
+  }, [layout]);
+  useEffect(() => { setStatusFilter('all'); }, [taskScope]);
+
+  const totalPages = Math.max(1, Math.ceil(viewRecords.length / pageSize));
+  const pagedRecords = viewRecords.slice((page - 1) * pageSize, page * pageSize);
   const allVisibleSelected = pagedRecords.length > 0 && pagedRecords.every(task => selectedIds.includes(task.id));
 
   useEffect(() => {
@@ -694,11 +691,14 @@ export const TasksWorkspace: React.FC = () => {
     setSelectedIds([]);
     setPage(1);
 
+    const nextParams = new URLSearchParams(searchParams);
     if (searchParams.has('taskscope')) {
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete('taskscope');
-      setSearchParams(nextParams);
+      const candidate = new URLSearchParams(nextParams);
+      candidate.delete('taskscope');
+      if (canAccessAmsRoute(currentRole, '/admin/tasks', candidate.toString())) nextParams.delete('taskscope');
     }
+    nextParams.set('layout', 'list');
+    setSearchParams(nextParams);
   };
 
   const clearFilters = () => {
@@ -1101,120 +1101,48 @@ export const TasksWorkspace: React.FC = () => {
 
   const scopeLabel = scopeLabels[taskScope] || 'All Tasks';
 
-  const sortIcon = (key: TaskSortKey) => {
-    if (sortKey !== key) return null;
-    return <span aria-hidden="true" className="font-medium text-muted">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
-  };
-
   return (
-    <AdminPageShell featureSlug="tasks-module" className="tasks-module">
+    <AdminPageShell featureSlug="tasks-module" className="tasks-module ams-tasks-workspace ams-operational-workspace">
       <div data-ams-slug="tasks-header">
         <AdminModuleHeader
           className="mb-0"
-          title="Tasks"
+          title={getAmsWorkspaceNavigationModule('/admin/tasks', searchParams.toString(), currentRole) === 'projects' ? 'Tasks & Execution' : 'My Tasks'}
+          eyebrow={<AdminStatusBadge tone={loading ? 'info' : taskSourceEverLoaded ? 'success' : 'warning'}>{loading ? 'Loading task records' : taskSourceEverLoaded ? 'Task records loaded' : 'Task data unavailable'}</AdminStatusBadge>}
           description="Manage daily delivery work, due tasks, reviews, blockers, and completed work from one task workspace."
-          actions={
-            canManageTasks ? (
-              <span data-ams-slug="tasks-action-new">
-                <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={openNewTask}>
-                  New Task
-                </Button>
-              </span>
-            ) : undefined
-          }
+          actions={<>{canManageTasks && <DashboardControl variant="primary" size="standard" icon={<Plus size={14} />} onClick={openNewTask} disabled={loading || !taskSourceEverLoaded || projects.length === 0 || bulkUpdating || updatingTaskId !== null} title={projects.length ? 'Create a task in an existing project' : 'Load a project before creating a task'}>New task</DashboardControl>}<DashboardControl variant="action" size="standard" icon={<RefreshCw size={14} />} onClick={() => void loadTasks(true)} disabled={loading} ariaLabel="Refresh task records">Refresh</DashboardControl></>}
         />
       </div>
 
       <div className="min-w-0" data-ams-slug="tasks-workspace-tabs">
         <AdminSectionTabs
           ariaLabel="Task execution worksheets"
+          className="ams-operational-tabs"
           activeKey={layout}
           items={TASK_WORKSPACE_VIEWS.map((view) => ({
             key: view.key,
             label: view.label,
-            to: view.key === 'board' || view.key === 'list' ? getTaskLayoutHref(view.key) : '/admin/tasks',
-            available: 'available' in view ? view.available : true
+            to: getTaskLayoutHref(view.key)
           }))}
         />
       </div>
 
-      <div className="min-w-0" data-ams-slug="tasks-queue-tabs">
-        <AdminSectionTabs
-          ariaLabel="Task queues"
-          activeKey={taskScope}
-          items={visibleTaskTabs.map((tab) => ({
-            key: tab.key,
-            label: tab.label,
-            to: getTaskScopeHref(tab.key)
-          }))}
-        />
-      </div>
-
-      <AdminPanel
-        title={scopeLabel}
-        description="Operational task queue linked to project delivery and team assignment."
-        slug={'tasks-' + taskScope}
-        bodyClassName="p-0"
-      >
-        <div className="border-b border-line px-4 py-3 sm:px-5" data-ams-feature-slug="tasks-filters">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-              <label className="relative min-w-0 flex-1 sm:min-w-[260px]" data-ams-slug="tasks-filter-search">
-                <span className="sr-only">Search tasks</span>
-                <Search size={14} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" />
-                <input
-                  value={query}
-                  onChange={event => setQuery(event.target.value)}
-                  placeholder="Search tasks, projects, clients, assignees..."
-                  aria-label="Search tasks, projects, clients, assignees"
-                  className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
-                />
-              </label>
-              <span data-ams-slug="tasks-filter-project">
-                <CustomSelect value={projectFilter} onChange={setProjectFilter} options={[{ value: 'all', label: 'All projects' }, ...projectOptions.map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[170px]" />
-              </span>
-              <span data-ams-slug="tasks-filter-priority">
-                <CustomSelect value={priorityFilter} onChange={setPriorityFilter} options={[{ value: 'all', label: 'All priorities' }, ...Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[145px]" />
-              </span>
-              <span data-ams-slug="tasks-filter-status">
-                <CustomSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: 'all', label: 'All statuses' }, ...Object.entries(taskStatusLabel).map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[145px]" />
-              </span>
-              <span data-ams-slug="tasks-filter-assignee">
-                <CustomSelect value={assigneeFilter} onChange={setAssigneeFilter} options={[{ value: 'all', label: 'All assignees' }, { value: '__unassigned__', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[155px]" />
-              </span>
-              <button
-                type="button"
-                onClick={clearFilters}
-                disabled={!activeFilterCount}
-                title="Reset filters"
-                aria-label="Reset task filters"
-                data-ams-slug="tasks-filter-reset"
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors hover:bg-panel hover:text-fg disabled:opacity-40"
-              >
-                <RefreshCw size={14} />
-              </button>
-            </div>
-
-            <div className="flex min-w-0 flex-wrap items-center gap-2 xl:justify-end" data-ams-feature-slug="tasks-view-controls">
-              {selectedIds.length > 0 && canManageTasks && (
-                <div className="flex items-center gap-1.5 rounded-control border border-line bg-bg p-0.5" data-ams-slug="tasks-bulk-actions">
-                  <span className="px-2 text-[10px] font-semibold text-fg">{selectedIds.length} selected</span>
-                  <button type="button" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('in_progress')} data-ams-slug="tasks-bulk-start" className="h-8 rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Start</button>
-                  <button type="button" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('review')} data-ams-slug="tasks-bulk-review" className="h-8 rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Review</button>
-                  <button type="button" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('done')} data-ams-slug="tasks-bulk-done" className="h-8 rounded-control px-2 text-[10px] font-medium text-success hover:bg-success/10 disabled:opacity-40">Done</button>
-                </div>
-              )}
-
-            </div>
+      <AdminPanel className="ams-task-panel ams-operational-panel ams-overview-panel"
+        title={layout === 'projects' ? 'Project queues' : layout === 'blockers' ? 'Blocked work' : scopeLabel}
+        description={layout === 'projects' ? 'Review the work for each client project without creating duplicate task lists.' : layout === 'blockers' ? 'Inspect tasks carrying a blocked or waiting flag. This view does not infer prerequisite relationships.' : 'Keep the brief, project, assignee, due date and next action visible.'}
+        slug={'tasks-' + taskScope} bodyClassName="p-0">
+        <div data-ams-feature-slug="tasks-filters"><AdminFilterBar className="ams-operational-filters" searchClassName="ams-operational-search" searchValue={query} onSearchChange={setQuery} searchLabel="Search tasks, projects, clients, assignees" searchPlaceholder="Search tasks, projects, clients, assignees..."
+          actions={<DashboardControl variant="action" size="standard" disabled={!activeFilterCount} onClick={clearFilters} ariaLabel="Reset task filters">Reset filters</DashboardControl>}>
+          <div className="ams-operational-filter-fields">
+            <span data-ams-slug="tasks-queue-tabs"><CustomSelect className="w-full" value={taskScope} onChange={value => { const target = new URL(getTaskScopeHref(value), 'https://ams.kapitech.local'); setSearchParams(new URLSearchParams(target.search)); }} options={visibleTaskTabs.map((tab) => ({value:tab.key,label:tab.label}))} aria-label="Task queue" /></span>
+            <CustomSelect value={projectFilter} onChange={setProjectFilter} options={[{ value:'all',label:'All projects' }, ...projectOptions.map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by project" />
+            <CustomSelect value={priorityFilter} onChange={setPriorityFilter} options={[{value:'all',label:'All priorities'}, ...Object.entries(taskPriorityLabel).map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by priority" />
+            <CustomSelect value={statusFilter} onChange={setStatusFilter} options={[{value:'all',label:'All stages'}, ...Object.entries(taskStatusLabel).map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by stage" />
+            <CustomSelect value={assigneeFilter} onChange={setAssigneeFilter} options={[{value:'all',label:'All assignees'},{value: '__unassigned__',label:'Unassigned'}, ...assignees.map(item=>({value:item.id,label:item.name}))]} aria-label="Filter tasks by assignee" />
+            <CustomSelect value={sortKey + ':' + sortDirection} onChange={value => {const [key,direction]=value.split(':');setSortKey(key as TaskSortKey);setSortDirection(direction as 'asc'|'desc');}} options={Object.entries({priority:'Priority',dueDate:'Due date',title:'Title',projectName:'Project',assignee:'Assignee',status:'Stage',createdAt:'Created date'}).flatMap(([key,label])=>[{value:key+':asc',label:label+' - ascending'},{value:key+':desc',label:label+' - descending'}])} aria-label="Sort tasks" />
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-muted" data-ams-slug="tasks-filter-summary">
-            <span>{filteredRecords.length} visible</span>
-            <span aria-hidden="true">·</span>
-            <span>{activeFilterCount ? activeFilterCount + ' filters active' : 'All filters clear'}</span>
-            <span aria-hidden="true">·</span>
-            <span>{scopeLabel}</span>
-          </div>
-        </div>
+        </AdminFilterBar></div>
+        <div className="ams-task-result-context" role="status"><span>{taskSourceEverLoaded ? viewRecords.length + ' tasks in ' + scopeLabel : loading ? 'Loading task records' : 'Task counts unavailable'}</span><span>{layout === 'blockers' ? 'Blocked/waiting flags only; changing stage does not verify a dependency was cleared.' : layout === 'projects' ? 'Counts describe the filtered tasks, not overall project progress.' : 'Review is a task stage, not confirmed client acceptance.'}</span></div>
+        {selectedIds.length > 0 && canManageTasks && layout === 'list' && <div className="ams-task-bulk" data-ams-slug="tasks-bulk-actions"><span>{selectedIds.length} selected</span><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('in_progress')}>Start selected</DashboardControl><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('done')}>Complete selected</DashboardControl></div>}
 
         {notice && (
           <div className="mx-4 mt-4 rounded-control border border-line bg-bg px-3 py-2 text-[11px] text-muted sm:mx-5" data-ams-slug="tasks-notice" aria-live="polite">
@@ -1223,15 +1151,7 @@ export const TasksWorkspace: React.FC = () => {
         )}
 
         {!loading && taskSourceEverLoaded && layout === 'board' && filteredRecords.length === 0 && (
-          <div className="flex flex-col gap-3 border-b border-line px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5" data-ams-slug="tasks-board-empty-state" role="status">
-            <div>
-              <p className="text-sm font-semibold text-fg">{activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'}</p>
-              <p className="mt-1 text-xs leading-5 text-muted">{activeFilterCount ? 'Reset filters or change the search to widen the queue.' : taskScope === 'all' ? 'No tasks are available from the live project data yet.' : 'Nothing needs attention in this task view right now.'}</p>
-            </div>
-            {activeFilterCount > 0 && (
-              <Button type="button" variant="secondary" onClick={clearFilters} data-ams-slug="tasks-board-empty-reset">Reset filters</Button>
-            )}
-          </div>
+          <div className="ams-task-empty" data-ams-slug="tasks-board-empty-state"><DashboardEmptyState eyebrow={scopeLabel} title={activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'} description="Change the queue or filters to find the delivery work you need." action={activeFilterCount ? <DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" onClick={clearFilters}>Reset filters</DashboardControl> : undefined} /></div>
         )}
 
         {loading ? (
@@ -1239,26 +1159,11 @@ export const TasksWorkspace: React.FC = () => {
             {[1, 2, 3, 4].map(item => <div key={item} className="h-24 animate-pulse rounded-control border border-line bg-bg" data-ams-slug={'tasks-loading-' + item} />)}
           </div>
         ) : !taskSourceEverLoaded ? (
-          <div className="flex flex-col gap-3 border-t border-line px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-5" data-ams-slug="tasks-source-unavailable" role="status">
-            <div>
-              <p className="text-sm font-semibold text-fg">Tasks unavailable</p>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">The task service has not returned a verified task record set. Queue counts are not authoritative until the source loads successfully.</p>
-            </div>
-            <Button type="button" variant="secondary" onClick={() => void loadTasks(true)} data-ams-slug="tasks-source-retry">Retry tasks</Button>
-          </div>
+          <div className="ams-task-empty" data-ams-slug="tasks-source-unavailable"><DashboardEmptyState eyebrow="Task source" title="Tasks unavailable" description="Task records could not be loaded. Counts remain unavailable until the task source returns successfully." action={<span data-ams-slug="tasks-source-retry"><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" onClick={() => void loadTasks(true)} ariaLabel="Retry tasks">Retry tasks</DashboardControl></span>} /></div>
         ) : filteredRecords.length === 0 && layout !== 'board' ? (
-          <div className="px-5 py-16 text-center" data-ams-slug="tasks-empty-state">
-            <FolderKanban size={22} className="mx-auto text-muted" aria-hidden="true" />
-            <p className="mt-3 text-sm font-semibold text-fg">{activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'}</p>
-            <p className="mt-1 text-xs text-muted">{activeFilterCount ? 'Reset filters or change the search to widen the queue.' : taskScope === 'all' ? 'No tasks are available from the live project data yet.' : 'Nothing needs attention in this task view right now.'}</p>
-            {activeFilterCount && (
-              <button type="button" onClick={clearFilters} data-ams-slug="tasks-empty-reset" className="mt-4 inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
-                Reset filters
-              </button>
-            )}
-          </div>
+          <div className="ams-task-empty" data-ams-slug="tasks-empty-state"><DashboardEmptyState eyebrow={scopeLabel} title={activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'} description="Change the queue or filters to find the delivery work you need." action={activeFilterCount ? <DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" onClick={clearFilters}>Reset filters</DashboardControl> : undefined} /></div>
         ) : layout === 'board' ? (
-          <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-board-view" tabIndex={0} role="region" aria-label="Scrollable task board">
+          <div className="ams-task-board overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-board-view" tabIndex={0} role="region" aria-label="Scrollable task board">
             <div className="border-b border-line px-4 py-2 text-[10px] text-muted" data-ams-slug="tasks-board-instructions">
               {canManageTasks ? 'Drag a card by its handle, or focus the handle and use the left/right arrow keys. Press Enter to open task details.' : 'Task movement is read-only for your current role.'}
             </div>
@@ -1314,8 +1219,8 @@ export const TasksWorkspace: React.FC = () => {
                             {updatingTaskId === task.id && (
                               <div role="status" className="mb-2 text-[10px] font-medium text-accent-text">Saving status…</div>
                             )}
-                            <div className="flex items-start gap-2">
-                              {canManageTasks && (
+                            <TaskExecutionCard task={task} formatDue={formatTaskDue} dueState={taskDueState} projectHref={getProjectDeliveryHref} onOpen={setSelectedTask} onEdit={canManageTasks ? openEditTask : undefined}
+                              dragHandle={canManageTasks ? (
                                 <button type="button"
                                   tabIndex={0}
                                   aria-label={'Move ' + task.title + ' between stages. Use left and right arrow keys.'}
@@ -1331,61 +1236,14 @@ export const TasksWorkspace: React.FC = () => {
                                 >
                                   <GripVertical size={15} />
                                 </button>
-                              )}
-                              <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-open'}>
-                                <div className="flex items-start justify-between gap-2">
-                                  <span className="min-w-0 text-xs font-semibold leading-5 text-fg">{task.title}</span>
-                                  <span className={'shrink-0 rounded-badge border px-1.5 py-0.5 text-[9px] font-semibold ' + taskPriorityClass[task.priority]}>{taskPriorityLabel[task.priority]}</span>
-                                </div>
-                                <div className="mt-2 truncate text-[10px] text-muted">{task.projectName}</div>
-                                <div className="mt-1 flex items-center justify-between gap-2 text-[10px]">
-                                  <span className={taskDueState(task) === 'overdue' ? 'text-danger' : taskDueState(task) === 'due-soon' ? 'text-warning' : 'text-muted'}>{formatTaskDue(task.dueDate)}</span>
-                                  {task.blocked && <span className="text-danger">Blocked</span>}
-                                </div>
-                              </button>
-                            </div>
-                            <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2">
-                              <span className="min-w-0 truncate font-mono text-[9px] text-muted/60">slug: {task.slug}</span>
-                              {canManageTasks && (
-                                <div className="flex shrink-0 items-center gap-1.5" data-ams-slug={task.slug + '-actions'}>
-                                  {columnIndex > 0 && (
-                                    <button
-                                      type="button"
-                                      title={'Move to ' + boardColumns[columnIndex - 1].label}
-                                      aria-label={'Move ' + task.title + ' to ' + boardColumns[columnIndex - 1].label}
-                                      disabled={updatingTaskId !== null || bulkUpdating}
-                                      onClick={() => void updateTaskStatus(task, boardColumns[columnIndex - 1].status)}
-                                      data-ams-slug={task.slug + '-previous'}
-                                      className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40"
-                                    >
-                                      <ArrowLeft size={13} />
-                                    </button>
-                                  )}
-                                  {task.status === 'todo' && (
-                                    <button type="button" title="Start task" aria-label={'Start ' + task.title} disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, 'in_progress')} data-ams-slug={task.slug + '-start'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
-                                      <Clock3 size={13} />
-                                    </button>
-                                  )}
-                                  {task.status === 'in_progress' && (
-                                    <button type="button" title="Move to review" aria-label={'Move ' + task.title + ' to review'} disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, 'review')} data-ams-slug={task.slug + '-review'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
-                                      <ArrowUpRight size={13} />
-                                    </button>
-                                  )}
-                                  {task.status !== 'done' && (
-                                    <button type="button" title="Mark done" aria-label={'Mark ' + task.title + ' done'} disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, 'done')} data-ams-slug={task.slug + '-done'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-success/30 hover:bg-success/10 hover:text-success disabled:opacity-40">
-                                      <CheckCircle2 size={13} />
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
+                              ) : undefined}
+                              stageActions={canManageTasks && columnIndex < boardColumns.length - 1 ? <DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, boardColumns[columnIndex + 1].status)} ariaLabel={'Move ' + task.title + ' to ' + boardColumns[columnIndex + 1].label}>{task.status === 'todo' ? 'Start' : task.status === 'in_progress' ? 'Send to review' : 'Mark done'}</DashboardControl> : undefined}
+                            />
                           </article>
                         );
                       })}
                       {!columnTasks.length && (
-                        <div className={'flex min-h-[104px] flex-1 items-center justify-center rounded-control border border-dashed px-3 py-8 text-center text-[10px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
-                          {isDropTarget && canManageTasks ? 'Drop task here' : activeFilterCount > 0 ? 'No matching tasks in this stage.' : canManageTasks ? 'No tasks in this stage. Create a task or move a card here.' : 'No tasks in this stage.'}
-                        </div>
+                        <DashboardEmptyState eyebrow={column.label} title={isDropTarget && canManageTasks ? 'Drop task here' : activeFilterCount > 0 ? 'No matching tasks in this stage.' : 'No tasks in this stage.'} description={canManageTasks ? 'Create a task or move a card into this stage using its handle.' : 'Tasks in this stage will appear here.'} icon={<FolderKanban size={17} />} />
                       )}
                     </div>
                   </section>
@@ -1393,94 +1251,17 @@ export const TasksWorkspace: React.FC = () => {
               })}
             </div>
           </div>
+        ) : layout === 'projects' ? (
+          <TaskProjectQueues records={filteredRecords} formatDue={formatTaskDue} dueState={taskDueState} projectHref={getProjectDeliveryHref} onOpen={setSelectedTask} onEdit={canManageTasks ? openEditTask : undefined} />
+        ) : layout === 'blockers' ? (
+          <TaskBlockedWork rows={pagedRecords} formatDue={formatTaskDue} dueState={taskDueState} projectHref={getProjectDeliveryHref} onOpen={setSelectedTask} onEdit={canManageTasks ? openEditTask : undefined} />
         ) : (
-          <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-table-view" tabIndex={0} role="region" aria-label="Scrollable task register">
-            <table className="w-full min-w-[1120px] border-collapse text-left">
-              <thead className="sticky top-0 z-10 bg-panel">
-                <tr className="border-b border-line">
-                  {canManageTasks && (
-                    <th className="h-11 w-10 px-3">
-                      <input type="checkbox" checked={allVisibleSelected} onChange={toggleVisibleSelection} aria-label="Select visible tasks" data-ams-slug="tasks-select-visible" className="h-4 w-4 rounded border-line bg-bg accent-accent" />
-                    </th>
-                  )}
-                  {[
-                    ['title', 'Task'],
-                    ['projectName', 'Project'],
-                    ['assignee', 'Assignee'],
-                    ['priority', 'Priority'],
-                    ['status', 'Status'],
-                    ['dueDate', 'Due'],
-                  ].map(([key, label]) => (
-                    <th key={key} className="h-11 px-3 text-[11px] font-semibold text-muted" data-ams-slug={'tasks-column-' + key}>
-                      <button type="button" onClick={() => setSort(key as TaskSortKey)} data-ams-slug={'tasks-sort-' + key} className="inline-flex items-center gap-1 rounded-control px-1 py-1 text-left hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                        {label}
-                        {sortIcon(key as TaskSortKey)}
-                      </button>
-                    </th>
-                  ))}
-                  <th className="h-11 w-32 px-4 text-right text-[11px] font-semibold text-muted" data-ams-slug="tasks-column-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedRecords.map(task => (
-                  <tr key={task.id} data-ams-slug={task.slug} className="border-b border-line transition-colors last:border-b-0 hover:bg-panel-hover">
-                    {canManageTasks && (
-                      <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-select'}>
-                        <input type="checkbox" checked={selectedIds.includes(task.id)} onChange={() => toggleSelection(task.id)} aria-label={'Select ' + task.title} className="h-4 w-4 rounded border-line bg-bg accent-accent" />
-                      </td>
-                    )}
-                    <td className="px-3 py-3 align-middle">
-                      <button type="button" className="block min-w-0 text-left" onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-open'}>
-                        <div className="max-w-[320px] truncate text-xs font-medium text-fg">{task.title}</div>
-                        <div className="mt-1 flex items-center gap-2 text-[9px] text-muted">
-                          <span className="font-mono text-muted/70">slug: {task.slug}</span>
-                          {task.tags.length > 0 && <span className="truncate">{task.tags.slice(0, 2).join(' · ')}</span>}
-                        </div>
-                      </button>
-                    </td>
-                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-project'}>
-                      <div className="max-w-[210px] truncate text-xs font-medium text-fg">{task.projectName}</div>
-                      <div className="mt-1 truncate text-[10px] text-muted">{task.clientName || 'Internal'}</div>
-                    </td>
-                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-assignee'}>
-                      <ProfileIdentity profile={{ name: task.assignee || 'Unassigned', contextLabel: task.assignee ? 'Assignee' : 'Unassigned' }} showRole={false} />
-                    </td>
-                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-priority'}>
-                      <span className={'inline-flex rounded-badge border px-2 py-0.5 text-[10px] font-semibold ' + taskPriorityClass[task.priority]}>{taskPriorityLabel[task.priority]}</span>
-                    </td>
-                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-status'}>
-                      <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-semibold ' + taskStatusClass[task.status]}><span className="h-1.5 w-1.5 rounded-full bg-current" />{taskStatusLabel[task.status]}{task.blocked && <span className="text-danger">· Blocked</span>}</span>
-                    </td>
-                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-due'}>
-                      <div className={'text-xs font-medium tabular-nums ' + (taskDueState(task) === 'overdue' ? 'text-danger' : taskDueState(task) === 'due-soon' ? 'text-warning' : 'text-fg')}>{formatTaskDue(task.dueDate)}</div>
-                      <div className="mt-1 text-[10px] text-muted">{taskDueLabel(task)}</div>
-                    </td>
-                    <td className="px-4 py-3 text-right align-middle" data-ams-slug={task.slug + '-actions'}>
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button type="button" title="View task" aria-label={'View ' + task.title} onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-view'} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg">
-                          <Eye size={14} />
-                        </button>
-                        {canManageTasks && task.status !== 'done' && (
-                          <button type="button" title={task.status === 'todo' ? 'Start task' : task.status === 'in_progress' ? 'Move to review' : 'Mark done'} aria-label={task.status === 'todo' ? 'Start ' + task.title : task.status === 'in_progress' ? 'Move ' + task.title + ' to review' : 'Mark ' + task.title + ' done'} disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, task.status === 'todo' ? 'in_progress' : task.status === 'in_progress' ? 'review' : 'done')} data-ams-slug={task.slug + '-quick-action'} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-accent/30 hover:bg-bg hover:text-fg disabled:opacity-40">
-                            {task.status === 'todo' ? <Clock3 size={14} /> : task.status === 'in_progress' ? <ArrowUpRight size={14} /> : <CheckCircle2 size={14} />}
-                          </button>
-                        )}
-                        <Link to={'/admin/projects?projects=sprint&project=' + encodeURIComponent(task.projectSlug)} title="Open project delivery" aria-label={'Open project delivery for ' + task.title} data-ams-slug={task.slug + '-project-link'} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg">
-                          <ArrowUpRight size={14} />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <TaskExecutionList rows={pagedRecords} canManage={canManageTasks} selectedIds={selectedIds} allVisibleSelected={allVisibleSelected} onSelect={toggleSelection} onSelectVisible={toggleVisibleSelection} sortKey={sortKey} sortDirection={sortDirection} onSort={setSort} onStatus={canManageTasks ? (task, status) => void updateTaskStatus(task, status) : undefined} mutating={updatingTaskId !== null || updatingSubtaskId !== null || bulkUpdating} formatDue={formatTaskDue} dueState={taskDueState} projectHref={getProjectDeliveryHref} onOpen={setSelectedTask} onEdit={canManageTasks ? openEditTask : undefined} />
         )}
-
-        <AdminTablePagination total={filteredRecords.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="tasks" slug="tasks-pagination" />
+        {(layout === 'list' || layout === 'blockers') && taskSourceEverLoaded && <AdminTablePagination total={viewRecords.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="tasks" slug="tasks-pagination" />}
       </AdminPanel>
 
-      <div data-ams-feature-slug="tasks-kpis">
+      <div data-ams-feature-slug="tasks-kpis"><p className="ams-task-summary-label">Queue context: {scopeLabel}. Totals use this queue before text and field filters. Signals may overlap.</p>
         <AdminMetricStrip slug="tasks-kpis"
           className="sm:grid-cols-2 lg:grid-cols-4"
           metrics={[
@@ -1490,7 +1271,7 @@ export const TasksWorkspace: React.FC = () => {
               label: scopeLabel,
               value: metrics.total,
               context: taskScope === 'all' ? 'Across project delivery work' : 'Tasks currently in this queue',
-              sparkline: [records.length, scopedRecords.length, metrics.total],
+
               icon: <FolderKanban size={15} />,
             },
             {
@@ -1499,7 +1280,7 @@ export const TasksWorkspace: React.FC = () => {
               label: 'Open Work',
               value: metrics.open,
               context: metrics.highPriority + ' high / urgent',
-              sparkline: [metrics.open, metrics.dueSoon, metrics.blocked],
+
               toneClassName: 'text-info',
               icon: <Clock3 size={15} />,
             },
@@ -1509,7 +1290,7 @@ export const TasksWorkspace: React.FC = () => {
               label: 'Review Queue',
               value: metrics.review,
               context: 'Awaiting review or QA',
-              sparkline: [metrics.review, metrics.blocked, metrics.open],
+
               toneClassName: 'text-warning',
               icon: <AlertTriangle size={15} />,
             },
@@ -1519,17 +1300,18 @@ export const TasksWorkspace: React.FC = () => {
               label: taskScope === 'completed' ? 'Completed' : 'Risk Signals',
               value: taskScope === 'completed' ? metrics.total : metrics.blocked + metrics.dueSoon,
               context: taskScope === 'completed' ? 'Completed tasks in scope' : 'Blocked + due soon / overdue',
-              sparkline: [metrics.blocked, metrics.dueSoon, metrics.total],
+
               toneClassName: taskScope === 'completed' ? 'text-success' : 'text-danger',
               icon: taskScope === 'completed' ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />,
             },
-          ]}
+          ].map(metric => ({...metric, value: taskSourceEverLoaded ? metric.value : '—', context: taskSourceEverLoaded ? metric.context : loading ? 'Loading task records' : 'Task data unavailable'}))}
         />
       </div>
 
       {!loading && workloadByAssignee.length > 0 && (
         <AdminPanel
-          title="Team workload"
+          className="ams-task-panel ams-operational-panel ams-overview-panel"
+          title="Open task distribution"
           description="Open task volume and delivery risk by assignee for the selected reporting period."
           slug="tasks-team-workload"
           bodyClassName="p-3 sm:p-4"
@@ -1541,7 +1323,7 @@ export const TasksWorkspace: React.FC = () => {
                 key={owner.key}
                 type="button"
                 onClick={() => selectWorkloadOwner(owner)}
-                aria-label={'View all open tasks for ' + owner.name}
+                aria-label={'View task queue for ' + owner.name}
                 data-ams-slug={'tasks-workload-owner-' + slugify(owner.key)}
                 className="group min-w-0 rounded-control border border-line bg-bg p-3 text-left transition-colors hover:border-accent/35 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
@@ -1571,7 +1353,7 @@ export const TasksWorkspace: React.FC = () => {
             ))}
           </div>
           <p className="mt-3 text-[10px] leading-4 text-muted">
-            Bars compare open task counts across assignees in this view. They do not represent available hours or individual capacity.
+            Bars compare open task counts in the loaded reporting-period records. They do not represent available hours or individual capacity.
           </p>
         </AdminPanel>
       )}
@@ -1621,10 +1403,10 @@ export const TasksWorkspace: React.FC = () => {
         </form>
       </Drawer>
 
-      <Modal slug="task-detail-modal"
+      <Drawer slug="task-detail-modal"
         open={Boolean(selectedTask)}
         onClose={() => setSelectedTask(null)}
-        size="lg"
+        size="xl"
         title={selectedTask?.title || 'Task details'}
         description={selectedTask ? selectedTask.projectName : undefined}
         footer={(
@@ -1655,6 +1437,14 @@ export const TasksWorkspace: React.FC = () => {
       >
         {selectedTask && (
           <div className="space-y-4" data-ams-feature-slug={selectedTask.slug + '-detail'}>
+            {notice && <p role="status" className="rounded-control border border-line bg-bg p-3 text-xs text-muted">{notice}</p>}
+            {selectedTask.description && (
+              <div className="rounded-card border border-line bg-bg p-4" data-ams-slug={selectedTask.slug + '-description'}>
+                <div className="text-[11px] font-semibold text-fg">Description</div>
+                <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-muted">{selectedTask.description}</p>
+              </div>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-id'}>
                 <div className="text-[10px] font-medium text-muted">Task ID</div>
@@ -1671,36 +1461,29 @@ export const TasksWorkspace: React.FC = () => {
               <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-due-detail'}>
                 <div className="text-[10px] font-medium text-muted">Due date</div>
                 <div className="mt-1 text-xs font-semibold tabular-nums text-fg">{formatTaskDue(selectedTask.dueDate)}</div>
-                <div className="mt-1 text-[10px] text-muted">{taskDueLabel(selectedTask)}</div>
+                <div className="mt-1 text-[10px] text-muted">{selectedTask.dueDate ? taskDueLabel(selectedTask) : 'No date recorded'}</div>
               </div>
               <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-assignee-detail'}>
                 <div className="text-[10px] font-medium text-muted">Assignee</div>
-                <div className="mt-1"><ProfileIdentity profile={{ name: selectedTask.assignee || 'Unassigned', contextLabel: 'Assignee' }} showRole={false} /></div>
+                <div className="mt-1">{selectedTask.assignee && selectedTask.assignee !== 'Unassigned' ? <ProfileIdentity profile={{ name: selectedTask.assignee, contextLabel: 'Assignee' }} showRole={false} /> : <span className="text-xs text-muted">Unassigned</span>}</div>
               </div>
               <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-client-detail'}>
                 <div className="text-[10px] font-medium text-muted">Client</div>
-                <div className="mt-1 text-xs font-semibold text-fg">{selectedTask.clientName || 'Internal'}</div>
+                <div className="mt-1 text-xs font-semibold text-fg">{selectedTask.clientName || 'Client not linked'}</div>
               </div>
             </div>
 
-            {selectedTask.description && (
-              <div className="rounded-card border border-line bg-bg p-4" data-ams-slug={selectedTask.slug + '-description'}>
-                <div className="text-[11px] font-semibold text-fg">Description</div>
-                <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-muted">{selectedTask.description}</p>
-              </div>
-            )}
 
             <div className="rounded-card border border-line bg-bg p-4" data-ams-slug={selectedTask.slug + '-flow'}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="text-[11px] font-semibold text-fg">Task flow</span>
-                <span className="font-mono text-[9px] text-muted/70">slug: {selectedTask.slug}</span>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {(['todo', 'in_progress', 'review', 'done'] as TaskStatus[]).map(status => (
                   <button
                     key={status}
                     type="button"
-                    disabled={!canManageTasks || updatingTaskId === selectedTask.id}
+                    disabled={!canManageTasks || updatingTaskId !== null || updatingSubtaskId !== null || bulkUpdating}
                     onClick={() => void updateTaskStatus(selectedTask, status)}
                     data-ams-slug={selectedTask.slug + '-flow-' + status}
                     className={'min-h-9 rounded-control border px-2 text-[10px] font-semibold transition-colors ' + (selectedTask.status === status ? taskStatusClass[status] : 'border-line bg-panel text-muted hover:text-fg') + ((!canManageTasks || updatingTaskId === selectedTask.id) ? ' opacity-50' : '')}
@@ -1751,25 +1534,16 @@ export const TasksWorkspace: React.FC = () => {
               </div>
             )}
 
-            <Link
-              to={'/admin/projects?projects=sprint&project=' + encodeURIComponent(selectedTask.projectSlug)}
-              onClick={() => setSelectedTask(null)}
-              data-ams-slug={selectedTask.slug + '-open-project'}
-              className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover"
-            >
-              <FolderKanban size={14} />
-              Open project delivery
-              <ArrowUpRight size={13} className="text-muted" />
-            </Link>
+            {getProjectDeliveryHref(selectedTask) && <DashboardControl variant="action" size="standard" icon={<FolderKanban size={14} />} to={getProjectDeliveryHref(selectedTask)!} onClick={() => setSelectedTask(null)}>Open project delivery</DashboardControl>}
 
             {selectedTask.blocked && (
               <div className="rounded-card border border-danger/20 bg-danger/5 p-3 text-xs text-danger" data-ams-slug={selectedTask.slug + '-blocked-warning'}>
-                This task is blocked and needs its dependency cleared before completion.
+                This task carries a blocked/waiting flag. Review its brief and tags before changing stage. No prerequisite link or clearance event is recorded here.
               </div>
             )}
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <Modal
         slug="task-delete-confirmation"

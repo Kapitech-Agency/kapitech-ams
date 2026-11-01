@@ -888,7 +888,7 @@ export const AdminProjects: React.FC = () => {
 
   const selectedSprintProject = useMemo(() => {
     return (
-      projects.find(project => project.slug === selectedProjectSlug) ||
+      projects.find(project => project.slug === selectedProjectSlug || project.id === selectedProjectSlug) ||
       activeProjects[0] ||
       projects[0] ||
       null
@@ -1750,7 +1750,7 @@ export const AdminProjects: React.FC = () => {
   }, [canReadClients, selectedProjectDetail?.clientId, clientOptionsLoaded, loadProjectClients]);
 
   return (
-    <AdminPageShell featureSlug="projects-module" className={"projects-module ams-projects-workspace" + (view === 'overview' ? ' ams-projects-overview' : view === 'all' || view === 'archived' ? ' ams-projects-registry' : '')}>
+    <AdminPageShell featureSlug="projects-module" className={"projects-module ams-projects-workspace" + (view === 'overview' ? ' ams-projects-overview ams-operational-workspace' : view === 'all' || view === 'archived' ? ' ams-projects-registry ams-operational-workspace' : '')}>
       <Modal
         open={Boolean(deleteProject)}
         onClose={() => { if (!deletingProjectRecord) setDeleteProject(null); }}
@@ -2203,7 +2203,7 @@ export const AdminProjects: React.FC = () => {
       {view === 'overview' && (
         <div className="space-y-4" data-ams-feature-slug="projects-overview-workspace" data-ams-slug="projects-overview-workspace">
           <section className="ams-projects-overview-grid grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" data-ams-feature-slug="projects-overview-primary" aria-label="Project delivery and attention">
-            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-overview-panel" title="Delivery exceptions" bodyClassName="ams-projects-overview-body"
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-operational-panel ams-overview-panel" title="Delivery exceptions" bodyClassName="ams-projects-overview-body"
               actions={<span className="ams-projects-overview-count">{serverMode ? overviewAttentionProjects.length : '—'} to review</span>}>
               {loading && !serverMode ? (
                 <div className="ams-projects-overview-state" role="status" aria-label="Loading project exceptions">
@@ -2233,7 +2233,7 @@ export const AdminProjects: React.FC = () => {
               )}
             </AdminPanel>
 
-            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-overview-panel" title="Project status distribution" bodyClassName="ams-projects-overview-body"
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-operational-panel ams-overview-panel" title="Project status distribution" bodyClassName="ams-projects-overview-body"
               actions={<DashboardControl variant="action" size="compact" icon={<FolderKanban size={14} />} className="ams-dashboard-card-action" onClick={() => openView('all')} showArrow ariaLabel="View all project records">View all</DashboardControl>}>
               {loading && !serverMode ? (
                 <div className="ams-projects-overview-state" role="status" aria-label="Loading project statuses">{[1, 2, 3, 4].map(item => <div key={item} className="h-10 animate-pulse rounded-control bg-bg" />)}</div>
@@ -2257,7 +2257,7 @@ export const AdminProjects: React.FC = () => {
               )}
             </AdminPanel>
 
-            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-overview-panel" title="Overdue milestones" bodyClassName="ams-projects-overview-body"
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-operational-panel ams-overview-panel" title="Overdue milestones" bodyClassName="ams-projects-overview-body"
               actions={<DashboardControl variant="action" size="compact" icon={<CalendarDays size={14} />} className="ams-dashboard-card-action" to={planningWorksheetHref('milestones')}>Open milestones</DashboardControl>}>
               {loading && !serverMode ? (
                 <div className="ams-projects-overview-state" role="status" aria-label="Loading milestones">{[1, 2, 3].map(item => <div key={item} className="h-14 animate-pulse rounded-control bg-bg" />)}</div>
@@ -2280,7 +2280,7 @@ export const AdminProjects: React.FC = () => {
               )}
             </AdminPanel>
 
-            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-overview-panel" title="Tasks in review" bodyClassName="ams-projects-overview-body"
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-operational-panel ams-overview-panel" title="Tasks in review" bodyClassName="ams-projects-overview-body"
               actions={<span className="ams-projects-overview-count">{serverMode ? overviewReviewTasks.length : '—'} tasks</span>}>
               {loading && !serverMode ? (
                 <div className="ams-projects-overview-state" role="status" aria-label="Loading review tasks">{[1, 2, 3].map(item => <div key={item} className="h-14 animate-pulse rounded-control bg-bg" />)}</div>
@@ -2728,7 +2728,7 @@ export const AdminProjects: React.FC = () => {
       {view === 'all' && (
         <>
           <AdminPanel
-            className="ams-registry-panel ams-overview-panel"
+            className="ams-registry-panel ams-operational-panel ams-overview-panel"
             title="Project portfolio"
             actions={<DashboardFilterGroup ariaLabel="Project Registry display" value={projectLayout} onChange={value => openLayout(value as ProjectLayout)} density="comfortable" options={[{value:'table',label:'Table'},{value:'board',label:'Kanban'},{value:'timeline',label:'Timeline'}]} />}
             description={serverMode
@@ -2743,8 +2743,8 @@ export const AdminProjects: React.FC = () => {
               onSearchChange={setProjectSearch}
               searchPlaceholder="Search projects, clients, owners..."
               searchLabel="Search projects"
-              className="ams-registry-filters"
-              searchClassName="ams-registry-search"
+              className="ams-operational-filters"
+              searchClassName="ams-operational-search"
               actions={(
                 <Button
                   type="button"
@@ -2758,7 +2758,7 @@ export const AdminProjects: React.FC = () => {
               )}
             >
               <div
-                className="ams-registry-filter-fields"
+                className="ams-operational-filter-fields"
                 aria-label="Project filters"
               >
                 {!registryStatusView && <CustomSelect value={projectStatusFilter} onChange={setProjectStatusFilter} options={[{value:'',label:'All statuses'}, ...PROJECT_STATUSES]} aria-label="Filter projects by status" />}
@@ -3619,11 +3619,11 @@ export const AdminProjects: React.FC = () => {
       {view === 'archived' && (
         <div className="space-y-4">
           <AdminPanel
-            className="ams-registry-panel ams-overview-panel"
+            className="ams-registry-panel ams-operational-panel ams-overview-panel"
             title="Archived projects"
             description="Completed delivery records remain queryable for reference, handover history, and future reuse."
           >
-            <AdminFilterBar slug="projects-archive-filters" className="ams-registry-filters" searchValue={archiveSearch} onSearchChange={setArchiveSearch} searchLabel="Search archived projects" searchPlaceholder="Search completed projects, clients, owners..."
+            <AdminFilterBar slug="projects-archive-filters" className="ams-operational-filters" searchValue={archiveSearch} onSearchChange={setArchiveSearch} searchLabel="Search archived projects" searchPlaceholder="Search completed projects, clients, owners..."
               actions={<DashboardControl variant="action" size="standard" icon={<X size={14} />} onClick={() => { setArchiveSearch(''); setArchiveHealthFilter(''); }} disabled={!archiveSearch && !archiveHealthFilter}>Reset filters</DashboardControl>}>
               <CustomSelect value={archiveHealthFilter} onChange={setArchiveHealthFilter} options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]} aria-label="Filter archived projects by health" />
             </AdminFilterBar>

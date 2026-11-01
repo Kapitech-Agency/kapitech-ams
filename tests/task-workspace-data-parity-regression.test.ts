@@ -8,11 +8,11 @@ test('Tasks & Execution exposes canonical worksheets and role-safe query-driven 
   const workspace = read('src/components/admin/TasksWorkspace.tsx');
 
   assert.match(workspace, /const TASK_WORKSPACE_VIEWS = \[\s*\{ key: 'board', label: 'Board \/ Kanban' \},\s*\{ key: 'list', label: 'List' \}/);
-  assert.match(workspace, /key: 'task-lists', label: 'Task Lists', available: false/);
-  assert.match(workspace, /key: 'dependencies', label: 'Dependencies', available: false/);
+  assert.match(workspace, /key: 'projects', label: 'Project Queues'/);
+  assert.match(workspace, /key: 'blockers', label: 'Blocked Work'/);
   assert.ok(workspace.includes("searchParams.get('layout')"));
-  assert.ok(workspace.includes("const layout: 'list' | 'board' = requestedLayout === 'board' ? 'board' : 'list'"));
-  assert.ok(workspace.includes("canonicalParams.set('layout', 'list')"));
+  assert.ok(workspace.includes('const layout = resolveTaskExecutionLayout(requestedLayout)'));
+  assert.ok(workspace.includes("canonicalParams.set('layout', layout)"));
   assert.ok(workspace.includes("setSearchParams(canonicalParams, { replace: true })"));
   assert.ok(workspace.includes('data-ams-slug="tasks-workspace-tabs"'));
   assert.ok(workspace.includes('data-ams-slug="tasks-queue-tabs"'));

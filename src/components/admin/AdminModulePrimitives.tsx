@@ -1,3 +1,4 @@
+import './OperationalWorkspace.css';
 import React, { useId } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, HelpCircle, X } from '../../lib/untitled-ui-icon-bridge';
 import { Link, NavLink } from 'react-router-dom';

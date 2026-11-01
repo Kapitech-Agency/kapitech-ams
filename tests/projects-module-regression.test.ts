@@ -461,7 +461,7 @@ test('Projects Overview equalizes all operational cards in one grid and keeps co
   const source = await read('src/pages/admin/AdminProjects.tsx');
   const css = await read('src/components/admin/ProjectsOverview.css');
   const overview = source.slice(source.indexOf('data-ams-feature-slug="projects-overview-workspace"'), source.indexOf("{view === 'planning-delivery' && (", source.indexOf('data-ams-feature-slug="projects-overview-workspace"')));
-  assert.equal((overview.match(/className="ams-projects-overview-panel ams-overview-panel"/g) || []).length, 4);
+  assert.equal((overview.match(/className="ams-projects-overview-panel ams-operational-panel ams-overview-panel"/g) || []).length, 4);
   assert.equal((overview.match(/ams-projects-overview-grid/g) || []).length, 1);
   assert.match(css, /grid-auto-rows:minmax\(330px,1fr\)/);
   assert.match(css, /ams-projects-overview-panel \{[^}]*height:100%/);

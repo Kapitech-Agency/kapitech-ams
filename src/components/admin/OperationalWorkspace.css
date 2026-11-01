@@ -1,0 +1,33 @@
+/* Shared geometry from the approved Dashboard Overview and operational Registry. */
+.ams-shell .ams-operational-workspace .ams-page-header { align-items:center; border-bottom:0; padding-bottom:8px; }
+.ams-shell .ams-operational-workspace .ams-page-header > div:first-child { flex:1; }
+.ams-shell .ams-operational-workspace .ams-page-header h1 { font-size:26px; line-height:32px; font-weight:650; letter-spacing:-.035em; }
+.ams-shell .ams-operational-workspace .ams-page-header > div:first-child > p { font-size:12px; line-height:18px; max-width:66ch; }
+.ams-shell .ams-operational-panel > div:first-child { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; flex-shrink:0; padding:13px 16px; min-height:58px; border-bottom:0; }
+.ams-shell .ams-operational-panel > div:first-child > div:last-child:not(:first-child) { width:auto; display:flex; align-items:center; }
+.ams-shell .ams-operational-panel h2 { margin:0; font-size:14px; line-height:19px; font-weight:650; letter-spacing:-.015em; }
+.ams-shell .ams-operational-filters { margin:4px 16px 12px; padding:12px; }
+.ams-shell .ams-operational-filters > div:first-child { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:10px; }
+.ams-shell .ams-operational-filters > div:first-child > div:first-child { display:grid; min-width:0; gap:10px; }
+.ams-shell .ams-operational-search { width:100%; }
+.ams-shell .ams-operational-filter-fields { display:grid; min-width:0; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.ams-shell .ams-operational-filter-fields > * { min-width:0; width:100%; }
+/* Navigation uses the same solid current-state treatment as approved Overview tabs. */
+.ams-shell nav.ams-topnav-scroll:is(.ams-projects-module-tabs, .ams-operational-tabs) > a { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:36px; min-height:36px; padding:6px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--muted); font-size:11px; line-height:14px; font-weight:550; white-space:nowrap; box-shadow:none; }
+.ams-shell nav.ams-topnav-scroll:is(.ams-projects-module-tabs, .ams-operational-tabs) > a:hover { background:color-mix(in srgb,var(--text) 4%,var(--panel)); color:var(--text); }
+.ams-shell nav.ams-topnav-scroll:is(.ams-projects-module-tabs, .ams-operational-tabs) > a[aria-current="page"],
+.ams-shell nav.ams-topnav-scroll:is(.ams-projects-module-tabs, .ams-operational-tabs) > a[aria-current="page"]:hover { border-color:var(--accent); background:var(--accent); color:white; font-weight:650; }
+.ams-shell nav.ams-topnav-scroll:is(.ams-projects-module-tabs, .ams-operational-tabs) > a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+@media(max-width:899px) { .ams-shell nav.ams-topnav-scroll:is(.ams-projects-module-tabs, .ams-operational-tabs) > a { height:40px; min-height:40px; } }
+
+@media(max-width:599px) {
+  .ams-shell .ams-operational-filters { margin-inline:12px; }
+  .ams-shell .ams-operational-filters > div:first-child { grid-template-columns:minmax(0,1fr); }
+  .ams-shell .ams-operational-filter-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.ams-shell .ams-operational-workspace .ams-page-header { align-items:stretch; }
+}
+
+@media(max-width:639px) {
+.ams-shell .ams-operational-workspace .ams-page-header { align-items:stretch; }
+.ams-shell .ams-operational-panel > div:first-child { padding:12px; }
+}

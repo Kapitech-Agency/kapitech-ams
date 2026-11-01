@@ -220,8 +220,8 @@ test('Projects prioritize the portfolio register before supporting KPIs while Ta
   assert.match(projects, /featureSlug="projects-module"/);
   assert.ok(header >= 0 && portfolio > header && kpis > portfolio);
   assert.ok(archive >= 0 && archiveKpis > archive);
-  assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-filters"') < tasks.indexOf('data-ams-feature-slug="tasks-table-view"'));
-  assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-table-view"') < tasks.indexOf('data-ams-feature-slug="tasks-kpis"'));
+  assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-filters"') < tasks.indexOf('<TaskExecutionList rows={pagedRecords}'));
+  assert.ok(tasks.indexOf('<TaskExecutionList rows={pagedRecords}') < tasks.indexOf('data-ams-feature-slug="tasks-kpis"'));
   assert.ok(tasks.indexOf('data-ams-feature-slug="tasks-kpis"') < tasks.indexOf('slug="tasks-team-workload"'));
   assert.match(tasks, /data-ams-feature-slug="tasks-board-view"/);
 });

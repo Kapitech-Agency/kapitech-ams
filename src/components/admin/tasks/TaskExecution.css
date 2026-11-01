@@ -1,0 +1,65 @@
+/* Domain composition only. Headers, panels, filters, actions and overlays use shared UI. */
+.ams-shell .ams-task-panel { min-width:0; overflow:hidden; }
+.ams-shell .ams-task-result-context { display:flex; align-items:start; justify-content:space-between; flex-wrap:wrap; gap:6px 16px; padding:0 16px 14px; font-size:11px; line-height:16px; color:var(--muted); }
+.ams-shell .ams-task-result-context > span:last-child { max-width:72ch; }
+.ams-shell .ams-task-empty { padding:4px 16px 20px; }
+.ams-shell .ams-task-bulk { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:0 16px 12px; font-size:11px; color:var(--muted); }
+.ams-shell .ams-task-board { position:relative; max-width:100%; min-width:0; }
+.ams-shell .ams-task-card-content { display:grid; gap:12px; min-width:0; }
+.ams-shell .ams-task-card-heading { display:flex; gap:8px; align-items:start; min-width:0; }
+.ams-shell .ams-task-identity { display:grid; flex:1; gap:4px; min-width:0; }
+.ams-shell .ams-task-identity > button { width:fit-content; max-width:100%; text-align:left; overflow-wrap:anywhere; font-size:12px; line-height:18px; font-weight:600; color:var(--text); }
+.ams-shell .ams-task-identity > span { font-size:11px; line-height:16px; color:var(--muted); overflow-wrap:anywhere; }
+.ams-shell .ams-task-identity small { font-size:10px; line-height:15px; color:var(--muted); overflow-wrap:anywhere; }
+.ams-shell .ams-task-identity > button:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.ams-shell .ams-task-signals { position:relative; display:flex; align-items:start; flex-wrap:wrap; gap:5px; }
+.ams-shell .ams-task-signals > div { width:100%; min-width:0; }
+.ams-shell .ams-task-card-context { display:flex; align-items:start; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:11px; line-height:16px; }
+.ams-shell .ams-task-due { display:grid; gap:3px; color:var(--text); font-size:11px; line-height:16px; }
+.ams-shell .ams-task-due small { color:var(--muted); font-size:10px; line-height:15px; }
+.ams-shell .ams-task-checklist-summary { color:var(--muted); font-size:10px; line-height:15px; }
+.ams-shell .ams-task-actions,.ams-shell .ams-task-card-footer { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+.ams-shell .ams-task-brief { display:grid; gap:5px; min-width:0; color:var(--muted); font-size:11px; line-height:17px; }
+.ams-shell .ams-task-brief strong { color:var(--text); font-size:11px; font-weight:600; }
+.ams-shell .ams-task-brief p { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
+.ams-shell .ams-task-table-scroll { position:relative; max-width:100%; overflow-x:auto; }
+.ams-shell .ams-task-table-scroll table { width:100%; min-width:1100px; }
+.ams-shell .ams-task-table-scroll :is(th,td) { padding:12px 14px; vertical-align:top; }
+.ams-shell .ams-task-table-scroll th { vertical-align:middle; }
+.ams-shell .ams-task-table-scroll th:first-child { min-width:44px; }
+.ams-shell .ams-task-table-scroll td:has(.ams-task-identity) { min-width:250px; max-width:330px; }
+.ams-shell .ams-task-table-scroll td:has(.ams-task-signals) { min-width:130px; }
+.ams-shell .ams-task-table-scroll td:has(.ams-task-actions) { min-width:160px; }
+.ams-shell .ams-task-table-scroll input[type="checkbox"],.ams-shell .ams-task-selection input { width:16px; height:16px; accent-color:var(--accent); }
+.ams-shell .ams-task-compact-list { display:none; }
+.ams-shell .ams-task-compact-record { min-width:0; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+.ams-shell .ams-task-selection { display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:11px; line-height:16px; color:var(--muted); }
+.ams-shell .ams-task-project-queues,.ams-shell .ams-task-blocked-work { display:grid; gap:12px; min-width:0; padding:4px 16px 16px; }
+.ams-shell .ams-task-view-help { margin:0; font-size:11px; line-height:16px; color:var(--muted); }
+.ams-shell .ams-task-project-queue { min-width:0; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+.ams-shell .ams-task-project-queue > summary { display:flex; min-width:0; align-items:center; justify-content:space-between; gap:12px; padding:16px; cursor:pointer; }
+.ams-shell .ams-task-project-queue > summary > span:first-child { display:grid; gap:4px; min-width:0; flex:1; }
+.ams-shell .ams-task-project-queue summary strong { color:var(--text); font-size:12px; line-height:18px; font-weight:600; overflow-wrap:anywhere; }
+.ams-shell .ams-task-project-queue summary > span:first-child > span { color:var(--muted); font-size:11px; line-height:16px; }
+.ams-shell .ams-task-project-queue > summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ams-shell .ams-task-project-queue > summary > svg { flex-shrink:0; color:var(--muted); transition:transform 150ms; }
+.ams-shell .ams-task-project-queue[open] > summary > svg { transform:rotate(90deg); }
+.ams-shell .ams-task-project-counts { display:flex; align-items:center; flex-wrap:wrap; gap:7px 12px; color:var(--muted); font-size:11px; line-height:16px; }
+.ams-shell .ams-task-project-records,.ams-shell .ams-task-blocker-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; }
+.ams-shell .ams-task-project-records { padding:0 12px 12px; }
+.ams-shell .ams-task-blocker-guidance { display:flex; align-items:start; gap:9px; min-width:0; color:var(--muted); font-size:11px; line-height:17px; }
+.ams-shell .ams-task-blocker-guidance > svg { flex-shrink:0; margin-top:1px; color:var(--warning); }
+.ams-shell .ams-task-summary-label { margin:0 0 12px; color:var(--muted); font-size:11px; line-height:16px; }
+.ams-shell .ams-tasks-workspace [data-ams-feature-slug="tasks-kpis"] .ams-dashboard-card { min-width:0; }
+@media(max-width:1099px) {
+ .ams-shell .ams-task-table-scroll { display:none; }
+ .ams-shell .ams-task-compact-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:4px 16px 16px; }
+}
+@media(max-width:599px) {
+ .ams-shell .ams-task-compact-list,.ams-shell .ams-task-project-records,.ams-shell .ams-task-blocker-grid { grid-template-columns:minmax(0,1fr); }
+ .ams-shell .ams-task-project-queue > summary { flex-wrap:wrap; }
+ .ams-shell .ams-task-project-counts { width:100%; }
+ .ams-shell .ams-task-project-queues,.ams-shell .ams-task-blocked-work { padding-inline:12px; }
+ .ams-shell .ams-task-compact-list { padding-inline:12px; }
+}
+@media(prefers-reduced-motion:reduce) { .ams-shell .ams-task-project-queue > summary > svg { transition:none; } }
