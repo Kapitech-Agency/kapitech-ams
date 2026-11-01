@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
@@ -12,12 +13,13 @@ const compiled = { exports: {} as any };
 const entry = `export { AdminInbox } from './src/pages/admin/AdminInbox';
 export { MessageWorkspace } from './src/components/admin/inbox/MessageWorkspace';
 export { CannedResponsesModal } from './src/components/admin/inbox/CannedResponsesModal';
+export { getInboxResponseTemplates } from './src/components/admin/inbox/responseTemplates';
 export { LanguageProvider } from './src/lib/LanguageContext';
 export { ReportingPeriodProvider } from './src/lib/ReportingPeriodContext';
 export { AdminSectionTabs, AdminTopbarTabs } from './src/components/admin/AdminModulePrimitives';`;
 const output = buildSync({ stdin: { contents: entry, resolveDir: root, loader: 'ts' }, write: false, bundle: true, packages: 'external', platform: 'node', format: 'cjs', loader: { '.css': 'empty' }, alias: { 'lucide-react': path.join(root, 'src/lib/untitled-ui-icon-bridge.tsx') }, define: { 'import.meta.env.PROD': 'true' } });
 new Function('require', 'module', 'exports', output.outputFiles[0].text)(createRequire(import.meta.url), compiled, compiled.exports);
-const { AdminInbox, MessageWorkspace, CannedResponsesModal, LanguageProvider, ReportingPeriodProvider, AdminSectionTabs, AdminTopbarTabs } = compiled.exports;
+const { AdminInbox, MessageWorkspace, CannedResponsesModal, getInboxResponseTemplates, LanguageProvider, ReportingPeriodProvider, AdminSectionTabs, AdminTopbarTabs } = compiled.exports;
 const { MemoryRouter } = createRequire(import.meta.url)('react-router-dom');
 const element = React.createElement;
 const renderWithStorage = (content: React.ReactElement) => {
@@ -120,5 +122,47 @@ test('Follow-ups defaults to Due Today without treating an unknown scope as real
     assert.match(html, /Follow-ups are not available yet/);
     assert.equal((navigation(html, 'Follow-up views').match(/aria-current="page"/g) || []).length, 1);
     assert.doesNotMatch(html, /Design preview|data-message-id=/);
+  }
+});
+
+test('Routing Rules is a navigable source-unavailable workspace, not a fabricated automation engine', () => {
+  const html = renderPage('/admin/inbox?view=routing-templates');
+  assert.equal((navigation(html, 'Routing and template sections').match(/aria-current="page"/g) || []).length, 1);
+  assert.match(html, /Automatic routing is not available yet/);
+  assert.match(html, /ams-dashboard-empty ams-dashboard-empty--compact/);
+  assert.match(html, /section=templates/);
+  assert.doesNotMatch(html, /Message categories|Search inbound messages|Enable rule|Run rule|Design preview|No active rules/);
+});
+
+test('Response Templates renders existing built-in responses and real source counts without live send actions', () => {
+  const html = renderPage('/admin/inbox?view=routing-templates&section=templates&template=discovery_call');
+  assert.match(html, /Existing built-in responses used in Messages/);
+  assert.match(html, /4 of 4/);
+  assert.match(html, /Discovery Call Invitation/);
+  assert.match(html, /Built-in · Read-only/);
+  assert.match(html, /\[Contact name\]/);
+  assert.match(html, /Copy response/);
+  assert.match(html, /Use from Messages/);
+  assert.match(html, /aria-label="Search response templates"/);
+  assert.match(html, /Filter templates by category/);
+  assert.doesNotMatch(html, /href="mailto:|href="https:\/\/wa.me|Design preview|Save template|Updated today/);
+});
+
+test('Routing template sections and unknown template keys resolve without imaginary records', () => {
+  const rules = renderPage('/admin/inbox?view=routing-templates&section=unknown');
+  assert.match(rules, /Automatic routing is not available yet/);
+  const library = renderPage('/admin/inbox?view=routing-templates&section=templates&template=unknown');
+  assert.match(library, /Select a response template/);
+  assert.doesNotMatch(library, /Response content|Copy response/);
+});
+
+test('shared built-in response content preserves the pre-extraction English and Indonesian output', () => {
+  // Baselines captured from the preceding main commit's actual CannedResponsesModal generator.
+  const hashes = { en: 'b86de7f6d6f883402086124b55bd3799ac60c3990039af2cfbefd5d52dbd8d74', id: '6e3e6734344a14f12a812fb23e28ecb604d05252e47babaad0ff29841e31a6e2' };
+  const context = { fullName: 'Test recipient', company: 'Test company', services: ['Design', 'Engineering'] };
+  for (const language of ['en', 'id'] as const) {
+    const rows = getInboxResponseTemplates(language, context).map(({ icon, ...item }: any) => item);
+    assert.equal(createHash('sha256').update(JSON.stringify(rows)).digest('hex'), hashes[language]);
+    assert.equal(rows.length, 4);
   }
 });

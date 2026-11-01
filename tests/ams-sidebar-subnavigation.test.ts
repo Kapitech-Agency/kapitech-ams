@@ -68,9 +68,8 @@ test('each module root tab follows the approved Master Structure Guide', () => {
 test('Inbox exposes only approved workspaces and keeps unavailable destinations non-interactive', async () => {
   const inbox = getAmsModuleSubnavigation('inbox', 'Admin');
   assert.deepEqual(inbox.map((item) => item.label), ['Messages', 'Follow-ups', 'Routing & Templates']);
-  for (const key of ['routing-templates']) {
-    assert.equal(inbox.find((item) => item.key === key)?.available, false, key + ' must remain target-only until implemented');
-  }
+  assert.equal(inbox.find((item) => item.key === 'routing-templates')?.to, '/admin/inbox?view=routing-templates');
+  assert.notEqual(inbox.find((item) => item.key === 'routing-templates')?.available, false);
   assert.equal(inbox.find((item) => item.key === 'messages')?.available, undefined);
   assert.equal(inbox.find((item) => item.key === 'follow-ups')?.to, '/admin/inbox?view=follow-ups');
   assert.notEqual(inbox.find((item) => item.key === 'follow-ups')?.available, false);
@@ -115,6 +114,10 @@ test('Inbox has no Overview subnavigation and unsupported views resolve to Messa
     'Follow-ups owns its presentation route without implying a connected reminder workflow');
 
   assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=follow-ups'), false);
+  const routing = inbox.find((item) => item.key === 'routing-templates')!;
+  assert.equal(isAmsModuleSubnavigationItemActive(routing, '/admin/inbox', '?view=routing-templates&section=templates'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(messages, '/admin/inbox', '?view=routing-templates'), false);
+  assert.equal(isAmsModuleSubnavigationItemActive(inbox.find((item) => item.key === 'follow-ups')!, '/admin/inbox', '?view=routing-templates'), false);
   const inboxSource = readInboxPresentation();
   assert.match(inboxSource, /type InboxTab = 'messages' \| 'client' \| 'unread' \| 'starred' \| 'client-requests' \| 'project-support'/);
   assert.match(inboxSource, /const \[searchParams, setSearchParams\] = useSearchParams\(\)/);

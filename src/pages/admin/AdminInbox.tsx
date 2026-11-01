@@ -28,10 +28,13 @@ import { DashboardControl } from '../../components/admin/DashboardControls';
 import type { InboxCategory } from '../../components/admin/inbox/inboxPresentation';
 import { MessageWorkspace } from '../../components/admin/inbox/MessageWorkspace';
 import { InboxFollowUps } from '../../components/admin/inbox/InboxFollowUps';
+import { InboxRoutingTemplates } from '../../components/admin/inbox/InboxRoutingTemplates';
 /** Route presentation before mounting message-only data hooks. */
 export const AdminInbox: React.FC = () => {
   const [params] = useSearchParams();
-  return params.get('view') === 'follow-ups' ? <InboxFollowUps /> : <AdminInboxMessages />;
+  if (params.get('view') === 'follow-ups') return <InboxFollowUps />;
+  if (params.get('view') === 'routing-templates') return <InboxRoutingTemplates />;
+  return <AdminInboxMessages />;
 };
 
 const AdminInboxMessages: React.FC = () => {

@@ -1,0 +1,45 @@
+/* Shared Overview controls, compact empty states and Inbox 5:7 register/reader. */
+.ams-routing-sections { flex-wrap: wrap; gap: 4px; }
+.ams-routing-source-label { display: inline-flex; padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius-badge); color: var(--muted); font-size: 12px; line-height: 16px; }
+.ams-routing-state { padding: 16px; }
+.ams-routing-category { flex: 0 1 auto; min-width: 0; }
+.ams-template-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
+.ams-template-workspace * { min-width: 0; }
+.ams-template-register, .ams-template-detail { align-self: start; overflow: hidden; }
+.ams-template-list { display: flex; flex-direction: column; gap: 4px; padding: 8px; }
+.ams-template-row { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px; text-align: left; border-radius: var(--radius-control); }
+.ams-template-row:hover { background: color-mix(in srgb, var(--text) 4%, transparent); }
+.ams-template-row[aria-pressed="true"] { background: color-mix(in srgb, var(--text) 6%, var(--panel)); box-shadow: inset 2px 0 var(--accent); }
+.ams-template-row-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 36px; height: 36px; border-radius: var(--radius-control); background: var(--bg); color: var(--muted); }
+.ams-template-row > span:last-child { display: flex; flex: 1; flex-direction: column; gap: 4px; }
+.ams-template-row strong { font-size: 13px; line-height: 18px; font-weight: 600; overflow-wrap: anywhere; }
+.ams-template-category, .ams-template-excerpt { color: var(--muted); font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
+.ams-template-excerpt { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ams-template-detail { display: none; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--panel); }
+.ams-template-workspace.has-selection > .ams-template-register { display: none; }
+.ams-template-workspace.has-selection > .ams-template-detail { display: block; }
+.ams-template-detail-header, .ams-template-detail-body, .ams-template-detail-footer { padding: 16px; }
+.ams-template-detail-header, .ams-template-detail-body, .ams-template-detail-footer { display: flex; flex-direction: column; gap: 12px; }
+.ams-template-detail-header { border-bottom: 1px solid var(--line); }
+.ams-template-detail-header h2 { font-size: 20px; line-height: 28px; font-weight: 600; overflow-wrap: anywhere; }
+.ams-template-detail-header > p, .ams-template-detail-footer > p { font-size: 12px; line-height: 18px; color: var(--muted); }
+.ams-template-detail-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.ams-template-detail-body { gap: 24px; }
+.ams-template-detail-body dl { display: flex; flex-direction: column; gap: 16px; }
+.ams-template-detail-body dt { margin-bottom: 4px; font-size: 12px; line-height: 18px; color: var(--muted); }
+.ams-template-detail-body dd, .ams-template-body { font-size: 13px; line-height: 24px; overflow-wrap: anywhere; }
+.ams-template-detail-body h3 { margin-bottom: 12px; font-size: 14px; line-height: 20px; font-weight: 600; }
+.ams-template-body { white-space: pre-wrap; user-select: text; }
+.ams-template-detail-footer { border-top: 1px solid var(--line); }
+.ams-template-workspace :is(button, a):focus-visible, .ams-template-detail h2:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (min-width: 1100px) {
+  .ams-template-workspace { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .ams-template-register, .ams-template-workspace.has-selection > .ams-template-register { grid-column: span 5; display: block; }
+  .ams-template-detail, .ams-template-workspace.has-selection > .ams-template-detail { grid-column: span 7; display: block; }
+}
+@media (max-width: 599px) {
+  .ams-routing-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ams-routing-sections > a { min-height: 40px; }
+  .ams-routing-category { flex-basis: 100%; }
+  .ams-routing-category > div { width: 100%; }
+}

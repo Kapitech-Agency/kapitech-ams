@@ -634,7 +634,7 @@ Show service demand or campaign outcomes only when sourced. Include objective, p
 
 ## 5.1 Purpose and workspaces
 
-Inbox manages incoming communication requiring triage, assignment, response, follow-up, or resolution. Messages is the default landing. Follow-ups and Routing & Templates remain separate workspaces only when their canonical source and workflow are available. Do not expose a separate Overview tab.
+Inbox manages incoming communication requiring triage, assignment, response, follow-up, or resolution. Messages is the default landing. Follow-ups and Routing & Templates are separate presentation workspaces per the November 2026 frontend instructions; operational scheduling and automatic routing still require canonical sources/workflows. Do not expose a separate Overview tab.
 
 ## 5.2 Messages workspace (default landing)
 
@@ -688,6 +688,8 @@ Each record shows:
 Per the user’s 1 November 2026 instruction to continue the frontend design of Follow-ups, its dedicated presentation route may be navigable with Due Today/Upcoming/Overdue/Completed controls and the specified register anatomy. When the canonical reminder/due-at source or workflow is absent, mark the queue unavailable using the approved Overview empty state. Do not infer due dates from message age, render mock records/counts, expose fake completion/snooze, or persist local-only follow-ups. Operational scheduling remains unavailable until its canonical contract is authorized and implemented.
 
 ## 5.4 Routing & Templates
+
+1 November 2026 user-authorized frontend scope: this workspace is navigable with Routing Rules / Response Templates sections. Rules show the approved Overview unavailable state until a canonical source exists. Templates reuse the four existing built-in response generators in a searchable/category-filtered, read-only library/detail view; their Messages personalization/send actions remain in Messages. Do not invent rule execution, template CRUD/versioning, contact records or provider delivery.
 
 ### Routing Rules
 Each rule contains its name, enabled state, supported conditions, destination/owner, category/priority behavior, rule order, conflicts, updated context if recorded, and supported preview/test/edit/disable actions.

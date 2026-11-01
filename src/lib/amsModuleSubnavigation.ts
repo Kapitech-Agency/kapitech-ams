@@ -40,7 +40,7 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
   inbox: [
     { key: 'messages', label: 'Messages', to: '/admin/inbox?view=messages', slug: 'inbox-workspace-messages' },
     { key: 'follow-ups', label: 'Follow-ups', to: '/admin/inbox?view=follow-ups', slug: 'inbox-workspace-follow-ups' },
-    { key: 'routing-templates', label: 'Routing & Templates', to: '/admin/inbox', available: false },
+    { key: 'routing-templates', label: 'Routing & Templates', to: '/admin/inbox?view=routing-templates', slug: 'inbox-workspace-routing-templates' },
   ],
   crm: [],
   projects: [
@@ -136,9 +136,10 @@ export function isAmsModuleSubnavigationItemActive(
 
   if (path === '/admin/finance/quotations') return itemKey === 'receivables';
   if (path === '/admin/inbox') {
-    // Follow-ups has a dedicated presentation route; categories and saved views
-    // remain in Messages. This does not imply a connected reminder workflow.
-    return itemKey === (params.get('view') === 'follow-ups' ? 'follow-ups' : 'messages');
+    // Follow-ups and Routing & Templates have dedicated presentation routes.
+    // This does not imply connected reminder or automatic-routing workflows.
+    const view = params.get('view');
+    return itemKey === (view === 'follow-ups' || view === 'routing-templates' ? view : 'messages');
   }
   if (path === '/admin/documents') return itemKey === 'library';
   if (path === '/admin/finance') {

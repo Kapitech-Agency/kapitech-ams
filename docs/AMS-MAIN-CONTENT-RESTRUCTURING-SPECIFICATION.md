@@ -213,6 +213,8 @@ Views: Due Today, Upcoming, Overdue and Completed. The frontend presentation is 
 
 ### Routing & Templates
 
+User-authorized frontend presentation (1 November 2026): `/admin/inbox?view=routing-templates`, internal `section=rules|templates`, optional existing `template` key. Use the existing built-in responses from Messages as the single shared content source, clearly read-only; show unmerged contact/company/service labels in the library and personalize only from actual Messages. No fake contacts, edited dates, versions or template persistence. Routing automation remains unavailable without its canonical source.
+
 Use an internal section switcher:
 - Routing Rules: actual rule name/state, supported conditions, destination/owner/category, priority/order, conflicts and allowed preview/test/edit/disable actions.
 - Response Templates: identity, channel/context, supported variables, version/update, preview and allowed edit/retire actions.

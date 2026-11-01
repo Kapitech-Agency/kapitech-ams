@@ -1,5 +1,15 @@
 # AMS Execution Checkpoint
 
+## Inbox Routing & Templates frontend workspace — 1 November 2026
+
+- Latest user scope: continue Inbox with Routing & Templates. Preserve UI/presentation/routing-only boundary, approved Overview controls/empty states, no Design preview/sample records, no backend/business-rule changes; push completed tasks to main.
+- Baseline main `412383d2d49f07d0334dc58d891f42a122027154`; AMS CI 41253360584 and Quality Gate 41253360480 verified green. No canonical routing-rule or template-CRUD API was found. Four built-in response generators already exist in Messages; these are real source content, not seeded records.
+- Add dedicated `?view=routing-templates` presentation and exclusive module active state. Internal `section=rules|templates`; optional `template=<existing-key>` selects content. Invalid section/key and retired preview queries normalize safely. Other module routes, permissions and message data hooks remain unchanged; the new workspace mounts without message-only data hooks.
+- Routing Rules uses the shared Overview compact unavailable state and a path to current Messages; no pretend rules/counts, enable/run/edit actions or routing engine. Response Templates exposes the existing four built-in responses through search/category/reset, a 5:7 library/detail layout, mobile detail/back flow, subject/channel/personalization context, source honesty (Built-in / Read-only), Copy response and Use from Messages. No live send links, fake versions/update dates or editing controls. Existing placeholders are labelled; no fake contact records.
+- Extract the original response content into `responseTemplates.ts`, shared with CannedResponsesModal. Original template keys, titles, categories, subjects, bodies and personalized modal actions are preserved. Regression SHA-256 baselines verify identical pre-extraction output in English/Indonesian for the recorded test context; no new merge syntax or template store.
+- Verification: TypeScript and production build passed; full suite 942 tests / 922 passed / zero failed / 20 conditional PostgreSQL skips. Browser checks on actual components/local isolated harness cover rule/template switching, selecting content, successful clipboard copy, no-match/reset, category filtering, mobile back/list, and overflow at 320/390/599/600/899/1100/1280px. Authenticated full-shell/provider delivery and real data writes are not verified or claimed. Exact-SHA remote CI follows push.
+- Next gate: user visual acceptance. Persisted rule management, template CRUD/versioning and automatic assignment require a separately authorized backend stage.
+
 ## Inbox Follow-ups frontend workspace — 1 November 2026
 
 - User accepted the preceding direction and requested Follow-ups next. Keep existing UI-only/routing scope, approved Overview components, no Design preview/sample records, no backend/business logic. Standing instruction requires push to main.
