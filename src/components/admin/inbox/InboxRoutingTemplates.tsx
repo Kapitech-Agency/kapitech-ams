@@ -70,15 +70,15 @@ export const InboxRoutingTemplates: React.FC = () => {
   };
 
   return <AdminPageShell featureSlug="inbox-routing-templates-workspace" className="ams-inbox-message-redesign ams-inbox-routing-templates">
-    <AdminModuleHeader slug="inbox-routing-templates-header" title="Routing & Templates"
+    <AdminModuleHeader slug="inbox-routing-templates-header" title="Inbox"
       description="Keep incoming requests organized and agency responses consistent."
       actions={<DashboardControl to="/admin/inbox?view=messages" icon={<MessageSquare size={14} />}>Open messages</DashboardControl>}
     />
-    <AdminSectionTabs ariaLabel="Routing and template sections" activeKey={section} className="ams-routing-sections" items={[
+    <AdminSectionTabs ariaLabel="Routing and template sections" activeKey={section} className="ams-inbox-workspace-tabs ams-routing-sections" items={[
       { key: 'rules', label: 'Routing Rules', to: '/admin/inbox?view=routing-templates&section=rules' },
       { key: 'templates', label: 'Response Templates', to: '/admin/inbox?view=routing-templates&section=templates' },
     ]} />
-    {section === 'rules' ? <AdminPanel slug="inbox-routing-rules-register" title="Routing Rules"
+    {section === 'rules' ? <AdminPanel slug="inbox-routing-rules-register" className="ams-inbox-panel" title="Routing Rules"
       description="Conditions, ownership and priority for incoming conversations."
       actions={<span className="ams-routing-source-label">Unavailable</span>} bodyClassName="ams-routing-state" >
       <DashboardEmptyState eyebrow="INCOMING MESSAGE ROUTING" icon={<SlidersHorizontal size={17} aria-hidden="true" />}
@@ -100,7 +100,7 @@ export const InboxRoutingTemplates: React.FC = () => {
         </div>
       </section>
       <div ref={root} className={'ams-template-workspace' + (selected ? ' has-selection' : '')}>
-        <AdminPanel slug="inbox-response-template-library" className="ams-template-register" title="Response Templates"
+        <AdminPanel slug="inbox-response-template-library" className="ams-inbox-panel ams-template-register" title="Response Templates"
           description="Existing built-in responses used in Messages." actions={<span className="ams-routing-source-label">{filtered.length} of {templates.length}</span>}>
           {filtered.length ? <div className="ams-template-list">{filtered.map((item) => {
             const Icon = item.icon;

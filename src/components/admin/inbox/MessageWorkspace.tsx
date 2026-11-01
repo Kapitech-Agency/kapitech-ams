@@ -114,8 +114,8 @@ export const MessageWorkspace: React.FC<Props> = (p) => {
     </section>);
 
   return <div ref={workspace} className={'ams-message-workspace' + (selected ? ' has-selection' : '') + (p.table ? ' is-table' : '') + (!p.loading && p.items.length === 0 ? ' has-empty-state' : '')} data-ams-feature-slug="message-workspace">
-    <section ref={register} className="ams-message-register" aria-label={t('Message register', 'Daftar pesan')}>
-      <header className="ams-message-panel-heading"><div className="ams-message-queue-title"><h2>{content.title}</h2>{!p.loading && !p.unavailable && !p.sourceUnavailable && <span className="ams-message-count">{p.items.length}</span>}</div><span>{!p.sourceUnavailable && t('Newest first', 'Terbaru dahulu')}</span></header>
+    <section ref={register} className="ams-inbox-panel ams-message-register" aria-label={t('Message register', 'Daftar pesan')}>
+      <header className="ams-inbox-panel-header ams-message-panel-heading"><div className="ams-message-queue-title"><h2>{content.title}</h2>{!p.loading && !p.unavailable && !p.sourceUnavailable && <span className="ams-message-count">{p.items.length}</span>}</div><span>{!p.sourceUnavailable && t('Newest first', 'Terbaru dahulu')}</span></header>
       {p.loading ? <div role="status" aria-label={t('Loading messages', 'Memuat pesan')} className="ams-message-loading">{[0, 1, 2, 3, 4].map((row) => <div key={row} className="ams-message-loading-row"><Skeleton className="h-4 w-1/2" /><Skeleton className="h-3 w-3/4" /><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-1/3" /></div>)}</div>
         : !p.items.length ? state : p.table ? <div className="ams-table-scroll ams-message-table-scroll" role="region" tabIndex={0} aria-label={t('Scrollable message table', 'Tabel pesan dapat digeser')}>
         <table data-ams-feature-slug="inbox-leads-directory" className="ams-table ams-message-table">

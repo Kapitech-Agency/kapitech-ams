@@ -2,12 +2,9 @@
 .ams-inbox-follow-ups-tabs { flex-wrap: wrap; gap: 4px; }
 .ams-inbox-follow-ups-register { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--panel); }
 .ams-inbox-follow-ups-register-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px; }
-.ams-inbox-follow-ups-register-header h2 { font-size: 14px; line-height: 20px; font-weight: 600; }
 .ams-inbox-follow-ups-register-header p { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 18px; }
 .ams-inbox-follow-ups-availability { padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius-badge); color: var(--muted); font-size: 12px; line-height: 16px; }
-.ams-inbox-follow-ups-columns { display: grid; grid-template-columns: 2fr 2fr 2fr 2fr 2fr 1fr 1fr; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 18px; }
 .ams-inbox-follow-ups-state { padding: 16px; }
-@media (max-width: 899px) { .ams-inbox-follow-ups-columns { display: none; } }
 @media (max-width: 599px) {
   .ams-inbox-follow-ups-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ams-inbox-follow-ups-tabs > a { min-height: 40px; }

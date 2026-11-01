@@ -394,7 +394,7 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="Module navigation"
                   activeKey={activeWorkspaceTab?.key || ''}
                   items={workspaceTabItems}
-                  className="min-w-0 flex-1"
+                  className={workspaceNavigationModule === 'inbox' ? 'min-w-0 flex-1 ams-inbox-module-tabs' : 'min-w-0 flex-1'}
                 />
               )}
               <Button
@@ -461,7 +461,7 @@ export const AdminLayout: React.FC = () => {
                 ariaLabel="Module navigation"
                 activeKey={activeWorkspaceTab?.key || ''}
                 items={workspaceTabItems}
-                className="w-full py-2"
+                className={workspaceNavigationModule === 'inbox' ? 'w-full py-2 ams-inbox-module-tabs' : 'w-full py-2'}
               />
             </div>
           </div>

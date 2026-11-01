@@ -7,6 +7,7 @@ import { buildSync } from 'esbuild';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { type InboxCategory } from '../src/components/admin/inbox/inboxPresentation';
+import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive } from '../src/lib/amsModuleSubnavigation';
 
 const root = process.cwd();
 const compiled = { exports: {} as any };
@@ -110,7 +111,7 @@ test('Follow-ups renders four distinct navigable views with Overview states and 
     assert.match(html, /ams-dashboard-empty ams-dashboard-empty--compact/);
     assert.match(html, /Follow-ups are not available yet/);
     assert.match(html, /href="\/admin\/inbox\?view=messages"/);
-    for (const column of ['Follow-up', 'Conversation', 'Client / contact', 'Owner / PIC', 'Due date', 'Status', 'Next action']) assert.ok(html.includes(column));
+    assert.doesNotMatch(html, /ams-inbox-follow-ups-columns/, 'Unavailable sources use the compact Overview state without decorative empty column headers.');
     assert.doesNotMatch(html, /Message categories|Search inbound messages|data-message-id=|ams-message-count|Design preview|No follow-ups due|Mark complete|Snooze/);
   }
 });
@@ -165,4 +166,37 @@ test('shared built-in response content preserves the pre-extraction English and 
     assert.equal(createHash('sha256').update(JSON.stringify(rows)).digest('hex'), hashes[language]);
     assert.equal(rows.length, 4);
   }
+});
+
+test('all Inbox module routes expose exactly one current workspace on desktop and mobile navigation', () => {
+  const items = getAmsModuleSubnavigation('inbox', 'Admin');
+  const cases = [
+    ['?view=messages', 'messages'], ['?view=client&saved=starred&layout=table', 'messages'],
+    ['?view=client-requests', 'messages'], ['?view=project-support', 'messages'],
+    ...['today', 'upcoming', 'overdue', 'completed'].map((scope) => ['?view=follow-ups&followup=' + scope, 'follow-ups']),
+    ['?view=routing-templates&section=rules', 'routing-templates'],
+    ['?view=routing-templates&section=templates&template=discovery_call', 'routing-templates'],
+  ];
+  for (const [search, expected] of cases) {
+    const current = items.filter((item) => isAmsModuleSubnavigationItemActive(item, '/admin/inbox', search));
+    assert.deepEqual(current.map((item) => item.key), [expected]);
+    for (const Tabs of [AdminTopbarTabs, AdminSectionTabs]) {
+      const html = renderWithStorage(element(MemoryRouter, { initialEntries: ['/admin/inbox' + search] }, element(Tabs, { items, activeKey: current[0].key, ariaLabel: 'Module navigation', className: 'ams-inbox-module-tabs' })));
+      assert.equal((html.match(/aria-current="page"/g) || []).length, 1);
+      assert.match(html, /ams-inbox-module-tabs/);
+    }
+  }
+});
+
+test('Messages, Follow-ups and Routing share module heading and primary tab styling without changing filters into tabs', () => {
+  const cases = [['?view=messages', 'Message categories'], ['?view=follow-ups&followup=upcoming', 'Follow-up views'], ['?view=routing-templates&section=templates', 'Routing and template sections']];
+  for (const [search, label] of cases) {
+    const html = renderPage('/admin/inbox' + search);
+    assert.equal((html.match(/<h1\b/g) || []).length, 1);
+    assert.match(html, /<h1\b[^>]*>[\s\S]*?>Inbox<\/span>/);
+    assert.match(html, /ams-inbox-workspace-tabs/);
+    assert.equal((navigation(html, label).match(/aria-current="page"/g) || []).length, 1);
+  }
+  const messages = renderPage('/admin/inbox?view=messages');
+  assert.doesNotMatch(navigation(messages, 'Message saved views'), /ams-inbox-workspace-tabs/);
 });

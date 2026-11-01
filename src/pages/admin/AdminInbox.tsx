@@ -29,6 +29,7 @@ import type { InboxCategory } from '../../components/admin/inbox/inboxPresentati
 import { MessageWorkspace } from '../../components/admin/inbox/MessageWorkspace';
 import { InboxFollowUps } from '../../components/admin/inbox/InboxFollowUps';
 import { InboxRoutingTemplates } from '../../components/admin/inbox/InboxRoutingTemplates';
+import '../../components/admin/inbox/InboxWorkspace.css';
 /** Route presentation before mounting message-only data hooks. */
 export const AdminInbox: React.FC = () => {
   const [params] = useSearchParams();

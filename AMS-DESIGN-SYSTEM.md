@@ -604,3 +604,10 @@ Inbox Messages review variant (31 October 2026): reuse Dashboard Overview's shar
 ## Inbox uses the approved Overview empty state
 
 Inbox empty, filtered-empty, unavailable and unselected-reader presentation uses the shared `DashboardEmptyState` extracted from Overview with identical compact markup/defaults. Apply the approved final Overview icon, dashed border, quiet surface, typography and action geometry; do not create a large centered hero or reader onboarding checklist. Use a compact natural-height register when empty and hide redundant reader content. Keep empty versus unavailable source meanings and permitted Retry/Reset/navigation actions distinct. Dashboard's approved stylesheet and rendered appearance remain unchanged by the extraction. This 1 November 2026 user correction supersedes earlier Inbox empty-state examples.
+
+
+## Inbox-wide Overview conformance — 1 November 2026
+
+Messages, Follow-ups and Routing & Templates use one `InboxWorkspace.css` presentation contract. Inbox-only topbar/mobile module navigation and primary internal view links use solid crimson with white text, the approved Overview control type/radius/computed padding, and stable selected hover. Scope via `ams-inbox-module-tabs` / `ams-inbox-workspace-tabs`; do not let generic tinted section-tab styles override them. Saved filters and Review/Table remain neutral grey, using the shared selected-filter token and compact control size. Each navigation group has one explicit current link; do not use pathname-only matching for query views.
+
+Keep the module heading Inbox in all three workspaces. Reuse Overview's module-title and panel-header typography, subdued metadata and header/body boundaries; keep canonical Inbox panel geometry and task-specific content. Search/action rows do not gain a separate decorative enclosing card. A source-unavailable queue uses the compact shared Overview state rather than decorative empty columns. Standard navigation targets are 36px desktop and 40px on touch layouts, preserving the global hit-target contract. This supersedes per-view tinted active styles and earlier Follow-up placeholder-column examples.

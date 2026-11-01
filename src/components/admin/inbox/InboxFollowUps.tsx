@@ -28,21 +28,18 @@ export const InboxFollowUps: React.FC = () => {
   }, [params, requested, setParams]);
 
   return <AdminPageShell featureSlug="inbox-follow-ups-workspace" className="ams-inbox-message-redesign ams-inbox-follow-ups">
-    <AdminModuleHeader slug="inbox-follow-ups-header" title="Follow-ups"
+    <AdminModuleHeader slug="inbox-follow-ups-header" title="Inbox"
       description="Keep client conversations, creative feedback and technical next steps on track."
       actions={<DashboardControl to="/admin/inbox?view=messages" icon={<MessageSquare size={14} />}>Open messages</DashboardControl>}
     />
-    <AdminSectionTabs ariaLabel="Follow-up views" activeKey={view.key} className="ams-inbox-follow-ups-tabs" items={FOLLOW_UP_VIEWS.map((item) => ({
+    <AdminSectionTabs ariaLabel="Follow-up views" activeKey={view.key} className="ams-inbox-workspace-tabs ams-inbox-follow-ups-tabs" items={FOLLOW_UP_VIEWS.map((item) => ({
       key: item.key, label: item.label, to: `/admin/inbox?view=follow-ups&followup=${item.key}`,
     }))} />
-    <section className="ams-inbox-follow-ups-register" data-ams-slug="inbox-follow-ups-register" aria-labelledby="inbox-follow-ups-register-title" data-source-status="unavailable">
-      <header className="ams-inbox-follow-ups-register-header">
+    <section className="ams-inbox-panel ams-inbox-follow-ups-register" data-ams-slug="inbox-follow-ups-register" aria-labelledby="inbox-follow-ups-register-title" data-source-status="unavailable">
+      <header className="ams-inbox-panel-header ams-inbox-follow-ups-register-header">
         <div><h2 id="inbox-follow-ups-register-title">{view.label}</h2><p>{view.description}</p></div>
         <span className="ams-inbox-follow-ups-availability">Unavailable</span>
       </header>
-      <div className="ams-inbox-follow-ups-columns" aria-hidden="true">
-        <span>Follow-up</span><span>Conversation</span><span>Client / contact</span><span>Owner / PIC</span><span>Due date</span><span>Status</span><span>Next action</span>
-      </div>
       <div className="ams-inbox-follow-ups-state">
         <DashboardEmptyState eyebrow="FOLLOW-UP QUEUE" icon={<CalendarDays size={17} aria-hidden="true" />}
           title="Follow-ups are not available yet"

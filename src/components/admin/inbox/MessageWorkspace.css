@@ -1,10 +1,6 @@
 /* Inbox uses Overview's shared controls and quiet hierarchy; canonical 12px panels. */
-.ams-shell .ams-inbox-message-redesign > .ams-page-header { padding-bottom: 8px; border-bottom: 0; }
-.ams-shell .ams-inbox-message-redesign > .ams-page-header > div:first-child { flex: 1 1 auto; }
 .ams-inbox2-navigation { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .ams-inbox2-navigation .ams-topnav-scroll { flex-wrap: wrap; overflow: visible; gap: 4px; }
-.ams-shell .ams-inbox2-categories > a { min-height: 36px; padding: 8px 12px; font-size: 12px; border-radius: var(--radius-control); }
-.ams-shell .ams-inbox2-categories > a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: white; }
 .ams-inbox2-saved { padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-control); }
 .ams-inbox2-saved > a { font-size: 12px; }
 .ams-inbox2-toolbar { display: flex; flex-direction: column; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--panel); min-width: 0; }
