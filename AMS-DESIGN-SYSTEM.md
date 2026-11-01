@@ -35,6 +35,8 @@ Verified from `README.md` and `package.json`:
 
 **Reconciled against the current repository:** token values live in `src/index.css`; shared admin primitives live in `src/components/admin/AdminModulePrimitives.tsx`; reusable UI controls live in `src/components/ui`. Extend these implementations instead of duplicating them. If a token or component conflicts with this document, update the document and implementation together.
 
+**Shared component usage is mandatory (user instruction, 1 November 2026).** Match the full rendered contract of the approved Dashboard Overview, including component props and required shared context/classes. Card header actions use `DashboardControl` (`variant="action"`, `size="compact"`, source-appropriate icon and `ams-dashboard-card-action`) within `ams-overview-panel`. Keep geometry and interaction styling in the existing shared stylesheet; do not reproduce them in module CSS. Reusing the component name with incomplete context is not sufficient.
+
 ---
 
 ## 1. Principles

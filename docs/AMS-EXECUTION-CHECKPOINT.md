@@ -1,5 +1,12 @@
 # AMS Execution Checkpoint
 
+## Projects shared card actions — 1 November 2026
+
+- User rejected the View all / Open milestones buttons and explicitly requires existing shared UI/components for end-to-end consistency. Baseline main `b67471ba6d0a95ea33b6378a05ece7f1d27e396d`; AMS CI 41302024078 and Quality Gate 41302024071 verified green.
+- Root cause: DashboardControl was used without the approved `ams-dashboard-card-action` and `ams-overview-panel` context, so generic styling applied. Reuse the complete existing shared contract, add the same registry/calendar icon treatment, retain trailing arrows and existing routing handlers. No custom button CSS or new component introduced. Canonical shared card-action line-height is reconciled to the actual approved render (14px).
+- Browser comparison against the approved Dashboard Open planning control: both Projects actions now match 32px height, 10px font, 14px line-height, 4px symmetric padding, 8px radius, 6px gap, border/surface/text colors, leading icon and trailing arrow. View all still opens `projects=all`; Open milestones opens Planning & Delivery with `planningView=milestones`. Local evidence only, not production deployment proof.
+- Record the mandatory full shared-component contract in AGENTS and the Design System. Preserve equal card heights, filters, data, permissions, backend and business logic. Full suite 950 tests / 930 passed / zero failures / 20 conditional PostgreSQL skips; TypeScript/build passed. Verify final build and exact-SHA workflows after push before delivery.
+
 ## Projects Overview corrections — 1 November 2026
 
 - Latest user rejected unequal card heights, module entry landing on Registry, and the prior composition. Baseline main `585fb85e83a3645f5ea37d5ebd37dc28648ec281`; AMS CI 41300387867 and Quality Gate 41300387839 verified green before this slice.

@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   BarChart3,
   Briefcase,
+  FolderKanban,
   Clock,
   CheckCircle2,
   CircleDollarSign,
@@ -2199,7 +2200,7 @@ export const AdminProjects: React.FC = () => {
       {view === 'overview' && (
         <div className="space-y-4" data-ams-feature-slug="projects-overview-workspace" data-ams-slug="projects-overview-workspace">
           <section className="ams-projects-overview-grid grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" data-ams-feature-slug="projects-overview-primary" aria-label="Project delivery and attention">
-            <AdminPanel headerDivider={false} className="ams-projects-overview-panel" title="Delivery exceptions" bodyClassName="ams-projects-overview-body"
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-overview-panel" title="Delivery exceptions" bodyClassName="ams-projects-overview-body"
               actions={<span className="ams-projects-overview-count">{serverMode ? overviewAttentionProjects.length : '—'} to review</span>}>
               {loading && !serverMode ? (
                 <div className="ams-projects-overview-state" role="status" aria-label="Loading project exceptions">
@@ -2229,8 +2230,8 @@ export const AdminProjects: React.FC = () => {
               )}
             </AdminPanel>
 
-            <AdminPanel headerDivider={false} className="ams-projects-overview-panel" title="Project status distribution" bodyClassName="ams-projects-overview-body"
-              actions={<DashboardControl size="compact" onClick={() => openView('all')} showArrow ariaLabel="View all project records">View all</DashboardControl>}>
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-overview-panel" title="Project status distribution" bodyClassName="ams-projects-overview-body"
+              actions={<DashboardControl variant="action" size="compact" icon={<FolderKanban size={14} />} className="ams-dashboard-card-action" onClick={() => openView('all')} showArrow ariaLabel="View all project records">View all</DashboardControl>}>
               {loading && !serverMode ? (
                 <div className="ams-projects-overview-state" role="status" aria-label="Loading project statuses">{[1, 2, 3, 4].map(item => <div key={item} className="h-10 animate-pulse rounded-control bg-bg" />)}</div>
               ) : !serverMode ? (
@@ -2253,8 +2254,8 @@ export const AdminProjects: React.FC = () => {
               )}
             </AdminPanel>
 
-            <AdminPanel headerDivider={false} className="ams-projects-overview-panel" title="Overdue milestones" bodyClassName="ams-projects-overview-body"
-              actions={<DashboardControl size="compact" to={planningWorksheetHref('milestones')}>Open milestones</DashboardControl>}>
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-overview-panel" title="Overdue milestones" bodyClassName="ams-projects-overview-body"
+              actions={<DashboardControl variant="action" size="compact" icon={<CalendarDays size={14} />} className="ams-dashboard-card-action" to={planningWorksheetHref('milestones')}>Open milestones</DashboardControl>}>
               {loading && !serverMode ? (
                 <div className="ams-projects-overview-state" role="status" aria-label="Loading milestones">{[1, 2, 3].map(item => <div key={item} className="h-14 animate-pulse rounded-control bg-bg" />)}</div>
               ) : !serverMode ? (
@@ -2276,7 +2277,7 @@ export const AdminProjects: React.FC = () => {
               )}
             </AdminPanel>
 
-            <AdminPanel headerDivider={false} className="ams-projects-overview-panel" title="Tasks in review" bodyClassName="ams-projects-overview-body"
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel ams-overview-panel" title="Tasks in review" bodyClassName="ams-projects-overview-body"
               actions={<span className="ams-projects-overview-count">{serverMode ? overviewReviewTasks.length : '—'} tasks</span>}>
               {loading && !serverMode ? (
                 <div className="ams-projects-overview-state" role="status" aria-label="Loading review tasks">{[1, 2, 3].map(item => <div key={item} className="h-14 animate-pulse rounded-control bg-bg" />)}</div>
