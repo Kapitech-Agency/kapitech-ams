@@ -1,13 +1,13 @@
 /* Projects consumes Dashboard Overview geometry. List heights remain equal on desktop. */
-.ams-shell .ams-projects-overview .ams-page-header { align-items:center; border-bottom:0; padding-bottom:8px; }
-.ams-shell .ams-projects-overview .ams-page-header > div:first-child { flex:1; }
-.ams-shell .ams-projects-overview .ams-page-header h1 { font-size:26px; line-height:32px; font-weight:650; letter-spacing:-.035em; }
-.ams-shell .ams-projects-overview .ams-page-header > div:first-child > p { font-size:12px; line-height:18px; max-width:66ch; }
+.ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header { align-items:center; border-bottom:0; padding-bottom:8px; }
+.ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header > div:first-child { flex:1; }
+.ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header h1 { font-size:26px; line-height:32px; font-weight:650; letter-spacing:-.035em; }
+.ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header > div:first-child > p { font-size:12px; line-height:18px; max-width:66ch; }
 .ams-shell .ams-projects-overview-grid { align-items:stretch; }
 .ams-shell .ams-projects-overview-panel { display:flex; flex-direction:column; min-width:0; height:100%; border-radius:12px; overflow:hidden; box-shadow:none; }
-.ams-shell .ams-projects-overview-panel > div:first-child { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; flex-shrink:0; padding:13px 16px; min-height:58px; border-bottom:0; }
-.ams-shell .ams-projects-overview-panel > div:first-child > div:last-child { width:auto; display:flex; align-items:center; }
-.ams-shell .ams-projects-overview-panel h2 { margin:0; font-size:14px; line-height:19px; font-weight:650; letter-spacing:-.015em; }
+.ams-shell :is(.ams-projects-overview-panel, .ams-registry-panel) > div:first-child { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; flex-shrink:0; padding:13px 16px; min-height:58px; border-bottom:0; }
+.ams-shell :is(.ams-projects-overview-panel, .ams-registry-panel) > div:first-child > div:last-child:not(:first-child) { width:auto; display:flex; align-items:center; }
+.ams-shell :is(.ams-projects-overview-panel, .ams-registry-panel) h2 { margin:0; font-size:14px; line-height:19px; font-weight:650; letter-spacing:-.015em; }
 .ams-shell .ams-projects-overview-body { display:flex; flex-direction:column; flex:1; min-height:0; }
 .ams-shell .ams-projects-overview-state { display:grid; gap:8px; padding:4px 16px 16px; }
 .ams-shell .ams-projects-overview-count { color:var(--muted); font-size:11px; line-height:16px; white-space:nowrap; }
@@ -53,8 +53,8 @@
   .ams-shell .ams-projects-overview-list { max-height:360px; }
 }
 @media(max-width:639px) {
-  .ams-shell .ams-projects-overview .ams-page-header { align-items:stretch; }
-  .ams-shell .ams-projects-overview-panel > div:first-child { padding:12px; }
+  .ams-shell :is(.ams-projects-overview, .ams-projects-registry) .ams-page-header { align-items:stretch; }
+  .ams-shell :is(.ams-projects-overview-panel, .ams-registry-panel) > div:first-child { padding:12px; }
   .ams-shell .ams-projects-overview-state { padding:4px 12px 12px; }
   .ams-shell .ams-projects-overview-record { gap:8px; }
 }

@@ -15,8 +15,8 @@ test('Projects module normalizes URL view and keeps layout in sync with browser 
   assert.ok(source.includes("requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'"));
   assert.ok(source.includes("if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning-delivery', 'resources', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView))"));
   assert.ok(source.includes("const requestedLayout = searchParams.get('layout')"));
-  assert.ok(source.includes("requestedLayout === 'table' ? 'table' : requestedLayout === 'timeline' ? 'timeline' : 'board'"));
-  assert.ok(source.includes("searchParams.get('layout') === 'table' ? 'table' : searchParams.get('layout') === 'timeline' ? 'timeline' : 'board'"));
+  assert.ok(source.includes("requestedLayout === 'board' ? 'board' : requestedLayout === 'timeline' ? 'timeline' : 'table'"));
+  assert.ok(source.includes("searchParams.get('layout') === 'board' ? 'board' : searchParams.get('layout') === 'timeline' ? 'timeline' : 'table'"));
 });
 
 test('Project date defaults use local calendar and malformed numbers normalize safely', async () => {
@@ -147,7 +147,7 @@ test('Project overview metrics and sprint project selection describe their actua
   assert.ok(source.includes("value: serverMode ? metrics.averageProgress + '%' : '—'"));
   assert.match(source, /AdminStatusBadge tone=\{serverMode \? 'success' : loading \? 'info' : 'warning'\}/);
   assert.match(source, /serverMode \? 'Live project data' : loading \? 'Loading project records' : 'Project data unavailable'/);
-  assert.ok(source.includes("change: serverMode ? activeProjects.length + ' active projects'"));
+  assert.ok(source.includes("change: serverMode ? activeProjects.length + ' open projects'"));
   assert.ok(source.includes("label: project.name + (project.status === 'completed' ? ' (Completed)' : '')"));
   assert.ok(source.includes("selectedSprintProject.status === 'completed' ? 'Completed project' : 'Active delivery'"));
 });
@@ -164,10 +164,12 @@ test('Completed projects remain inspectable but cannot receive new tasks', async
 test('Projects board, table, sprint, budget, and archive expose loading or empty states', async () => {
   const source = await read('src/pages/admin/AdminProjects.tsx');
 
-  assert.ok(source.includes("No projects yet. Create a project to start the portfolio."));
-  assert.ok(source.includes("No projects have been created yet."));
+  const records = await read('src/components/admin/projects/ProjectRegistryRecords.tsx');
+  assert.ok(records.includes("No projects have been created yet."));
+  assert.ok(records.includes("Project records unavailable"));
+  assert.ok(records.includes("Loading project registry"));
   assert.ok(source.includes('Loading project delivery'));
-  assert.ok(source.includes('loading && (view === \'budget\' || view === \'archived\')'));
+  assert.ok(source.includes("loading && view === 'budget'"));
 });
 
 test('Sprint task sorting uses a transitive status order with stable priority and due-date tie-breakers', async () => {

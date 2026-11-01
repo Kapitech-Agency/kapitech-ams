@@ -88,6 +88,29 @@ export interface AdminTopbarTabsProps extends Omit<AdminSectionTabsProps, 'varia
  * tabs so the application shell can own topbar geometry without page-specific
  * tab styles. Access filtering and active-route semantics match AdminSectionTabs.
  */
+const useActiveTabVisibility = (navRef: React.RefObject<HTMLElement | null>, activeTabRef: React.RefObject<HTMLAnchorElement | null>, activeKey: string) => {
+  React.useEffect(() => {
+    const nav = navRef.current;
+    const activeTab = activeTabRef.current;
+    if (!nav || !activeTab) return;
+    const revealActive = () => {
+      const navBounds = nav.getBoundingClientRect();
+      const tabBounds = activeTab.getBoundingClientRect();
+      const inset = 12;
+      if (tabBounds.left < navBounds.left + inset) {
+        nav.scrollLeft -= navBounds.left + inset - tabBounds.left;
+      } else if (tabBounds.right > navBounds.right - inset) {
+        nav.scrollLeft += tabBounds.right - (navBounds.right - inset);
+      }
+    };
+    revealActive();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(revealActive);
+    observer?.observe(nav);
+    observer?.observe(activeTab);
+    return () => observer?.disconnect();
+  }, [activeKey, navRef, activeTabRef]);
+};
+
 export const AdminTopbarTabs: React.FC<AdminTopbarTabsProps> = ({
   items,
   activeKey,
@@ -97,26 +120,13 @@ export const AdminTopbarTabs: React.FC<AdminTopbarTabsProps> = ({
   const navRef = React.useRef<HTMLElement | null>(null);
   const activeTabRef = React.useRef<HTMLAnchorElement | null>(null);
 
-  React.useEffect(() => {
-    const nav = navRef.current;
-    const activeTab = activeTabRef.current;
-    if (!nav || !activeTab) return;
-
-    const navBounds = nav.getBoundingClientRect();
-    const tabBounds = activeTab.getBoundingClientRect();
-    const inset = 12;
-    if (tabBounds.left < navBounds.left + inset) {
-      nav.scrollLeft -= navBounds.left + inset - tabBounds.left;
-    } else if (tabBounds.right > navBounds.right - inset) {
-      nav.scrollLeft += tabBounds.right - (navBounds.right - inset);
-    }
-  }, [activeKey]);
+  useActiveTabVisibility(navRef, activeTabRef, activeKey);
 
   return (
     <nav
       ref={navRef}
       aria-label={ariaLabel}
-      className={cn('ams-topbar-tabs ams-topnav-scroll flex min-h-8 max-w-full min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain', className)}
+      className={cn('ams-topbar-tabs ams-topnav-scroll flex min-h-8 max-w-full min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain pr-3', className)}
     >
       {items.filter(canRenderNavigationTab).map((item) => {
         const active = item.available !== false && activeKey === item.key;
@@ -166,28 +176,14 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
   const navRef = React.useRef<HTMLElement | null>(null);
   const activeTabRef = React.useRef<HTMLAnchorElement | null>(null);
 
-  React.useEffect(() => {
-    const nav = navRef.current;
-    const activeTab = activeTabRef.current;
-    if (!nav || !activeTab) return;
-
-    const navBounds = nav.getBoundingClientRect();
-    const tabBounds = activeTab.getBoundingClientRect();
-    const inset = 12;
-
-    if (tabBounds.left < navBounds.left + inset) {
-      nav.scrollLeft -= navBounds.left + inset - tabBounds.left;
-    } else if (tabBounds.right > navBounds.right - inset) {
-      nav.scrollLeft += tabBounds.right - (navBounds.right - inset);
-    }
-  }, [activeKey]);
+  useActiveTabVisibility(navRef, activeTabRef, activeKey);
 
   return (
   <nav
     ref={navRef}
     aria-label={ariaLabel}
     className={cn(
-      'flex max-w-full min-w-0 items-center gap-1 overflow-x-auto ams-topnav-scroll',
+      'flex max-w-full min-w-0 items-center gap-1 overflow-x-auto ams-topnav-scroll pr-3',
       className
     )}
   >
@@ -622,18 +618,20 @@ export interface AdminDataTableShellProps {
   children: React.ReactNode;
   className?: string;
   slug?: string;
+  embedded?: boolean;
 }
 
 /** Shared outer surface for a data table and its pagination footer. */
 export const AdminDataTableShell: React.FC<AdminDataTableShellProps> = ({
   children,
   className,
-  slug
+  slug,
+  embedded = false
 }) => (
   <section
     data-ams-feature-slug={slug}
     data-ams-slug={slug}
-    className={cn('ams-data-table-shell overflow-hidden rounded-card border border-line bg-panel', className)}
+    className={cn('ams-data-table-shell overflow-hidden rounded-card border border-line bg-panel', embedded && 'ams-data-table-shell--embedded', className)}
   >
     {children}
   </section>

@@ -223,7 +223,7 @@ test('primary data surfaces remain named and keyboard-accessible across all nine
     ['src/components/admin/GlobalExecutiveDashboard.tsx', /data-ams-feature-slug="dashboard-delivery-desk"[\s\S]*ariaLabel="Task queue filters"[\s\S]*onChange=\{\(value\)=>setOverviewTaskFilter\(value as DashboardTaskFilter\)\}/, 'Dashboard'],
     ['src/components/admin/DashboardControls.tsx', /role="group" aria-label=\{ariaLabel\}/, 'Dashboard shared filter component'],
     ['src/components/admin/inbox/MessageWorkspace.tsx', /role="region" tabIndex=\{0\} aria-label=\{t\('Scrollable message table'/, 'Inbox'],
-    ['src/pages/admin/AdminProjects.tsx', /aria-label="Scrollable project register table"/, 'Projects'],
+    ['src/components/admin/projects/ProjectRegistryRecords.tsx', /role="region" tabIndex=\{0\} aria-label=\{archived \? 'Scrollable archived project register' : 'Scrollable project register table'\}/, 'Projects'],
     ['src/components/admin/TasksWorkspace.tsx', /aria-label="Scrollable task register"/, 'Tasks'],
     ['src/pages/admin/AdminClients.tsx', /aria-label="Scrollable client directory"|aria-label=\{statusScope === 'lead' \? 'Scrollable onboarding account register' : 'Scrollable client directory'\}/, 'Clients'],
     ['src/pages/admin/AdminFinanceWorkspace.tsx', /aria-label=\{'Scrollable ' \+ title \+ ' table'\}/, 'Finance'],

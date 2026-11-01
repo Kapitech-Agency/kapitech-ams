@@ -65,7 +65,7 @@ test('Projects does not present unavailable project data as seeded/demo records 
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
   assert.doesNotMatch(source, /Demo mode keeps the change local|seeded task data|Seeded project data/i);
   assert.ok(source.includes("serverMode ? String(archivedProjects.length) : '—'"));
-  assert.ok(source.includes("{serverMode ? projects.length : '—'}"));
+  assert.ok(source.includes('available={serverMode} loading={loading} hasRecords={projects.length > 0}'));
   assert.ok(source.includes('Live project records are unavailable. Refresh after the project service is restored.'));
   assert.ok(source.includes('Project data unavailable'));
 });
@@ -390,8 +390,9 @@ test('Project management provides an in-place Gantt timeline using existing proj
   const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
 
   assert.ok(projects.includes("type ProjectLayout = 'board' | 'table' | 'timeline';"));
-  assert.ok(projects.includes("openLayout('timeline')"));
-  assert.ok(projects.includes("aria-pressed={projectLayout === 'timeline'}"));
+  assert.ok(projects.includes("onChange={value => openLayout(value as ProjectLayout)}"));
+  assert.ok(projects.includes("value:'timeline',label:'Timeline'"));
+  assert.ok(projects.includes('ariaLabel="Project Registry display" value={projectLayout}'));
   assert.ok(projects.includes('data-ams-feature-slug="projects-gantt-timeline"'));
   assert.ok(projects.includes('projects={filteredProjects}'));
   assert.ok(projects.includes('onOpenProject={openProjectDetail}'));
@@ -698,7 +699,8 @@ test('Project portfolio and archive registers lead their supporting KPI summarie
   const moduleHeader = projects.indexOf('<AdminModuleHeader');
   assert.ok(moduleHeader >= 0 && portfolioTitle > moduleHeader && portfolioKpis > portfolioTitle);
   assert.ok(archiveTitle >= 0 && archiveTitle > moduleHeader && archiveKpis > archiveTitle);
-  assert.ok(projects.includes('aria-label="Project status quick filters"'));
+  assert.ok(projects.includes('ariaLabel="Project Registry views"'));
+  assert.ok(projects.includes('aria-label="Filter projects by status"'));
   assert.ok(projects.includes('slug="projects-directory-filters"'));
 });
 
@@ -1066,29 +1068,36 @@ test('Careers job and applicant registers adapt to compact screens without remov
 });
 
 
-test('Project Table view switches to portfolio cards on compact widths without losing reporting fields or permissions', () => {
+test('Project Table and compact cards use one source presentation and retain financial provenance and permissions', () => {
   const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
-  assert.ok(projects.includes('data-ams-feature-slug="projects-table-cards"'));
-  assert.ok(projects.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
-  assert.ok(projects.includes('data-ams-slug={\'project-portfolio-card-\' + project.id}'));
-  assert.ok(projects.includes('Recorded cost / budget'));
-  assert.ok(projects.includes('Delivery progress'));
-  assert.ok(projects.includes('canManageProjects && <button type="button" data-primary="true" onClick={() => openEditProject(project)}'));
-  assert.ok(projects.includes('onClick={() => openProjectDetail(project)}'));
+  const records = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/projects/ProjectRegistryRecords.tsx'), 'utf8');
+  const css = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/projects/ProjectRegistry.css'), 'utf8');
+  assert.ok(projects.includes('rows={pagedProjectTableRows}'));
+  assert.ok(records.includes("'projects-table-cards'"));
+  assert.ok(records.includes("'project-portfolio-card-'"));
+  assert.ok(records.includes('Recorded cost / budget'));
+  assert.ok(records.includes('Finance data unavailable'));
+  assert.ok(records.includes('Delivery progress'));
+  assert.ok(projects.includes('onEdit={canManageProjects ? openEditProject : undefined}'));
+  assert.ok(records.includes('{onEdit && <DashboardControl'));
+  assert.ok(records.includes('onClick={() => onOpen(project)}'));
+  assert.ok(css.includes('@media(max-width:1099px)'));
 });
 
 
-test('Project Budget and Archived workspaces expose compact cards with the same financial and historical context', () => {
+test('Project Budget and completed history retain financial context and permission gates', () => {
   const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+  const records = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/projects/ProjectRegistryRecords.tsx'), 'utf8');
   assert.ok(projects.includes('data-ams-feature-slug="projects-budget-cards"'));
-  assert.ok(projects.includes('data-ams-feature-slug="projects-archived-cards"'));
-  assert.ok(projects.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(records.includes("'projects-archived-cards'"));
+  assert.ok(records.includes("'archived-project-card-'"));
   assert.ok(projects.includes('Actual to date'));
   assert.ok(projects.includes('Cost / budget'));
-  assert.ok(projects.includes('Final progress'));
-  assert.ok(projects.includes('data-ams-slug={\'archived-project-card-\' + project.id}'));
+  assert.ok(records.includes('project.progressPercent'));
+  assert.ok(records.includes('Target deadlines are not completion timestamps.'));
+  assert.ok(projects.includes('archived rows={pagedArchiveTableRows}'));
   assert.ok(projects.includes('row.remaining === null ?'));
-  assert.ok(projects.includes('canManageProjects && <button type="button" className="inline-flex min-h-9 items-center rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-medium text-accent-text" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>'));
+  assert.ok(projects.includes('onEdit={canManageProjects ? openEditProject : undefined}'));
 });
 
 

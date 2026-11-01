@@ -43,7 +43,9 @@ import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { getProjectsDefaultView } from '../../lib/projectsWorkspaceNavigation';
-import { DashboardControl } from '../../components/admin/DashboardControls';
+import { ProjectRegistryRecords, ProjectRegistryCard } from '../../components/admin/projects/ProjectRegistryRecords';
+import '../../components/admin/projects/ProjectRegistry.css';
+import { DashboardControl, DashboardFilterGroup } from '../../components/admin/DashboardControls';
 import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
 import '../../components/admin/ProjectsOverview.css';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -217,15 +219,14 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
   const todayMs = parseTimelineDate(todayIso()) ?? Date.now();
   const rows = projects.map((project) => {
     const parsedStart = parseTimelineDate(project.startDate);
-    const parsedCreated = parseTimelineDate(project.createdAt);
-    const startMs = parsedStart ?? parsedCreated ?? todayMs;
+    const startMs = parsedStart ?? 0;
     const parsedEnd = parseTimelineDate(project.targetEndDate);
-    const endMs = parsedEnd !== null && parsedEnd >= startMs ? parsedEnd : startMs + 14 * dayMs;
+    const endMs = parsedEnd ?? 0;
     return {
       project,
       startMs,
       endMs,
-      estimatedDates: parsedStart === null || parsedEnd === null || parsedEnd < startMs,
+      datesNeedReview: parsedStart === null || parsedEnd === null || parsedEnd < startMs,
     };
   });
 
@@ -247,8 +248,16 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
     );
   }
 
-  const rangeStart = Math.floor(Math.min(...rows.map((row) => row.startMs)) / dayMs) * dayMs - 7 * dayMs;
-  const rangeEnd = Math.floor(Math.max(...rows.map((row) => row.endMs)) / dayMs) * dayMs + 8 * dayMs;
+  const scheduledRows = rows.filter(row => !row.datesNeedReview);
+  if (!scheduledRows.length) return (
+    <section data-ams-feature-slug="projects-gantt-timeline" aria-label="Project Gantt timeline" className="p-4 space-y-3">
+      <DashboardEmptyState eyebrow="Recorded schedule" title="Project dates need review" description="A timeline requires a recorded start date and a target deadline on or after it. Open a project to review its schedule." icon={<CalendarDays size={17} />} />
+      <div className="grid gap-2">{rows.map(row => <DashboardControl key={row.project.id} variant="action" size="standard" onClick={() => onOpenProject(row.project)}>{row.project.name}: {formatDate(row.project.startDate)} to {formatDate(row.project.targetEndDate)}</DashboardControl>)}</div>
+    </section>
+  );
+
+  const rangeStart = Math.floor(Math.min(...scheduledRows.map((row) => row.startMs)) / dayMs) * dayMs - 7 * dayMs;
+  const rangeEnd = Math.floor(Math.max(...scheduledRows.map((row) => row.endMs)) / dayMs) * dayMs + 8 * dayMs;
   const rangeDays = Math.max(1, Math.ceil((rangeEnd - rangeStart) / dayMs));
   const rangeWidth = Math.max(900, Math.min(2400, rangeDays * 16));
   const weekStep = Math.max(1, (rangeWidth / rangeDays) * 7);
@@ -305,7 +314,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
             const statusLabel = PROJECT_STATUSES.find((item) => item.value === row.project.status)?.label || row.project.status;
             const left = ((row.startMs - rangeStart) / (rangeEnd - rangeStart)) * 100;
             const width = ((row.endMs + dayMs - row.startMs) / (rangeEnd - rangeStart)) * 100;
-            const overdue = row.project.status !== 'completed' && row.endMs < todayMs;
+            const overdue = !row.datesNeedReview && row.project.status !== 'completed' && row.endMs < todayMs;
             const title = row.project.name + ': ' + formatDate(row.project.startDate || '') + ' to ' + formatDate(row.project.targetEndDate || '');
             return (
               <div key={row.project.id} className="group flex border-b border-line/70 hover:bg-panel-hover/40">
@@ -323,7 +332,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
                     </span>
                     <span className={'mt-0.5 block truncate text-[10px] ' + (overdue ? 'text-danger' : 'text-muted')}>
                       {row.project.startDate ? formatDate(row.project.startDate) : 'Start date not set'} → {row.project.targetEndDate ? formatDate(row.project.targetEndDate) : 'Deadline not set'}
-                      {row.estimatedDates ? ' · estimated range' : ''}
+                      {row.datesNeedReview ? ' · date range needs review' : ''}
                     </span>
                   </span>
                   <ArrowUpRight size={13} className="shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
@@ -339,6 +348,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
                   {todayPosition >= 0 && todayPosition <= 100 && (
                     <div className="pointer-events-none absolute inset-y-0 z-10 border-l border-dashed border-warning/50" style={{ left: todayPosition + '%' }} aria-hidden="true" />
                   )}
+                  {row.datesNeedReview ? <span className="absolute left-3 top-5 text-[11px] text-muted">Date range needs review</span> : (
                   <button
                     type="button"
                     onClick={() => onOpenProject(row.project)}
@@ -350,6 +360,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
                     <span className="truncate tabular-nums">{row.project.progressPercent}%</span>
                   </button>
+                  )}
                 </div>
               </div>
             );
@@ -465,7 +476,7 @@ export const AdminProjects: React.FC = () => {
   const [archiveSearch, setArchiveSearch] = useState('');
   const [archiveHealthFilter, setArchiveHealthFilter] = useState('');
   const [projectLayout, setProjectLayout] = useState<ProjectLayout>(
-    searchParams.get('layout') === 'table' ? 'table' : searchParams.get('layout') === 'timeline' ? 'timeline' : 'board'
+    searchParams.get('layout') === 'board' ? 'board' : searchParams.get('layout') === 'timeline' ? 'timeline' : 'table'
   );
   const projectKanbanScrollRef = useDragToScroll<HTMLDivElement>();
   const taskKanbanScrollRef = useDragToScroll<HTMLDivElement>();
@@ -509,6 +520,11 @@ export const AdminProjects: React.FC = () => {
   const registryStatusView = requestedView && ['planning', 'active', 'on-hold', 'completed'].includes(requestedView)
     ? requestedView
     : null;
+  React.useEffect(() => {
+    setProjectStatusFilter('');
+    setProjectTablePage(1);
+  }, [registryStatusView]);
+
   const selectedProjectSlug = searchParams.get('project') || '';
   const requestedPlanningView = searchParams.get('planningView');
   const planningView: PlanningWorkspaceView = requestedPlanningView === 'milestones' || requestedPlanningView === 'timeline'
@@ -579,7 +595,7 @@ export const AdminProjects: React.FC = () => {
 
   React.useEffect(() => {
     const requestedLayout = searchParams.get('layout');
-    setProjectLayout(requestedLayout === 'table' ? 'table' : requestedLayout === 'timeline' ? 'timeline' : 'board');
+    setProjectLayout(requestedLayout === 'board' ? 'board' : requestedLayout === 'timeline' ? 'timeline' : 'table');
   }, [searchParams]);
 
   React.useEffect(() => {
@@ -1667,7 +1683,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   const exportProjects = () => {
-    const rows = filteredProjects.map(project => [
+    const rows = (view === 'archived' ? filteredArchivedProjects : filteredProjects).map(project => [
       project.slug,
       project.name,
       project.clientCompany,
@@ -1688,7 +1704,7 @@ export const AdminProjects: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'kapitech-projects-kanban.csv';
+    anchor.download = view === 'archived' ? 'kapitech-project-history.csv' : 'kapitech-project-registry.csv';
     anchor.click();
     URL.revokeObjectURL(url);
     showToast('Projects exported.');
@@ -1704,7 +1720,7 @@ export const AdminProjects: React.FC = () => {
     setProjectLayout(layout);
     const next = new URLSearchParams(searchParams);
     if (view === 'all' && !next.get('projects')) next.set('projects', 'all');
-    if (layout === 'board') next.delete('layout');
+    if (layout === 'table') next.delete('layout');
     else next.set('layout', layout);
     setSearchParams(next, { replace: true });
   };
@@ -1734,7 +1750,7 @@ export const AdminProjects: React.FC = () => {
   }, [canReadClients, selectedProjectDetail?.clientId, clientOptionsLoaded, loadProjectClients]);
 
   return (
-    <AdminPageShell featureSlug="projects-module" className={"projects-module" + (view === 'overview' ? ' ams-projects-overview' : '')}>
+    <AdminPageShell featureSlug="projects-module" className={"projects-module ams-projects-workspace" + (view === 'overview' ? ' ams-projects-overview' : view === 'all' || view === 'archived' ? ' ams-projects-registry' : '')}>
       <Modal
         open={Boolean(deleteProject)}
         onClose={() => { if (!deletingProjectRecord) setDeleteProject(null); }}
@@ -2106,18 +2122,15 @@ export const AdminProjects: React.FC = () => {
         className="mb-0"
         eyebrow={(
           <div className="flex flex-wrap items-center gap-2">
-            <span>{view === 'overview' ? 'Projects / Overview' : view === 'planning-delivery' ? 'Projects / Planning & Delivery' : view === 'resources' ? 'Projects / Project Resources' : view === 'all' ? 'Projects / Project Registry' : 'Projects'}</span>
+            <span>{view === 'overview' ? 'Projects / Overview' : view === 'planning-delivery' ? 'Projects / Planning & Delivery' : view === 'resources' ? 'Projects / Project Resources' : view === 'all' || view === 'archived' ? 'Projects / Project Registry' : 'Projects'}</span>
             <AdminStatusBadge tone={serverMode ? 'success' : loading ? 'info' : 'warning'}>
               {serverMode ? 'Live project data' : loading ? 'Loading project records' : 'Project data unavailable'}
             </AdminStatusBadge>
           </div>
         )}
         title={view === 'overview' ? 'Project Overview' : view === 'planning-delivery' ? 'Planning & Delivery' : view === 'resources' ? 'Project Resources' : view === 'all'
-          ? registryStatusView === 'planning' ? 'Planning'
-            : registryStatusView === 'active' ? 'Active Projects'
-              : registryStatusView === 'on-hold' ? 'On Hold'
-                : registryStatusView === 'completed' ? 'Completed Projects' : 'Projects'
-          : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}
+          ? 'Project Registry'
+          : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Project Registry'}
         description={
           view === 'overview'
             ? 'Review delivery exceptions, overdue milestones and project status across the portfolio.'
@@ -2127,8 +2140,11 @@ export const AdminProjects: React.FC = () => {
                 ? 'Review the selected project team, recorded allocation entries, and task assignments from canonical project records.'
                 : view === 'all'
                 ? registryStatusView
-                  ? 'Project registry filtered by the selected lifecycle status.'
-                  : 'Project records, delivery stages, and supported execution controls.'
+                  ? registryStatusView === 'planning' ? 'Confirm the client, scope, ownership and milestone dates before production or development.'
+                    : registryStatusView === 'active' ? 'Coordinate projects in progress and Review across creative and technology delivery.'
+                      : registryStatusView === 'on-hold' ? 'Inspect paused commitments, responsible leads, deadlines and unfinished work.'
+                        : 'Review completed records, delivery evidence and remaining handover work.'
+                  : 'Plan, coordinate and review creative production and technology delivery in one register.'
                 : view === 'sprint'
                   ? 'Move work through execution stages and keep delivery ownership visible.'
                   : view === 'budget'
@@ -2140,24 +2156,11 @@ export const AdminProjects: React.FC = () => {
             {(view === 'planning-delivery' || view === 'resources') && (
               <Button variant="secondary" onClick={() => openView('all')}>Open Project Registry</Button>
             )}
-            {view === 'all' && (
-              <div className="inline-flex min-h-9 items-center gap-1 rounded-control border border-line bg-panel px-0.5">
-                <button type="button" aria-pressed={projectLayout === 'board'} onClick={() => openLayout('board')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (projectLayout === 'board' ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}>
-                  <LayoutGrid size={13} /> Kanban
-                </button>
-                <button type="button" onClick={() => openLayout('table')} aria-pressed={projectLayout === 'table'} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (projectLayout === 'table' ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}>
-                  <List size={13} /> Table
-                </button>
-                <button type="button" onClick={() => openLayout('timeline')} aria-pressed={projectLayout === 'timeline'} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (projectLayout === 'timeline' ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}>
-                  <CalendarDays size={13} /> Gantt
-                </button>
-              </div>
-            )}
-            {view !== 'overview' && view !== 'planning-delivery' && view !== 'resources' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
-            {view === 'overview' ? <>
+            {view !== 'overview' && view !== 'all' && view !== 'archived' && view !== 'planning-delivery' && view !== 'resources' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
+            {view === 'overview' || view === 'all' || view === 'archived' ? <>
               {canManageProjects && <DashboardControl variant="primary" icon={<Plus size={14} />} onClick={() => openNewProject()}>New project</DashboardControl>}
-              <DashboardControl variant="action" icon={<Briefcase size={14} />} onClick={() => openView('all')}>Project Registry</DashboardControl>
-              <DashboardControl variant="action" icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />} disabled={loading} onClick={() => void syncProjects()} ariaLabel="Refresh project overview">Refresh</DashboardControl>
+              {view === 'overview' ? <DashboardControl variant="action" icon={<Briefcase size={14} />} onClick={() => openView('all')}>Project Registry</DashboardControl> : <DashboardControl variant="action" icon={<Download size={14} />} onClick={exportProjects}>Export projects</DashboardControl>}
+              <DashboardControl variant="action" icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />} disabled={loading} onClick={() => void syncProjects()} ariaLabel={view === 'overview' ? 'Refresh project overview' : 'Refresh project registry'}>Refresh</DashboardControl>
             </> : canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
           </>
         )}
@@ -2167,7 +2170,7 @@ export const AdminProjects: React.FC = () => {
         <AdminSectionTabs
           ariaLabel="Project Registry views"
           activeKey={view === 'archived' ? 'archived' : registryStatusView || 'all'}
-          className="w-full border-b border-line pb-2"
+          className="ams-registry-lifecycle-tabs ams-projects-module-tabs w-full"
           items={[
             { key: 'all', label: 'All Projects', to: '/admin/projects?projects=all' },
             { key: 'planning', label: 'Planning', to: '/admin/projects?projects=planning' },
@@ -2724,14 +2727,12 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'all' && (
         <>
-    
-
-          
-
           <AdminPanel
+            className="ams-registry-panel ams-overview-panel"
             title="Project portfolio"
+            actions={<DashboardFilterGroup ariaLabel="Project Registry display" value={projectLayout} onChange={value => openLayout(value as ProjectLayout)} density="comfortable" options={[{value:'table',label:'Table'},{value:'board',label:'Kanban'},{value:'timeline',label:'Timeline'}]} />}
             description={serverMode
-              ? 'Manage the active project portfolio, move delivery stages from Kanban, and keep the table as the structured reporting view.'
+              ? 'Keep the client, project owner, schedule and next delivery checkpoint visible in every view.'
               : loading
                 ? 'Loading the current project portfolio from AMS.'
                 : 'Live project records are unavailable. Refresh after the project service is restored.'}
@@ -2742,7 +2743,8 @@ export const AdminProjects: React.FC = () => {
               onSearchChange={setProjectSearch}
               searchPlaceholder="Search projects, clients, owners..."
               searchLabel="Search projects"
-              searchClassName="w-[210px] flex-none"
+              className="ams-registry-filters"
+              searchClassName="ams-registry-search"
               actions={(
                 <Button
                   type="button"
@@ -2754,47 +2756,12 @@ export const AdminProjects: React.FC = () => {
                   Reset filters
                 </Button>
               )}
-              footer={(
-                <div
-                  className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5"
-                  style={{ flexWrap: 'nowrap' }}
-                  aria-label="Project status quick filters"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setProjectStatusFilter('')}
-                    className={'inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
-                  >
-                    All
-                    <span className="tabular-nums">{serverMode ? projects.length : '—'}</span>
-                  </button>
-                  {PROJECT_KANBAN_COLUMNS.map(column => {
-                    const count = projects.filter(project => project.status === column.id).length;
-                    const active = projectStatusFilter === column.id;
-                    return (
-                      <button
-                        key={column.id}
-                        type="button"
-                        onClick={() => setProjectStatusFilter(column.id)}
-                        className={'inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
-                      >
-                        <span className={'h-1.5 w-1.5 shrink-0 rounded-full ' + column.dot} />
-                        {column.label}
-                        <span className="tabular-nums">{serverMode ? count : '—'}</span>
-                      </button>
-                    );
-                  })}
-                  <span className="ml-auto shrink-0 whitespace-nowrap px-1 text-[10px] text-muted">
-                    {serverMode ? filteredProjects.length + ' / ' + projects.length : loading ? 'Loading records' : '—'}
-                  </span>
-                </div>
-              )}
             >
               <div
-                className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5"
-                style={{ flexWrap: 'nowrap' }}
+                className="ams-registry-filter-fields"
                 aria-label="Project filters"
               >
+                {!registryStatusView && <CustomSelect value={projectStatusFilter} onChange={setProjectStatusFilter} options={[{value:'',label:'All statuses'}, ...PROJECT_STATUSES]} aria-label="Filter projects by status" />}
                 <CustomSelect
                   value={projectDeadlineFilter}
                   onChange={(value) => setProjectDeadlineFilter(value as ProjectDeadlineFilter)}
@@ -2805,7 +2772,7 @@ export const AdminProjects: React.FC = () => {
                     { value: 'days-8-30', label: 'Due in 8–30 days' },
                     { value: 'no-deadline', label: 'No / invalid deadline' },
                   ]}
-                  className="w-[168px] shrink-0"
+                  className="w-full min-w-0"
                   aria-label="Filter projects by deadline"
                   data-ams-slug="projects-filter-deadline"
                 />
@@ -2813,21 +2780,21 @@ export const AdminProjects: React.FC = () => {
                   value={projectHealthFilter}
                   onChange={setProjectHealthFilter}
                   options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]}
-                  className="w-[128px] shrink-0"
+                  className="w-full min-w-0"
                   aria-label="Filter projects by health"
                 />
                 <CustomSelect
                   value={projectClientFilter}
                   onChange={setProjectClientFilter}
                   options={[{ value: '', label: 'All clients' }, ...projectFilterOptions.clients.map(value => ({ value, label: value }))]}
-                  className="w-[138px] shrink-0"
+                  className="w-full min-w-0"
                   aria-label="Filter projects by client"
                 />
                 <CustomSelect
                   value={projectOwnerFilter}
                   onChange={setProjectOwnerFilter}
                   options={[{ value: '', label: 'All owners' }, ...projectFilterOptions.owners.map(value => ({ value, label: value }))]}
-                  className="w-[132px] shrink-0"
+                  className="w-full min-w-0"
                   aria-label="Filter projects by owner"
                 />
                 <CustomSelect
@@ -2840,29 +2807,19 @@ export const AdminProjects: React.FC = () => {
                     { value: 'budget', label: 'Highest budget' },
                     { value: 'name', label: 'Name A–Z' },
                   ]}
-                  className="w-[176px] shrink-0"
+                  className="w-full min-w-0"
                   aria-label="Sort projects"
                 />
               </div>
             </AdminFilterBar>
-            {loading ? (
-              <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-4">
-                {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
-              </div>
+            <div className="ams-registry-result-context" role="status"><span>{serverMode ? filteredProjects.length + ' of ' + projects.length + ' projects' : loading ? 'Loading project records' : 'Project records unavailable'}</span><span>{registryStatusView === 'planning' ? 'Prepare ownership, scope and milestone dates before delivery.' : registryStatusView === 'active' ? 'In progress and Review project stages.' : registryStatusView === 'on-hold' ? 'Paused delivery. Inspect the project before resuming work.' : registryStatusView === 'completed' ? 'Completed status does not confirm client acceptance or full task completion.' : 'Creative and technology delivery in one canonical register.'}</span></div>
+            {loading || !serverMode || filteredProjects.length === 0 ? (
+              <ProjectRegistryRecords rows={pagedProjectTableRows} available={serverMode} loading={loading} hasRecords={projects.length > 0}
+                hasFilters={activeProjectFilters > 0} onReset={clearProjectFilters} getRecordedCost={getRecordedExpense}
+                formatDate={formatDate} formatMoney={value => formatAmount(value, currency)} isOverdue={isOverdue}
+                onOpen={openProjectDetail} onDelivery={goToSprint} onEdit={canManageProjects ? openEditProject : undefined} />
             ) : projectLayout === 'board' ? (
               <div ref={projectKanbanScrollRef} className="ams-project-kanban-board overflow-x-auto overflow-y-visible cursor-grab" tabIndex={0} role="region" aria-label="Scrollable project board" data-ams-slug="projects-board-scroll">
-                {filteredProjects.length === 0 && (
-                  <div role="status" className="mx-3 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-control border border-line bg-panel p-3 sm:mx-4">
-                    <div className="text-xs text-muted">
-                      {projects.length === 0 ? 'No projects yet. Create a project to start the portfolio.' : 'No projects match the current filters.'}
-                    </div>
-                    {activeProjectFilters > 0 && (
-                      <button type="button" onClick={clearProjectFilters} className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">
-                        Reset filters
-                      </button>
-                    )}
-                  </div>
-                )}
                 <div className="flex min-w-max items-start gap-3 px-3 pb-5 pt-3 sm:gap-3.5 sm:px-4 sm:pb-6 sm:pt-4">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
@@ -2891,19 +2848,12 @@ export const AdminProjects: React.FC = () => {
                               <p className="mt-1 hidden text-[10px] leading-4 text-muted sm:block">{column.description}</p>
                             </div>
                             {canManageProjects && (
-                              <button
-                                type="button"
-                                onClick={() => openNewProject(column.id)}
-                                className="inline-flex h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg"
-                                aria-label={'Add project to ' + column.label}
-                              >
-                                <Plus size={12} /> Add
-                              </button>
+                              <DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" icon={<Plus size={12} />} onClick={() => openNewProject(column.id)} ariaLabel={'Add project to ' + column.label}>Add</DashboardControl>
                             )}
                           </div>
                           <div className="mt-2 flex items-center justify-between gap-2 border-t border-line/70 pt-2 text-[10px] text-muted">
                             <span>{items.reduce((sum, project) => sum + project.tasks.filter(task => task.status !== 'done').length, 0)} open tasks</span>
-                            <span className="tabular-nums">{formatAmount(items.reduce((sum, project) => sum + project.budget, 0), currency)}</span>
+                            <span className="tabular-nums">{items.length} projects</span>
                           </div>
                         </div>
 
@@ -2952,18 +2902,9 @@ export const AdminProjects: React.FC = () => {
                           }}
                           className={'ams-project-kanban-stack flex flex-col gap-2 overflow-visible p-2.5 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {items.length === 0 ? (
-                            <div className={'flex min-h-[104px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
-                              <span className="max-w-[190px]">
-                                <span className="block font-medium text-fg">{canManageProjects && isDropTarget ? 'Drop project here' : 'No projects here'}</span>
-                                <span className="mt-1 block text-muted">{canManageProjects ? 'Drag a card into this lane.' : 'No projects in this stage.'}</span>
-                              </span>
-                            </div>
+                            <DashboardEmptyState eyebrow={column.label} title={canManageProjects && isDropTarget ? 'Drop project here' : 'No projects in this stage'} description={canManageProjects ? 'Move a project here using its drag handle, or add a project to this stage.' : 'Projects at this delivery stage will appear here.'} icon={<FolderKanban size={17} />} />
                           ) : (
                             items.map(project => {
-                              const taskDone = project.tasks.filter(task => task.status === 'done').length;
-                              const recordedCost = getRecordedExpense(project.id);
-                              const recordedCostCount = recordedExpenseTotals?.get(project.id)?.count || 0;
-                              const milestoneDone = project.milestones.filter(milestone => milestone.completed).length;
                               const isDragging = draggingProjectId === project.id;
 
                               return (
@@ -2985,8 +2926,10 @@ export const AdminProjects: React.FC = () => {
                                     isDragging ? 'rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="flex min-w-0 items-start gap-2">
+                                  <ProjectRegistryCard project={project} recordedCost={getRecordedExpense(project.id)}
+                                    formatDate={formatDate} formatMoney={value => formatAmount(value, currency)} isOverdue={isOverdue}
+                onOpen={openProjectDetail} onDelivery={goToSprint} onEdit={canManageProjects ? openEditProject : undefined}
+                                    dragHandle={(
                                       <button type="button"
                                         data-drag-handle="true"
                                         draggable={canManageProjects && !movingProjectId}
@@ -3024,86 +2967,7 @@ export const AdminProjects: React.FC = () => {
                                       >
                                         <GripVertical size={16} strokeWidth={2.2} />
                                       </button>
-                                      <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
-                                        <div className="break-words whitespace-normal text-[10px] font-medium leading-4 text-muted">{project.clientCompany}</div>
-                                        <h3 className="mt-0.5 break-words whitespace-normal text-sm font-semibold leading-5 text-fg">{project.name}</h3>
-                                      </button>
-                                    </div>
-                                    <div className="flex shrink-0 items-center gap-1.5">
-                                      {movingProjectId === project.id && (
-                                        <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Updating…</span>
-                                      )}
-                                      <button type="button" aria-label={'Actions for ' + project.name} onClick={() => openProjectDetail(project)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg">
-                                        <MoreHorizontal size={15} />
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-line pt-3">
-                                    <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + healthClass(project.health)}>{project.health || 'Good'}</span>
-                                    <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{taskDone}/{project.tasks.length} tasks</span>
-                                    <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{milestoneDone}/{project.milestones.length || 0} milestones</span>
-                                  </div>
-                                  <div className="mt-3 grid grid-cols-2 gap-2">
-                                    <div className="min-w-0 rounded-control border border-line bg-bg px-2.5 py-2">
-                                      <div className="text-[10px] font-medium text-muted">Service</div>
-                                      <div className="mt-0.5 truncate text-[10px] font-medium text-fg">{project.serviceCategory || 'Delivery'}</div>
-                                    </div>
-                                    <div className="min-w-0 rounded-control border border-line bg-bg px-2.5 py-2">
-                                      <div className="text-[10px] font-medium text-muted">Deadline</div>
-                                      <div className={'mt-0.5 truncate text-[10px] font-medium ' + (isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'text-danger' : 'text-fg')}>
-                                        {project.targetEndDate ? formatDate(project.targetEndDate) : 'Not set'}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="mt-3 space-y-1.5">
-                                    <div className="flex items-center justify-between text-[10px] text-muted">
-                                      <span>Progress</span>
-                                      <span className="font-semibold tabular-nums text-fg">{project.progressPercent}%</span>
-                                    </div>
-                                    <div className="h-1.5 overflow-hidden rounded-full bg-bg">
-                                      <div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} />
-                                    </div>
-                                  </div>
-
-                                  <div className="mt-3 border-t border-line pt-3">
-                                    <div className="flex items-end justify-between gap-3">
-                                      <div className="min-w-0">
-                                        <div className="text-[10px] font-medium text-muted">Recorded cost</div>
-                                        <div className="mt-0.5 break-words whitespace-normal text-xs font-medium tabular-nums text-fg">
-                                          {recordedCost === null ? '—' : formatAmount(recordedCost, currency)}
-                                          <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
-                                        </div>
-                                        <div className="mt-1 text-[10px] text-muted">
-                                          {recordedCost === null ? 'Finance source unavailable' : recordedCostCount + ' expense records'}
-                                        </div>
-                                      </div>
-                                      {project.teamLead ? (
-                                        <ProfileIdentity
-                                          profile={{ name: project.teamLead, role: 'Project owner', division: 'Delivery' }}
-                                          compact
-                                          size="sm"
-                                          showRole={false}
-                                          className="h-8 w-8 shrink-0"
-                                        />
-                                      ) : (
-                                        <span className="text-[10px] font-medium text-muted">Unassigned</span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3 text-[10px]">
-                                    <span className="min-w-0 break-words whitespace-normal text-muted">{project.slug}</span>
-                                    <div className="flex shrink-0 items-center gap-2">
-                                      <button type="button" onClick={() => openProjectDetail(project)} className="inline-flex h-8 min-h-8 items-center justify-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-semibold text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                                        View project
-                                      </button>
-                                      <button type="button" onClick={() => goToSprint(project)} className="inline-flex h-8 min-h-8 items-center justify-center gap-1 rounded-control border border-accent/25 bg-accent/10 px-2.5 text-[10px] font-semibold text-accent-text transition-colors hover:border-accent/40 hover:bg-accent/15 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                                        Delivery <ArrowUpRight size={13} />
-                                      </button>
-                                    </div>
-                                  </div>
+                                    )} />
                                 </article>
                                 </React.Fragment>
                               );
@@ -3123,115 +2987,10 @@ export const AdminProjects: React.FC = () => {
                 onOpenProject={openProjectDetail}
               />
             ) : (
-              <>
-              <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="projects-table-cards" role="list" aria-label="Project portfolio cards">
-                {pagedProjectTableRows.length === 0 ? (
-                  <div className="rounded-control border border-line bg-bg p-6 text-center" role="status">
-                    <p className="text-xs font-semibold text-fg">{projects.length === 0 ? 'No projects have been created yet.' : 'No projects match the current filters.'}</p>
-                    {(activeProjectFilters > 0 || projectSort !== 'updated') && <button type="button" onClick={clearProjectFilters} className="mt-3 inline-flex h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">Reset filters</button>}
-                  </div>
-                ) : pagedProjectTableRows.map(project => {
-                  const recordedCost = getRecordedExpense(project.id);
-                  const overdue = isOverdue(project.targetEndDate) && project.status !== 'completed';
-                  return (
-                    <article key={project.id} role="listitem" data-ams-slug={'project-portfolio-card-' + project.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
-                      <div className="flex min-w-0 items-start justify-between gap-3">
-                        <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 flex-1 text-left">
-                          <h3 className="break-words text-sm font-semibold text-fg">{project.name}</h3>
-                          <p className="mt-1 break-words text-[11px] text-muted">{project.clientCompany || 'No client linked'}</p>
-                        </button>
-                        <span className={'inline-flex shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span>
-                      </div>
-                      <div className="mt-3 border-y border-line py-3">
-                        <div className="flex items-center justify-between gap-3 text-[11px]">
-                          <span className="text-muted">Delivery progress</span>
-                          <span className="font-semibold tabular-nums text-fg">{project.progressPercent}%</span>
-                        </div>
-                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel">
-                          <div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} />
-                        </div>
-                      </div>
-                      <div className="mt-3 grid grid-cols-2 gap-3">
-                        <div className="min-w-0"><p className="text-[10px] text-muted">Recorded cost / budget</p><p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{recordedCost === null ? '—' : formatAmount(recordedCost, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></p>{recordedCost === null && <p className="mt-1 text-[10px] text-muted">Finance data unavailable</p>}</div>
-                        <div className="min-w-0"><p className="text-[10px] text-muted">Deadline</p><p className={'mt-1 break-words text-xs font-medium ' + (overdue ? 'text-danger' : 'text-fg')}>{formatDate(project.targetEndDate)}</p>{overdue && <p className="mt-1 text-[10px] text-danger">Overdue</p>}</div>
-                        <div className="min-w-0 col-span-2"><p className="text-[10px] text-muted">Owner</p><div className="mt-1">{project.teamLead ? <ProfileIdentity profile={{ name: project.teamLead, contextLabel: 'Project owner' }} showRole={false} /> : <span className="text-xs text-muted">Unassigned</span>}</div></div>
-                      </div>
-                      <div className="mt-3 flex justify-end gap-1.5 border-t border-line pt-3">
-                        <button type="button" onClick={() => openProjectDetail(project)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">View project</button>
-                        {canManageProjects && <button type="button" data-primary="true" onClick={() => openEditProject(project)} className="inline-flex min-h-9 items-center rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-medium text-accent-text hover:bg-accent/15">Edit</button>}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-              <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable project register table">
-                <table className="ams-projects-table min-w-[1080px] text-left">
-                  <thead>
-                    <tr>
-                      <th>Project</th>
-                      <th>Status</th>
-                      <th>Progress</th>
-                      <th>Recorded cost</th>
-                      <th>Owner</th>
-                      <th>Deadline</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagedProjectTableRows.map(project => {
-                      const recordedCost = getRecordedExpense(project.id);
-                      return (
-                        <tr key={project.id}>
-                          <td>
-                            <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
-                              <div className="max-w-[300px] truncate text-xs font-semibold text-fg">{project.name}</div>
-                              <div className="mt-1 max-w-[300px] truncate text-[10px] text-muted">{project.clientCompany || 'No client linked'}</div>
-                            </button>
-                          </td>
-                          <td><span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span></td>
-                          <td>
-                            <div className="min-w-[150px]">
-                              <div className="flex items-center justify-between text-[10px] text-muted"><span>Delivery</span><span className="tabular-nums text-fg">{project.progressPercent}%</span></div>
-                              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} /></div>
-                            </div>
-                          </td>
-                          <td className="text-xs tabular-nums font-medium text-fg">{recordedCost === null ? '—' : formatAmount(recordedCost, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></td>
-                          <td>
-                            {project.teamLead ? (
-                              <ProfileIdentity
-                                profile={{ name: project.teamLead, contextLabel: 'Project owner' }}
-                                showRole={false}
-                              />
-                            ) : (
-                              <span className="text-xs text-muted">Unassigned</span>
-                            )}
-                          </td>
-                          <td className={'text-xs ' + (isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'text-danger' : 'text-fg')}>{formatDate(project.targetEndDate)}</td>
-                          <td>
-                            <div className="ams-table-actions">
-                              <button type="button" className="ams-table-action" onClick={() => openProjectDetail(project)}>View</button>
-                              {canManageProjects && <button type="button" className="ams-table-action" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                                      {filteredProjects.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="py-12 text-center text-xs text-muted">
-                          <div>{projects.length === 0 ? 'No projects have been created yet.' : 'No projects match the current filters.'}</div>
-                          {(activeProjectFilters > 0 || projectSort !== 'updated') && (
-                            <button type="button" onClick={clearProjectFilters} className="mt-3 inline-flex h-8 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">
-                              Reset filters
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    )}
-</tbody>
-                </table>
-              </div>
-              </>
+              <ProjectRegistryRecords rows={pagedProjectTableRows} available={serverMode} loading={loading} hasRecords={projects.length > 0}
+                hasFilters={activeProjectFilters > 0} onReset={clearProjectFilters} getRecordedCost={getRecordedExpense}
+                formatDate={formatDate} formatMoney={value => formatAmount(value, currency)} isOverdue={isOverdue}
+                onOpen={openProjectDetail} onDelivery={goToSprint} onEdit={canManageProjects ? openEditProject : undefined} />
             )}
             {projectLayout === 'table' && (
               <AdminTablePagination total={filteredProjects.length} page={projectTablePage} pageSize={projectTablePageSize} onPageChange={setProjectTablePage} onPageSizeChange={setProjectTablePageSize} itemLabel="projects" slug="projects-directory-pagination" />
@@ -3239,16 +2998,17 @@ export const AdminProjects: React.FC = () => {
           </AdminPanel>
 
           <section data-ams-feature-slug="projects-kpis" data-ams-slug="projects-kpis" aria-label="Projects key performance indicators">
+            <div className="ams-registry-summary-heading"><h2>Portfolio context</h2><p>All open projects in the reporting period. Lifecycle and search filters do not change these totals.</p></div>
             <AdminMetricStrip
               className="sm:grid-cols-2 lg:grid-cols-4"
               metrics={[
                 {
                   id: 'active-value',
-                  label: 'Total active value',
+                  label: 'Open project budgets',
                   value: serverMode ? formatAmount(metrics.value, currency) : '—',
-                  change: serverMode ? activeProjects.length + ' active' : loading ? 'Loading records' : 'Unavailable',
+                  change: serverMode ? activeProjects.length + ' open' : loading ? 'Loading records' : 'Unavailable',
                   changeToneClassName: serverMode ? 'text-success' : 'text-muted',
-                  context: serverMode ? 'Across active contracts' : loading ? 'Loading live project records' : 'Live project data unavailable',
+                  context: serverMode ? 'Recorded budgets on open projects' : loading ? 'Loading live project records' : 'Live project data unavailable',
 
                   icon: <CircleDollarSign size={15} />,
                   toneClassName: 'text-success',
@@ -3266,7 +3026,7 @@ export const AdminProjects: React.FC = () => {
                 },
                 {
                   id: 'risk',
-                  label: 'Milestones at risk',
+                  label: 'Overdue milestones',
                   value: serverMode ? String(metrics.milestonesAtRisk || metrics.risks) : '—',
                   change: serverMode ? metrics.risks ? 'Action required' : 'Healthy' : loading ? 'Loading records' : 'Unavailable',
                   changeToneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
@@ -3276,9 +3036,9 @@ export const AdminProjects: React.FC = () => {
                 },
                 {
                   id: 'allocation',
-                  label: 'Resource allocation',
+                  label: 'Assigned people',
                   value: serverMode ? metrics.assignedPeople + ' assigned' : '—',
-                  change: serverMode ? activeProjects.length + ' active projects' : loading ? 'Loading records' : 'Unavailable',
+                  change: serverMode ? activeProjects.length + ' open projects' : loading ? 'Loading records' : 'Unavailable',
                   changeToneClassName: 'text-muted',
                   context: serverMode ? 'Unique owners & contributors' : loading ? 'Loading live project records' : 'Live project data unavailable',
 
@@ -3723,7 +3483,7 @@ export const AdminProjects: React.FC = () => {
       )}
 
       {/* CONTEXTUAL TASK DETAIL DRAWER */}
-      {loading && (view === 'budget' || view === 'archived') && (
+      {loading && view === 'budget' && (
         <AdminPanel title="Loading projects" description="Loading project records from the shared workspace.">
           <div role="status" aria-label="Loading project records" className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map(item => <div key={item} className="h-24 animate-pulse rounded-card border border-line bg-bg" />)}
@@ -3856,128 +3616,22 @@ export const AdminProjects: React.FC = () => {
         </>
       )}
 
-      {view === 'archived' && !loading && (
+      {view === 'archived' && (
         <div className="space-y-4">
-
-
-          
-
           <AdminPanel
+            className="ams-registry-panel ams-overview-panel"
             title="Archived projects"
             description="Completed delivery records remain queryable for reference, handover history, and future reuse."
           >
-            <div className="border-b border-line bg-bg/40 p-4 sm:p-5">
-              <div className="grid items-center gap-2.5 md:grid-cols-[minmax(260px,1fr)_170px_auto]">
-                <div className="relative min-w-0">
-                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                  <input
-                    value={archiveSearch}
-                    onChange={event => setArchiveSearch(event.target.value)}
-                    placeholder="Search archived projects, clients, owners..."
-                    className={fieldClass + ' mt-0 pl-9'}
-                    aria-label="Search archived projects"
-                  />
-                </div>
-                <CustomSelect
-                  value={archiveHealthFilter}
-                  onChange={setArchiveHealthFilter}
-                  options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]}
-                  className="w-full"
-                  aria-label="Filter archived projects by health"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setArchiveSearch('');
-                    setArchiveHealthFilter('');
-                  }}
-                  disabled={!archiveSearch && !archiveHealthFilter}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <X size={13} />
-                  Reset
-                </button>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-muted">
-                <span><strong className="font-semibold text-fg">{filteredArchivedProjects.length}</strong> of {archivedProjects.length} completed projects</span>
-                <span className="hidden sm:inline">Historical records are read from the same canonical project model.</span>
-              </div>
-            </div>
-
-            <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="projects-archived-cards" role="list" aria-label="Archived project cards">
-              {pagedArchiveTableRows.length === 0 ? (
-                <div className="rounded-control border border-line bg-bg p-6 text-center text-xs text-muted">{archivedProjects.length ? 'No archived projects match the current filters.' : 'No archived projects yet.'}</div>
-              ) : pagedArchiveTableRows.map(project => (
-                <article key={project.id} role="listitem" data-ams-slug={'archived-project-card-' + project.id} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 flex-1 text-left">
-                      <h3 className="break-words text-sm font-semibold text-fg">{project.name}</h3>
-                      <p className="mt-1 break-words text-[11px] text-muted">{project.clientCompany || '—'}</p>
-                      <p className="mt-1 text-[10px] text-muted">{project.serviceCategory || 'Delivery'}</p>
-                    </button>
-                    <span className="shrink-0 rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-semibold text-success">Completed</span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-3 border-y border-line py-3">
-                    <div className="min-w-0"><p className="text-[10px] text-muted">Completed</p><p className="mt-1 text-xs text-fg">{formatDate(project.targetEndDate)}</p></div>
-                    <div className="min-w-0"><p className="text-[10px] text-muted">Final budget</p><p className="mt-1 break-words text-xs tabular-nums text-fg">{formatAmount(project.budget, currency)}</p></div>
-                    <div className="col-span-2 min-w-0"><div className="flex items-center justify-between gap-2 text-[10px] text-muted"><span>Final progress</span><span className="tabular-nums text-fg">{project.progressPercent}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-success" style={{ width: project.progressPercent + '%' }} /></div></div>
-                    <div className="col-span-2 min-w-0"><p className="text-[10px] text-muted">Owner</p><div className="mt-1">{project.teamLead ? <ProfileIdentity profile={{ name: project.teamLead, contextLabel: 'Project owner' }} showRole={false} /> : <span className="text-xs text-muted">Unassigned</span>}</div></div>
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                    <span className="max-w-full break-all font-mono text-[10px] text-muted">{project.slug}</span>
-                    <div className="flex justify-end gap-1.5">
-                      <button type="button" className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg" onClick={() => openProjectDetail(project)}>View</button>
-                      {canManageProjects && <button type="button" className="inline-flex min-h-9 items-center rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-medium text-accent-text" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>}
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable archived project register">
-              <table className="ams-data-table min-w-[1020px] text-left">
-                <thead><tr><th>Project</th><th>Client</th><th>Completed</th><th>Budget</th><th>Final progress</th><th>Owner</th><th>Slug</th><th>Actions</th></tr></thead>
-                <tbody>
-                  {pagedArchiveTableRows.map(project => (
-                    <tr key={project.id}>
-                      <td>
-                        <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
-                          <div className="max-w-[250px] truncate text-xs font-semibold text-fg">{project.name}</div>
-                          <div className="mt-0.5 max-w-[250px] truncate text-[11px] text-muted">{project.serviceCategory || 'Delivery'}</div>
-                        </button>
-                      </td>
-                      <td className="text-xs text-muted">{project.clientCompany || '—'}</td>
-                      <td className="text-xs text-fg">{formatDate(project.targetEndDate)}</td>
-                      <td className="text-xs tabular-nums text-fg">{formatAmount(project.budget, currency)}</td>
-                      <td>
-                        <div className="min-w-[150px]">
-                          <div className="flex items-center justify-between text-[10px] text-muted"><span>Final</span><span className="tabular-nums text-fg">{project.progressPercent}%</span></div>
-                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-success" style={{ width: project.progressPercent + '%' }} /></div>
-                        </div>
-                      </td>
-                      <td>
-                        {project.teamLead ? (
-                          <ProfileIdentity profile={{ name: project.teamLead, contextLabel: 'Project owner' }} showRole={false} />
-                        ) : (
-                          <span className="text-xs text-muted">Unassigned</span>
-                        )}
-                      </td>
-                      <td className="text-[11px] text-muted">{project.slug}</td>
-                      <td>
-                        <div className="ams-table-actions">
-                          <button type="button" className="ams-table-action" onClick={() => openProjectDetail(project)}>View</button>
-                          {canManageProjects && <button type="button" className="ams-table-action" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredArchivedProjects.length === 0 && (
-                    <tr><td colSpan={8} className="py-12 text-center text-xs text-muted">
-                      {archivedProjects.length ? 'No archived projects match the current filters.' : 'No archived projects yet.'}
-                    </td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <AdminFilterBar slug="projects-archive-filters" className="ams-registry-filters" searchValue={archiveSearch} onSearchChange={setArchiveSearch} searchLabel="Search archived projects" searchPlaceholder="Search completed projects, clients, owners..."
+              actions={<DashboardControl variant="action" size="standard" icon={<X size={14} />} onClick={() => { setArchiveSearch(''); setArchiveHealthFilter(''); }} disabled={!archiveSearch && !archiveHealthFilter}>Reset filters</DashboardControl>}>
+              <CustomSelect value={archiveHealthFilter} onChange={setArchiveHealthFilter} options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]} aria-label="Filter archived projects by health" />
+            </AdminFilterBar>
+            <div className="ams-registry-result-context" role="status"><span>{serverMode ? filteredArchivedProjects.length + ' of ' + archivedProjects.length + ' completed records' : loading ? 'Loading project history' : 'Project history unavailable'}</span><span>Target deadlines are planned dates, not completion timestamps.</span></div>
+            <ProjectRegistryRecords archived rows={pagedArchiveTableRows} available={serverMode} loading={loading} hasRecords={archivedProjects.length > 0}
+                hasFilters={Boolean(archiveSearch || archiveHealthFilter)} onReset={() => { setArchiveSearch(''); setArchiveHealthFilter(''); }} getRecordedCost={getRecordedExpense}
+                formatDate={formatDate} formatMoney={value => formatAmount(value, currency)} isOverdue={isOverdue}
+                onOpen={openProjectDetail} onDelivery={goToSprint} onEdit={canManageProjects ? openEditProject : undefined} />
           <AdminTablePagination total={filteredArchivedProjects.length} page={archiveTablePage} pageSize={archiveTablePageSize} onPageChange={setArchiveTablePage} onPageSizeChange={setArchiveTablePageSize} itemLabel="completed projects" slug="projects-archived-pagination" />
           </AdminPanel>
 
@@ -3991,14 +3645,14 @@ export const AdminProjects: React.FC = () => {
                   value: serverMode ? String(archivedProjects.length) : '—',
                   change: serverMode ? 'Historical delivery' : loading ? 'Loading records' : 'Unavailable',
                   changeToneClassName: serverMode ? 'text-success' : 'text-muted',
-                  context: serverMode ? 'Closed project records' : loading ? 'Loading live project records' : 'Live project data unavailable',
+                  context: serverMode ? 'Projects marked Completed' : loading ? 'Loading live project records' : 'Live project data unavailable',
 
                   icon: <CheckCircle2 size={15} />,
                   toneClassName: 'text-success',
                 },
                 {
                   id: 'archived-value',
-                  label: 'Completed value',
+                  label: 'Completed project budgets',
                   value: serverMode ? formatAmount(archiveStats.totalValue, currency) : '—',
                   change: serverMode ? archiveStats.clients + ' clients' : loading ? 'Loading records' : 'Unavailable',
                   changeToneClassName: serverMode ? 'text-info' : 'text-muted',
@@ -4009,7 +3663,7 @@ export const AdminProjects: React.FC = () => {
                 },
                 {
                   id: 'archived-progress',
-                  label: 'Average final progress',
+                  label: 'Average recorded progress',
                   value: serverMode ? archiveStats.averageProgress + '%' : '—',
                   change: serverMode ? 'Delivery completion' : loading ? 'Loading records' : 'Unavailable',
                   changeToneClassName: serverMode ? 'text-success' : 'text-muted',

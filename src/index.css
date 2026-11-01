@@ -646,6 +646,8 @@
 .ams-shell .ams-finance-table .ams-table-actions>button,.ams-shell .ams-finance-table .ams-table-actions>a{width:32px;height:32px;min-width:32px;min-height:32px;padding:0}
 .ams-shell .ams-finance-table .tabular-nums{font-variant-numeric:tabular-nums}
 .ams-shell .ams-data-table-shell,.ams-shell .ams-client-table-shell{min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+/* Reuse the same table shell inside a parent panel without a second outer outline. */
+.ams-shell .ams-data-table-shell.ams-data-table-shell--embedded{border:0;border-radius:0}
 .ams-shell .ams-data-table,.ams-shell .ams-client-table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
 .ams-shell .ams-topbar-utilities,.ams-shell .ams-topbar-mobile-utilities{display:flex;align-items:center;gap:8px;padding:4px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
 .ams-shell .ams-topbar-icon{min-width:36px;min-height:36px;border-radius:8px}

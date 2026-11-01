@@ -1,6 +1,6 @@
 /* Inbox consumes the approved Overview empty-state geometry and final typography.
    Dashboard keeps its existing stylesheet and rendered presentation unchanged. */
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -13,14 +13,14 @@
   text-align: left;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty--compact {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty--compact {
   padding: 13px 12px;
   gap: 10px;
   border-radius: 11px;
   background: color-mix(in srgb, var(--bg) 54%, var(--panel));
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__icon {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__icon {
   display: grid;
   width: 34px;
   height: 34px;
@@ -32,12 +32,12 @@
   color: var(--muted);
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__content {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__content {
   min-width: 0;
   flex: 1;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__eyebrow {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__eyebrow {
   margin: 0 0 3px;
   color: var(--muted);
   font-size: 10px;
@@ -47,7 +47,7 @@
   text-transform: uppercase;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__title {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__title {
   margin: 0;
   color: var(--text);
   font-size: 12px;
@@ -57,7 +57,7 @@
   overflow-wrap: anywhere;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__description {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__description {
   font-size: 11px;
   line-height: 16px;
   max-width: 56ch;
@@ -66,27 +66,27 @@
   overflow-wrap: anywhere;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__action {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__action {
   display: flex;
   flex-wrap: wrap;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__action a {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__action a {
   min-height: 30px;
   border-radius: 8px;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__action a:focus-visible {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__action a:focus-visible {
   outline-offset: 3px;
 }
 
 @media (max-width: 599px) {
-  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty {
+  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty {
     gap: 9px;
     padding: 13px 11px;
   }
 
-  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__icon {
+  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__icon {
     width: 30px;
     height: 30px;
     flex-basis: 30px;
@@ -95,25 +95,25 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty *,
-  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__action a {
+  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty *,
+  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__action a {
     transition-duration: 0.01ms;
   }
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty--success .ams-dashboard-empty__icon {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty--success .ams-dashboard-empty__icon {
   border-color: color-mix(in srgb, var(--success) 22%, var(--line));
   background: color-mix(in srgb, var(--success) 7%, var(--panel));
   color: var(--success);
 }
 
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__action {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__action {
   align-items: center;
   gap: 8px;
   margin-top: 10px;
 }
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-overview) .ams-dashboard-empty__action .ams-dashboard-control {
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace) .ams-dashboard-empty__action .ams-dashboard-control {
   box-sizing: border-box;
   height: var(--ams-dashboard-control-height, 36px);
   min-height: var(--ams-dashboard-control-height, 36px);
