@@ -1,4 +1,5 @@
 import './OperationalWorkspace.css';
+import './AdminModuleHeader.css';
 import React, { useId } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, HelpCircle, X } from '../../lib/untitled-ui-icon-bridge';
 import { Link, NavLink } from 'react-router-dom';
@@ -323,6 +324,8 @@ export const AdminStatusBadge: React.FC<AdminStatusBadgeProps> = ({
 };
 
 export interface AdminModuleHeaderProps {
+  /** Approved Overview geometry; use for every new or redesigned workspace. */
+  variant?: 'default' | 'workspace';
   title: React.ReactNode;
   description?: React.ReactNode;
   eyebrow?: React.ReactNode;
@@ -333,6 +336,7 @@ export interface AdminModuleHeaderProps {
 }
 
 export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
+  variant = 'default',
   title,
   description,
   eyebrow,
@@ -343,6 +347,7 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
 }) => (
   <header data-ams-feature-slug={slug} data-ams-slug={slug || (typeof title === 'string' ? 'header-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : undefined)} className={cn(
     'ams-page-header mb-6 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between',
+    variant === 'workspace' && 'ams-module-header--workspace',
     className
   )}>
     <div className="min-w-0">

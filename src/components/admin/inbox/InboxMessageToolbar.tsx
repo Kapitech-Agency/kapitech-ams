@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Check, ChevronDown, Download, Filter, LayoutGrid, RefreshCw, Search, Star, Table as TableIcon, X } from 'lucide-react';
+import { Check, ChevronDown, Download, LayoutGrid, RefreshCw, Table as TableIcon } from 'lucide-react';
+import { AdminFilterToolbar, AdminFilterField } from '../AdminFilterToolbar';
 import { AdminSectionTabs } from '../AdminModulePrimitives';
 import { DashboardControl, DashboardFilterGroup } from '../DashboardControls';
 import { CustomSelect, type SelectOption } from '../../ui/CustomSelect';
@@ -42,20 +43,12 @@ type Props = {
 };
 
 export const InboxMessageToolbar: React.FC<Props> = (p) => {
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreButton = useRef<HTMLButtonElement>(null);
   const activeFilters = [p.status, p.priority, p.owner, p.channel].filter((value) => value !== 'all').length;
-  return <section className="ams-inbox2-toolbar" data-ams-slug="inbox-message-controls" aria-label="Message controls">
-    <div className="ams-inbox2-toolbar-row">
-      <label className="ams-inbox2-search">
-        <Search size={16} aria-hidden="true" />
-        <span className="sr-only">Search inbound messages</span>
-        <input aria-label="Search inbound messages" value={p.search} onChange={(event) => p.onSearch(event.target.value)} placeholder="Search messages, people or briefs…" />
-        {p.search && <button type="button" onClick={() => p.onSearch('')} aria-label="Clear message search"><X size={14} /></button>}
-      </label>
-      <div className="ams-inbox2-toolbar-controls" data-ams-feature-slug="inbox-message-actions">
-        <DashboardControl variant="filter" active={filtersOpen || activeFilters > 0} ariaPressed={filtersOpen} ariaExpanded={filtersOpen} ariaControls="inbox-message-filter-panel" onClick={() => setFiltersOpen(!filtersOpen)} icon={<Filter size={16} />} count={activeFilters || undefined}>Filters</DashboardControl>
+  return <AdminFilterToolbar slug="inbox-message-controls" actionsSlug="inbox-message-actions" ariaLabel="Message controls" columns={4}
+    searchValue={p.search} onSearchChange={p.onSearch} searchLabel="Search inbound messages" searchPlaceholder="Search messages, people or briefs…"
+    activeFilterCount={activeFilters} onReset={p.onReset} actions={<>
         <DashboardFilterGroup ariaLabel="Message register view" className="ams-inbox2-view-switch" value={p.table ? 'table' : 'split'} options={[
           { value: 'split', label: <><LayoutGrid size={14} /><span>Review</span></> },
           { value: 'table', label: <><TableIcon size={14} /><span>Table</span></> },
@@ -72,15 +65,10 @@ export const InboxMessageToolbar: React.FC<Props> = (p) => {
             {p.canManage && <Link onClick={() => setMoreOpen(false)} to="/admin/cms/careers?tab=applicants">Careers applicants</Link>}
           </div>
         </DropdownPortal>
-      </div>
-    </div>
-    {filtersOpen && <div id="inbox-message-filter-panel" className="ams-inbox2-filter-panel">
-      <div><span>Status</span><CustomSelect slug="inbox-message-status-filter" aria-label="Filter messages by status" value={p.status} onChange={p.onStatus} options={p.statuses.map((option) => ({ ...option, label: option.value === 'all' ? 'All statuses' : option.label.replace(/^Status: /, '') }))} /></div>
-      <div><span>Priority</span><CustomSelect slug="inbox-message-priority-filter" aria-label="Filter messages by priority" value={p.priority} onChange={p.onPriority} options={[{ value: 'all', label: 'All priorities' }, { value: 'urgent', label: 'Urgent' }, { value: 'high', label: 'High' }, { value: 'normal', label: 'Normal' }, { value: 'low', label: 'Low' }]} /></div>
-      <div><span>Owner / PIC</span><CustomSelect slug="inbox-message-owner-filter" aria-label="Filter messages by owner" value={p.owner} onChange={p.onOwner} options={p.owners} /></div>
-      <div><span>Record type</span><CustomSelect slug="inbox-message-channel-filter" aria-label="Filter messages by channel" value={p.channel} onChange={p.onChannel} options={p.channels} /></div>
-      <DashboardControl variant="quiet" icon={<X size={14} />} onClick={p.onReset} disabled={!activeFilters && !p.search}>Reset filters</DashboardControl>
-    </div>}
-    {activeFilters > 0 && !filtersOpen && <div className="ams-inbox2-active-filters"><Filter size={12} aria-hidden="true" /><span>{activeFilters} {activeFilters === 1 ? 'filter' : 'filters'} applied</span><button type="button" onClick={p.onReset}>Clear filters</button></div>}
-  </section>;
+    </>}>
+      <AdminFilterField label="Status"><CustomSelect slug="inbox-message-status-filter" aria-label="Filter messages by status" value={p.status} onChange={p.onStatus} options={p.statuses.map((option) => ({ ...option, label: option.value === 'all' ? 'All statuses' : option.label.replace(/^Status: /, '') }))} /></AdminFilterField>
+      <AdminFilterField label="Priority"><CustomSelect slug="inbox-message-priority-filter" aria-label="Filter messages by priority" value={p.priority} onChange={p.onPriority} options={[{ value: 'all', label: 'All priorities' }, { value: 'urgent', label: 'Urgent' }, { value: 'high', label: 'High' }, { value: 'normal', label: 'Normal' }, { value: 'low', label: 'Low' }]} /></AdminFilterField>
+      <AdminFilterField label="Owner / PIC"><CustomSelect slug="inbox-message-owner-filter" aria-label="Filter messages by owner" value={p.owner} onChange={p.onOwner} options={p.owners} /></AdminFilterField>
+      <AdminFilterField label="Record type"><CustomSelect slug="inbox-message-channel-filter" aria-label="Filter messages by channel" value={p.channel} onChange={p.onChannel} options={p.channels} /></AdminFilterField>
+  </AdminFilterToolbar>;
 };

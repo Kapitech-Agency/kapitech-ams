@@ -22,10 +22,10 @@ const actions = { onOpen: noop, formatDue: (value: string) => value || 'No due d
 const render = (Component: React.ElementType, props = {}) => renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(Component, { ...actions, ...props })));
 
 test('Task layout aliases resolve to supported views while preserving role and personal scope', () => {
-  assert.equal(resolveTaskExecutionLayout(null), 'list');
+  assert.equal(resolveTaskExecutionLayout(null), 'board');
   assert.equal(resolveTaskExecutionLayout('task-lists'), 'projects');
   assert.equal(resolveTaskExecutionLayout('dependencies'), 'blockers');
-  assert.equal(resolveTaskExecutionLayout('unknown'), 'list');
+  assert.equal(resolveTaskExecutionLayout('unknown'), 'board');
   for (const role of ['Admin', 'PM', 'Creative', 'Finance', 'Freelancer'] as AmsRole[]) {
     const params = new URLSearchParams(role === 'PM' ? 'taskscope=my' : 'taskscope=my&workspace=project');
     for (const layout of ['board', 'list', 'projects', 'blockers'] as const) {

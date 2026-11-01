@@ -41,6 +41,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
+import { AdminFilterToolbar, AdminFilterField } from '../../components/admin/AdminFilterToolbar';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { getProjectsDefaultView } from '../../lib/projectsWorkspaceNavigation';
 import { ProjectRegistryRecords, ProjectRegistryCard } from '../../components/admin/projects/ProjectRegistryRecords';
@@ -2119,6 +2120,7 @@ export const AdminProjects: React.FC = () => {
       </Drawer>
 
       <AdminModuleHeader
+        variant="workspace"
         className="mb-0"
         eyebrow={(
           <div className="flex flex-wrap items-center gap-2">
@@ -2737,32 +2739,11 @@ export const AdminProjects: React.FC = () => {
                 ? 'Loading the current project portfolio from AMS.'
                 : 'Live project records are unavailable. Refresh after the project service is restored.'}
           >
-            <AdminFilterBar
-              slug="projects-directory-filters"
-              searchValue={projectSearch}
-              onSearchChange={setProjectSearch}
-              searchPlaceholder="Search projects, clients, owners..."
-              searchLabel="Search projects"
-              className="ams-operational-filters"
-              searchClassName="ams-operational-search"
-              actions={(
-                <Button
-                  type="button"
-                  variant="secondary"
-                  icon={<X size={13} />}
-                  onClick={clearProjectFilters}
-                  disabled={!activeProjectFilters && projectSort === 'updated'}
-                >
-                  Reset filters
-                </Button>
-              )}
-            >
-              <div
-                className="ams-operational-filter-fields"
-                aria-label="Project filters"
-              >
-                {!registryStatusView && <CustomSelect value={projectStatusFilter} onChange={setProjectStatusFilter} options={[{value:'',label:'All statuses'}, ...PROJECT_STATUSES]} aria-label="Filter projects by status" />}
-                <CustomSelect
+            <AdminFilterToolbar slug="projects-directory-filters" ariaLabel="Project controls"
+              searchValue={projectSearch} onSearchChange={setProjectSearch} searchLabel="Search projects" searchPlaceholder="Search projects, clients, owners..."
+              activeFilterCount={activeProjectFilters - Number(Boolean(projectSearch))} onReset={clearProjectFilters} resetDisabled={!activeProjectFilters && projectSort === 'updated'}>
+                {!registryStatusView && <AdminFilterField label="Lifecycle status"><CustomSelect value={projectStatusFilter} onChange={setProjectStatusFilter} options={[{value:'',label:'All statuses'}, ...PROJECT_STATUSES]} aria-label="Filter projects by status" /></AdminFilterField>}
+                <AdminFilterField label="Deadline"><CustomSelect
                   value={projectDeadlineFilter}
                   onChange={(value) => setProjectDeadlineFilter(value as ProjectDeadlineFilter)}
                   options={[
@@ -2775,29 +2756,29 @@ export const AdminProjects: React.FC = () => {
                   className="w-full min-w-0"
                   aria-label="Filter projects by deadline"
                   data-ams-slug="projects-filter-deadline"
-                />
-                <CustomSelect
+                /></AdminFilterField>
+                <AdminFilterField label="Health"><CustomSelect
                   value={projectHealthFilter}
                   onChange={setProjectHealthFilter}
                   options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]}
                   className="w-full min-w-0"
                   aria-label="Filter projects by health"
-                />
-                <CustomSelect
+                /></AdminFilterField>
+                <AdminFilterField label="Client"><CustomSelect
                   value={projectClientFilter}
                   onChange={setProjectClientFilter}
                   options={[{ value: '', label: 'All clients' }, ...projectFilterOptions.clients.map(value => ({ value, label: value }))]}
                   className="w-full min-w-0"
                   aria-label="Filter projects by client"
-                />
-                <CustomSelect
+                /></AdminFilterField>
+                <AdminFilterField label="Project owner"><CustomSelect
                   value={projectOwnerFilter}
                   onChange={setProjectOwnerFilter}
                   options={[{ value: '', label: 'All owners' }, ...projectFilterOptions.owners.map(value => ({ value, label: value }))]}
                   className="w-full min-w-0"
                   aria-label="Filter projects by owner"
-                />
-                <CustomSelect
+                /></AdminFilterField>
+                <AdminFilterField label="Sort order"><CustomSelect
                   value={projectSort}
                   onChange={setProjectSort}
                   options={[
@@ -2809,9 +2790,8 @@ export const AdminProjects: React.FC = () => {
                   ]}
                   className="w-full min-w-0"
                   aria-label="Sort projects"
-                />
-              </div>
-            </AdminFilterBar>
+                /></AdminFilterField>
+            </AdminFilterToolbar>
             <div className="ams-registry-result-context" role="status"><span>{serverMode ? filteredProjects.length + ' of ' + projects.length + ' projects' : loading ? 'Loading project records' : 'Project records unavailable'}</span><span>{registryStatusView === 'planning' ? 'Prepare ownership, scope and milestone dates before delivery.' : registryStatusView === 'active' ? 'In progress and Review project stages.' : registryStatusView === 'on-hold' ? 'Paused delivery. Inspect the project before resuming work.' : registryStatusView === 'completed' ? 'Completed status does not confirm client acceptance or full task completion.' : 'Creative and technology delivery in one canonical register.'}</span></div>
             {loading || !serverMode || filteredProjects.length === 0 ? (
               <ProjectRegistryRecords rows={pagedProjectTableRows} available={serverMode} loading={loading} hasRecords={projects.length > 0}
@@ -3623,10 +3603,10 @@ export const AdminProjects: React.FC = () => {
             title="Archived projects"
             description="Completed delivery records remain queryable for reference, handover history, and future reuse."
           >
-            <AdminFilterBar slug="projects-archive-filters" className="ams-operational-filters" searchValue={archiveSearch} onSearchChange={setArchiveSearch} searchLabel="Search archived projects" searchPlaceholder="Search completed projects, clients, owners..."
-              actions={<DashboardControl variant="action" size="standard" icon={<X size={14} />} onClick={() => { setArchiveSearch(''); setArchiveHealthFilter(''); }} disabled={!archiveSearch && !archiveHealthFilter}>Reset filters</DashboardControl>}>
-              <CustomSelect value={archiveHealthFilter} onChange={setArchiveHealthFilter} options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]} aria-label="Filter archived projects by health" />
-            </AdminFilterBar>
+            <AdminFilterToolbar slug="projects-archive-filters" ariaLabel="Archived project controls" searchValue={archiveSearch} onSearchChange={setArchiveSearch} searchLabel="Search archived projects" searchPlaceholder="Search completed projects, clients, owners..."
+              activeFilterCount={Number(Boolean(archiveHealthFilter))} onReset={() => { setArchiveSearch(''); setArchiveHealthFilter(''); }}>
+              <AdminFilterField label="Health"><CustomSelect value={archiveHealthFilter} onChange={setArchiveHealthFilter} options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]} aria-label="Filter archived projects by health" /></AdminFilterField>
+            </AdminFilterToolbar>
             <div className="ams-registry-result-context" role="status"><span>{serverMode ? filteredArchivedProjects.length + ' of ' + archivedProjects.length + ' completed records' : loading ? 'Loading project history' : 'Project history unavailable'}</span><span>Target deadlines are planned dates, not completion timestamps.</span></div>
             <ProjectRegistryRecords archived rows={pagedArchiveTableRows} available={serverMode} loading={loading} hasRecords={archivedProjects.length > 0}
                 hasFilters={Boolean(archiveSearch || archiveHealthFilter)} onReset={() => { setArchiveSearch(''); setArchiveHealthFilter(''); }} getRecordedCost={getRecordedExpense}

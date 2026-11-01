@@ -4,7 +4,7 @@ export type TaskExecutionLayout = 'board' | 'list' | 'projects' | 'blockers';
 export const resolveTaskExecutionLayout = (value: string | null): TaskExecutionLayout => {
   if (value === 'task-lists') return 'projects';
   if (value === 'dependencies') return 'blockers';
-  return value === 'board' || value === 'projects' || value === 'blockers' ? value : 'list';
+  return value === 'list' || value === 'projects' || value === 'blockers' ? value : 'board';
 };
 
 export const buildTaskExecutionLayoutHref = (params: URLSearchParams, layout: TaskExecutionLayout): string => {

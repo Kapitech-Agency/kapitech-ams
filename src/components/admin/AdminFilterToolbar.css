@@ -1,0 +1,26 @@
+/* Shared Inbox toolbar contract. Module CSS must not redefine its control geometry. */
+.ams-filter-toolbar { display:flex; flex-direction:column; gap:12px; padding:12px; border:1px solid var(--line); border-radius:var(--radius-card); background:var(--panel); min-width:0; }
+.ams-filter-toolbar-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.ams-filter-toolbar-search { display:flex; align-items:center; flex:1 1 auto; gap:8px; min-width:0; min-height:36px; padding:0 12px; color:var(--muted); border:1px solid var(--line); border-radius:var(--radius-control); background:var(--bg); }
+.ams-filter-toolbar-search:focus-within { outline:2px solid var(--accent); outline-offset:2px; }
+.ams-filter-toolbar-search input { flex:1; width:100%; min-width:0; min-height:36px; color:var(--text); font-size:13px; background:transparent; border:0; border-radius:0; padding:0; outline:none; box-shadow:none; }
+.ams-filter-toolbar-search input::placeholder { color:var(--muted); }
+.ams-filter-toolbar-search > svg { flex-shrink:0; }
+.ams-filter-toolbar-search > button { display:flex; align-items:center; justify-content:center; min-height:36px; min-width:36px; }
+.ams-filter-toolbar-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
+.ams-shell .ams-filter-toolbar-controls > .ams-dashboard-control { height:var(--dashboard-control-height,36px); min-height:var(--dashboard-control-height,36px); }
+.ams-shell .ams-filter-toolbar-controls > .ams-dashboard-control--filter { border:1px solid var(--line); border-radius:var(--radius-control); }
+.ams-filter-toolbar-panel { display:grid; gap:12px; padding-top:12px; border-top:1px solid var(--line); }
+.ams-filter-toolbar-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; align-items:end; }
+.ams-filter-toolbar-fields--four { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.ams-filter-toolbar-footer { display:flex; justify-content:flex-end; }
+.ams-filter-toolbar-field { min-width:0; }
+.ams-filter-toolbar-field > span:first-child { display:block; margin-bottom:8px; color:var(--muted); font-size:12px; }
+.ams-filter-toolbar-field > div { width:100%; }
+.ams-filter-toolbar-applied { display:flex; flex-wrap:wrap; align-items:center; gap:8px; color:var(--muted); font-size:12px; }
+.ams-filter-toolbar-applied button { min-height:36px; color:var(--text); text-decoration:underline; text-underline-offset:4px; }
+.ams-filter-toolbar :is(button,a):focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ams-shell .ams-operational-panel .ams-filter-toolbar { margin:4px 16px 12px; }
+@media(max-width:1099px) { .ams-filter-toolbar-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:899px) { .ams-filter-toolbar-search input, .ams-shell .ams-filter-toolbar-controls > .ams-dashboard-control { min-height:40px; height:auto; } }
+@media(max-width:599px) { .ams-filter-toolbar-row { flex-direction:column; align-items:stretch; } .ams-filter-toolbar-controls { justify-content:space-between; } .ams-filter-toolbar-fields { grid-template-columns:minmax(0,1fr); } .ams-shell .ams-operational-panel .ams-filter-toolbar { margin-inline:12px; } }

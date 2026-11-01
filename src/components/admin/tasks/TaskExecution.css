@@ -43,7 +43,7 @@
 .ams-shell .ams-task-project-queue summary > span:first-child > span { color:var(--muted); font-size:11px; line-height:16px; }
 .ams-shell .ams-task-project-queue > summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .ams-shell .ams-task-project-queue > summary > svg { flex-shrink:0; color:var(--muted); transition:transform 150ms; }
-.ams-shell .ams-task-project-queue[open] > summary > svg { transform:rotate(90deg); }
+.ams-shell .ams-task-project-queue[open] > summary > svg { transform:rotate(180deg); }
 .ams-shell .ams-task-project-counts { display:flex; align-items:center; flex-wrap:wrap; gap:7px 12px; color:var(--muted); font-size:11px; line-height:16px; }
 .ams-shell .ams-task-project-records,.ams-shell .ams-task-blocker-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; }
 .ams-shell .ams-task-project-records { padding:0 12px 12px; }

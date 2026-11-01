@@ -41,19 +41,6 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.ams-shell .ams-inbox-message-redesign .ams-page-header {
-  align-items: center;
-  padding-bottom: 8px;
-  border-bottom: 0;
-}
-.ams-shell .ams-inbox-message-redesign .ams-page-header h1 {
-  font-size: 26px;
-  line-height: 32px;
-  font-weight: 650;
-  letter-spacing: -.01em;
-}
-.ams-shell .ams-inbox-message-redesign .ams-page-header > div:first-child { flex: 1 1 auto; }
-.ams-shell .ams-inbox-message-redesign .ams-page-header > div:first-child > p { font-size: 12px; line-height: 18px; }
 .ams-shell .ams-inbox-message-redesign .ams-inbox-panel > :where(.ams-inbox-panel-header, div:first-child) {
   display: flex;
   min-width: 0;
@@ -75,7 +62,4 @@
 .ams-shell .ams-inbox-message-redesign :is(.ams-template-category, .ams-template-excerpt, .ams-message-secondary, .ams-message-company, .ams-message-owner, .ams-message-row-top time, .ams-message-sender-info > span, .ams-message-sender > time) { font-size: 11px; line-height: 16px; }
 @media (max-width: 899px) {
   .ams-shell nav.ams-topnav-scroll:is(.ams-inbox-module-tabs, .ams-inbox-workspace-tabs) > a { height: 40px; min-height: 40px; }
-}
-@media (max-width: 639px) {
-  .ams-shell .ams-inbox-message-redesign .ams-page-header { align-items: stretch; }
 }

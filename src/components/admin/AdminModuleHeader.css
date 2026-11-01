@@ -1,0 +1,13 @@
+/* AdminModuleHeader workspace variant: approved Dashboard Overview typography/anatomy. */
+.ams-shell header.ams-module-header--workspace {
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,max-content); align-items:center;
+  gap:12px 18px; width:100%; min-width:0; margin:0; padding:0 0 8px; border:0;
+}
+.ams-shell header.ams-module-header--workspace > div:first-child { min-width:0; max-width:100%; }
+.ams-shell header.ams-module-header--workspace h1 { margin:0; font-size:26px; line-height:32px; font-weight:650; letter-spacing:-.035em; }
+.ams-shell header.ams-module-header--workspace > div:first-child > p { max-width:54ch; margin-top:4px; font-size:11px; line-height:16px; }
+.ams-shell header.ams-module-header--workspace > div:last-child:not(:first-child) { display:flex; width:auto; min-width:0; max-width:100%; justify-self:end; align-items:center; }
+@media(max-width:899px) {
+  .ams-shell header.ams-module-header--workspace { grid-template-columns:minmax(0,1fr); align-items:start; }
+  .ams-shell header.ams-module-header--workspace > div:last-child:not(:first-child) { width:100%; justify-self:stretch; justify-content:flex-start; }
+}

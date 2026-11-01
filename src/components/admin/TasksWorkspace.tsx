@@ -22,7 +22,8 @@ import { TaskExecutionCard, TaskExecutionList, TaskProjectQueues, TaskBlockedWor
 import { resolveTaskExecutionLayout, buildTaskExecutionLayoutHref, type TaskExecutionLayout } from '../../lib/taskExecutionNavigation';
 import { getAmsWorkspaceNavigationModule } from '../../lib/amsModuleSubnavigation';
 import './tasks/TaskExecution.css';
-import { AdminFilterBar, AdminStatusBadge, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from './AdminModulePrimitives';
+import { AdminFilterToolbar, AdminFilterField } from './AdminFilterToolbar';
+import { AdminStatusBadge, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { Drawer } from '../ui/Drawer';
@@ -1105,9 +1106,10 @@ export const TasksWorkspace: React.FC = () => {
     <AdminPageShell featureSlug="tasks-module" className="tasks-module ams-tasks-workspace ams-operational-workspace">
       <div data-ams-slug="tasks-header">
         <AdminModuleHeader
+          variant="workspace"
           className="mb-0"
           title={getAmsWorkspaceNavigationModule('/admin/tasks', searchParams.toString(), currentRole) === 'projects' ? 'Tasks & Execution' : 'My Tasks'}
-          eyebrow={<AdminStatusBadge tone={loading ? 'info' : taskSourceEverLoaded ? 'success' : 'warning'}>{loading ? 'Loading task records' : taskSourceEverLoaded ? 'Task records loaded' : 'Task data unavailable'}</AdminStatusBadge>}
+          eyebrow={<><span>{getAmsWorkspaceNavigationModule('/admin/tasks', searchParams.toString(), currentRole) === 'projects' ? 'Projects / Tasks & Execution' : 'My Work / Tasks'}</span><AdminStatusBadge tone={loading ? 'info' : taskSourceEverLoaded ? 'success' : 'warning'}>{loading ? 'Loading task records' : taskSourceEverLoaded ? 'Task records loaded' : 'Task data unavailable'}</AdminStatusBadge></>}
           description="Manage daily delivery work, due tasks, reviews, blockers, and completed work from one task workspace."
           actions={<>{canManageTasks && <DashboardControl variant="primary" size="standard" icon={<Plus size={14} />} onClick={openNewTask} disabled={loading || !taskSourceEverLoaded || projects.length === 0 || bulkUpdating || updatingTaskId !== null} title={projects.length ? 'Create a task in an existing project' : 'Load a project before creating a task'}>New task</DashboardControl>}<DashboardControl variant="action" size="standard" icon={<RefreshCw size={14} />} onClick={() => void loadTasks(true)} disabled={loading} ariaLabel="Refresh task records">Refresh</DashboardControl></>}
         />
@@ -1128,19 +1130,18 @@ export const TasksWorkspace: React.FC = () => {
 
       <AdminPanel className="ams-task-panel ams-operational-panel ams-overview-panel"
         title={layout === 'projects' ? 'Project queues' : layout === 'blockers' ? 'Blocked work' : scopeLabel}
-        description={layout === 'projects' ? 'Review the work for each client project without creating duplicate task lists.' : layout === 'blockers' ? 'Inspect tasks carrying a blocked or waiting flag. This view does not infer prerequisite relationships.' : 'Keep the brief, project, assignee, due date and next action visible.'}
+        description={layout === 'projects' ? 'Coordinate creative production and development tasks by client project.' : layout === 'blockers' ? 'Review flagged work and coordinate the next action with its assignee.' : 'Keep the brief, project, assignee, due date and next action visible.'}
         slug={'tasks-' + taskScope} bodyClassName="p-0">
-        <div data-ams-feature-slug="tasks-filters"><AdminFilterBar className="ams-operational-filters" searchClassName="ams-operational-search" searchValue={query} onSearchChange={setQuery} searchLabel="Search tasks, projects, clients, assignees" searchPlaceholder="Search tasks, projects, clients, assignees..."
-          actions={<DashboardControl variant="action" size="standard" disabled={!activeFilterCount} onClick={clearFilters} ariaLabel="Reset task filters">Reset filters</DashboardControl>}>
-          <div className="ams-operational-filter-fields">
-            <span data-ams-slug="tasks-queue-tabs"><CustomSelect className="w-full" value={taskScope} onChange={value => { const target = new URL(getTaskScopeHref(value), 'https://ams.kapitech.local'); setSearchParams(new URLSearchParams(target.search)); }} options={visibleTaskTabs.map((tab) => ({value:tab.key,label:tab.label}))} aria-label="Task queue" /></span>
-            <CustomSelect value={projectFilter} onChange={setProjectFilter} options={[{ value:'all',label:'All projects' }, ...projectOptions.map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by project" />
-            <CustomSelect value={priorityFilter} onChange={setPriorityFilter} options={[{value:'all',label:'All priorities'}, ...Object.entries(taskPriorityLabel).map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by priority" />
-            <CustomSelect value={statusFilter} onChange={setStatusFilter} options={[{value:'all',label:'All stages'}, ...Object.entries(taskStatusLabel).map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by stage" />
-            <CustomSelect value={assigneeFilter} onChange={setAssigneeFilter} options={[{value:'all',label:'All assignees'},{value: '__unassigned__',label:'Unassigned'}, ...assignees.map(item=>({value:item.id,label:item.name}))]} aria-label="Filter tasks by assignee" />
-            <CustomSelect value={sortKey + ':' + sortDirection} onChange={value => {const [key,direction]=value.split(':');setSortKey(key as TaskSortKey);setSortDirection(direction as 'asc'|'desc');}} options={Object.entries({priority:'Priority',dueDate:'Due date',title:'Title',projectName:'Project',assignee:'Assignee',status:'Stage',createdAt:'Created date'}).flatMap(([key,label])=>[{value:key+':asc',label:label+' - ascending'},{value:key+':desc',label:label+' - descending'}])} aria-label="Sort tasks" />
-          </div>
-        </AdminFilterBar></div>
+        <div data-ams-feature-slug="tasks-filters"><AdminFilterToolbar slug="tasks-filter-toolbar" ariaLabel="Task controls"
+          searchValue={query} onSearchChange={setQuery} searchLabel="Search tasks, projects, clients, assignees" searchPlaceholder="Search tasks, projects, clients, assignees..."
+          activeFilterCount={[projectFilter, priorityFilter, statusFilter, assigneeFilter].filter(value => value !== 'all').length} onReset={clearFilters} resetDisabled={!activeFilterCount}>
+            <AdminFilterField label="Task queue"><span data-ams-slug="tasks-queue-tabs"><CustomSelect className="w-full" value={taskScope} onChange={value => { const target = new URL(getTaskScopeHref(value), 'https://ams.kapitech.local'); setSearchParams(new URLSearchParams(target.search)); }} options={visibleTaskTabs.map((tab) => ({value:tab.key,label:tab.label}))} aria-label="Task queue" /></span></AdminFilterField>
+            <AdminFilterField label="Project"><CustomSelect value={projectFilter} onChange={setProjectFilter} options={[{ value:'all',label:'All projects' }, ...projectOptions.map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by project" /></AdminFilterField>
+            <AdminFilterField label="Priority"><CustomSelect value={priorityFilter} onChange={setPriorityFilter} options={[{value:'all',label:'All priorities'}, ...Object.entries(taskPriorityLabel).map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by priority" /></AdminFilterField>
+            <AdminFilterField label="Stage"><CustomSelect value={statusFilter} onChange={setStatusFilter} options={[{value:'all',label:'All stages'}, ...Object.entries(taskStatusLabel).map(([value,label]) => ({value,label}))]} aria-label="Filter tasks by stage" /></AdminFilterField>
+            <AdminFilterField label="Assignee"><CustomSelect value={assigneeFilter} onChange={setAssigneeFilter} options={[{value:'all',label:'All assignees'},{value: '__unassigned__',label:'Unassigned'}, ...assignees.map(item=>({value:item.id,label:item.name}))]} aria-label="Filter tasks by assignee" /></AdminFilterField>
+            <AdminFilterField label="Sort order"><CustomSelect value={sortKey + ':' + sortDirection} onChange={value => {const [key,direction]=value.split(':');setSortKey(key as TaskSortKey);setSortDirection(direction as 'asc'|'desc');}} options={Object.entries({priority:'Priority',dueDate:'Due date',title:'Title',projectName:'Project',assignee:'Assignee',status:'Stage',createdAt:'Created date'}).flatMap(([key,label])=>[{value:key+':asc',label:label+' - ascending'},{value:key+':desc',label:label+' - descending'}])} aria-label="Sort tasks" /></AdminFilterField>
+        </AdminFilterToolbar></div>
         <div className="ams-task-result-context" role="status"><span>{taskSourceEverLoaded ? viewRecords.length + ' tasks in ' + scopeLabel : loading ? 'Loading task records' : 'Task counts unavailable'}</span><span>{layout === 'blockers' ? 'Blocked/waiting flags only; changing stage does not verify a dependency was cleared.' : layout === 'projects' ? 'Counts describe the filtered tasks, not overall project progress.' : 'Review is a task stage, not confirmed client acceptance.'}</span></div>
         {selectedIds.length > 0 && canManageTasks && layout === 'list' && <div className="ams-task-bulk" data-ams-slug="tasks-bulk-actions"><span>{selectedIds.length} selected</span><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('in_progress')}>Start selected</DashboardControl><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('done')}>Complete selected</DashboardControl></div>}
 

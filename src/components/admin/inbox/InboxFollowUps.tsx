@@ -28,7 +28,7 @@ export const InboxFollowUps: React.FC = () => {
   }, [params, requested, setParams]);
 
   return <AdminPageShell featureSlug="inbox-follow-ups-workspace" className="ams-inbox-message-redesign ams-inbox-follow-ups">
-    <AdminModuleHeader slug="inbox-follow-ups-header" title="Inbox"
+    <AdminModuleHeader slug="inbox-follow-ups-header" variant="workspace" title="Inbox"
       description="Keep client conversations, creative feedback and technical next steps on track."
       actions={<DashboardControl to="/admin/inbox?view=messages" icon={<MessageSquare size={14} />}>Open messages</DashboardControl>}
     />

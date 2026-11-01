@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, ArrowUpRight, Eye, FolderKanban, Pencil } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Eye, FolderKanban, Pencil } from 'lucide-react';
 import { AdminDataTableShell, AdminStatusBadge } from '../AdminModulePrimitives';
 import { DashboardControl } from '../DashboardControls';
 import { DashboardEmptyState } from '../DashboardEmptyState';
@@ -95,7 +95,7 @@ const ProjectQueue: React.FC<{ tasks: TaskExecutionRecord[] } & RecordActions> =
   const [expanded, setExpanded] = useState(false);
   const task = tasks[0];
   return <details className="ams-task-project-queue" onToggle={event => setExpanded(event.currentTarget.open)}>
-    <summary><span><strong>{task.projectId ? task.projectName : 'Tasks without a linked project'}</strong><span>{task.projectId ? task.clientName || 'Client not linked' : 'Review project linkage in each task.'}</span></span><span className="ams-task-project-counts"><span>{tasks.length} tasks</span><span>{tasks.filter(item => item.status !== 'done').length} open</span><span>{tasks.filter(item => item.status === 'review').length} review</span><span>{tasks.filter(item => item.blocked).length} flagged</span></span><ArrowUpRight size={14} aria-hidden="true" /></summary>
+    <summary><span><strong>{task.projectId ? task.projectName : 'Tasks without a linked project'}</strong><span>{task.projectId ? task.clientName || 'Client not linked' : 'Review project linkage in each task.'}</span></span><span className="ams-task-project-counts"><span>{tasks.length} tasks</span><span>{tasks.filter(item => item.status !== 'done').length} open</span><span>{tasks.filter(item => item.status === 'done').length} done</span><span>{tasks.filter(item => item.status === 'review').length} review</span><span>{tasks.filter(item => item.blocked).length} flagged</span></span><ChevronDown size={14} aria-hidden="true" /></summary>
     {expanded && <div className="ams-task-project-records">{tasks.map(item => <article key={item.id} className="ams-task-compact-record ams-overview-panel"><TaskExecutionCard {...actions} task={item} /></article>)}</div>}
   </details>;
 };

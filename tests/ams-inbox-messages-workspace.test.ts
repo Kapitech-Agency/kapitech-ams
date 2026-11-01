@@ -66,8 +66,8 @@ test('Inbox opens on a source-backed Messages master-detail workspace without an
 
 test('Inbox keeps bulk actions and export in one shared toolbar without Overview duplicates', async () => {
 const source = readInboxPresentation();
-  assert.match(source, /data-ams-slug="inbox-message-controls"/);
-  assert.match(source, /data-ams-feature-slug="inbox-message-actions"/);
+  assert.match(source, /<AdminFilterToolbar slug="inbox-message-controls"/);
+  assert.match(source, /actionsSlug="inbox-message-actions"/);
   const header = source.slice(source.indexOf('<AdminModuleHeader slug="inbox-header"'), source.indexOf('<InboxMessageNavigation'));
   assert.doesNotMatch(header, /handleExportCSV|handleMarkAllRead/);
   assert.equal((source.match(/onExport=\{handleExportCSV\}/g) || []).length, 1);

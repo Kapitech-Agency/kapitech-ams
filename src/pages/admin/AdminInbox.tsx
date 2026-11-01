@@ -562,7 +562,7 @@ const AdminInboxMessages: React.FC = () => {
   return (
     <AdminPageShell featureSlug="inbox-module" className="ams-inbox-page ams-inbox-message-redesign">
       
-      <AdminModuleHeader slug="inbox-header" className="mb-0" title="Inbox"
+      <AdminModuleHeader slug="inbox-header" variant="workspace" className="mb-0" title="Inbox"
         description="Conversations, creative briefs and technical requests."
         actions={<>
           <DashboardControl icon={<Mail size={14} />} onClick={() => setIsEmailModalOpen(true)}>Email alerts</DashboardControl>

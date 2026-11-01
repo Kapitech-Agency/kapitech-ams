@@ -70,7 +70,7 @@ export const InboxRoutingTemplates: React.FC = () => {
   };
 
   return <AdminPageShell featureSlug="inbox-routing-templates-workspace" className="ams-inbox-message-redesign ams-inbox-routing-templates">
-    <AdminModuleHeader slug="inbox-routing-templates-header" title="Inbox"
+    <AdminModuleHeader slug="inbox-routing-templates-header" variant="workspace" title="Inbox"
       description="Keep incoming requests organized and agency responses consistent."
       actions={<DashboardControl to="/admin/inbox?view=messages" icon={<MessageSquare size={14} />}>Open messages</DashboardControl>}
     />
