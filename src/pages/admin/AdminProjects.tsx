@@ -18,6 +18,7 @@ import {
   List,
   MoreHorizontal,
   Plus,
+  RefreshCw,
   Search,
   ShieldAlert,
   SlidersHorizontal,
@@ -40,6 +41,8 @@ import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { getProjectsDefaultView } from '../../lib/projectsWorkspaceNavigation';
+import { DashboardControl } from '../../components/admin/DashboardControls';
 import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
 import '../../components/admin/ProjectsOverview.css';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -481,6 +484,7 @@ export const AdminProjects: React.FC = () => {
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
   const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
+  const [pendingReviewTask, setPendingReviewTask] = useState<{ projectId: string; taskId: string } | null>(null);
   const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
   const createProjectRequestHandled = React.useRef(false);
   const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
@@ -492,7 +496,7 @@ export const AdminProjects: React.FC = () => {
   const [deletingTaskRecord, setDeletingTaskRecord] = useState(false);
 
   const requestedView = searchParams.get('projects');
-  const view: ProjectsView = requestedView === 'overview'
+  const view: ProjectsView = requestedView === 'overview' || (!requestedView && getProjectsDefaultView(searchParams) === 'overview')
     ? 'overview'
     : requestedView === 'planning-delivery'
       ? 'planning-delivery'
@@ -884,6 +888,18 @@ export const AdminProjects: React.FC = () => {
     setSelectedTask(current => current && current.id === latestTask.id && current !== latestTask ? latestTask : current);
   }, [selectedSprintProject, selectedTask?.id]);
 
+  React.useEffect(() => {
+    if (view !== 'sprint') setSelectedTask(null);
+  }, [view]);
+
+  // Wait for the routed project context before opening its existing task drawer.
+  React.useEffect(() => {
+    if (view !== 'sprint' || !pendingReviewTask || selectedSprintProject?.id !== pendingReviewTask.projectId) return;
+    const task = selectedSprintProject.tasks.find(item => item.id === pendingReviewTask.taskId);
+    if (task) setSelectedTask(task);
+    setPendingReviewTask(null);
+  }, [view, selectedSprintProject, pendingReviewTask]);
+
   const taskAssigneeOptions = useMemo(() => {
     if (!selectedSprintProject) return [];
     return Array.from(
@@ -997,6 +1013,10 @@ export const AdminProjects: React.FC = () => {
     ),
   [activeProjects]);
 
+  const overviewReviewTasks = useMemo(() => activeProjects.flatMap(project =>
+    project.tasks.filter(task => task.status === 'review').map(task => ({ project, task }))
+  ).sort((left, right) => (left.task.dueDate || '9999-12-31').localeCompare(right.task.dueDate || '9999-12-31')), [activeProjects]);
+
   const projectOverviewStatuses = useMemo(() => [
     { key: 'planning', label: 'Planning', count: projects.filter((project) => project.status === 'planning').length },
     { key: 'active', label: 'Active', count: projects.filter((project) => project.status === 'in_progress' || project.status === 'review').length },
@@ -1052,6 +1072,7 @@ export const AdminProjects: React.FC = () => {
     setSelectedProject(project);
     const next = new URLSearchParams(searchParams);
     next.set('project', project.slug);
+    if (!next.get('projects')) next.set('projects', view);
     setSearchParams(next, { replace: true });
   };
 
@@ -1059,6 +1080,7 @@ export const AdminProjects: React.FC = () => {
     setSelectedProject(null);
     const next = new URLSearchParams(searchParams);
     next.delete('project');
+    if (view === 'all' && !next.get('projects')) next.set('projects', 'all');
     setSearchParams(next, { replace: true });
   };
 
@@ -1673,14 +1695,14 @@ export const AdminProjects: React.FC = () => {
 
   const openView = (nextView: ProjectsView) => {
     const next = new URLSearchParams(searchParams);
-    if (nextView === 'all') next.delete('projects');
-    else next.set('projects', nextView);
+    next.set('projects', nextView);
     setSearchParams(next);
   };
 
   const openLayout = (layout: ProjectLayout) => {
     setProjectLayout(layout);
     const next = new URLSearchParams(searchParams);
+    if (view === 'all' && !next.get('projects')) next.set('projects', 'all');
     if (layout === 'board') next.delete('layout');
     else next.set('layout', layout);
     setSearchParams(next, { replace: true });
@@ -2114,7 +2136,7 @@ export const AdminProjects: React.FC = () => {
         }
         actions={(
           <>
-            {(view === 'overview' || view === 'planning-delivery' || view === 'resources') && (
+            {(view === 'planning-delivery' || view === 'resources') && (
               <Button variant="secondary" onClick={() => openView('all')}>Open Project Registry</Button>
             )}
             {view === 'all' && (
@@ -2131,7 +2153,11 @@ export const AdminProjects: React.FC = () => {
               </div>
             )}
             {view !== 'overview' && view !== 'planning-delivery' && view !== 'resources' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
-            {canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
+            {view === 'overview' ? <>
+              {canManageProjects && <DashboardControl variant="primary" icon={<Plus size={14} />} onClick={() => openNewProject()}>New project</DashboardControl>}
+              <DashboardControl variant="action" icon={<Briefcase size={14} />} onClick={() => openView('all')}>Project Registry</DashboardControl>
+              <DashboardControl variant="action" icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />} disabled={loading} onClick={() => void syncProjects()} ariaLabel="Refresh project overview">Refresh</DashboardControl>
+            </> : canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
           </>
         )}
       />
@@ -2142,7 +2168,7 @@ export const AdminProjects: React.FC = () => {
           activeKey={view === 'archived' ? 'archived' : registryStatusView || 'all'}
           className="w-full border-b border-line pb-2"
           items={[
-            { key: 'all', label: 'All Projects', to: '/admin/projects' },
+            { key: 'all', label: 'All Projects', to: '/admin/projects?projects=all' },
             { key: 'planning', label: 'Planning', to: '/admin/projects?projects=planning' },
             { key: 'active', label: 'Active Projects', to: '/admin/projects?projects=active' },
             { key: 'on-hold', label: 'On Hold', to: '/admin/projects?projects=on-hold' },
@@ -2172,90 +2198,118 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'overview' && (
         <div className="space-y-4" data-ams-feature-slug="projects-overview-workspace" data-ams-slug="projects-overview-workspace">
-          <section className="grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" data-ams-feature-slug="projects-overview-primary" aria-label="Delivery exceptions and project status">
-            <AdminPanel className="ams-projects-overview-panel" title="Delivery exceptions" description="Projects with a health concern, overdue task or overdue milestone.">
+          <section className="ams-projects-overview-grid grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" data-ams-feature-slug="projects-overview-primary" aria-label="Project delivery and attention">
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel" title="Delivery exceptions" bodyClassName="ams-projects-overview-body"
+              actions={<span className="ams-projects-overview-count">{serverMode ? overviewAttentionProjects.length : '—'} to review</span>}>
               {loading && !serverMode ? (
-                <div role="status" aria-label="Loading project exceptions" className="grid gap-2 p-4">
-                  {[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
+                <div className="ams-projects-overview-state" role="status" aria-label="Loading project exceptions">
+                  {[1, 2, 3].map(item => <div key={item} className="h-16 animate-pulse rounded-control bg-bg" />)}
                 </div>
               ) : !serverMode ? (
-                <div className="p-3"><DashboardEmptyState eyebrow="Project source" title="Project records unavailable" description="Delivery exceptions will appear when the project service is available. No project status has been assumed." icon={<Briefcase size={17} />} /></div>
+                <div className="ams-projects-overview-state"><DashboardEmptyState eyebrow="Project delivery" title="Project records unavailable" description="Refresh to try loading delivery exceptions again." icon={<Briefcase size={17} />} /></div>
               ) : overviewAttentionProjects.length === 0 ? (
-                <div className="p-3"><DashboardEmptyState eyebrow="Delivery exceptions" title="No delivery exceptions detected" description="No health concerns, overdue tasks or overdue milestones were found in the current project records." tone="success" icon={<CheckCircle2 size={17} />} /></div>
+                <div className="ams-projects-overview-state"><DashboardEmptyState eyebrow="Project delivery" title={activeProjects.length ? 'No delivery exceptions detected' : 'No active projects yet'} description={activeProjects.length ? 'No health concerns, overdue tasks or overdue milestones were found in open projects.' : 'Creative and technology delivery will appear here when projects are added.'} icon={<Briefcase size={17} />} /></div>
               ) : (
-                <div className="divide-y divide-line">
-                  {overviewAttentionProjects.slice(0, 8).map(({ project, issues }) => (
-                    <button key={project.id} type="button" onClick={() => openProjectDetail(project)}
-                      className="flex min-h-16 w-full min-w-0 items-start justify-between gap-3 p-3 text-left transition-colors hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent sm:p-4"
-                      data-ams-slug={'projects-overview-exception-' + project.slug}>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold text-fg">{project.name}</span>
-                        <span className="mt-1 block truncate text-[11px] text-muted">{project.clientCompany || 'Client not linked'} · {project.teamLead || 'Owner not assigned'}</span>
-                        <span className="mt-2 flex flex-wrap gap-1.5">
-                          {issues.map((issue) => <span key={issue} className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{issue}</span>)}
+                <>
+                  <div className="ams-projects-overview-list" role="region" aria-label="Projects requiring attention" tabIndex={0}>
+                    {overviewAttentionProjects.map(({ project, issues }) => (
+                      <button key={project.id} type="button" onClick={() => openProjectDetail(project)} className="ams-projects-overview-record" data-ams-slug={'projects-overview-exception-' + project.slug}>
+                        <span className="ams-projects-overview-record-main">
+                          <span className="ams-projects-overview-record-title">{project.name}</span>
+                          <span className="ams-projects-overview-record-meta">{project.clientCompany || project.clientName || 'Client not linked'} &middot; {project.teamLead || 'Owner not assigned'}</span>
+                          <span className="ams-projects-overview-record-meta">{project.serviceCategory || 'Service not specified'} &middot; {PROJECT_STATUSES.find(status => status.value === project.status)?.label || project.status}</span>
+                          <span className="ams-projects-overview-signals">{issues.map(issue => <span key={issue}>{issue}</span>)}</span>
                         </span>
-                      </span>
-                      <span className="shrink-0 text-right text-[10px] text-muted">{project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}<span className="mt-1 block text-accent">View project</span></span>
-                    </button>
-                  ))}
-                  {overviewAttentionProjects.length > 8 && <div className="px-4 py-3 text-[11px] text-muted">Showing 8 of {overviewAttentionProjects.length} projects requiring review.</div>}
-                </div>
+                        <span className="ams-projects-overview-record-end"><span>{project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}</span><ArrowUpRight size={13} aria-hidden="true" /></span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="ams-projects-overview-footnote">Open a project to inspect its health, task dates and milestone details.</p>
+                </>
               )}
             </AdminPanel>
-            <AdminPanel className="ams-projects-overview-panel" title="Project status distribution" description="Counts from the same canonical project records. Select a status to open its registry view.">
-              {!serverMode ? (
-                <div className="p-3"><DashboardEmptyState eyebrow="Portfolio status" title={loading ? 'Loading project statuses' : 'Status counts unavailable'} description="Status totals require a verified project record set." icon={<BarChart3 size={17} />} /></div>
+
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel" title="Project status distribution" bodyClassName="ams-projects-overview-body"
+              actions={<DashboardControl size="compact" onClick={() => openView('all')} showArrow ariaLabel="View all project records">View all</DashboardControl>}>
+              {loading && !serverMode ? (
+                <div className="ams-projects-overview-state" role="status" aria-label="Loading project statuses">{[1, 2, 3, 4].map(item => <div key={item} className="h-10 animate-pulse rounded-control bg-bg" />)}</div>
+              ) : !serverMode ? (
+                <div className="ams-projects-overview-state"><DashboardEmptyState eyebrow="Portfolio status" title="Status counts unavailable" description="Refresh to load the current project portfolio." icon={<BarChart3 size={17} />} /></div>
               ) : (
-                <div className="divide-y divide-line">
-                  {projectOverviewStatuses.map((status) => (
-                    <button key={status.key} type="button"
-                      onClick={() => {
-                        const next = new URLSearchParams(searchParams);
-                        next.set('projects', status.key);
-                        setSearchParams(next);
-                      }}
-                      className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs transition-colors hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent">
-                      <span className="flex items-center gap-2 text-muted"><span className={"ams-project-status-dot ams-project-status-dot--" + status.key} aria-hidden="true" />{status.label}</span>
-                      <span className="font-semibold tabular-nums text-fg">{status.count}<ArrowUpRight size={12} className="ml-1 inline text-muted" aria-hidden="true" /></span>
+                <>
+                  <div className="ams-projects-overview-status-summary"><span><strong>{projects.length}</strong> projects across the portfolio</span>
+                    {projects.length > 0 && <span className="ams-projects-overview-status-bar" aria-hidden="true">{projectOverviewStatuses.filter(status => status.count > 0).map(status => <span key={status.key} className={'ams-project-status-fill--' + status.key} style={{width: (status.count / projects.length * 100) + '%'}} />)}</span>}
+                  </div>
+                  <div className="ams-projects-overview-status-list">
+                    {projectOverviewStatuses.map(status => (
+                      <button key={status.key} type="button" onClick={() => { const next = new URLSearchParams(searchParams); next.set('projects', status.key); setSearchParams(next); }} className="ams-projects-overview-status-row">
+                        <span><span className={'ams-project-status-dot ams-project-status-fill--' + status.key} aria-hidden="true" />{status.label}</span>
+                        <span><strong>{status.count}</strong><ArrowUpRight size={12} aria-hidden="true" /></span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="ams-projects-overview-footnote">Select a status to open its filtered Project Registry.</p>
+                </>
+              )}
+            </AdminPanel>
+
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel" title="Overdue milestones" bodyClassName="ams-projects-overview-body"
+              actions={<DashboardControl size="compact" to={planningWorksheetHref('milestones')}>Open milestones</DashboardControl>}>
+              {loading && !serverMode ? (
+                <div className="ams-projects-overview-state" role="status" aria-label="Loading milestones">{[1, 2, 3].map(item => <div key={item} className="h-14 animate-pulse rounded-control bg-bg" />)}</div>
+              ) : !serverMode ? (
+                <div className="ams-projects-overview-state"><DashboardEmptyState eyebrow="Delivery milestones" title="Milestones unavailable" description="Refresh to load milestone dates and completion states." icon={<CalendarDays size={17} />} /></div>
+              ) : metrics.milestonesAtRisk === 0 ? (
+                <div className="ams-projects-overview-state"><DashboardEmptyState eyebrow="Delivery milestones" title="No overdue milestones" description="Uncompleted milestones past their due date will appear here, with a link to their project." icon={<CalendarDays size={17} />} /></div>
+              ) : (
+                <>
+                  <div className="ams-projects-overview-list" role="region" aria-label="Overdue project milestones" tabIndex={0}>
+                    {activeProjects.flatMap(project => project.milestones.filter(milestone => !milestone.completed && isOverdue(milestone.dueDate)).map(milestone => ({ project, milestone }))).sort((a, b) => a.milestone.dueDate.localeCompare(b.milestone.dueDate)).map(({ project, milestone }) => (
+                      <button type="button" key={project.id + ':' + milestone.id} onClick={() => openProjectDetail(project)} className="ams-projects-overview-record">
+                        <span className="ams-projects-overview-record-main"><span className="ams-projects-overview-record-title">{milestone.title}</span><span className="ams-projects-overview-record-meta">{project.name} &middot; {project.clientCompany || project.clientName || 'Client not linked'}</span><span className="ams-projects-overview-record-meta">Project lead: {project.teamLead || 'Not assigned'}</span></span>
+                        <span className="ams-projects-overview-record-end"><span className="text-danger">{formatDate(milestone.dueDate)}</span><span className="ams-projects-overview-tag">Overdue</span><ArrowUpRight size={13} aria-hidden="true" /></span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="ams-projects-overview-footnote">{metrics.milestonesAtRisk} overdue milestones. Open a project for its milestone details.</p>
+                </>
+              )}
+            </AdminPanel>
+
+            <AdminPanel headerDivider={false} className="ams-projects-overview-panel" title="Tasks in review" bodyClassName="ams-projects-overview-body"
+              actions={<span className="ams-projects-overview-count">{serverMode ? overviewReviewTasks.length : '—'} tasks</span>}>
+              {loading && !serverMode ? (
+                <div className="ams-projects-overview-state" role="status" aria-label="Loading review tasks">{[1, 2, 3].map(item => <div key={item} className="h-14 animate-pulse rounded-control bg-bg" />)}</div>
+              ) : !serverMode ? (
+                <div className="ams-projects-overview-state"><DashboardEmptyState eyebrow="Task review" title="Review tasks unavailable" description="Refresh to load tasks currently in the Review stage." icon={<CheckCircle2 size={17} />} /></div>
+              ) : overviewReviewTasks.length === 0 ? (
+                <div className="ams-projects-overview-state"><DashboardEmptyState eyebrow="Task review" title="No tasks awaiting review" description="Tasks moved to the Review stage will appear here with their assignee and due date." icon={<CheckCircle2 size={17} />} /></div>
+              ) : (
+                <div className="ams-projects-overview-list" role="region" aria-label="Tasks awaiting review" tabIndex={0}>
+                  {overviewReviewTasks.map(({ project, task }) => (
+                    <button type="button" key={project.id + ':' + task.id} onClick={() => { setPendingReviewTask({ projectId: project.id, taskId: task.id }); goToSprint(project); }} className="ams-projects-overview-record">
+                      <span className="ams-projects-overview-record-main"><span className="ams-projects-overview-record-title">{task.title}</span><span className="ams-projects-overview-record-meta">{project.name} &middot; {project.clientCompany || project.clientName || 'Client not linked'}</span><span className="ams-projects-overview-record-meta">Assignee: {task.assignedTo || 'Not assigned'}</span></span>
+                      <span className="ams-projects-overview-record-end"><span>{task.dueDate ? formatDate(task.dueDate) : 'No due date'}</span><span className="ams-projects-overview-tag">Review</span><ArrowUpRight size={13} aria-hidden="true" /></span>
                     </button>
                   ))}
                 </div>
               )}
+              <p className="ams-projects-overview-footnote">Task stage only. Client approval and a designated reviewer are not recorded here.</p>
             </AdminPanel>
           </section>
-          <section className="grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" aria-label="Milestones and delivery coverage">
-            <AdminPanel className="ams-projects-overview-panel" title="Overdue milestones" description="Uncompleted milestones past their recorded due date." actions={<Link className="ams-projects-overview-link" to={planningWorksheetHref('milestones')}>Open milestones <ArrowUpRight size={12} aria-hidden="true" /></Link>}>
-              {loading && !serverMode ? <div className="p-4" role="status" aria-label="Loading milestones"><div className="h-20 animate-pulse rounded-control bg-bg" /></div>
-                : !serverMode ? <div className="p-3"><DashboardEmptyState eyebrow="Milestone source" title="Milestones unavailable" description="Milestone dates will appear when project records are available." icon={<CalendarDays size={17} />} /></div>
-                : metrics.milestonesAtRisk === 0 ? <div className="p-3"><DashboardEmptyState eyebrow="Milestones" title="No overdue milestones" description="No uncompleted milestones are past due in the current open projects." tone="success" icon={<CalendarDays size={17} />} /></div>
-                : <div className="divide-y divide-line">{activeProjects.flatMap(project => project.milestones.filter(milestone => !milestone.completed && isOverdue(milestone.dueDate)).map(milestone => ({project, milestone}))).sort((a, b) => a.milestone.dueDate.localeCompare(b.milestone.dueDate)).slice(0, 6).map(({project, milestone}) => (
-                  <button type="button" key={project.id + ':' + milestone.id} onClick={() => openProjectDetail(project)} className="ams-projects-overview-record">
-                    <span className="min-w-0"><span className="block text-xs font-semibold text-fg">{milestone.title}</span><span className="mt-1 block text-[11px] text-muted">{project.name} · {project.clientCompany || 'Client not linked'}</span></span>
-                    <span className="shrink-0 text-right"><span className="block text-[11px] text-danger">{formatDate(milestone.dueDate)}</span><span className="mt-1 block text-[10px] text-muted">View project <ArrowUpRight size={11} className="inline" aria-hidden="true" /></span></span>
-                  </button>
-                ))}<p className="px-4 py-3 text-[11px] text-muted">Showing {Math.min(6, metrics.milestonesAtRisk)} of {metrics.milestonesAtRisk} overdue milestones. Open milestones to review the full project scope.</p></div>}
-            </AdminPanel>
-            <AdminPanel className="ams-projects-overview-panel" title="Delivery coverage" description="Know what this overview can verify.">
-              <dl className="ams-projects-overview-coverage">
-                <div><dt>Project health & deadlines</dt><dd>Recorded project health, task due dates and milestone dates.</dd></div>
-                <div><dt>Blockers & client reviews</dt><dd>Separate blocker details and client review records are not available from the current project source.</dd></div>
-                <div><dt>Resource conflicts</dt><dd>Allocation records can be inspected in Resources. Capacity conflicts are not verified here.</dd></div>
-              </dl>
-            </AdminPanel>
-          </section>
-          <section className="grid gap-3 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3" data-ams-feature-slug="projects-overview-supporting-metrics" aria-label="Project delivery summary">
+          <section className="ams-projects-overview-summary grid gap-3 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3" data-ams-feature-slug="projects-overview-supporting-metrics" aria-label="Project delivery summary">
             {[
               { label: 'Open projects', value: serverMode ? String(activeProjects.length) : '—', context: 'Projects not marked completed' },
               { label: 'Open tasks', value: serverMode ? String(metrics.openTasks) : '—', context: 'Tasks not marked Done' },
               { label: 'Overdue milestones', value: serverMode ? String(metrics.milestonesAtRisk) : '—', context: 'Uncompleted milestones past due' },
-            ].map((metric) => (
-              <article key={metric.label} className="rounded-card border border-line bg-panel p-4" data-ams-slug={'projects-overview-metric-' + metric.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}>
-                <div className="text-xs font-medium text-muted">{metric.label}</div>
-                <div className="mt-3 text-2xl font-semibold tabular-nums text-fg">{metric.value}</div>
-                <div className="mt-1 text-[11px] text-muted">{serverMode ? metric.context : loading ? 'Loading live project records' : 'Live project data unavailable'}</div>
+            ].map(metric => (
+              <article key={metric.label} data-ams-slug={'projects-overview-metric-' + metric.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}>
+                <div><span>{metric.label}</span><strong>{metric.value}</strong></div>
+                <p>{serverMode ? metric.context : loading ? 'Loading project records' : 'Project data unavailable'}</p>
               </article>
             ))}
           </section>
+          <details className="ams-projects-overview-help"><summary>About delivery signals</summary><p>Health flags use project status, progress and dates. Milestones are overdue only when uncompleted and past due. Separate blocker reasons, client approval history and verified capacity conflicts are not available in this overview.</p></details>
         </div>
       )}
 

@@ -785,7 +785,7 @@ test('Projects Overview summary follows canonical responsive breakpoints', async
   const overviewEnd = projects.indexOf("{view === 'planning-delivery' && (", overviewStart);
   assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, 'The Project Overview workspace should be identifiable');
   const overview = projects.slice(overviewStart, overviewEnd);
-  assert.ok(overview.includes('className="grid gap-3 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3" data-ams-feature-slug="projects-overview-supporting-metrics" aria-label="Project delivery summary"'),
+  assert.ok(overview.includes('className="ams-projects-overview-summary grid gap-3 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3" data-ams-feature-slug="projects-overview-supporting-metrics" aria-label="Project delivery summary"'),
     'Three supporting project KPIs should use two columns from 600px and three from 900px.');
   assert.equal(overview.includes('sm:grid-cols-2 xl:grid-cols-4'), false,
     'Project overview KPI geometry must not depend on generic 640px and 1280px breakpoints.');

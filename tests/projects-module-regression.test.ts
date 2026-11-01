@@ -444,6 +444,43 @@ test('Project Overview uses shared empty states and exposes source-backed milest
   assert.match(overview, /planningWorksheetHref\('milestones'\)/);
   assert.match(overview, /!milestone.completed && isOverdue\(milestone.dueDate\)/);
   assert.match(overview, /onClick=\{\(\) => openProjectDetail\(project\)\}/);
-  assert.match(overview, /Separate blocker details and client review records are not available/);
+  assert.match(overview, /title="Tasks in review"/);
+  assert.match(source, /task.status === 'review'/);
+  assert.match(overview, /setPendingReviewTask\(\{ projectId: project.id, taskId: task.id \}\); goToSprint\(project\)/);
+  assert.match(source, /selectedSprintProject\?\.id !== pendingReviewTask.projectId/);
+  assert.match(source, /selectedSprintProject.tasks.find\(item => item.id === pendingReviewTask.taskId\)/);
+  assert.doesNotMatch(overview, /title="Delivery coverage"/);
+  assert.match(overview, /Client approval and a designated reviewer are not recorded here/);
   assert.doesNotMatch(overview, /localStorage|Math.random|Design preview/);
+});
+
+
+test('Projects Overview equalizes all operational cards in one grid and keeps compact summaries secondary', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const css = await read('src/components/admin/ProjectsOverview.css');
+  const overview = source.slice(source.indexOf('data-ams-feature-slug="projects-overview-workspace"'), source.indexOf("{view === 'planning-delivery' && (", source.indexOf('data-ams-feature-slug="projects-overview-workspace"')));
+  assert.equal((overview.match(/className="ams-projects-overview-panel"/g) || []).length, 4);
+  assert.equal((overview.match(/ams-projects-overview-grid/g) || []).length, 1);
+  assert.match(css, /grid-auto-rows:minmax\(330px,1fr\)/);
+  assert.match(css, /ams-projects-overview-panel \{[^}]*height:100%/);
+  assert.doesNotMatch(css, /align-self:start/);
+  assert.match(overview, /role="region" aria-label="Tasks awaiting review" tabIndex=\{0\}/);
+  assert.doesNotMatch(overview, /\.slice\(0,/);
+  assert.ok(overview.indexOf('title="Tasks in review"') < overview.indexOf('projects-overview-supporting-metrics'));
+});
+
+
+test('Project detail retains its originating workspace and review drawers close when leaving execution', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const start = source.indexOf('const openProjectDetail =');
+  const end = source.indexOf('const openNewProject =', start);
+  const selection = source.slice(start, end);
+  assert.ok(selection.includes("if (!next.get('projects')) next.set('projects', view)"));
+  assert.ok(selection.includes("if (view === 'all' && !next.get('projects')) next.set('projects', 'all')"));
+  assert.match(source, /if \(view !== 'sprint'\) setSelectedTask\(null\);\s*\}, \[view\]\)/);
+  const openView = source.slice(source.indexOf('const openView ='), source.indexOf('const openLayout ='));
+  assert.ok(openView.includes("next.set('projects', nextView)"));
+  assert.doesNotMatch(openView, /delete\('projects'\)/);
+  const openLayout = source.slice(source.indexOf('const openLayout ='), source.indexOf('const goToSprint ='));
+  assert.ok(openLayout.includes("if (view === 'all' && !next.get('projects')) next.set('projects', 'all')"));
 });

@@ -167,9 +167,12 @@ test('Project Registry filters keep the Project Registry workspace active withou
   assert.equal(isAmsModuleSubnavigationItemActive(resources, '/admin/projects', '?projects=resources'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=planning-delivery'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=resources'), false);
-  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=all'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/projects', '?projects=overview'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(overview, '/admin/projects'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?project=existing-project'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?layout=table'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=overview'), false);
   for (const status of ['planning', 'active', 'on-hold', 'completed', 'archived']) {
     assert.equal(isAmsModuleSubnavigationItemActive(registry, '/admin/projects', '?projects=' + status), true,
@@ -333,7 +336,7 @@ test('role-specific workspace destinations remain permitted and primary links ac
   const cases: Array<[AmsRole, string, string, string]> = [
     ['Admin', 'dashboard-hub', 'dashboard', 'overview'],
     ['Admin', 'inbox', 'inbox', 'messages'],
-    ['Admin', 'project-hub', 'projects', 'registry'],
+    ['Admin', 'project-hub', 'projects', 'overview'],
     ['Finance', 'project-hub', 'projects', 'tasks'],
     ['Creative', 'project-hub', 'projects', 'tasks'],
     ['Admin', 'clients', 'clients', 'directory'],

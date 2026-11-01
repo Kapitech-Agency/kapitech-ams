@@ -1,3 +1,4 @@
+import { getProjectsDefaultView } from './projectsWorkspaceNavigation';
 import { canAccessAmsRoute, type AmsRole } from './amsNavigationAccess';
 
 export type AmsSidebarModuleKey = 'dashboard' | 'inbox' | 'projects' | 'clients' | 'finance' | 'team' | 'documents' | 'cms' | 'settings' | 'crm' | 'tasks';
@@ -163,7 +164,7 @@ export function isAmsModuleSubnavigationItemActive(
     return itemKey === selectedView;
   }
   if (path === '/admin/projects') {
-    const selected = params.get('projects') || 'all';
+    const selected = params.get('projects') || getProjectsDefaultView(params);
     if (selected === 'overview') return itemKey === 'overview';
     if (selected === 'planning-delivery') return itemKey === 'planning-delivery';
     if (selected === 'resources') return itemKey === 'resources';

@@ -52,7 +52,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     key: 'delivery',
     label: 'Delivery',
     items: [
-      { key: 'project-hub', label: 'Projects', to: '/admin/projects', icon: 'projects', allowedRoles: ALL_ROLES },
+      { key: 'project-hub', label: 'Projects', to: '/admin/projects?projects=overview', icon: 'projects', allowedRoles: ALL_ROLES },
       { key: 'clients', label: 'Clients', to: '/admin/clients/all-clients', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
     ],
   },

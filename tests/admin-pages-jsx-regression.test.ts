@@ -56,7 +56,8 @@ test('Finance transaction worksheets keep mutations permission-gated and use emb
 test('Admin projects mutation actions stay behind their permissions', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
   assert.ok(source.includes('{canManageKanbanTasks && <Button'));
-  assert.ok(source.includes('{canManageProjects && <Button'));
+  assert.ok(source.includes('{canManageProjects && <DashboardControl'), 'Overview create action must retain its project management guard');
+  assert.ok(source.includes(': canManageProjects && <Button'), 'Other project views must retain their project management guard');
   assert.ok(!source.includes('Legacy regression guard:'));
 });
 
