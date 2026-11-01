@@ -71,18 +71,10 @@
 .ams-shell .ams-inbox-message-redesign .ams-inbox-panel > :where(.ams-inbox-panel-header, div:first-child) h2 { margin: 0; font-size: 14px; line-height: 19px; font-weight: 650; letter-spacing: -.015em; }
 .ams-shell .ams-inbox-message-redesign .ams-inbox-panel > :where(.ams-inbox-panel-header, div:first-child) p { font-size: 11px; line-height: 16px; }
 .ams-shell .ams-inbox-message-redesign :is(.ams-message-count, .ams-message-panel-heading > span, .ams-inbox-follow-ups-availability, .ams-routing-source-label) { flex-shrink: 0; font-size: 11px; line-height: 16px; }
-.ams-shell .ams-inbox-message-redesign .ams-inbox2-toolbar { padding: 0; border: 0; background: transparent; }
-.ams-inbox2-toolbar-utilities { display: flex; flex: 0 0 auto; flex-wrap: nowrap; align-items: center; gap: 8px; margin-left: auto; }
 .ams-shell .ams-inbox-message-redesign :is(.ams-message-reader-content h3, .ams-template-detail-body h3) { font-size: 13px; line-height: 18px; font-weight: 600; }
 .ams-shell .ams-inbox-message-redesign :is(.ams-template-category, .ams-template-excerpt, .ams-message-secondary, .ams-message-company, .ams-message-owner, .ams-message-row-top time, .ams-message-sender-info > span, .ams-message-sender > time) { font-size: 11px; line-height: 16px; }
-.ams-shell .ams-inbox-message-redesign .ams-inbox2-saved > a[aria-current="page"] { border-color: var(--line); background: var(--dashboard-control-selected); color: var(--text); font-weight: 650; }
-.ams-shell .ams-inbox-message-redesign .ams-dashboard-filter-group .ams-dashboard-control--filter { height: 32px; min-height: 32px; }
-.ams-shell .ams-inbox-message-redesign .ams-dashboard-filter-group .ams-dashboard-control--filter[aria-pressed="true"] { border-color: var(--line); background: var(--dashboard-control-selected); color: var(--text); box-shadow: none; }
 @media (max-width: 899px) {
-  .ams-shell .ams-inbox-message-redesign .ams-dashboard-control,
-  .ams-shell .ams-inbox-message-redesign .ams-dashboard-filter-group .ams-dashboard-control--filter { height: 40px; min-height: 40px; }
   .ams-shell nav.ams-topnav-scroll:is(.ams-inbox-module-tabs, .ams-inbox-workspace-tabs) > a { height: 40px; min-height: 40px; }
-  .ams-shell .ams-inbox-message-redesign .ams-inbox2-saved > a { min-height: 40px; }
 }
 @media (max-width: 639px) {
   .ams-shell .ams-inbox-message-redesign .ams-page-header { align-items: stretch; }

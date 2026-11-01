@@ -60,7 +60,6 @@ export const InboxMessageToolbar: React.FC<Props> = (p) => {
           { value: 'split', label: <><LayoutGrid size={14} /><span>Review</span></> },
           { value: 'table', label: <><TableIcon size={14} /><span>Table</span></> },
         ]} onChange={(value) => p.onView(value === 'table')} />
-        <div className="ams-inbox2-toolbar-utilities" role="group" aria-label="Additional message actions">
         <DashboardControl variant="icon" ariaLabel="Refresh messages" title="Refresh messages" icon={<RefreshCw size={16} />} onClick={p.onRefresh} disabled={p.loading} />
         <DashboardControl buttonRef={moreButton} ariaLabel="More message actions" ariaExpanded={moreOpen} ariaControls="inbox-more-actions" onClick={() => setMoreOpen(!moreOpen)} trailingIcon={<ChevronDown size={14} />}>More</DashboardControl>
         <DropdownPortal open={moreOpen} anchorRef={moreButton} onClose={() => setMoreOpen(false)} align="right" className="ams-inbox2-more-content">
@@ -73,7 +72,6 @@ export const InboxMessageToolbar: React.FC<Props> = (p) => {
             {p.canManage && <Link onClick={() => setMoreOpen(false)} to="/admin/cms/careers?tab=applicants">Careers applicants</Link>}
           </div>
         </DropdownPortal>
-        </div>
       </div>
     </div>
     {filtersOpen && <div id="inbox-message-filter-panel" className="ams-inbox2-filter-panel">

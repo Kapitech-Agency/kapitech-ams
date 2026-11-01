@@ -1,5 +1,11 @@
 # AMS Execution Checkpoint
 
+## Restore preferred Inbox filter presentation — 1 November 2026
+
+- User rejected the filter restyling in `b64bfc4bf2c5dc6d51fd2411978e8519deec6127` and prefers the immediately preceding filter design. Restore filter-specific presentation only: padded outlined toolbar in Messages/templates, saved-view treatment, shared Review/Table control sizing and original Refresh/More placement.
+- Keep the corrected solid-crimson navigation states, exclusive current links, common Inbox heading/panel typography and compact Overview empty states. No backend, data, permissions, routes, filter behavior or template content changes. This latest preference supersedes the prior audit's flattened toolbar and regrouped utilities.
+- Baseline main `b64bfc4bf2c5dc6d51fd2411978e8519deec6127`, both AMS CI 41295039139 and Quality Gate 41295039247 previously green. TypeScript/build passed; full suite 944 tests / 924 passed / zero failures / 20 conditional PostgreSQL skips. Local actual-component browser check confirms restored 12px toolbar padding, 1px outline, filter expansion and retained crimson navigation. Push to main under standing instruction; exact-SHA CI is recorded in delivery.
+
 ## Inbox-wide Overview conformance and active states — 1 November 2026
 
 - Latest user request: active states in Follow-ups and Routing & Templates are wrong; audit all Messages/Follow-ups/Routing & Templates against approved Dashboard Overview. Baseline main `aab5815ef58c343b0ef5d947c6a0e841713b6bce`; AMS CI 41292331723 and Quality Gate 41292331839 verified green.
