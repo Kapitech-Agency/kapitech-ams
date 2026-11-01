@@ -1,5 +1,14 @@
 # AMS Execution Checkpoint
 
+## Projects Overview presentation — 1 November 2026
+
+- User requested continuation to Projects → Overview. Baseline main `bbe73c0295ee462f260eb2c534d4fec43f39d978`; prior AMS CI 41298716407 and Quality Gate 41298716434 were green.
+- Bounded Overview changes: 7:5 delivery exceptions/status row, shared approved Dashboard empty states, scoped Overview header/panel typography, source-backed overdue milestone queue, delivery coverage and existing supporting metrics. Status actions retain existing registry routes; milestone rows open the existing project detail drawer; worksheet action opens Planning & Delivery → Milestones.
+- Preserve all existing metrics, overdue predicate, health inference, API calls, mutation handlers, permissions, Registry filters and other tabs. No backend/schema/business changes, synthetic production records or design-preview controls.
+- Existing and verified: project status counts, exception records, overdue task/milestone checks, project drawer and milestone worksheet routes. Separate blocker details, client-review workflow and verified capacity-conflict sources remain incomplete; coverage states this explicitly. Existing project health may be inferred by the unchanged normalizer and must not be described as an independent blocker/review source.
+- Verification: full suite 945 tests / 925 passed / zero failures / 20 conditional PostgreSQL skips; TypeScript and production build passed. Local actual-component browser QA: light/dark empty response, unavailable response with em-dash totals, 390px no horizontal overflow, status → Active Registry and milestone → worksheet. An isolated external QA fixture also verified overdue milestone → correct project drawer and visible milestone; fixture is outside repository and never included in production. Browser evidence is local, not authenticated production/deployment proof.
+- Delivery requires push to main and exact-SHA AMS CI + Quality Gate success. No claim of broader Projects workflow completion or user visual sign-off.
+
 ## Restore preferred Inbox filter presentation — 1 November 2026
 
 - User rejected the filter restyling in `b64bfc4bf2c5dc6d51fd2411978e8519deec6127` and prefers the immediately preceding filter design. Restore filter-specific presentation only: padded outlined toolbar in Messages/templates, saved-view treatment, shared Review/Table control sizing and original Refresh/More placement.

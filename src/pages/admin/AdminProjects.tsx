@@ -40,6 +40,8 @@ import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
+import '../../components/admin/ProjectsOverview.css';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
@@ -1709,7 +1711,7 @@ export const AdminProjects: React.FC = () => {
   }, [canReadClients, selectedProjectDetail?.clientId, clientOptionsLoaded, loadProjectClients]);
 
   return (
-    <AdminPageShell featureSlug="projects-module" className="projects-module">
+    <AdminPageShell featureSlug="projects-module" className={"projects-module" + (view === 'overview' ? ' ams-projects-overview' : '')}>
       <Modal
         open={Boolean(deleteProject)}
         onClose={() => { if (!deletingProjectRecord) setDeleteProject(null); }}
@@ -2095,7 +2097,7 @@ export const AdminProjects: React.FC = () => {
           : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}
         description={
           view === 'overview'
-            ? 'Source-backed portfolio summary, delivery exceptions, and project status distribution.'
+            ? 'Review delivery exceptions, overdue milestones and project status across the portfolio.'
             : view === 'planning-delivery'
               ? 'Review the selected project brief, planned dates, recorded milestones, and delivery schedule.'
               : view === 'resources'
@@ -2170,22 +2172,16 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'overview' && (
         <div className="space-y-4" data-ams-feature-slug="projects-overview-workspace" data-ams-slug="projects-overview-workspace">
-          <section className="grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]" data-ams-feature-slug="projects-overview-primary" aria-label="Delivery exceptions and project status">
-            <AdminPanel title="Delivery exceptions" description="Projects with a recorded health concern, overdue task, or overdue milestone.">
+          <section className="grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" data-ams-feature-slug="projects-overview-primary" aria-label="Delivery exceptions and project status">
+            <AdminPanel className="ams-projects-overview-panel" title="Delivery exceptions" description="Projects with a health concern, overdue task or overdue milestone.">
               {loading && !serverMode ? (
                 <div role="status" aria-label="Loading project exceptions" className="grid gap-2 p-4">
                   {[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
                 </div>
               ) : !serverMode ? (
-                <div className="p-5" role="status">
-                  <p className="text-sm font-medium text-fg">Project records unavailable</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">The overview needs live project records. Refresh after the project service is restored.</p>
-                </div>
+                <div className="p-3"><DashboardEmptyState eyebrow="Project source" title="Project records unavailable" description="Delivery exceptions will appear when the project service is available. No project status has been assumed." icon={<Briefcase size={17} />} /></div>
               ) : overviewAttentionProjects.length === 0 ? (
-                <div className="p-5" role="status">
-                  <p className="text-sm font-medium text-fg">No delivery exceptions detected</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">No recorded project health concerns, overdue tasks, or overdue milestones were found in the current project records.</p>
-                </div>
+                <div className="p-3"><DashboardEmptyState eyebrow="Delivery exceptions" title="No delivery exceptions detected" description="No health concerns, overdue tasks or overdue milestones were found in the current project records." tone="success" icon={<CheckCircle2 size={17} />} /></div>
               ) : (
                 <div className="divide-y divide-line">
                   {overviewAttentionProjects.slice(0, 8).map(({ project, issues }) => (
@@ -2199,19 +2195,16 @@ export const AdminProjects: React.FC = () => {
                           {issues.map((issue) => <span key={issue} className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{issue}</span>)}
                         </span>
                       </span>
-                      <span className="shrink-0 text-right text-[10px] text-muted">{project.targetEndDate || 'No deadline'}<span className="mt-1 block text-accent">View project</span></span>
+                      <span className="shrink-0 text-right text-[10px] text-muted">{project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}<span className="mt-1 block text-accent">View project</span></span>
                     </button>
                   ))}
                   {overviewAttentionProjects.length > 8 && <div className="px-4 py-3 text-[11px] text-muted">Showing 8 of {overviewAttentionProjects.length} projects requiring review.</div>}
                 </div>
               )}
             </AdminPanel>
-            <AdminPanel title="Project status distribution" description="Counts from the same canonical project records. Select a status to open its registry view.">
+            <AdminPanel className="ams-projects-overview-panel" title="Project status distribution" description="Counts from the same canonical project records. Select a status to open its registry view.">
               {!serverMode ? (
-                <div className="p-5" role="status">
-                  <p className="text-sm font-medium text-fg">Status counts unavailable</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">The project source has not returned a verified record set.</p>
-                </div>
+                <div className="p-3"><DashboardEmptyState eyebrow="Portfolio status" title={loading ? 'Loading project statuses' : 'Status counts unavailable'} description="Status totals require a verified project record set." icon={<BarChart3 size={17} />} /></div>
               ) : (
                 <div className="divide-y divide-line">
                   {projectOverviewStatuses.map((status) => (
@@ -2222,12 +2215,32 @@ export const AdminProjects: React.FC = () => {
                         setSearchParams(next);
                       }}
                       className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs transition-colors hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent">
-                      <span className="text-muted">{status.label}</span>
+                      <span className="flex items-center gap-2 text-muted"><span className={"ams-project-status-dot ams-project-status-dot--" + status.key} aria-hidden="true" />{status.label}</span>
                       <span className="font-semibold tabular-nums text-fg">{status.count}<ArrowUpRight size={12} className="ml-1 inline text-muted" aria-hidden="true" /></span>
                     </button>
                   ))}
                 </div>
               )}
+            </AdminPanel>
+          </section>
+          <section className="grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" aria-label="Milestones and delivery coverage">
+            <AdminPanel className="ams-projects-overview-panel" title="Overdue milestones" description="Uncompleted milestones past their recorded due date." actions={<Link className="ams-projects-overview-link" to={planningWorksheetHref('milestones')}>Open milestones <ArrowUpRight size={12} aria-hidden="true" /></Link>}>
+              {loading && !serverMode ? <div className="p-4" role="status" aria-label="Loading milestones"><div className="h-20 animate-pulse rounded-control bg-bg" /></div>
+                : !serverMode ? <div className="p-3"><DashboardEmptyState eyebrow="Milestone source" title="Milestones unavailable" description="Milestone dates will appear when project records are available." icon={<CalendarDays size={17} />} /></div>
+                : metrics.milestonesAtRisk === 0 ? <div className="p-3"><DashboardEmptyState eyebrow="Milestones" title="No overdue milestones" description="No uncompleted milestones are past due in the current open projects." tone="success" icon={<CalendarDays size={17} />} /></div>
+                : <div className="divide-y divide-line">{activeProjects.flatMap(project => project.milestones.filter(milestone => !milestone.completed && isOverdue(milestone.dueDate)).map(milestone => ({project, milestone}))).sort((a, b) => a.milestone.dueDate.localeCompare(b.milestone.dueDate)).slice(0, 6).map(({project, milestone}) => (
+                  <button type="button" key={project.id + ':' + milestone.id} onClick={() => openProjectDetail(project)} className="ams-projects-overview-record">
+                    <span className="min-w-0"><span className="block text-xs font-semibold text-fg">{milestone.title}</span><span className="mt-1 block text-[11px] text-muted">{project.name} · {project.clientCompany || 'Client not linked'}</span></span>
+                    <span className="shrink-0 text-right"><span className="block text-[11px] text-danger">{formatDate(milestone.dueDate)}</span><span className="mt-1 block text-[10px] text-muted">View project <ArrowUpRight size={11} className="inline" aria-hidden="true" /></span></span>
+                  </button>
+                ))}<p className="px-4 py-3 text-[11px] text-muted">Showing {Math.min(6, metrics.milestonesAtRisk)} of {metrics.milestonesAtRisk} overdue milestones. Open milestones to review the full project scope.</p></div>}
+            </AdminPanel>
+            <AdminPanel className="ams-projects-overview-panel" title="Delivery coverage" description="Know what this overview can verify.">
+              <dl className="ams-projects-overview-coverage">
+                <div><dt>Project health & deadlines</dt><dd>Recorded project health, task due dates and milestone dates.</dd></div>
+                <div><dt>Blockers & client reviews</dt><dd>Separate blocker details and client review records are not available from the current project source.</dd></div>
+                <div><dt>Resource conflicts</dt><dd>Allocation records can be inspected in Resources. Capacity conflicts are not verified here.</dd></div>
+              </dl>
             </AdminPanel>
           </section>
           <section className="grid gap-3 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3" data-ams-feature-slug="projects-overview-supporting-metrics" aria-label="Project delivery summary">

@@ -130,8 +130,8 @@ test('Project overview metrics and sprint project selection describe their actua
     'Delivery exceptions and status distribution should lead the supporting summary metrics.');
   assert.doesNotMatch(overview.slice(supporting, summary), /label: 'Delivery exceptions'/,
     'The exception count must not be duplicated as a KPI alongside the exception register.');
-  assert.match(overview, /min-\[1100px\]:grid-cols-\[minmax\(0,1\.45fr\)_minmax\(280px,0\.75fr\)\]/);
-  assert.doesNotMatch(overview, /xl:grid-cols-\[minmax\(0,1\.45fr\)_minmax\(280px,0\.75fr\)\]/);
+  assert.match(overview, /min-\[1100px\]:grid-cols-\[minmax\(0,7fr\)_minmax\(0,5fr\)\]/);
+  assert.doesNotMatch(overview, /xl:grid-cols-\[minmax\(0,7fr\)_minmax\(0,5fr\)\]/);
   assert.ok(source.includes('projects-planning-delivery-workspace'));
   assert.ok(source.includes('title="Project timeline"'));
   assert.ok(source.includes('title="Milestones"'));
@@ -434,3 +434,16 @@ test('Planning & Delivery Timeline leads with chronological recorded task and mi
     'Timeline must not create dependencies or duration estimates absent from current records.');
 });
 
+
+
+test('Project Overview uses shared empty states and exposes source-backed milestone navigation', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+  const overview = source.slice(source.indexOf('data-ams-feature-slug="projects-overview-workspace"'), source.indexOf("{view === 'planning-delivery' && (", source.indexOf('data-ams-feature-slug="projects-overview-workspace"')));
+  assert.match(overview, /DashboardEmptyState/);
+  assert.match(overview, /title="Overdue milestones"/);
+  assert.match(overview, /planningWorksheetHref\('milestones'\)/);
+  assert.match(overview, /!milestone.completed && isOverdue\(milestone.dueDate\)/);
+  assert.match(overview, /onClick=\{\(\) => openProjectDetail\(project\)\}/);
+  assert.match(overview, /Separate blocker details and client review records are not available/);
+  assert.doesNotMatch(overview, /localStorage|Math.random|Design preview/);
+});

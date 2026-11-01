@@ -1,0 +1,24 @@
+.ams-shell .ams-projects-overview .ams-page-header { border-bottom:0; padding-bottom:8px; }
+.ams-shell .ams-projects-overview .ams-page-header h1 { font-size:26px; line-height:32px; letter-spacing:-.03em; }
+.ams-shell .ams-projects-overview .ams-page-header p { font-size:11px; line-height:16px; max-width:70ch; }
+.ams-shell .ams-projects-overview-panel { border-radius:12px; overflow:hidden; min-width:0; align-self:start; box-shadow:none; }
+.ams-shell .ams-projects-overview-panel > div:first-child { padding:13px 16px; min-height:56px; }
+.ams-shell .ams-projects-overview-panel h2 { font-size:14px; line-height:19px; font-weight:650; letter-spacing:-.01em; }
+.ams-shell .ams-projects-overview-panel > div:first-child p { font-size:11px; line-height:16px; margin-top:3px; }
+.ams-shell .ams-projects-overview-record { display:flex; width:100%; min-width:0; align-items:start; justify-content:space-between; gap:12px; padding:14px 16px; text-align:left; transition:background-color 150ms; }
+.ams-shell .ams-projects-overview-record:hover { background:var(--bg); }
+.ams-shell .ams-projects-overview-record:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+.ams-shell .ams-projects-overview-record > span:first-child { overflow-wrap:anywhere; }
+.ams-shell .ams-projects-overview-link { display:inline-flex; align-items:center; gap:5px; min-height:32px; padding:6px; border:1px solid var(--line); border-radius:8px; font-size:11px; line-height:14px; white-space:nowrap; color:var(--text); }
+.ams-shell .ams-projects-overview-link:hover { background:var(--bg); }
+.ams-shell .ams-projects-overview-link:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.ams-shell .ams-project-status-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); }
+.ams-shell .ams-project-status-dot--active { background:var(--accent); }
+.ams-shell .ams-project-status-dot--on-hold { background:var(--warning); }
+.ams-shell .ams-project-status-dot--completed { background:var(--success); }
+.ams-shell .ams-projects-overview-coverage { padding:0 16px; }
+.ams-shell .ams-projects-overview-coverage > div { padding:13px 0; }
+.ams-shell .ams-projects-overview-coverage > div + div { border-top:1px solid var(--line); }
+.ams-shell .ams-projects-overview-coverage dt { font-size:12px; line-height:18px; font-weight:600; color:var(--text); }
+.ams-shell .ams-projects-overview-coverage dd { margin:4px 0 0; font-size:11px; line-height:16px; color:var(--muted); }
+@media(max-width:599px) { .ams-shell .ams-projects-overview-panel > div:first-child { padding:12px; flex-wrap:wrap; } .ams-shell .ams-projects-overview-record { padding:12px; } }
