@@ -6,11 +6,11 @@
     "Import reachability is conservative and does not prove each export/selector is used. Never auto-delete based on this report."
   ],
   "summary": {
-    "sourceFiles": 114,
-    "reachableFiles": 111,
-    "componentFiles": 39,
+    "sourceFiles": 116,
+    "reachableFiles": 113,
+    "componentFiles": 41,
     "sharedComponentFiles": 18,
-    "cssBytes": 514069
+    "cssBytes": 513951
   },
   "unresolvedDynamicImports": [],
   "unreachable": [
@@ -31,6 +31,9 @@
         "src/components/admin/TasksWorkspace.tsx",
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
         "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
+        "src/pages/admin/AdminClientRetainers.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminContracts.tsx",
         "src/pages/admin/AdminProjects.tsx"
       ]
     },
@@ -58,6 +61,8 @@
         "src/components/admin/AmsNavigationPlaceholder.tsx",
         "src/components/admin/GlobalExecutiveDashboard.tsx",
         "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/clients/ClientDirectoryRegister.tsx",
+        "src/components/admin/clients/ClientWorkspace.tsx",
         "src/components/admin/inbox/InboxFollowUps.tsx",
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
@@ -147,6 +152,35 @@
       ]
     },
     {
+      "file": "src/components/admin/clients/ClientDirectoryRegister.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "ClientDirectoryRegister"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminClients.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/clients/ClientWorkspace.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "CLIENT_AGREEMENT_TABS",
+        "CLIENT_ONBOARDING_TABS",
+        "CLIENT_SERVICE_TABS",
+        "ClientAgreementTabs",
+        "ClientSourceWorkspace"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminClientRetainers.tsx",
+        "src/pages/admin/AdminClientSlaMonitoring.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminContracts.tsx"
+      ]
+    },
+    {
       "file": "src/components/admin/CommandPalette.tsx",
       "kind": "domain",
       "reachable": true,
@@ -170,6 +204,8 @@
         "src/components/admin/AdminFilterToolbar.tsx",
         "src/components/admin/GlobalExecutiveDashboard.tsx",
         "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/clients/ClientDirectoryRegister.tsx",
+        "src/components/admin/clients/ClientWorkspace.tsx",
         "src/components/admin/inbox/InboxFollowUps.tsx",
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
@@ -177,6 +213,9 @@
         "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/components/admin/projects/ProjectRegistryRecords.tsx",
         "src/components/admin/tasks/TaskExecutionViews.tsx",
+        "src/pages/admin/AdminClientRetainers.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminContracts.tsx",
         "src/pages/admin/AdminInbox.tsx",
         "src/pages/admin/AdminProjects.tsx"
       ]
@@ -191,12 +230,17 @@
       "consumers": [
         "src/components/admin/GlobalExecutiveDashboard.tsx",
         "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/clients/ClientDirectoryRegister.tsx",
+        "src/components/admin/clients/ClientWorkspace.tsx",
         "src/components/admin/inbox/InboxFollowUps.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
         "src/components/admin/inbox/MessageWorkspace.tsx",
         "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/components/admin/projects/ProjectRegistryRecords.tsx",
         "src/components/admin/tasks/TaskExecutionViews.tsx",
+        "src/pages/admin/AdminClientRetainers.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminContracts.tsx",
         "src/pages/admin/AdminProjects.tsx"
       ]
     },
@@ -303,6 +347,7 @@
       ],
       "consumers": [
         "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/clients/ClientDirectoryRegister.tsx",
         "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/components/admin/projects/ProjectRegistryRecords.tsx",
         "src/components/admin/tasks/TaskExecutionViews.tsx",
@@ -774,7 +819,7 @@
     {
       "file": "src/index.css",
       "reachable": true,
-      "bytes": 47826,
+      "bytes": 47708,
       "rules": 374,
       "exactDuplicateRules": 0
     }
@@ -863,27 +908,31 @@
       "file": "src/pages/admin/AdminClientRetainers.tsx",
       "reachable": true,
       "components": {
-        "AdminFilterBar": 1,
+        "AdminDataTableShell": 1,
+        "AdminFilterField": 3,
+        "AdminFilterToolbar": 1,
         "AdminMetricStrip": 1,
         "AdminModuleHeader": 1,
         "AdminPageShell": 1,
-        "AdminSectionTabs": 1,
-        "AdminStatusBadge": 1,
+        "AdminPanel": 2,
         "AdminTablePagination": 1,
         "ArrowUp": 3,
         "ArrowUpDown": 1,
-        "Button": 5,
-        "CalendarDays": 1,
+        "Button": 6,
+        "CalendarDays": 2,
+        "ClientAgreementTabs": 1,
         "Clock3": 1,
         "CustomSelect": 5,
+        "DashboardControl": 5,
+        "DashboardEmptyState": 1,
         "Download": 1,
-        "Drawer": 1,
+        "Drawer": 2,
+        "FileText": 1,
         "Pencil": 2,
         "Plus": 1,
-        "RotateCcw": 1,
-        "Search": 2,
         "SortButton": 5,
         "TriangleAlert": 1,
+        "Users": 1,
         "X": 1
       }
     },
@@ -891,53 +940,51 @@
       "file": "src/pages/admin/AdminClients.tsx",
       "reachable": true,
       "components": {
-        "Activity": 2,
-        "AdminFilterBar": 1,
+        "Activity": 1,
+        "AdminFilterField": 4,
+        "AdminFilterToolbar": 1,
         "AdminModuleHeader": 1,
         "AdminPageShell": 1,
-        "AdminSectionTabs": 2,
+        "AdminPanel": 2,
+        "AdminSectionTabs": 1,
         "AdminTablePagination": 1,
         "ArrowDown": 1,
-        "ArrowUp": 8,
-        "ArrowUpDown": 4,
-        "Button": 16,
+        "Button": 14,
         "CalendarDays": 2,
         "Check": 1,
         "CheckCircle2": 2,
         "CircleAlert": 2,
-        "CircleDashed": 2,
-        "CustomSelect": 6,
+        "CircleDashed": 1,
+        "ClientDirectoryRegister": 1,
+        "ClientSourceWorkspace": 1,
+        "CustomSelect": 7,
+        "DashboardControl": 2,
+        "DashboardEmptyState": 3,
+        "DashboardFilterGroup": 2,
         "Drawer": 3,
-        "ExternalLink": 3,
-        "Eye": 2,
-        "FileText": 2,
+        "ExternalLink": 1,
+        "FileText": 3,
         "Globe": 1,
-        "Link": 7,
+        "Link": 5,
         "MailIcon": 1,
-        "MessageSquare": 1,
+        "MessageSquare": 2,
         "Modal": 1,
-        "Pencil": 2,
         "Phone": 1,
         "Plus": 3,
-        "ProfileIdentity": 3,
+        "ProfileIdentity": 1,
         "ShieldAlert": 1,
-        "Users": 3,
-        "X": 2
+        "Users": 1,
+        "X": 1
       }
     },
     {
       "file": "src/pages/admin/AdminClientSlaMonitoring.tsx",
       "reachable": true,
       "components": {
-        "Activity": 1,
         "AdminModuleHeader": 1,
         "AdminPageShell": 1,
         "AdminSectionTabs": 1,
-        "AdminStatusBadge": 1,
-        "AlertTriangle": 1,
-        "ExternalLink": 1,
-        "FileText": 1,
-        "Link": 1
+        "ClientSourceWorkspace": 1
       }
     },
     {
@@ -1088,22 +1135,28 @@
       "file": "src/pages/admin/AdminContracts.tsx",
       "reachable": true,
       "components": {
+        "AdminDataTableShell": 1,
+        "AdminFilterField": 2,
+        "AdminFilterToolbar": 2,
         "AdminModuleHeader": 1,
         "AdminPageShell": 1,
-        "AdminSectionTabs": 1,
+        "AdminPanel": 2,
         "AdminTablePagination": 1,
         "ArrowRight": 2,
-        "Button": 24,
-        "CalendarDays": 2,
-        "ClipboardCheck": 2,
+        "Button": 19,
+        "CalendarDays": 3,
+        "ClientAgreementTabs": 1,
+        "ClientSourceWorkspace": 1,
+        "ClipboardCheck": 1,
         "ConfirmDialog": 2,
         "CustomSelect": 6,
+        "DashboardControl": 4,
+        "DashboardEmptyState": 2,
         "Drawer": 2,
         "ExternalLink": 4,
-        "Link": 2,
-        "Plus": 3,
+        "Link": 1,
+        "Plus": 1,
         "RefreshCw": 3,
-        "Search": 2,
         "ShieldAlert": 1,
         "Trash2": 2,
         "X": 1

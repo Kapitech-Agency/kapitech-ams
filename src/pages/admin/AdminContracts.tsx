@@ -1,13 +1,17 @@
+import { ClientAgreementTabs, ClientSourceWorkspace } from '../../components/admin/clients/ClientWorkspace';
+import { AdminFilterToolbar, AdminFilterField } from '../../components/admin/AdminFilterToolbar';
+import { DashboardControl } from '../../components/admin/DashboardControls';
+import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowRight, CalendarDays, ClipboardCheck, ExternalLink, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, ClipboardCheck, ExternalLink, Plus, RefreshCw, ShieldAlert, Trash2, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
-import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminPanel, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type ContractStatus = 'draft' | 'in_review' | 'sent' | 'signed' | 'active' | 'completed' | 'expired' | 'terminated';
 type ContractType = 'msa' | 'sow' | 'service_agreement' | 'nda' | 'change_order';
@@ -162,6 +166,7 @@ const toForm = (contract: ClientContract): ContractForm => ({
 export const AdminContracts: React.FC = () => {
   const canManage = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageCrm') || hasAdminPermission('canManageClients');
   const [searchParams] = useSearchParams();
+  const isContractHistory = searchParams.get('view') === 'history';
   const isRenewalSchedule = searchParams.get('view') === 'renewals';
   const [contracts, setContracts] = useState<ClientContract[]>([]);
   const [clients, setClients] = useState<RelatedRecord[]>([]);
@@ -430,32 +435,24 @@ export const AdminContracts: React.FC = () => {
     return null;
   };
 
+  const contractEmpty = <DashboardEmptyState eyebrow={error ? 'Source unavailable' : 'Agreements'} title={error ? 'Contract source unavailable' : contracts.length ? 'No matching agreements' : 'No contracts or SOWs recorded'} description={error ? 'Reload the source before reviewing the agreement register.' : contracts.length ? 'Clear the search or choose another status.' : 'Create a draft to record the scope, deliverables and commercial terms.'} icon={<ClipboardCheck size={17} />} action={<DashboardControl variant="quiet" onClick={error ? () => void load() : contracts.length ? () => {setQuery('');setStatusFilter('all');} : openCreate} disabled={!error && !contracts.length && !canManage}>{error ? 'Retry loading' : contracts.length ? 'Reset filters' : 'Create contract'}</DashboardControl>} />;
+
   return (
     <AdminPageShell featureSlug="client-contracts-module">
       <AdminModuleHeader
         className="mb-0"
-        title={isRenewalSchedule ? 'Renewal Schedule' : 'Contracts & SOW'}
-        description={isRenewalSchedule
+        title="Client Agreements"
+        description={isContractHistory ? 'Inspect the provenance of the current agreement and its signed evidence.' : isRenewalSchedule
           ? 'Review dates recorded on active contracts and retainers. This schedule is a view over existing records, not a separate renewal register.'
           : 'Manage client agreements from draft and review through signature, activation, renewal, and closeout.'}
         actions={isRenewalSchedule
-          ? <Link to="/admin/clients/retainers" className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Retainers</Link>
+          ? <DashboardControl to="/admin/clients/retainers" variant="action" icon={<CalendarDays size={14} />}>Open retainers</DashboardControl>
           : <Button type="button" variant="primary" onClick={openCreate} disabled={!canManage} icon={<Plus size={14} />}>New Contract</Button>}
       />
 
-      <AdminSectionTabs
-        ariaLabel="Client Agreements worksheets"
-        activeKey={isRenewalSchedule ? 'renewals' : 'contracts'}
-        className="w-full border-b border-line pb-2"
-        items={[
-          { key: 'contracts', label: 'Contracts & SOWs', to: '/admin/contracts' },
-          { key: 'retainers', label: 'Retainers & Service Commitments', to: '/admin/clients/retainers' },
-          { key: 'renewals', label: 'Renewal Schedule', to: '/admin/contracts?view=renewals' },
-          { key: 'history', label: 'Contract History', to: '/admin/contracts', available: false },
-        ]}
-      />
+<ClientAgreementTabs activeKey={isContractHistory ? 'history' : isRenewalSchedule ? 'renewals' : 'contracts'} />
 
-      {isRenewalSchedule ? (
+      {isContractHistory ? <ClientSourceWorkspace worksheet="history" /> : isRenewalSchedule ? (
         <div className="space-y-4" data-ams-feature-slug="client-renewal-schedule" data-ams-slug="client-renewal-schedule">
           {!loading && !renewalScheduleSourcesComplete && (
             <div className="flex flex-col gap-3 rounded-control border border-warning/25 bg-warning/5 px-3 py-3 text-xs leading-5 text-muted sm:flex-row sm:items-center sm:justify-between">
@@ -463,13 +460,8 @@ export const AdminContracts: React.FC = () => {
               <Button type="button" variant="secondary" onClick={() => void load()} disabled={loading} icon={<RefreshCw size={13} />} className="shrink-0">Refresh sources</Button>
             </div>
           )}
-          <div data-ams-feature-slug="renewal-schedule-filters" data-ams-slug="renewal-schedule-filters" className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <label className="relative block min-w-0 flex-1">
-              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
-              <input type="search" aria-label="Search renewal agreements" value={renewalQuery} onChange={(event) => setRenewalQuery(event.target.value)} placeholder="Search agreement, client, or source…" className="ams-control w-full pl-9" />
-            </label>
-            <div role="group" aria-label="Renewal schedule filters" className="flex min-w-0 flex-wrap items-center gap-2">
-              <CustomSelect
+          <AdminFilterToolbar slug="renewal-schedule-filters" searchLabel="Search renewal agreements" searchPlaceholder="Search agreement or client…" searchValue={renewalQuery} onSearchChange={setRenewalQuery} activeFilterCount={Number(renewalTimingFilter !== 'all')} onReset={() => {setRenewalQuery(''); setRenewalTimingFilter('all');}}>
+            <AdminFilterField label="Renewal timing">              <CustomSelect
                 value={renewalTimingFilter}
                 onChange={(value) => setRenewalTimingFilter(value as RenewalTimingFilter)}
                 options={[
@@ -480,34 +472,17 @@ export const AdminContracts: React.FC = () => {
                   { value: 'date-not-recorded', label: 'Date not recorded' }
                 ]}
                 aria-label="Filter renewals by timing"
-                className="min-w-[170px]"
-                triggerClassName="w-full min-w-[170px]"
+                triggerClassName="w-full"
                 slug="renewal-timing-filter"
-              />
-              {(renewalQuery.trim() || renewalTimingFilter !== 'all') && (
-                <Button type="button" variant="secondary" onClick={() => { setRenewalQuery(''); setRenewalTimingFilter('all'); }}>Clear filters</Button>
-              )}
-            </div>
-          </div>
-          <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="Renewal schedule records">
-            <div className="flex flex-col gap-2 border-b border-line p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-              <div>
-                <h2 className="text-sm font-semibold text-fg">Renewal and end-date schedule</h2>
-                <p className="mt-1 text-[11px] leading-5 text-muted">The schedule reads active contracts and saved active retainer terms. It does not create or transition agreement records.</p>
-              </div>
-              <span aria-live="polite" className="text-[10px] text-muted">{loading ? 'Loading sources' : renewalScheduleSourcesComplete ? (filteredRenewalScheduleRows.length === renewalScheduleRows.length ? renewalScheduleRows.length + ' records' : filteredRenewalScheduleRows.length + ' of ' + renewalScheduleRows.length + ' records') : 'Partial source coverage · ' + filteredRenewalScheduleRows.length + ' available'}</span>
-            </div>
+              /></AdminFilterField>
+          </AdminFilterToolbar>
+          <AdminPanel title="Renewal and end-date schedule" description="Recorded dates on active contracts and retainers. Missing dates remain visible; available sources do not imply full coverage." className="ams-operational-panel ams-overview-panel" actions={<span aria-live="polite" className="text-[11px] text-muted">{loading ? 'Loading sources' : renewalScheduleSourcesComplete ? filteredRenewalScheduleRows.length + ' records' : 'Partial source coverage'}</span>}>
             {loading ? (
               <div className="space-y-2 p-4" role="status" aria-label="Loading renewal schedule">
                 {[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
               </div>
             ) : filteredRenewalScheduleRows.length === 0 ? (
-              <div className="p-6 text-center" role="status">
-                <CalendarDays size={19} className="mx-auto text-muted" aria-hidden="true" />
-                <p className="mt-3 text-sm font-medium text-fg">{renewalScheduleRows.length > 0 ? 'No matching renewal records.' : renewalScheduleSourcesComplete ? 'No active agreements have renewal or end-date records.' : 'Renewal schedule cannot be fully verified.'}</p>
-                <p className="mt-1 text-xs leading-5 text-muted">{renewalScheduleRows.length > 0 ? 'Clear the search or choose another timing filter.' : renewalScheduleSourcesComplete ? 'Add dates to the canonical contract or retainer records to include them in this schedule.' : 'Refresh after both contract and client record sources are available. The page will not treat unavailable data as zero renewals.'}</p>
-                {renewalScheduleRows.length > 0 && <Button type="button" variant="secondary" className="mt-4" onClick={() => { setRenewalQuery(''); setRenewalTimingFilter('all'); }}>Clear filters</Button>}
-              </div>
+              <DashboardEmptyState eyebrow={renewalScheduleSourcesComplete ? 'Renewal schedule' : 'Incomplete sources'} title={renewalScheduleRows.length ? 'No matching renewal records' : renewalScheduleSourcesComplete ? 'No active agreements recorded' : 'Renewal coverage cannot be verified'} description={renewalScheduleRows.length ? 'Clear the search or select another timing filter.' : renewalScheduleSourcesComplete ? 'Record renewal or end dates on the canonical contract and retainer records.' : 'Refresh after both contract and client sources are available. Unavailable records are not zero renewals.'} icon={<CalendarDays size={17} />} action={<DashboardControl variant="quiet" onClick={renewalScheduleSourcesComplete ? () => {setRenewalQuery('');setRenewalTimingFilter('all');} : () => void load()}>{renewalScheduleSourcesComplete ? 'Reset filters' : 'Refresh sources'}</DashboardControl>} />
             ) : (
               <div className="divide-y divide-line">
                 {filteredRenewalScheduleRows.map((row) => {
@@ -538,7 +513,7 @@ export const AdminContracts: React.FC = () => {
                 })}
               </div>
             )}
-          </section>
+          </AdminPanel>
           <div className="rounded-card border border-line bg-panel px-4 py-3 text-[11px] leading-5 text-muted">
             The current contract and retainer sources do not expose an accountable owner or next-action field. Open the source register to verify ownership before follow-up. Dates come from active agreement records only. Retainer hours and billing eligibility are not recalculated here. Past-dated active records need a human lifecycle review; the schedule does not mark contracts as expired automatically.
           </div>
@@ -554,14 +529,8 @@ export const AdminContracts: React.FC = () => {
 
 
 
-      <section className="rounded-card border border-line bg-panel p-3 sm:p-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <label className="relative block min-w-0 flex-1">
-            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <input aria-label="Search contracts" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search contract number, client, project, or title…" className="ams-control w-full pl-9" />
-          </label>
-          <div className="flex flex-wrap items-center gap-2">
-            <CustomSelect
+      <AdminFilterToolbar slug="contracts-filters" searchLabel="Search contracts" searchPlaceholder="Search agreement, client, project or scope…" searchValue={query} onSearchChange={setQuery} activeFilterCount={Number(statusFilter !== 'all')} onReset={() => {setQuery('');setStatusFilter('all');}} actions={<DashboardControl variant="quiet" onClick={() => void load()} disabled={loading} icon={<RefreshCw size={13} />}>Refresh</DashboardControl>}>
+        <AdminFilterField label="Agreement status">            <CustomSelect
               value={statusFilter}
               onChange={(value) => setStatusFilter(value as 'all' | ContractStatus)}
               options={[
@@ -569,16 +538,14 @@ export const AdminContracts: React.FC = () => {
                 ...(Object.keys(statusLabels) as ContractStatus[]).map((status) => ({ value: status, label: statusLabels[status] }))
               ]}
               aria-label="Filter contracts by status"
-              className="min-w-[160px]"
-              triggerClassName="w-full min-w-[160px]"
+              triggerClassName="w-full"
               slug="contracts-status-filter"
-            />
-            <Button type="button" variant="secondary" onClick={() => void load()} disabled={loading} icon={<RefreshCw size={13} />}>Refresh</Button>
-          </div>
-        </div>
-
+            /></AdminFilterField>
+      </AdminFilterToolbar>
+      <AdminPanel title="Contracts & SOWs" description="Review scope and obligations, then inspect or advance the existing agreement workflow." className="ams-operational-panel ams-overview-panel" slug="client-agreements-register">
+        <AdminDataTableShell embedded>
         <div className="mt-4 min-w-0">
-          <div className="grid gap-3 min-[1280px]:hidden" data-ams-feature-slug="contracts-compact-cards" role="list" aria-label="Contract and statement of work cards">
+          <div className="grid gap-3 min-[1100px]:hidden" data-ams-feature-slug="contracts-compact-cards" role="list" aria-label="Contract and statement of work cards">
             {loading ? Array.from({ length: 3 }).map((_, index) => (
               <div key={index} className="rounded-card border border-line bg-bg p-4" role="status" aria-label="Loading contract">
                 <div className="h-3 w-44 max-w-full animate-pulse rounded-badge bg-line" />
@@ -618,17 +585,12 @@ export const AdminContracts: React.FC = () => {
                 </article>
               );
             }) : (
-              <div className="rounded-card border border-line bg-bg px-4 py-10 text-center">
-                <ClipboardCheck size={20} className="mx-auto text-muted" />
-                <p className="mt-3 text-sm font-medium text-fg">{contracts.length ? 'No contracts match these filters.' : 'No contracts or SOWs recorded yet.'}</p>
-                <p className="mt-1 text-xs leading-5 text-muted">{contracts.length ? 'Clear the search or choose another status.' : 'Create a draft to start the review and signature workflow. This register does not create an e-signature on your behalf.'}</p>
-                {!contracts.length && canManage && <Button type="button" variant="secondary" className="mt-4" onClick={openCreate} icon={<Plus size={13} />}>Create first contract</Button>}
-              </div>
+              contractEmpty
             )}
           </div>
-          <div className="hidden min-[1280px]:block overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse text-left">
-            <thead><tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
+          <div className="hidden min-[1100px]:block overflow-x-auto custom-scrollbar" role="region" aria-label="Scrollable agreement register" tabIndex={0}>
+          <table className="w-full min-w-[980px] border-collapse text-left"><caption className="sr-only">Contracts and statements of work</caption>
+            <thead><tr className="border-b border-line text-[11px] font-medium text-muted">
               <th className="px-3 py-3 font-medium">Contract / SOW</th>
               <th className="px-3 py-3 font-medium">Client & project</th>
               <th className="px-3 py-3 font-medium">Term</th>
@@ -672,18 +634,14 @@ export const AdminContracts: React.FC = () => {
                       </td>
                     </tr>
                   );
-                }) : <tr><td colSpan={6} className="px-4 py-16 text-center">
-                  <ClipboardCheck size={20} className="mx-auto text-muted" />
-                  <p className="mt-3 text-sm font-medium text-fg">{contracts.length ? 'No contracts match these filters.' : 'No contracts or SOWs recorded yet.'}</p>
-                  <p className="mt-1 text-xs text-muted">{contracts.length ? 'Clear the search or choose another status.' : 'Create a draft to start the review and signature workflow. This register does not create an e-signature on your behalf.'}</p>
-                  {!contracts.length && canManage && <Button type="button" variant="secondary" className="mt-4" onClick={openCreate} icon={<Plus size={13} />}>Create first contract</Button>}
-                </td></tr>}
+                }) : <tr><td colSpan={6} className="p-0">{contractEmpty}</td></tr>}
             </tbody>
           </table>
           </div>
         </div>
         <AdminTablePagination total={filtered.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="contracts" slug="contracts-pagination" />
-      </section>
+              </AdminDataTableShell>
+      </AdminPanel>
 
       {notice && <div role="status" className="flex items-center justify-between gap-2 rounded-control border border-success/20 bg-success/5 px-3 py-2 text-xs text-fg"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss message" className="rounded-control p-1 text-muted hover:bg-bg"><X size={13} /></button></div>}
 

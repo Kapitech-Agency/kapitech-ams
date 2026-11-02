@@ -339,14 +339,15 @@ test('Client Retainers use persisted records and disclose missing time-log recon
 
 test('SLA Monitoring never presents mock uptime or incident metrics as production data', async () => {
   const page = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
+  const source = await read('src/components/admin/clients/ClientWorkspace.tsx');
+  assert.match(page, /ClientSourceWorkspace/);
+  assert.match(source, /Telemetry not configured/);
+  assert.match(source, /No verified SLA telemetry source/);
+  assert.match(source, /These measurements are unavailable/);
+  assert.match(source, /to: '\/admin\/contracts'/);
+  assert.doesNotMatch(page + source, /SLA-001|PT Astra Digital Ventura|ShopeePay International|value:\s*['"]\d+/);
+  assert.doesNotMatch(page + source, /const seed|const \[records\]|isSlugFixtureMode/);
 
-  assert.match(page, /Telemetry not configured/);
-  assert.match(page, /No sample accounts or simulated performance values are shown/);
-  assert.match(page, /Uptime, MTTR, compliance, incident history, and snapshots are unavailable/);
-  assert.match(page, /data-ams-slug="sla-monitoring-setup"/);
-  assert.doesNotMatch(page, /SLA-001|PT Astra Digital Ventura|ShopeePay International|value:\s*['"]\d+/);
-  assert.doesNotMatch(page, /const seed|const \[records\]|isSlugFixtureMode/);
-  assert.match(page, /Open Contracts &amp; SOW/);
 });
 
 test('unexpected async API failures are forwarded and returned as safe JSON', async () => {
@@ -707,15 +708,16 @@ test('Contracts & SOW keeps its persisted lifecycle route under the role navigat
 });
 
 test('SLA Monitoring never presents fixture telemetry as real client performance', async () => {
-  const sla = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
+  const page = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
+  const source = await read('src/components/admin/clients/ClientWorkspace.tsx');
+  assert.match(page, /ClientSourceWorkspace/);
+  assert.match(source, /Telemetry not configured/);
+  assert.match(source, /No verified SLA telemetry source/);
+  assert.match(source, /These measurements are unavailable/);
+  assert.match(source, /to: '\/admin\/contracts'/);
+  assert.doesNotMatch(page + source, /SLA-001|PT Astra Digital Ventura|ShopeePay International|value:\s*['"]\d+/);
+  assert.doesNotMatch(page + source, /const seed|const \[records\]|isSlugFixtureMode/);
 
-  assert.match(sla, /Telemetry not configured/);
-  assert.match(sla, /No sample accounts or simulated performance values are shown/);
-  assert.match(sla, /Uptime, MTTR, compliance, incident history, and snapshots are unavailable/);
-  assert.match(sla, /data-ams-slug="sla-monitoring-setup"/);
-  assert.doesNotMatch(sla, /SLA-001|PT Astra Digital Ventura|ShopeePay International|value:\s*['"]\d+/);
-  assert.doesNotMatch(sla, /SLA-001|PT Astra Digital Ventura|ShopeePay International|const seed/);
-  assert.doesNotMatch(sla, /isSlugFixtureMode/);
 });
 
 test('Resource Planning assignments persist and Capacity Allocation foregrounds saved plans over tracked-time history', async () => {

@@ -225,7 +225,7 @@ test('primary data surfaces remain named and keyboard-accessible across all nine
     ['src/components/admin/inbox/MessageWorkspace.tsx', /role="region" tabIndex=\{0\} aria-label=\{t\('Scrollable message table'/, 'Inbox'],
     ['src/components/admin/projects/ProjectRegistryRecords.tsx', /role="region" tabIndex=\{0\} aria-label=\{archived \? 'Scrollable archived project register' : 'Scrollable project register table'\}/, 'Projects'],
     ['src/components/admin/tasks/TaskExecutionViews.tsx', /tabIndex=\{0\} role="region" aria-label="Scrollable task register"/, 'Tasks'],
-    ['src/pages/admin/AdminClients.tsx', /aria-label="Scrollable client directory"|aria-label=\{statusScope === 'lead' \? 'Scrollable onboarding account register' : 'Scrollable client directory'\}/, 'Clients'],
+    ['src/components/admin/clients/ClientDirectoryRegister.tsx', /tabIndex=\{0\} role="region" aria-label=\{'Scrollable ' \+ title\.toLowerCase\(\)\}/, 'Clients'],
     ['src/pages/admin/AdminFinanceWorkspace.tsx', /aria-label=\{'Scrollable ' \+ title \+ ' table'\}/, 'Finance'],
     ['src/pages/admin/AdminTeams.tsx', /aria-label="Scrollable team directory table"/, 'Team & Resources'],
     ['src/pages/admin/AdminDocuments.tsx', /aria-label="Scrollable private document register"/, 'Documents'],

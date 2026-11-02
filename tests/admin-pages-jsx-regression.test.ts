@@ -98,7 +98,8 @@ test('Finance views stay inside the Finance workspace and retired routes stay hi
 test('Retainer workspace uses neutral counts and sentence-case table hierarchy', () => {
   const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
 
-  assert.ok(retainers.includes('tone="neutral">{records.length} active contracts</AdminStatusBadge>'));
+  assert.ok(retainers.includes('eyebrow="Retainers & service commitments"'));
+  assert.ok(retainers.includes('!isLoading && sourceAvailable && <section'));
   assert.ok(retainers.includes('Monthly retainer value'));
   assert.ok(retainers.includes('Committed retainer hours'));
   assert.ok(retainers.includes('Renewals due in 30 days'));
@@ -114,7 +115,7 @@ test('Long-form client relationship detail uses the shared drawer surface', () =
   assert.ok(clients.includes('size="3xl"'));
   assert.equal(clients.includes('client-directory-detail-modal'), false);
   assert.ok(clients.includes('Relationship timeline'));
-  assert.ok(clients.includes('Contracts &amp; Statements of Work'));
+  assert.ok(clients.includes('title="Contracts & Statements of Work"'));
 });
 
 test('Operational UI avoids sub-10px text outside faithful CMS previews', () => {
@@ -450,7 +451,7 @@ test('Client profile detail loads persisted contracts by client ID or exact comp
   assert.ok(clients.includes('contractClientId === selectedClient.id'));
   assert.ok(clients.includes('normalizeClientRelationName(contract.clientName) === normalizeClientRelationName(selectedClient.company)'));
   assert.ok(clients.includes('const canViewClientContracts = canManageClients || hasAdminPermission(\'canManageCrm\') || hasAdminPermission(\'canManageProjects\')'));
-  assert.ok(clients.includes('data-ams-feature-slug="client-contract-history"'));
+  assert.ok(clients.includes('slug="client-contract-history"'));
   assert.ok(clients.includes('No linked contracts yet'));
   assert.ok(clients.includes('isSecureContractDocumentUrl(contract.documentUrl)'));
   assert.ok(clients.includes("return new URL(value).protocol === 'https:'"));
@@ -471,7 +472,7 @@ test('Client interaction timeline reads and writes persistent relationship histo
   assert.ok(postgresDatabase.includes("'client_interactions'"));
   assert.ok(postgresDatabase.includes('const clientInteractions=(m.get(\'client_interactions\')??[])'));
   assert.ok(postgresDatabase.includes('clients,clientInteractions,projects'));
-  assert.ok(clients.includes('data-ams-feature-slug="client-interaction-timeline"'));
+  assert.ok(clients.includes('slug="client-interaction-timeline"'));
   assert.ok(clients.includes('slug="client-interaction-create-drawer"'));
   assert.ok(clients.includes('api.clients.getInteractions(selectedClient.id)'));
   assert.ok(clients.includes('api.clients.createInteraction(interactionClient.id'));
@@ -498,7 +499,7 @@ test('Client interaction timeline is separate from global security audit records
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
   const routes = fs.readFileSync(path.resolve(process.cwd(), 'server/routes.ts'), 'utf8');
 
-  assert.ok(clients.includes('Saved client calls, meetings, emails, messages, and internal notes.'));
+  assert.ok(clients.includes('Saved client calls, meetings, emails, messages and internal notes.'));
   assert.ok(clients.includes('api.clients.getInteractions(selectedClient.id)'));
   assert.ok(routes.includes("const interactions = (getDatabase().clientInteractions || [])"));
   assert.ok(!clients.includes("api.auditLogs.getAll()"));
@@ -665,12 +666,11 @@ test('Retainers and SLA monitoring prioritize the actual operational workspace',
   const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
   assert.ok(retainers.includes('<AdminMetricStrip'));
   assert.ok(retainers.includes('data-ams-slug="retainer-time-log-reconciliation-state"'));
-  assert.ok(retainers.includes('data-ams-slug="retainers-directory"'));
+  assert.ok(retainers.includes('slug="retainers-directory"'));
   assert.equal(retainers.includes('className="grid grid-cols-1 gap-3 md:grid-cols-3"'), false);
-  assert.ok(sla.indexOf('data-ams-slug="sla-telemetry-not-configured"') < sla.indexOf('data-ams-slug="sla-monitoring-setup"'));
-  assert.ok(sla.indexOf('data-ams-slug="sla-monitoring-setup"') < sla.indexOf('data-ams-slug="sla-monitoring-next-actions"'));
+  assert.ok(sla.includes('<ClientSourceWorkspace worksheet={active as ClientSourceWorksheet}'));
+  assert.ok(sla.includes('CLIENT_SERVICE_TABS'));
   assert.equal(sla.includes('aria-label="SLA metrics"'), false);
-  assert.ok(sla.includes('No sample accounts or simulated performance values are shown.'));
 });
 
 
@@ -703,8 +703,8 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
   const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
 
-  const clientDirectory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
-  const clientDirectoryEnd = clients.indexOf('</section>', clientDirectory);
+  const clientDirectory = clients.indexOf('<ClientDirectoryRegister records=');
+  const clientDirectoryEnd = clients.indexOf('slug="client-directory-pagination"', clientDirectory);
   const clientMetrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
   assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory);
   assert.equal(clientMetrics, -1, 'Clients Directory must not render a default KPI strip.');
@@ -784,7 +784,7 @@ test('Time tracking leads with the time-entry workflow and register before perio
 
 test('Contracts and SOW keeps the searchable register primary and exposes saved details without duplicate status metrics', () => {
   const contracts = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminContracts.tsx'), 'utf8');
-  const search = contracts.indexOf('aria-label="Search contracts"');
+  const search = contracts.indexOf('searchLabel="Search contracts"');
   const table = contracts.indexOf('<table', search);
   const pagination = contracts.indexOf('slug="contracts-pagination"');
   const metrics = contracts.indexOf('data-ams-feature-slug="contracts-overview-kpis"');
@@ -799,7 +799,7 @@ test('Contracts and SOW keeps the searchable register primary and exposes saved 
   for (const field of ['selectedContract.clientName', 'selectedContract.projectName', 'selectedContract.startDate', 'selectedContract.endDate', 'selectedContract.renewalDate', 'selectedContract.scope', 'selectedContract.deliverables', 'selectedContract.paymentTerms']) {
     assert.ok(contracts.includes(field), 'Missing source-backed agreement detail field: ' + field);
   }
-  assert.ok(contracts.includes('Contract History worksheet remains unavailable') || contracts.includes('Contract History worksheet remains unavailable'));
+  assert.ok(contracts.includes('<ClientSourceWorkspace worksheet="history"'));
   assert.ok(contracts.includes('data-ams-slug={\'contract-\' + contract.id}'));
 });
 
@@ -953,31 +953,29 @@ test('Team member and vendor profile details use shared drawers with fixed actio
 
 
 test('Client directory adapts its primary register for narrow screens without losing core account actions', () => {
-  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
-  assert.ok(clients.includes('data-ams-slug="clients-directory-cards"') || clients.includes("statusScope === 'lead' ? 'clients-onboarding-cards' : 'clients-directory-cards'"),
-    'The shared register keeps a mobile card surface with a distinct scope label for onboarding.');
-  assert.ok(clients.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
-  assert.ok(clients.includes('min-w-[1100px]'), 'The desktop directory reserves enough width for the canonical identity and service-context columns.');
-  assert.ok(!clients.includes('min-w-[1240px]'));
-  assert.ok(clients.includes("colSpan={statusScope === 'lead' ? 7 : 8}"), 'Empty state must span the active onboarding or directory column count.');
-  assert.ok(clients.includes('Primary contact'));
-  assert.ok(clients.includes('getClientStatusTone(client.status)'));
-  assert.ok(clients.includes('getClientTierLabel(client)'));
-  assert.ok(clients.includes("client.projectsCount >= 5 ? 'Tier 1 Strategic'"));
-  assert.ok(clients.includes("aria-label={'View profile for ' + client.company}"));
-  assert.ok(clients.includes("aria-label={'Manage ' + client.company}"));
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/clients/ClientDirectoryRegister.tsx'), 'utf8');
+  assert.ok(clients.includes('min-[1100px]:hidden'));
+  assert.ok(clients.includes('hidden overflow-x-auto custom-scrollbar min-[1100px]:block'));
+  assert.ok(clients.includes('min-w-[900px]'));
+  assert.ok(clients.includes('aria-label={title}'));
+  assert.ok(clients.includes("ariaLabel={'View profile for ' + client.company}"));
+  assert.ok(clients.includes("ariaLabel={'Manage ' + client.company}"));
+  assert.ok(clients.includes('p.canManage &&'));
+  assert.ok(clients.includes('p.serviceContext(client)'));
+  assert.equal(clients.includes('Tier 1 Strategic'), false, 'Account tiers cannot be inferred from project count.');
+
 });
 
 test('Clients header avoids repeating the Active clients metric before the primary directory', () => {
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
   const headerStart = clients.indexOf('<AdminModuleHeader slug="clients-header"');
   const headerEnd = clients.indexOf('{errorMessage && (', headerStart);
-  const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
+  const directory = clients.indexOf('<ClientDirectoryRegister records=');
   const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
   assert.ok(headerStart >= 0 && headerEnd > headerStart);
   const header = clients.slice(headerStart, headerEnd);
   assert.doesNotMatch(header, /clientMetrics\\.active|active accounts|AdminStatusBadge/);
-  const directoryEnd = clients.indexOf('</section>', directory);
+  const directoryEnd = clients.indexOf('slug="client-directory-pagination"', directory);
   assert.ok(directory > headerEnd);
   assert.ok(directoryEnd > directory);
   assert.equal(metrics, -1, 'The account register is the primary Directory workspace; a duplicate KPI strip is not rendered.');
@@ -1121,7 +1119,7 @@ test('Time Logs uses responsive cards, scope filters, honest billing classificat
 test('Contracts uses compact cards while preserving lifecycle transitions and manager permission gates', () => {
   const contracts = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminContracts.tsx'), 'utf8');
   assert.ok(contracts.includes('data-ams-feature-slug="contracts-compact-cards"'));
-  assert.ok(contracts.includes('hidden min-[1280px]:block overflow-x-auto'));
+  assert.ok(contracts.includes('hidden min-[1100px]:block overflow-x-auto'));
   assert.ok(contracts.includes("const next = primaryNext(contract.status)"));
   assert.ok(contracts.includes("onClick={() => void transition(contract, next)}"));
   assert.ok(contracts.includes("setPendingStatusChange({ contract, status: 'expired' })"));
@@ -1134,7 +1132,7 @@ test('Contracts uses compact cards while preserving lifecycle transitions and ma
 test('Client Retainers uses responsive cards while keeping usage and renewal semantics intact', () => {
   const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
   assert.ok(retainers.includes('data-ams-feature-slug="retainers-compact-cards"'));
-  assert.ok(retainers.includes('hidden min-[1280px]:block overflow-x-auto custom-scrollbar'));
+  assert.ok(retainers.includes('hidden min-[1100px]:block overflow-x-auto custom-scrollbar'));
   assert.ok(retainers.includes('item.usedHours / Math.max(1, item.committedHours) * 100'));
   assert.ok(retainers.includes('const isRenewalHighlighted = (value: string) => {'));
   assert.ok(retainers.includes('return days !== null && days <= 30;'), 'Only valid renewal dates within the warning window should be highlighted.');

@@ -2,35 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 // Shared module chrome renders the canonical ams-page-header primitive.
-import {
-  Activity,
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  Check,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  CircleAlert,
-  CircleDashed,
-  CalendarDays,
-  Download,
-  ExternalLink,
-  FileText,
-  Mail as MailIcon,
-  MessageSquare,
-  Phone,
-  Eye,
-  Globe,
-  Pencil,
-  Plus,
-  Search,
-  ShieldAlert,
-  Trash2,
-  Users,
-  X
-} from 'lucide-react';
-import { AgencyClient, createClientSlug, getAgencyClientSlug, normalizeAgencyClient } from '../../lib/clientStore';
+// Shared module chrome renders the canonical ams-page-header primitive.
+import { Activity, ArrowDown, Check, CheckCircle2, CircleAlert, CircleDashed, CalendarDays, ExternalLink, FileText, Mail as MailIcon, MessageSquare, Phone, Globe, Plus, ShieldAlert, Users, X } from 'lucide-react';
+import { AgencyClient, createClientSlug, normalizeAgencyClient } from '../../lib/clientStore';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
@@ -39,8 +13,13 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
-import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminPanel, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { AdminFilterToolbar, AdminFilterField } from '../../components/admin/AdminFilterToolbar';
+import { DashboardControl, DashboardFilterGroup } from '../../components/admin/DashboardControls';
+import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
+import { ClientDirectoryRegister } from '../../components/admin/clients/ClientDirectoryRegister';
+import { CLIENT_ONBOARDING_TABS, ClientSourceWorkspace, ClientSourceWorksheet } from '../../components/admin/clients/ClientWorkspace';
 
 
 type SortKey = 'name' | 'company' | 'industry' | 'status' | 'updatedAt' | 'projectsCount' | 'totalSpend';
@@ -94,16 +73,6 @@ const clientInteractionLabel = (type: ClientInteractionType) =>
 const formatClientStatusLabel = (value: unknown) => {
   const normalized = String(value || '').trim().replace(/[_-]+/g, ' ');
   return normalized ? normalized.split(' ').map((word) => word ? word[0].toUpperCase() + word.slice(1) : word).join(' ') : 'Not set';
-};
-
-const getClientTierLabel = (client: AgencyClient) =>
-  client.projectsCount >= 5 ? 'Tier 1 Strategic' : client.status === 'lead' ? 'Project-based' : 'Retainer Core';
-
-const getClientStatusTone = (value: unknown) => {
-  const normalized = String(value || '').trim().toLowerCase();
-  if (normalized === 'active') return 'border-success/25 bg-success/10 text-success';
-  if (normalized === 'lead') return 'border-info/25 bg-info/10 text-info';
-  return 'border-line bg-bg text-muted';
 };
 
 const toLocalDateTimeInput = (date: Date) => {
@@ -227,8 +196,8 @@ const STATUS_OPTIONS: Array<{ value: AgencyClient['status']; label: string }> = 
 
 const statusMeta: Record<AgencyClient['status'], { label: string; tone: 'success' | 'info' | 'warning' | 'neutral'; icon: React.ReactNode }> = {
   active: { label: 'Active', tone: 'success', icon: <Activity size={12} aria-hidden="true" /> },
-  completed: { label: 'Completed', tone: 'info', icon: <Check size={12} aria-hidden="true" /> },
-  lead: { label: 'Lead', tone: 'warning', icon: <Users size={12} aria-hidden="true" /> },
+  completed: { label: 'Completed', tone: 'neutral', icon: <Check size={12} aria-hidden="true" /> },
+  lead: { label: 'Lead', tone: 'info', icon: <Users size={12} aria-hidden="true" /> },
   inactive: { label: 'Inactive', tone: 'neutral', icon: <X size={12} aria-hidden="true" /> }
 };
 
@@ -249,13 +218,6 @@ const statusClasses: Record<'success' | 'info' | 'warning' | 'neutral', string> 
   warning: 'bg-warning/10 text-warning',
   neutral: 'bg-bg text-muted'
 };
-
-const slaClasses = {
-  success: 'border-success/20 bg-success/10 text-success',
-  warning: 'border-warning/20 bg-warning/10 text-warning',
-  danger: 'border-danger/20 bg-danger/10 text-danger',
-  neutral: 'border-line bg-bg text-muted'
-} as const;
 
 type ClientProfileReadinessItem = {
   key: string;
@@ -338,6 +300,11 @@ export const AdminClients: React.FC = () => {
     nextStep: '',
     occurredAt: toLocalDateTimeInput(new Date()),
   });
+  const [detailView, setDetailView] = useState('profile');
+  useEffect(() => { setDetailView('profile'); }, [selectedClient?.id]);
+  const requestedWorksheet = searchParams.get('worksheet');
+  const onboardingWorksheet: ClientSourceWorksheet = requestedWorksheet === 'required-documents' || requestedWorksheet === 'kickoff-readiness' ? requestedWorksheet : 'onboarding-checklist';
+  const contactsView = statusScope !== 'lead' && searchParams.get('worksheet') === 'contacts';
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<AgencyClient | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AgencyClient | null>(null);
@@ -661,7 +628,7 @@ export const AdminClients: React.FC = () => {
       );
     }
     if (state.status === 'ready' && state.records.length === 0) {
-      return <div className="p-3 text-xs leading-5 text-muted" role="status">{emptyMessage}</div>;
+      return <DashboardEmptyState eyebrow="Linked records" title="No linked records" description={emptyMessage} />;
     }
     if (state.status !== 'ready') return null;
     return renderRecords(state.records);
@@ -682,22 +649,9 @@ export const AdminClients: React.FC = () => {
   const industryOptions = useMemo(() => Array.from(new Set(clients.map((client) => client.industry).filter(Boolean))).sort(), [clients]);
   const locationOptions = useMemo(() => Array.from(new Set(clients.map((client) => client.location).filter(Boolean))).sort(), [clients]);
 
-  const overBudgetClients = useMemo(
-    () => clients.filter((client) => getClientSlaState(client) === 'over'),
-    [clients]
-  );
-
   const resetFilters = () => {
-    setSearchQuery('');
-    setStatusFilter('all');
-    setIndustryFilter('all');
-    setLocationFilter('all');
-    setSlaFilter('all');
-    setStatusScope('all');
-    setPage(1);
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('scope');
-    setSearchParams(nextParams, { replace: true });
+    setSearchQuery(''); setStatusFilter('all'); setIndustryFilter('all');
+    setLocationFilter('all'); setSlaFilter('all'); setPage(1);
   };
 
   const changeStatusScope = (scope: StatusScope) => {
@@ -958,6 +912,14 @@ export const AdminClients: React.FC = () => {
     ? Math.round((selectedClientReadinessCount / selectedClientReadiness.length) * 100)
     : 0;
 
+  const spendCapContext = (client: AgencyClient) => {
+    const budget = typeof client.slaDailyAdSpendBudget === 'number' && Number.isFinite(client.slaDailyAdSpendBudget) && client.slaDailyAdSpendBudget > 0 ? client.slaDailyAdSpendBudget : null;
+    const spend = typeof client.currentDailyAdSpend === 'number' && Number.isFinite(client.currentDailyAdSpend) ? client.currentDailyAdSpend : null;
+    const slaState = getClientSlaState(client);
+    const headroom = budget !== null && spend !== null ? Math.max(0, Math.min(100, (1 - spend / budget) * 100)) : null;
+    return headroom === null ? slaState === 'not-configured' ? 'Spend cap not configured' : 'Spend not recorded' : headroom.toFixed(1) + '% spend cap headroom';
+  };
+
   return (
     <AdminPageShell featureSlug="clients-module" className="ams-clients-module">
       <div data-ams-feature-slug="clients-header" data-ams-slug="clients-header">
@@ -965,13 +927,13 @@ export const AdminClients: React.FC = () => {
         <AdminModuleHeader slug="clients-header"
           className="mb-0"
           eyebrow={statusScope === 'lead' ? 'Onboarding workspace' : 'Client directory'}
-          title={statusScope === 'lead' ? 'Client Onboarding' : 'Clients & Key Accounts'}
+          title={statusScope === 'lead' ? 'Client Onboarding' : 'Client Directory'}
           description={statusScope === 'lead'
             ? 'Review prospective client accounts and recorded profile details.'
-            : 'Directory of enterprise clients, relationship health, spend-cap status, and account operations.'}
+            : 'Find the account, connect with the right contact and review Kapitech’s delivery commitments.'}
         actions={(
           <>
-            <Button type="button" variant="secondary" onClick={handleExport} icon={<ArrowDown size={14} aria-hidden="true" />}>{statusScope === 'lead' ? 'Export Onboarding Accounts' : 'Export Directory'}</Button>
+            <Button type="button" variant="secondary" onClick={handleExport} disabled={isLoading || Boolean(errorMessage)} icon={<ArrowDown size={14} aria-hidden="true" />}>{statusScope === 'lead' ? 'Export Onboarding Accounts' : 'Export Directory'}</Button>
             {canManageClients && (
               <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>{statusScope === 'lead' ? 'New Lead' : 'New Client'}</Button>
             )}
@@ -981,38 +943,15 @@ export const AdminClients: React.FC = () => {
       </div>
       
 
-      {statusScope === 'lead' ? (
-        <AdminSectionTabs
-          ariaLabel="Client Onboarding worksheets"
-          activeKey=""
-          className="w-full border-b border-line pb-2"
-          items={[
-            { key: 'onboarding-checklist', label: 'Onboarding Checklist', to: '/admin/clients/all-clients?scope=onboarding', available: false },
-            { key: 'required-documents', label: 'Required Documents', to: '/admin/clients/all-clients?scope=onboarding', available: false },
-            { key: 'kickoff-readiness', label: 'Kickoff Readiness', to: '/admin/clients/all-clients?scope=onboarding', available: false },
-          ]}
-        />
-      ) : (
-        <AdminSectionTabs
-          ariaLabel="Client Directory worksheets"
-          activeKey="companies"
-          className="w-full border-b border-line pb-2"
-          items={[
-            { key: 'companies', label: 'Companies', to: '/admin/clients/all-clients' },
-            { key: 'contacts', label: 'Contacts', to: '/admin/clients/all-clients', available: false },
-          ]}
-        />
-      )}
-
-      {statusScope === 'lead' && (
-        <section data-ams-feature-slug="clients-onboarding-source-boundary" data-ams-slug="clients-onboarding-source-boundary" aria-labelledby="clients-onboarding-source-title" className="flex min-w-0 items-start gap-3 rounded-card border border-line bg-panel p-3.5">
-          <CircleDashed size={16} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
-          <div className="min-w-0">
-            <h2 id="clients-onboarding-source-title" className="text-xs font-semibold text-fg">{language === 'id' ? 'Ruang lingkup onboarding' : 'Onboarding scope'}</h2>
-            <p className="mt-1 text-xs leading-5 text-muted">{language === 'id' ? 'Daftar ini menampilkan record klien berstatus Lead. Checklist onboarding, bukti dokumen wajib, dan kickoff readiness belum tersedia sebagai record terpisah. Kelengkapan profil tidak berarti onboarding sudah disetujui.' : 'This view lists existing client records with Lead status. Onboarding checklists, required-document evidence, and kickoff readiness are not available as separate records. Profile completeness does not mean onboarding has been approved.'}</p>
-          </div>
-        </section>
-      )}
+      <AdminSectionTabs className="ams-operational-tabs"
+        ariaLabel={statusScope === 'lead' ? 'Client Onboarding worksheets' : 'Client Directory worksheets'}
+        activeKey={statusScope === 'lead' ? onboardingWorksheet : contactsView ? 'contacts' : 'companies'}
+        items={statusScope === 'lead' ? CLIENT_ONBOARDING_TABS : [
+          {key:'companies', label:'Companies', to:'/admin/clients/all-clients'},
+          {key:'contacts', label:'Contacts', to:'/admin/clients/all-clients?worksheet=contacts'},
+        ]}
+      />
+      {statusScope === 'lead' && <ClientSourceWorkspace worksheet={onboardingWorksheet} />}
 
       {errorMessage && (
         <div role="alert" aria-live="assertive" className="flex flex-col gap-3 rounded-card border border-danger/25 bg-danger/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1031,304 +970,29 @@ export const AdminClients: React.FC = () => {
 
             
 
-      <AdminFilterBar slug="client-directory-filters"
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder={statusScope === 'lead' ? 'Search lead company, contact, email, phone or client ID...' : 'Search by company, contact, industry, or client ID...'}
+      <AdminFilterToolbar slug="client-directory-filters" searchValue={searchQuery} onSearchChange={setSearchQuery}
         searchLabel={statusScope === 'lead' ? 'Search onboarding accounts' : 'Search clients'}
-        actions={(
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            {statusScope !== 'lead' && (
-              <div className="w-full shrink-0 sm:w-40">
-                <CustomSelect
-                  slug="clients-status-filter"
-                  aria-label={language === 'id' ? 'Filter status klien' : 'Filter client status'}
-                  value={statusFilter}
-                  onChange={(value) => setStatusFilter(value as 'all' | AgencyClient['status'])}
-                  options={[
-                    { value: 'all', label: language === 'id' ? 'Semua status' : 'All statuses' },
-                    ...STATUS_OPTIONS,
-                  ]}
-                />
-              </div>
-            )}
-            <div className="w-full shrink-0 sm:w-44">
-              <CustomSelect
-                aria-label={language === 'id' ? 'Filter industri' : 'Filter industry'}
-                value={industryFilter}
-                onChange={setIndustryFilter}
-                options={[
-                  { value: 'all', label: language === 'id' ? 'Semua industri' : 'All industries' },
-                  ...industryOptions.map((industry) => ({ value: industry, label: industry })),
-                ]}
-                slug="clients-industry-filter"
-              />
-            </div>
-            <div className="w-full shrink-0 sm:w-44">
-              <CustomSelect
-                aria-label={language === 'id' ? 'Filter lokasi' : 'Filter location'}
-                value={locationFilter}
-                onChange={setLocationFilter}
-                options={[
-                  { value: 'all', label: language === 'id' ? 'Semua lokasi' : 'All locations' },
-                  ...locationOptions.map((location) => ({ value: location, label: location })),
-                ]}
-                slug="clients-location-filter"
-              />
-            </div>
-            {statusScope !== 'lead' && (
-              <div className="w-full shrink-0 sm:w-48">
-                <CustomSelect
-                  aria-label={language === 'id' ? 'Filter kesehatan batas belanja' : 'Filter spend cap health'}
-                  value={slaFilter}
-                  onChange={(value) => setSlaFilter(value as SlaFilter)}
-                  options={[
-                    { value: 'all', label: language === 'id' ? 'Semua status batas belanja' : 'All spend cap states' },
-                    { value: 'healthy', label: language === 'id' ? 'Dalam batas aman' : 'Healthy' },
-                    { value: 'near', label: language === 'id' ? 'Mendekati batas' : 'Near cap' },
-                    { value: 'over', label: language === 'id' ? 'Melewati batas' : 'Over cap' },
-                    { value: 'not-configured', label: language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured' },
-                    { value: 'spend-not-recorded', label: language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded' }
-                  ]}
-                  slug="clients-spend-cap-filter"
-                />
-              </div>
-            )}
-            <Button type="button" variant="secondary" icon={<X size={13} />} onClick={resetFilters}>{language === 'id' ? 'Reset filter' : 'Reset filters'}</Button>
-          </div>
-        )}
-        footer={(
-          <div className="flex min-w-0 gap-1 overflow-x-auto custom-scrollbar" aria-label={statusScope === 'lead' ? 'Client onboarding scopes' : 'Client scopes'}>
-          {(statusScope === 'lead'
-            ? [
-                { id: 'lead', label: 'Onboarding accounts' },
-                { id: 'all', label: 'All accounts' }
-              ]
-            : [
-                { id: 'all', label: 'All accounts' },
-                { id: 'active', label: 'Active' },
-                { id: 'at-risk', label: 'At-risk' }
-              ]
-          ).map((item) => (
-            <button key={item.id} type="button" aria-pressed={statusScope === item.id} onClick={() => changeStatusScope(item.id as StatusScope)} className={`inline-flex min-h-9 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${statusScope === item.id ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}>
-              {item.label}
-            </button>
-          ))}
-          </div>
-        )}
-      />
-
-      <section data-ams-feature-slug="clients-directory-table" data-ams-slug={statusScope === 'lead' ? 'clients-onboarding-register' : 'clients-directory-table'} aria-label={statusScope === 'lead' ? 'Onboarding accounts' : 'Clients directory'} className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel">
-        <div className="grid gap-2.5 p-3 min-[1280px]:hidden sm:p-4" data-ams-slug={statusScope === 'lead' ? 'clients-onboarding-cards' : 'clients-directory-cards'} role="list" aria-label={statusScope === 'lead' ? 'Onboarding account cards' : 'Client directory cards'}>
-          {isLoading ? Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="rounded-control border border-line bg-bg p-4" role="status" aria-label={statusScope === 'lead' ? 'Loading onboarding account' : 'Loading client'}>
-              <div className="h-3.5 w-40 max-w-full animate-pulse rounded-badge bg-line" />
-              <div className="mt-3 h-3 w-28 animate-pulse rounded-badge bg-line" />
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="h-10 animate-pulse rounded-control bg-line/60" />
-                <div className="h-10 animate-pulse rounded-control bg-line/60" />
-              </div>
-            </div>
-          )) : paginatedClients.length === 0 ? (
-            <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center" data-ams-slug="clients-mobile-empty-state">
-              <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div>
-              <p className="mt-3 text-sm font-medium text-fg">{errorMessage ? (statusScope === 'lead' ? 'Onboarding account source unavailable.' : 'Client directory unavailable.') : clients.length ? (statusScope === 'lead' ? 'No matching lead accounts.' : 'No matching clients.') : statusScope === 'lead' ? 'No lead accounts yet. Create a lead to begin onboarding review.' : 'No clients yet.'}</p>
-              <p className="mt-1 max-w-sm text-xs leading-5 text-muted">{errorMessage ? (statusScope === 'lead' ? 'Lead account data could not be loaded. Use the retry action above.' : 'The client data could not be loaded. Use the retry action above.') : (statusScope === 'lead' ? 'Adjust the search or active filters to find a lead account.' : 'Adjust the search or active filters.')}</p>
-              {clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Reset filters</button>}
-            </div>
-          ) : paginatedClients.map((client) => {
-            const budget = typeof client.slaDailyAdSpendBudget === 'number' && Number.isFinite(client.slaDailyAdSpendBudget) && client.slaDailyAdSpendBudget > 0
-              ? client.slaDailyAdSpendBudget
-              : null;
-            const spend = typeof client.currentDailyAdSpend === 'number' && Number.isFinite(client.currentDailyAdSpend)
-              ? client.currentDailyAdSpend
-              : null;
-            const slaState = getClientSlaState(client);
-            const spendState = slaState === 'over' ? 'danger' : slaState === 'near' ? 'warning' : slaState === 'healthy' ? 'success' : 'neutral';
-            const headroom = budget !== null && spend !== null ? Math.max(0, Math.min(100, (1 - spend / budget) * 100)) : null;
-            const clientSlug = getAgencyClientSlug(client as AgencyClient & Record<string, unknown>) || createClientSlug(client.company || client.name || 'client account', client.id);
-            const capLabel = headroom === null
-              ? slaState === 'not-configured' ? (language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured') : (language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded')
-              : headroom.toFixed(1) + (language === 'id' ? '% ruang tersisa' : '% headroom');
-            return (
-              <article key={client.id} role="listitem" data-ams-slug={'client-account-card-' + clientSlug} className="min-w-0 rounded-card border border-line bg-bg p-3.5">
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="break-words text-sm font-semibold text-fg">{client.company}</h2>
-                    <p className="mt-1 break-words text-[11px] text-muted">ID: {client.id}{client.location ? ' · ' + client.location : ''}</p>
-                    {statusScope === 'lead' ? (
-                      <p className="mt-1 break-words text-[10px] leading-4 text-muted" data-ams-slug={'client-onboarding-added-' + clientSlug}>Lead record · Added {formatDate(client.createdAt, language)}</p>
-                    ) : (
-                      <>
-                        <p className="mt-1 text-[10px] text-muted">{getClientTierLabel(client)}</p>
-                        <p className="mt-1 break-words text-[10px] leading-4 text-muted" data-ams-slug={'client-service-context-' + clientSlug}>{getClientServiceContext(client, language)}</p>
-                      </>
-                    )}
-                  </div>
-                  <span className={'inline-flex shrink-0 items-center rounded-badge border px-2 py-1 text-[10px] font-semibold ' + getClientStatusTone(client.status)}>
-                    {formatClientStatusLabel(client.status)}
-                  </span>
-                </div>
-                {statusScope === 'lead' ? (
-                  <div className="mt-3 grid grid-cols-1 gap-x-3 gap-y-3 border-y border-line py-3 sm:grid-cols-2" data-ams-slug="client-onboarding-contact-context">
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Primary contact</p>
-                      <p className="mt-1 break-words text-xs text-fg">{client.name || 'Not recorded'}</p>
-                      {client.contactPersonRole && <p className="mt-0.5 break-words text-[10px] text-muted">{client.contactPersonRole}</p>}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Business email</p>
-                      <p className="mt-1 break-all text-xs text-fg">{client.email || 'Not recorded'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Phone / WhatsApp</p>
-                      <p className="mt-1 break-words text-xs text-fg">{client.phone || 'Not recorded'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Industry</p>
-                      <p className="mt-1 break-words text-xs text-fg">{client.industry || 'Not recorded'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Record last updated</p>
-                      <p className="mt-1 break-words text-xs text-fg">{formatDate(client.updatedAt, language)}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Location</p>
-                      <p className="mt-1 break-words text-xs text-fg">{client.location || 'Not recorded'}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 border-y border-line py-3">
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Industry</p>
-                      <p className="mt-1 break-words text-xs text-fg">{client.industry || '—'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Primary contact</p>
-                      <p className="mt-1 break-words text-xs text-fg">{client.name || '—'}</p>
-                      {client.contactPersonRole && <p className="mt-0.5 break-words text-[10px] text-muted">{client.contactPersonRole}</p>}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Billed value</p>
-                      <p className="mt-1 break-words text-xs font-medium tabular-nums text-fg">{typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(client.totalSpend) : (language === 'id' ? 'Belum tercatat' : 'Not recorded')}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted">Spend cap health</p>
-                      <p className={'mt-1 break-words text-xs tabular-nums ' + (spendState === 'danger' ? 'font-medium text-danger' : 'text-fg')}>{capLabel}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center justify-end gap-1 pt-2">
-                  <button type="button" onClick={() => setSelectedClient(client)} aria-label={'View profile for ' + client.company} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                    <Eye size={13} aria-hidden="true" /> View profile
-                  </button>
-                  {canManageClients && (
-                    <button type="button" onClick={() => openEdit(client)} aria-label={'Manage ' + client.company} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                      <Pencil size={14} aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-
-        <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label={statusScope === 'lead' ? 'Scrollable onboarding account register' : 'Scrollable client directory'}>
-          <table className="ams-client-table w-full min-w-[1100px] border-collapse text-left">
-            <thead className="bg-bg">
-              <tr className="border-b border-line text-[11px] font-medium text-muted">
-                <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('company')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">{statusScope === 'lead' ? 'Lead account' : 'Client account'} {sortKey === 'company' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                {statusScope === 'lead' ? (
-                  <>
-                    <th className="px-4 py-2.5">Primary contact</th>
-                    <th className="px-4 py-2.5">Contact channels</th>
-                    <th className="px-4 py-2.5">Industry / location</th>
-                    <th className="px-4 py-2.5">Status</th>
-                    <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('updatedAt')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Last updated {sortKey === 'updatedAt' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                  </>
-                ) : (
-                  <>
-                    <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('industry')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Industry {sortKey === 'industry' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                    <th className="px-4 py-2.5">Primary contact</th>
-                    <th className="px-4 py-2.5">Status</th>
-                    <th className="px-4 py-2.5">Service / Retainer</th>
-                    <th className="px-4 py-2.5 text-right"><button type="button" onClick={() => toggleSort('totalSpend')} className="ml-auto inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Billed value {sortKey === 'totalSpend' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                    <th className="px-4 py-2.5">Spend cap health</th>
-                  </>
-                )}
-                <th className="px-4 py-2.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line text-[13px] leading-[18px]">
-              {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: statusScope === 'lead' ? 7 : 8 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
-                <tr><td colSpan={statusScope === 'lead' ? 7 : 8} className="p-0"><div className="flex min-h-[280px] w-full flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="clients-empty-state"><div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div><p className="mt-3 text-sm font-medium text-fg">{errorMessage ? 'Client directory unavailable.' : clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 max-w-sm text-xs leading-5 text-muted">{errorMessage ? 'The client data could not be loaded. Use the retry action above.' : 'Adjust the search or active filters.'}</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</div></td></tr>
-              ) : paginatedClients.map((client) => {
-                const budget = typeof client.slaDailyAdSpendBudget === 'number' && Number.isFinite(client.slaDailyAdSpendBudget) && client.slaDailyAdSpendBudget > 0
-                  ? client.slaDailyAdSpendBudget
-                  : null;
-                const spend = typeof client.currentDailyAdSpend === 'number' && Number.isFinite(client.currentDailyAdSpend)
-                  ? client.currentDailyAdSpend
-                  : null;
-                const slaState = getClientSlaState(client);
-                const spendState = slaState === 'over' ? 'danger' : slaState === 'near' ? 'warning' : slaState === 'healthy' ? 'success' : 'neutral';
-                const headroom = budget !== null && spend !== null ? Math.max(0, Math.min(100, (1 - spend / budget) * 100)) : null;
-                const clientSlug = getAgencyClientSlug(client as AgencyClient & Record<string, unknown>) || createClientSlug(client.company || client.name || 'client account', client.id);
-                return (
-                  <tr key={client.id} data-ams-slug={'client-account-' + clientSlug} className="transition-colors hover:bg-bg/70">
-                    <td className="px-4 py-3">
-                      <button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[240px] text-left">
-                        <span className="block truncate font-medium text-fg">{client.company || client.name || 'Client account'}</span>
-                        <span className="mt-1 block truncate text-[11px] text-muted tabular-nums">ID: {client.id}</span>
-                        {statusScope === 'lead' && <span className="mt-1 block text-[10px] text-muted">Added {formatDate(client.createdAt, language)}</span>}
-                      </button>
-                    </td>
-                    {statusScope === 'lead' ? (
-                  <>
-                    <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company }} /> : <span className="text-xs text-muted">Not recorded</span>}</td>
-                    <td className="px-4 py-3"><div className="max-w-[240px] space-y-1 text-xs text-fg"><p className="break-all">{client.email || 'Email not recorded'}</p><p className="break-words text-muted">{client.phone || 'Phone not recorded'}</p></div></td>
-                    <td className="px-4 py-3"><div className="max-w-[180px] space-y-1 text-xs text-fg"><p className="break-words">{client.industry || 'Industry not recorded'}</p><p className="break-words text-muted">{client.location || 'Location not recorded'}</p></div></td>
-                    <td className="px-4 py-3"><span className={'inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + getClientStatusTone(client.status)}>{formatClientStatusLabel(client.status)}</span></td>
-                    <td className="px-4 py-3 whitespace-nowrap text-xs text-muted">{formatDate(client.updatedAt, language)}</td>
-                  </>
-                ) : (
-                  <>
-                    <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
-                    <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || undefined, contextLabel: client.company, companyEmail: client.email, phone: client.phone }} /> : <span className="text-xs text-muted">—</span>}</td>
-                    <td className="px-4 py-3"><span className={'inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + getClientStatusTone(client.status)}>{formatClientStatusLabel(client.status)}</span></td>
-                    <td className="px-4 py-3 max-w-[240px]">
-                      <span className="block break-words text-xs text-fg" data-ams-slug={'client-service-context-register-' + clientSlug}>{getClientServiceContext(client, language)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{typeof client.totalSpend === 'number' && Number.isFinite(client.totalSpend) ? new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(client.totalSpend) : (language === 'id' ? 'Belum tercatat' : 'Not recorded')}</td>
-                    <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={'h-2 w-2 rounded-full ' + (spendState === 'success' ? 'bg-success' : spendState === 'warning' ? 'bg-warning' : spendState === 'danger' ? 'bg-danger' : 'bg-line')} aria-hidden="true" /><span className={spendState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{headroom === null ? (slaState === 'not-configured' ? (language === 'id' ? 'Batas belum dikonfigurasi' : 'Not configured') : (language === 'id' ? 'Belanja belum tercatat' : 'Spend not recorded')) : headroom.toFixed(1) + (language === 'id' ? '% ruang tersisa' : '% headroom')}</span></div></td>
-                  </>
-                )}
-                    <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
-                        <button type="button" onClick={() => setSelectedClient(client)} aria-label={`View profile for ${client.company}`} title="View profile" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                          <Eye size={16} aria-hidden="true" />
-                        </button>
-                        {canManageClients && (
-                          <button type="button" onClick={() => openEdit(client)} aria-label={`Manage ${client.company}`} title="Manage client" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                            <Pencil size={16} aria-hidden="true" />
-                          </button>
-                        )}
-                      </div></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        {!isLoading && <AdminTablePagination total={filteredClients.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="records" slug="client-directory-pagination" />}
-      </section>
-
-
+        searchPlaceholder="Search company, primary contact, email or industry…"
+        activeFilterCount={[statusFilter, industryFilter, locationFilter, slaFilter].filter(value => value !== 'all').length}
+        onReset={resetFilters} columns={4} actions={<CustomSelect value={sortKey + ':' + sortDirection} onChange={value => {const [key, direction] = value.split(':'); setSortKey(key as SortKey);setSortDirection(direction as SortDirection);}} aria-label="Sort client accounts" options={[{value:'company:asc',label:'Company A–Z'},{value:'company:desc',label:'Company Z–A'},{value:'name:asc',label:'Contact A–Z'},{value:'name:desc',label:'Contact Z–A'},{value:'updatedAt:desc',label:'Recently updated'},{value:'updatedAt:asc',label:'Oldest update'},{value:'industry:asc',label:'Industry A–Z'},{value:'totalSpend:desc',label:'Billed value: highest'},{value:'projectsCount:desc',label:'Project count: highest'}]} />} >
+        <AdminFilterField label="Relationship status"><CustomSelect value={statusFilter} onChange={value => setStatusFilter(value as 'all' | AgencyClient['status'])} options={[{value:'all',label:'All statuses'}, ...STATUS_OPTIONS]} aria-label="Filter client status" disabled={statusScope === 'lead'} /></AdminFilterField>
+        <AdminFilterField label="Industry"><CustomSelect value={industryFilter} onChange={setIndustryFilter} options={[{value:'all',label:'All industries'}, ...industryOptions.map(value => ({value,label:value}))]} aria-label="Filter industry" /></AdminFilterField>
+        <AdminFilterField label="Location"><CustomSelect value={locationFilter} onChange={setLocationFilter} options={[{value:'all',label:'All locations'}, ...locationOptions.map(value => ({value,label:value}))]} aria-label="Filter location" /></AdminFilterField>
+        <AdminFilterField label="Advertising spend cap"><CustomSelect value={slaFilter} onChange={value => setSlaFilter(value as SlaFilter)} options={[{value:'all',label:'All spend cap states'},{value:'healthy',label:'Within cap'},{value:'near',label:'Near cap'},{value:'over',label:'Over cap'},{value:'not-configured',label:'Not configured'},{value:'spend-not-recorded',label:'Spend not recorded'}]} aria-label="Filter spend cap health" disabled={statusScope === 'lead'} /></AdminFilterField>
+      </AdminFilterToolbar>
+      {statusScope !== 'lead' && <DashboardFilterGroup ariaLabel="Client scopes" value={statusScope} onChange={value => changeStatusScope(value as StatusScope)} options={[{value:'all',label:'All accounts'},{value:'active',label:'Active'},{value:'at-risk',label:'Spend cap exceptions'}]} />}
+      <ClientDirectoryRegister records={paginatedClients} loading={isLoading} unavailable={Boolean(errorMessage)} hasAccounts={statusScope === 'lead' ? clients.some(client => client.status === 'lead') : clients.length > 0}
+        contacts={contactsView} onboarding={statusScope === 'lead'} canManage={canManageClients} sortKey={sortKey} direction={sortDirection}
+        onCreate={canManageClients ? openCreate : undefined} onSort={toggleSort} onInspect={setSelectedClient} onEdit={openEdit} onReset={resetFilters} onRetry={() => void loadData()}
+        formatDate={value => formatDate(value, language)} serviceContext={client => getClientServiceContext(client, language)} spendContext={spendCapContext}
+        pagination={<AdminTablePagination total={filteredClients.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="accounts" slug="client-directory-pagination" />} />
 
       <Drawer slug="client-directory-detail-drawer"
         open={!!selectedClient}
         onClose={() => setSelectedClient(null)}
         size="3xl"
         title={selectedClient?.company || 'Client details'}
-        description={selectedClient ? `${selectedClient.name} · ${selectedClient.id} · ${getAgencyClientSlug(selectedClient as AgencyClient & Record<string, unknown>)}` : undefined}
+        description={selectedClient ? `${selectedClient.name || 'Primary contact not recorded'} · Client 360` : undefined}
         footer={<div className="flex flex-wrap justify-end gap-2">{canManageClientInteractions && <Button type="button" variant="secondary" onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log interaction</Button>}{canManageClients && <Button type="button" variant="secondary" onClick={() => { if (!selectedClient) return; const client = selectedClient; setSelectedClient(null); openEdit(client); }}>{selectedClient?.status === 'lead' ? 'Continue onboarding' : 'Edit client'}</Button>}<Button type="button" variant="secondary" onClick={() => setSelectedClient(null)}>Close</Button></div>}
       >
         {selectedClient && (
@@ -1343,18 +1007,13 @@ export const AdminClients: React.FC = () => {
               </span>
             </div>
 
-            {canManageClientInteractions && (
-              <section
-                aria-label="Client relationship timeline"
-                data-ams-feature-slug="client-interaction-timeline"
-                data-ams-slug="client-interaction-timeline"
-                className="overflow-hidden rounded-card border border-line bg-panel"
-              >
-                <div className="border-b border-line px-4 py-3">
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-fg"><Activity size={15} className="text-muted" aria-hidden="true" /> Relationship timeline</h3>
-                  <p className="mt-1 text-xs leading-5 text-muted">Saved client calls, meetings, emails, messages, and internal notes.</p>
-                </div>
+            <DashboardFilterGroup ariaLabel="Client 360 sections" value={detailView} onChange={setDetailView} options={[
+              {value:'profile',label:'Account profile'}, {value:'linked',label:'Linked work'},
+              ...(canViewClientContracts ? [{value:'agreements',label:'Agreements'}] : []), ...(canManageClientInteractions ? [{value:'activity',label:'Interactions'}] : [])
+            ]} />
 
+            {detailView === 'activity' && canManageClientInteractions && (
+              <AdminPanel slug="client-interaction-timeline" title="Relationship timeline" description="Saved client calls, meetings, emails, messages and internal notes." className="ams-operational-panel ams-overview-panel">
                 {interactionsLoading ? (
                   <div className="space-y-2 p-4" role="status" aria-label="Loading client interaction history">
                     {[1, 2, 3].map(item => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
@@ -1394,26 +1053,22 @@ export const AdminClients: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-start gap-2 p-4" data-ams-slug="client-interaction-empty">
-                    <p className="text-xs font-medium text-fg">No interactions recorded yet</p>
-                    <p className="text-xs leading-5 text-muted">Record the next client conversation so the team can follow the relationship history and agreed next steps.</p>
-                    <Button type="button" variant="secondary" onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log first interaction</Button>
-                  </div>
+                  <DashboardEmptyState eyebrow="Relationship timeline" title="No interactions recorded yet" description="Record the next client conversation and its agreed next step." icon={<MessageSquare size={17} />} action={<DashboardControl variant="quiet" onClick={openInteractionDrawer} icon={<Plus size={13} />}>Log first interaction</DashboardControl>} />
                 )}
-              </section>
+              </AdminPanel>
             )}
 
-            {selectedClient.status === 'lead' && (
+            {detailView === 'profile' && selectedClient.status === 'lead' && (
               <section
-                aria-label="Onboarding profile readiness"
+                aria-label="Profile details"
                 data-ams-feature-slug="client-onboarding-readiness"
                 data-ams-slug="client-onboarding-readiness"
                 className="rounded-card border border-line bg-bg p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-semibold text-fg">Onboarding profile readiness</h3>
-                    <p className="mt-1 text-xs leading-5 text-muted">Required client profile details recorded in AMS.</p>
+                    <h3 className="text-sm font-semibold text-fg">Profile details</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted">Recorded profile fields; this is not an onboarding requirement checklist.</p>
                   </div>
                   <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-1 text-xs font-semibold tabular-nums text-fg">
                     {selectedClientReadinessCount}/{selectedClientReadiness.length} · {selectedClientReadinessPercent}%
@@ -1441,23 +1096,8 @@ export const AdminClients: React.FC = () => {
               </section>
             )}
 
-            {canViewClientContracts && (
-              <section
-                aria-label="Client contracts and statements of work"
-                data-ams-feature-slug="client-contract-history"
-                data-ams-slug="client-contract-history"
-                className="overflow-hidden rounded-card border border-line bg-panel"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-4 py-3">
-                  <div>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-fg"><FileText size={15} className="text-muted" aria-hidden="true" /> Contracts &amp; Statements of Work</h3>
-                    <p className="mt-1 text-xs leading-5 text-muted">Saved contracts linked to this client record.</p>
-                  </div>
-                  <Link to="/admin/contracts" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                    Contract register <ExternalLink size={12} aria-hidden="true" />
-                  </Link>
-                </div>
-
+            {detailView === 'agreements' && canViewClientContracts && (
+              <AdminPanel slug="client-contract-history" title="Contracts & Statements of Work" description="Saved agreements linked to this client record." className="ams-operational-panel ams-overview-panel" actions={<DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/contracts" icon={<FileText size={14} />}>Contract register</DashboardControl>}>
                 {contractsLoading ? (
                   <div className="space-y-2 p-4" role="status" aria-label="Loading client contracts">
                     {[1, 2].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
@@ -1506,17 +1146,12 @@ export const AdminClients: React.FC = () => {
                     })}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-start gap-2 p-4" data-ams-slug="client-contract-empty">
-                    <p className="text-xs font-medium text-fg">No linked contracts yet</p>
-                    <p className="text-xs leading-5 text-muted">Contracts and statements of work added in the Contract register will appear here when linked by client ID or exact company name.</p>
-                    <Link to="/admin/contracts" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                      Open contract register <ExternalLink size={12} aria-hidden="true" />
-                    </Link>
-                  </div>
+                  <DashboardEmptyState eyebrow="Client agreements" title="No linked contracts yet" description="Saved agreements appear here when linked by client ID or exact company name. Review the canonical contract register." icon={<FileText size={17} />} />
                 )}
-              </section>
+              </AdminPanel>
             )}
 
+            {detailView === 'linked' && (
             <section aria-label="Client 360 linked records" data-ams-feature-slug="client-360-linked-records" data-ams-slug="client-360-linked-records" className="overflow-hidden rounded-card border border-line bg-panel">
               <div className="border-b border-line px-4 py-3">
                 <h3 className="text-sm font-semibold text-fg">Linked work and records</h3>
@@ -1607,6 +1242,9 @@ export const AdminClients: React.FC = () => {
               </div>
             </section>
 
+            )}
+
+            {detailView === 'profile' && <>
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs text-muted">Email</p>
@@ -1628,10 +1266,7 @@ export const AdminClients: React.FC = () => {
                 <p className="text-xs text-muted">Location</p>
                 <p className="mt-1 text-sm text-fg">{selectedClient.location || '—'}</p>
               </div>
-              <div className="sm:col-span-2">
-                <p className="text-xs text-muted">Slug</p>
-                <p className="mt-1 truncate font-mono text-xs text-fg">{getAgencyClientSlug(selectedClient as AgencyClient & Record<string, unknown>)}</p>
-              </div>
+
               <div>
                 <p className="text-xs text-muted">Website</p>
                 {selectedClient.website ? (
@@ -1682,6 +1317,7 @@ export const AdminClients: React.FC = () => {
             <div className="text-xs text-muted">
               Last updated {formatDate(selectedClient.updatedAt, language)}
             </div>
+            </>}
           </div>
         )}
       </Drawer>

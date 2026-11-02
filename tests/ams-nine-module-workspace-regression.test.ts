@@ -67,23 +67,23 @@ test('Client Directory makes the register primary and includes recorded service 
   const clients = await read('src/pages/admin/AdminClients.tsx');
   const header = clients.indexOf('<AdminModuleHeader slug="clients-header"');
   const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
-  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
-  const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
-  const directoryEnd = clients.indexOf('</section>', directory);
+  const filters = clients.indexOf('<AdminFilterToolbar slug="client-directory-filters"');
+  const directory = clients.indexOf('<ClientDirectoryRegister records=');
+  const directoryEnd = clients.indexOf('slug="client-directory-pagination"', directory);
   assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory);
   assert.equal(metrics, -1, 'Directory should not render a default KPI strip.');
   assert.match(clients, /const getClientServiceContext = \(client: AgencyClient, language: string\) =>/);
   assert.match(clients, /getClientServiceContext\(client, language\)/);
   assert.match(clients, /No retainer service context recorded/);
   const filterBar = clients.slice(filters, directory);
-  assert.match(filterBar, /slug="clients-status-filter"/);
+  assert.match(filterBar, /Filter client status/);
   assert.match(filterBar, /value=\{statusFilter\}/);
-  assert.match(filterBar, /slug="clients-industry-filter"/);
+  assert.match(filterBar, /Filter industry/);
   assert.match(filterBar, /value=\{industryFilter\}/);
-  assert.match(filterBar, /slug="clients-location-filter"/);
+  assert.match(filterBar, /Filter location/);
   assert.match(filterBar, /value=\{locationFilter\}/);
-  assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,450}slug="clients-status-filter"/);
-  assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,1200}slug="clients-spend-cap-filter"/);
+  assert.match(filterBar, /disabled=\{statusScope === 'lead'\}/);
+  assert.match(filterBar, /AdminFilterField label="Advertising spend cap"/);
 });
 
 
@@ -94,7 +94,7 @@ test('Client exports use one scope-aware CSV handler and preserve missing billed
   assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, 'The canonical client export handler must be identifiable.');
   const exportHandler = clients.slice(handlerStart, handlerEnd);
 
-  assert.match(clients, /onClick=\{handleExport\}[\s\S]{0,120}Export Onboarding Accounts/);
+  assert.match(clients, /onClick=\{handleExport\}[\s\S]{0,220}Export Onboarding Accounts/);
   assert.match(exportHandler, /const headers = statusScope === 'lead'/);
   assert.ok(exportHandler.includes("['Client ID', 'Slug', 'Contact', 'Company', 'Email', 'Phone', 'Industry', 'Status', 'Location', 'Website']"));
   assert.ok(exportHandler.includes("'kapitech-client-onboarding-accounts.csv'"));
@@ -231,21 +231,20 @@ test('Clients surface account health after the directory and keep data gaps expl
   assert.match(clients, /featureSlug="clients-module"/);
   const header = clients.indexOf('<AdminModuleHeader slug="clients-header"');
   const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
-  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
-  const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
-  const directoryEnd = clients.indexOf('</section>', directory);
+  const filters = clients.indexOf('<AdminFilterToolbar slug="client-directory-filters"');
+  const directory = clients.indexOf('<ClientDirectoryRegister records=');
+  const directoryEnd = clients.indexOf('slug="client-directory-pagination"', directory);
   assert.ok(header >= 0 && filters > header && directory > filters && directoryEnd > directory);
   assert.equal(metrics, -1, 'Directory health context should come from canonical account rows, not a default KPI strip.');
   assert.match(clients, /Client directory unavailable/);
   assert.match(clients, /Cumulative billed value/);
   assert.match(clients, /visible to users with client-management access/);
   assert.doesNotMatch(clients, /Client or CRM access/);
-  assert.match(clients, /clients-onboarding-source-boundary/);
-  assert.match(clients, /Profile completeness does not mean onboarding has been approved/);
-  assert.match(clients, /statusScope !== 'lead' && \(/);
-  assert.match(clients, /aria-pressed=\{statusScope === item\.id\}/);
-  assert.doesNotMatch(clients, /id: 'lead', label: 'Onboarding'/, 'Onboarding is reached through the module workspace navigation, not a duplicate Directory scope control.');
-  assert.match(clients, /label: 'Onboarding accounts'/);
+  assert.match(clients, /ClientSourceWorkspace worksheet=\{onboardingWorksheet\}/);
+  assert.match(clients, /statusScope !== 'lead' && <DashboardFilterGroup/);
+  assert.match(clients, /label:'Spend cap exceptions'/);
+  assert.doesNotMatch(clients, /id: 'lead', label: 'Onboarding'/);
+
 });
 
 test('Client Retainers keeps the source-backed register primary and distinguishes missing usage data from zero', async () => {
@@ -253,8 +252,8 @@ test('Client Retainers keeps the source-backed register primary and distinguishe
   const header = retainers.indexOf('<AdminModuleHeader');
   const sourceBoundary = retainers.indexOf('data-ams-slug="retainer-time-log-reconciliation-state"');
   const filters = retainers.indexOf('slug="client-retainers-filters"');
-  const directory = retainers.indexOf('data-ams-feature-slug="retainers-directory"');
-  const directoryEnd = retainers.indexOf('</section>', directory);
+  const directory = retainers.indexOf('slug="retainers-directory"');
+  const directoryEnd = retainers.indexOf('</AdminPanel>', directory);
   const metrics = retainers.indexOf('data-ams-feature-slug="retainers-kpis"');
   const secondarySummary = retainers.indexOf('data-ams-feature-slug="retainers-summary"');
   assert.ok(header >= 0 && sourceBoundary > header && filters > sourceBoundary && directory > filters && directoryEnd > directory && metrics > directoryEnd);
@@ -553,7 +552,7 @@ test('shared module headers wrap actions without forcing a full-width mobile act
 
 test('shared compact actions retain adequate touch targets and visible keyboard focus', async () => {
   const css = await read('src/index.css');
-  assert.match(css, /\.ams-shell :is\(\.ams-data-table,\.ams-finance-table,\.ams-client-table,\.ams-teams-table,\.ams-projects-table,\.settings-system-table,\.ams-table\) td :is\(button,a\)\[class~="h-8"\]\[class~="w-8"\]/);
+  assert.match(css, /\.ams-shell :is\(\.ams-data-table,\.ams-finance-table,\.ams-teams-table,\.ams-projects-table,\.settings-system-table,\.ams-table\) td :is\(button,a\)\[class~="h-8"\]\[class~="w-8"\]/);
   assert.match(css, /min-width:40px;\s*min-height:40px/s);
   assert.match(css, /outline:2px solid var\(--accent\)/);
 });
@@ -670,14 +669,14 @@ test('Client Agreements Renewal Schedule uses canonical active contract and reta
   const contracts = await read('src/pages/admin/AdminContracts.tsx');
   const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
   assert.ok(contracts.includes("const isRenewalSchedule = searchParams.get('view') === 'renewals'"));
-  assert.ok(contracts.includes("activeKey={isRenewalSchedule ? 'renewals' : 'contracts'}"));
-  assert.ok(contracts.includes("to: '/admin/contracts?view=renewals'"));
+  assert.ok(contracts.includes("activeKey={isContractHistory ? 'history' : isRenewalSchedule ? 'renewals' : 'contracts'}"));
+  assert.ok((await read('src/components/admin/clients/ClientWorkspace.tsx')).includes("to: '/admin/contracts?view=renewals'"));
   assert.ok(contracts.includes("contract.status === 'active'"));
   assert.ok(contracts.includes("client.activeRetainer === true"));
   assert.ok(contracts.includes('data-ams-feature-slug="client-renewal-schedule"'));
   assert.ok(contracts.includes('Renewal data is incomplete'));
   assert.ok(contracts.includes('does not mark contracts as expired automatically'));
-  assert.ok(retainers.includes("to: '/admin/contracts?view=renewals'"));
+  assert.ok(retainers.includes('<ClientAgreementTabs activeKey="retainers"'));
   assert.doesNotMatch(retainers, /label: 'Renewal Schedule'.*available: false/);
 });
 
@@ -687,9 +686,9 @@ test('Client Renewal Schedule prioritizes a searchable deadline register and rep
   const end = contracts.indexOf(') : (', start);
   assert.ok(start >= 0 && end > start, 'renewal schedule branch must be identifiable');
   const renewal = contracts.slice(start, end);
-  const search = renewal.indexOf('aria-label="Search renewal agreements"');
+  const search = renewal.indexOf('searchLabel="Search renewal agreements"');
   const timingFilter = renewal.indexOf('slug="renewal-timing-filter"');
-  const register = renewal.indexOf('aria-label="Renewal schedule records"');
+  const register = renewal.indexOf('<AdminPanel title="Renewal and end-date schedule"');
   assert.ok(search >= 0 && timingFilter > search && register > timingFilter, 'search and timing filters must precede the primary register');
   assert.doesNotMatch(renewal, /client-renewal-schedule-kpis/, 'remove KPI cards that duplicate queue timing filters');
   assert.match(renewal, /No matching renewal records/);
@@ -701,16 +700,16 @@ test('Client Renewal Schedule prioritizes a searchable deadline register and rep
 test('Client Onboarding has a distinct header when the onboarding scope is selected', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
   assert.match(clients, /eyebrow=\{statusScope === 'lead' \? 'Onboarding workspace' : 'Client directory'\}/);
-  assert.match(clients, /title=\{statusScope === 'lead' \? 'Client Onboarding' : 'Clients & Key Accounts'\}/);
+  assert.match(clients, /title=\{statusScope === 'lead' \? 'Client Onboarding' : 'Client Directory'\}/);
   assert.match(clients, /Review prospective client accounts and recorded profile details/);
-  assert.match(clients, /Profile completeness does not mean onboarding has been approved/);
+  assert.match(clients, /ClientSourceWorkspace worksheet=\{onboardingWorksheet\}/);
   assert.match(clients, /scope === 'onboarding'/);
 });
 
 
 test('Contracts action feedback follows the primary register and avoids duplicate status KPIs', async () => {
   const contracts = await read('src/pages/admin/AdminContracts.tsx');
-  const header = contracts.indexOf("title={isRenewalSchedule ? 'Renewal Schedule' : 'Contracts & SOW'}");
+  const header = contracts.indexOf('title="Client Agreements"');
   const pagination = contracts.indexOf('slug="contracts-pagination"');
   const notice = contracts.indexOf('{notice && <div role="status"');
   assert.ok(header >= 0 && pagination > header && notice > pagination);
@@ -880,39 +879,26 @@ test('Inbox does not invent unsupported follow-up timing or actions', async () =
 
 test('Client Onboarding keeps account scope controls separate from spend-cap filters', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
-  const onboardingNote = clients.indexOf('data-ams-feature-slug="clients-onboarding-source-boundary"');
-  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
-  assert.ok(onboardingNote >= 0 && filters > onboardingNote, 'Onboarding source limits must be clear before record filters.');
-  const filterBarEnd = clients.indexOf('data-ams-feature-slug="clients-directory-table"', filters);
-  assert.ok(filterBarEnd > filters);
-  const filterBar = clients.slice(filters, filterBarEnd);
-  assert.match(filterBar, /statusScope !== 'lead' && \(/);
-  assert.match(filterBar, /aria-label=\{statusScope === 'lead' \? 'Client onboarding scopes' : 'Client scopes'\}/);
-  assert.match(filterBar, /id: 'lead', label: 'Onboarding accounts'/);
-  assert.match(clients, /setStatusFilter\('all'\);\s*setSlaFilter\('all'\);\s*setPage\(1\);/);
+  assert.ok(clients.indexOf('<ClientSourceWorkspace worksheet={onboardingWorksheet}') < clients.indexOf('<AdminFilterToolbar'));
+  assert.match(clients, /disabled=\{statusScope === 'lead'\}/);
+  const reset = clients.slice(clients.indexOf('const resetFilters'), clients.indexOf('const changeStatusScope'));
+  assert.doesNotMatch(reset, /setStatusScope|setSearchParams/, 'Reset must not navigate out of Onboarding.');
   assert.match(clients, /if \(requestedScope !== statusScope\) \{[\s\S]{0,160}setSlaFilter\('all'\)/);
+
 });
 
 
 test('Client Directory exposes canonical status, industry and location filters', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
-  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
-  const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"', filters);
-  const filterBar = clients.slice(filters, directory);
+  const filters = clients.indexOf('<AdminFilterToolbar slug="client-directory-filters"');
+  const directory = clients.indexOf('<ClientDirectoryRegister records=', filters);
   assert.ok(filters >= 0 && directory > filters);
-  for (const [slug, value] of [
-    ['clients-status-filter', 'statusFilter'],
-    ['clients-industry-filter', 'industryFilter'],
-    ['clients-location-filter', 'locationFilter'],
-  ]) {
-    assert.ok(filterBar.includes('slug="' + slug + '"'), 'Missing directory filter ' + slug);
-    assert.ok(filterBar.includes('value={' + value + '}'), 'Filter does not use existing state ' + value);
-  }
-  assert.match(filterBar, /industryOptions\.map\(\(industry\) => \(\{ value: industry, label: industry \}\)\)/);
-  assert.match(filterBar, /locationOptions\.map\(\(location\) => \(\{ value: location, label: location \}\)\)/);
-  assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,450}slug="clients-status-filter"/);
-  assert.match(filterBar, /statusScope !== 'lead' && \([\s\S]{0,1200}slug="clients-spend-cap-filter"/);
+  const toolbar = clients.slice(filters, directory);
+  for (const state of ['statusFilter','industryFilter','locationFilter','slaFilter']) assert.ok(toolbar.includes('value={' + state + '}'));
+  assert.match(toolbar, /industryOptions\.map/); assert.match(toolbar, /locationOptions\.map/);
+  assert.match(toolbar, /activeFilterCount=\{/);
   assert.match(clients, /\[searchQuery, statusFilter, industryFilter, locationFilter, slaFilter, statusScope, sortKey, sortDirection\]/);
+
 });
 
 
@@ -929,8 +915,8 @@ test('Client Onboarding actions and new-record defaults follow the Lead scope', 
 
 test('Client profile relationship action is not duplicated inside the timeline header', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
-  const timelineStart = clients.indexOf('data-ams-feature-slug="client-interaction-timeline"');
-  const timelineEnd = clients.indexOf("{selectedClient.status === 'lead' && (", timelineStart);
+  const timelineStart = clients.indexOf('slug="client-interaction-timeline"');
+  const timelineEnd = clients.indexOf("{detailView === 'profile' && selectedClient.status === 'lead' && (", timelineStart);
   assert.ok(timelineStart >= 0 && timelineEnd > timelineStart);
   const timeline = clients.slice(timelineStart, timelineEnd);
   assert.doesNotMatch(timeline, /Log interaction<\/Button>/);
@@ -941,27 +927,16 @@ test('Client profile relationship action is not duplicated inside the timeline h
 
 
 test('Clients Service & Health keeps unsupported telemetry metrics and worksheets unavailable', async () => {
-  const serviceHealth = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
-  assert.match(serviceHealth, /title="SLA Monitoring"/);
-  assert.match(serviceHealth, /Telemetry not configured/);
-  assert.match(serviceHealth, /No verified SLA telemetry source/);
-  assert.match(serviceHealth, /uptime, MTTR, compliance, incident history, and snapshots are unavailable/i);
-  assert.match(serviceHealth, /No sample accounts or simulated performance values are shown/);
-  assert.match(serviceHealth, /data-ams-slug="sla-telemetry-not-configured"/);
-  assert.match(serviceHealth, /data-ams-slug="sla-monitoring-setup"/);
-  assert.match(serviceHealth, /Define each service commitment/);
-  assert.match(serviceHealth, /Connect a telemetry source/);
-  assert.match(serviceHealth, /Verify incident and recovery timestamps/);
-  assert.match(serviceHealth, /to="\/admin\/contracts"/);
-  for (const worksheet of [
-    /label: 'Service Issues & Feedback'.*available: false/,
-    /label: 'Client Health'.*available: false/,
-    /label: 'Service History'.*available: false/,
-  ]) {
-    assert.match(serviceHealth, worksheet, 'unsupported Service & Health worksheets must remain target-only');
-  }
-  assert.doesNotMatch(serviceHealth, /\b(?:99\.9|99\.|MTTR:\s*\d|\d+% uptime)\b/,
-    'telemetry-dependent SLA performance must not be fabricated');
+  const page = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
+  const source = await read('src/components/admin/clients/ClientWorkspace.tsx');
+  assert.match(page, /title="Service & Health"/);
+  assert.match(page, /ClientSourceWorkspace worksheet=\{active as ClientSourceWorksheet\}/);
+  assert.match(source, /No verified SLA telemetry source/);
+  assert.match(source, /No validated client-health model is configured/);
+  assert.match(source, /No verified service outcome timeline/);
+  assert.doesNotMatch(source, /available: false|99\.9|MTTR:\s*\d/);
+  assert.match(source, /working calendars and timestamped service events/);
+
 });
 
 test('Client 360 exposes only canonically linked records behind existing permissions', async () => {
@@ -1004,28 +979,17 @@ test('Client 360 exposes only canonically linked records behind existing permiss
 
 test('Client Onboarding uses an onboarding-specific primary register', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
-  const filters = clients.indexOf('<AdminFilterBar slug="client-directory-filters"');
-  const register = clients.indexOf("statusScope === 'lead' ? 'clients-onboarding-register' : 'clients-directory-table'");
-  assert.ok(filters >= 0 && register > filters, 'The onboarding queue should follow its scope-aware filters.');
-  assert.match(clients, /Search lead company, contact, email, phone or client ID/);
-  assert.match(clients, /Search onboarding accounts/);
-  assert.match(clients, /Onboarding Checklist'.*available: false/);
-  assert.match(clients, /Required Documents'.*available: false/);
-  assert.match(clients, /Kickoff Readiness'.*available: false/);
-  assert.match(clients, /Profile completeness does not mean onboarding has been approved/);
-  assert.match(clients, /data-ams-slug="client-onboarding-contact-context"/);
-  assert.match(clients, /client\.email \|\| 'Not recorded'/);
-  assert.match(clients, /client\.phone \|\| 'Not recorded'/);
-  assert.match(clients, /Added \{formatDate\(client\.createdAt, language\)\}/);
-  assert.match(clients, /Last updated/);
-  assert.match(clients, /statusScope === 'lead' \? 'Lead account' : 'Client account'/);
-  assert.match(clients, /Contact channels/);
-  assert.match(clients, /Industry \/ location/);
-  const rowStart = clients.indexOf("{statusScope === 'lead' ? (", clients.indexOf('<tbody'));
-  const directoryRowBranch = clients.slice(rowStart, clients.indexOf("                ) : (", rowStart));
-  assert.doesNotMatch(directoryRowBranch, /Billed value|Spend cap health|client\.totalSpend/,
-    'The onboarding register must focus on lead contactability, not established-client financial indicators.');
-  assert.match(clients, /No lead accounts yet\. Create a lead to begin onboarding review\./);
+  const records = await read('src/components/admin/clients/ClientDirectoryRegister.tsx');
+  const workspaces = await read('src/components/admin/clients/ClientWorkspace.tsx');
+  assert.ok(clients.indexOf('<AdminFilterToolbar') < clients.indexOf('<ClientDirectoryRegister records='));
+  assert.match(clients, /onboarding=\{statusScope === 'lead'\}/);
+  assert.match(records, /p.onboarding \? 'Lead accounts'/);
+  assert.match(records, /Contact channels/);
+  assert.match(records, /p.onboarding \? 'Added '/);
+  assert.match(workspaces, /required-documents/); assert.match(workspaces, /kickoff-readiness/);
+  assert.match(workspaces, /Profile completeness and contract status alone cannot authorize a kickoff/);
+  assert.match(records, /p.onboarding \? 'Added '[\s\S]*: p.serviceContext/);
+
 });
 
 

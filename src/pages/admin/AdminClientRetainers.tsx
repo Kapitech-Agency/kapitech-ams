@@ -1,21 +1,12 @@
+import { Users, FileText } from 'lucide-react';
+import { ClientAgreementTabs } from '../../components/admin/clients/ClientWorkspace';
+import { AdminFilterToolbar, AdminFilterField } from '../../components/admin/AdminFilterToolbar';
+import { DashboardControl } from '../../components/admin/DashboardControls';
+import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { formatRetainerRenewalDate, getDefaultRetainerRenewalDate, getRetainerRenewalDays } from '../../lib/retainerDateDefaults';
-import {
-  ArrowUp,
-  ArrowUpDown,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  Download,
-  Plus,
-  Pencil,
-  RotateCcw,
-  Search,
-  TriangleAlert,
-  X
-} from 'lucide-react';
+import { ArrowUp, ArrowUpDown, CalendarDays, Clock3, Download, Plus, Pencil, TriangleAlert, X } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
@@ -23,7 +14,7 @@ import type { AgencyClient } from '../../lib/clientStore';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminPanel, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type Health = 'healthy' | 'near-cap' | 'overage-risk' | 'not-configured';
 type Cycle = 'monthly' | 'quarterly' | 'annual';
@@ -139,6 +130,7 @@ export const AdminClientRetainers: React.FC = () => {
   const { language } = useLanguage();
   const canManageRetainers = hasAdminPermission('canManageClients');
   const [clients, setClients] = useState<AgencyClient[]>([]);
+  const [selectedRetainer, setSelectedRetainer] = useState<Retainer | null>(null);
   const [records, setRecords] = useState<Retainer[]>([]);
   const [query, setQuery] = useState('');
   const [cycle, setCycle] = useState<'all' | Cycle>('all');
@@ -147,6 +139,8 @@ export const AdminClientRetainers: React.FC = () => {
   const [sortKey, setSortKey] = useState<SortKey>('renewal');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
+  const [sourceAvailable, setSourceAvailable] = useState(false);
+  const [loadRevision, setLoadRevision] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [retainerFormOpen, setRetainerFormOpen] = useState(false);
   const [editingRetainer, setEditingRetainer] = useState<Retainer | null>(null);
@@ -172,12 +166,14 @@ export const AdminClientRetainers: React.FC = () => {
         }
         const rows = response.data.clients as AgencyClient[];
         if (mounted) {
+          setSourceAvailable(true);
           setClients(rows);
           setRecords(rows.filter((client) => client.activeRetainer === true).map(mapClientRetainer));
           setMessage(null);
         }
       } catch (error) {
         if (mounted) {
+          setSourceAvailable(false);
           setClients([]);
           setRecords([]);
           setMessage(error instanceof Error ? error.message : 'Client records could not be loaded.');
@@ -189,7 +185,7 @@ export const AdminClientRetainers: React.FC = () => {
 
     void loadRetainers();
     return () => { mounted = false; };
-  }, []);
+  }, [loadRevision]);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -324,32 +320,24 @@ export const AdminClientRetainers: React.FC = () => {
   };
 
 
+  const retainerEmpty = <DashboardEmptyState eyebrow={!sourceAvailable ? 'Source unavailable' : 'Service commitments'} title={!sourceAvailable ? 'Retainer source unavailable' : records.length ? 'No matching retainers' : 'No active retainer agreements'} description={!sourceAvailable ? 'Reload the client source before reviewing saved retainer terms or totals.' : records.length ? 'Adjust the search, cycle, tier or usage filter.' : 'Create a retainer against an existing canonical client account.'} icon={<CalendarDays size={17} />} action={<DashboardControl variant="quiet" onClick={!sourceAvailable ? () => setLoadRevision(value => value + 1) : records.length ? reset : () => openRetainerForm()} disabled={sourceAvailable && !records.length && !canManageRetainers}>{!sourceAvailable ? 'Retry loading' : records.length ? 'Reset filters' : 'Create retainer'}</DashboardControl>} />;
+
   return (
     <AdminPageShell featureSlug="client-retainers-module" className="ams-clients-module">
       <AdminModuleHeader slug="client-retainers-header"
         className="mb-0"
-        title="Client Retainer Agreements"
+        title="Client Agreements"
         description="Manage saved retainer terms, committed hours, and renewal dates."
-        eyebrow={<AdminStatusBadge tone="neutral">{records.length} active contracts</AdminStatusBadge>}
+        eyebrow="Retainers & service commitments"
         actions={(
           <>
-            <Button type="button" variant="secondary" onClick={exportReport} icon={<Download size={14} />}>Export Report</Button>
-            {canManageRetainers && <Button type="button" variant="primary" onClick={openRetainerForm} icon={<Plus size={14} />}>New Retainer</Button>}
+            <Button type="button" variant="secondary" onClick={exportReport} disabled={isLoading || !sourceAvailable} icon={<Download size={14} />}>Export Report</Button>
+            {canManageRetainers && <Button type="button" variant="primary" onClick={openRetainerForm} disabled={isLoading || !sourceAvailable} icon={<Plus size={14} />}>New Retainer</Button>}
           </>
         )}
       />
 
-      <AdminSectionTabs
-        ariaLabel="Client Agreements worksheets"
-        activeKey="retainers"
-        className="w-full border-b border-line pb-2"
-        items={[
-          { key: 'contracts', label: 'Contracts & SOWs', to: '/admin/contracts' },
-          { key: 'retainers', label: 'Retainers & Service Commitments', to: '/admin/clients/retainers' },
-          { key: 'renewals', label: 'Renewal Schedule', to: '/admin/contracts?view=renewals' },
-          { key: 'history', label: 'Contract History', to: '/admin/contracts', available: false },
-        ]}
-      />
+<ClientAgreementTabs activeKey="retainers" />
 
       <div className="flex items-start gap-3 rounded-card border border-warning/25 bg-warning/5 px-3 py-3 text-xs text-muted" role="status" aria-live="polite" data-ams-slug="retainer-time-log-reconciliation-state">
         <TriangleAlert size={15} className="mt-0.5 shrink-0 text-warning" aria-hidden="true" />
@@ -360,24 +348,18 @@ export const AdminClientRetainers: React.FC = () => {
 
 
 
-      <AdminFilterBar slug="client-retainers-filters"
-        searchValue={query}
-        onSearchChange={setQuery}
-        searchPlaceholder="Search client, retainer ID, tier, or cycle..."
-        searchLabel="Search retainers"
-        actions={(
-          <>
-            <CustomSelect value={cycle} onChange={(value) => setCycle(value as 'all' | Cycle)} options={[{ value: 'all', label: 'All cycles' }, { value: 'monthly', label: 'Monthly' }, { value: 'quarterly', label: 'Quarterly' }, { value: 'annual', label: 'Annual' }]} aria-label="Billing cycle" className="min-w-[136px]" triggerClassName="w-full" />
-            <CustomSelect value={tier} onChange={(value) => setTier(value as 'all' | Tier)} options={[{ value: 'all', label: 'All tiers' }, { value: 'tier-1', label: 'Tier 1 Strategic' }, { value: 'tier-2', label: 'Tier 2 Enterprise' }, { value: 'tier-3', label: 'Tier 3 Growth' }]} aria-label="Retainer tier" className="min-w-[146px]" triggerClassName="w-full" />
-            <CustomSelect value={health} onChange={(value) => setHealth(value as 'all' | Health)} options={[{ value: 'all', label: 'All health' }, { value: 'healthy', label: 'Healthy' }, { value: 'near-cap', label: 'Near cap' }, { value: 'overage-risk', label: 'Overage risk' }, { value: 'not-configured', label: 'Usage unavailable' }]} aria-label="Retainer health" className="min-w-[138px]" triggerClassName="w-full" />
-            <Button type="button" variant="secondary" icon={<RotateCcw size={13} />} onClick={reset}>Reset filters</Button>
-          </>
-        )}
-      />
 
-      <section data-ams-feature-slug="retainers-directory" data-ams-slug="retainers-directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="Retainer agreements table">
+
+      <AdminFilterToolbar slug="client-retainers-filters" searchValue={query} onSearchChange={setQuery} searchLabel="Search retainers" searchPlaceholder="Search client, retainer or billing cycle…" activeFilterCount={[cycle,tier,health].filter(value => value !== 'all').length} onReset={reset}>
+        <AdminFilterField label="Billing cycle"><CustomSelect value={cycle} onChange={(value) => setCycle(value as 'all' | Cycle)} options={[{ value: 'all', label: 'All cycles' }, { value: 'monthly', label: 'Monthly' }, { value: 'quarterly', label: 'Quarterly' }, { value: 'annual', label: 'Annual' }]} aria-label="Billing cycle" className="w-full" triggerClassName="w-full" /></AdminFilterField>
+        <AdminFilterField label="Retainer tier"><CustomSelect value={tier} onChange={(value) => setTier(value as 'all' | Tier)} options={[{ value: 'all', label: 'All tiers' }, { value: 'tier-1', label: 'Tier 1 Strategic' }, { value: 'tier-2', label: 'Tier 2 Enterprise' }, { value: 'tier-3', label: 'Tier 3 Growth' }]} aria-label="Retainer tier" className="w-full" triggerClassName="w-full" /></AdminFilterField>
+        <AdminFilterField label="Usage signal"><CustomSelect value={health} onChange={(value) => setHealth(value as 'all' | Health)} options={[{ value: 'all', label: 'All health' }, { value: 'healthy', label: 'Healthy' }, { value: 'near-cap', label: 'Near cap' }, { value: 'overage-risk', label: 'Overage risk' }, { value: 'not-configured', label: 'Usage unavailable' }]} aria-label="Retainer health" className="w-full" triggerClassName="w-full" /></AdminFilterField>
+      </AdminFilterToolbar>
+
+      <AdminPanel slug="retainers-directory" className="ams-operational-panel ams-overview-panel" title="Retainers & Service Commitments" description="Review saved commercial terms, recorded usage and the next renewal." >
+        <AdminDataTableShell embedded>
         <div className="min-w-0">
-          <div className="grid gap-3 p-3 min-[1280px]:hidden sm:p-4" data-ams-feature-slug="retainers-compact-cards" role="list" aria-label="Retainer agreement cards">
+          <div className="grid gap-3 p-3 min-[1100px]:hidden sm:p-4" data-ams-feature-slug="retainers-compact-cards" role="list" aria-label="Retainer agreement cards">
             {isLoading ? Array.from({ length: pageSize }).map((_, index) => (
               <div key={index} className="rounded-card border border-line bg-bg p-4" role="status" aria-label="Loading retainer">
                 <div className="h-3 w-36 animate-pulse rounded-badge bg-line" />
@@ -421,22 +403,17 @@ export const AdminClientRetainers: React.FC = () => {
                       </>
                     )}
                   </div>
-                  <div className="mt-3 flex justify-end border-t border-line pt-3">
+                  <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-line pt-3"><DashboardControl variant="quiet" onClick={() => setSelectedRetainer(item)}>View commitment</DashboardControl>
                     {canManageRetainers && <button type="button" onClick={() => openRetainerForm(item)} aria-label={'Edit terms for ' + item.client} title="Edit terms" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[11px] text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={13} aria-hidden="true" />Edit terms</button>}
                   </div>
                 </article>
               );
             }) : (
-              <div className="rounded-control border border-line bg-bg px-4 py-10 text-center">
-                <Search size={18} className="mx-auto text-muted" />
-                <p className="mt-3 text-sm font-medium text-fg">{records.length === 0 ? 'No active retainer agreements.' : 'No matching retainers.'}</p>
-                <p className="mt-1 text-xs text-muted">{records.length === 0 ? 'Create a retainer for a client already listed in Client Directory.' : 'Adjust the search or clear the active filters.'}</p>
-                <button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Reset filters</button>
-              </div>
+              retainerEmpty
             )}
           </div>
-          <div className="hidden min-[1280px]:block overflow-x-auto custom-scrollbar">
-          <table className="w-full min-w-[1120px] border-collapse text-left">
+          <div className="hidden min-[1100px]:block overflow-x-auto custom-scrollbar" role="region" aria-label="Scrollable retainer register" tabIndex={0}>
+          <table className="w-full min-w-[1120px] border-collapse text-left"><caption className="sr-only">Saved retainer terms and recorded usage</caption>
             <thead className="bg-bg"><tr className="border-b border-line text-[11px] font-medium text-muted">
               <th className="px-4 py-2.5"><SortButton label="Client & contract" sortKey="client" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
               <th className="px-4 py-2.5 text-right"><SortButton label="Monthly value" sortKey="monthlyValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
@@ -457,21 +434,24 @@ export const AdminClientRetainers: React.FC = () => {
                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{item.overageRateRecorded ? money(item.overageRate) + '/hr' : 'Not recorded'}</td>
                    <td className="px-4 py-3 text-[11px] text-muted"><div>{item.cycleRecorded ? cycleLabel[item.cycle] : 'Cycle not recorded'}</div><div className={(isRenewalHighlighted(item.renewal) ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>{item.renewalRecorded ? 'Renews ' + formatDate(item.renewal) : 'Renewal date not recorded'}</div></td>
                    <td className="px-4 py-3 text-center"><span className={'inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + meta.className}><span className={'h-1.5 w-1.5 rounded-full ' + meta.dot} />{meta.label}{usage !== null && usage >= 80 ? ' · ' + usage + '%' : ''}</span></td>
-<td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
+<td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1"><DashboardControl variant="quiet" size="compact" onClick={() => setSelectedRetainer(item)}>View commitment</DashboardControl>
                      {canManageRetainers && <>
                        <button type="button" onClick={() => openRetainerForm(item)} aria-label={`Edit terms for ${item.client}`} title="Edit terms" className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={15} aria-hidden="true" /></button>
                      </>}
                    </div></td>
                  </tr>;
-               }) : <tr><td colSpan={8} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">{records.length === 0 ? 'No active retainer agreements.' : 'No matching retainers.'}</p><p className="mt-1 text-xs text-muted">{records.length === 0 ? 'Create a retainer for a client already listed in Client Directory.' : 'Adjust the search or clear the active filters.'}</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
+               }) : <tr><td colSpan={8} className="p-0">{retainerEmpty}</td></tr>}
             </tbody>
           </table>
           </div>
         </div>
-        {!isLoading && <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="retainers" slug="retainers-pagination" />}
-      </section>
+        {!isLoading && sourceAvailable && <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="retainers" slug="retainers-pagination" />}
+              </AdminDataTableShell>
+      </AdminPanel>
 
-      <section data-ams-feature-slug="retainers-kpis" data-ams-slug="retainers-kpis" aria-label="Retainer metrics">
+
+
+{!isLoading && sourceAvailable && <section data-ams-feature-slug="retainers-kpis" data-ams-slug="retainers-kpis" aria-label="Retainer metrics">
         <AdminMetricStrip
           slug="retainers-kpis"
           metrics={[
@@ -480,23 +460,40 @@ export const AdminClientRetainers: React.FC = () => {
             { id: 'renewals-due', label: 'Renewals due in 30 days', value: renewals.length, context: !renewalDatesComplete ? renewalDateCount + ' of ' + records.length + ' active retainers have valid renewal dates; missing dates excluded' : renewalsValue === null ? 'Monthly value is not recorded for every renewal in range' : money(renewalsValue) + ' monthly value', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
           ]}
         />
-      </section>
+      </section>}
+
+      <Drawer slug="retainer-inspection-drawer" open={Boolean(selectedRetainer)} onClose={() => setSelectedRetainer(null)} size="xl" title={selectedRetainer?.client || 'Service commitment'} description="Saved retainer terms · client-owned record" footer={<><Button variant="secondary" onClick={() => setSelectedRetainer(null)}>Close</Button>{canManageRetainers && selectedRetainer && <Button variant="primary" onClick={() => {const item = selectedRetainer;setSelectedRetainer(null);openRetainerForm(item);}}>Edit terms</Button>}</>}>
+        {selectedRetainer && <div className="space-y-4">
+          <AdminPanel title="Commercial commitment" className="ams-operational-panel ams-overview-panel" bodyClassName="p-4">
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div><dt className="text-xs text-muted">Monthly value</dt><dd className="mt-1 text-sm text-fg">{selectedRetainer.monthlyValueRecorded ? money(selectedRetainer.monthlyValue) : 'Not recorded'}</dd></div>
+              <div><dt className="text-xs text-muted">Billing cycle</dt><dd className="mt-1 text-sm text-fg">{selectedRetainer.cycleRecorded ? cycleLabel[selectedRetainer.cycle] : 'Not recorded'}</dd></div>
+              <div><dt className="text-xs text-muted">Committed hours</dt><dd className="mt-1 text-sm text-fg">{selectedRetainer.committedHoursRecorded ? selectedRetainer.committedHours + ' hrs' : 'Not recorded'}</dd></div>
+              <div><dt className="text-xs text-muted">Recorded hours used</dt><dd className="mt-1 text-sm text-fg">{selectedRetainer.usedHoursRecorded ? selectedRetainer.usedHours + ' hrs' : 'Not recorded'}</dd></div>
+              <div><dt className="text-xs text-muted">Overage rate</dt><dd className="mt-1 text-sm text-fg">{selectedRetainer.overageRateRecorded ? money(selectedRetainer.overageRate) + '/hr' : 'Not recorded'}</dd></div>
+              <div><dt className="text-xs text-muted">Renewal</dt><dd className="mt-1 text-sm text-fg">{selectedRetainer.renewalRecorded ? formatDate(selectedRetainer.renewal) : 'Not recorded'}</dd></div>
+            </dl>
+          </AdminPanel>
+          <p className="text-xs leading-5 text-muted">Recorded usage is not reconciled with eligible Time Logs. Review the service scope and billing obligations in the signed agreement.</p>
+          <div className="flex flex-wrap gap-2">{selectedRetainer.clientId && <DashboardControl to={'/admin/clients/all-clients?client=' + encodeURIComponent(selectedRetainer.clientId)} icon={<Users size={14} />}>Client 360</DashboardControl>}<DashboardControl to="/admin/contracts" icon={<FileText size={14} />}>Contracts & SOWs</DashboardControl></div>
+        </div>}
+      </Drawer>
 
       <Drawer slug="retainer-create-drawer"
         open={retainerFormOpen}
-        onClose={() => { setRetainerFormOpen(false); setEditingRetainer(null); }}
+        onClose={() => { if (retainerSaving) return; setRetainerFormOpen(false); setEditingRetainer(null); }}
         size="lg"
         title={editingRetainer ? 'Edit retainer' : 'New retainer'}
         description="Save retainer terms against an existing client record."
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => { setRetainerFormOpen(false); setEditingRetainer(null); }}>Cancel</Button>
+            <Button type="button" variant="secondary" disabled={retainerSaving} onClick={() => { setRetainerFormOpen(false); setEditingRetainer(null); }}>Cancel</Button>
             <Button type="submit" form="retainer-create-form" variant="primary" loading={retainerSaving}>{editingRetainer ? 'Save changes' : 'Create retainer'}</Button>
           </>
         )}
       >
         <form id="retainer-create-form" onSubmit={createRetainer} className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <fieldset disabled={retainerSaving} className="contents"><div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
               <span className="text-[11px] font-medium text-muted">Client</span>
               <input required value={retainerClient} onChange={(event) => setRetainerClient(event.target.value)} disabled={Boolean(editingRetainer)} placeholder="Existing client company name" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent disabled:opacity-60" />
@@ -525,7 +522,7 @@ export const AdminClientRetainers: React.FC = () => {
               <span className="text-[11px] font-medium text-muted">Renewal date</span>
               <input required type="date" value={retainerRenewal} onChange={(event) => setRetainerRenewal(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
             </label>
-          </div>
+          </div></fieldset>
         </form>
       </Drawer>
 

@@ -20,7 +20,7 @@ test('Client detail distinguishes absent financial values from recorded zero', a
   assert.match(clients, /const getClientSlaState = \(client: AgencyClient\): Exclude<SlaFilter, 'all'> =>/);
   assert.match(clients, /if \(typeof spend !== 'number' \|\| !Number\.isFinite\(spend\)\) return 'spend-not-recorded';/);
   assert.match(clients, /value={slaFilter}/);
-  assert.match(clients, /value: 'spend-not-recorded', label: language === 'id' \? 'Belanja belum tercatat' : 'Spend not recorded'/);
+  assert.match(clients, /value:'spend-not-recorded',label:'Spend not recorded'/);
   assert.doesNotMatch(clients, /clientMetrics|AdminMetricStrip/,
     'The primary Clients Directory must not require a duplicate summary KPI computation.');
   assert.match(clients, /const slaState = getClientSlaState\(client\)/,
