@@ -13,6 +13,7 @@ export interface SelectOption {
 }
 
 interface CustomSelectProps {
+  id?: string;
   options: SelectOption[];
   value: string;
   onChange: (value: string) => void;
@@ -29,6 +30,7 @@ interface CustomSelectProps {
 }
 
 export const CustomSelect: React.FC<CustomSelectProps> = ({
+  id,
   options,
   value,
   onChange,
@@ -77,6 +79,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   return (
     <div data-ams-slug={slug} className={`relative inline-block text-left ${className}`}>
       <button
+        id={id}
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen((open) => !open)}

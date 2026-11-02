@@ -19,7 +19,8 @@ import { AdminFilterToolbar, AdminFilterField } from '../../components/admin/Adm
 import { DashboardControl, DashboardFilterGroup } from '../../components/admin/DashboardControls';
 import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
 import { ClientDirectoryRegister } from '../../components/admin/clients/ClientDirectoryRegister';
-import { CLIENT_ONBOARDING_TABS, ClientSourceWorkspace, ClientSourceWorksheet } from '../../components/admin/clients/ClientWorkspace';
+import { CLIENT_ONBOARDING_TABS } from '../../components/admin/clients/ClientWorkspace';
+import { ClientOnboardingWorkspace, ClientOnboardingChecklistBoundary, clientOnboardingHref, ClientOnboardingWorksheet } from '../../components/admin/clients/ClientOnboardingWorkspace';
 
 
 type SortKey = 'name' | 'company' | 'industry' | 'status' | 'updatedAt' | 'projectsCount' | 'totalSpend';
@@ -303,7 +304,7 @@ export const AdminClients: React.FC = () => {
   const [detailView, setDetailView] = useState('profile');
   useEffect(() => { setDetailView('profile'); }, [selectedClient?.id]);
   const requestedWorksheet = searchParams.get('worksheet');
-  const onboardingWorksheet: ClientSourceWorksheet = requestedWorksheet === 'required-documents' || requestedWorksheet === 'kickoff-readiness' ? requestedWorksheet : 'onboarding-checklist';
+  const onboardingWorksheet: ClientOnboardingWorksheet = requestedWorksheet === 'required-documents' || requestedWorksheet === 'kickoff-readiness' ? requestedWorksheet : 'onboarding-checklist';
   const contactsView = statusScope !== 'lead' && searchParams.get('worksheet') === 'contacts';
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<AgencyClient | null>(null);
@@ -339,6 +340,7 @@ export const AdminClients: React.FC = () => {
       setStatusScope(requestedScope);
       setStatusFilter('all');
       setSlaFilter('all');
+      if (requestedScope === 'lead') { setSortKey('updatedAt'); setSortDirection('desc'); }
       setPage(1);
     }
   }, [searchParams, statusScope]);
@@ -946,12 +948,15 @@ export const AdminClients: React.FC = () => {
       <AdminSectionTabs className="ams-operational-tabs"
         ariaLabel={statusScope === 'lead' ? 'Client Onboarding worksheets' : 'Client Directory worksheets'}
         activeKey={statusScope === 'lead' ? onboardingWorksheet : contactsView ? 'contacts' : 'companies'}
-        items={statusScope === 'lead' ? CLIENT_ONBOARDING_TABS : [
+        items={statusScope === 'lead' ? CLIENT_ONBOARDING_TABS.map(item => ({...item, to: clientOnboardingHref(item.key as ClientOnboardingWorksheet, searchParams.get('onboardingClient') || '')})) : [
           {key:'companies', label:'Companies', to:'/admin/clients/all-clients'},
           {key:'contacts', label:'Contacts', to:'/admin/clients/all-clients?worksheet=contacts'},
         ]}
       />
-      {statusScope === 'lead' && <ClientSourceWorkspace worksheet={onboardingWorksheet} />}
+      {statusScope === 'lead' && onboardingWorksheet !== 'onboarding-checklist' ? (
+        <ClientOnboardingWorkspace worksheet={onboardingWorksheet} clients={clients} loading={isLoading} unavailable={Boolean(errorMessage)} onInspect={setSelectedClient} onRetry={() => void loadData()} />
+      ) : <>
+
 
       {errorMessage && (
         <div role="alert" aria-live="assertive" className="flex flex-col gap-3 rounded-card border border-danger/25 bg-danger/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -974,18 +979,21 @@ export const AdminClients: React.FC = () => {
         searchLabel={statusScope === 'lead' ? 'Search onboarding accounts' : 'Search clients'}
         searchPlaceholder="Search company, primary contact, email or industry…"
         activeFilterCount={[statusFilter, industryFilter, locationFilter, slaFilter].filter(value => value !== 'all').length}
-        onReset={resetFilters} columns={4} actions={<CustomSelect value={sortKey + ':' + sortDirection} onChange={value => {const [key, direction] = value.split(':'); setSortKey(key as SortKey);setSortDirection(direction as SortDirection);}} aria-label="Sort client accounts" options={[{value:'company:asc',label:'Company A–Z'},{value:'company:desc',label:'Company Z–A'},{value:'name:asc',label:'Contact A–Z'},{value:'name:desc',label:'Contact Z–A'},{value:'updatedAt:desc',label:'Recently updated'},{value:'updatedAt:asc',label:'Oldest update'},{value:'industry:asc',label:'Industry A–Z'},{value:'totalSpend:desc',label:'Billed value: highest'},{value:'projectsCount:desc',label:'Project count: highest'}]} />} >
-        <AdminFilterField label="Relationship status"><CustomSelect value={statusFilter} onChange={value => setStatusFilter(value as 'all' | AgencyClient['status'])} options={[{value:'all',label:'All statuses'}, ...STATUS_OPTIONS]} aria-label="Filter client status" disabled={statusScope === 'lead'} /></AdminFilterField>
+        onReset={resetFilters} columns={statusScope === 'lead' ? 3 : 4} actions={<CustomSelect value={sortKey + ':' + sortDirection} onChange={value => {const [key, direction] = value.split(':'); setSortKey(key as SortKey);setSortDirection(direction as SortDirection);}} aria-label="Sort client accounts" options={[{value:'company:asc',label:'Company A–Z'},{value:'company:desc',label:'Company Z–A'},{value:'name:asc',label:'Contact A–Z'},{value:'name:desc',label:'Contact Z–A'},{value:'updatedAt:desc',label:'Recently updated'},{value:'updatedAt:asc',label:'Oldest update'},{value:'industry:asc',label:'Industry A–Z'},...(statusScope !== 'lead' ? [{value:'totalSpend:desc',label:'Billed value: highest'},{value:'projectsCount:desc',label:'Project count: highest'}] : [])]} />} >
+        {statusScope !== 'lead' && <AdminFilterField label="Relationship status"><CustomSelect value={statusFilter} onChange={value => setStatusFilter(value as 'all' | AgencyClient['status'])} options={[{value:'all',label:'All statuses'}, ...STATUS_OPTIONS]} aria-label="Filter client status" /></AdminFilterField>}
         <AdminFilterField label="Industry"><CustomSelect value={industryFilter} onChange={setIndustryFilter} options={[{value:'all',label:'All industries'}, ...industryOptions.map(value => ({value,label:value}))]} aria-label="Filter industry" /></AdminFilterField>
         <AdminFilterField label="Location"><CustomSelect value={locationFilter} onChange={setLocationFilter} options={[{value:'all',label:'All locations'}, ...locationOptions.map(value => ({value,label:value}))]} aria-label="Filter location" /></AdminFilterField>
-        <AdminFilterField label="Advertising spend cap"><CustomSelect value={slaFilter} onChange={value => setSlaFilter(value as SlaFilter)} options={[{value:'all',label:'All spend cap states'},{value:'healthy',label:'Within cap'},{value:'near',label:'Near cap'},{value:'over',label:'Over cap'},{value:'not-configured',label:'Not configured'},{value:'spend-not-recorded',label:'Spend not recorded'}]} aria-label="Filter spend cap health" disabled={statusScope === 'lead'} /></AdminFilterField>
+        {statusScope !== 'lead' && <AdminFilterField label="Advertising spend cap"><CustomSelect value={slaFilter} onChange={value => setSlaFilter(value as SlaFilter)} options={[{value:'all',label:'All spend cap states'},{value:'healthy',label:'Within cap'},{value:'near',label:'Near cap'},{value:'over',label:'Over cap'},{value:'not-configured',label:'Not configured'},{value:'spend-not-recorded',label:'Spend not recorded'}]} aria-label="Filter spend cap health" /></AdminFilterField>}
       </AdminFilterToolbar>
       {statusScope !== 'lead' && <DashboardFilterGroup ariaLabel="Client scopes" value={statusScope} onChange={value => changeStatusScope(value as StatusScope)} options={[{value:'all',label:'All accounts'},{value:'active',label:'Active'},{value:'at-risk',label:'Spend cap exceptions'}]} />}
       <ClientDirectoryRegister records={paginatedClients} loading={isLoading} unavailable={Boolean(errorMessage)} hasAccounts={statusScope === 'lead' ? clients.some(client => client.status === 'lead') : clients.length > 0}
         contacts={contactsView} onboarding={statusScope === 'lead'} canManage={canManageClients} sortKey={sortKey} direction={sortDirection}
         onCreate={canManageClients ? openCreate : undefined} onSort={toggleSort} onInspect={setSelectedClient} onEdit={openEdit} onReset={resetFilters} onRetry={() => void loadData()}
+        profileContext={client => {const fields = getClientProfileReadiness(client); return 'Profile fields: ' + fields.filter(field => field.complete).length + '/' + fields.length + ' recorded';}}
         formatDate={value => formatDate(value, language)} serviceContext={client => getClientServiceContext(client, language)} spendContext={spendCapContext}
         pagination={<AdminTablePagination total={filteredClients.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="accounts" slug="client-directory-pagination" />} />
+      {statusScope === 'lead' && <ClientOnboardingChecklistBoundary />}
+      </>}
 
       <Drawer slug="client-directory-detail-drawer"
         open={!!selectedClient}

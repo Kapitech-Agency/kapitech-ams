@@ -82,7 +82,7 @@ test('Client Directory makes the register primary and includes recorded service 
   assert.match(filterBar, /value=\{industryFilter\}/);
   assert.match(filterBar, /Filter location/);
   assert.match(filterBar, /value=\{locationFilter\}/);
-  assert.match(filterBar, /disabled=\{statusScope === 'lead'\}/);
+  assert.match(filterBar, /statusScope !== 'lead' && <AdminFilterField/);
   assert.match(filterBar, /AdminFilterField label="Advertising spend cap"/);
 });
 
@@ -240,7 +240,7 @@ test('Clients surface account health after the directory and keep data gaps expl
   assert.match(clients, /Cumulative billed value/);
   assert.match(clients, /visible to users with client-management access/);
   assert.doesNotMatch(clients, /Client or CRM access/);
-  assert.match(clients, /ClientSourceWorkspace worksheet=\{onboardingWorksheet\}/);
+  assert.match(clients, /ClientOnboardingWorkspace worksheet=\{onboardingWorksheet\}/);
   assert.match(clients, /statusScope !== 'lead' && <DashboardFilterGroup/);
   assert.match(clients, /label:'Spend cap exceptions'/);
   assert.doesNotMatch(clients, /id: 'lead', label: 'Onboarding'/);
@@ -702,7 +702,7 @@ test('Client Onboarding has a distinct header when the onboarding scope is selec
   assert.match(clients, /eyebrow=\{statusScope === 'lead' \? 'Onboarding workspace' : 'Client directory'\}/);
   assert.match(clients, /title=\{statusScope === 'lead' \? 'Client Onboarding' : 'Client Directory'\}/);
   assert.match(clients, /Review prospective client accounts and recorded profile details/);
-  assert.match(clients, /ClientSourceWorkspace worksheet=\{onboardingWorksheet\}/);
+  assert.match(clients, /ClientOnboardingWorkspace worksheet=\{onboardingWorksheet\}/);
   assert.match(clients, /scope === 'onboarding'/);
 });
 
@@ -879,8 +879,9 @@ test('Inbox does not invent unsupported follow-up timing or actions', async () =
 
 test('Client Onboarding keeps account scope controls separate from spend-cap filters', async () => {
   const clients = await read('src/pages/admin/AdminClients.tsx');
-  assert.ok(clients.indexOf('<ClientSourceWorkspace worksheet={onboardingWorksheet}') < clients.indexOf('<AdminFilterToolbar'));
-  assert.match(clients, /disabled=\{statusScope === 'lead'\}/);
+  assert.ok(clients.indexOf('<ClientOnboardingWorkspace worksheet={onboardingWorksheet}') < clients.indexOf('<AdminFilterToolbar'));
+  assert.ok(clients.indexOf('<ClientOnboardingChecklistBoundary') > clients.indexOf('<ClientDirectoryRegister records='));
+  assert.match(clients, /statusScope !== 'lead' && <AdminFilterField/);
   const reset = clients.slice(clients.indexOf('const resetFilters'), clients.indexOf('const changeStatusScope'));
   assert.doesNotMatch(reset, /setStatusScope|setSearchParams/, 'Reset must not navigate out of Onboarding.');
   assert.match(clients, /if \(requestedScope !== statusScope\) \{[\s\S]{0,160}setSlaFilter\('all'\)/);
@@ -985,10 +986,10 @@ test('Client Onboarding uses an onboarding-specific primary register', async () 
   assert.match(clients, /onboarding=\{statusScope === 'lead'\}/);
   assert.match(records, /p.onboarding \? 'Lead accounts'/);
   assert.match(records, /Contact channels/);
-  assert.match(records, /p.onboarding \? 'Added '/);
+  assert.match(records, /p.profileContext/);
   assert.match(workspaces, /required-documents/); assert.match(workspaces, /kickoff-readiness/);
-  assert.match(workspaces, /Profile completeness and contract status alone cannot authorize a kickoff/);
-  assert.match(records, /p.onboarding \? 'Added '[\s\S]*: p.serviceContext/);
+  assert.match(await read('src/components/admin/clients/ClientOnboardingWorkspace.tsx'), /Profile completeness and contract status alone cannot authorize a kickoff/);
+  assert.match(records, /p.onboarding \?[\s\S]*: p.serviceContext/);
 
 });
 

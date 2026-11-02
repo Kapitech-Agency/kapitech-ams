@@ -238,7 +238,7 @@ test('Clients and Team & Resources use persistent workspaces while internal view
   assert.match(clientSource, /Client Directory worksheets/);
   assert.match(clientSource, /Client Onboarding worksheets/);
   assert.match(clientSource, /worksheet=contacts/);
-  assert.match(clientSource, /ClientSourceWorkspace worksheet=\{onboardingWorksheet\}/);
+  assert.match(clientSource, /ClientOnboardingWorkspace worksheet=\{onboardingWorksheet\}/);
   for (const label of ['Onboarding Checklist', 'Required Documents', 'Kickoff Readiness']) assert.ok(worksheets.includes(label));
   assert.doesNotMatch(worksheets, /available: false/);
 

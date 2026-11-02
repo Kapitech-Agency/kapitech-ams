@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
@@ -8,10 +9,10 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const bundle=buildSync({stdin:{contents:`export * from './src/components/admin/clients/ClientWorkspace';export * from './src/components/admin/clients/ClientDirectoryRegister';export * from './src/pages/admin/AdminClientSlaMonitoring';`,resolveDir:root,loader:'tsx'},bundle:true,write:false,platform:'node',format:'cjs',packages:'external',alias:{'lucide-react':path.join(root,'src/lib/untitled-ui-icon-bridge.tsx')},loader:{'.css':'empty'}});
+const bundle=buildSync({stdin:{contents:`export * from './src/components/admin/clients/ClientWorkspace';export * from './src/components/admin/clients/ClientDirectoryRegister';export * from './src/pages/admin/AdminClientSlaMonitoring';export * from './src/components/admin/clients/ClientOnboardingWorkspace';`,resolveDir:root,loader:'tsx'},bundle:true,write:false,platform:'node',format:'cjs',packages:'external',alias:{'lucide-react':path.join(root,'src/lib/untitled-ui-icon-bridge.tsx')},loader:{'.css':'empty'}});
 const compiled={exports:{} as any};const require=createRequire(import.meta.url);
 new Function('require','module','exports',bundle.outputFiles[0].text)(require,compiled,compiled.exports);
-const {ClientDirectoryRegister,ClientSourceWorkspace,ClientAgreementTabs,CLIENT_AGREEMENT_TABS,CLIENT_ONBOARDING_TABS,CLIENT_SERVICE_TABS,AdminClientSlaMonitoring}=compiled.exports;
+const {ClientDirectoryRegister,ClientSourceWorkspace,ClientAgreementTabs,CLIENT_AGREEMENT_TABS,CLIENT_ONBOARDING_TABS,CLIENT_SERVICE_TABS,AdminClientSlaMonitoring,ClientOnboardingWorkspace,ClientOnboardingChecklistBoundary,clientOnboardingHref}=compiled.exports;
 const {MemoryRouter}=require('react-router-dom');
 const render=(component:any,props:Record<string,unknown>,url='/admin/clients/all-clients')=>renderToStaticMarkup(React.createElement(MemoryRouter,{initialEntries:[url]},React.createElement(component,props)));
 const noop=()=>{};
@@ -58,6 +59,10 @@ test('Onboarding rows prioritize lead identity and contactability over financial
   assert.match(html,/Added 2026-01-01/);
   assert.match(html,/Contact channels/);
   assert.doesNotMatch(html,/Service not recorded|Spend cap not configured|Billed value/);
+  const table=html.slice(html.indexOf('<table'),html.indexOf('</table>'));
+  assert.equal((table.match(/<th scope="col"/g)||[]).length,6);
+  assert.match(html,/worksheet=required-documents&amp;onboardingClient=qa-canonical-id/);
+  assert.doesNotMatch(render(ClientDirectoryRegister,{...props,onboarding:true,canManage:true}),/aria-label="Manage /);
 });
 
 test('Unavailable and loading client sources never render stale account rows or pagination',()=>{
@@ -106,7 +111,7 @@ test('All four service routes render their own evidence boundary with one select
 });
 
 test('Unimplemented evidence has compact Overview states and real next actions, never simulated records',()=>{
-  for(const worksheet of ['onboarding-checklist','required-documents','kickoff-readiness','history','sla-monitoring','service-issues','client-health','service-history']){
+  for(const worksheet of ['history','sla-monitoring','service-issues','client-health','service-history']){
     const html=render(ClientSourceWorkspace,{worksheet});
     assert.match(html,/ams-operational-panel ams-overview-panel/);
     assert.match(html,/ams-dashboard-card-action/);
@@ -114,6 +119,57 @@ test('Unimplemented evidence has compact Overview states and real next actions, 
     assert.match(html,/href="\/admin\//);
     assert.doesNotMatch(html,/Design preview|sample account|All checks complete|100%|<table/);
   }
-  assert.match(render(ClientSourceWorkspace,{worksheet:'kickoff-readiness'}),/cannot authorize a kickoff/);
+  assert.match(render(ClientOnboardingWorkspace,{worksheet:'kickoff-readiness',clients:[account],loading:false,unavailable:false,onInspect:noop,onRetry:noop},clientOnboardingHref('kickoff-readiness',account.id)),/cannot authorize a kickoff/);
   assert.match(render(ClientSourceWorkspace,{worksheet:'history'}),/not reconstructed into a timeline/);
+});
+
+
+test('Onboarding worksheet links retain canonical account scope and encode IDs safely',()=>{
+  for(const worksheet of ['onboarding-checklist','required-documents','kickoff-readiness']){
+    const url=new URL(clientOnboardingHref(worksheet,'canonical/id & context'),'https://ams.example.invalid');
+    assert.equal(url.searchParams.get('scope'),'onboarding');
+    assert.equal(url.searchParams.get('onboardingClient'),'canonical/id & context');
+    assert.equal(url.searchParams.get('worksheet'),worksheet==='onboarding-checklist'?null:worksheet);
+  }
+});
+
+test('Onboarding Documents and Kickoff require a selected canonical lead instead of repeating the account queue',()=>{
+  const base={clients:[account,{...account,id:'active-account',company:'Active client',status:'active'}],loading:false,unavailable:false,onInspect:noop,onRetry:noop};
+  for(const worksheet of ['required-documents','kickoff-readiness']){
+    const unselected=render(ClientOnboardingWorkspace,{...base,worksheet});
+    assert.match(unselected,/Choose a lead account to review/);
+    assert.doesNotMatch(unselected,/<table|Company directory|Next action|Open Client 360/);
+    const selected=render(ClientOnboardingWorkspace,{...base,worksheet},clientOnboardingHref(worksheet,account.id));
+    assert.match(selected,/QA creative &amp; technology/);
+    assert.match(selected,/Open Client 360/);
+    assert.match(selected,/id="onboarding-account"/);
+    assert.match(selected,/for="onboarding-account"/);
+    assert.doesNotMatch(selected,/<table|100%|approved kickoff/);
+    const invalid=render(ClientOnboardingWorkspace,{...base,worksheet},clientOnboardingHref(worksheet,'active-account'));
+    assert.match(invalid,/Selected lead account unavailable/);
+    assert.doesNotMatch(invalid,/Open Client 360|Document requirements are not configured for this account/);
+  }
+});
+
+test('Onboarding evidence distinguishes unavailable, loading and valid-empty account sources',()=>{
+  const base={worksheet:'required-documents',clients:[account],loading:false,unavailable:false,onInspect:noop,onRetry:noop};
+  const failure=render(ClientOnboardingWorkspace,{...base,unavailable:true},clientOnboardingHref('required-documents',account.id));
+  assert.match(failure,/Lead accounts could not be verified/);
+  assert.match(failure,/Retry loading/);
+  assert.doesNotMatch(failure,/Open Client 360/);
+  assert.match(render(ClientOnboardingWorkspace,{...base,loading:true}),/Loading lead account context/);
+  assert.match(render(ClientOnboardingWorkspace,{...base,clients:[]}),/No lead accounts recorded/);
+  const boundary=render(ClientOnboardingChecklistBoundary,{});
+  assert.match(boundary,/Profile review does not approve onboarding/);
+  assert.doesNotMatch(boundary,/Next action/);
+});
+
+
+test('Production Clients navigation adopts the Overview padding context on desktop and mobile',()=>{
+  const layout=readFileSync(path.join(root,'src/pages/admin/AdminLayout.tsx'),'utf8');
+  assert.match(layout,/workspaceNavigationModule === 'clients' \? 'min-w-0 flex-1 ams-operational-tabs'/);
+  assert.match(layout,/workspaceNavigationModule === 'clients' \? 'w-full py-2 ams-operational-tabs'/);
+  const css=readFileSync(path.join(root,'src/components/admin/OperationalWorkspace.css'),'utf8');
+  assert.match(css,/nav\.ams-topnav-scroll:is\(\.ams-projects-module-tabs, \.ams-operational-tabs\) > a \{[^}]*padding:6px/);
+  assert.doesNotMatch(css,/a\[aria-current="page"\][^{]*\{[^}]*padding:/);
 });
