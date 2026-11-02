@@ -435,7 +435,7 @@ export const AdminContracts: React.FC = () => {
     return null;
   };
 
-  const contractEmpty = <DashboardEmptyState eyebrow={error ? 'Source unavailable' : 'Agreements'} title={error ? 'Contract source unavailable' : contracts.length ? 'No matching agreements' : 'No contracts or SOWs recorded'} description={error ? 'Reload the source before reviewing the agreement register.' : contracts.length ? 'Clear the search or choose another status.' : 'Create a draft to record the scope, deliverables and commercial terms.'} icon={<ClipboardCheck size={17} />} action={<DashboardControl variant="quiet" onClick={error ? () => void load() : contracts.length ? () => {setQuery('');setStatusFilter('all');} : openCreate} disabled={!error && !contracts.length && !canManage}>{error ? 'Retry loading' : contracts.length ? 'Reset filters' : 'Create contract'}</DashboardControl>} />;
+  const contractEmpty = <DashboardEmptyState inset eyebrow={error ? 'Source unavailable' : 'Agreements'} title={error ? 'Contract source unavailable' : contracts.length ? 'No matching agreements' : 'No contracts or SOWs recorded'} description={error ? 'Reload the source before reviewing the agreement register.' : contracts.length ? 'Clear the search or choose another status.' : 'Create a draft to record the scope, deliverables and commercial terms.'} icon={<ClipboardCheck size={17} />} action={<DashboardControl variant="quiet" onClick={error ? () => void load() : contracts.length ? () => {setQuery('');setStatusFilter('all');} : openCreate} disabled={!error && !contracts.length && !canManage}>{error ? 'Retry loading' : contracts.length ? 'Reset filters' : 'Create contract'}</DashboardControl>} />;
 
   return (
     <AdminPageShell featureSlug="client-contracts-module">
@@ -482,7 +482,7 @@ export const AdminContracts: React.FC = () => {
                 {[1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
               </div>
             ) : filteredRenewalScheduleRows.length === 0 ? (
-              <DashboardEmptyState eyebrow={renewalScheduleSourcesComplete ? 'Renewal schedule' : 'Incomplete sources'} title={renewalScheduleRows.length ? 'No matching renewal records' : renewalScheduleSourcesComplete ? 'No active agreements recorded' : 'Renewal coverage cannot be verified'} description={renewalScheduleRows.length ? 'Clear the search or select another timing filter.' : renewalScheduleSourcesComplete ? 'Record renewal or end dates on the canonical contract and retainer records.' : 'Refresh after both contract and client sources are available. Unavailable records are not zero renewals.'} icon={<CalendarDays size={17} />} action={<DashboardControl variant="quiet" onClick={renewalScheduleSourcesComplete ? () => {setRenewalQuery('');setRenewalTimingFilter('all');} : () => void load()}>{renewalScheduleSourcesComplete ? 'Reset filters' : 'Refresh sources'}</DashboardControl>} />
+              <DashboardEmptyState inset eyebrow={renewalScheduleSourcesComplete ? 'Renewal schedule' : 'Incomplete sources'} title={renewalScheduleRows.length ? 'No matching renewal records' : renewalScheduleSourcesComplete ? 'No active agreements recorded' : 'Renewal coverage cannot be verified'} description={renewalScheduleRows.length ? 'Clear the search or select another timing filter.' : renewalScheduleSourcesComplete ? 'Record renewal or end dates on the canonical contract and retainer records.' : 'Refresh after both contract and client sources are available. Unavailable records are not zero renewals.'} icon={<CalendarDays size={17} />} action={<DashboardControl variant="quiet" onClick={renewalScheduleSourcesComplete ? () => {setRenewalQuery('');setRenewalTimingFilter('all');} : () => void load()}>{renewalScheduleSourcesComplete ? 'Reset filters' : 'Refresh sources'}</DashboardControl>} />
             ) : (
               <div className="divide-y divide-line">
                 {filteredRenewalScheduleRows.map((row) => {
@@ -544,6 +544,7 @@ export const AdminContracts: React.FC = () => {
       </AdminFilterToolbar>
       <AdminPanel title="Contracts & SOWs" description="Review scope and obligations, then inspect or advance the existing agreement workflow." className="ams-operational-panel ams-overview-panel" slug="client-agreements-register">
         <AdminDataTableShell embedded>
+        {!loading && visible.length === 0 ? contractEmpty : (
         <div className="mt-4 min-w-0">
           <div className="grid gap-3 min-[1100px]:hidden" data-ams-feature-slug="contracts-compact-cards" role="list" aria-label="Contract and statement of work cards">
             {loading ? Array.from({ length: 3 }).map((_, index) => (
@@ -552,7 +553,7 @@ export const AdminContracts: React.FC = () => {
                 <div className="mt-3 h-3 w-28 animate-pulse rounded-badge bg-line" />
                 <div className="mt-4 grid grid-cols-2 gap-3"><div className="h-9 animate-pulse rounded-control bg-line/60" /><div className="h-9 animate-pulse rounded-control bg-line/60" /></div>
               </div>
-            )) : visible.length ? visible.map((contract) => {
+            )) : visible.map((contract) => {
               const next = primaryNext(contract.status);
               return (
                 <article key={contract.id} data-ams-slug={'contract-card-' + contract.id} role="listitem" className="min-w-0 rounded-card border border-line bg-bg p-3.5">
@@ -584,9 +585,7 @@ export const AdminContracts: React.FC = () => {
                   </div>
                 </article>
               );
-            }) : (
-              contractEmpty
-            )}
+            })}
           </div>
           <div className="hidden min-[1100px]:block overflow-x-auto custom-scrollbar" role="region" aria-label="Scrollable agreement register" tabIndex={0}>
           <table className="w-full min-w-[980px] border-collapse text-left"><caption className="sr-only">Contracts and statements of work</caption>
@@ -600,7 +599,7 @@ export const AdminContracts: React.FC = () => {
             </tr></thead>
             <tbody className="divide-y divide-line">
               {loading ? Array.from({ length: 4 }).map((_, index) => <tr key={index}><td colSpan={6} className="px-3 py-4"><div className="h-3 w-56 animate-pulse rounded-badge bg-line" /></td></tr>) :
-                visible.length ? visible.map((contract) => {
+                visible.map((contract) => {
                   const next = primaryNext(contract.status);
                   return (
                     <tr key={contract.id} data-ams-slug={'contract-' + contract.id} className="transition-colors hover:bg-bg/60">
@@ -634,11 +633,11 @@ export const AdminContracts: React.FC = () => {
                       </td>
                     </tr>
                   );
-                }) : <tr><td colSpan={6} className="p-0">{contractEmpty}</td></tr>}
+                })}
             </tbody>
           </table>
           </div>
-        </div>
+        </div>)}
         <AdminTablePagination total={filtered.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="contracts" slug="contracts-pagination" />
               </AdminDataTableShell>
       </AdminPanel>

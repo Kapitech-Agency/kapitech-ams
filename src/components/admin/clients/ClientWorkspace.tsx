@@ -39,7 +39,7 @@ export const ClientSourceWorkspace: React.FC<{ worksheet: ClientSourceWorksheet 
   const Icon = item.icon;
   return <div className="grid min-w-0 gap-4" data-ams-slug={'client-source-' + worksheet}>
     <AdminPanel title={item.title} className="ams-operational-panel ams-overview-panel" actions={<DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to={item.to} icon={<Icon size={14} />}>{item.action}</DashboardControl>}>
-      <DashboardEmptyState eyebrow={item.eyebrow} title={item.empty} description={item.description} icon={<Icon size={17} />} />
+      <DashboardEmptyState inset eyebrow={item.eyebrow} title={item.empty} description={item.description} icon={<Icon size={17} />} />
     </AdminPanel>
     <AdminPanel title="Next action" className="ams-operational-panel ams-overview-panel" bodyClassName="p-4">
       <p className="text-xs font-medium text-fg">{item.next}</p><p className="mt-1 text-xs leading-5 text-muted">{item.evidence}</p>

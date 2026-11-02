@@ -630,7 +630,7 @@ export const AdminClients: React.FC = () => {
       );
     }
     if (state.status === 'ready' && state.records.length === 0) {
-      return <DashboardEmptyState eyebrow="Linked records" title="No linked records" description={emptyMessage} />;
+      return <DashboardEmptyState inset eyebrow="Linked records" title="No linked records" description={emptyMessage} />;
     }
     if (state.status !== 'ready') return null;
     return renderRecords(state.records);
@@ -1061,7 +1061,7 @@ export const AdminClients: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <DashboardEmptyState eyebrow="Relationship timeline" title="No interactions recorded yet" description="Record the next client conversation and its agreed next step." icon={<MessageSquare size={17} />} action={<DashboardControl variant="quiet" onClick={openInteractionDrawer} icon={<Plus size={13} />}>Log first interaction</DashboardControl>} />
+                  <DashboardEmptyState inset eyebrow="Relationship timeline" title="No interactions recorded yet" description="Record the next client conversation and its agreed next step." icon={<MessageSquare size={17} />} action={<DashboardControl variant="quiet" onClick={openInteractionDrawer} icon={<Plus size={13} />}>Log first interaction</DashboardControl>} />
                 )}
               </AdminPanel>
             )}
@@ -1154,7 +1154,7 @@ export const AdminClients: React.FC = () => {
                     })}
                   </div>
                 ) : (
-                  <DashboardEmptyState eyebrow="Client agreements" title="No linked contracts yet" description="Saved agreements appear here when linked by client ID or exact company name. Review the canonical contract register." icon={<FileText size={17} />} />
+                  <DashboardEmptyState inset eyebrow="Client agreements" title="No linked contracts yet" description="Saved agreements appear here when linked by client ID or exact company name. Review the canonical contract register." icon={<FileText size={17} />} />
                 )}
               </AdminPanel>
             )}

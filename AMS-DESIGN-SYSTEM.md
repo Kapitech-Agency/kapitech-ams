@@ -41,6 +41,8 @@ Verified from `README.md` and `package.json`:
 
 Use `AdminFilterToolbar` and `AdminFilterField` for new/redesigned list filters. This is the shared Inbox interaction, now used by Inbox Messages, Project Registry (including Archived) every Tasks & Execution view, and Clients Directory/Agreements/Retainers/Renewal Schedule. Search is always available; the neutral Filters control opens/closes labelled fields and reports active field-filter count. The panel starts closed; closing never clears caller-owned filter state. Applied filters remain visible and clearable while closed. Reset uses the caller's canonical reset; search is excluded from the field-filter badge. Shared CSS owns the outlined 12px toolbar, responsive field grid, focus and touch targets. Actions use the shared slot; use three columns for delivery controls or four for Inbox's four fields, reducing to two/one at existing breakpoints. No page-specific duplicate toggle/filter component. Older `AdminFilterBar` consumers outside the redesigned scope remain compatibility consumers; migrate when their workflow is reviewed.
 
+**Empty-state placement:** The Overview reference separates the panel body inset (16px on every side) from the compact empty surface’s existing inner padding (13px/12px desktop; 13px/11px below 600px). Use `DashboardEmptyState inset` inside unpadded panel/table bodies. If the parent already has p-4, leave inset off. Do not mount a flush empty surface against the card outline or stack two padding owners. Approved Dashboard placements/default markup stay unchanged.
+
 ---
 
 ## 1. Principles

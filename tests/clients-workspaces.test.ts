@@ -9,10 +9,10 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const bundle=buildSync({stdin:{contents:`export * from './src/components/admin/clients/ClientWorkspace';export * from './src/components/admin/clients/ClientDirectoryRegister';export * from './src/pages/admin/AdminClientSlaMonitoring';export * from './src/components/admin/clients/ClientOnboardingWorkspace';`,resolveDir:root,loader:'tsx'},bundle:true,write:false,platform:'node',format:'cjs',packages:'external',alias:{'lucide-react':path.join(root,'src/lib/untitled-ui-icon-bridge.tsx')},loader:{'.css':'empty'}});
+const bundle=buildSync({stdin:{contents:`export * from './src/components/admin/clients/ClientWorkspace';export * from './src/components/admin/clients/ClientDirectoryRegister';export * from './src/pages/admin/AdminClientSlaMonitoring';export * from './src/components/admin/clients/ClientOnboardingWorkspace';export * from './src/components/admin/DashboardEmptyState';`,resolveDir:root,loader:'tsx'},bundle:true,write:false,platform:'node',format:'cjs',packages:'external',alias:{'lucide-react':path.join(root,'src/lib/untitled-ui-icon-bridge.tsx')},loader:{'.css':'empty'}});
 const compiled={exports:{} as any};const require=createRequire(import.meta.url);
 new Function('require','module','exports',bundle.outputFiles[0].text)(require,compiled,compiled.exports);
-const {ClientDirectoryRegister,ClientSourceWorkspace,ClientAgreementTabs,CLIENT_AGREEMENT_TABS,CLIENT_ONBOARDING_TABS,CLIENT_SERVICE_TABS,AdminClientSlaMonitoring,ClientOnboardingWorkspace,ClientOnboardingChecklistBoundary,clientOnboardingHref}=compiled.exports;
+const {ClientDirectoryRegister,ClientSourceWorkspace,ClientAgreementTabs,CLIENT_AGREEMENT_TABS,CLIENT_ONBOARDING_TABS,CLIENT_SERVICE_TABS,AdminClientSlaMonitoring,ClientOnboardingWorkspace,ClientOnboardingChecklistBoundary,clientOnboardingHref,DashboardEmptyState}=compiled.exports;
 const {MemoryRouter}=require('react-router-dom');
 const render=(component:any,props:Record<string,unknown>,url='/admin/clients/all-clients')=>renderToStaticMarkup(React.createElement(MemoryRouter,{initialEntries:[url]},React.createElement(component,props)));
 const noop=()=>{};
@@ -172,4 +172,17 @@ test('Production Clients navigation adopts the Overview padding context on deskt
   const css=readFileSync(path.join(root,'src/components/admin/OperationalWorkspace.css'),'utf8');
   assert.match(css,/nav\.ams-topnav-scroll:is\(\.ams-projects-module-tabs, \.ams-operational-tabs\) > a \{[^}]*padding:6px/);
   assert.doesNotMatch(css,/a\[aria-current="page"\][^{]*\{[^}]*padding:/);
+});
+
+
+test('Panel empty states opt into one Overview inset while the approved default markup stays unchanged',()=>{
+  const state={eyebrow:'Source',title:'No records',description:'Review the canonical source.'};
+  assert.doesNotMatch(render(DashboardEmptyState,state),/data-ams-empty-inset/);
+  const inset=render(DashboardEmptyState,{...state,inset:true});
+  assert.match(inset,/<div class="min-w-0 p-4" data-ams-empty-inset="true"><div class="ams-dashboard-empty/);
+  assert.equal((inset.match(/data-ams-empty-inset/g)||[]).length,1);
+  for(const html of [render(ClientDirectoryRegister,{...props,records:[]}),render(ClientSourceWorkspace,{worksheet:'history'}),render(ClientOnboardingChecklistBoundary,{}),render(ClientOnboardingWorkspace,{worksheet:'required-documents',clients:[],loading:false,unavailable:false,onInspect:noop,onRetry:noop})]){
+    assert.equal((html.match(/data-ams-empty-inset/g)||[]).length,1,'The owning panel supplies one shared inset per visible state.');
+    assert.match(html,/ams-dashboard-empty--compact/);
+  }
 });

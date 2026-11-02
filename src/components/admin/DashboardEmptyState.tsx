@@ -9,6 +9,8 @@ export type DashboardEmptyStateProps = {
   icon?: React.ReactNode;
   action?: React.ReactNode;
   compact?: boolean;
+  /** Overview panel-body inset; omit when the parent already supplies p-4. */
+  inset?: boolean;
   tone?: 'neutral' | 'success';
 };
 
@@ -19,8 +21,10 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = ({
   icon = <FileText size={17} aria-hidden="true" />,
   action,
   compact = true,
+  inset = false,
   tone = 'neutral'
-}) => (
+}) => {
+  const state = (
   <div className={[
     'ams-dashboard-empty',
     compact ? 'ams-dashboard-empty--compact' : '',
@@ -34,5 +38,7 @@ export const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = ({
       {action ? <div className="ams-dashboard-empty__action">{action}</div> : null}
     </div>
   </div>
-);
+  );
+  return inset ? <div className="min-w-0 p-4" data-ams-empty-inset>{state}</div> : state;
+};
 

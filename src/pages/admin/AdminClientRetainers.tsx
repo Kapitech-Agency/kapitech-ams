@@ -320,7 +320,7 @@ export const AdminClientRetainers: React.FC = () => {
   };
 
 
-  const retainerEmpty = <DashboardEmptyState eyebrow={!sourceAvailable ? 'Source unavailable' : 'Service commitments'} title={!sourceAvailable ? 'Retainer source unavailable' : records.length ? 'No matching retainers' : 'No active retainer agreements'} description={!sourceAvailable ? 'Reload the client source before reviewing saved retainer terms or totals.' : records.length ? 'Adjust the search, cycle, tier or usage filter.' : 'Create a retainer against an existing canonical client account.'} icon={<CalendarDays size={17} />} action={<DashboardControl variant="quiet" onClick={!sourceAvailable ? () => setLoadRevision(value => value + 1) : records.length ? reset : () => openRetainerForm()} disabled={sourceAvailable && !records.length && !canManageRetainers}>{!sourceAvailable ? 'Retry loading' : records.length ? 'Reset filters' : 'Create retainer'}</DashboardControl>} />;
+  const retainerEmpty = <DashboardEmptyState inset eyebrow={!sourceAvailable ? 'Source unavailable' : 'Service commitments'} title={!sourceAvailable ? 'Retainer source unavailable' : records.length ? 'No matching retainers' : 'No active retainer agreements'} description={!sourceAvailable ? 'Reload the client source before reviewing saved retainer terms or totals.' : records.length ? 'Adjust the search, cycle, tier or usage filter.' : 'Create a retainer against an existing canonical client account.'} icon={<CalendarDays size={17} />} action={<DashboardControl variant="quiet" onClick={!sourceAvailable ? () => setLoadRevision(value => value + 1) : records.length ? reset : () => openRetainerForm()} disabled={sourceAvailable && !records.length && !canManageRetainers}>{!sourceAvailable ? 'Retry loading' : records.length ? 'Reset filters' : 'Create retainer'}</DashboardControl>} />;
 
   return (
     <AdminPageShell featureSlug="client-retainers-module" className="ams-clients-module">
@@ -358,6 +358,7 @@ export const AdminClientRetainers: React.FC = () => {
 
       <AdminPanel slug="retainers-directory" className="ams-operational-panel ams-overview-panel" title="Retainers & Service Commitments" description="Review saved commercial terms, recorded usage and the next renewal." >
         <AdminDataTableShell embedded>
+        {!isLoading && visible.length === 0 ? retainerEmpty : (
         <div className="min-w-0">
           <div className="grid gap-3 p-3 min-[1100px]:hidden sm:p-4" data-ams-feature-slug="retainers-compact-cards" role="list" aria-label="Retainer agreement cards">
             {isLoading ? Array.from({ length: pageSize }).map((_, index) => (
@@ -366,7 +367,7 @@ export const AdminClientRetainers: React.FC = () => {
                 <div className="mt-3 h-3 w-24 animate-pulse rounded-badge bg-line" />
                 <div className="mt-4 h-8 animate-pulse rounded-control bg-line/60" />
               </div>
-            )) : visible.length ? visible.map((item) => {
+            )) : visible.map((item) => {
               const usage = getRetainerUsage(item);
               const meta = healthMeta[item.health];
               return (
@@ -408,9 +409,7 @@ export const AdminClientRetainers: React.FC = () => {
                   </div>
                 </article>
               );
-            }) : (
-              retainerEmpty
-            )}
+            })}
           </div>
           <div className="hidden min-[1100px]:block overflow-x-auto custom-scrollbar" role="region" aria-label="Scrollable retainer register" tabIndex={0}>
           <table className="w-full min-w-[1120px] border-collapse text-left"><caption className="sr-only">Saved retainer terms and recorded usage</caption>
@@ -424,7 +423,7 @@ export const AdminClientRetainers: React.FC = () => {
             </tr></thead>
             <tbody>
               {isLoading ? Array.from({ length: pageSize }).map((_, index) => <tr key={index} className="border-b border-line last:border-0">{Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="px-4 py-4"><div className="h-3 w-full max-w-28 animate-pulse rounded-badge bg-line" /></td>)}</tr>) :
-               visible.length ? visible.map((item) => {
+               visible.map((item) => {
                  const usage = getRetainerUsage(item); const meta = healthMeta[item.health];
                  return <tr key={item.id} data-ams-slug={'client-retainer-' + item.id.toLowerCase()} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
                                       <td className="px-4 py-3"><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[11px] font-semibold text-fg">{item.initials}</div><div className="min-w-0"><div className="truncate text-xs font-semibold text-fg">{item.client}</div><div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted"><span className="tabular-nums">{item.id}</span><span>•</span><span>{item.tierRecorded ? tierLabel[item.tier] : 'Tier not recorded'}</span></div></div></div></td>
@@ -440,11 +439,11 @@ export const AdminClientRetainers: React.FC = () => {
                      </>}
                    </div></td>
                  </tr>;
-               }) : <tr><td colSpan={8} className="p-0">{retainerEmpty}</td></tr>}
+               })}
             </tbody>
           </table>
           </div>
-        </div>
+        </div>)}
         {!isLoading && sourceAvailable && <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="retainers" slug="retainers-pagination" />}
               </AdminDataTableShell>
       </AdminPanel>

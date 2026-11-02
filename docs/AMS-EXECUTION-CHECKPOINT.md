@@ -1,5 +1,11 @@
 # AMS Execution Checkpoint
 
+## Clients empty-state padding correction — 2 November 2026
+
+- User requests empty-state padding aligned with Dashboard Overview. Baseline main `a09d317065934b85d39ee1b38380c4713784c3fa`, prior exact-SHA workflows green. Root cause: Clients reused the compact surface but omitted the Overview panel-body inset, leaving the surface against the card edge.
+- Add opt-in `DashboardEmptyState inset`, owning the existing 16px p-4 outer region; default rendering and compact inner geometry remain unchanged. Adopt across Clients/Client 360, Onboarding, Agreements/Renewals, Retainers and Service/Health. Contracts/Retainers render one state outside responsive table/card branches: generic td padding and table minimum widths had otherwise added extra inset/overflow. Loaded-record layout is unchanged. Source/callbacks/permissions/business rules are untouched.
+- Validation: 987 tests / 967 passed / zero failures / 20 conditional PostgreSQL skips; lint (TypeScript + inventory freshness) and production build pass. Actual AdminLayout audit compares the unchanged Overview client-delivery empty markup with Directory, Onboarding Documents/Kickoff, Contracts, Renewals, Retainers and Service/Health at 1280px and 390px: outer 16px on all sides, actual left/right offsets 16px, compact inner 13px/12px desktop and 13px/11px mobile, no document overflow and no empty state inside a table. Default Dashboard markup remains unchanged. External evidence: clients-empty-padding-corrected.png and clients-empty-padding-qa.json. Next action: refresh main, push and verify exact-SHA CI/Quality Gate. Backend/business behavior and production writes are not changed or claimed.
+
 ## Clients padding and Onboarding correction — 2 November 2026
 
 - Latest user correction: active-state padding must match Dashboard Overview; review Onboarding structure. Baseline main `f9173dd4aa70fae5f9a90b10eb47e4702f5a942e`, baseline AMS CI/Quality Gate verified green in previous delivery. Current changes are frontend presentation and account-scope routing only.

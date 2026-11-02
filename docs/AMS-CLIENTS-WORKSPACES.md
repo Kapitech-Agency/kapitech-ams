@@ -35,6 +35,8 @@ Directory order: workspace header/actions → worksheet navigation → shared di
 
 ## Shared presentation and cleanup
 
+All Clients empty/filtered-empty/unavailable/unselected states in unpadded panels/tables use `DashboardEmptyState inset`, supplying the same 16px outer body region as Overview. Contracts and Retainers render one empty region outside their responsive table/card branches, avoiding table-cell padding and minimum table widths; loaded-record geometry is preserved. Compact surface inner padding and approved Dashboard default placements are unchanged.
+
 Shared geometry stays in the existing owners: `AdminModuleHeader`, `OperationalWorkspace.css`, `AdminFilterToolbar`, `DashboardControls`, `DashboardEmptyState`, shared Drawer and form Button. Card actions use `variant="action" size="compact" className="ams-dashboard-card-action"` inside `ams-overview-panel`. No Clients stylesheet, token layer, fixture route, preview label or new component framework is added.
 
 Remove the superseded inline Directory table/card implementation, legacy Clients/Retainers `AdminFilterBar` consumers, inferred tier display, static disabled worksheet rows, unused imports/helpers, unconsumed legacy client-table CSS selector aliases and old SLA setup-card composition. Active source libraries, APIs, stores, secure document handling, forms, permission gates and compatibility routes remain.
