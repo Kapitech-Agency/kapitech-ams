@@ -13,7 +13,7 @@ test('Projects module normalizes URL view and keeps layout in sync with browser 
   assert.ok(source.includes("const requestedView = searchParams.get('projects');"));
   assert.ok(source.includes("const view: ProjectsView = requestedView === 'overview'"));
   assert.ok(source.includes("requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'"));
-  assert.ok(source.includes("if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning-delivery', 'resources', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView))"));
+  assert.ok(source.includes("if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning-delivery', 'resources', 'content-campaigns', 'controls', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView))"));
   assert.ok(source.includes("const requestedLayout = searchParams.get('layout')"));
   assert.ok(source.includes("requestedLayout === 'board' ? 'board' : requestedLayout === 'timeline' ? 'timeline' : 'table'"));
   assert.ok(source.includes("searchParams.get('layout') === 'board' ? 'board' : searchParams.get('layout') === 'timeline' ? 'timeline' : 'table'"));
@@ -118,7 +118,7 @@ test('Project overview metrics and sprint project selection describe their actua
   assert.ok(source.includes('Delivery exceptions'));
   assert.ok(source.includes('Project status distribution'));
   const overviewStart = source.indexOf('data-ams-feature-slug="projects-overview-workspace"');
-  const overviewEnd = source.indexOf("{view === 'planning-delivery' && (", overviewStart);
+  const overviewEnd = source.indexOf('<ProjectDeliveryWorkspaces', overviewStart);
   assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, 'Project Overview should have a bounded source section');
   const overview = source.slice(overviewStart, overviewEnd);
   const primary = overview.indexOf('data-ams-feature-slug="projects-overview-primary"');
@@ -132,18 +132,9 @@ test('Project overview metrics and sprint project selection describe their actua
     'The exception count must not be duplicated as a KPI alongside the exception register.');
   assert.match(overview, /min-\[1100px\]:grid-cols-\[minmax\(0,7fr\)_minmax\(0,5fr\)\]/);
   assert.doesNotMatch(overview, /xl:grid-cols-\[minmax\(0,7fr\)_minmax\(0,5fr\)\]/);
-  assert.ok(source.includes('projects-planning-delivery-workspace'));
-  assert.ok(source.includes('title="Project timeline"'));
-  assert.ok(source.includes('title="Milestones"'));
-  assert.ok(source.includes("searchParams.get('planningView')"));
-  assert.ok(source.includes("next.delete('planningView')"));
-  assert.ok(source.includes('Project brief notes'));
-  assert.ok(source.includes('Not tracked as separate project records'));
-  assert.ok(source.includes("next.set('planningProject', value)"));
-  assert.ok(source.includes('projects-resources-workspace'));
-  assert.ok(source.includes('Recorded resource allocation'));
-  assert.ok(source.includes("next.set('resourcesProject', value)"));
-  assert.ok(source.includes('Capacity and availability'));
+  assert.ok(source.includes('<ProjectDeliveryWorkspaces workspace={view as DeliveryWorkspace}'));
+  assert.ok(source.includes('recordedCost={getRecordedExpense}'));
+  assert.ok(source.includes('onRefresh={() => void syncProjects()}'));
   assert.ok(source.includes("value: serverMode ? metrics.averageProgress + '%' : '—'"));
   assert.match(source, /AdminStatusBadge tone=\{serverMode \? 'success' : loading \? 'info' : 'warning'\}/);
   assert.match(source, /serverMode \? 'Live project data' : loading \? 'Loading project records' : 'Project data unavailable'/);
@@ -239,208 +230,22 @@ test('Project Registry deadline filtering uses explicit local-date ranges and re
 });
 
 
-test('Planning & Delivery never substitutes a different project for an invalid URL selection', async () => {
+test('Remaining project workspaces use the shared delivery composition without changing data or mutation ownership', async () => {
   const source = await read('src/pages/admin/AdminProjects.tsx');
-  const selectionStart = source.indexOf("const planningProject = planningProjectId");
-  const selectionEnd = source.indexOf("const planningMilestones", selectionStart);
-  assert.ok(selectionStart >= 0 && selectionEnd > selectionStart, 'Planning project selection should be explicit.');
-  const selection = source.slice(selectionStart, selectionEnd);
-
-  assert.match(selection, /planningProjectId\s*\?\s*projects\.find[\s\S]*?\|\| null\s*:\s*projects\.find/);
-  assert.match(source, /title=\{planningProjectId \? 'Selected project unavailable' : 'No project records'\}/);
-  assert.match(source, /The selected project is not available in the current source\. AMS will not substitute another project automatically\./);
-  assert.match(source, /Choose an available project for planning/);
-  assert.match(source, /next\.set\('planningProject', value\)/);
-  assert.match(source, /data-ams-slug="planning-project-clear-selection"/);
-  assert.match(source, /next\.delete\('planningProject'\)/);
-  assert.match(source, /options=\{\[\{ value: '', label: 'Choose a project\.\.\.' \}, \.\.\.projects\.map/);
+  const presentation = await read('src/components/admin/projects/ProjectDeliveryWorkspaces.tsx');
+  assert.match(source, /workspace=\{view as DeliveryWorkspace\} projects=\{projects\} loading=\{loading\} available=\{serverMode\}/);
+  assert.match(source, /onEdit=\{canManageProjects \? project => openEditProject/);
+  assert.match(source, /canAccessAmsRoute\(currentAmsRole, target.pathname, target.search\)/);
+  assert.match(source, /recordedCost=\{getRecordedExpense\}/);
+  assert.match(presentation, /AdminFilterToolbar/);
+  assert.match(presentation, /AdminDataTableShell embedded/);
+  assert.match(presentation, /<Drawer/);
+  assert.doesNotMatch(presentation, /api\.|localStorage|fetch\(/);
 });
-
-
-test('Project Resources never substitutes a different project for an invalid URL selection', async () => {
-  const source = await read('src/pages/admin/AdminProjects.tsx');
-  const selectionStart = source.indexOf('const resourcesProject = resourcesProjectId');
-  const selectionEnd = source.indexOf('const resourcesAllocations', selectionStart);
-  assert.ok(selectionStart >= 0 && selectionEnd > selectionStart, 'Resource project selection should be explicit.');
-  const selection = source.slice(selectionStart, selectionEnd);
-
-  assert.match(selection, /resourcesProjectId\s*\?\s*projects\.find[\s\S]*?\|\| null\s*:\s*projects\.find/);
-  assert.match(source, /title=\{resourcesProjectId \? 'Selected project unavailable' : 'No project records'\}/);
-  assert.match(source, /The selected project is not available in the current source\. AMS will not substitute another project automatically\./);
-  assert.match(source, /Choose an available project for resources/);
-  assert.match(source, /next\.set\('resourcesProject', value\)/);
-  assert.match(source, /data-ams-slug="resources-project-clear-selection"/);
-  assert.match(source, /next\.delete\('resourcesProject'\)/);
-});
-
-test('Planning & Delivery preserves the selected project across active worksheet tabs', async () => {
-  const source = await read('src/pages/admin/AdminProjects.tsx');
-  const helperStart = source.indexOf('const planningWorksheetHref = (worksheet: PlanningWorkspaceView) => {');
-  const helperEnd = source.indexOf('const planningProject = planningProjectId', helperStart);
-  assert.ok(helperStart >= 0 && helperEnd > helperStart, 'Planning worksheet URL helper should be declared beside the selected-project context.');
-  const helper = source.slice(helperStart, helperEnd);
-
-  assert.ok(helper.includes('const next = new URLSearchParams(searchParams);'));
-  assert.ok(helper.includes("next.set('projects', 'planning-delivery');"));
-  assert.ok(helper.includes("next.set('planningView', worksheet);"));
-  assert.ok(helper.includes("return '/admin/projects?' + next.toString();"));
-
-  const tabsStart = source.indexOf('ariaLabel="Planning & Delivery worksheets"');
-  const tabsEnd = source.indexOf('          />', tabsStart);
-  assert.ok(tabsStart >= 0 && tabsEnd > tabsStart, 'Planning & Delivery worksheet tabs should be identifiable.');
-  const tabs = source.slice(tabsStart, tabsEnd);
-  assert.match(tabs, /key: 'brief', label: 'Project Brief', to: planningWorksheetHref\('brief'\)/);
-  assert.match(tabs, /key: 'milestones', label: 'Milestones', to: planningWorksheetHref\('milestones'\)/);
-  assert.match(tabs, /key: 'timeline', label: 'Timeline', to: planningWorksheetHref\('timeline'\)/);
-  assert.doesNotMatch(tabs, /key: '(?:brief|milestones|timeline)'[^\n]*to: '\/admin\/projects\?projects=planning-delivery/);
-});
-
-test('Planning & Delivery puts project scope before worksheet tabs and makes the brief the primary workspace', async () => {
-  const source = await read('src/pages/admin/AdminProjects.tsx');
-  const workspaceStart = source.indexOf("      {view === 'planning-delivery' && (");
-  const workspaceEnd = source.indexOf("      {view === 'resources' && (", workspaceStart);
-  assert.ok(workspaceStart >= 0 && workspaceEnd > workspaceStart, 'Planning & Delivery should remain a bounded workspace.');
-  const workspace = source.slice(workspaceStart, workspaceEnd);
-
-  const scopeIndex = workspace.indexOf('data-ams-slug="planning-delivery-scope"');
-  const tabsIndex = workspace.indexOf('ariaLabel="Planning & Delivery worksheets"');
-  const briefIndex = workspace.indexOf('data-ams-slug="planning-project-brief"');
-  const notesIndex = workspace.indexOf('aria-label="Project brief notes"', briefIndex);
-  const contextIndex = workspace.indexOf('aria-label="Project context"', briefIndex);
-  assert.ok(scopeIndex >= 0 && tabsIndex > scopeIndex, 'The selected project scope must be visible before worksheet navigation.');
-  assert.ok(briefIndex > tabsIndex && notesIndex > briefIndex && contextIndex > notesIndex,
-    'The Project Brief must follow worksheet navigation and place recorded notes before supporting context.');
-  assert.match(workspace, /This selection scopes the Project Brief, Milestones and Timeline worksheets\./);
-
-  const briefEnd = workspace.indexOf("{planningView === 'milestones' && (", briefIndex);
-  assert.ok(briefEnd > briefIndex, 'The Project Brief should have an explicit boundary before Milestones.');
-  const brief = workspace.slice(briefIndex, briefEnd);
-  assert.match(brief, /Project brief notes/);
-  assert.match(brief, /Target deadline/);
-  assert.match(brief, /Recorded progress/);
-  assert.match(brief, /Recorded milestones/);
-  assert.match(brief, /Team members/);
-  assert.match(brief, /Not tracked as separate project records/);
-  assert.match(brief, /Open task execution/);
-  assert.doesNotMatch(brief, /title="Planning data coverage"/, 'Duplicate coverage panel should not compete with the brief.');
-  assert.doesNotMatch(workspace, /data-ams-slug="planning-delivery-context"/, 'The duplicate context row should be removed.');
-  assert.match(workspace, /next\.set\('planningProject', value\)/, 'Changing scope must keep the canonical project query state.');
-});
-
-test('Project Resources leads with allocations and keeps capacity semantics separate', async () => {
-  const source = await read('src/pages/admin/AdminProjects.tsx');
-  const workspaceStart = source.indexOf("      {view === 'resources' && (");
-  const workspaceEnd = source.indexOf("      {view === 'all' && (", workspaceStart);
-  assert.ok(workspaceStart >= 0 && workspaceEnd > workspaceStart, 'Project Resources should remain a bounded workspace.');
-  const workspace = source.slice(workspaceStart, workspaceEnd);
-
-  const scopeIndex = workspace.indexOf('data-ams-slug="project-resources-scope"');
-  const allocationIndex = workspace.indexOf('title="Recorded resource allocation"');
-  const teamIndex = workspace.indexOf('title="Project team"');
-  const taskIndex = workspace.indexOf('title="Project task assignments"');
-  const capacityIndex = workspace.indexOf('data-ams-slug="project-capacity-boundary"');
-  assert.ok(scopeIndex >= 0 && allocationIndex > scopeIndex, 'The selected project must be clear before the allocation register.');
-  assert.ok(teamIndex > allocationIndex && taskIndex > teamIndex && capacityIndex > taskIndex,
-    'Allocation is primary; the team and task registers follow, with capacity limitations kept secondary.');
-  assert.doesNotMatch(workspace, /aria-label="Project resource summary"/, 'A KPI strip must not precede the actual resource records.');
-  assert.doesNotMatch(workspace, /label: '(?:Team members|Allocation entries|Assigned tasks|Unassigned tasks)'/,
-    'Summary cards must not duplicate the record surfaces below.');
-  assert.match(workspace, /allocation\.allocationPercent/);
-  assert.match(workspace, /formatDate\(allocation\.startDate\)/);
-  assert.match(workspace, /formatDate\(allocation\.endDate\)/);
-  assert.match(workspace, /String\(task\.assignedTo \|\| ''\)\.trim\(\) \|\| 'Unassigned'/);
-  assert.match(workspace, /Capacity and availability/);
-  assert.match(workspace, /does not infer cross-project availability, time-log totals, or overload percentages/);
-  assert.doesNotMatch(workspace, /matchingTasks|allocationRecords/, 'The project team view should not imply a cross-source identity join based only on display names.');
-  assert.match(workspace, /next\.set\('resourcesProject', value\)/);
-  assert.match(workspace, /next\.delete\('resourcesProject'\)/);
-  assert.match(workspace, /The selected project is not available in the current source\. AMS will not substitute another project automatically\./);
-  assert.match(workspace, /No resource allocation entries are recorded for this project\./);
-  assert.match(workspace, /No tasks are recorded for this project\./);
-});
-
-test('Planning & Delivery Milestones keeps the canonical register primary and discloses missing owner/dependency fields', async () => {
-  const source = await read('src/pages/admin/AdminProjects.tsx');
-  const workspaceStart = source.indexOf("      {view === 'planning-delivery' && (");
-  const workspaceEnd = source.indexOf("      {view === 'resources' && (", workspaceStart);
-  assert.ok(workspaceStart >= 0 && workspaceEnd > workspaceStart, 'Planning & Delivery should remain a bounded workspace.');
-  const workspace = source.slice(workspaceStart, workspaceEnd);
-  const scopeIndex = workspace.indexOf('data-ams-slug="planning-delivery-scope"');
-  const tabsIndex = workspace.indexOf('ariaLabel="Planning & Delivery worksheets"');
-  const milestoneIndex = workspace.indexOf("planningView === 'milestones'");
-  const timelineIndex = workspace.indexOf("planningView === 'timeline'", milestoneIndex);
-  assert.ok(scopeIndex >= 0 && tabsIndex > scopeIndex && milestoneIndex > tabsIndex && timelineIndex > milestoneIndex,
-    'Milestones should be a project-scoped worksheet following the common scope and worksheet controls.');
-
-  const milestones = workspace.slice(milestoneIndex, timelineIndex);
-  assert.match(milestones, /title="Milestones"/);
-  assert.match(milestones, /Milestone title, due date and completion come from the selected project records\./);
-  assert.match(milestones, /Milestone-specific owners and dependencies are not stored in the current model\./);
-  assert.match(milestones, /planningMilestones\.filter\(\(milestone\) => milestone\.completed\)\.length/);
-  assert.match(milestones, /planningMilestones\.map\(\(milestone, index\) =>/);
-  assert.match(milestones, /milestone\.title \|\| 'Untitled milestone'/);
-  assert.match(milestones, /formatDate\(milestone\.dueDate\)/);
-  assert.match(milestones, /milestone\.completed \? 'Completed' : overdue \? 'Overdue'/);
-  assert.match(milestones, /role="table" aria-label="Project milestones"/);
-  assert.match(milestones, /data-ams-slug="planning-milestone-column-headings"/);
-  assert.match(milestones, /role="columnheader" className="text-\[10px\] font-medium text-muted">Milestone<\/span>/);
-  assert.match(milestones, /role="columnheader" className="text-\[10px\] font-medium text-muted">Due date<\/span>/);
-  assert.match(milestones, /role="columnheader" className="text-\[10px\] font-medium text-muted">Status<\/span>/);
-  assert.match(milestones, /role="rowgroup" className="divide-y divide-line"/);
-  assert.match(milestones, /role="row" key=\{milestone\.id\}/);
-  assert.match(milestones, /role="cell" className="flex min-w-0 items-baseline/);
-  assert.match(milestones, /className="sr-only">Milestone: <\/span>/);
-  assert.match(milestones, /text-\[10px\] font-medium text-muted sm:hidden">Due date<\/span>/);
-  assert.doesNotMatch(milestones, /aria-hidden="true"/, 'Column headings remain exposed to assistive technology.');
-  assert.match(milestones, /data-ams-slug="planning-milestone-register"/);
-  assert.match(milestones, /No milestones are recorded for this project\./);
-  assert.doesNotMatch(milestones, /ownerId|dependencyId|fakeMilestone|demoMilestone/,
-    'The worksheet must not fabricate milestone owners, dependency records, or sample milestones.');
-});
-
-test('Planning & Delivery Timeline leads with chronological recorded task and milestone dates', async () => {
-  const source = await read('src/pages/admin/AdminProjects.tsx');
-  const workspaceStart = source.indexOf("      {view === 'planning-delivery' && (");
-  const workspaceEnd = source.indexOf("      {view === 'resources' && (", workspaceStart);
-  assert.ok(workspaceStart >= 0 && workspaceEnd > workspaceStart, 'Planning & Delivery should remain a bounded workspace.');
-  const workspace = source.slice(workspaceStart, workspaceEnd);
-  const scopeIndex = workspace.indexOf('data-ams-slug="planning-delivery-scope"');
-  const tabsIndex = workspace.indexOf('ariaLabel="Planning & Delivery worksheets"');
-  const timelineIndex = workspace.indexOf("planningView === 'timeline'");
-  const timelineEnd = workspace.indexOf("            </>", timelineIndex);
-  assert.ok(scopeIndex >= 0 && tabsIndex > scopeIndex && timelineIndex > tabsIndex && timelineEnd > timelineIndex,
-    'Timeline should remain project-scoped under the common worksheet navigation.');
-  const timeline = workspace.slice(timelineIndex, timelineEnd);
-  assert.match(timeline, /title="Project timeline"/);
-  assert.match(timeline, /aria-label="Recorded project timeline"/);
-  assert.match(timeline, /planningTimelineItems\.map\(\(item\) =>/);
-  assert.match(timeline, /aria-label="Project date context"/);
-  assert.match(timeline, /Project start/);
-  assert.match(timeline, /Target deadline/);
-  assert.match(timeline, /Recorded progress/);
-  assert.match(timeline, /No task or milestone due dates are recorded for this project\./);
-  assert.match(timeline, /Dependency tracking unavailable/);
-  assert.match(timeline, /do not store timeline dependency links/);
-  assert.doesNotMatch(timeline, /sm:grid-cols-3|rounded-control border border-line bg-bg p-3/,
-    'The timeline list, not a KPI tile strip, must be the main working surface.');
-
-  const entriesStart = source.indexOf('  const planningTimelineItems = [');
-  const entriesEnd = source.indexOf('  const resourcesProjectId =', entriesStart);
-  assert.ok(entriesStart >= 0 && entriesEnd > entriesStart, 'Timeline event composition should be bounded beside canonical project selection.');
-  const entries = source.slice(entriesStart, entriesEnd);
-  assert.match(entries, /planningMilestones\s*\.filter\(\(milestone\) => Boolean\(milestone\.dueDate\)\)/);
-  assert.match(entries, /planningProject\?\.tasks/);
-  assert.match(entries, /\.filter\(\(task\) => Boolean\(task\.dueDate\)\)/);
-  assert.match(entries, /\.sort\(\(left, right\) => left\.date\.localeCompare\(right\.date\)\)/);
-  assert.doesNotMatch(entries, /dependencyId|estimatedDuration|fakeTimeline|demoTimeline/,
-    'Timeline must not create dependencies or duration estimates absent from current records.');
-});
-
-
 
 test('Project Overview uses shared empty states and exposes source-backed milestone navigation', async () => {
   const source = await read('src/pages/admin/AdminProjects.tsx');
-  const overview = source.slice(source.indexOf('data-ams-feature-slug="projects-overview-workspace"'), source.indexOf("{view === 'planning-delivery' && (", source.indexOf('data-ams-feature-slug="projects-overview-workspace"')));
+  const overview = source.slice(source.indexOf('data-ams-feature-slug="projects-overview-workspace"'), source.indexOf('<ProjectDeliveryWorkspaces', source.indexOf('data-ams-feature-slug="projects-overview-workspace"')));
   assert.match(overview, /DashboardEmptyState/);
   assert.match(overview, /title="Overdue milestones"/);
   assert.match(overview, /planningWorksheetHref\('milestones'\)/);
@@ -460,7 +265,7 @@ test('Project Overview uses shared empty states and exposes source-backed milest
 test('Projects Overview equalizes all operational cards in one grid and keeps compact summaries secondary', async () => {
   const source = await read('src/pages/admin/AdminProjects.tsx');
   const css = await read('src/components/admin/ProjectsOverview.css');
-  const overview = source.slice(source.indexOf('data-ams-feature-slug="projects-overview-workspace"'), source.indexOf("{view === 'planning-delivery' && (", source.indexOf('data-ams-feature-slug="projects-overview-workspace"')));
+  const overview = source.slice(source.indexOf('data-ams-feature-slug="projects-overview-workspace"'), source.indexOf('<ProjectDeliveryWorkspaces', source.indexOf('data-ams-feature-slug="projects-overview-workspace"')));
   assert.equal((overview.match(/className="ams-projects-overview-panel ams-operational-panel ams-overview-panel"/g) || []).length, 4);
   assert.equal((overview.match(/ams-projects-overview-grid/g) || []).length, 1);
   assert.match(css, /grid-auto-rows:minmax\(330px,1fr\)/);

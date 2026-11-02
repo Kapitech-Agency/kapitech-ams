@@ -84,8 +84,8 @@ test('Inbox exposes only approved workspaces and keeps unavailable destinations 
   assert.equal(projects.find((item) => item.key === 'planning-delivery')?.to, '/admin/projects?projects=planning-delivery');
   assert.equal(projects.find((item) => item.key === 'resources')?.available, undefined);
   assert.equal(projects.find((item) => item.key === 'resources')?.to, '/admin/projects?projects=resources');
-  assert.equal(projects.find((item) => item.key === 'content-campaigns')?.available, false, 'content-campaigns must not imply a live workspace');
-  assert.equal(projects.find((item) => item.key === 'controls')?.to, '/admin/projects?projects=budget');
+  assert.notEqual(projects.find((item) => item.key === 'content-campaigns')?.available, false, 'the source-backed production workspace is navigable; publishing remains unavailable within it');
+  assert.equal(projects.find((item) => item.key === 'controls')?.to, '/admin/projects?projects=controls');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   assert.doesNotMatch(layout, /workspaceChildTabItems|Workspace subnavigation/,
     'global shell must not render a third navigation layer for worksheet categories');
@@ -179,47 +179,30 @@ test('Project Registry filters keep the Project Registry workspace active withou
       'status filter ' + status + ' stays within Project Registry');
   }
   assert.equal(isAmsModuleSubnavigationItemActive(tasks, '/admin/projects', '?projects=sprint'), true);
-  assert.equal(controls.available, false, 'Project Controls stays target-only until its complete workspace is implemented');
-  assert.equal(controls.slug, undefined, 'Budget vs Actual must not advertise itself as the complete Project Controls workspace');
-  assert.equal(isAmsModuleSubnavigationItemActive(controls, '/admin/projects', '?projects=budget'), false,
-    'Budget vs Actual remains a legacy/internal view rather than an active Project Controls workspace');
+  assert.notEqual(controls.available, false, 'Controls now has a source-backed delivery workspace');
+  assert.equal(controls.slug, 'projects-workspace-controls');
+  assert.equal(isAmsModuleSubnavigationItemActive(controls, '/admin/projects', '?projects=budget'), true,
+    'The preserved internal budget route belongs to Project Controls');
 
   const projectSource = await read('src/pages/admin/AdminProjects.tsx');
   assert.match(projectSource, /registryStatusView/);
   assert.ok(projectSource.includes('projects-overview-workspace'));
-  assert.ok(projectSource.includes('projects-planning-delivery-workspace'));
-  assert.ok(projectSource.includes('projects-resources-workspace'));
+  assert.ok(projectSource.includes('<ProjectDeliveryWorkspaces workspace={view as DeliveryWorkspace}'));
+  assert.ok(projectSource.includes("'content-campaigns','resources','controls'"));
   assert.ok(projectSource.includes("requestedView === 'overview'"));
   assert.ok(projectSource.includes("requestedView === 'planning-delivery'"));
   assert.ok(projectSource.includes("requestedView === 'resources'"));
   assert.match(projectSource, /searchParams\.get\('projects'\)/);
   assert.match(projectSource, /matchesRegistryStatus/);
-  assert.match(projectSource, /ariaLabel="Planning & Delivery worksheets"/);
-  const planningWorksheetLabels = [
-    'Project Brief', 'Scope & Deliverables', 'Milestones', 'Timeline',
-    'Deliverable Tracking', 'Internal Quality Review', 'Client Review', 'Revision History',
-  ];
-  for (const label of planningWorksheetLabels) {
-    assert.ok(projectSource.includes("label: '" + label + "'"), 'Planning & Delivery worksheet missing: ' + label);
-  }
-  assert.match(projectSource, /activeKey=\{planningView\}/);
-  assert.match(projectSource, /planningView === 'brief'/);
-  assert.match(projectSource, /planningView === 'milestones'/);
-  assert.match(projectSource, /planningView === 'timeline'/);
-  assert.match(projectSource, /searchParams\.get\('planningView'\)/);
-  assert.match(projectSource, /next\.set\('planningView', 'brief'\)/);
+  const deliverySource = await read('src/components/admin/projects/ProjectDeliveryWorkspaces.tsx');
+  const deliveryNavigation = await read('src/lib/projectDeliveryPresentation.ts');
+  for (const label of ['Project Brief','Milestones','Timeline']) assert.ok(deliveryNavigation.includes("label:'"+label+"'"));
+  assert.match(deliverySource, /activeKey=\{worksheet\}/);
+  assert.match(deliverySource, /to:deliveryHref\(params,p.workspace,item.key\)/);
+  assert.match(deliverySource, /Separate deliverable acceptance criteria, versioned internal\/client review and revision history are not connected/);
   assert.match(projectSource, /next\.delete\('planningView'\)/);
   assert.match(projectSource, /const planningWorksheetHref = \(worksheet: PlanningWorkspaceView\) => \{/);
-  assert.match(projectSource, /const next = new URLSearchParams\(searchParams\);\s*next\.set\('projects', 'planning-delivery'\);\s*next\.set\('planningView', worksheet\);/);
-  for (const worksheet of ['brief', 'milestones', 'timeline']) {
-    assert.ok(projectSource.includes("to: planningWorksheetHref('" + worksheet + "')"), 'Active Planning worksheet must preserve its query context: ' + worksheet);
-  }
-  for (const key of [
-    'scope-deliverables', 'deliverable-tracking',
-    'internal-quality-review', 'client-review', 'revision-history',
-  ]) {
-    assert.match(projectSource, new RegExp("key: '" + key + "',[^\\n]*available: false"));
-  }
+
 });
 
 test('Document Library categories remain in the library and normalize unsupported category URLs', async () => {

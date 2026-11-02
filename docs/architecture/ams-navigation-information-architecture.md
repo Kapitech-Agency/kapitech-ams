@@ -64,6 +64,8 @@ Notification targets route to the owning record/module using existing authorizat
 
 ### 3.3 Projects
 
+**2 November 2026 frontend implementation:** all seven workspace entries are navigable for existing permitted roles. The four remaining workspaces use the scoped worksheet routes in [Projects Delivery Workspaces](../AMS-PROJECT-DELIVERY-WORKSPACES.md). Content/Controls frontend availability does not imply campaign publishing/metrics, persisted risks/changes, global capacity or closure acceptance exist; those views show their actual source boundaries. The legacy internal budget route remains compatible under Controls. Target ownership below remains unchanged.
+
 Projects has seven workspaces:
 1. **Overview** — source-backed portfolio context and exceptions; it must not duplicate the full registry.
 2. **Project Registry** — one canonical project register. Planning, Active, On Hold, Completed and Archived are filters/saved views, not separate workspaces.

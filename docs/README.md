@@ -52,6 +52,8 @@ Finance has five approved areas: **Overview & Control, Transactions & Cash, Rece
 
 ## 3. Visual, UX/UI, and content implementation
 
+Current source-backed Planning & Delivery, Content & Campaigns, Project Resources and Project Controls composition/route/availability contracts are in [Projects Delivery Workspaces](AMS-PROJECT-DELIVERY-WORKSPACES.md). Frontend navigation availability does not imply campaign publishing, capacity, risk or acceptance backends exist.
+
 The current end-to-end component catalogue, usage/cleanup rules and nine-module adoption matrix are in [AMS Shared UI System](AMS-SHARED-UI-SYSTEM.md). The approved Dashboard Overview is the visual reference. Review the generated [actual-consumer inventory](ui/shared-ui-inventory.json); regenerate it with `npm run ui:audit`, and verify it with `npm run ui:check` (also part of lint). Static reachability is not proof of visual/persistence acceptance. Historical component references and screenshots remain dated evidence, not permission to restore removed legacy UI.
 
 | Document | Use it for |

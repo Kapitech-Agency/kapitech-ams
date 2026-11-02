@@ -782,7 +782,7 @@ test('Inbox uses the message reader as the primary workspace without a redundant
 test('Projects Overview summary follows canonical responsive breakpoints', async () => {
   const projects = await read('src/pages/admin/AdminProjects.tsx');
   const overviewStart = projects.indexOf('data-ams-feature-slug="projects-overview-workspace"');
-  const overviewEnd = projects.indexOf("{view === 'planning-delivery' && (", overviewStart);
+  const overviewEnd = projects.indexOf('<ProjectDeliveryWorkspaces', overviewStart);
   assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, 'The Project Overview workspace should be identifiable');
   const overview = projects.slice(overviewStart, overviewEnd);
   assert.ok(overview.includes('className="ams-projects-overview-summary grid gap-3 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3" data-ams-feature-slug="projects-overview-supporting-metrics" aria-label="Project delivery summary"'),

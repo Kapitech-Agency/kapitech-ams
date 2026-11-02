@@ -6,11 +6,11 @@
     "Import reachability is conservative and does not prove each export/selector is used. Never auto-delete based on this report."
   ],
   "summary": {
-    "sourceFiles": 111,
-    "reachableFiles": 108,
-    "componentFiles": 38,
+    "sourceFiles": 114,
+    "reachableFiles": 111,
+    "componentFiles": 39,
     "sharedComponentFiles": 18,
-    "cssBytes": 509227
+    "cssBytes": 514069
   },
   "unresolvedDynamicImports": [],
   "unreachable": [
@@ -30,6 +30,7 @@
       "consumers": [
         "src/components/admin/TasksWorkspace.tsx",
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
+        "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/pages/admin/AdminProjects.tsx"
       ]
     },
@@ -61,6 +62,7 @@
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
         "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/components/admin/projects/ProjectRegistryRecords.tsx",
         "src/components/admin/tasks/TaskExecutionViews.tsx",
         "src/pages/admin/AdminClientRetainers.tsx",
@@ -172,6 +174,7 @@
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
         "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/components/admin/projects/ProjectRegistryRecords.tsx",
         "src/components/admin/tasks/TaskExecutionViews.tsx",
         "src/pages/admin/AdminInbox.tsx",
@@ -191,6 +194,7 @@
         "src/components/admin/inbox/InboxFollowUps.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
         "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/components/admin/projects/ProjectRegistryRecords.tsx",
         "src/components/admin/tasks/TaskExecutionViews.tsx",
         "src/pages/admin/AdminProjects.tsx"
@@ -299,6 +303,7 @@
       ],
       "consumers": [
         "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/components/admin/projects/ProjectRegistryRecords.tsx",
         "src/components/admin/tasks/TaskExecutionViews.tsx",
         "src/pages/admin/AdminClients.tsx",
@@ -310,6 +315,18 @@
         "src/pages/admin/AdminTeams.tsx",
         "src/pages/admin/AdminTimeLogs.tsx",
         "src/pages/admin/AdminVendors.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "DeliveryRegister",
+        "ProjectDeliveryWorkspaces"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminProjects.tsx"
       ]
     },
     {
@@ -522,6 +539,7 @@
         "src/components/admin/TasksWorkspace.tsx",
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
+        "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/components/admin/tasks/TaskExecutionViews.tsx",
         "src/components/ui/CustomReportPeriodPicker.tsx",
         "src/pages/admin/AdminClientRetainers.tsx",
@@ -557,6 +575,7 @@
         "src/components/admin/TasksWorkspace.tsx",
         "src/components/admin/UserProfileSettingsModal.tsx",
         "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/components/admin/projects/ProjectDeliveryWorkspaces.tsx",
         "src/pages/admin/AdminClientRetainers.tsx",
         "src/pages/admin/AdminClients.tsx",
         "src/pages/admin/AdminCmsCareers.tsx",
@@ -722,6 +741,13 @@
       "reachable": true,
       "bytes": 1975,
       "rules": 9,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/projects/ProjectDeliveryWorkspaces.css",
+      "reachable": true,
+      "bytes": 4842,
+      "rules": 54,
       "exactDuplicateRules": 0
     },
     {
@@ -1289,21 +1315,21 @@
         "AdminMetricStrip": 2,
         "AdminModuleHeader": 1,
         "AdminPageShell": 1,
-        "AdminPanel": 21,
-        "AdminSectionTabs": 2,
+        "AdminPanel": 9,
+        "AdminSectionTabs": 1,
         "AdminStatusBadge": 1,
         "AdminTablePagination": 3,
-        "ArrowUpRight": 7,
+        "ArrowUpRight": 6,
         "BarChart3": 3,
-        "Briefcase": 3,
-        "Button": 23,
+        "Briefcase": 4,
+        "Button": 19,
         "CalendarDays": 4,
         "CheckCircle2": 4,
         "CircleDollarSign": 2,
         "Clock": 1,
         "Code2": 1,
-        "CustomSelect": 21,
-        "DashboardControl": 8,
+        "CustomSelect": 17,
+        "DashboardControl": 10,
         "DashboardEmptyState": 9,
         "DashboardFilterGroup": 1,
         "Download": 2,
@@ -1316,11 +1342,12 @@
         "MoreHorizontal": 1,
         "Plus": 6,
         "ProfileIdentity": 3,
+        "ProjectDeliveryWorkspaces": 1,
         "ProjectRegistryCard": 1,
         "ProjectRegistryRecords": 3,
         "ProjectTimeline": 1,
         "React.Fragment": 2,
-        "RefreshCw": 1,
+        "RefreshCw": 2,
         "Search": 1,
         "ShieldAlert": 1,
         "SlidersHorizontal": 1,

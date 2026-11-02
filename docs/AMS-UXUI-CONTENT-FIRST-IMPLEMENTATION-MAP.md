@@ -1,5 +1,7 @@
 # AMS Content-First UX/UI Implementation Map
 
+> **2 November 2026 current Projects update:** Planning & Delivery, Content & Campaigns, Project Resources and Project Controls have a shared, source-backed frontend composition across fourteen worksheets. This supersedes the historical notes below that keep the entire Content/Controls workspace entry disabled. Missing campaign/review/risk/capacity/closure sources remain explicitly unavailable inside the new workspaces. See [current workspace contract](AMS-PROJECT-DELIVERY-WORKSPACES.md) and [execution checkpoint](AMS-EXECUTION-CHECKPOINT.md); historical source/CI notes are retained as dated evidence.
+
 Historical baseline date: 17 October 2026  
 Roadmap cross-reference updated: 25 October 2026 (Dashboard identity/link slice verified; prior entries remain historical)
 

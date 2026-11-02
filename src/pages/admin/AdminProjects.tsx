@@ -43,6 +43,8 @@ import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { AdminFilterToolbar, AdminFilterField } from '../../components/admin/AdminFilterToolbar';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { ProjectDeliveryWorkspaces } from '../../components/admin/projects/ProjectDeliveryWorkspaces';
+import type { DeliveryWorkspace } from '../../lib/projectDeliveryPresentation';
 import { getProjectsDefaultView } from '../../lib/projectsWorkspaceNavigation';
 import { ProjectRegistryRecords, ProjectRegistryCard } from '../../components/admin/projects/ProjectRegistryRecords';
 import '../../components/admin/projects/ProjectRegistry.css';
@@ -62,7 +64,7 @@ type ProjectRecord = AgencyProject & {
   slug: string;
 };
 
-type ProjectsView = 'overview' | 'all' | 'sprint' | 'budget' | 'archived' | 'planning-delivery' | 'resources';
+type ProjectsView = 'overview' | 'all' | 'sprint' | 'budget' | 'archived' | 'planning-delivery' | 'resources' | 'content-campaigns' | 'controls';
 type PlanningWorkspaceView = 'brief' | 'milestones' | 'timeline';
 type ProjectLayout = 'board' | 'table' | 'timeline';
 
@@ -513,8 +515,8 @@ export const AdminProjects: React.FC = () => {
     ? 'overview'
     : requestedView === 'planning-delivery'
       ? 'planning-delivery'
-      : requestedView === 'resources'
-        ? 'resources'
+      : requestedView === 'resources' || requestedView === 'content-campaigns' || requestedView === 'controls'
+        ? requestedView
         : requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'
           ? requestedView
           : 'all';
@@ -527,67 +529,15 @@ export const AdminProjects: React.FC = () => {
   }, [registryStatusView]);
 
   const selectedProjectSlug = searchParams.get('project') || '';
-  const requestedPlanningView = searchParams.get('planningView');
-  const planningView: PlanningWorkspaceView = requestedPlanningView === 'milestones' || requestedPlanningView === 'timeline'
-    ? requestedPlanningView
-    : 'brief';
-  const planningProjectId = searchParams.get('planningProject') || '';
   const planningWorksheetHref = (worksheet: PlanningWorkspaceView) => {
     const next = new URLSearchParams(searchParams);
     next.set('projects', 'planning-delivery');
     next.set('planningView', worksheet);
     return '/admin/projects?' + next.toString();
   };
-  const planningProject = planningProjectId
-    ? projects.find((project) => project.id === planningProjectId || project.slug === planningProjectId) || null
-    : projects.find((project) => project.status !== 'completed')
-      || projects[0]
-      || null;
-  const planningMilestones = planningProject
-    ? [...planningProject.milestones].sort((left, right) =>
-        (left.dueDate || '9999-12-31').localeCompare(right.dueDate || '9999-12-31')
-      )
-    : [];
-  const planningTimelineItems = [
-    ...planningMilestones
-      .filter((milestone) => Boolean(milestone.dueDate))
-      .map((milestone) => ({
-        id: 'milestone-' + milestone.id,
-        kind: 'Milestone',
-        title: milestone.title || 'Untitled milestone',
-        date: milestone.dueDate,
-        state: milestone.completed ? 'Completed' : isOverdue(milestone.dueDate) ? 'Overdue' : 'Upcoming',
-      })),
-    ...(planningProject?.tasks || [])
-      .filter((task) => Boolean(task.dueDate))
-      .map((task) => ({
-        id: 'task-' + task.id,
-        kind: 'Task',
-        title: task.title || 'Untitled task',
-        date: task.dueDate,
-        state: task.status === 'todo' ? 'To do' : task.status === 'in_progress' ? 'In progress' : task.status === 'review' ? 'Review' : 'Done',
-      })),
-  ].sort((left, right) => left.date.localeCompare(right.date));
-  const resourcesProjectId = searchParams.get('resourcesProject') || '';
-  const resourcesProject = resourcesProjectId
-    ? projects.find((project) => project.id === resourcesProjectId || project.slug === resourcesProjectId) || null
-    : projects.find((project) => project.status !== 'completed')
-      || projects[0]
-      || null;
-  const resourcesAllocations = resourcesProject?.resourceAllocations || [];
-  const resourcesTeamNames = resourcesProject
-    ? Array.from(new Set([
-        resourcesProject.teamLead,
-        ...resourcesProject.teamMembers,
-        ...resourcesAllocations.map((allocation) => allocation.memberName),
-      ].map((name) => String(name || '').trim()).filter(Boolean)))
-    : [];
-  const resourcesTasks = resourcesProject?.tasks || [];
-  const resourcesAssignedTasks = resourcesTasks.filter((task) => Boolean(String(task.assignedTo || '').trim()));
-  const resourcesUnassignedTasks = resourcesTasks.filter((task) => !String(task.assignedTo || '').trim());
 
   React.useEffect(() => {
-    if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning-delivery', 'resources', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView)) {
+    if (requestedView && !['overview', 'all', 'sprint', 'budget', 'archived', 'planning-delivery', 'resources', 'content-campaigns', 'controls', 'planning', 'active', 'on-hold', 'completed'].includes(requestedView)) {
       const next = new URLSearchParams(searchParams);
       next.delete('projects');
       setSearchParams(next, { replace: true });
@@ -2124,7 +2074,7 @@ export const AdminProjects: React.FC = () => {
         className="mb-0"
         eyebrow={(
           <div className="flex flex-wrap items-center gap-2">
-            <span>{view === 'overview' ? 'Projects / Overview' : view === 'planning-delivery' ? 'Projects / Planning & Delivery' : view === 'resources' ? 'Projects / Project Resources' : view === 'all' || view === 'archived' ? 'Projects / Project Registry' : 'Projects'}</span>
+            <span>{view === 'overview' ? 'Projects / Overview' : view === 'planning-delivery' ? 'Projects / Planning & Delivery' : view === 'resources' ? 'Projects / Project Resources' : view === 'content-campaigns' ? 'Projects / Content & Campaigns' : view === 'controls' ? 'Projects / Project Controls' : view === 'all' || view === 'archived' ? 'Projects / Project Registry' : 'Projects'}</span>
             <AdminStatusBadge tone={serverMode ? 'success' : loading ? 'info' : 'warning'}>
               {serverMode ? 'Live project data' : loading ? 'Loading project records' : 'Project data unavailable'}
             </AdminStatusBadge>
@@ -2132,7 +2082,7 @@ export const AdminProjects: React.FC = () => {
         )}
         title={view === 'overview' ? 'Project Overview' : view === 'planning-delivery' ? 'Planning & Delivery' : view === 'resources' ? 'Project Resources' : view === 'all'
           ? 'Project Registry'
-          : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Project Registry'}
+          : view === 'content-campaigns' ? 'Content & Campaigns' : view === 'controls' ? 'Project Controls' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Project Registry'}
         description={
           view === 'overview'
             ? 'Review delivery exceptions, overdue milestones and project status across the portfolio.'
@@ -2140,6 +2090,8 @@ export const AdminProjects: React.FC = () => {
               ? 'Review the selected project brief, planned dates, recorded milestones, and delivery schedule.'
               : view === 'resources'
                 ? 'Review the selected project team, recorded allocation entries, and task assignments from canonical project records.'
+                : view === 'content-campaigns' ? 'Coordinate production work, project references and publication-source readiness.'
+                : view === 'controls' ? 'Inspect delivery exceptions, Finance-linked costs and recorded handover evidence.'
                 : view === 'all'
                 ? registryStatusView
                   ? registryStatusView === 'planning' ? 'Confirm the client, scope, ownership and milestone dates before production or development.'
@@ -2155,15 +2107,15 @@ export const AdminProjects: React.FC = () => {
         }
         actions={(
           <>
-            {(view === 'planning-delivery' || view === 'resources') && (
-              <Button variant="secondary" onClick={() => openView('all')}>Open Project Registry</Button>
+            {(['planning-delivery','resources','content-campaigns','controls'].includes(view)) && (
+              <DashboardControl variant="action" icon={<Briefcase size={14}/>} onClick={() => openView('all')}>Project Registry</DashboardControl>
             )}
-            {view !== 'overview' && view !== 'all' && view !== 'archived' && view !== 'planning-delivery' && view !== 'resources' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
+            {view !== 'overview' && view !== 'all' && view !== 'archived' && view !== 'planning-delivery' && view !== 'resources' && view !== 'content-campaigns' && view !== 'controls' && <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>}
             {view === 'overview' || view === 'all' || view === 'archived' ? <>
               {canManageProjects && <DashboardControl variant="primary" icon={<Plus size={14} />} onClick={() => openNewProject()}>New project</DashboardControl>}
               {view === 'overview' ? <DashboardControl variant="action" icon={<Briefcase size={14} />} onClick={() => openView('all')}>Project Registry</DashboardControl> : <DashboardControl variant="action" icon={<Download size={14} />} onClick={exportProjects}>Export projects</DashboardControl>}
               <DashboardControl variant="action" icon={<RefreshCw size={14} className={loading ? 'animate-spin' : ''} />} disabled={loading} onClick={() => void syncProjects()} ariaLabel={view === 'overview' ? 'Refresh project overview' : 'Refresh project registry'}>Refresh</DashboardControl>
-            </> : canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
+            </> : ['planning-delivery','resources','content-campaigns','controls'].includes(view) ? <DashboardControl variant="action" icon={<RefreshCw size={14}/>} disabled={loading} onClick={() => void syncProjects()}>Refresh</DashboardControl> : canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
           </>
         )}
       />
@@ -2319,412 +2271,12 @@ export const AdminProjects: React.FC = () => {
         </div>
       )}
 
-      {view === 'planning-delivery' && (
-        <div className="space-y-4" data-ams-feature-slug="projects-planning-delivery-workspace" data-ams-slug="projects-planning-delivery-workspace">
-          {serverMode && planningProject && (
-            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" data-ams-slug="planning-delivery-scope">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-fg">Selected project</p>
-                <p className="mt-1 text-[11px] leading-5 text-muted">This selection scopes the Project Brief, Milestones and Timeline worksheets.</p>
-              </div>
-              <div className="w-full min-w-0 sm:max-w-64">
-                <CustomSelect
-                  value={planningProject.id}
-                  onChange={(value) => {
-                    const next = new URLSearchParams(searchParams);
-                    next.set('planningProject', value);
-                    setSearchParams(next);
-                  }}
-                  options={projects.map((project) => ({ value: project.id, label: project.name }))}
-                  className="w-full"
-                  aria-label="Select project for planning"
-                />
-              </div>
-            </div>
-          )}
-          <AdminSectionTabs
-            ariaLabel="Planning & Delivery worksheets"
-            activeKey={planningView}
-            className="w-full border-b border-line pb-2"
-            items={[
-              { key: 'brief', label: 'Project Brief', to: planningWorksheetHref('brief') },
-              { key: 'scope-deliverables', label: 'Scope & Deliverables', to: '/admin/projects?projects=planning-delivery', available: false },
-              { key: 'milestones', label: 'Milestones', to: planningWorksheetHref('milestones') },
-              { key: 'timeline', label: 'Timeline', to: planningWorksheetHref('timeline') },
-              { key: 'deliverable-tracking', label: 'Deliverable Tracking', to: '/admin/projects?projects=planning-delivery', available: false },
-              { key: 'internal-quality-review', label: 'Internal Quality Review', to: '/admin/projects?projects=planning-delivery', available: false },
-              { key: 'client-review', label: 'Client Review', to: '/admin/projects?projects=planning-delivery', available: false },
-              { key: 'revision-history', label: 'Revision History', to: '/admin/projects?projects=planning-delivery', available: false },
-            ]}
-          />
-          {loading && !serverMode ? (
-            <AdminPanel title="Loading planning records" description="Retrieving the current project and milestone records.">
-              <div role="status" aria-label="Loading planning records" className="grid gap-3 p-4 sm:grid-cols-2">
-                {[1, 2, 3, 4].map((item) => <div key={item} className="h-20 animate-pulse rounded-control border border-line bg-bg" />)}
-              </div>
-            </AdminPanel>
-          ) : !serverMode ? (
-            <AdminPanel title="Planning records unavailable" description="Planning & Delivery needs live project records.">
-              <div className="p-4 text-xs leading-5 text-muted" role="status">The project service did not return verified records. No local or sample records are shown.</div>
-            </AdminPanel>
-          ) : !planningProject ? (
-            <AdminPanel
-              title={planningProjectId ? 'Selected project unavailable' : 'No project records'}
-              description={planningProjectId ? 'The project ID in this URL was not returned by the current project source.' : 'Planning & Delivery displays project details from canonical records.'}
-            >
-              <div className="space-y-3 p-5">
-                <p className="text-xs leading-5 text-muted" role="status">
-                  {planningProjectId
-                    ? 'The selected project is not available in the current source. AMS will not substitute another project automatically.'
-                    : 'No projects are available in the current source.'}
-                </p>
-                {projects.length > 0 && (
-                  <div className="w-full min-w-0 sm:max-w-80">
-                    <CustomSelect
-                      value=""
-                      onChange={(value) => {
-                        if (!value) return;
-                        const next = new URLSearchParams(searchParams);
-                        next.set('planningProject', value);
-                        setSearchParams(next);
-                      }}
-                      options={[{ value: '', label: 'Choose a project...' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
-                      className="w-full"
-                      aria-label="Choose an available project for planning"
-                    />
-                  </div>
-                )}
-                {planningProjectId && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      const next = new URLSearchParams(searchParams);
-                      next.delete('planningProject');
-                      setSearchParams(next);
-                    }}
-                    data-ams-slug="planning-project-clear-selection"
-                  >
-                    Use default project
-                  </Button>
-                )}
-              </div>
-            </AdminPanel>
-          ) : (
-            <>
-              {planningView === 'brief' && (
-                <AdminPanel
-                  title="Project brief"
-                  description="Review recorded project notes and the source-backed context for this project. Formal scope and review outcomes remain separate only when canonical records exist."
-                >
-                  <div className="grid min-w-0 gap-0 min-[1100px]:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]" data-ams-slug="planning-project-brief">
-                    <section className="min-w-0 p-4 sm:p-5" aria-label="Project brief notes">
-                      <div className="text-xs font-semibold text-fg">Project brief notes</div>
-                      {planningProject.notes ? (
-                        <p className="mt-3 whitespace-pre-wrap break-words rounded-control border border-line bg-bg p-3 text-xs leading-5 text-fg">{planningProject.notes}</p>
-                      ) : (
-                        <p className="mt-3 rounded-control border border-dashed border-line p-4 text-xs leading-5 text-muted" role="status">No project brief notes are recorded for this project.</p>
-                      )}
-                      <div className="mt-4 border-l-2 border-line pl-3" role="note" data-ams-slug="planning-brief-record-boundary">
-                        <p className="text-[11px] font-semibold text-muted">Not tracked as separate project records</p>
-                        <p className="mt-1 text-[11px] leading-5 text-muted">Scope and acceptance criteria, deliverables, internal QA outcomes, client review outcomes and revision history have no separate canonical records in the current project model. These outcomes are not inferred from notes, tasks or milestones.</p>
-                      </div>
-                      <div className="mt-4">
-                        <Button variant="secondary" icon={<ArrowUpRight size={13} />} onClick={() => goToSprint(planningProject)}>Open task execution</Button>
-                      </div>
-                    </section>
-                    <aside className="min-w-0 border-t border-line p-4 sm:p-5 min-[1100px]:border-l min-[1100px]:border-t-0" aria-label="Project context">
-                      <div className="text-xs font-semibold text-fg">Project context</div>
-                      <dl className="mt-3 divide-y divide-line">
-                        {[
-                          { label: 'Client', value: planningProject.clientCompany || 'Not linked' },
-                          { label: 'Project owner', value: planningProject.teamLead || 'Unassigned' },
-                          { label: 'Service', value: planningProject.serviceCategory || 'Not specified' },
-                          { label: 'Status', value: statusLabel(planningProject.status) },
-                          { label: 'Start date', value: formatDate(planningProject.startDate) },
-                          { label: 'Target deadline', value: formatDate(planningProject.targetEndDate) },
-                          { label: 'Recorded progress', value: planningProject.progressPercent + '%' },
-                          { label: 'Recorded milestones', value: String(planningProject.milestones.length) },
-                          { label: 'Team members', value: planningProject.teamMembers.length ? planningProject.teamMembers.join(', ') : 'No project team members recorded' },
-                        ].map((field) => (
-                          <div key={field.label} className="grid min-w-0 gap-1 py-2.5 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:gap-3">
-                            <dt className="text-[11px] font-medium text-muted">{field.label}</dt>
-                            <dd className="min-w-0 break-words text-xs font-semibold text-fg sm:text-right">{field.value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </aside>
-                  </div>
-                </AdminPanel>
-              )}
-
-              {planningView === 'milestones' && (
-                <AdminPanel
-                  title="Milestones"
-                  description="Milestone title, due date and completion come from the selected project records. Milestone-specific owners and dependencies are not stored in the current model."
-                  actions={(
-                    <span className="rounded-badge border border-line bg-bg px-2.5 py-1.5 text-[10px] font-medium tabular-nums text-muted">
-                      {planningMilestones.filter((milestone) => milestone.completed).length} of {planningMilestones.length} completed
-                    </span>
-                  )}
-                >
-                  {planningMilestones.length === 0 ? (
-                    <div className="p-5 text-xs leading-5 text-muted" role="status">No milestones are recorded for this project.</div>
-                  ) : (
-                    <div role="table" aria-label="Project milestones" className="divide-y divide-line" data-ams-slug="planning-milestone-register">
-                      <div
-                        className="hidden bg-bg px-4 py-2 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(130px,0.35fr)_auto] sm:items-center sm:gap-4"
-                        role="row"
-                        data-ams-slug="planning-milestone-column-headings"
-                      >
-                        <span role="columnheader" className="text-[10px] font-medium text-muted">Milestone</span>
-                        <span role="columnheader" className="text-[10px] font-medium text-muted">Due date</span>
-                        <span role="columnheader" className="text-[10px] font-medium text-muted">Status</span>
-                      </div>
-                      <div role="rowgroup" className="divide-y divide-line">
-                      {planningMilestones.map((milestone, index) => {
-                        const overdue = !milestone.completed && isOverdue(milestone.dueDate);
-                        return (
-                          <div role="row" key={milestone.id} className="grid min-w-0 gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(130px,0.35fr)_auto] sm:items-center sm:gap-4 sm:p-4" data-ams-slug={'planning-milestone-' + milestone.id}>
-                            <div role="cell" className="flex min-w-0 items-start gap-3">
-                              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold tabular-nums text-muted">{index + 1}</span>
-                              <span className="sr-only">Milestone: </span>
-                              <span className="min-w-0 break-words text-xs font-semibold text-fg">{milestone.title || 'Untitled milestone'}</span>
-                            </div>
-                            <div role="cell" className="flex min-w-0 items-baseline gap-1.5 pl-9 text-xs tabular-nums text-muted sm:pl-0">
-                              <span className="shrink-0 text-[10px] font-medium text-muted sm:hidden">Due date</span>
-                              <span>{formatDate(milestone.dueDate)}</span>
-                            </div>
-                            <div role="cell" className="min-w-0">
-                              <span className={'inline-flex w-fit rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (
-                              milestone.completed
-                                ? 'border-success/25 bg-success/10 text-success'
-                                : overdue
-                                  ? 'border-danger/25 bg-danger/10 text-danger'
-                                  : 'border-line bg-bg text-muted'
-                            )}>
-                                {milestone.completed ? 'Completed' : overdue ? 'Overdue' : milestone.dueDate ? 'Upcoming' : 'Date not set'}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      </div>
-                    </div>
-                  )}
-                </AdminPanel>
-              )}
-
-              {planningView === 'timeline' && (
-                <AdminPanel
-                  title="Project timeline"
-                  description="Timeline orders recorded task and milestone due dates chronologically alongside project dates. Dependency links are not tracked in the current project/task models."
-                >
-                  <div className="grid min-w-0 gap-0 min-[1100px]:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)]" data-ams-slug="planning-project-timeline">
-                    <section className="min-w-0 p-4 sm:p-5" aria-label="Recorded project timeline">
-                      <h3 className="text-xs font-semibold text-fg">Recorded timeline</h3>
-                      <p className="mt-1 text-[11px] leading-5 text-muted">Task and milestone dates are shown only when the canonical record has a due date. Entries are ordered by their recorded date.</p>
-                      {planningTimelineItems.length === 0 ? (
-                        <div className="mt-3 rounded-control border border-dashed border-line p-4 text-xs leading-5 text-muted" role="status">No task or milestone due dates are recorded for this project. Project start and target dates remain available in the project context.</div>
-                      ) : (
-                        <ol className="mt-3 ml-2 space-y-0 border-l border-line py-2">
-                          {planningTimelineItems.map((item) => (
-                            <li key={item.id} className="relative pb-5 pl-6 last:pb-0">
-                              <span className="absolute -left-[5px] top-1 h-2.5 w-2.5 rounded-full border border-line bg-panel" aria-hidden="true" />
-                              <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                                <div className="min-w-0">
-                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">{item.kind}</p>
-                                  <p className="mt-1 break-words text-xs font-semibold text-fg">{item.title}</p>
-                                  <p className="mt-1 text-[11px] text-muted">{item.state}</p>
-                                </div>
-                                <time className="shrink-0 text-xs tabular-nums text-muted" dateTime={item.date}>{formatDate(item.date)}</time>
-                              </div>
-                            </li>
-                          ))}
-                        </ol>
-                      )}
-                    </section>
-                    <aside className="min-w-0 border-t border-line p-4 sm:p-5 min-[1100px]:border-l min-[1100px]:border-t-0" aria-label="Project date context">
-                      <h3 className="text-xs font-semibold text-fg">Project date context</h3>
-                      <dl className="mt-3 divide-y divide-line">
-                        {[
-                          { label: 'Project start', value: formatDate(planningProject.startDate) },
-                          { label: 'Target deadline', value: formatDate(planningProject.targetEndDate) },
-                          { label: 'Recorded progress', value: planningProject.progressPercent + '%' },
-                          { label: 'Milestone due dates', value: String(planningMilestones.filter((milestone) => Boolean(milestone.dueDate)).length) },
-                          { label: 'Task due dates', value: String((planningProject.tasks || []).filter((task) => Boolean(task.dueDate)).length) },
-                        ].map((field) => (
-                          <div key={field.label} className="grid min-w-0 gap-1 py-2.5 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:gap-3">
-                            <dt className="text-[11px] font-medium text-muted">{field.label}</dt>
-                            <dd className="min-w-0 break-words text-xs font-semibold text-fg sm:text-right">{field.value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                      <div className="mt-4 border-l-2 border-line pl-3" role="note" data-ams-slug="planning-timeline-dependency-boundary">
-                        <p className="text-[11px] font-semibold text-muted">Dependency tracking unavailable</p>
-                        <p className="mt-1 text-[11px] leading-5 text-muted">Current project and task records do not store timeline dependency links. AMS does not infer dependency chains or estimated durations.</p>
-                      </div>
-                    </aside>
-                  </div>
-                </AdminPanel>
-              )}
-            </>
-          )}
-        </div>
-      )}
-      {view === 'resources' && (
-        <div className="space-y-4" data-ams-feature-slug="projects-resources-workspace" data-ams-slug="projects-resources-workspace">
-          {loading && !serverMode ? (
-            <AdminPanel title="Loading project resources" description="Retrieving canonical project assignments and resource allocation records.">
-              <div role="status" aria-label="Loading project resources" className="grid gap-3 p-4 sm:grid-cols-2">
-                {[1, 2, 3, 4].map((item) => <div key={item} className="h-20 animate-pulse rounded-control border border-line bg-bg" />)}
-              </div>
-            </AdminPanel>
-          ) : !serverMode ? (
-            <AdminPanel title="Project resources unavailable" description="Project Resources requires live project records.">
-              <div className="p-4 text-xs leading-5 text-muted" role="status">The project service did not return verified records. No local or sample assignments are shown.</div>
-            </AdminPanel>
-          ) : !resourcesProject ? (
-            <AdminPanel
-              title={resourcesProjectId ? 'Selected project unavailable' : 'No project records'}
-              description={resourcesProjectId ? 'The project ID in this URL was not returned by the current project source.' : 'Project Resources displays team assignments for a canonical project.'}
-            >
-              <div className="space-y-3 p-5">
-                <p className="text-xs leading-5 text-muted" role="status">
-                  {resourcesProjectId
-                    ? 'The selected project is not available in the current source. AMS will not substitute another project automatically.'
-                    : 'No projects are available in the current source.'}
-                </p>
-                {projects.length > 0 && (
-                  <div className="w-full min-w-0 sm:max-w-80">
-                    <CustomSelect
-                      value=""
-                      onChange={(value) => {
-                        if (!value) return;
-                        const next = new URLSearchParams(searchParams);
-                        next.set('resourcesProject', value);
-                        setSearchParams(next);
-                      }}
-                      options={[{ value: '', label: 'Choose a project...' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
-                      className="w-full"
-                      aria-label="Choose an available project for resources"
-                    />
-                  </div>
-                )}
-                {resourcesProjectId && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      const next = new URLSearchParams(searchParams);
-                      next.delete('resourcesProject');
-                      setSearchParams(next);
-                    }}
-                    data-ams-slug="resources-project-clear-selection"
-                  >
-                    Use default project
-                  </Button>
-                )}
-              </div>
-            </AdminPanel>
-          ) : (
-            <>
-              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" data-ams-slug="project-resources-scope">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-fg">Selected project</p>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">Review recorded allocation periods first, then the project roster and task assignments. Cross-project capacity remains in Team & Resources.</p>
-                </div>
-                <div className="w-full min-w-0 sm:max-w-64">
-                  <CustomSelect
-                    value={resourcesProject.id}
-                    onChange={(value) => {
-                      const next = new URLSearchParams(searchParams);
-                      next.set('resourcesProject', value);
-                      setSearchParams(next);
-                    }}
-                    options={projects.map((project) => ({ value: project.id, label: project.name }))}
-                    className="w-full"
-                    aria-label="Select project for resources"
-                  />
-                </div>
-              </div>
-
-              <AdminPanel title="Recorded resource allocation" description="Canonical allocation entries for the selected project. Percentages and dates are shown only when explicitly recorded.">
-                {resourcesAllocations.length === 0 ? (
-                  <div className="p-5 text-xs leading-5 text-muted" role="status">No resource allocation entries are recorded for this project.</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[420px] text-left">
-                      <thead className="bg-bg text-[10px] font-medium text-muted">
-                        <tr><th className="p-3">Person</th><th className="p-3 text-right">Allocation</th><th className="p-3">Period</th></tr>
-                      </thead>
-                      <tbody className="divide-y divide-line text-xs">
-                        {resourcesAllocations.map((allocation, index) => (
-                          <tr key={allocation.memberId + ':' + index}>
-                            <td className="p-3 font-medium text-fg">{allocation.memberName || 'Name not recorded'}</td>
-                            <td className="p-3 text-right font-semibold tabular-nums text-fg">{allocation.allocationPercent}%</td>
-                            <td className="p-3 text-[10px] leading-4 text-muted">{formatDate(allocation.startDate)} to {formatDate(allocation.endDate)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </AdminPanel>
-
-              <div className="grid min-w-0 gap-4 min-[1100px]:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]" data-ams-slug="project-resource-assignment-context">
-                <AdminPanel title="Project team" description="Membership comes from the selected project record and does not establish current staff availability.">
-                  {resourcesTeamNames.length === 0 ? (
-                    <div className="p-4 text-xs leading-5 text-muted" role="status">No project owner or team members are recorded.</div>
-                  ) : (
-                    <div className="divide-y divide-line">
-                      {resourcesTeamNames.map((name) => (
-                        <div key={name} className="flex min-w-0 items-start justify-between gap-3 p-3">
-                          <div className="min-w-0">
-                            <div className="break-words text-xs font-medium text-fg">{name}</div>
-                            <div className="mt-1 text-[10px] text-muted">{name === resourcesProject.teamLead ? 'Project owner' : 'Project team member'}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </AdminPanel>
-
-                <AdminPanel title="Project task assignments" description="A project-scoped view of canonical task records, not a separate task or capacity system.">
-                  {resourcesTasks.length === 0 ? (
-                    <div className="p-5 text-xs leading-5 text-muted" role="status">No tasks are recorded for this project.</div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[620px] text-left">
-                        <thead className="bg-bg text-[10px] font-medium text-muted">
-                          <tr><th className="p-3">Task</th><th className="p-3">Assignee</th><th className="p-3">Status</th><th className="p-3">Priority</th><th className="p-3">Due date</th></tr>
-                        </thead>
-                        <tbody className="divide-y divide-line text-xs">
-                          {[...resourcesTasks].sort((left, right) =>
-                            (left.dueDate || '9999-12-31').localeCompare(right.dueDate || '9999-12-31')
-                          ).map((task) => (
-                            <tr key={task.id}>
-                              <td className="max-w-[300px] p-3"><div className="truncate font-medium text-fg">{task.title}</div><div className="mt-1 text-[10px] text-muted">{resourcesProject.name}</div></td>
-                              <td className="p-3 text-muted">{String(task.assignedTo || '').trim() || 'Unassigned'}</td>
-                              <td className="p-3 text-muted">{task.status === 'todo' ? 'To do' : task.status === 'in_progress' ? 'In progress' : task.status === 'review' ? 'Review' : 'Done'}</td>
-                              <td className="p-3 text-muted">{task.priority}</td>
-                              <td className="p-3 whitespace-nowrap text-muted">{formatDate(task.dueDate)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </AdminPanel>
-              </div>
-
-              <aside className="flex min-w-0 flex-col gap-1 border-l-2 border-line pl-3 py-1" aria-label="Capacity and availability" data-ams-slug="project-capacity-boundary" role="note">
-                <h3 className="text-xs font-semibold text-muted">Capacity and availability</h3>
-                <p className="text-[11px] leading-5 text-muted">This project workspace does not infer cross-project availability, time-log totals, or overload percentages from assignment counts. Use the existing Team & Resources and Time Tracking sources for those records.</p>
-              </aside>
-            </>
-          )}
-        </div>
+      {(['planning-delivery','content-campaigns','resources','controls'] as string[]).includes(view) && (
+        <ProjectDeliveryWorkspaces workspace={view as DeliveryWorkspace} projects={projects} loading={loading} available={serverMode}
+          onRefresh={() => void syncProjects()} onOpen={project => openProjectDetail(project as ProjectRecord)}
+          onEdit={canManageProjects ? project => openEditProject(project as ProjectRecord) : undefined}
+          canAccess={href => { const target = new URL(href, 'https://ams.kapitech.local'); return canAccessAmsRoute(currentAmsRole, target.pathname, target.search); }} recordedCost={getRecordedExpense}
+          formatMoney={value => formatAmount(value,currency)} formatDate={formatDate} />
       )}
 
       {view === 'all' && (
