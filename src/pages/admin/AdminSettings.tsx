@@ -78,7 +78,7 @@ type SecurityStatus = {
   restoreVerifiedAt: string | null;
 };
 
-// ProductionReadinessCard remains the shared readiness contract for this inline AMS gate.
+// Readiness presentation consumes the existing server response; it never computes readiness locally.
 type ProductionReadiness = {
   productionReady: boolean;
   gates: Record<string, boolean>;

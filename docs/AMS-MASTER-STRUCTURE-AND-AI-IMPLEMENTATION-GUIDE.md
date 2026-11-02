@@ -19,6 +19,8 @@ The goal of AMS is to provide one integrated operating system for Kapitech's cre
 
 ### 1.1 Core Principles
 
+**Current shared UI preparation (2 November 2026):** [AMS Shared UI System](AMS-SHARED-UI-SYSTEM.md) specifies the existing component catalogue, ownership, interaction states, nine-module adoption matrix and evidence-based legacy cleanup. Dashboard Overview is the approved visual reference. This does not change the product taxonomy, business rules or backend requirements below; target-only features must not be represented as existing shared functionality.
+
 1. **One sidebar with nine primary modules.** Do not create a new sidebar module merely because a feature has its own workflow.
 2. **End to end, not just a collection of pages.** Every feature must account for its initial state, process, user actions, statuses, failures, exceptions, outcome, history, and cross-module impact.
 3. **One authoritative data source.** Cross-module references must point to the same record rather than copying data into independent master records.

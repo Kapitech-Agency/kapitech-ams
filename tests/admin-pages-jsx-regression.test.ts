@@ -155,7 +155,7 @@ test('Authenticated AMS pages use one canonical responsive page frame', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
 
-  assert.ok(primitives.includes("className={cn('ams-page-shell min-h-full min-w-0', className)}"));
+  assert.ok(primitives.includes("className={cn('ams-page-shell ams-ui-workspace min-h-full min-w-0', className)}"));
   assert.ok(primitives.includes('ams-workspace-navigation-group'), 'Page title and contextual tabs share one spacing group.');
   assert.ok(stylesheet.includes('.ams-shell>main>.ams-content{min-width:0;padding:0}'));
   assert.ok(stylesheet.includes('.ams-shell .ams-page-shell{display:flex;flex-direction:column;gap:24px;padding:24px 24px 32px}'));
@@ -413,20 +413,14 @@ test('Tasks workspace shows an assignee workload and risk overview linked to the
 });
 
 
-test('CRM pipeline opportunity edits use the existing persistent API and canonical open stages', () => {
-  const crm = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientLeadAccounts.tsx'), 'utf8');
-
-  assert.ok(crm.includes("const canManageCrm = fixtureMode || hasAdminPermission('canManageCrm')"));
-  assert.ok(crm.includes('api.crm.updateDeal(editingLead.id'));
-  assert.ok(crm.includes("stage: editForm.stage"));
-  assert.ok(crm.includes("value: 'new', label: 'New'"));
-  assert.ok(crm.includes("value: 'contacted', label: 'Contacted'"));
-  assert.ok(crm.includes("value: 'proposal', label: 'Proposal'"));
-  assert.ok(crm.includes("value: 'negotiation', label: 'Negotiation'"));
-  assert.ok(crm.includes('slug="lead-account-edit-drawer"'));
-  assert.ok(crm.includes('loading={savingEditLead}') && crm.includes('disabled={savingEditLead}'));
-  assert.ok(crm.includes('No server record was changed.'));
-  assert.ok(crm.includes("!['won', 'lost', 'closed_won', 'closed_lost'].includes(String(deal.stage || '').toLowerCase())"));
+test('Removed lead-account UI keeps its compatibility redirect and canonical CRM API contracts', () => {
+  const app = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+  const api = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/apiClient.ts'), 'utf8');
+  assert.match(app, /path="clients\/lead-accounts" element=\{<Navigate to="\/admin\/clients\/all-clients" replace/);
+  assert.doesNotMatch(app, /import\([^)]*AdminClientLeadAccounts/);
+  assert.ok(api.includes('updateDeal: (id: string, updates: any)'));
+  assert.ok(api.includes('convertWonDeal: (id: string)'));
+  assert.ok(api.includes('api/crm/deals/${id}/convert-to-project'));
 });
 
 
@@ -763,20 +757,13 @@ test('Client, team, vendor and time-log registers lead their supporting summarie
 });
 
 
-test('Lead pipeline uses one compact summary after the primary filtered directory', () => {
-  const leads = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientLeadAccounts.tsx'), 'utf8');
-  const filters = leads.indexOf('slug="lead-accounts-filters"');
-  const directory = leads.indexOf('data-ams-feature-slug="lead-accounts-directory"');
-  const pagination = leads.indexOf('slug="lead-accounts-pagination"');
-  const summary = leads.indexOf('data-ams-feature-slug="lead-accounts-summary"');
-  assert.ok(filters >= 0 && directory > filters);
-  assert.ok(pagination > directory && summary > pagination);
-  assert.doesNotMatch(leads, /data-ams-feature-slug="lead-accounts-kpis"/);
-  assert.doesNotMatch(leads, /const proposalCount\s*=/);
-  assert.ok(leads.includes('Open deal value:'));
-  assert.ok(leads.includes('Weighted probability:'));
-  assert.ok(leads.includes('Contract review:'));
-  assert.ok(leads.includes('Ready to sign:'));
+test('Unused legacy lead-account page is removed while the active Clients directory remains routed', () => {
+  const app = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  assert.equal(fs.existsSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientLeadAccounts.tsx')), false);
+  assert.match(app, /path="clients\/all-clients"/);
+  assert.match(clients, /AdminModuleHeader/);
+  assert.match(clients, /api\.clients\./);
 });
 
 test('Time tracking leads with the time-entry workflow and register before period summary metrics', () => {

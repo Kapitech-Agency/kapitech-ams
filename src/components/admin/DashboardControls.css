@@ -1,6 +1,6 @@
 /* Shared Dashboard control system.
    DashboardControl and DashboardFilterGroup own action, filter, and calendar control geometry. */
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace),
 .ams-shell .ams-dashboard,
 .ams-portal-root .ams-calendar-period-filter__panel,
 .ams-portal-root .ams-dashboard-activity-calendar-panel {
@@ -21,7 +21,7 @@
   --dashboard-control-selected: color-mix(in srgb, var(--text) 9%, var(--panel));
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control,
 .ams-shell .ams-dashboard .ams-dashboard-control,
 .ams-portal-root .ams-dashboard-control {
   box-sizing: border-box;
@@ -48,9 +48,9 @@
   transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control__icon,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control__icon,
 .ams-shell .ams-dashboard .ams-dashboard-control__icon,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control__trailing-icon,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control__trailing-icon,
 .ams-shell .ams-dashboard .ams-dashboard-control__trailing-icon,
 .ams-portal-root .ams-dashboard-control__icon,
 .ams-portal-root .ams-dashboard-control__trailing-icon {
@@ -61,7 +61,7 @@
   line-height: 0;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control__label,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control__label,
 .ams-shell .ams-dashboard .ams-dashboard-control__label,
 .ams-portal-root .ams-dashboard-control__label {
   min-width: 0;
@@ -69,7 +69,7 @@
   text-overflow: ellipsis;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control__count,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control__count,
 .ams-shell .ams-dashboard .ams-dashboard-control__count,
 .ams-portal-root .ams-dashboard-control__count {
   display: inline-flex;
@@ -90,9 +90,9 @@
 }
 
 /* The same neutral hover color is shared by all control variants. */
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-control:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) a.ams-dashboard-control:hover:not([aria-disabled="true"]),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) a.ams-dashboard-control:hover:not([aria-disabled="true"]),
 .ams-shell .ams-dashboard a.ams-dashboard-control:hover:not([aria-disabled="true"]),
 .ams-portal-root .ams-dashboard-control:hover:not(:disabled),
 .ams-portal-root a.ams-dashboard-control:hover:not([aria-disabled="true"]) {
@@ -103,7 +103,7 @@
   transform: none;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--primary,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--primary,
 .ams-shell .ams-dashboard .ams-dashboard-control--primary,
 .ams-portal-root .ams-dashboard-control--primary {
   border-color: var(--accent);
@@ -112,7 +112,7 @@
   font-weight: 650;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--compact,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--compact,
 .ams-shell .ams-dashboard .ams-dashboard-control--compact,
 .ams-portal-root .ams-dashboard-control--compact {
   height: var(--dashboard-control-compact-height, 32px);
@@ -121,7 +121,7 @@
   font-size: 10px;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--roomy,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--roomy,
 .ams-shell .ams-dashboard .ams-dashboard-control--roomy,
 .ams-portal-root .ams-dashboard-control--roomy {
   height: 32px;
@@ -129,11 +129,11 @@
   padding-inline: var(--dashboard-control-padding-standard-x, 12px);
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--action .ams-dashboard-control__icon,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--action .ams-dashboard-control__icon,
 .ams-shell .ams-dashboard .ams-dashboard-control--action .ams-dashboard-control__icon,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--shortcut .ams-dashboard-control__icon,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--shortcut .ams-dashboard-control__icon,
 .ams-shell .ams-dashboard .ams-dashboard-control--shortcut .ams-dashboard-control__icon,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--primary .ams-dashboard-control__icon,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--primary .ams-dashboard-control__icon,
 .ams-shell .ams-dashboard .ams-dashboard-control--primary .ams-dashboard-control__icon,
 .ams-portal-root .ams-dashboard-control--action .ams-dashboard-control__icon,
 .ams-portal-root .ams-dashboard-control--shortcut .ams-dashboard-control__icon,
@@ -148,7 +148,7 @@
   background: color-mix(in srgb, currentColor 5%, transparent);
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control:focus-visible,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control:focus-visible,
 .ams-shell .ams-dashboard .ams-dashboard-control:focus-visible,
 .ams-portal-root .ams-dashboard-control:focus-visible {
   outline: 2px solid var(--accent);
@@ -156,9 +156,9 @@
   z-index: 1;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control:disabled,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control:disabled,
 .ams-shell .ams-dashboard .ams-dashboard-control:disabled,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control[aria-disabled="true"],
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control[aria-disabled="true"],
 .ams-shell .ams-dashboard .ams-dashboard-control[aria-disabled="true"],
 .ams-portal-root .ams-dashboard-control:disabled,
 .ams-portal-root .ams-dashboard-control[aria-disabled="true"] {
@@ -168,7 +168,7 @@
   transform: none;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--filter,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--filter,
 .ams-shell .ams-dashboard .ams-dashboard-control--filter,
 .ams-portal-root .ams-dashboard-control--filter {
   box-sizing: border-box;
@@ -192,11 +192,11 @@
   transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--filter:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--filter:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-control--filter:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--filter.is-active:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--filter.is-active:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-control--filter.is-active:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--filter[aria-pressed="true"]:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--filter[aria-pressed="true"]:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-control--filter[aria-pressed="true"]:hover:not(:disabled),
 .ams-portal-root .ams-dashboard-control--filter:hover:not(:disabled),
 .ams-portal-root .ams-dashboard-control--filter.is-active:hover:not(:disabled),
@@ -208,9 +208,9 @@
   transform: none;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--filter[aria-pressed="true"],
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--filter[aria-pressed="true"],
 .ams-shell .ams-dashboard .ams-dashboard-control--filter[aria-pressed="true"],
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control--filter.is-active,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control--filter.is-active,
 .ams-shell .ams-dashboard .ams-dashboard-control--filter.is-active,
 .ams-portal-root .ams-dashboard-control--filter[aria-pressed="true"],
 .ams-portal-root .ams-dashboard-control--filter.is-active {
@@ -220,7 +220,7 @@
   font-weight: 650;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group,
 .ams-portal-root .ams-dashboard-filter-group {
   box-sizing: border-box;
@@ -240,7 +240,7 @@
   overflow: visible;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--compact,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--compact,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--compact,
 .ams-portal-root .ams-dashboard-filter-group--compact {
   min-height: var(--dashboard-control-height, 36px);
@@ -248,7 +248,7 @@
   gap: 2px;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--comfortable,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--comfortable,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--comfortable,
 .ams-portal-root .ams-dashboard-filter-group--comfortable {
   min-height: 40px;
@@ -256,8 +256,8 @@
   padding: 4px;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--comfortable .ams-dashboard-control--filter,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--comfortable .ams-dashboard-control--filter,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--comfortable .ams-dashboard-control--filter,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--comfortable .ams-dashboard-control--filter,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--comfortable .ams-dashboard-control--filter,
 .ams-portal-root .ams-dashboard-filter-group--comfortable .ams-dashboard-control--filter {
   height: 30px;
@@ -267,7 +267,7 @@
   font-size: 11px;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--grid,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--grid,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--grid,
 .ams-portal-root .ams-dashboard-filter-group--grid {
   display: grid;
@@ -279,8 +279,8 @@
   background: transparent;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control--filter,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control--filter,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control--filter,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control--filter,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control--filter,
 .ams-portal-root .ams-dashboard-filter-group--grid .ams-dashboard-control--filter {
   display: flex;
@@ -298,16 +298,16 @@
   white-space: normal;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control__label,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control__label,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control__label,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control__label,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control__label,
 .ams-portal-root .ams-dashboard-filter-group--grid .ams-dashboard-control__label {
   font-size: 10px;
   line-height: 14px;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control__metric,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control__metric,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control__metric,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group--grid .ams-dashboard-control__metric,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group--grid .ams-dashboard-control__metric,
 .ams-portal-root .ams-dashboard-filter-group--grid .ams-dashboard-control__metric {
   margin-top: auto;
@@ -362,17 +362,17 @@
 .ams-shell .ams-dashboard .ams-dashboard-page-header > div:first-child {min-width: 0; max-width: 100%}
 .ams-shell .ams-dashboard .ams-dashboard-page-header > div:last-child {width: auto; min-width: 0; max-width: 100%; justify-self: end; margin: 0}
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-header-actions .ams-dashboard-control,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-header-actions .ams-dashboard-control,
 .ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-header-shortcuts .ams-dashboard-control,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-header-shortcuts .ams-dashboard-control,
 .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-project-progress-header-actions .ams-dashboard-control,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-project-progress-header-actions .ams-dashboard-control,
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-card-header-actions .ams-dashboard-control,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-card-header-actions .ams-dashboard-control,
 .ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-control,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-overview-panel .ams-dashboard-control--action,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-overview-panel .ams-dashboard-control--action,
 .ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-activity-header-actions .ams-dashboard-control ,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-activity-header-actions .ams-dashboard-control ,
 .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control {
   height: var(--dashboard-control-height);
   min-height: var(--dashboard-control-height);
@@ -473,7 +473,7 @@
 }
 
 .ams-shell .ams-dashboard .ams-calendar-period-filter__trigger .ams-dashboard-control__label {min-width: 0; flex: 1 1 auto}
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-calendar-period-filter__trigger .ams-dashboard-control__icon,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-calendar-period-filter__trigger .ams-dashboard-control__icon,
 .ams-shell .ams-dashboard .ams-calendar-period-filter__trigger .ams-dashboard-control__icon,
 .ams-shell .ams-dashboard .ams-calendar-period-filter__trigger .ams-dashboard-control__trailing-icon {color:var(--muted)}
 
@@ -590,7 +590,7 @@
   .ams-shell .ams-dashboard .ams-calendar-period-filter {width:208px;flex-basis:208px}
 }
 @media (max-width: 599px) {
-  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control:not(.ams-dashboard-control--filter),
+  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control:not(.ams-dashboard-control--filter),
   .ams-shell .ams-dashboard .ams-dashboard-control:not(.ams-dashboard-control--filter),
   .ams-portal-root .ams-dashboard-control:not(.ams-dashboard-control--filter) {height:40px;min-height:40px}
   .ams-shell .ams-dashboard .ams-dashboard-header-actions,
@@ -603,11 +603,11 @@
   .ams-shell .ams-dashboard .ams-calendar-period-filter {width:100%;flex:1 1 100%}
 }
 @media (prefers-reduced-motion: reduce) {
-  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control,
+  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control,
   .ams-shell .ams-dashboard .ams-dashboard-control,
-  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-control *,
+  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-control *,
   .ams-shell .ams-dashboard .ams-dashboard-control *,
-  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group *,
+  .ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group *,
   .ams-shell .ams-dashboard .ams-dashboard-filter-group *,
   .ams-portal-root .ams-dashboard-control,
   .ams-portal-root .ams-calendar-period-filter__panel *,
@@ -616,17 +616,17 @@
 
 
 /* Shared geometry contract: dimensions and padding follow semantic control size. */
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
 .ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-header-shortcuts .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-header-shortcuts .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
 .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-project-progress-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-project-progress-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-card-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-card-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
 .ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-overview-panel .ams-dashboard-control--action:not(.ams-dashboard-control--compact),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-overview-panel .ams-dashboard-control--action:not(.ams-dashboard-control--compact),
 .ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action:not(.ams-dashboard-control--compact),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-activity-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon) ,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-activity-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon) ,
 .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control:not(.ams-dashboard-control--compact):not(.ams-dashboard-control--filter):not(.ams-dashboard-control--icon) {
   box-sizing: border-box;
   height: var(--dashboard-control-height, 36px);
@@ -636,17 +636,17 @@
   border-radius: var(--dashboard-control-radius, 8px);
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-header-actions .ams-dashboard-control--compact,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-header-actions .ams-dashboard-control--compact,
 .ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control--compact,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-header-shortcuts .ams-dashboard-control--compact,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-header-shortcuts .ams-dashboard-control--compact,
 .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control--compact,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-project-progress-header-actions .ams-dashboard-control--compact,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-project-progress-header-actions .ams-dashboard-control--compact,
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control--compact,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-card-header-actions .ams-dashboard-control--compact,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-card-header-actions .ams-dashboard-control--compact,
 .ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-control--compact,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-control--compact,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-control--compact,
 .ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-control--compact,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-activity-header-actions .ams-dashboard-control--compact ,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-activity-header-actions .ams-dashboard-control--compact ,
 .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control--compact {
   box-sizing: border-box;
   height: var(--dashboard-control-compact-height, 32px);
@@ -656,8 +656,8 @@
   border-radius: var(--dashboard-control-radius, 8px);
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group .ams-dashboard-control--filter,
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-filter-group .ams-dashboard-control--filter,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group .ams-dashboard-control--filter,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-filter-group .ams-dashboard-control--filter,
 .ams-shell .ams-dashboard .ams-dashboard-filter-group .ams-dashboard-control--filter,
 .ams-portal-root .ams-dashboard-filter-group .ams-dashboard-control--filter {
   padding-inline: var(--dashboard-control-padding-filter-x, 10px);
@@ -665,19 +665,19 @@
 }
 
 /* Hover/focus colors are common to links, buttons, selects and segmented choices. */
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-header-actions .ams-dashboard-control:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-header-actions .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-control:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-header-shortcuts .ams-dashboard-control:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-header-shortcuts .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-header-shortcuts .ams-dashboard-control:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-project-progress-header-actions .ams-dashboard-control:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-project-progress-header-actions .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-project-progress-header-actions .ams-dashboard-control:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-card-header-actions .ams-dashboard-control:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-card-header-actions .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-card-header-actions .ams-dashboard-control:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-overview-panel .ams-dashboard-control--action:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-overview-panel .ams-dashboard-control--action:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-activity-header-actions .ams-dashboard-control:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-activity-header-actions .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-control:hover:not(:disabled),
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-dashboard-toolbar .ams-dashboard-control:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-dashboard-toolbar .ams-dashboard-control:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-dashboard-toolbar .ams-dashboard-control:hover:not(:disabled),
 .ams-portal-root .ams-calendar-period-filter__panel .ams-dashboard-control:hover:not(:disabled),
 .ams-portal-root .ams-dashboard-activity-calendar-panel .ams-dashboard-control:hover:not(:disabled),
@@ -691,7 +691,7 @@
 
 
 /* Dashboard card-action baseline: Project registry is the visual reference. */
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action,
 .ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action,
 .ams-portal-root .ams-dashboard-control--action.ams-dashboard-card-action {
   box-sizing: border-box;
@@ -718,7 +718,7 @@
   transform: none;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action:hover:not(:disabled),
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action:hover:not(:disabled),
 .ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action:hover:not(:disabled),
 .ams-portal-root .ams-dashboard-control--action.ams-dashboard-card-action:hover:not(:disabled) {
   border-color: var(--dashboard-control-hover-border, color-mix(in srgb, var(--text) 14%, var(--line)));
@@ -728,7 +728,7 @@
   transform: none;
 }
 
-.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace) .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action:focus-visible,
+.ams-shell :is(.ams-inbox-message-redesign, .ams-projects-workspace, .ams-operational-workspace, .ams-ui-workspace) .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action:focus-visible,
 .ams-shell .ams-dashboard .ams-overview-panel .ams-dashboard-control--action.ams-dashboard-card-action:focus-visible,
 .ams-portal-root .ams-dashboard-control--action.ams-dashboard-card-action:focus-visible {
   outline: 2px solid var(--accent);

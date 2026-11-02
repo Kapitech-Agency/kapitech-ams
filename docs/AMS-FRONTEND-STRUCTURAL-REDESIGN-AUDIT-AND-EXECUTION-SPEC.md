@@ -118,6 +118,8 @@ Approved navigation is considered implemented; preserve it rather than rebuildin
 
 ### Stage 2 — Shared shell and page geometry
 
+The current implementation preparation and cleanup contract is [AMS Shared UI System](AMS-SHARED-UI-SYSTEM.md), with generated [consumer inventory](ui/shared-ui-inventory.json). The approved Dashboard Overview remains the visual reference. Reuse existing primitives, explicitly track active legacy consumers and missing extractions, and remove only proven unused/superseded UI. This refines Stage 2; it does not claim Stage 4/5 completion for every module.
+
 Verify the page gutter/header owners, location of contextual tabs, primary scroll owner, sidebar/topbar behavior, responsive geometry, focus/overlay behavior and design-system tokens. Do not patch a shared shell defect with arbitrary page-specific padding, negative margins, duplicated headers or CSS hacks. Recheck all consuming pages after shared changes.
 
 **Exit:** shared geometry works for affected route types and does not depend on local workarounds.

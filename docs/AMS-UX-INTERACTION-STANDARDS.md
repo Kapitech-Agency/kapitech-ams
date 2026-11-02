@@ -57,6 +57,8 @@ Inspect layout ownership from the outer shell to the inner component and fix the
 
 ## 4. Page hierarchy
 
+The [Shared UI System](AMS-SHARED-UI-SYSTEM.md) is mandatory for choosing components, states, migration and cleanup. AdminModuleHeader now defaults to approved workspace geometry; AdminPageShell supplies the common UI context across modules. Active legacy filters are tracked compatibility consumers, not unused code.
+
 When appropriate:
 1. Canonical page shell.
 2. One module header with title, concise description and primary actions.
@@ -71,13 +73,13 @@ Not every screen needs KPI cards. Do not leave blank metric gaps or add meaningl
 ### Dashboard typography and control scale
 
 The Dashboard uses a fixed semantic scale rather than ad-hoc heading sizes:
-- **H1 page title:** 26px / 32px, weight 650.
-- **H2 card title:** 15px / 20px, weight 650.
+- **H1 page title:** 26px / 32px, weight 650; 23px / 29px below 600px, matching the approved Overview.
+- **Approved Overview/operational H2 card title:** 14px / 19px, weight 650; preserve separately documented analytical compositions.
 - **H3 section title:** 13px / 18px, weight 650.
 - **H4 compact subsection:** 12px / 17px, weight 600.
 - **H5/H6 secondary heading:** 11px / 15px, weight 600.
 - **Body:** 12px / 18px; **supporting copy:** 11px / 16px; **metadata/field labels:** 10px / 14px.
-- Use one control geometry contract sourced from `src/components/admin/DashboardControls.css`: standard actions are 36px high with 12px horizontal padding; compact actions are 32px high with 10px horizontal padding; segmented options are 28px high with 10px horizontal padding inside a 36px bordered shell. Reuse CSS variables for padding; do not add button-specific horizontal padding values to card markup.
+- Use the full DashboardControl / DashboardFilterGroup contract: standard action 36px with symmetric 6px padding; compact action 32px with symmetric 4px padding; comfortable grouped options use the roomy 5px symmetric variant. The component owns padding and its CSS owns named dimensions/states. Older horizontal-only CSS fallback values do not override the actual approved render. Form submit/cancel controls retain Button's named form context. Do not add page-local geometry.
 - When a segmented filter sits beside a standard action, align the outer group shell and action to 36px; keep inner options compact. Use `DashboardFilterGroup` for all related options such as All / Creative / IT, not separate custom button markup.
 - Active filters are neutral, never crimson blocks. Crimson remains reserved for the primary brand action and active Dashboard view tabs. Tabs wrap within available width; they never become a horizontal scroll strip. Header actions in the same row use the same standard size and padding tokens.
 - Card-local time filters live in the card they control. Actions such as Open quotation ledger and Open Time Logs belong in the relevant empty state when the data list is empty, not as permanent actions beside the section title.

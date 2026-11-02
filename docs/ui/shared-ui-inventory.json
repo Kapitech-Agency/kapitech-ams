@@ -1,0 +1,1471 @@
+{
+  "schemaVersion": 1,
+  "entry": "src/main.tsx",
+  "limitations": [
+    "Static imports, re-exports and literal dynamic imports; not authenticated role/persistence or visual acceptance evidence.",
+    "Import reachability is conservative and does not prove each export/selector is used. Never auto-delete based on this report."
+  ],
+  "summary": {
+    "sourceFiles": 111,
+    "reachableFiles": 108,
+    "componentFiles": 38,
+    "sharedComponentFiles": 18,
+    "cssBytes": 509227
+  },
+  "unresolvedDynamicImports": [],
+  "unreachable": [
+    "src/lib/crmStore.ts",
+    "src/lib/runtimeMode.ts",
+    "src/vite-env.d.ts"
+  ],
+  "components": [
+    {
+      "file": "src/components/admin/AdminFilterToolbar.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "AdminFilterField",
+        "AdminFilterToolbar"
+      ],
+      "consumers": [
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/inbox/InboxMessageToolbar.tsx",
+        "src/pages/admin/AdminProjects.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/AdminModulePrimitives.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "AdminDataTableShell",
+        "AdminFilterBar",
+        "AdminMetricCard",
+        "AdminMetricStrip",
+        "AdminModuleHeader",
+        "AdminModuleNotice",
+        "AdminPageShell",
+        "AdminPanel",
+        "AdminSectionTabs",
+        "AdminStatusBadge",
+        "AdminTablePagination",
+        "AdminTopbarTabs",
+        "AdminWorkspaceNavigationContext",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/AmsNavigationPlaceholder.tsx",
+        "src/components/admin/GlobalExecutiveDashboard.tsx",
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/inbox/InboxFollowUps.tsx",
+        "src/components/admin/inbox/InboxMessageToolbar.tsx",
+        "src/components/admin/inbox/InboxRoutingTemplates.tsx",
+        "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/components/admin/projects/ProjectRegistryRecords.tsx",
+        "src/components/admin/tasks/TaskExecutionViews.tsx",
+        "src/pages/admin/AdminClientRetainers.tsx",
+        "src/pages/admin/AdminClientSlaMonitoring.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminCmsCareers.tsx",
+        "src/pages/admin/AdminCmsInsights.tsx",
+        "src/pages/admin/AdminCmsProjects.tsx",
+        "src/pages/admin/AdminCmsServices.tsx",
+        "src/pages/admin/AdminCmsTestimonials.tsx",
+        "src/pages/admin/AdminContracts.tsx",
+        "src/pages/admin/AdminDocuments.tsx",
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInbox.tsx",
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminLayout.tsx",
+        "src/pages/admin/AdminProjectProfitability.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminSettings.tsx",
+        "src/pages/admin/AdminTeams.tsx",
+        "src/pages/admin/AdminTimeLogs.tsx",
+        "src/pages/admin/AdminVendors.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/AdminNotificationCenter.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "AdminNotificationCenter"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminLayout.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/AdminReportingPeriodBar.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "AdminReportingPeriodBar",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminLayout.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/AmsBrandLogo.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "AmsBrandLogo",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminLayout.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/AmsNavigationPlaceholder.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "AmsNavigationPlaceholder",
+        "default"
+      ],
+      "consumers": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/AmsRoleRouteGuard.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "AmsRoleRouteGuard",
+        "default"
+      ],
+      "consumers": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/CommandPalette.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "CommandPalette",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminLayout.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/DashboardControls.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "DashboardControl",
+        "DashboardFilterGroup"
+      ],
+      "consumers": [
+        "src/components/admin/AdminFilterToolbar.tsx",
+        "src/components/admin/GlobalExecutiveDashboard.tsx",
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/inbox/InboxFollowUps.tsx",
+        "src/components/admin/inbox/InboxMessageToolbar.tsx",
+        "src/components/admin/inbox/InboxRoutingTemplates.tsx",
+        "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/components/admin/projects/ProjectRegistryRecords.tsx",
+        "src/components/admin/tasks/TaskExecutionViews.tsx",
+        "src/pages/admin/AdminInbox.tsx",
+        "src/pages/admin/AdminProjects.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/DashboardEmptyState.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "DashboardEmptyState"
+      ],
+      "consumers": [
+        "src/components/admin/GlobalExecutiveDashboard.tsx",
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/inbox/InboxFollowUps.tsx",
+        "src/components/admin/inbox/InboxRoutingTemplates.tsx",
+        "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/components/admin/projects/ProjectRegistryRecords.tsx",
+        "src/components/admin/tasks/TaskExecutionViews.tsx",
+        "src/pages/admin/AdminProjects.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/DynamicAdminSidebar.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "AdminSystemSettingsNavigation",
+        "DynamicAdminSidebarNavigation",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminLayout.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/GlobalExecutiveDashboard.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "GlobalExecutiveDashboard",
+        "default"
+      ],
+      "consumers": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/GlobalTimerControl.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "GlobalTimerControl",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminLayout.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/inbox/CannedResponsesModal.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "CannedResponsesModal"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminInbox.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/inbox/InboxFollowUps.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "InboxFollowUps"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminInbox.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/inbox/InboxMessageToolbar.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "InboxMessageNavigation",
+        "InboxMessageToolbar"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminInbox.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/inbox/InboxRoutingTemplates.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "InboxRoutingTemplates"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminInbox.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/inbox/MessageWorkspace.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "MessageWorkspace"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminInbox.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/ProfileIdentity.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "ProfileIdentity",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/projects/ProjectRegistryRecords.tsx",
+        "src/components/admin/tasks/TaskExecutionViews.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminCmsTestimonials.tsx",
+        "src/pages/admin/AdminDocuments.tsx",
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminLayout.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminTeams.tsx",
+        "src/pages/admin/AdminTimeLogs.tsx",
+        "src/pages/admin/AdminVendors.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/projects/ProjectRegistryRecords.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "ProjectRegistryCard",
+        "ProjectRegistryRecords"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminProjects.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/RequireAdminAuth.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "RequireAdminAuth",
+        "default"
+      ],
+      "consumers": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/RequireModuleAccess.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "RequireModuleAccess",
+        "default"
+      ],
+      "consumers": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/tasks/TaskExecutionViews.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "TaskBlockedWork",
+        "TaskExecutionCard",
+        "TaskExecutionList",
+        "TaskProjectQueues"
+      ],
+      "consumers": [
+        "src/components/admin/TasksWorkspace.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/TasksWorkspace.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "TasksWorkspace",
+        "default"
+      ],
+      "consumers": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/UserAvatar.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "UserAvatar",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/ProfileIdentity.tsx",
+        "src/components/admin/UserProfileSettingsModal.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/UserProfileSettingsModal.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "UserProfileSettingsModal",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminLayout.tsx"
+      ]
+    },
+    {
+      "file": "src/components/charts/DashboardCharts.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "BarChart",
+        "DonutChart",
+        "TrendChart"
+      ],
+      "consumers": [
+        "src/components/admin/GlobalExecutiveDashboard.tsx"
+      ]
+    },
+    {
+      "file": "src/components/EmailForwardingGuideModal.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "EmailForwardingGuideModal"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminInbox.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/Button.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "Button",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/AdminNotificationCenter.tsx",
+        "src/components/admin/AdminReportingPeriodBar.tsx",
+        "src/components/admin/CommandPalette.tsx",
+        "src/components/admin/GlobalTimerControl.tsx",
+        "src/components/admin/ProfileIdentity.tsx",
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/UserProfileSettingsModal.tsx",
+        "src/components/ui/ConfirmDialog.tsx",
+        "src/components/ui/Drawer.tsx",
+        "src/components/ui/Modal.tsx",
+        "src/pages/admin/AdminClientRetainers.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminCmsCareers.tsx",
+        "src/pages/admin/AdminCmsInsights.tsx",
+        "src/pages/admin/AdminCmsProjects.tsx",
+        "src/pages/admin/AdminCmsServices.tsx",
+        "src/pages/admin/AdminCmsTestimonials.tsx",
+        "src/pages/admin/AdminContracts.tsx",
+        "src/pages/admin/AdminDocuments.tsx",
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminLayout.tsx",
+        "src/pages/admin/AdminLogin.tsx",
+        "src/pages/admin/AdminProjectProfitability.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminSettings.tsx",
+        "src/pages/admin/AdminTeams.tsx",
+        "src/pages/admin/AdminTimeLogs.tsx",
+        "src/pages/admin/AdminVendors.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/ConfirmDialog.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "ConfirmDialog",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminCmsCareers.tsx",
+        "src/pages/admin/AdminCmsInsights.tsx",
+        "src/pages/admin/AdminCmsProjects.tsx",
+        "src/pages/admin/AdminCmsServices.tsx",
+        "src/pages/admin/AdminCmsTestimonials.tsx",
+        "src/pages/admin/AdminContracts.tsx",
+        "src/pages/admin/AdminDocuments.tsx",
+        "src/pages/admin/AdminTeams.tsx",
+        "src/pages/admin/AdminTimeLogs.tsx",
+        "src/pages/admin/AdminVendors.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/CustomDatePicker.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "CustomDatePicker",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInvoicing.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/CustomReportPeriodPicker.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "CustomReportPeriodPicker",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/AdminReportingPeriodBar.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/CustomSelect.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "CustomSelect",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/AdminModulePrimitives.tsx",
+        "src/components/admin/GlobalExecutiveDashboard.tsx",
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/inbox/InboxMessageToolbar.tsx",
+        "src/components/admin/inbox/InboxRoutingTemplates.tsx",
+        "src/components/admin/tasks/TaskExecutionViews.tsx",
+        "src/components/ui/CustomReportPeriodPicker.tsx",
+        "src/pages/admin/AdminClientRetainers.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminCmsCareers.tsx",
+        "src/pages/admin/AdminCmsInsights.tsx",
+        "src/pages/admin/AdminCmsProjects.tsx",
+        "src/pages/admin/AdminCmsServices.tsx",
+        "src/pages/admin/AdminCmsTestimonials.tsx",
+        "src/pages/admin/AdminContracts.tsx",
+        "src/pages/admin/AdminDocuments.tsx",
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInbox.tsx",
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminSettings.tsx",
+        "src/pages/admin/AdminTeams.tsx",
+        "src/pages/admin/AdminTimeLogs.tsx",
+        "src/pages/admin/AdminVendors.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/Drawer.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "Drawer",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/GlobalTimerControl.tsx",
+        "src/components/admin/ProfileIdentity.tsx",
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/UserProfileSettingsModal.tsx",
+        "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/pages/admin/AdminClientRetainers.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminCmsCareers.tsx",
+        "src/pages/admin/AdminCmsInsights.tsx",
+        "src/pages/admin/AdminCmsProjects.tsx",
+        "src/pages/admin/AdminCmsServices.tsx",
+        "src/pages/admin/AdminCmsTestimonials.tsx",
+        "src/pages/admin/AdminContracts.tsx",
+        "src/pages/admin/AdminDocuments.tsx",
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminSettings.tsx",
+        "src/pages/admin/AdminTeams.tsx",
+        "src/pages/admin/AdminTimeLogs.tsx",
+        "src/pages/admin/AdminVendors.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/DropdownPortal.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "DropdownPortal",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/AdminNotificationCenter.tsx",
+        "src/components/admin/GlobalExecutiveDashboard.tsx",
+        "src/components/admin/inbox/InboxMessageToolbar.tsx",
+        "src/components/ui/CustomDatePicker.tsx",
+        "src/components/ui/CustomSelect.tsx",
+        "src/components/ui/InvoiceStatusDropdown.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/InvoiceStatusDropdown.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "InvoiceStatusDropdown",
+        "default"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminInvoicing.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/Modal.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "Modal",
+        "default"
+      ],
+      "consumers": [
+        "src/components/EmailForwardingGuideModal.tsx",
+        "src/components/admin/CommandPalette.tsx",
+        "src/components/admin/GlobalTimerControl.tsx",
+        "src/components/admin/ProfileIdentity.tsx",
+        "src/components/admin/TasksWorkspace.tsx",
+        "src/components/admin/inbox/CannedResponsesModal.tsx",
+        "src/components/ui/ConfirmDialog.tsx",
+        "src/pages/admin/AdminClients.tsx",
+        "src/pages/admin/AdminDocuments.tsx",
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInbox.tsx",
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminLayout.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminSettings.tsx",
+        "src/pages/admin/AdminTimeLogs.tsx"
+      ]
+    },
+    {
+      "file": "src/components/ui/Skeleton.tsx",
+      "kind": "shared",
+      "reachable": true,
+      "exports": [
+        "Skeleton",
+        "default"
+      ],
+      "consumers": [
+        "src/components/admin/AdminModulePrimitives.tsx",
+        "src/components/admin/AdminNotificationCenter.tsx",
+        "src/components/admin/RequireAdminAuth.tsx",
+        "src/components/admin/inbox/MessageWorkspace.tsx",
+        "src/pages/admin/AdminCmsProjects.tsx",
+        "src/pages/admin/AdminCmsServices.tsx",
+        "src/pages/admin/AdminDocuments.tsx",
+        "src/pages/admin/AdminTeams.tsx",
+        "src/pages/admin/AdminTimeLogs.tsx",
+        "src/pages/admin/AdminVendors.tsx"
+      ]
+    }
+  ],
+  "stylesheets": [
+    {
+      "file": "src/components/admin/AdminFilterToolbar.css",
+      "reachable": true,
+      "bytes": 3193,
+      "rules": 28,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/AdminModuleHeader.css",
+      "reachable": true,
+      "bytes": 1276,
+      "rules": 8,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/DashboardControls.css",
+      "reachable": true,
+      "bytes": 40977,
+      "rules": 93,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/DashboardEmptyState.css",
+      "reachable": true,
+      "bytes": 4769,
+      "rules": 16,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/GlobalExecutiveDashboard.css",
+      "reachable": true,
+      "bytes": 368734,
+      "rules": 1698,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/inbox/InboxFollowUps.css",
+      "reachable": true,
+      "bytes": 983,
+      "rules": 8,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/inbox/InboxRoutingTemplates.css",
+      "reachable": true,
+      "bytes": 4142,
+      "rules": 40,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/inbox/InboxWorkspace.css",
+      "reachable": true,
+      "bytes": 3472,
+      "rules": 14,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/inbox/MessageWorkspace.css",
+      "reachable": true,
+      "bytes": 13863,
+      "rules": 128,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/OperationalWorkspace.css",
+      "reachable": true,
+      "bytes": 1975,
+      "rules": 9,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/projects/ProjectRegistry.css",
+      "reachable": true,
+      "bytes": 5806,
+      "rules": 55,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/ProjectsOverview.css",
+      "reachable": true,
+      "bytes": 5658,
+      "rules": 43,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/components/admin/tasks/TaskExecution.css",
+      "reachable": true,
+      "bytes": 6553,
+      "rules": 60,
+      "exactDuplicateRules": 0
+    },
+    {
+      "file": "src/index.css",
+      "reachable": true,
+      "bytes": 47826,
+      "rules": 374,
+      "exactDuplicateRules": 0
+    }
+  ],
+  "workspaces": [
+    {
+      "file": "src/components/admin/GlobalExecutiveDashboard.tsx",
+      "reachable": true,
+      "components": {
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminPanel": 17,
+        "AdminStatusBadge": 5,
+        "AdminTablePagination": 1,
+        "AlertTriangle": 8,
+        "AnalyticsView": 1,
+        "ArrowUpRight": 8,
+        "CalendarDays": 11,
+        "CheckCircle2": 17,
+        "ChevronDown": 2,
+        "ChevronLeft": 1,
+        "ChevronRight": 1,
+        "CircleDollarSign": 5,
+        "Clock3": 4,
+        "Code2": 1,
+        "CustomSelect": 4,
+        "DashboardCalendarPeriodFilter": 3,
+        "DashboardControl": 47,
+        "DashboardEmptyState": 33,
+        "DashboardFilterGroup": 6,
+        "DashboardUnavailable": 17,
+        "DonutChart": 2,
+        "Download": 1,
+        "DropdownPortal": 2,
+        "Eye": 1,
+        "FileText": 7,
+        "Filter": 2,
+        "FolderKanban": 16,
+        "Link": 7,
+        "Palette": 1,
+        "PerformanceView": 1,
+        "ReceiptText": 7,
+        "RefreshCw": 6,
+        "Search": 2,
+        "TrendChart": 4,
+        "Users": 8
+      }
+    },
+    {
+      "file": "src/components/admin/TasksWorkspace.tsx",
+      "reachable": true,
+      "components": {
+        "AdminFilterField": 6,
+        "AdminFilterToolbar": 1,
+        "AdminMetricStrip": 1,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminPanel": 2,
+        "AdminSectionTabs": 1,
+        "AdminStatusBadge": 1,
+        "AdminTablePagination": 1,
+        "AlertTriangle": 2,
+        "ArrowUpRight": 1,
+        "Button": 8,
+        "CheckCircle2": 4,
+        "Clock3": 1,
+        "CustomSelect": 11,
+        "DashboardControl": 9,
+        "DashboardEmptyState": 4,
+        "Drawer": 3,
+        "FolderKanban": 3,
+        "GripVertical": 1,
+        "Modal": 1,
+        "Pencil": 1,
+        "Plus": 1,
+        "ProfileIdentity": 1,
+        "RefreshCw": 1,
+        "Tag": 2,
+        "TaskBlockedWork": 1,
+        "TaskExecutionCard": 1,
+        "TaskExecutionList": 1,
+        "TaskProjectQueues": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminClientRetainers.tsx",
+      "reachable": true,
+      "components": {
+        "AdminFilterBar": 1,
+        "AdminMetricStrip": 1,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminSectionTabs": 1,
+        "AdminStatusBadge": 1,
+        "AdminTablePagination": 1,
+        "ArrowUp": 3,
+        "ArrowUpDown": 1,
+        "Button": 5,
+        "CalendarDays": 1,
+        "Clock3": 1,
+        "CustomSelect": 5,
+        "Download": 1,
+        "Drawer": 1,
+        "Pencil": 2,
+        "Plus": 1,
+        "RotateCcw": 1,
+        "Search": 2,
+        "SortButton": 5,
+        "TriangleAlert": 1,
+        "X": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminClients.tsx",
+      "reachable": true,
+      "components": {
+        "Activity": 2,
+        "AdminFilterBar": 1,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminSectionTabs": 2,
+        "AdminTablePagination": 1,
+        "ArrowDown": 1,
+        "ArrowUp": 8,
+        "ArrowUpDown": 4,
+        "Button": 16,
+        "CalendarDays": 2,
+        "Check": 1,
+        "CheckCircle2": 2,
+        "CircleAlert": 2,
+        "CircleDashed": 2,
+        "CustomSelect": 6,
+        "Drawer": 3,
+        "ExternalLink": 3,
+        "Eye": 2,
+        "FileText": 2,
+        "Globe": 1,
+        "Link": 7,
+        "MailIcon": 1,
+        "MessageSquare": 1,
+        "Modal": 1,
+        "Pencil": 2,
+        "Phone": 1,
+        "Plus": 3,
+        "ProfileIdentity": 3,
+        "ShieldAlert": 1,
+        "Users": 3,
+        "X": 2
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminClientSlaMonitoring.tsx",
+      "reachable": true,
+      "components": {
+        "Activity": 1,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminSectionTabs": 1,
+        "AdminStatusBadge": 1,
+        "AlertTriangle": 1,
+        "ExternalLink": 1,
+        "FileText": 1,
+        "Link": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminCmsCareers.tsx",
+      "reachable": true,
+      "components": {
+        "AdminDataTableShell": 2,
+        "AdminModuleHeader": 1,
+        "AdminModuleNotice": 1,
+        "AdminPageShell": 1,
+        "AdminTablePagination": 2,
+        "Briefcase": 3,
+        "Button": 6,
+        "CheckCircle2": 2,
+        "ConfirmDialog": 2,
+        "CustomSelect": 4,
+        "Drawer": 2,
+        "ExternalLink": 5,
+        "Eye": 4,
+        "EyeOff": 2,
+        "Field": 22,
+        "FileText": 3,
+        "Pencil": 2,
+        "Plus": 2,
+        "RefreshCw": 7,
+        "Search": 2,
+        "Send": 2,
+        "ShieldAlert": 2,
+        "Skeleton": 7,
+        "Trash2": 4,
+        "Users": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminCmsInsights.tsx",
+      "reachable": true,
+      "components": {
+        "AdminDataTableShell": 1,
+        "AdminFilterBar": 1,
+        "AdminModuleHeader": 1,
+        "AdminModuleNotice": 1,
+        "AdminPageShell": 1,
+        "AdminStatusBadge": 4,
+        "AdminTablePagination": 1,
+        "ArrowDown": 1,
+        "ArrowUp": 1,
+        "ArrowUpRight": 3,
+        "BlockEditor": 1,
+        "Button": 11,
+        "ConfirmDialog": 1,
+        "CustomSelect": 14,
+        "Drawer": 1,
+        "Field": 17,
+        "FileText": 3,
+        "Globe": 4,
+        "HelpCircle": 1,
+        "InsightEditor": 1,
+        "Link": 1,
+        "Pencil": 3,
+        "Plus": 4,
+        "Search": 1,
+        "SectionTitle": 6,
+        "Trash2": 3,
+        "UploadCloud": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminCmsProjects.tsx",
+      "reachable": true,
+      "components": {
+        "AdminDataTableShell": 1,
+        "AdminFilterBar": 1,
+        "AdminModuleHeader": 1,
+        "AdminModuleNotice": 1,
+        "AdminPageShell": 1,
+        "AdminTablePagination": 1,
+        "Button": 8,
+        "ConfirmDialog": 1,
+        "CustomSelect": 2,
+        "Drawer": 1,
+        "Edit3": 2,
+        "Eye": 3,
+        "ImageIcon": 3,
+        "Plus": 1,
+        "Skeleton": 6,
+        "Star": 3,
+        "Trash2": 2,
+        "UploadCloud": 1,
+        "X": 5
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminCmsServices.tsx",
+      "reachable": true,
+      "components": {
+        "AdminDataTableShell": 1,
+        "AdminFilterBar": 1,
+        "AdminModuleHeader": 1,
+        "AdminModuleNotice": 1,
+        "AdminPageShell": 1,
+        "AdminTablePagination": 1,
+        "Button": 7,
+        "CheckCircle2": 1,
+        "Code": 1,
+        "ConfirmDialog": 1,
+        "Cpu": 1,
+        "CustomSelect": 2,
+        "Drawer": 2,
+        "Edit3": 3,
+        "ExternalLink": 3,
+        "Eye": 3,
+        "EyeOff": 1,
+        "Palette": 1,
+        "Plus": 1,
+        "Skeleton": 6,
+        "Sparkles": 1,
+        "Trash2": 1,
+        "X": 2
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminCmsTestimonials.tsx",
+      "reachable": true,
+      "components": {
+        "AdminDataTableShell": 1,
+        "AdminFilterBar": 1,
+        "AdminModuleHeader": 1,
+        "AdminModuleNotice": 1,
+        "AdminPageShell": 1,
+        "AdminTablePagination": 1,
+        "Button": 5,
+        "ConfirmDialog": 1,
+        "CustomSelect": 1,
+        "Drawer": 1,
+        "Edit3": 2,
+        "Eye": 2,
+        "EyeOff": 2,
+        "MapPin": 2,
+        "MessageSquare": 1,
+        "Plus": 2,
+        "ProfileIdentity": 1,
+        "Star": 2,
+        "Trash2": 2,
+        "X": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminContracts.tsx",
+      "reachable": true,
+      "components": {
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminSectionTabs": 1,
+        "AdminTablePagination": 1,
+        "ArrowRight": 2,
+        "Button": 24,
+        "CalendarDays": 2,
+        "ClipboardCheck": 2,
+        "ConfirmDialog": 2,
+        "CustomSelect": 6,
+        "Drawer": 2,
+        "ExternalLink": 4,
+        "Link": 2,
+        "Plus": 3,
+        "RefreshCw": 3,
+        "Search": 2,
+        "ShieldAlert": 1,
+        "Trash2": 2,
+        "X": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminDocuments.tsx",
+      "reachable": true,
+      "components": {
+        "AdminFilterBar": 1,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminPanel": 1,
+        "AdminStatusBadge": 1,
+        "AdminTablePagination": 1,
+        "Button": 11,
+        "CheckCircle2": 1,
+        "ConfirmDialog": 1,
+        "CustomSelect": 7,
+        "Download": 3,
+        "Drawer": 1,
+        "Eye": 2,
+        "FileCode2": 1,
+        "FileSpreadsheet": 1,
+        "FileText": 3,
+        "Link": 2,
+        "LockKeyhole": 4,
+        "Modal": 1,
+        "Plus": 2,
+        "ProfileIdentity": 3,
+        "RefreshCw": 2,
+        "Skeleton": 7,
+        "Trash2": 2,
+        "UploadCloud": 3,
+        "X": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminFinanceWorkspace.tsx",
+      "reachable": true,
+      "components": {
+        "AdminInvoicing": 5,
+        "AdminMetricStrip": 7,
+        "AdminModuleHeader": 2,
+        "AdminModuleNotice": 1,
+        "AdminPageShell": 2,
+        "AdminPanel": 6,
+        "AdminProjectProfitability": 1,
+        "AdminSectionTabs": 1,
+        "AdminStatusBadge": 13,
+        "AdminTablePagination": 1,
+        "AdminVendors": 1,
+        "ArrowDown": 5,
+        "ArrowUp": 2,
+        "ArrowUpDown": 1,
+        "ArrowUpRight": 5,
+        "Button": 44,
+        "CircleDollarSign": 3,
+        "CustomDatePicker": 4,
+        "CustomSelect": 9,
+        "Download": 9,
+        "Drawer": 2,
+        "FileText": 2,
+        "FinanceDataTable": 32,
+        "FinanceWorkbookWorkspace": 1,
+        "Landmark": 3,
+        "Modal": 1,
+        "Plus": 7,
+        "RefreshCw": 4,
+        "Search": 1,
+        "ShieldAlert": 5,
+        "StatusBadge": 15,
+        "Trash2": 1,
+        "WalletCards": 6,
+        "WorkbookNote": 21,
+        "X": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminInbox.tsx",
+      "reachable": true,
+      "components": {
+        "AdminInboxMessages": 1,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AlertCircle": 1,
+        "CannedResponsesModal": 1,
+        "Check": 1,
+        "CustomSelect": 3,
+        "DashboardControl": 1,
+        "EmailForwardingGuideModal": 1,
+        "ExternalLink": 1,
+        "InboxFollowUps": 1,
+        "InboxMessageNavigation": 1,
+        "InboxMessageToolbar": 1,
+        "InboxRoutingTemplates": 1,
+        "Link": 1,
+        "Mail": 1,
+        "MessageWorkspace": 1,
+        "Modal": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminInvoicing.tsx",
+      "reachable": true,
+      "components": {
+        "AdminModuleHeader": 1,
+        "AdminTablePagination": 7,
+        "AlertCircle": 5,
+        "ArrowDown": 2,
+        "BadgeCheck": 2,
+        "BarChart3": 1,
+        "Check": 4,
+        "CheckCircle2": 4,
+        "Clock3": 3,
+        "Copy": 2,
+        "CustomDatePicker": 8,
+        "CustomSelect": 33,
+        "Download": 11,
+        "Drawer": 6,
+        "Edit3": 3,
+        "EmptyState": 9,
+        "Eye": 3,
+        "FileText": 6,
+        "FinanceCashFlowChart": 2,
+        "FinanceMetricCard": 28,
+        "Hourglass": 3,
+        "InvoiceStatusDropdown": 1,
+        "Modal": 8,
+        "MoreHorizontal": 1,
+        "Plus": 9,
+        "ProfileIdentity": 4,
+        "QuotationStatusBadge": 1,
+        "Receipt": 6,
+        "RefreshCw": 5,
+        "Search": 5,
+        "Send": 3,
+        "ShieldCheck": 2,
+        "SlidersHorizontal": 1,
+        "StatusBadge": 6,
+        "Trash2": 7,
+        "TrendingUp": 4,
+        "WalletCards": 7,
+        "X": 2
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminLayout.tsx",
+      "reachable": true,
+      "components": {
+        "AdminNotificationCenter": 2,
+        "AdminReportingPeriodBar": 2,
+        "AdminSectionTabs": 1,
+        "AdminSystemSettingsNavigation": 2,
+        "AdminTopbarTabs": 1,
+        "AmsBrandLogo": 3,
+        "Button": 6,
+        "CommandPalette": 1,
+        "DynamicAdminSidebarNavigation": 2,
+        "GlobalTimerControl": 2,
+        "Link": 2,
+        "LogOut": 2,
+        "Menu": 1,
+        "Modal": 1,
+        "Moon": 2,
+        "Outlet": 1,
+        "ProfileIdentity": 2,
+        "ReportingPeriodProvider": 1,
+        "Search": 2,
+        "Sun": 2,
+        "UserProfileSettingsModal": 1,
+        "X": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminLogin.tsx",
+      "reachable": true,
+      "components": {
+        "AlertCircle": 1,
+        "ArrowLeft": 2,
+        "ArrowRight": 3,
+        "Button": 3,
+        "Eye": 1,
+        "EyeOff": 1,
+        "KeyRound": 1,
+        "Mail": 1,
+        "ShieldCheck": 2
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminProjectProfitability.tsx",
+      "reachable": true,
+      "components": {
+        "AdminModuleHeader": 1,
+        "AdminModuleNotice": 1,
+        "AdminPageShell": 1,
+        "AlertCircle": 1,
+        "Button": 1,
+        "RefreshCw": 1,
+        "Search": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminProjects.tsx",
+      "reachable": true,
+      "components": {
+        "AdminFilterField": 7,
+        "AdminFilterToolbar": 2,
+        "AdminMetricStrip": 2,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminPanel": 21,
+        "AdminSectionTabs": 2,
+        "AdminStatusBadge": 1,
+        "AdminTablePagination": 3,
+        "ArrowUpRight": 7,
+        "BarChart3": 3,
+        "Briefcase": 3,
+        "Button": 23,
+        "CalendarDays": 4,
+        "CheckCircle2": 4,
+        "CircleDollarSign": 2,
+        "Clock": 1,
+        "Code2": 1,
+        "CustomSelect": 21,
+        "DashboardControl": 8,
+        "DashboardEmptyState": 9,
+        "DashboardFilterGroup": 1,
+        "Download": 2,
+        "Drawer": 4,
+        "ExternalLink": 4,
+        "FolderKanban": 2,
+        "GripVertical": 2,
+        "Link": 2,
+        "Modal": 2,
+        "MoreHorizontal": 1,
+        "Plus": 6,
+        "ProfileIdentity": 3,
+        "ProjectRegistryCard": 1,
+        "ProjectRegistryRecords": 3,
+        "ProjectTimeline": 1,
+        "React.Fragment": 2,
+        "RefreshCw": 1,
+        "Search": 1,
+        "ShieldAlert": 1,
+        "SlidersHorizontal": 1,
+        "Trash2": 2,
+        "Users": 2,
+        "X": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminSettings.tsx",
+      "reachable": true,
+      "components": {
+        "Activity": 5,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminSectionTabs": 1,
+        "AdminTablePagination": 2,
+        "AlertCircle": 6,
+        "Button": 22,
+        "Check": 4,
+        "CheckCircle2": 2,
+        "Clock3": 3,
+        "Copy": 3,
+        "CustomSelect": 6,
+        "Database": 3,
+        "Download": 2,
+        "Drawer": 2,
+        "FileCheck2": 2,
+        "KeyRound": 1,
+        "Layers": 1,
+        "Lock": 1,
+        "Modal": 1,
+        "Palette": 1,
+        "RoleIcon": 1,
+        "Save": 2,
+        "Search": 2,
+        "ShieldAlert": 1,
+        "ShieldCheck": 4,
+        "Smartphone": 2,
+        "StatusBadge": 14,
+        "SummaryCard": 3,
+        "Trash2": 2,
+        "UserCheck": 1,
+        "UserPlus": 1,
+        "Users": 3
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminTeams.tsx",
+      "reachable": true,
+      "components": {
+        "AdminFilterBar": 2,
+        "AdminMetricStrip": 3,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminPanel": 8,
+        "AdminSectionTabs": 2,
+        "AdminTablePagination": 7,
+        "AlertCircle": 1,
+        "BarChart3": 1,
+        "Button": 24,
+        "CalendarDays": 2,
+        "CheckCircle2": 2,
+        "ConfirmDialog": 2,
+        "CustomSelect": 13,
+        "Download": 3,
+        "Drawer": 5,
+        "Edit3": 2,
+        "ExternalLink": 2,
+        "Eye": 2,
+        "LayoutGrid": 1,
+        "Link": 4,
+        "Plus": 2,
+        "ProfileIdentity": 4,
+        "ReceiptText": 1,
+        "RefreshCw": 2,
+        "RotateCcw": 2,
+        "Search": 2,
+        "ShieldCheck": 3,
+        "Skeleton": 5,
+        "Table": 1,
+        "Timer": 2,
+        "Trash2": 1,
+        "TrendingUp": 1,
+        "UserPlus": 3,
+        "Users": 2,
+        "UsersRound": 5,
+        "WalletCards": 1,
+        "X": 1
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminTimeLogs.tsx",
+      "reachable": true,
+      "components": {
+        "AdminMetricStrip": 1,
+        "AdminModuleHeader": 1,
+        "AdminPageShell": 1,
+        "AdminSectionTabs": 1,
+        "AdminTablePagination": 1,
+        "Button": 5,
+        "CalendarDays": 1,
+        "ConfirmDialog": 1,
+        "CustomSelect": 5,
+        "Drawer": 1,
+        "Plus": 1,
+        "ProfileIdentity": 2,
+        "ReceiptText": 1,
+        "RefreshCw": 2,
+        "Skeleton": 7,
+        "Timer": 2,
+        "Trash2": 2
+      }
+    },
+    {
+      "file": "src/pages/admin/AdminVendors.tsx",
+      "reachable": true,
+      "components": {
+        "AdminModuleHeader": 2,
+        "AdminPageShell": 1,
+        "AdminSectionTabs": 2,
+        "AdminTablePagination": 1,
+        "AlertCircle": 2,
+        "Building2": 1,
+        "Button": 5,
+        "CheckCircle2": 1,
+        "ConfirmDialog": 1,
+        "CustomSelect": 7,
+        "Drawer": 2,
+        "Edit3": 1,
+        "Globe": 1,
+        "Mail": 1,
+        "Phone": 1,
+        "Plus": 3,
+        "ProfileIdentity": 1,
+        "RefreshCw": 1,
+        "Search": 1,
+        "ShieldCheck": 2,
+        "Skeleton": 2,
+        "Star": 1,
+        "Trash2": 1,
+        "Users": 2,
+        "VendorWorkspaceContainer": 2,
+        "X": 1
+      }
+    }
+  ]
+}

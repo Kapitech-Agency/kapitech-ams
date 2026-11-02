@@ -11,3 +11,6 @@
   .ams-shell header.ams-module-header--workspace { grid-template-columns:minmax(0,1fr); align-items:start; }
   .ams-shell header.ams-module-header--workspace > div:last-child:not(:first-child) { width:100%; justify-self:stretch; justify-content:flex-start; }
 }
+@media(max-width:599px) {
+  .ams-shell header.ams-module-header--workspace h1 { font-size:23px; line-height:29px; }
+}

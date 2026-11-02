@@ -30,14 +30,14 @@ Verified from `README.md` and `package.json`:
 | Charts | **No chart library installed** | Build small SVG chart components, or propose a dependency and justify it before adding |
 | UI kit | **No shadcn/ui, no Radix** | Build components in-house. Handle focus and keyboard behavior yourself. |
 | Backend | Express API, PostgreSQL (`pg`), HttpOnly session cookies, CSRF, TOTP MFA | UI must never handle secrets and must respect roles and CSRF flows |
-| Quality gates | CI runs `npm ci`, `npm run lint` (`tsc --noEmit`), `npm run build`; tests use `node --test` | Every change must pass lint and build |
+| Quality gates | CI uses `bun install`, runs lint (TypeScript + ui:check), `node --import tsx --test tests/**/*.test.ts`, production build and AMS CI security/PostgreSQL checks | Local npm scripts remain supported; verify both workflows for the delivered SHA |
 | Optional integrations | Gemini (AI), Telegram notifications | See the AI and notification patterns in section 8 |
 
 **Reconciled against the current repository:** token values live in `src/index.css`; shared admin primitives live in `src/components/admin/AdminModulePrimitives.tsx`; reusable UI controls live in `src/components/ui`. Extend these implementations instead of duplicating them. If a token or component conflicts with this document, update the document and implementation together.
 
 **Shared component usage is mandatory (user instruction, 1 November 2026).** Match the full rendered contract of the approved Dashboard Overview, including component props and required shared context/classes. Card header actions use `DashboardControl` (`variant="action"`, `size="compact"`, source-appropriate icon and `ams-dashboard-card-action`) within `ams-overview-panel`. Keep geometry and interaction styling in the existing shared stylesheet; do not reproduce them in module CSS. Reusing the component name with incomplete context is not sufficient.
 
-**Workspace header and filter contract (1 November 2026 user correction):** Use `AdminModuleHeader variant="workspace"` for new/redesigned workspaces. `AdminModuleHeader.css` owns its Overview-derived grid, 26/32 title, 11/16 description, context/eyebrow, action region, 8px bottom padding and responsive stacking. Render exactly one page h1; optional source status belongs in the contextual eyebrow, with primary/utility actions in the shared actions slot. Navigation immediately follows the header. Do not wrap it in a second heading or add module-specific header geometry. Dashboard's existing action-cluster responsiveness remains its approved dense-action variant.
+**Workspace header and filter contract (1 November 2026 user correction):** Use `AdminModuleHeader` for every workspace; the approved `workspace` variant is now the default, and explicit `variant="workspace"` remains supported. `AdminModuleHeader.css` owns its Overview-derived grid, 26/32 title (23/29 below 600px), 11/16 description, context/eyebrow, action region, 8px bottom padding and responsive stacking. Render exactly one page h1; optional source status belongs in the contextual eyebrow, with primary/utility actions in the shared actions slot. Navigation immediately follows the header. Do not wrap it in a second heading or add module-specific header geometry. Dashboard's existing action-cluster responsiveness remains its approved dense-action variant.
 
 Use `AdminFilterToolbar` and `AdminFilterField` for new/redesigned list filters. This is the shared Inbox interaction, now used by Inbox Messages, Project Registry (including Archived) and every Tasks & Execution view. Search is always available; the neutral Filters control opens/closes labelled fields and reports active field-filter count. The panel starts closed; closing never clears caller-owned filter state. Applied filters remain visible and clearable while closed. Reset uses the caller's canonical reset; search is excluded from the field-filter badge. Shared CSS owns the outlined 12px toolbar, responsive field grid, focus and touch targets. Actions use the shared slot; use three columns for delivery controls or four for Inbox's four fields, reducing to two/one at existing breakpoints. No page-specific duplicate toggle/filter component. Older `AdminFilterBar` consumers outside the redesigned scope remain compatibility consumers; migrate when their workflow is reviewed.
 
@@ -375,15 +375,15 @@ For every component define default, hover, focus-visible, active, and disabled s
 ### Buttons
 | Semantic size | Geometry and padding |
 |---|---|
-| Standard action | 36px high, 12px horizontal padding, 8px icon-to-label gap, radius 8. |
-| Compact action | 32px high, 10px horizontal padding, 8px content gap, radius 8. |
-| Segmented option | 28px high, 10px horizontal padding, radius 6; aligned inside a 36px grouped shell. |
+| Shared Dashboard standard action | 36px high; symmetric 6px padding owned by DashboardControl; shared icon/label gap and radius. |
+| Shared Dashboard compact action | 32px high; symmetric 4px padding; card actions retain the complete approved panel/action context. |
+| Segmented option | DashboardFilterGroup owns density/shell geometry; compact uses 4px symmetric padding, comfortable uses the roomy 5px variant. Reuse its API, not page-local dimensions. |
 | Primary | `--accent` fill, white text, weight 500. Hover `crimson-600`, pressed `crimson-700`. |
 | Secondary | `--panel` fill, 1px `--line`, `--text`. Hover: border `--muted`. |
 | Ghost | Transparent, `--muted` text. Hover: `--text`. |
 | Destructive | `--danger` outline or fill with icon + text. Always behind a confirm step (see section 8). |
 
-In the Dashboard, `src/components/admin/DashboardControls.css` is the source of truth for shared size and padding variables: `--dashboard-control-padding-standard-x` (12px), `--dashboard-control-padding-compact-x` (10px), and `--dashboard-control-padding-filter-x` (10px). Card-level CSS may define grouped layout and responsive behavior, but must not invent alternate horizontal padding for a control of the same semantic size.
+DashboardControls.tsx owns the current approved symmetric padding (standard 6px, compact 4px, roomy 5px); DashboardControls.css owns shared dimensions, variants, states and contextual treatments. Older horizontal-padding CSS variables are compatibility fallbacks, not the rendered padding contract when DashboardControl supplies its style. Do not restore older 12px/10px horizontal-only action padding or copy styles into a module. Form Button retains its named form-submit/cancel geometry. See [Shared UI System](docs/AMS-SHARED-UI-SYSTEM.md) for component selection, all interaction states, migration and cleanup rules.
 
 One primary button per view region. Buttons that trigger a request show a pending state and are disabled while pending.
 

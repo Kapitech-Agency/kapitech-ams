@@ -33,7 +33,7 @@ export const AdminPageShell: React.FC<AdminPageShellProps> = ({
     <div
       data-ams-feature-slug={featureSlug}
       data-ams-slug={featureSlug}
-      className={cn('ams-page-shell min-h-full min-w-0', className)}
+      className={cn('ams-page-shell ams-ui-workspace min-h-full min-w-0', className)}
     >
       {workspaceNavigation && !navigationResult.inserted && (
         <WorkspaceNavigationTabs navigation={workspaceNavigation} />
@@ -325,7 +325,7 @@ export const AdminStatusBadge: React.FC<AdminStatusBadgeProps> = ({
 
 export interface AdminModuleHeaderProps {
   /** Approved Overview geometry; use for every new or redesigned workspace. */
-  variant?: 'default' | 'workspace';
+  variant?: 'workspace';
   title: React.ReactNode;
   description?: React.ReactNode;
   eyebrow?: React.ReactNode;
@@ -336,7 +336,7 @@ export interface AdminModuleHeaderProps {
 }
 
 export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
-  variant = 'default',
+  variant = 'workspace',
   title,
   description,
   eyebrow,

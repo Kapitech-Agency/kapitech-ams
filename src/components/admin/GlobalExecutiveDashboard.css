@@ -742,15 +742,6 @@
   color: var(--danger);
 }
 
-.ams-shell .ams-dashboard .ams-project-summary-item--danger strong {
-  color: var(--danger);
-}
-
-.ams-shell .ams-dashboard .ams-project-summary-item--tasks .ams-project-summary-item__icon {
-  color: var(--series-3);
-  background: color-mix(in srgb, var(--series-3) 9%, var(--panel));
-}
-
 @media (max-width: 599px) {
   .ams-shell .ams-dashboard .ams-retired-overview-scope {
     align-items: stretch;
@@ -759,10 +750,6 @@
 
   .ams-shell .ams-dashboard .ams-retired-overview-scope__chips {
     justify-content: flex-start;
-  }
-
-  .ams-shell .ams-dashboard .ams-finance-movement__grid {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1088,14 +1075,6 @@
 
 /* Finance's headline metric and trend become separate, balanced work surfaces. */
 
-.ams-shell .ams-dashboard .ams-finance-primary-metric__label {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
 .ams-shell .ams-dashboard .ams-finance-primary-metric__label > p {
   font-size: 11px;
   line-height: 16px;
@@ -1323,29 +1302,15 @@
   gap: 6px;
 }
 
-.ams-shell .ams-dashboard .ams-project-workstream > div:first-child > span:first-child {
-  font-size: 11px;
-  line-height: 15px;
-  font-weight: 550;
-}
-
 .ams-shell .ams-dashboard .ams-project-workstream > div:first-child > span:last-child {
   font-size: 10px;
   line-height: 14px;
-}
-
-.ams-shell .ams-dashboard .ams-project-workstream .h-2 {
-  height: 7px;
 }
 
 @media (max-width: 599px) {
   .ams-shell .ams-dashboard .ams-project-risk-layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
-  }
-
-  .ams-shell .ams-dashboard .ams-project-risk-layout > .ams-donut-chart--maven {
-    justify-self: center;
   }
 
   .ams-shell .ams-dashboard .ams-project-risk-section__heading {
@@ -2293,10 +2258,6 @@
 
 /* Team Workload owner signals and per-card period controls align consistently. */
 
-.ams-shell .ams-dashboard .ams-dashboard-team-time__header > div:first-child {
-  min-width: 0;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-team-time__header .ams-card-period-controls {
   flex: 0 1 auto;
   margin-left: auto;
@@ -2567,11 +2528,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   gap: 12px;
 }
 
-.ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
-  margin-top: 0;
-  margin-block-start: 0;
-}
-
 .ams-shell .ams-dashboard .ams-overview-panel {
   background: var(--panel);
   transition: border-color 170ms ease, box-shadow 170ms ease;
@@ -2821,14 +2777,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard .ams-dashboard-projects-panel {
   display: flex;
   min-height: 100%;
-  flex: 1 1 auto;
-  flex-direction: column;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-projects-body {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
   flex: 1 1 auto;
   flex-direction: column;
 }
@@ -3561,13 +3509,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   font-weight: 550;
   white-space: nowrap;
   text-decoration: none;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--invoice.bg-accent,
-.ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--invoice.bg-accent:hover {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-header-actions .ams-dashboard-header-action--invoice.bg-accent:hover {
@@ -5899,29 +5840,12 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   background: transparent;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td:first-child {
-  border-radius: 9px 0 0 9px;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td:last-child {
-  border-radius: 0 9px 9px 0;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-activity-table__action {
   display: -webkit-box;
   overflow: hidden;
   color: var(--text);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-table__actor,
-.ams-shell .ams-dashboard .ams-dashboard-activity-table__time {
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 14px;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-table__severity {
@@ -6086,11 +6010,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard .ams-overview-card-row {
   column-gap: 12px;
   row-gap: 12px;
-}
-
-.ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
-  margin-top: 0;
-  margin-block-start: 0;
 }
 
 .ams-shell .ams-dashboard .ams-overview-panel > div:first-child {
@@ -6523,16 +6442,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   transition: background-color 140ms ease;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-activity-table__action {
   overflow-wrap: anywhere;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor {
-  display: none;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-table__time {
@@ -6821,23 +6732,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   margin: 0 0 12px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions {
-  display: flex;
-  min-width: 0;
-  max-width: 100%;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 7px;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions > .ams-card-period-controls {
-  width: 190px;
-  min-width: 0;
-  max-width: 100%;
-  flex: 0 1 190px;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-dashboard-card-action {
   height: 32px;
   min-height: 32px;
@@ -6849,10 +6743,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard .ams-dashboard-owner-row {
   padding: 12px 0;
   border-bottom: 1px solid color-mix(in srgb,var(--line) 70%,transparent);
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-owner-row:last-child {
-  border-bottom: 0;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-owner-row__signals {
@@ -6882,13 +6772,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions {
   max-width: 100%;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions .ams-dashboard-activity-calendar-filter {
-  width: 172px;
-  min-width: 0;
-  max-width: 100%;
-  flex: 0 1 172px;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-search {
@@ -6921,14 +6804,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-table {
   border-spacing: 0;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) {
-  width: 43%;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2) {
-  width: 18%;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) {
@@ -7272,24 +7147,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     gap: 12px;
   }
 
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
-    display: flex;
-    min-width: 0;
-    align-self: stretch;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-finance-panel,
-  .ams-shell .ams-dashboard .ams-dashboard-projects-panel {
-    display: flex;
-    width: 100%;
-    min-width: 0;
-    min-height: 100%;
-    height: 100%;
-    flex: 1 1 auto;
-    flex-direction: column;
-  }
-
   .ams-shell .ams-dashboard .ams-dashboard-finance-body,
   .ams-shell .ams-dashboard .ams-dashboard-projects-body {
     display: flex;
@@ -7305,12 +7162,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 /* Task and deadline panels use the same full-height body contract. */
-
-.ams-shell .ams-dashboard .ams-dashboard-delivery-row {
-  align-items: stretch;
-  column-gap: 12px;
-  row-gap: 12px;
-}
 
 .ams-shell .ams-dashboard .ams-dashboard-delivery-row > section {
   display: flex;
@@ -7917,12 +7768,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions {
     flex-wrap: wrap;
   }
-
-  .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts {
-    margin-left: 0;
-    padding-left: 0;
-    border-left: 0;
-  }
 }
 
 /* Standard action buttons share 36px geometry; compact registry/filter controls share 32px geometry. */
@@ -7958,9 +7803,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 /* Projects deliberately stretches to the Finance panel height on wide screens. */
 
 @media (min-width: 1100px) {
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {
-    align-items: stretch;
-  }
 
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
     display: flex;
@@ -8265,12 +8107,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   white-space: nowrap;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts {
-  margin-left: 2px;
-  padding-left: 10px;
-  border-left: 1px solid var(--dashboard-card-border);
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-dashboard-view-tabs {
   display: flex;
   width: fit-content;
@@ -8285,12 +8121,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   overflow-y: visible;
   scrollbar-width: none;
   white-space: normal;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-toolbar[aria-label="Dashboard view and reporting controls"] > .ams-retired-dashboard-view-tabs::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
 }
 
 .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {
@@ -8327,13 +8157,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 /* Team workload: clear separation between task allocation and recorded time. */
-
-.ams-shell .ams-dashboard .ams-dashboard-team-panel {
-  display: flex;
-  min-width: 0;
-  min-height: 100%;
-  flex-direction: column;
-}
 
 .ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body {
   display: flex;
@@ -8418,15 +8241,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   border-radius: 999px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-header-actions {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
   display: grid;
   grid-template-columns: minmax(220px, 1.5fr) minmax(116px, .72fr) minmax(158px, 1fr) minmax(122px, .75fr) auto auto;
@@ -8468,13 +8282,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   min-width: 0;
   padding-inline: 16px;
   overflow-x: auto;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-table {
-  width: 100%;
-  min-width: 0;
-  table-layout: fixed;
-  border-collapse: collapse;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-table thead th {
@@ -8533,15 +8340,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     grid-template-columns: minmax(0, 1.35fr) minmax(120px, .8fr) minmax(150px, 1fr);
     gap: 10px;
   }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-filter--order {
-    grid-column: auto;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-reset,
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-export {
-    justify-self: start;
-  }
 }
 
 @media (max-width: 759px) {
@@ -8561,30 +8359,12 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     border-left: 0;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search {
-    grid-column: 1 / -1;
-  }
-
   .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
     padding-inline: 8px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table thead th,
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td {
-    padding: 9px 7px;
   }
 }
 
 @media (max-width: 599px) {
-  .ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body {
-    padding: 12px;
-  }
 
   .ams-shell .ams-dashboard .ams-dashboard-team-tasks {
     padding-bottom: 12px;
@@ -8592,12 +8372,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
   .ams-shell .ams-dashboard .ams-dashboard-team-time {
     padding-top: 12px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table__severity {
-    min-width: 0;
-    padding-inline: 5px;
-    font-size: 9px;
   }
 }
 
@@ -8632,22 +8406,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-}
-.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-primary-actions,
-.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts,
-.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-utility-actions {
-  display: flex;
-  min-width: 0;
-  max-width: 100%;
-  flex: 0 1 auto;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
-.ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts {
-  margin-left: 2px;
-  padding-left: 10px;
-  border-left: 1px solid var(--dashboard-card-border);
 }
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions .ams-dashboard-control,
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-shortcuts .ams-dashboard-control,
@@ -8793,12 +8551,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 /* Team Workload is a clean comparison list, with whitespace instead of nested divider lines. */
-.ams-shell .ams-dashboard .ams-dashboard-team-panel {
-  display: flex;
-  min-width: 0;
-  min-height: 100%;
-  flex-direction: column;
-}
 .ams-shell .ams-dashboard .ams-dashboard-team-body {
   display: flex;
   min-width: 0;
@@ -8850,32 +8602,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   padding: 12px 0;
   border: 0;
 }
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__heading {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-}
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span {
-  display: inline-flex;
-  min-height: 22px;
-  align-items: center;
-  padding: 3px 7px;
-  border: 1px solid var(--dashboard-card-border);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--bg) 35%, var(--panel));
-  font-size: 10px;
-  line-height: 14px;
-  white-space: nowrap;
-}
 
 /* Recent Activity: aligned table columns, calm surfaces, and compact responsive filters. */
 .ams-shell .ams-dashboard .ams-dashboard-activity-header-actions {
@@ -8914,13 +8640,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   padding-inline: 14px;
   overflow-x: auto;
 }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table {
-  width: 100%;
-  min-width: 0;
-  table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 0 5px;
-}
 .ams-shell .ams-dashboard .ams-dashboard-activity-table thead th {
   padding: 8px 12px;
   background: transparent;
@@ -8947,30 +8666,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr {
   outline: 1px solid transparent;
   transition: background-color 140ms ease;
-}
-.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr:hover td {
-  background: var(--dashboard-hover-surface);
-}
-.ams-shell .ams-dashboard .ams-dashboard-activity-table__action {
-  margin: 0;
-  font-size: 12px;
-  line-height: 17px;
-  font-weight: 550;
-  overflow-wrap: anywhere;
-}
-.ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor {
-  display: none;
-  margin-top: 3px;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 14px;
-}
-.ams-shell .ams-dashboard .ams-dashboard-activity-table__time {
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 15px;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
 }
 .ams-shell .ams-dashboard .ams-dashboard-activity-table__severity { white-space: nowrap; }
 @media (max-width: 1199px) {
@@ -9022,18 +8717,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     gap: 10px;
     padding: 12px;
   }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search {
-    grid-column: 1 / -1;
-  }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap { padding-inline: 6px; }
   .ams-shell .ams-dashboard .ams-dashboard-activity-table thead th,
   .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td { padding: 9px 7px; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2),
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table td:nth-child(2) { display: none; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 52%; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 30%; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 18%; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor { display: block; }
 }
 @media (max-width: 599px) {
   .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions,
@@ -9126,10 +8811,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 /* Card rows are siblings in the Overview fragment. Apply the exact same
    spacing token between rows, without compounding margins from prior layers. */
-.ams-shell .ams-dashboard .ams-overview-card-row + .ams-overview-card-row {
-  margin-top: 0;
-  margin-block-start: 0;
-}
 
 .ams-shell .ams-dashboard .ams-overview-card-row > section {
   min-width: 0;
@@ -9156,15 +8837,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:first-child {
   min-width: 0;
   max-width: none;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:last-child {
-  display: flex;
-  width: auto;
-  min-width: 0;
-  max-width: 100%;
-  justify-self: end;
-  align-items: center;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions {
@@ -9261,18 +8933,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 /* Projects and Finance form one row and are physically stretched to the same height. */
 @media (min-width: 1100px) {
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {
-    align-items: stretch;
-    grid-auto-rows: 1fr;
-  }
-
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
-    display: flex;
-    min-width: 0;
-    min-height: 0;
-    align-self: stretch;
-  }
 
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-finance-panel,
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-panel {
@@ -9284,15 +8944,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     flex: 1 1 auto;
     flex-direction: column;
     align-self: stretch;
-  }
-
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-finance-body,
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-body {
-    display: flex;
-    min-width: 0;
-    min-height: 0;
-    flex: 1 1 auto;
-    flex-direction: column;
   }
 
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-projects-body > .ams-project-portfolio-body {
@@ -9448,14 +9099,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   gap: 8px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span {
   display: inline-flex;
   min-height: 22px;
@@ -9530,14 +9173,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   overflow-x: auto;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-activity-table {
-  width: 100%;
-  min-width: 0;
-  table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 0 5px;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-activity-table th {
   padding: 8px 11px;
   color: var(--muted);
@@ -9562,15 +9197,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 .ams-shell .ams-dashboard .ams-dashboard-activity-table tbody td:last-child {
   border-radius: 0 9px 9px 0;
 }
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-table tbody tr:hover td {
-  background: var(--dashboard-hover-surface);
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 43%; }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2) { width: 19%; }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 26%; }
-.ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 12%; }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-table__action {
   margin: 0;
@@ -9602,16 +9228,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 @media (max-width: 1359px) {
-  .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    row-gap: 10px;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:last-child {
-    width: 100%;
-    justify-self: start;
-  }
 
   .ams-shell .ams-dashboard .ams-dashboard-page-header .ams-dashboard-header-actions {
     width: 100%;
@@ -9629,10 +9245,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 @media (max-width: 1199px) {
   .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
     grid-template-columns: minmax(0, 1.25fr) minmax(122px, .8fr) minmax(140px, 1fr);
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search {
-    grid-column: 1 / -1;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-control {
@@ -9669,10 +9281,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     padding: 12px;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search {
-    grid-column: 1 / -1;
-  }
-
   .ams-shell .ams-dashboard .ams-dashboard-activity-table-wrap {
     padding-inline: 6px;
   }
@@ -9682,15 +9290,8 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
     padding: 8px 6px;
   }
 
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(2),
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table td:nth-child(2) {
-    display: none;
-  }
-
   .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(1) { width: 52%; }
   .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(3) { width: 30%; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table th:nth-child(4) { width: 18%; }
-  .ams-shell .ams-dashboard .ams-dashboard-activity-table__mobile-actor { display: block; }
 
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions {
     width: 100%;
@@ -9713,14 +9314,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
   .ams-shell .ams-dashboard .ams-dashboard-project-service-filter {
     max-width: 100%;
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .ams-shell .ams-dashboard .ams-dashboard-activity-tools > .ams-dashboard-activity-search {
-    grid-column: auto;
   }
 
   .ams-shell .ams-dashboard .ams-dashboard-activity-filter {
@@ -9879,14 +9472,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   transition: width 180ms ease;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > span {
   display: inline-flex;
   min-width: 0;
@@ -9913,12 +9498,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   border-color: color-mix(in srgb, var(--warning) 24%, var(--line));
   background: color-mix(in srgb, var(--warning) 7%, var(--panel));
   color: var(--warning);
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-review {
-  border-color: color-mix(in srgb, var(--info) 22%, var(--line));
-  background: color-mix(in srgb, var(--info) 6%, var(--panel));
-  color: var(--info);
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-owner-row__signals > .is-clear {
@@ -10002,16 +9581,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   overflow-wrap: anywhere;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__value {
-  flex: 0 0 auto;
-  color: var(--text);
-  font-size: 11px;
-  line-height: 15px;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track {
   height: 6px;
   overflow: hidden;
@@ -10049,8 +9618,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ams-shell .ams-dashboard .ams-dashboard-owner-row__fill,
-  .ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track > span { transition-duration: 0.01ms; }
 }
 
 
@@ -10103,11 +9670,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   margin: 0;
   padding: 0 0 10px;
   border: 0;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:first-child {
-  min-width: 0;
-  max-width: 100%;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header h1 {
@@ -10224,11 +9786,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 @media (max-width: 1359px) {
-  .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-    row-gap: 10px;
-  }
 
   .ams-shell .ams-dashboard .ams-dashboard-page-header.ams-page-header > div:last-child {
     width: 100%;
@@ -10473,14 +10030,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] {
     align-items: stretch;
     grid-auto-rows: 1fr;
-  }
-
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-finance-overview"],
-  .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] > section[data-ams-feature-slug="dashboard-project-portfolio"] {
-    display: flex;
-    min-width: 0;
-    min-height: 0;
-    align-self: stretch;
   }
 
   .ams-shell .ams-dashboard .ams-overview-card-row[aria-label="Finance and project overview"] .ams-dashboard-finance-panel,
@@ -11185,12 +10734,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 }
 
 /* Team Workload: clear owner ranking and record-time section without cramped rows or dividers. */
-.ams-shell .ams-dashboard .ams-dashboard-team-panel {
-  display: flex;
-  min-width: 0;
-  min-height: 100%;
-  flex-direction: column;
-}
 
 .ams-shell .ams-dashboard .ams-dashboard-team-panel > .ams-dashboard-team-body {
   display: flex;
@@ -11266,16 +10809,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   gap: 5px 9px;
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__heading > span:first-child,
-.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__name {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  color: var(--text);
-  font-size: 11px;
-  line-height: 15px;
-  font-weight: 550;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-owner-row__count {
   display: inline-flex;
   flex: 0 0 auto;
@@ -11284,34 +10817,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   color: var(--muted);
   font-size: 9px;
   line-height: 13px;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__count strong {
-  color: var(--text);
-  font-size: 13px;
-  line-height: 16px;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__track,
-.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track {
-  display: block;
-  width: 100%;
-  height: 6px;
-  min-height: 6px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--line) 76%, var(--panel));
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-owner-row__fill,
-.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__track > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent);
-  transition: width 180ms ease;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-owner-row__signals {
@@ -11354,16 +10859,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   color: var(--muted);
 }
 
-.ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__value {
-  flex: 0 0 auto;
-  color: var(--text);
-  font-size: 11px;
-  line-height: 15px;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
 .ams-shell .ams-dashboard .ams-dashboard-recorded-time-row__entries {
   color: var(--muted);
   font-size: 9px;
@@ -11392,11 +10887,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
   }
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header {
     align-items: flex-start;
-  }
-  .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions {
-    flex: 1 1 100%;
-    width: 100%;
-    justify-content: flex-start;
   }
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter,
   .ams-shell .ams-dashboard .ams-dashboard-team-time__header-actions .ams-calendar-period-filter__trigger {
@@ -11470,11 +10960,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-search:focus-within {
   border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
-}
-
-.ams-shell .ams-dashboard .ams-dashboard-activity-search input::placeholder {
-  color: var(--muted);
-  opacity: .85;
 }
 
 .ams-shell .ams-dashboard .ams-dashboard-activity-filter {
@@ -11659,10 +11144,6 @@ html:has(.ams-shell .ams-dashboard), body:has(.ams-shell .ams-dashboard) {
 
 
 /* Approved final table rhythm. Recent Activity is a compact, filterable data table. */
-.ams-shell .ams-dashboard .ams-dashboard-activity-table {
-  border-collapse: separate;
-  border-spacing: 0 4px;
-}
 
 
 /* Dashboard card divider-free contract — 28 October 2026.

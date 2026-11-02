@@ -47,4 +47,6 @@ test('Shared workspace header keeps context, one h1, description and actions in 
   assert.ok(html.indexOf('Projects / Tasks') < html.indexOf('<h1'));
   assert.ok(html.indexOf('</h1>') < html.indexOf('Creative and technology delivery.'));
   assert.ok(html.indexOf('Creative and technology delivery.') < html.indexOf('<button'));
+  const defaultHeader = renderToStaticMarkup(React.createElement(AdminModuleHeader,{title:'Clients'}));
+  assert.match(defaultHeader,/ams-module-header--workspace/,'All module headers use the approved default, including existing callers.');
 });

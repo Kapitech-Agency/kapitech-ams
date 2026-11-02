@@ -6,6 +6,8 @@
 
 ## 1. Stack and shared patterns
 
+Use the mandatory [Shared UI System](AMS-SHARED-UI-SYSTEM.md) catalogue and actual [consumer inventory](ui/shared-ui-inventory.json) before creating a component. `AdminPageShell` supplies the common UI context; `AdminModuleHeader` uses the approved workspace geometry by default. No unused components, parallel legacy implementations or module-local shared geometry. Run `npm run ui:audit` after UI source changes, review the report, and pass `npm run ui:check` through lint. Active compatibility components remain until all real consumers migrate.
+
 Verify package.json/current source before major changes. The repository documents React 19, TypeScript, Vite 6, Tailwind CSS v4, react-router-dom v7, motion, an icon bridge and shared AMS components.
 
 - Use function components, typed props and existing route patterns.

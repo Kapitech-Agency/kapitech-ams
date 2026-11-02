@@ -1,6 +1,6 @@
 # Kapitech AMS Documentation Index
 
-**Updated:** 22 October 2026  
+**Updated:** 2 November 2026
 **Repository:** `Kapitech-Agency/kapitech-ams`  
 **Purpose:** Identify the authoritative product, design, engineering, evidence, and operational documents without confusing target specifications with verified implementation.
 
@@ -51,6 +51,8 @@ AMS has nine primary modules: **Dashboard, Inbox, Projects, Clients, Finance, Te
 Finance has five approved areas: **Overview & Control, Transactions & Cash, Receivables & Payables, Project Finance, Accounting & Reports**. Preserve the existing worksheet identities, canonical records, accounting semantics, and source/API behavior.
 
 ## 3. Visual, UX/UI, and content implementation
+
+The current end-to-end component catalogue, usage/cleanup rules and nine-module adoption matrix are in [AMS Shared UI System](AMS-SHARED-UI-SYSTEM.md). The approved Dashboard Overview is the visual reference. Review the generated [actual-consumer inventory](ui/shared-ui-inventory.json); regenerate it with `npm run ui:audit`, and verify it with `npm run ui:check` (also part of lint). Static reachability is not proof of visual/persistence acceptance. Historical component references and screenshots remain dated evidence, not permission to restore removed legacy UI.
 
 | Document | Use it for |
 |---|---|

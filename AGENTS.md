@@ -103,6 +103,8 @@ Production deployments are sourced from **main** as configured for Kapitech. Com
 
 ## 7. UI rules are not optional
 
+- **2 November 2026 shared UI preparation:** Read `docs/AMS-SHARED-UI-SYSTEM.md` and `docs/ui/shared-ui-inventory.json` before creating or deleting UI. Dashboard Overview is the approved reference. Use the existing shared component family and full contract; extract missing primitives with a real consumer instead of shipping unused components. Keep business logic, role gates and compatibility routes intact. Regenerate `npm run ui:audit`, review actual consumers, and pass `npm run ui:check` (included in lint). Remove unreachable/superseded visual code and packages only with import/route/cascade evidence; never equate static reachability with visual or backend acceptance.
+
 - Follow **AMS-DESIGN-SYSTEM.md** and the relevant drawer/modal/kanban guidelines. Inspect current tokens/components instead of trusting memory.
 - Use the existing page shell, topbar/section-tab patterns, spacing, typography, status colors, button hierarchy and table patterns.
 - **Standing user instruction (1 November 2026):** Existing shared UI/components are mandatory for consistent end-to-end presentation. Reuse the full approved component contract (variant, size, icon, shared action class and panel/context class), not just the component name. Dashboard Overview is the approved reference. Card actions use `DashboardControl` with the existing `ams-dashboard-card-action` contract inside `ams-overview-panel`; do not recreate their dimensions/appearance in module CSS. Verify the rendered result against the actual reference.

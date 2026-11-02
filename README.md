@@ -2,6 +2,8 @@
 
 Production-grade internal Agency Management System for Kapitech Agency.
 
+Shared UI architecture, required components, interaction rules, cleanup evidence and module adoption are documented in [AMS Shared UI System](docs/AMS-SHARED-UI-SYSTEM.md), using Dashboard Overview as the approved design reference. Run `npm run ui:audit` to refresh the actual-consumer inventory after UI changes; `npm run ui:check` verifies it and runs as part of lint. This tooling does not modify runtime data or grant permissions.
+
 ## Runtime
 
 - Node.js 22
