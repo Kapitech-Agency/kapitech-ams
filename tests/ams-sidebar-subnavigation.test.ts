@@ -37,18 +37,19 @@ test('each module root tab follows the approved Master Structure Guide', () => {
   ]);
   const financeNavigation = getAmsModuleSubnavigation('finance', 'Admin');
   assert.deepEqual(financeNavigation.map((item) => item.label), [
-    'Overview & Control', 'Transactions & Cash', 'Receivables & Payables',
-    'Project Finance', 'Accounting & Reports',
+    'Finance Overview', 'Client Billing', 'Cash & Spend',
+    'Project Finance', 'Books & Close', 'Financial Reports',
   ]);
   assert.deepEqual(financeNavigation.map((item) => item.to), [
     '/admin/finance?tab=executive-summary',
-    '/admin/finance?tab=cash-bank',
     '/admin/finance?tab=quotations',
+    '/admin/finance?tab=cash-bank',
     '/admin/finance?tab=project-finance',
-    '/admin/finance?tab=journal',
+    '/admin/finance?tab=monthly-closing',
+    '/admin/finance?tab=monthly-pnl',
   ]);
   assert.equal(isAmsModuleSubnavigationItemActive(financeNavigation[0], '/admin/finance', '?tab=executive-summary'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(financeNavigation[2], '/admin/finance', '?tab=quotations'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(financeNavigation[1], '/admin/finance', '?tab=quotations'), true);
   assert.deepEqual(getAmsModuleSubnavigation('team', 'Admin').map((item) => item.label), [
     'Team & Capacity', 'People Operations', 'Vendors & Freelancers', 'Time Tracking',
   ]);
@@ -263,28 +264,26 @@ test('Clients and Team & Resources use persistent workspaces while internal view
   assert.doesNotMatch(layout, /workspaceChildTabItems|Workspace subnavigation/);
 });
 
-test('Finance keeps its five canonical areas and every existing worksheet activates its owning area', () => {
+test('Finance keeps its six work areas and every existing worksheet activates its owning area', () => {
   const finance = getAmsModuleSubnavigation('finance', 'Admin');
-  assert.deepEqual(finance.map((item) => item.key), ['overview', 'transactions', 'receivables', 'projects', 'accounting']);
-  assert.deepEqual(getAmsModuleSubnavigation('finance', 'Finance').map((item) => item.key), ['overview', 'transactions', 'receivables', 'projects', 'accounting']);
+  assert.deepEqual(finance.map((item) => item.key), ['overview', 'receivables', 'transactions', 'projects', 'accounting', 'reports']);
+  assert.deepEqual(getAmsModuleSubnavigation('finance', 'Finance').map((item) => item.key), ['overview', 'receivables', 'transactions', 'projects', 'accounting', 'reports']);
   assert.deepEqual(getAmsModuleSubnavigation('finance', 'PM').map((item) => item.key), ['projects']);
 
-  const groupForWorksheet: Record<string, string> = {
-    overview: 'overview',
-    transactions: 'transactions',
-    receivables: 'receivables',
-    projects: 'projects',
-    accounting: 'accounting',
+  const expectedWorksheets = {
+    overview: ['executive-summary', 'dashboard'],
+    receivables: ['quotations', 'revenue', 'accounts-receivable'],
+    transactions: ['cash-bank', 'expenses', 'accounts-payable', 'vendors', 'petty-cash'],
+    projects: ['project-finance', 'operational-budget', 'team-fee', 'project-allocation'],
+    accounting: ['monthly-closing', 'journal', 'chart-of-accounts'],
+    reports: ['monthly-pnl', 'cash-flow', 'balance-sheet', 'annual-summary'],
   };
-  for (const group of FINANCE_WORKBOOK_GROUPS) {
-    const tab = finance.find((item) => item.key === groupForWorksheet[group.key]);
-    assert.ok(tab, 'Missing Finance group: ' + group.key);
-    for (const sheet of group.items) {
-      assert.equal(
-        isAmsModuleSubnavigationItemActive(tab!, '/admin/finance', '?tab=' + sheet.key),
-        true,
-        'Finance worksheet must activate its owning root tab: ' + sheet.key,
-      );
+  assert.deepEqual(Object.values(expectedWorksheets).flat().sort(),
+    [...FINANCE_WORKBOOK_GROUPS.flatMap(group => group.items.map(sheet => sheet.key)), 'quotations'].sort());
+  for (const [area, worksheets] of Object.entries(expectedWorksheets)) {
+    for (const worksheet of worksheets) {
+      const active = finance.filter(item => isAmsModuleSubnavigationItemActive(item, '/admin/finance', '?tab=' + worksheet));
+      assert.deepEqual(active.map(item => item.key), [area], worksheet);
     }
   }
   const receivables = finance.find((item) => item.key === 'receivables')!;

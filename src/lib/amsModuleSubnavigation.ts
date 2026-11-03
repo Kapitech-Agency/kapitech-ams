@@ -1,3 +1,4 @@
+import { FINANCE_AREAS, financeWorksheetUrl, getFinanceArea } from './financeWorkspaceNavigation';
 import { getProjectsDefaultView } from './projectsWorkspaceNavigation';
 import { canAccessAmsRoute, type AmsRole } from './amsNavigationAccess';
 
@@ -59,13 +60,12 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'agreements', label: 'Agreements', to: '/admin/contracts', slug: 'clients-workspace-agreements' },
     { key: 'service-health', label: 'Service & Health', to: '/admin/clients/sla-monitoring', slug: 'clients-workspace-service-health' },
   ],
-  finance: [
-    { key: 'overview', label: 'Overview & Control', to: '/admin/finance?tab=executive-summary', slug: 'finance-workspace-overview-control' },
-    { key: 'transactions', label: 'Transactions & Cash', to: '/admin/finance?tab=cash-bank', slug: 'finance-workspace-transactions-cash' },
-    { key: 'receivables', label: 'Receivables & Payables', to: '/admin/finance?tab=quotations', slug: 'finance-workspace-receivables-payables' },
-    { key: 'projects', label: 'Project Finance', to: '/admin/finance?tab=project-finance', slug: 'finance-workspace-project-finance' },
-    { key: 'accounting', label: 'Accounting & Reports', to: '/admin/finance?tab=journal', slug: 'finance-workspace-accounting-reports' },
-  ],
+  finance: FINANCE_AREAS.map(area => ({
+    key: area.key,
+    label: area.label,
+    to: financeWorksheetUrl(area.tabs[0]),
+    slug: area.slug
+  })),
   team: [
     { key: 'team', label: 'Team & Capacity', to: '/admin/team', slug: 'team-workspace-capacity' },
     { key: 'people-ops', label: 'People Operations', to: '/admin/team', available: false },
@@ -144,17 +144,7 @@ export function isAmsModuleSubnavigationItemActive(
   }
   if (path === '/admin/documents') return itemKey === 'library';
   if (path === '/admin/finance') {
-    const groups: Record<string, string[]> = {
-      overview: ['executive-summary', 'dashboard'],
-      transactions: ['cash-bank', 'revenue', 'expenses', 'petty-cash'],
-      receivables: ['accounts-receivable', 'accounts-payable', 'vendors', 'quotations'],
-      projects: ['project-finance', 'operational-budget', 'project-allocation', 'team-fee'],
-      accounting: ['journal', 'chart-of-accounts', 'monthly-pnl', 'cash-flow', 'balance-sheet', 'monthly-closing', 'annual-summary'],
-    };
-    const tabs = Object.values(groups).flat();
-    const selected = params.get('tab') || 'executive-summary';
-    const normalized = tabs.includes(selected) ? selected : 'executive-summary';
-    if (itemKey in groups) return groups[itemKey].includes(normalized);
+    return itemKey === getFinanceArea(params.get('tab') || 'executive-summary').key;
   }
   if (path === '/admin/dashboard') {
     const requestedView = params.get('view');

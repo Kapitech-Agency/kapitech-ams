@@ -1,3 +1,4 @@
+import { FINANCE_HANDOFFS, FINANCE_WORKSHEET_LABELS, getFinanceArea } from '../../lib/financeWorkspaceNavigation';
 import { AdminDataTableShell } from '../../components/admin/AdminModulePrimitives';
 import { AdminFilterToolbar } from '../../components/admin/AdminFilterToolbar';
 import { DashboardControl } from '../../components/admin/DashboardControls';
@@ -733,9 +734,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
   const activeTab = requestedTab === 'quotations'
     ? quotationsViewTab
     : flatTabs.find((item) => item.key === requestedTab) || flatTabs[0];
-  const activeGroup = requestedTab === 'quotations'
-    ? FINANCE_WORKBOOK_GROUPS.find((group) => group.key === 'receivables') || FINANCE_WORKBOOK_GROUPS[0]
-    : FINANCE_WORKBOOK_GROUPS.find((group) => group.items.some((item) => item.key === activeTab.key)) || FINANCE_WORKBOOK_GROUPS[0];
+  const activeGroup = getFinanceArea(activeTab.key);
 
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<AgencyExpense[]>([]);
@@ -1764,15 +1763,16 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           slug: 'finance-view-quotations'
         }]
       : []),
-    ...activeGroup.items
+    ...activeGroup.tabs.flatMap(key => flatTabs.filter(tab => tab.key === key))
       .filter((item) => canShowFinanceWorksheet(item.key))
       .map((item) => ({
         key: item.key,
-        label: item.label,
+        label: FINANCE_WORKSHEET_LABELS[item.key] ?? item.label,
         to: financeWorksheetDestination(item.key),
         slug: 'finance-sheet-' + item.key
       }))
   ];
+  const handoffs = (FINANCE_HANDOFFS[activeTab.key] ?? []).filter(item => canShowFinanceWorksheet(item.tab));
   const renderLoading = () => (
     <AdminPanel className="ams-operational-panel ams-overview-panel" title="Loading finance sources" description="Reading live AMS invoice, expense, project and vendor records.">
       <div className="space-y-3 p-4">
@@ -3492,6 +3492,17 @@ const FinanceWorkbookWorkspace: React.FC = () => {
       <div data-ams-slug="finance-workspace-navigation">
         {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="ams-operational-tabs" variant="primary" />}
       </div>
+      {handoffs.length > 0 && (
+        <AdminPanel className="ams-operational-panel ams-overview-panel" title={activeTab.key === 'executive-summary' ? 'Finance workbench' : 'Related work'} description={activeTab.key === 'executive-summary' ? 'Open the register, close checklist, or report for the work you need to do.' : 'Continue in the worksheet that owns the next step.'}>
+          <div className="flex flex-wrap gap-2 p-4">
+            {handoffs.map(item => (
+              <DashboardControl key={item.tab} to={financeWorksheetDestination(item.tab)} variant="action" size="compact" className="ams-dashboard-card-action">
+                {item.label}
+              </DashboardControl>
+            ))}
+          </div>
+        </AdminPanel>
+      )}
       {SEARCHABLE_FINANCE_TABS.has(activeTab.key) && activeTab.key !== 'vendors' && <AdminFilterToolbar slug="finance-worksheet-search" searchValue={searchText} onSearchChange={setSearchText} searchLabel="Search this view" searchPlaceholder="Search this worksheet…" activeFilterCount={0} onReset={() => setSearchText('')} />}
       <div className="min-w-0 space-y-4" data-ams-feature-slug={activeTab.key} data-ams-slug="finance-active-worksheet">
         {(Boolean(registerActionError && !editor) || registerErrors.length > 0 || sourceErrors.length > 0) && (

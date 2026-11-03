@@ -15,9 +15,9 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(sidebar, /aria-label="Primary navigation"/);
   assert.match(sidebar, /data-ams-navigation-layout="flat"/);
   assert.doesNotMatch(sidebar, /data-ams-nav-submenu|aria-expanded=|ChevronDown/);
-  const subnavigation = await read('src/lib/amsModuleSubnavigation.ts');
+  const subnavigation = await read('src/lib/amsModuleSubnavigation.ts') + await read('src/lib/financeWorkspaceNavigation.ts');
   assert.match(navigation, /key: 'finance', label: 'Finance', to: '\/admin\/finance\?tab=executive-summary'/);
-  assert.doesNotMatch(subnavigation, /Invoicing & Revenues|Profitability & Expenses|Project Profitability/);
+  assert.doesNotMatch(subnavigation, /Invoicing & Revenues|Profitability & Expenses/);
   for (const area of ['Overview & Control', 'Transactions & Cash', 'Receivables & Payables', 'Project Finance', 'Accounting & Reports']) {
     assert.ok(workbook.includes("label: '" + area + "'"), 'Missing Finance group ' + area);
   }
@@ -34,8 +34,8 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
     'The primary worksheet active state must use the shared crimson accent tint and border.');
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
-  assert.match(workspace, /const sheetItems = \[[\s\S]{0,260}key: 'quotations'[\s\S]{0,260}activeGroup\.items[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
-  assert.ok(workspace.indexOf("key: 'quotations'") < workspace.indexOf('...activeGroup.items'), 'Quotations must be the first worksheet in Receivables & Payables.');
+  assert.match(workspace, /const sheetItems = \[[\s\S]{0,260}key: 'quotations'[\s\S]{0,260}activeGroup\.tabs[\s\S]{0,400}canShowFinanceWorksheet\(item\.key\)/);
+  assert.ok(workspace.indexOf("key: 'quotations'") < workspace.indexOf('...activeGroup.tabs'), 'Quotations must be the first worksheet in Receivables & Payables.');
   const worksheetAccessStart = workspace.indexOf('const canShowFinanceWorksheet =');
   const worksheetAccessEnd = workspace.indexOf('const sheetItems =', worksheetAccessStart);
   const worksheetAccess = workspace.slice(worksheetAccessStart, worksheetAccessEnd);
@@ -44,7 +44,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.equal(worksheetAccess.includes('sidebarDestinations'), false, 'A worksheet must not disappear just because its URL is also the primary Finance destination.');
   assert.match(workbook, /key: 'executive-summary', sheet: '00', label: 'Executive Summary'/);
   assert.ok(workspace.includes("slug: 'finance-view-quotations'"));
-  assert.match(workspace, /label: item\.label/);
+  assert.match(workspace, /label: FINANCE_WORKSHEET_LABELS\[item\.key\] \?\? item\.label/);
   assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
   assert.match(workspace, /\{loading \? renderLoading\(\) : renderView\(activeTab\)\}/);
   assert.match(workbook, /FINANCE_WORKBOOK_GROUPS/);
@@ -384,7 +384,7 @@ test('Finance locale uses the selected application language and localized financ
 test('Finance views embed the existing transactional workflows instead of routing users away', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
-  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts') + await read('src/lib/financeWorkspaceNavigation.ts');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
 
   assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses' \| 'vendor-payments' \| 'quotations'/);
@@ -406,7 +406,7 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
-  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts') + await read('src/lib/financeWorkspaceNavigation.ts');
 
   assert.ok(app.includes('<Route path="invoicing" element={<LegacyInvoicingRedirect />} />'));
   assert.match(app, /query.get\('finance'\) === 'vendor-payments'/);
@@ -418,7 +418,7 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.doesNotMatch(layout, /isFinanceModuleRoute|ariaLabel="Finance sections"/);
   assert.equal(layout.includes('data-ams-slug="active-module-title"'), false);
   assert.ok(sidebar.includes('aria-label="Primary navigation"'));
-  assert.ok(navigation.includes('Finance areas') || navigation.includes("label: 'Overview & Control'"));
+  assert.ok(navigation.includes('Finance areas') || navigation.includes("label: 'Finance Overview'"));
   assert.equal(navigation.includes("label: 'Profitability & Expenses'"), false);
   assert.ok(navigation.includes('finance-workspace-receivables-payables'));
   assert.match(navigation, /finance-workspace-accounting-reports/);

@@ -6,8 +6,8 @@
     "Import reachability is conservative and does not prove each export/selector is used. Never auto-delete based on this report."
   ],
   "summary": {
-    "sourceFiles": 118,
-    "reachableFiles": 115,
+    "sourceFiles": 119,
+    "reachableFiles": 116,
     "componentFiles": 43,
     "sharedComponentFiles": 18,
     "cssBytes": 513951
@@ -1248,7 +1248,7 @@
         "AdminModuleHeader": 2,
         "AdminModuleNotice": 2,
         "AdminPageShell": 2,
-        "AdminPanel": 7,
+        "AdminPanel": 8,
         "AdminProjectProfitability": 1,
         "AdminSectionTabs": 1,
         "AdminStatusBadge": 13,
@@ -1262,7 +1262,7 @@
         "CircleDollarSign": 3,
         "CustomDatePicker": 4,
         "CustomSelect": 9,
-        "DashboardControl": 16,
+        "DashboardControl": 17,
         "DashboardEmptyState": 1,
         "Download": 9,
         "Drawer": 2,

@@ -83,9 +83,8 @@ test('Finance views stay inside the Finance workspace and retired routes stay hi
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
   assert.ok(navigation.includes("key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary'"));
-  assert.equal(subnavigation.includes("to: '/admin/finance?tab=quotations'"), true);
+  assert.ok(subnavigation.includes("finance: FINANCE_AREAS.map"));
   assert.equal(subnavigation.includes("to: '/admin/finance?tab=accounts-payable'"), false);
-  assert.equal(subnavigation.includes("to: '/admin/finance?tab=project-finance'"), true);
   const workbook = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/financeWorkbook.ts'), 'utf8');
   for (const area of ['Overview & Control', 'Transactions & Cash', 'Receivables & Payables', 'Project Finance', 'Accounting & Reports']) {
     assert.ok(workbook.includes("label: '" + area + "'"), 'Missing Finance area ' + area);

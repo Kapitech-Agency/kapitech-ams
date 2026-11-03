@@ -279,7 +279,7 @@ test('workspace context navigation is scoped to its owning pages and cannot foll
   assert.ok(navigation.includes("if (path.startsWith('/admin/cms/')) return 'cms';"));
   assert.ok(navigation.includes("if (path === '/admin/settings') return 'settings';"));
   assert.equal(navigation.includes("path === '/admin/navigation/release-readiness') return 'settings'"), false);
-  assert.equal(navigation.includes("if (path === '/admin/tasks') {\n    const params"), true);
+  assert.ok(navigation.replace(/\r\n/g, "\n").includes("if (path === '/admin/tasks') {\n    const params"));
   assert.equal(layout.includes("'/admin/documents', '/admin/team', '/admin/time-logs'"), false);
   assert.equal(layout.includes("'/admin/crm', '/admin/clients/all-clients'"), false);
 });

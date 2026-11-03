@@ -4,7 +4,7 @@ Updated: 2 November 2026. Scope: frontend presentation and navigation. Dashboard
 
 ## Workspace contract
 
-- Preserve five areas, twenty workbook worksheets and the existing Quotations destination. Sidebar Finance opens Executive Summary. Area defaults remain Executive Summary, Cash & Bank, Quotations, Project Finance and Journal. Query-aware current links use the shared `ams-operational-tabs` context in the real desktop/mobile AdminLayout and worksheet navigation; selected padding is symmetric, with the existing 36px desktop/40px touch targets.
+- Six work areas organize the twenty workbook worksheets and Quotations. Worksheet identifiers, source ownership and deep links are stable. Finance opens Executive Summary. Client Billing opens Quotations, Cash & Spend opens Cash & Reconciliation, Project Finance opens Project Profitability, Books & Close opens Month-End Close, and Financial Reports opens Monthly P&L. The Executive Summary workbench links to these workflows. Contextual links connect related tasks and respect the existing route policy. Query-aware current links use the shared `ams-operational-tabs` context in the real desktop/mobile AdminLayout and worksheet navigation; selected padding is symmetric, with the existing 36px desktop/40px touch targets.
 - `AdminPageShell` owns the page gutter and vertical region spacing. `AdminModuleHeader` owns the Finance heading, owning-area eyebrow, active worksheet description and refresh action. Panels use `AdminPanel` with `ams-operational-panel ams-overview-panel`; card actions use `DashboardControl`, with compact card-action geometry. Financial metric cards opt into the shared stacked value/trend layout so a sparkline cannot truncate a financial value; other consumers retain their approved default. Form and confirmation controls retain shared Button and existing submission behavior.
 - `AdminFilterToolbar` owns register search and disclosure filters. Search stays visible, Filters starts closed, labels remain visible when expanded, applied count/reset remains available when closed. Counts exclude search and sort. Invoice period and currency are separate neutral `DashboardFilterGroup` contexts; changing invoice period retains its existing status reset. Filter reset never submits a transaction.
 - Quotations: status and sort. Invoices/Receivables: invoice status, payment status, due date and sort. Expenses: type, category, period and sort. Contract-linked vendor payments: vendor, payment state and sort. Source-backed worksheet search and PM aggregate search use the same toolbar without an inert Filters button.
@@ -15,27 +15,27 @@ Updated: 2 November 2026. Scope: frontend presentation and navigation. Dashboard
 
 | Area | Worksheet | Presentation / existing source |
 |---|---|---|
-| Overview & Control | Executive Summary | Period context → overdue exceptions → period metrics → figure definitions → recent invoices; existing invoice/expense source |
-| Overview & Control | Dashboard | Selected/previous comparison statement → period activity |
-| Transactions & Cash | Cash & Bank | Movement register → movement metrics → separate statement-reconciliation controls |
-| Transactions & Cash | Revenue | Existing invoice register, editor and payment inspection → supporting tax/retainer views |
-| Transactions & Cash | Expenses | Existing expense register and supplier/project links, recorded settlement state |
-| Transactions & Cash | Petty Cash | Voucher register → canonical Cash & Bank reconciliation handoff → metrics |
-| Receivables & Payables | Quotations | Canonical proposal/quotation ledger, existing review/editor/conversion flow |
-| Receivables & Payables | Accounts Receivable | Outstanding invoice register → source-backed aging, including invalid due-date bucket |
-| Receivables & Payables | Accounts Payable | Vendor-bill register → linked installment schedule → supporting metrics; contract commitments remain distinct |
-| Receivables & Payables | Vendors & Freelancers | Existing canonical vendor/contract source and links; no parallel supplier store |
-| Project Finance | Project Finance | Existing grouped project financial register; PM receives only authorized project aggregates |
+| Finance Overview | Executive Summary | Period context → overdue exceptions → period metrics → figure definitions → recent invoices; existing invoice/expense source |
+| Finance Overview | Period Performance | Selected/previous comparison statement → period activity |
+| Cash & Spend | Cash & Reconciliation | Movement register → movement metrics → separate statement-reconciliation controls |
+| Client Billing | Client Invoices | Existing invoice register, editor and payment inspection → supporting tax/retainer views |
+| Cash & Spend | Expenses | Existing expense register and supplier/project links, recorded settlement state |
+| Cash & Spend | Petty Cash | Voucher register → canonical Cash & Bank reconciliation handoff → metrics |
+| Client Billing | Quotations | Canonical proposal/quotation ledger, existing review/editor/conversion flow |
+| Client Billing | Collections & Aging | Outstanding invoice register → source-backed aging, including invalid due-date bucket |
+| Cash & Spend | Supplier Bills | Vendor-bill register → linked installment schedule → supporting metrics; contract commitments remain distinct |
+| Cash & Spend | Suppliers & Freelancers | Existing canonical vendor/contract source and links; no parallel supplier store |
+| Project Finance | Project Profitability | Existing grouped project financial register; PM receives only authorized project aggregates |
 | Project Finance | Operational Budget | Existing category/PIC monthly budget and recorded expense actuals |
-| Project Finance | Project Allocation | Existing persisted allocation records and server results |
-| Project Finance | Team Fee | Existing fee/source records and recorded settlement state |
-| Accounting & Reports | Journal | Existing draft bridge, inspection, maker-checker posting and record controls |
-| Accounting & Reports | Chart of Accounts | Existing accounts register and permitted editor |
-| Accounting & Reports | Monthly P&L | Formal statement with existing provisional/posted-source caveats |
-| Accounting & Reports | Cash Flow | Formal statement; source movement remains distinct from bank reconciliation |
-| Accounting & Reports | Balance Sheet | Formal statement with existing reconciliation limitations |
-| Accounting & Reports | Monthly Closing | Existing month picker, checklist, reviewer and lock controls |
-| Accounting & Reports | Annual Summary | Formal annual statement from existing reporting source |
+| Project Finance | Profit Allocation | Existing persisted allocation records and server results |
+| Project Finance | Project Team Fees | Existing fee/source records and recorded settlement state |
+| Books & Close | Journal & Posting | Existing draft bridge, inspection, maker-checker posting and record controls |
+| Books & Close | Chart of Accounts | Existing accounts register and permitted editor |
+| Financial Reports | Monthly P&L | Formal statement with existing provisional/posted-source caveats |
+| Financial Reports | Cash Flow | Formal statement; source movement remains distinct from bank reconciliation |
+| Financial Reports | Balance Sheet | Formal statement with existing reconciliation limitations |
+| Books & Close | Month-End Close | Existing month picker, checklist, reviewer and lock controls |
+| Financial Reports | Annual Summary | Formal annual statement from existing reporting source |
 
 ## Boundaries and evidence
 
