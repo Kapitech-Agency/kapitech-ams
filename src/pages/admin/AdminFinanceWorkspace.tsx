@@ -1,5 +1,5 @@
 import { FinanceWorksheetSections } from '../../components/admin/finance/FinanceWorksheetSections';
-import { FINANCE_HANDOFFS, FINANCE_WORKSHEET_LABELS, getFinanceArea } from '../../lib/financeWorkspaceNavigation';
+import { FINANCE_HANDOFFS, FINANCE_WORKSHEET_LABELS, FINANCE_WORKSHEET_START, getFinanceArea } from '../../lib/financeWorkspaceNavigation';
 import { AdminDataTableShell } from '../../components/admin/AdminModulePrimitives';
 import { AdminFilterToolbar } from '../../components/admin/AdminFilterToolbar';
 import { DashboardControl } from '../../components/admin/DashboardControls';
@@ -2842,9 +2842,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         ];
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Operational source preview · not the posted General Ledger">
-              This preview uses invoice issue dates and expense records, excluding output tax from revenue. It is useful for operating review but is not accounting profit. Use posted General Journal balances as the accounting view; unmapped source rows, drafts and incomplete posting remain exceptions to resolve.
-            </WorkbookNote>
+
 <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-pnl-comparison-controls">
               <div className="min-w-0 text-xs text-muted">
                 <div className="font-medium text-fg">Comparison period</div>
@@ -2867,6 +2865,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             </div>
 <FinanceWorksheetSections label="Profit & loss basis" defaultSection="posted" sections={[
 { key: 'source', label: 'Source activity', content: <>
+            <WorkbookNote tone="warning" title="Operational source preview · not the posted General Ledger">
+              This preview uses invoice issue dates and expense records, excluding output tax from revenue. It is useful for operating review but is not accounting profit. Use posted General Journal balances as the accounting view; unmapped source rows, drafts and incomplete posting remain exceptions to resolve.
+            </WorkbookNote>
 <FinanceDataTable presentation="report"
               title="Operational source preview comparison"
               description={periodLabel + ' compared with ' + comparisonLabel + '. Change is current minus comparison; percentage is unavailable when the comparison baseline is zero.'}
@@ -2876,14 +2877,14 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               exportable={false}
               actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-comparison-' + reportPeriodValue + '.csv', ['Line item', 'Selected period', 'Comparison period', 'Change', 'Change percent'], comparisonMetrics.map((item) => [item.label, item.current, item.comparison, item.current - item.comparison, item.comparison === 0 ? 'N/A' : (((item.current - item.comparison) / Math.abs(item.comparison)) * 100).toFixed(1) + '%']))} variant="action" size="compact" className="ams-dashboard-card-action">Export comparison</DashboardControl>}
             />
-<FinanceDataTable presentation="report" title="Operational source preview detail" description="These source-derived values are separate from the Posted GL metrics above and must not be presented as final accounting profit." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected period." exportable={false} actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-' + reportPeriodValue + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))} variant="action" size="compact" className="ams-dashboard-card-action">Export CSV</DashboardControl>} />
+<FinanceDataTable presentation="report" title="Operational source preview detail" description="These source-derived values are separate from the Posted ledger figures and must not be presented as final accounting profit." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected period." exportable={false} actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-' + reportPeriodValue + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))} variant="action" size="compact" className="ams-dashboard-card-action">Export CSV</DashboardControl>} />
 <div className="text-xs text-muted">Classified expense total: {formatMoney(classifiedExpense)} · Source records in selected period: {currentPnl.expenses.length} expenses, {currentPnl.invoices.length} invoices.</div>
 </> },
 { key: 'posted', label: 'Posted ledger', content: <>
 <section className="min-w-0 space-y-3" data-ams-slug="finance-pnl-posted-ledger-summary">
               <div className="flex min-w-0 flex-col gap-1">
                 <h2 className="text-sm font-semibold text-fg">Posted General Ledger snapshot</h2>
-                <p className="text-xs text-muted">Journal-backed accounting figures for {periodLabel}, separate from the operational source preview above.</p>
+                <p className="text-xs text-muted">Journal-backed accounting figures for {periodLabel}, separate from the Source activity view.</p>
               </div>
               <FinanceDataTable presentation="report"
                 title="Posted General Ledger income statement"
@@ -3564,9 +3565,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
     <AdminPageShell featureSlug="excel-aligned-finance-workspace" className="ams-finance-workspace ams-operational-workspace">
       <AdminModuleHeader
         slug="finance-workspace-header"
-        eyebrow={activeGroup.label}
-        title="Finance"
-        description={activeTab.description || "Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."}
+        eyebrow={'Finance / ' + activeGroup.label}
+        title={FINANCE_WORKSHEET_LABELS[activeTab.key] ?? activeTab.label}
+        description={FINANCE_WORKSHEET_START[activeTab.key] ?? activeTab.description}
         actions={(
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>
@@ -3579,7 +3580,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
       <div data-ams-slug="finance-workspace-navigation">
         {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="ams-operational-tabs" variant="primary" />}
       </div>
-      <div className={handoffs.length ? "grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_16rem]" : "min-w-0"}>
       <div className="min-w-0 space-y-4" key={activeTab.key}>
       {SEARCHABLE_FINANCE_TABS.has(activeTab.key) && activeTab.key !== 'vendors' && <AdminFilterToolbar slug="finance-worksheet-search" searchValue={searchText} onSearchChange={setSearchText} searchLabel="Search this view" searchPlaceholder="Search this worksheet…" activeFilterCount={0} onReset={() => setSearchText('')} />}
       <div className="min-w-0 space-y-4" data-ams-feature-slug={activeTab.key} data-ams-slug="finance-active-worksheet">
@@ -3611,8 +3611,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
       </div>
       </div>
       {handoffs.length > 0 && (
-        <AdminPanel className="ams-operational-panel ams-overview-panel" title={activeTab.key === 'executive-summary' ? 'Finance workbench' : 'Related work'} description={activeTab.key === 'executive-summary' ? 'Open the register, close checklist, or report for the work you need to do.' : 'Continue in the worksheet that owns the next step.'}>
-          <div className="flex flex-col items-start gap-2 p-4">
+        <AdminPanel className="ams-operational-panel ams-overview-panel" title={activeTab.key === 'executive-summary' ? 'Go to a finance task' : 'Continue in Finance'}>
+          <div className="flex flex-wrap items-center gap-2 p-4">
             {handoffs.map(item => (
               <DashboardControl key={item.tab} to={financeWorksheetDestination(item.tab)} variant="action" size="compact" className="ams-dashboard-card-action">
                 {item.label}
@@ -3621,7 +3621,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           </div>
         </AdminPanel>
       )}
-      </div>
       {renderRegisterEditor()}
       {renderVendorContractEditor()}
       <Modal

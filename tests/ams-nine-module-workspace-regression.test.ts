@@ -560,8 +560,8 @@ test('shared compact actions retain adequate touch targets and visible keyboard 
 
 test('Finance worksheet header explains the active view and its owning workspace', async () => {
   const finance = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
-  assert.match(finance, /eyebrow=\{activeGroup\.label\}/);
-  assert.match(finance, /description=\{activeTab\.description \|\| "Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place\."\}/);
+  assert.match(finance, /eyebrow=\{'Finance \/ ' \+ activeGroup\.label\}/);
+  assert.match(finance, /description=\{FINANCE_WORKSHEET_START\[activeTab\.key\] \?\? activeTab\.description\}/);
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(finance, /ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="ams-operational-tabs" variant="primary"/);
 });
