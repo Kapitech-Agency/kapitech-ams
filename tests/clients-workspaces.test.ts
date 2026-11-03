@@ -167,8 +167,8 @@ test('Onboarding evidence distinguishes unavailable, loading and valid-empty acc
 
 test('Production Clients navigation adopts the Overview padding context on desktop and mobile',()=>{
   const layout=readFileSync(path.join(root,'src/pages/admin/AdminLayout.tsx'),'utf8');
-  assert.match(layout,/workspaceNavigationModule === 'clients' \? 'min-w-0 flex-1 ams-operational-tabs'/);
-  assert.match(layout,/workspaceNavigationModule === 'clients' \? 'w-full py-2 ams-operational-tabs'/);
+  assert.match(layout,/\(workspaceNavigationModule === 'clients' \|\| workspaceNavigationModule === 'finance'\) \? 'min-w-0 flex-1 ams-operational-tabs'/);
+  assert.match(layout,/\(workspaceNavigationModule === 'clients' \|\| workspaceNavigationModule === 'finance'\) \? 'w-full py-2 ams-operational-tabs'/);
   const css=readFileSync(path.join(root,'src/components/admin/OperationalWorkspace.css'),'utf8');
   assert.match(css,/nav\.ams-topnav-scroll:is\(\.ams-projects-module-tabs, \.ams-operational-tabs\) > a \{[^}]*padding:6px/);
   assert.doesNotMatch(css,/a\[aria-current="page"\][^{]*\{[^}]*padding:/);

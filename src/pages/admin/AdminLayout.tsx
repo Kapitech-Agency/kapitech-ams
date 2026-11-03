@@ -394,7 +394,7 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="Module navigation"
                   activeKey={activeWorkspaceTab?.key || ''}
                   items={workspaceTabItems}
-                  className={workspaceNavigationModule === 'inbox' ? 'min-w-0 flex-1 ams-inbox-module-tabs' : workspaceNavigationModule === 'projects' ? 'min-w-0 flex-1 ams-projects-module-tabs' : workspaceNavigationModule === 'clients' ? 'min-w-0 flex-1 ams-operational-tabs' : 'min-w-0 flex-1'}
+                  className={workspaceNavigationModule === 'inbox' ? 'min-w-0 flex-1 ams-inbox-module-tabs' : workspaceNavigationModule === 'projects' ? 'min-w-0 flex-1 ams-projects-module-tabs' : (workspaceNavigationModule === 'clients' || workspaceNavigationModule === 'finance') ? 'min-w-0 flex-1 ams-operational-tabs' : 'min-w-0 flex-1'}
                 />
               )}
               <Button
@@ -461,7 +461,7 @@ export const AdminLayout: React.FC = () => {
                 ariaLabel="Module navigation"
                 activeKey={activeWorkspaceTab?.key || ''}
                 items={workspaceTabItems}
-                className={workspaceNavigationModule === 'inbox' ? 'w-full py-2 ams-inbox-module-tabs' : workspaceNavigationModule === 'projects' ? 'w-full py-2 ams-projects-module-tabs' : workspaceNavigationModule === 'clients' ? 'w-full py-2 ams-operational-tabs' : 'w-full py-2'}
+                className={workspaceNavigationModule === 'inbox' ? 'w-full py-2 ams-inbox-module-tabs' : workspaceNavigationModule === 'projects' ? 'w-full py-2 ams-projects-module-tabs' : (workspaceNavigationModule === 'clients' || workspaceNavigationModule === 'finance') ? 'w-full py-2 ams-operational-tabs' : 'w-full py-2'}
               />
             </div>
           </div>

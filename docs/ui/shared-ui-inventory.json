@@ -6,9 +6,9 @@
     "Import reachability is conservative and does not prove each export/selector is used. Never auto-delete based on this report."
   ],
   "summary": {
-    "sourceFiles": 117,
-    "reachableFiles": 114,
-    "componentFiles": 42,
+    "sourceFiles": 118,
+    "reachableFiles": 115,
+    "componentFiles": 43,
     "sharedComponentFiles": 18,
     "cssBytes": 513951
   },
@@ -34,7 +34,11 @@
         "src/pages/admin/AdminClientRetainers.tsx",
         "src/pages/admin/AdminClients.tsx",
         "src/pages/admin/AdminContracts.tsx",
-        "src/pages/admin/AdminProjects.tsx"
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminProjectProfitability.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminVendors.tsx"
       ]
     },
     {
@@ -221,6 +225,7 @@
         "src/components/admin/clients/ClientDirectoryRegister.tsx",
         "src/components/admin/clients/ClientOnboardingWorkspace.tsx",
         "src/components/admin/clients/ClientWorkspace.tsx",
+        "src/components/admin/finance/FinanceRecordSurface.tsx",
         "src/components/admin/inbox/InboxFollowUps.tsx",
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
@@ -231,8 +236,11 @@
         "src/pages/admin/AdminClientRetainers.tsx",
         "src/pages/admin/AdminClients.tsx",
         "src/pages/admin/AdminContracts.tsx",
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
         "src/pages/admin/AdminInbox.tsx",
-        "src/pages/admin/AdminProjects.tsx"
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminVendors.tsx"
       ]
     },
     {
@@ -257,7 +265,11 @@
         "src/pages/admin/AdminClientRetainers.tsx",
         "src/pages/admin/AdminClients.tsx",
         "src/pages/admin/AdminContracts.tsx",
-        "src/pages/admin/AdminProjects.tsx"
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminProjectProfitability.tsx",
+        "src/pages/admin/AdminProjects.tsx",
+        "src/pages/admin/AdminVendors.tsx"
       ]
     },
     {
@@ -271,6 +283,19 @@
       ],
       "consumers": [
         "src/pages/admin/AdminLayout.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/finance/FinanceRecordSurface.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "FinanceRecordSurface"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInvoicing.tsx",
+        "src/pages/admin/AdminProjectProfitability.tsx"
       ]
     },
     {
@@ -1216,12 +1241,14 @@
       "file": "src/pages/admin/AdminFinanceWorkspace.tsx",
       "reachable": true,
       "components": {
+        "AdminDataTableShell": 1,
+        "AdminFilterToolbar": 1,
         "AdminInvoicing": 5,
         "AdminMetricStrip": 7,
         "AdminModuleHeader": 2,
-        "AdminModuleNotice": 1,
+        "AdminModuleNotice": 2,
         "AdminPageShell": 2,
-        "AdminPanel": 6,
+        "AdminPanel": 7,
         "AdminProjectProfitability": 1,
         "AdminSectionTabs": 1,
         "AdminStatusBadge": 13,
@@ -1230,27 +1257,28 @@
         "ArrowDown": 5,
         "ArrowUp": 2,
         "ArrowUpDown": 1,
-        "ArrowUpRight": 5,
-        "Button": 44,
+        "ArrowUpRight": 6,
+        "Button": 28,
         "CircleDollarSign": 3,
         "CustomDatePicker": 4,
         "CustomSelect": 9,
+        "DashboardControl": 16,
+        "DashboardEmptyState": 1,
         "Download": 9,
         "Drawer": 2,
-        "FileText": 2,
+        "FileText": 3,
         "FinanceDataTable": 32,
+        "FinanceRecordSurface": 1,
         "FinanceWorkbookWorkspace": 1,
         "Landmark": 3,
         "Modal": 1,
         "Plus": 7,
         "RefreshCw": 4,
-        "Search": 1,
-        "ShieldAlert": 5,
+        "ShieldAlert": 4,
         "StatusBadge": 15,
         "Trash2": 1,
         "WalletCards": 6,
-        "WorkbookNote": 21,
-        "X": 1
+        "WorkbookNote": 21
       }
     },
     {
@@ -1281,7 +1309,11 @@
       "file": "src/pages/admin/AdminInvoicing.tsx",
       "reachable": true,
       "components": {
-        "AdminModuleHeader": 1,
+        "AdminDataTableShell": 4,
+        "AdminFilterField": 13,
+        "AdminFilterToolbar": 5,
+        "AdminMetricCard": 1,
+        "AdminPanel": 4,
         "AdminTablePagination": 7,
         "AlertCircle": 5,
         "ArrowDown": 2,
@@ -1293,6 +1325,9 @@
         "Copy": 2,
         "CustomDatePicker": 8,
         "CustomSelect": 33,
+        "DashboardControl": 11,
+        "DashboardEmptyState": 1,
+        "DashboardFilterGroup": 3,
         "Download": 11,
         "Drawer": 6,
         "Edit3": 3,
@@ -1301,6 +1336,7 @@
         "FileText": 6,
         "FinanceCashFlowChart": 2,
         "FinanceMetricCard": 28,
+        "FinanceRecordSurface": 5,
         "Hourglass": 3,
         "InvoiceStatusDropdown": 1,
         "Modal": 8,
@@ -1310,7 +1346,6 @@
         "QuotationStatusBadge": 1,
         "Receipt": 6,
         "RefreshCw": 5,
-        "Search": 5,
         "Send": 3,
         "ShieldCheck": 2,
         "SlidersHorizontal": 1,
@@ -1368,13 +1403,17 @@
       "file": "src/pages/admin/AdminProjectProfitability.tsx",
       "reachable": true,
       "components": {
+        "AdminDataTableShell": 1,
+        "AdminFilterToolbar": 1,
         "AdminModuleHeader": 1,
         "AdminModuleNotice": 1,
         "AdminPageShell": 1,
+        "AdminPanel": 1,
         "AlertCircle": 1,
         "Button": 1,
-        "RefreshCw": 1,
-        "Search": 1
+        "DashboardEmptyState": 1,
+        "FinanceRecordSurface": 1,
+        "RefreshCw": 1
       }
     },
     {
@@ -1537,30 +1576,36 @@
       "file": "src/pages/admin/AdminVendors.tsx",
       "reachable": true,
       "components": {
+        "AdminFilterField": 4,
+        "AdminFilterToolbar": 1,
         "AdminModuleHeader": 2,
         "AdminPageShell": 1,
+        "AdminPanel": 1,
         "AdminSectionTabs": 2,
         "AdminTablePagination": 1,
         "AlertCircle": 2,
         "Building2": 1,
-        "Button": 5,
+        "Button": 7,
         "CheckCircle2": 1,
         "ConfirmDialog": 1,
-        "CustomSelect": 7,
+        "CustomSelect": 11,
+        "DashboardControl": 1,
+        "DashboardEmptyState": 1,
         "Drawer": 2,
         "Edit3": 1,
         "Globe": 1,
         "Mail": 1,
         "Phone": 1,
-        "Plus": 3,
+        "Plus": 5,
         "ProfileIdentity": 1,
-        "RefreshCw": 1,
+        "RefreshCw": 2,
         "Search": 1,
         "ShieldCheck": 2,
         "Skeleton": 2,
         "Star": 1,
         "Trash2": 1,
-        "Users": 2,
+        "Users": 3,
+        "VendorDirectorySurface": 1,
         "VendorWorkspaceContainer": 2,
         "X": 1
       }

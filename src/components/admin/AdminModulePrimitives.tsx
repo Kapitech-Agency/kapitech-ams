@@ -469,8 +469,8 @@ const MetricSparkline: React.FC<{ values?: number[]; label: React.ReactNode; ton
   );
 };
 
-export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = ({
-  label, value, context, change, changeToneClassName = 'text-muted', sparkline, icon, toneClassName = 'text-fg', slug, id, sourceLabel, linkLabel, className
+export const AdminMetricCard: React.FC<AdminMetric & { className?: string; valueLayout?: 'inline' | 'stacked' }> = ({
+  label, value, context, change, changeToneClassName = 'text-muted', sparkline, icon, toneClassName = 'text-fg', slug, id, sourceLabel, linkLabel, className, valueLayout = 'inline'
 }) => (
   <article data-ams-slug={slug || (id ? 'metric-' + String(id).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() : undefined)} className={cn('ams-dashboard-card rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover', className)}>
     <div className="flex items-start justify-between gap-3">
@@ -479,8 +479,8 @@ export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = (
           </div>
       {icon && <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg', toneClassName)}>{icon}</span>}
     </div>
-    <div className="mt-3 flex min-w-0 items-end justify-between gap-4">
-      <div className={cn('min-w-0 truncate text-2xl font-semibold leading-8 tracking-[-0.02em] tabular-nums', toneClassName)}>{value}</div>
+    <div className={cn('mt-3 flex min-w-0 gap-4', valueLayout === 'stacked' ? 'flex-col items-start' : 'items-end justify-between')}>
+      <div className={cn('min-w-0 text-2xl font-semibold leading-8 tracking-[-0.02em] tabular-nums', valueLayout === 'stacked' ? 'max-w-full break-words' : 'truncate', toneClassName)}>{value}</div>
       {Array.isArray(sparkline) && sparkline.length >= 2 && <MetricSparkline values={sparkline} label={label} toneClassName={toneClassName} />}
     </div>
     {(change !== undefined || context !== undefined) && (
@@ -592,6 +592,8 @@ export interface AdminPanelProps {
   className?: string;
   bodyClassName?: string;
   slug?: string;
+  featureSlug?: string;
+  ariaLabel?: string;
   headerDivider?: boolean;
 }
 
@@ -603,9 +605,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   className,
   bodyClassName,
   slug,
+  featureSlug,
+  ariaLabel,
   headerDivider = true
 }) => (
-  <section data-ams-slug={slug} className={cn('rounded-card border border-line bg-panel', className)}>
+  <section data-ams-feature-slug={featureSlug} aria-label={ariaLabel} data-ams-slug={slug} className={cn('rounded-card border border-line bg-panel', className)}>
     {(title || description || actions) && (
       <div className={cn('flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5', headerDivider ? 'border-b border-line' : '')}>
         <div className="min-w-0">

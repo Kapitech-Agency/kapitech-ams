@@ -43,6 +43,10 @@ import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { toSlug } from '../../lib/slug';
 
 import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminPanel } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterToolbar, AdminFilterField } from '../../components/admin/AdminFilterToolbar';
+import { DashboardControl } from '../../components/admin/DashboardControls';
+import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
@@ -51,7 +55,9 @@ const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.R
     : <AdminPageShell featureSlug="vendors-module">{children}</AdminPageShell>
 );
 
-export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }> = ({ embedded = false, searchTerm }) => {
+const VendorDirectorySurface: React.FC<{embedded: boolean; description: string; actions: React.ReactNode; children: React.ReactNode}> = ({embedded,description,actions,children}) => embedded ? <AdminPanel className="ams-operational-panel ams-overview-panel" title="Vendor directory" description={description} actions={actions}>{children}</AdminPanel> : <>{children}</>;
+
+export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string; onSearchChange?: (value: string) => void }> = ({ embedded = false, searchTerm, onSearchChange }) => {
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
   const navigationRole = getAmsRole(getAdminSession()?.user);
@@ -428,7 +434,48 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
       )}
 
       {/* Filter & Search Bar */}
-      <section data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters" className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
+      {embedded ? <AdminFilterToolbar slug="finance-vendor-directory-filters" searchValue={effectiveSearchQuery} onSearchChange={onSearchChange || setSearchQuery} searchLabel="Search vendors" searchPlaceholder="Search name, skill or email" activeFilterCount={[selectedCategory,selectedType,statusFilter,vettedFilter].filter(value => value !== 'All').length} onReset={() => {setSelectedCategory('All');setSelectedType('All');setStatusFilter('All');setVettedFilter('All');}} columns={4}><AdminFilterField label="Service category"><CustomSelect
+              value={selectedCategory}
+              onChange={val => setSelectedCategory(val)}
+              options={[
+                { value: 'All', label: language === 'id' ? 'Semua Bidang' : 'All Categories' },
+                { value: 'Frontend Dev', label: 'Frontend Dev' },
+                { value: 'Backend Dev', label: 'Backend Dev' },
+                { value: 'UI/UX Design', label: 'UI/UX Design' },
+                { value: 'DevOps & Cloud', label: 'DevOps & Cloud' },
+                { value: '3D & Motion', label: '3D & Motion' },
+                { value: 'SEO & Copy', label: 'SEO & Copy' }
+              ]}
+             aria-label="Vendor category"/></AdminFilterField>
+<AdminFilterField label="Engagement type"><CustomSelect
+              value={selectedType}
+              onChange={val => setSelectedType(val)}
+              options={[
+                { value: 'All', label: language === 'id' ? 'Semua Tipe' : 'All Types' },
+                { value: 'freelancer', label: 'Freelancer' },
+                { value: 'contractor', label: 'Contractor' },
+                { value: 'agency_partner', label: 'Agency Partner' }
+              ]}
+             aria-label="Vendor type"/></AdminFilterField>
+<AdminFilterField label="Status"><CustomSelect
+              value={statusFilter}
+              onChange={val => setStatusFilter(val)}
+              options={[
+                { value: 'All', label: language === 'id' ? 'Semua Status' : 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'under_review', label: 'Review' },
+                { value: 'inactive', label: 'Inactive' }
+              ]}
+             aria-label="Vendor status"/></AdminFilterField>
+<AdminFilterField label="Verification"><CustomSelect
+              value={vettedFilter}
+              onChange={val => setVettedFilter(val)}
+              options={[
+                { value: 'All', label: language === 'id' ? 'Semua Verifikasi' : 'All Verification' },
+                { value: 'vetted', label: language === 'id' ? 'Hanya Vetted' : 'Vetted Only' },
+                { value: 'unvetted', label: language === 'id' ? 'Belum Vetted' : 'Unvetted' }
+              ]}
+             aria-label="Vendor verification"/></AdminFilterField></AdminFilterToolbar> : (<section data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters" className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
         <div className={searchTerm !== undefined ? 'hidden' : 'relative w-full lg:w-96'}>
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -495,10 +542,10 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
             />
           </div>
         </div>
-      </section>
+      </section>)}
 
       {/* Vendors Grid */}
-      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between" data-ams-feature-slug="vendor-directory-register-header" data-ams-slug="vendor-directory-register-header">
+      {!embedded && (<div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between" data-ams-feature-slug="vendor-directory-register-header" data-ams-slug="vendor-directory-register-header">
         <h2 id="vendor-directory-list-title" className="text-sm font-semibold text-fg">{language === 'id' ? 'Direktori vendor' : 'Vendor directory'}</h2>
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:shrink-0 sm:justify-end">
           <p className="text-[11px] tabular-nums text-muted" aria-live="polite">
@@ -511,8 +558,8 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
             <span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span>
           </button>}
         </div>
-      </div>
-      <section data-ams-feature-slug="vendor-directory-list" data-ams-slug="vendor-directory-list" aria-labelledby="vendor-directory-list-title"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      </div>)}
+      <VendorDirectorySurface embedded={embedded} actions={<DashboardControl variant="primary" size="compact" icon={<Plus size={14}/>} disabled={!canManageVendors} onClick={handleOpenAdd}>{language === 'id' ? 'Tambah vendor' : 'Add vendor'}</DashboardControl>} description={filteredVendors.length + (filteredVendors.length === 1 ? ' vendor' : ' vendors')}><section data-ams-feature-slug="vendor-directory-list" data-ams-slug="vendor-directory-list" className={embedded && filteredVendors.length > 0 ? 'p-4' : undefined} aria-labelledby={embedded ? undefined : 'vendor-directory-list-title'} aria-label={embedded ? 'Vendor directory records' : undefined}><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {paginatedVendors.map(vendor => (
           <div
             key={vendor.id}
@@ -527,7 +574,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
                     <div className="flex items-center gap-1.5 flex-wrap">
 
                       {(vendor.isVetted ?? true) && (
-                        <span 
+                        <span
                           onClick={(e) => handleToggleVettedQuick(vendor, e)}
                           title={language === 'id' ? 'Mitra Terverifikasi Kapitech (Klik untuk ubah)' : 'Kapitech Vetted Talent (Click to toggle)'}
                           className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-badge text-[9px] font-sans font-semibold bg-accent/10 text-accent-text border border-accent/30 cursor-pointer hover:bg-accent/15 transition-colors"
@@ -638,7 +685,24 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
       </div></section>
 
 {filteredVendors.length === 0 && (
-        <div className="flex w-full flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-12 text-center">
+        embedded ? <DashboardEmptyState inset eyebrow="Vendors & freelancers" icon={<Users size={17}/>} title={loadError
+              ? (language === 'id' ? 'Vendor tidak dapat dimuat' : 'Unable to load vendors')
+              : (language === 'id' ? (vendors.length ? 'Tidak ada vendor yang cocok' : 'Belum ada vendor') : (vendors.length ? 'No matching vendors found' : 'No vendors yet'))} description={loadError
+              ? (language === 'id' ? 'Data vendor belum tersedia karena layanan gagal dimuat. Coba muat ulang.' : 'Vendor data is unavailable because the service could not be reached. Try loading again.')
+              : (language === 'id'
+                ? 'Ubah filter pencarian atau tambahkan profil vendor saat siap.'
+                : 'Adjust the search filters or add a vendor profile when you are ready.')} action={<>
+          {loadError && (
+            <Button type="button" variant="secondary" icon={<RefreshCw size={14} />} loading={isLoading} onClick={() => void loadVendors()} className="mt-4">
+              {language === 'id' ? 'Coba lagi' : 'Retry loading'}
+            </Button>
+          )}
+          {!loadError && vendors.length === 0 && canManageVendors && (
+            <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={handleOpenAdd} className="mt-4">
+              {language === 'id' ? 'Tambah vendor' : 'Add vendor'}
+            </Button>
+          )}
+        </>} /> : (<div className="flex w-full flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-12 text-center">
           {loadError ? <AlertCircle size={28} className="mb-3 text-danger" aria-hidden="true" /> : <Users size={28} className="mb-3 text-muted" aria-hidden="true" />}
           <h3 className="text-sm font-semibold text-fg">
             {loadError
@@ -662,7 +726,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
               {language === 'id' ? 'Tambah vendor' : 'Add vendor'}
             </Button>
           )}
-        </div>
+        </div>)
       )}
 
       {filteredVendors.length > 0 && (
@@ -677,6 +741,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
       />
       )}
 
+</VendorDirectorySurface>
       {/* Detail Slideover Drawer */}
       {isDrawerOpen && selectedVendor && (
         <Drawer
@@ -907,8 +972,8 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
                     <span>{language === 'id' ? 'Mitra Terverifikasi (Vetted)' : 'Kapitech Vetted Talent'}</span>
                   </span>
                   <p className="text-[11px] text-muted mt-0.5">
-                    {language === 'id' 
-                      ? 'Tandai bahwa portfolio, NDA, dan review SLA telah divalidasi oleh partner agensi.' 
+                    {language === 'id'
+                      ? 'Tandai bahwa portfolio, NDA, dan review SLA telah divalidasi oleh partner agensi.'
                       : 'Flag that NDA, portfolio deliverables, and background check have been passed.'}
                   </p>
                 </div>

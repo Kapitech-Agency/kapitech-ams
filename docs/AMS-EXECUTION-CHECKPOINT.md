@@ -1,5 +1,13 @@
 # AMS Execution Checkpoint
 
+## Finance module frontend rebuild — active 2 November 2026
+
+- User requests continuing into Finance under the established structural UI/UX/shared-component scope. Baseline main `3a968fd9aaabe27566cfb5060d10bf00223ee103`; prior exact-SHA AMS CI and Quality Gate passed. Repository is clean at audit start and live main fetched. Preserve all 20 workbook destinations, Quotations, PM aggregate-only Project Finance, routes, source ownership and permissions.
+- Domain authority: FINANCE-EXCEL-ALIGNMENT.md plus current code/tests. No backend/API/model/auth/RBAC/math/posting/period-lock/maker-checker/payment/idempotency changes or real financial operations are authorized. The historical visual restriction in the alignment document yields to the user's current frontend rebuild request; financial contracts remain authoritative.
+- Existing: workbook source loaders/supplementary registers, Journal draft bridge/posting, cash evidence, closing, invoice/payment/quotation/editor flows. Existing incomplete/provisional: financial statement authority, actual-margin/source reconciliation and bank-feed/provider readiness; preserve all caveats and unknown-versus-zero/source-error distinctions. No demo values, new ledger or provider flow.
+- Audit identifies legacy raw search/filter layouts, default tinted Finance navigation, wide-only registers outside Project Finance, local empty markup, inconsistent panel composition and a separate PM aggregate presentation. Plan: shared Overview navigation/panels/actions/disclosure filters/empty insets, responsive source-backed records, clear report-versus-register presentation, existing forms and source actions. Capture non-JSX declarations/assignments for Finance/Invoices/PM in an external AST baseline before edits.
+- Next action: implement and verify a bounded presentation foundation across the five areas, inspect all 21 destinations and existing cross-module/permission boundaries; maintain regression coverage and docs, then push main and verify exact-SHA workflows. No production writes or visual sign-off claimed.
+
 ## Clients empty-state padding correction — 2 November 2026
 
 - User requests empty-state padding aligned with Dashboard Overview. Baseline main `a09d317065934b85d39ee1b38380c4713784c3fa`, prior exact-SHA workflows green. Root cause: Clients reused the compact surface but omitted the Overview panel-body inset, leaving the surface against the card edge.

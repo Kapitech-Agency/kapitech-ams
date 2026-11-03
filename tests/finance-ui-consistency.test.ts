@@ -28,7 +28,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(subnavigation, /finance-workspace-receivables-payables/);
   assert.match(subnavigation, /finance-workspace-project-finance/);
   assert.match(subnavigation, /finance-workspace-accounting-reports/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 min-\[1100px\]:flex-1" variant="primary"/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="ams-operational-tabs" variant="primary"/);
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   assert.ok(primitives.includes("'border-accent/20 bg-accent/10 font-semibold text-fg'"),
     'The primary worksheet active state must use the shared crimson accent tint and border.');
@@ -75,22 +75,22 @@ test('Finance visible copy describes user workflows, not spreadsheet implementat
 test('Finance workspace groups navigation, search, and alerts using the shared AMS layout patterns', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
-  assert.match(workspace, /className="flex min-w-0 flex-col gap-3 min-\[1100px\]:flex-row min-\[1100px\]:items-center min-\[1100px\]:justify-between"[\s\S]{0,280}data-ams-slug="finance-workspace-navigation"/);
+  assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.doesNotMatch(workspace, /SEARCHABLE_FINANCE_TABS\.has\(activeTab\.key\) && activeGroup\.items\.length <= 4/);
-  assert.match(workspace, /<div className="flex min-w-0 w-full justify-start min-\[1100px\]:w-72 min-\[1100px\]:shrink-0 min-\[1100px\]:justify-end" data-ams-slug="finance-worksheet-search">/);
+  assert.match(workspace, /<AdminFilterToolbar slug="finance-worksheet-search"/);
   assert.doesNotMatch(workspace, /finance-workspace-navigation[\s\S]{0,100}lg:flex-row/,
     'Finance worksheet navigation stays stacked until the canonical 1100px breakpoint.');
   assert.match(workspace, /\(Boolean\(registerActionError && !editor\) \|\| registerErrors\.length > 0 \|\| sourceErrors\.length > 0\)/);
   assert.match(workspace, /<AdminModuleNotice[\s\S]{0,320}Finance action needs attention/);
   assert.doesNotMatch(workspace, /<WorkbookNote tone="warning" title="Some finance sources are unavailable">/);
-  assert.match(workspace, /<div className="min-w-0 space-y-3" data-ams-feature-slug=\{activeTab\.key\} data-ams-slug="finance-active-worksheet">/);
+  assert.match(workspace, /<div className="min-w-0 space-y-4" data-ams-feature-slug=\{activeTab\.key\} data-ams-slug="finance-active-worksheet">/);
 });
 
 test('The Finance worksheet search controls the embedded vendor directory without a duplicate search field', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
 
-  assert.match(workspace, /<AdminVendors embedded searchTerm=\{searchText\} \/>/);
+  assert.match(workspace, /<AdminVendors embedded searchTerm=\{searchText\} onSearchChange=\{setSearchText\} \/>/);
   assert.match(vendors, /embedded\?: boolean; searchTerm\?: string/);
   assert.match(vendors, /const effectiveSearchQuery = searchTerm \?\? searchQuery/);
   assert.match(vendors, /v\.name\.toLowerCase\(\)\.includes\(effectiveSearchQuery\.toLowerCase\(\)\)/);
@@ -221,7 +221,7 @@ test('Project Finance provides a compact card register with the same rows, sorti
   assert.match(component, /data-ams-slug="finance-project-finance-cards"/);
   assert.match(component, /visibleRows\.map\(\(row\) => \(/);
   assert.match(component, /setSort\(\(current\) => \(\{ index, direction: current\?\.index === index \? current\.direction : 'asc' \}\)\)/);
-  assert.match(component, /hidden max-w-full overflow-x-auto min-\[1280px\]:block/);
+  assert.match(component, /desktopOnly=\{Boolean\(compactCardLayout\)\}/);
   assert.match(projectView, /compactCardLayout=\{\{titleIndex:0,subtitleIndexes:\[1,2\],statusIndexes:\[13,16\]/);
   assert.match(projectView, /label:'Planned financials',indexes:\[3,4,5,6\]/);
   assert.match(projectView, /label:'Reporting-period activity',indexes:\[7,8,9,10,11,12\]/);
@@ -275,8 +275,8 @@ test('Finance worksheet search, date display, and register permissions are wired
   assert.ok(cashBankStart >= 0 && receivablesStart > cashBankStart);
   assert.doesNotMatch(workspace.slice(cashBankStart, receivablesStart), /renderRecentActivity\(\)/, 'Cash & Bank should not repeat a second table of the same movements.');
   assert.match(workspace, /SEARCHABLE_FINANCE_TABS\.has\(activeTab\.key\)/);
-  assert.match(workspace, /value=\{searchText\}[\s\S]*?onChange=\{\(event\) => setSearchText\(event\.target\.value\)\}/);
-  assert.match(workspace, /onClick=\{\(\) => setSearchText\(''\)\}/);
+  assert.match(workspace, /searchValue=\{searchText\} onSearchChange=\{setSearchText\}/);
+  assert.match(workspace, /onReset=\{\(\) => setSearchText\(''\)\}/);
   assert.match(workspace, /const canManageFinanceRecords = hasAdminPermission\('canManageInvoices'\)/);
   assert.match(workspace, /const canApproveFinanceRecords = hasAdminPermission\('canApproveBudgets'\)/);
   assert.match(workspace, /const isPeriodLocked = Boolean\(recordPeriod\) && getRegisterRecords\('monthly-closing-lock'\)/);
@@ -341,7 +341,7 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   assert.match(workspace, /const canShowFinanceWorksheet = \(key: string\) =>/);
   assert.doesNotMatch(workspace, /sidebarDestinations/);
   assert.doesNotMatch(apView, /title="Vendor contract references"/);
-  assert.match(vendorsView, /<AdminVendors embedded searchTerm=\{searchText\} \/>/);
+  assert.match(vendorsView, /<AdminVendors embedded searchTerm=\{searchText\} onSearchChange=\{setSearchText\} \/>/);
   assert.match(vendorsView, /Vendor contract register/);
   assert.match(vendorsView, /openVendorContractEditor\(vendor, contract\)/);
   assert.doesNotMatch(vendorsView, /Vendor & Freelancer payment schedule/);
@@ -389,11 +389,11 @@ test('Finance views embed the existing transactional workflows instead of routin
 
   assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses' \| 'vendor-payments' \| 'quotations'/);
   assert.match(invoicing, /embeddedReceivablesOnly \|\| hasOpenReceivable/);
-  assert.match(invoicing, /!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceBlocked && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
+  assert.match(invoicing, /!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceBlocked && <DashboardControl[\s\S]*?onClick=\{openCreateInvoice\}/);
   assert.match(invoicing, /openPayment\(invoice\)/);
   assert.match(invoicing, /embeddedIncomeExpenseMode \|\| 'income'/);
   assert.match(invoicing, /Expense ledger/);
-  assert.match(vendors, /export const AdminVendors: React\.FC<\{ embedded\?: boolean; searchTerm\?: string \}>/);
+  assert.match(vendors, /export const AdminVendors: React\.FC<\{ embedded\?: boolean; searchTerm\?: string; onSearchChange\?: \(value: string\) => void \}>/);
   assert.match(vendors, /!embedded && <AdminModuleHeader/);
   assert.doesNotMatch(vendors, /data-ams-slug="team-mobile-tabs"/);
   assert.match(workspace, /accountsByCode\.values\(\)/);
@@ -679,7 +679,7 @@ test('Finance registers provide sortable headers, usable pagination, and CSV exp
   assert.match(workspace, /const exportRows = \(\) =>/);
   assert.match(workspace, /const exportableRows = sortedRows\.map/);
   assert.match(workspace, /exportable = true/);
-  assert.match(workspace, /exportable=\{false\} actions=\{<Button variant="secondary" type="button" icon=\{<Download size=\{14\}/);
+  assert.match(workspace, /exportable=\{false\} actions=\{<DashboardControl type="button" icon=\{<Download size=\{14\}/);
 });
 
 test('Journal mapping matches the implemented accrual accounting workflow', async () => {
@@ -882,8 +882,8 @@ test('Finance Expenses register shows canonical supplier links and recorded paym
 
 test('Finance Quotations register contains its wide table and keeps commercial context visible', async () => {
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
-  const quotationHeading = invoicing.indexOf('>Quotation ledger</h2>');
-  const scrollRegion = invoicing.indexOf('<div className="overflow-x-auto custom-scrollbar">{filteredQuotations.length===0?', quotationHeading);
+  const quotationHeading = invoicing.indexOf('title={<>Quotation ledger</>}');
+  const scrollRegion = invoicing.indexOf('<FinanceRecordSurface caption="Quotation ledger">', quotationHeading);
   const tableStart = invoicing.indexOf('<table className="ams-finance-table min-w-[1180px] border-separate border-spacing-0 text-xs">', scrollRegion);
   const tableEnd = invoicing.indexOf('</table>', tableStart);
   const quotations = invoicing.slice(tableStart, tableEnd);
@@ -910,7 +910,7 @@ test('Embedded invoice registers lead supporting summaries and receivables aging
   assert.ok(pagination >= 0 && embeddedSummary > pagination && agingView > embeddedSummary,
     'The actionable invoice register must precede supporting summary and aging views.');
 
-  const invoiceList = invoicing.indexOf('<div className="overflow-x-auto custom-scrollbar">{filteredInvoices.length===0?');
+  const invoiceList = invoicing.indexOf('<FinanceRecordSurface caption="Invoice ledger">');
   const invoiceTableStart = invoicing.indexOf('<table className="ams-finance-table min-w-[1120px] table-fixed border-separate border-spacing-0 text-xs">', invoiceList);
   const invoiceTableEnd = invoicing.indexOf('</table>', invoiceTableStart);
   const invoiceTable = invoicing.slice(invoiceTableStart, invoiceTableEnd);

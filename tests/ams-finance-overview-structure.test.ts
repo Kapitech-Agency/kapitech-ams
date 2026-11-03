@@ -35,7 +35,7 @@ test('Finance Executive Summary highlights overdue invoices using the existing F
   assert.ok(summary.includes("getEffectiveInvoiceStatus(invoice) === 'overdue' && getInvoiceOutstanding(invoice) > 0"));
   assert.ok(summary.includes('title="Items needing attention · overdue invoices"'));
   assert.ok(summary.includes('This exception queue is independent of the selected invoice issue-date period.'));
-  const periodContext = summary.indexOf('data-ams-feature-slug="finance-executive-summary-period"');
+  const periodContext = summary.indexOf('featureSlug="finance-executive-summary-period"');
   const exceptionQueue = summary.indexOf('title="Items needing attention · overdue invoices"');
   const metricStrip = summary.indexOf('<AdminMetricStrip metrics={metrics} />');
   const figureDefinitions = summary.indexOf('data-ams-feature-slug="finance-executive-summary-definitions"');

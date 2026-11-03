@@ -4,7 +4,7 @@
 
 ## Source of truth and UI constraints
 
-The workbook **Kapitech Finance Final Automated.xlsx** is the business-process reference for AMS Finance. The AMS design system and existing UI implementation remain the visual source of truth. The workspace reuses AdminPageShell, AdminModuleHeader, AdminSectionTabs, AdminPanel, AdminMetricStrip, AdminStatusBadge, the shared Button and Drawer, and the existing color tokens. Do not introduce a new palette or redesign existing Finance screens.
+The workbook **Kapitech Finance Final Automated.xlsx** is the business-process reference for AMS Finance. The AMS design system and existing UI implementation remain the visual source of truth. The workspace reuses AdminPageShell, AdminModuleHeader, AdminSectionTabs, AdminPanel, AdminMetricStrip, AdminStatusBadge, the shared Button and Drawer, and the existing color tokens. The 2 November 2026 user-authorized Finance presentation rebuild follows the approved Dashboard Overview through the existing shared UI. It may replace legacy presentation, never the financial/source contracts below. Do not introduce a new palette. See [Finance workspace presentation](AMS-FINANCE-WORKSPACES.md).
 
 ## Navigation map
 

@@ -1,33 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import {
-  AlertCircle,
-  ArrowDown,
-  Check,
-  CheckCircle2,
-  Copy,
-  BadgeCheck,
-  BarChart3,
-  Clock3,
-  Download,
-  Edit3,
-  Eye,
-  FileText,
-  Hourglass,
-  Plus,
-  Receipt,
-  RefreshCw,
-  Search,
-  Send,
-  MoreHorizontal,
-  ShieldCheck,
-  SlidersHorizontal,
-  Trash2,
-  TrendingUp,
-  WalletCards,
-  X
-} from 'lucide-react';
-import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
+import { useSearchParams } from 'react-router-dom';
+import { AlertCircle, ArrowDown, Check, CheckCircle2, Copy, BadgeCheck, BarChart3, Clock3, Download, Edit3, Eye, FileText, Hourglass, Plus, Receipt, RefreshCw, Send, MoreHorizontal, ShieldCheck, SlidersHorizontal, Trash2, TrendingUp, WalletCards, X } from 'lucide-react';
+import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance } from '../../lib/financeStore';
 import { AgencyVendor } from '../../lib/vendorStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -38,7 +12,12 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminMetricCard, AdminTablePagination, AdminStatusBadge, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricCard, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminPanel } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterToolbar, AdminFilterField } from '../../components/admin/AdminFilterToolbar';
+import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
+import { DashboardControl, DashboardFilterGroup } from '../../components/admin/DashboardControls';
+import { FinanceRecordSurface } from '../../components/admin/finance/FinanceRecordSurface';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { FINANCE_INVOICE_TEMPLATES, FINANCE_QUOTATION_TEMPLATES, printFinanceDocument } from '../../lib/financeDocumentTemplates';
@@ -421,16 +400,7 @@ const QuotationStatusBadge = ({ status }: { status: FinanceQuotationStatus }) =>
   );
 };
 
-const EmptyState = ({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) => (
-  <div className="flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-bg px-5 py-8 text-center">
-    <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted">
-      <Receipt size={18} strokeWidth={1.8} />
-    </div>
-    <p className="mt-3 text-sm font-medium text-fg">{title}</p>
-    <p className="mt-1 max-w-[48ch] text-xs leading-5 text-muted">{description}</p>
-    {action && <div className="mt-4">{action}</div>}
-  </div>
-);
+const EmptyState = ({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) => <DashboardEmptyState icon={<Receipt size={18} />} eyebrow="Finance" title={title} description={description} action={action} />;
 
 type FinanceChartPoint = {
   label: string;
@@ -579,7 +549,7 @@ const FinanceCashFlowChart: React.FC<{
     </div>
   );
 };
-const FinanceMetricCard: React.FC<React.ComponentProps<typeof AdminMetricCard>> = AdminMetricCard;
+const FinanceMetricCard: React.FC<React.ComponentProps<typeof AdminMetricCard>> = (props) => <AdminMetricCard {...props} valueLayout="stacked" />;
 
 type EmbeddedFinanceView = 'invoices' | 'receivables' | 'income-expenses' | 'vendor-payments' | 'quotations';
 type AdminInvoicingProps = {
@@ -2871,13 +2841,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   return (
     <div className="min-w-0 space-y-5">
-      {isProposalWorkspace && <AdminModuleHeader className="mb-0" title="Quotations" description="Manage commercial quotations, review stages, validity, and the handoff to invoicing." />}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
-          {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
-            <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-accent/10 text-fg border border-accent/25' : 'text-muted hover:bg-bg hover:text-fg border border-transparent')}>{item}</button>
-          ))}
-        </div>
+        <DashboardFilterGroup ariaLabel="Finance currency" value={currency} onChange={value => setActiveCurrency(value as CurrencyCode)} options={[{value:'IDR',label:'IDR'},{value:'USD',label:'USD'}]} />
       </div>
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
@@ -2911,44 +2876,18 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       ) : financeView === 'quotations' ? (
         <div className="space-y-5">
           <section className="space-y-5">
-            <section data-ams-feature-slug="finance-records-section" data-ams-slug="finance-records-section" className="rounded-card border border-line bg-panel overflow-hidden">
-  <div className="border-b border-line bg-panel p-4 sm:px-5">
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <h2 className="text-sm font-semibold text-fg">Quotation ledger</h2>
-          <p className="mt-1 text-xs text-muted">Search, filter, and sort the commercial pipeline.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+            <><AdminFilterToolbar slug="finance-records-section-filters" searchValue={quotationSearch} onSearchChange={setQuotationSearch} searchLabel="Search quotations" searchPlaceholder="Search quotation or client" activeFilterCount={Number(quotationStatusFilter !== 'all')} onReset={() => { setQuotationSearch(''); setQuotationStatusFilter('all'); }} columns={3}><AdminFilterField label="Status"><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} className="min-w-0" triggerClassName="w-full" aria-label="Quotation status filter"/></AdminFilterField>
+<AdminFilterField label="Sort"><CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} className="min-w-0" triggerClassName="w-full" aria-label="Quotation sort"/></AdminFilterField></AdminFilterToolbar><AdminPanel className="ams-operational-panel ams-overview-panel" title={<>Quotation ledger</>} description={<>Search, filter, and sort the commercial pipeline.</>} actions={<div className="flex flex-wrap items-center gap-2">
           <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">
             {filteredQuotations.length} visible
           </span>
           {canManageProposals && (
-            <button type="button" onClick={openCreateQuotation} className={primaryClass}>
-              <Plus size={14}/>New quotation
-            </button>
+            <DashboardControl onClick={openCreateQuotation} variant="primary" size="compact" className="ams-dashboard-card-action" icon={<Plus size={14}/>}>
+              New quotation
+            </DashboardControl>
           )}
-        </div>
-      </div>
-      <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(0,2fr)]">
-        <label className="relative min-w-0">
-          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
-          <span className="sr-only">Search quotations</span>
-          <input value={quotationSearch} onChange={(event)=>setQuotationSearch(event.target.value)} placeholder="Search quotation, client..." className={fieldClass+' h-10 pl-9'}/>
-        </label>
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(170px,1fr)_minmax(160px,1fr)]">
-          <CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} className="min-w-0" triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Quotation status filter"/>
-          <CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} className="min-w-0" triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Quotation sort"/>
-        </div>
-      </div>
-      {(quotationSearch || quotationStatusFilter !== 'all') && (
-        <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
-          <span className="text-[10px] text-muted">Quotation filters are active</span>
-          <button type="button" onClick={()=>{setQuotationSearch('');setQuotationStatusFilter('all');}} className={actionClass+' h-8 min-h-8 px-3 text-[11px]'}>Clear filters</button>
-        </div>
-      )}
-    </div>
-  </div><div className="overflow-x-auto custom-scrollbar">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="ams-finance-table min-w-[1180px] border-separate border-spacing-0 text-xs">
+        </div>} slug="finance-records-section" featureSlug="finance-records-section"><AdminDataTableShell embedded>
+  <div className="min-w-0">{filteredQuotations.length===0?<div className="p-4"><EmptyState title={quotationError ? 'Quotation data unavailable' : 'No quotations found'} description={quotationError ? 'Retry quotations before relying on this list.' : 'Adjust the search or filters.'}/></div>:<FinanceRecordSurface caption="Quotation ledger"><table className="ams-finance-table min-w-[1180px] border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10">
 <tr>
   <th className="w-[25%]">Quotation</th>
@@ -3002,68 +2941,26 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   </tr>
 })}
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records"  icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent"  icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context="Records returned by the Finance service"  icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'}  icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
-</tbody></table>}</div><AdminTablePagination total={filteredQuotations.length} page={quotationPage} pageSize={quotationPageSize} onPageChange={setQuotationPage} onPageSizeChange={setQuotationPageSize} itemLabel="quotations" slug="finance-quotations-pagination" /></section>
+</tbody></table></FinanceRecordSurface>}</div><AdminTablePagination total={filteredQuotations.length} page={quotationPage} pageSize={quotationPageSize} onPageChange={setQuotationPage} onPageSizeChange={setQuotationPageSize} itemLabel="quotations" slug="finance-quotations-pagination" /></AdminDataTableShell></AdminPanel></>
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
           </section>
         </div>
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-5">
-          <section data-ams-feature-slug="finance-income-expenses-ledger" data-ams-slug="finance-income-expenses-ledger" className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Income and expenses ledger">
-  <header className="border-b border-line bg-panel p-4 sm:px-5">
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h2 className="text-sm font-semibold text-fg">{incomeExpenseMode === 'expenses' ? 'Expense ledger' : 'Income & expenses ledger'}</h2>
-            <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">
-              {incomeExpenseMode === 'income' ? incomeRows.length + ' payments' : filteredExpenses.length + ' expenses'}
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-muted">{incomeExpenseMode === 'expenses' ? 'Record and review expenses directly in this Finance tab. Voiding keeps an auditable server record.' : 'Review collected income and recorded operating spend from the same finance workspace.'}</p>
-        </div>
-        {!embeddedIncomeExpenseMode && (
-          <div className="inline-flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5" role="tablist" aria-label="Ledger type">
-            <button type="button" role="tab" aria-selected={incomeExpenseMode === 'income'} onClick={() => setIncomeExpenseMode('income')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'income' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Income</button>
-            <button type="button" role="tab" aria-selected={incomeExpenseMode === 'expenses'} onClick={() => setIncomeExpenseMode('expenses')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'expenses' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Expenses</button>
-          </div>
-        )}
-      </div>
-      {incomeExpenseMode === 'income' ? (
-        <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(240px,320px)]">
-          <div className="flex min-h-10 items-center rounded-control border border-line bg-bg px-3 text-[10px] text-muted">Showing recorded payment activity in {currency}.</div>
-          <label className="relative min-w-0">
-            <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
-            <span className="sr-only">Search income</span>
-            <input value={incomeSearch} onChange={(event) => setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass + ' h-10 pl-8'}/>
-          </label>
-        </div>
-      ) : (
-        <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(0,2fr)]">
-          <label className="relative min-w-0">
-            <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
-            <span className="sr-only">Search expense</span>
-            <input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' h-10 pl-8'}/>
-          </label>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(150px,1fr)_auto_auto_auto]">
-            <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense type filter"/>
-            <CustomSelect value={expenseCategoryFilter} onChange={setExpenseCategoryFilter} options={expenseCategoryOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense category filter"/>
-            <CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense period filter"/>
-            <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense sort"/>
-            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-10 min-h-10'}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-            <button type="button" onClick={exportExpensesCsv} disabled={expenseSourceBlocked || !filteredExpenses.length} className={actionClass + ' h-10 min-h-10'}><Download size={14}/>Export CSV</button>
-            {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' h-10 min-h-10 shrink-0'}><Plus size={14}/>Add expense</button>}
-          </div>
-        </div>
-      )}
-    </div>
-  </header>
+          <>{!embeddedIncomeExpenseMode && <DashboardFilterGroup ariaLabel="Ledger type" value={incomeExpenseMode} onChange={value => setIncomeExpenseMode(value as typeof incomeExpenseMode)} options={[{value:'income',label:'Income'},{value:'expenses',label:'Expenses'}]} />}{incomeExpenseMode === 'income' ? <AdminFilterToolbar searchValue={incomeSearch} onSearchChange={setIncomeSearch} searchLabel="Search income" searchPlaceholder="Search invoice or client" activeFilterCount={0} onReset={() => setIncomeSearch('')} /> : <AdminFilterToolbar slug="finance-income-expenses-ledger-filters" searchValue={expenseSearch} onSearchChange={setExpenseSearch} searchLabel="Search expenses" searchPlaceholder="Search expense or supplier" activeFilterCount={[expenseTypeFilter, expenseCategoryFilter, expensePeriodFilter].filter(value => value !== 'all').length} onReset={() => { setExpenseSearch(''); setExpenseTypeFilter('all'); setExpenseCategoryFilter('all'); setExpensePeriodFilter('all'); }} columns={4}><AdminFilterField label="Type"><CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="w-full" aria-label="Expense type filter"/></AdminFilterField>
+<AdminFilterField label="Category"><CustomSelect value={expenseCategoryFilter} onChange={setExpenseCategoryFilter} options={expenseCategoryOptions} triggerClassName="w-full" aria-label="Expense category filter"/></AdminFilterField>
+<AdminFilterField label="Period"><CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="w-full" aria-label="Expense period filter"/></AdminFilterField>
+<AdminFilterField label="Sort"><CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="w-full" aria-label="Expense sort"/></AdminFilterField></AdminFilterToolbar>}<AdminPanel className="ams-operational-panel ams-overview-panel" title={<>{incomeExpenseMode === 'expenses' ? 'Expense ledger' : 'Income & expenses ledger'}</>} description={<>{incomeExpenseMode === 'expenses' ? 'Record and review expenses directly in this Finance tab. Voiding keeps an auditable server record.' : 'Review collected income and recorded operating spend from the same finance workspace.'}</>} actions={incomeExpenseMode === 'expenses' ? (<div className="flex flex-wrap items-center gap-2"><DashboardControl onClick={() => void loadData(true)} disabled={refreshing} variant="action" size="compact" className="ams-dashboard-card-action" icon={<RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>}>{refreshing ? 'Refreshing' : 'Refresh'}</DashboardControl>
+<DashboardControl onClick={exportExpensesCsv} disabled={expenseSourceBlocked || !filteredExpenses.length} variant="action" size="compact" className="ams-dashboard-card-action" icon={<Download size={14}/>}>Export CSV</DashboardControl>
+<DashboardControl onClick={openExpenseModal} variant="primary" size="compact" className="ams-dashboard-card-action" icon={<Plus size={14}/>}>Add expense</DashboardControl></div>) : undefined} slug="finance-income-expenses-ledger" featureSlug="finance-income-expenses-ledger"><AdminDataTableShell embedded>
+
   {incomeExpenseMode === 'income' ? (
     <div className="space-y-0">
-      <div className="overflow-x-auto px-1 custom-scrollbar">
+      <div className="min-w-0">
         {incomeRows.length === 0 ? (
-          <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>
+          <div className="p-4"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>
         ) : (
-          <table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
+          <FinanceRecordSurface caption="Received payments"><table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
             <thead><tr><th className="w-[22%]">Payment</th><th className="w-[27%]">Client</th><th className="w-[13%]">Received</th><th className="w-[18%]">Method</th><th className="w-[15%] text-right">Amount</th><th className="w-[48px] text-right">Action</th></tr></thead>
             <tbody>
               {paginatedIncomeRows.map((row) => (
@@ -3080,18 +2977,18 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></FinanceRecordSurface>
         )}
       </div>
       <AdminTablePagination total={incomeRows.length} page={incomePage} pageSize={incomePageSize} onPageChange={setIncomePage} onPageSizeChange={setIncomePageSize} itemLabel="payments" slug="finance-income-pagination" />
     </div>
   ) : (
     <div className="space-y-0">
-      <div className="overflow-x-auto custom-scrollbar">
+      <div className="min-w-0">
         {filteredExpenses.length === 0 ? (
-          <div className="p-5"><EmptyState title={loading || refreshing ? 'Loading expenses…' : expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'} description={loading || refreshing ? 'Loading the latest expense records.' : expenseSourceUnavailable ? 'The expense source could not be loaded. Retry before relying on this list.' : 'Adjust the search or filters.'}/></div>
+          <div className="p-4"><EmptyState title={loading || refreshing ? 'Loading expenses…' : expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'} description={loading || refreshing ? 'Loading the latest expense records.' : expenseSourceUnavailable ? 'The expense source could not be loaded. Retry before relying on this list.' : 'Adjust the search or filters.'}/></div>
         ) : (
-          <table className="ams-finance-table min-w-[1360px] border-separate border-spacing-0 text-xs">
+          <FinanceRecordSurface caption="Expense ledger"><table className="ams-finance-table min-w-[1360px] border-separate border-spacing-0 text-xs">
             <thead><tr><th className="w-[20%]">Expense</th><th className="w-[16%]">Supplier</th><th className="w-[13%]">Category</th><th className="w-[13%]">Project</th><th className="w-[9%]">Date</th><th className="w-[10%] text-right">Amount</th><th className="w-[9%]">Schedule</th><th className="w-[10%]">Payment status</th><th className="w-[48px] text-right">Action</th></tr></thead>
             <tbody>
               {paginatedExpenses.map((expense) => {
@@ -3138,7 +3035,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                 );
               })}
             </tbody>
-          </table>
+          </table></FinanceRecordSurface>
         )}
       </div>
       <AdminTablePagination total={filteredExpenses.length} page={expensePage} pageSize={expensePageSize} onPageChange={setExpensePage} onPageSizeChange={setExpensePageSize} itemLabel="expenses" slug="finance-expenses-pagination" />
@@ -3154,52 +3051,23 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           ) : (
             <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
           )}
-          </section>
+          </AdminDataTableShell></AdminPanel></>
         </div>
       ) : financeView === 'vendor-payments' ? (
         <div className="space-y-5">
-          <section data-ams-feature-slug="finance-vendor-payments-ledger" data-ams-slug="finance-vendor-payments-ledger" className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Vendor payments ledger">
-            <header className="border-b border-line bg-panel p-4 sm:px-5">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <h2 className="text-sm font-semibold text-fg">Contract-linked vendor payments</h2>
-                      <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{filteredVendorPayments.length} visible</span>
-                    </div>
-                    <p className="mt-1 text-xs text-muted">Track payments against vendor contracts separately from bill settlements in the Accounts Payable register.</p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
+          <><AdminFilterToolbar slug="finance-vendor-payments-ledger-filters" searchValue={vendorPaymentSearch} onSearchChange={setVendorPaymentSearch} searchLabel="Search vendor payments" searchPlaceholder="Search vendor, company or contract" activeFilterCount={[vendorPaymentVendorFilter, vendorPaymentStatusFilter].filter(value => value !== 'all').length} onReset={() => { setVendorPaymentSearch(''); setVendorPaymentStatusFilter('all'); setVendorPaymentVendorFilter('all'); }} columns={3}><AdminFilterField label="Vendor"><CustomSelect value={vendorPaymentVendorFilter} onChange={setVendorPaymentVendorFilter} options={[{value:'all',label:'All vendors'}, ...vendors.map((vendor) => ({value:vendor.id,label:vendor.name}))]} triggerClassName="w-full" aria-label="Vendor"/></AdminFilterField>
+<AdminFilterField label="Payment status"><CustomSelect value={vendorPaymentStatusFilter} onChange={(value) => setVendorPaymentStatusFilter(value as VendorPaymentStatus | 'all')} options={[{value:'all',label:'All payment states'},{value:'scheduled',label:'Scheduled'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'},{value:'overdue',label:'Overdue'}]} triggerClassName="w-full" aria-label="Payment status"/></AdminFilterField>
+<AdminFilterField label="Sort"><CustomSelect value={vendorPaymentSort} onChange={(value) => setVendorPaymentSort(value as typeof vendorPaymentSort)} options={[{value:'due_asc',label:'Due soonest'},{value:'due_desc',label:'Due latest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="w-full" aria-label="Sort"/></AdminFilterField></AdminFilterToolbar><AdminPanel className="ams-operational-panel ams-overview-panel" title={<>Contract-linked vendor payments</>} description={<>Track payments against vendor contracts separately from bill settlements in the Accounts Payable register.</>} actions={<div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{currency}</span>
-                    <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-                    <button type="button" onClick={exportVendorPaymentsCsv} disabled={expenseSourceBlocked || vendorSourceBlocked || !filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                    {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
-                  </div>
-                </div>
+                    <DashboardControl onClick={() => void loadData(true)} disabled={refreshing} variant="action" size="compact" className="ams-dashboard-card-action" icon={<RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>}>{refreshing ? 'Refreshing' : 'Refresh'}</DashboardControl>
+                    <DashboardControl onClick={exportVendorPaymentsCsv} disabled={expenseSourceBlocked || vendorSourceBlocked || !filteredVendorPayments.length} variant="action" size="compact" className="ams-dashboard-card-action" icon={<Download size={14}/>}>Export CSV</DashboardControl>
+                    {canManageInvoices && <DashboardControl onClick={() => openVendorPaymentModal()} variant="primary" size="compact" className="ams-dashboard-card-action" icon={<Plus size={14}/>}>Record payment</DashboardControl>}
+                  </div>} slug="finance-vendor-payments-ledger" featureSlug="finance-vendor-payments-ledger"><AdminDataTableShell embedded>
 
-                <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(150px,1fr)_minmax(170px,1fr)_minmax(150px,1fr)]">
-                  <label className="relative min-w-0">
-                    <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
-                    <span className="sr-only">Search vendor payments</span>
-                    <input value={vendorPaymentSearch} onChange={(event) => setVendorPaymentSearch(event.target.value)} placeholder="Search vendor, company, contract..." className={fieldClass + ' h-10 pl-8'}/>
-                  </label>
-                  <CustomSelect value={vendorPaymentVendorFilter} onChange={setVendorPaymentVendorFilter} options={[{value:'all',label:'All vendors'}, ...vendors.map((vendor) => ({value:vendor.id,label:vendor.name}))]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
-                  <CustomSelect value={vendorPaymentStatusFilter} onChange={(value) => setVendorPaymentStatusFilter(value as VendorPaymentStatus | 'all')} options={[{value:'all',label:'All payment states'},{value:'scheduled',label:'Scheduled'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'},{value:'overdue',label:'Overdue'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
-                  <CustomSelect value={vendorPaymentSort} onChange={(value) => setVendorPaymentSort(value as typeof vendorPaymentSort)} options={[{value:'due_asc',label:'Due soonest'},{value:'due_desc',label:'Due latest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
-                </div>
 
-                {(vendorPaymentSearch || vendorPaymentStatusFilter !== 'all' || vendorPaymentVendorFilter !== 'all') && (
-                  <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
-                    <span className="text-[10px] text-muted">Vendor payment filters are active</span>
-                    <button type="button" onClick={() => { setVendorPaymentSearch(''); setVendorPaymentStatusFilter('all'); setVendorPaymentVendorFilter('all'); }} className={actionClass + ' h-8 min-h-8 px-3 text-[11px]'}>Clear filters</button>
-                  </div>
-                )}
-              </div>
-            </header>
-
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="min-w-0">
               {filteredVendorPayments.length === 0 ? (
-                <div className="p-5">
+                <div className="p-4">
                   <EmptyState
                     title="No vendor payments found"
                     description={vendors.length ? 'No contracts match the current filters or there are no obligations in this currency.' : 'Vendor data is not available yet. Refresh Finance after vendor records are available.'}
@@ -3207,7 +3075,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                   />
                 </div>
               ) : (
-                <table className="ams-finance-table min-w-[1120px] border-separate border-spacing-0 text-xs">
+                <FinanceRecordSurface caption="Vendor contract payments"><table className="ams-finance-table min-w-[1120px] border-separate border-spacing-0 text-xs">
                   <thead><tr><th className="w-[23%]">Vendor / contract</th><th className="w-[12%]">Due date</th><th className="w-[13%] text-right">Amount</th><th className="w-[13%] text-right">Paid</th><th className="w-[13%] text-right">Outstanding</th><th className="w-[12%]">Status</th><th className="w-[48px] text-right">Action</th></tr></thead>
                   <tbody>
                     {paginatedVendorPayments.map((row) => (
@@ -3230,7 +3098,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></FinanceRecordSurface>
               )}
             </div>
             <AdminTablePagination total={filteredVendorPayments.length} page={vendorPaymentPage} pageSize={vendorPaymentPageSize} onPageChange={setVendorPaymentPage} onPageSizeChange={setVendorPaymentPageSize} itemLabel="vendor payments" slug="finance-vendor-payments-pagination" />
@@ -3240,7 +3108,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <FinanceMetricCard label="Paid" value={formatFinanceCardAmount(vendorPaymentMetrics.paid, currency)} context="Recorded payments" icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success" />
             <FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(vendorPaymentMetrics.outstanding, currency)} context="Remaining obligations" icon={<WalletCards size={15} className="text-warning"/>} toneClassName="text-warning" />
           </section>
-          </section>
+          </AdminDataTableShell></AdminPanel></>
         </div>
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
@@ -3288,62 +3156,48 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   <p className={'mt-0.5 text-sm font-semibold tabular-nums '+(quarterNetCash>=0?'text-success':'text-danger')}>{formatFinanceCardAmount(quarterNetCash,currency)}</p>
 </div></div></div><div className="p-4">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 5 aging buckets.</p></div><div className="p-4"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
           )}
-          <section className="rounded-card border border-line bg-panel overflow-hidden">
-  {clientContextId && (
-    <div className="flex flex-col gap-2 border-b border-line bg-bg px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-5" role="status" data-ams-slug="finance-invoice-client-context">
-      <div className="min-w-0">
-        <p className="font-medium text-fg">Invoices linked to Client: {clientContextName}</p>
-        <p className="mt-1 text-[10px] leading-4 text-muted">The register uses the canonical client ID. This filter applies to the invoice register only; supporting summary views keep their existing scope.</p>
-      </div>
-      <button type="button" onClick={clearClientContext} className={actionClass + ' shrink-0'} data-ams-slug="finance-invoice-client-context-clear">Clear client filter</button>
-    </div>
-  )}
-  <div className="border-b border-line bg-panel p-4 sm:px-5">
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <h2 className="text-sm font-semibold text-fg">{embeddedReceivablesOnly ? 'Accounts receivable' : 'Invoice ledger'}</h2>
-            <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">
-              {filteredInvoices.length} visible
-            </span>
-          </div>
-          <p className="mt-1 text-[10px] text-muted">
+          <><AdminFilterToolbar slug="finance-invoice-ledger-filters" searchValue={search} onSearchChange={setSearch} searchLabel="Search invoices" searchPlaceholder="Search invoice, client or project" activeFilterCount={[statusFilter, paymentFilter, dueFilter].filter(value => value !== 'all').length} onReset={() => { setSearch(''); setStatusFilter('all'); setPaymentFilter('all'); setDueFilter('all'); }} columns={4}><AdminFilterField label="Invoice status"><CustomSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={embeddedReceivablesOnly ? statusOptions.filter((option) => ['all', 'sent', 'partially_paid', 'overdue'].includes(option.value)) : statusOptions} className="min-w-0" triggerClassName="w-full"
+           aria-label="Invoice status"/></AdminFilterField>
+<AdminFilterField label="Payment status"><CustomSelect
+            value={paymentFilter}
+            onChange={(value) => setPaymentFilter(value as PaymentFilter)}
+            options={[
+              {value:'all',label:'All payment states'},
+              {value:'unpaid',label:'Unpaid'},
+              {value:'partial',label:'Partially paid'},
+              {value:'paid',label:'Paid'}
+            ]} className="min-w-0" triggerClassName="w-full"
+           aria-label="Payment status"/></AdminFilterField>
+<AdminFilterField label="Due date"><CustomSelect
+            value={dueFilter}
+            onChange={setDueFilter}
+            options={[
+              {value:'all',label:'All due states'},
+              {value:'due_soon',label:'Due within 7 days'},
+              {value:'overdue',label:'Overdue'},
+              {value:'later',label:'Due later'}
+            ]} className="min-w-0" triggerClassName="w-full"
+           aria-label="Due date"/></AdminFilterField>
+<AdminFilterField label="Sort"><CustomSelect
+            value={sort}
+            onChange={(value) => setSort(value as SortKey)}
+            options={sortOptions} className="min-w-0" triggerClassName="w-full"
+           aria-label="Sort"/></AdminFilterField></AdminFilterToolbar><AdminPanel className="ams-operational-panel ams-overview-panel" title={<>{embeddedReceivablesOnly ? 'Accounts receivable' : 'Invoice ledger'}</>} description={<>
             {embeddedReceivablesOnly
               ? 'Outstanding client invoices only · record and review payments in this tab.'
               : (ledgerPeriod === 'all' ? 'All periods' : reportingQuarter?.label || 'Current quarter') + ' · Search, filter, and manage billing records.'}
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-9 min-h-9'}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-          <button type="button" onClick={exportInvoicesCsv} disabled={invoiceSourceBlocked || !filteredInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export CSV</button>
-          {!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceBlocked && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
-          <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
-            <button
-              type="button"
-              onClick={() => { setLedgerPeriod('reporting-quarter'); setStatusFilter('all'); }}
-              className={'min-h-8 rounded-chip px-3 text-[11px] font-semibold transition-colors ' + (ledgerPeriod === 'reporting-quarter' ? 'border border-accent/25 bg-accent/10 text-fg' : 'border border-transparent text-muted hover:bg-panel hover:text-fg')}
-            >
-              Current quarter
-            </button>
-            <button
-              type="button"
-              onClick={() => { setLedgerPeriod('all'); setStatusFilter('all'); }}
-              className={'min-h-8 rounded-chip px-3 text-[11px] font-semibold transition-colors ' + (ledgerPeriod === 'all' ? 'border border-accent/25 bg-accent/10 text-fg' : 'border border-transparent text-muted hover:bg-panel hover:text-fg')}
-            >
-              All periods
-            </button>
-          </div>
+          </>} actions={<div className="flex min-w-0 w-full flex-wrap items-center gap-2 sm:w-auto">
+          <DashboardControl onClick={() => void loadData(true)} disabled={refreshing} variant="action" size="compact" className="ams-dashboard-card-action" icon={<RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>}>{refreshing ? 'Refreshing' : 'Refresh'}</DashboardControl>
+          <DashboardControl onClick={exportInvoicesCsv} disabled={invoiceSourceBlocked || !filteredInvoices.length} variant="action" size="compact" className="ams-dashboard-card-action" icon={<Download size={14}/>}>Export CSV</DashboardControl>
+          {!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceBlocked && <DashboardControl onClick={openCreateInvoice} variant="primary" size="compact" className="ams-dashboard-card-action" icon={<Plus size={14}/>}>New invoice</DashboardControl>}
+          <DashboardFilterGroup ariaLabel="Invoice period" value={ledgerPeriod} onChange={value => { setLedgerPeriod(value as LedgerPeriod); setStatusFilter('all'); }} options={[{value:'reporting-quarter',label:'Current quarter'},{value:'all',label:'All periods'}]} />
           <div className="relative">
-            <button
-              type="button"
-              onClick={() => setColumnMenuOpen((open) => !open)}
-              className={actionClass + ' h-9 min-h-9 px-3'}
-              aria-expanded={columnMenuOpen}
-              aria-haspopup="menu"
-            >
-              <SlidersHorizontal size={14}/>Columns
-            </button>
+            <DashboardControl onClick={() => setColumnMenuOpen((open) => !open)} ariaExpanded={columnMenuOpen} variant="action" size="compact" className="ams-dashboard-card-action" icon={<SlidersHorizontal size={14}/>}>
+              Columns
+            </DashboardControl>
             {columnMenuOpen && (
               <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5" role="menu">
                 {(['client','timeline','billing','status','actions'] as const).map((key) => {
@@ -3373,82 +3227,17 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
               </div>
             )}
           </div>
-        </div>
+        </div>} slug="finance-invoice-ledger" featureSlug="finance-invoice-ledger"><AdminDataTableShell embedded>
+  {clientContextId && (
+    <div className="flex flex-col gap-2 border-b border-line bg-bg px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-5" role="status" data-ams-slug="finance-invoice-client-context">
+      <div className="min-w-0">
+        <p className="font-medium text-fg">Invoices linked to Client: {clientContextName}</p>
+        <p className="mt-1 text-[10px] leading-4 text-muted">The register uses the canonical client ID. This filter applies to the invoice register only; supporting summary views keep their existing scope.</p>
       </div>
-
-      <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(0,3fr)]">
-        <label className="relative min-w-0">
-          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
-          <span className="sr-only">Search invoices</span>
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search invoice, client, project..."
-            className={fieldClass + ' h-10 pl-9'}
-          />
-        </label>
-
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          <CustomSelect
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={embeddedReceivablesOnly ? statusOptions.filter((option) => ['all', 'sent', 'partially_paid', 'overdue'].includes(option.value)) : statusOptions}
-            className="min-w-0 xl:shrink-0"
-            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[150px]"
-          />
-          <CustomSelect
-            value={paymentFilter}
-            onChange={(value) => setPaymentFilter(value as PaymentFilter)}
-            options={[
-              {value:'all',label:'All payment states'},
-              {value:'unpaid',label:'Unpaid'},
-              {value:'partial',label:'Partially paid'},
-              {value:'paid',label:'Paid'}
-            ]}
-            className="min-w-0 xl:shrink-0"
-            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[176px]"
-          />
-          <CustomSelect
-            value={dueFilter}
-            onChange={setDueFilter}
-            options={[
-              {value:'all',label:'All due states'},
-              {value:'due_soon',label:'Due within 7 days'},
-              {value:'overdue',label:'Overdue'},
-              {value:'later',label:'Due later'}
-            ]}
-            className="min-w-0 xl:shrink-0"
-            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[150px]"
-          />
-          <CustomSelect
-            value={sort}
-            onChange={(value) => setSort(value as SortKey)}
-            options={sortOptions}
-            className="min-w-0 xl:shrink-0"
-            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[176px]"
-          />
-        </div>
-      </div>
-
-      {(search || statusFilter !== 'all' || paymentFilter !== 'all' || dueFilter !== 'all') && (
-        <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
-          <span className="text-[10px] text-muted">Filters are active</span>
-          <button
-            type="button"
-            onClick={() => {
-              setSearch('');
-              setStatusFilter('all');
-              setPaymentFilter('all');
-              setDueFilter('all');
-            }}
-            className={actionClass + ' h-8 min-h-8 px-3 text-[11px]'}
-          >
-            Clear filters
-          </button>
-        </div>
-      )}
+      <button type="button" onClick={clearClientContext} className={actionClass + ' shrink-0'} data-ams-slug="finance-invoice-client-context-clear">Clear client filter</button>
     </div>
-  </div><div className="overflow-x-auto custom-scrollbar">{filteredInvoices.length===0?<div className="p-5"><EmptyState title={loading || refreshing ? 'Loading invoices…' : invoiceSourceUnavailable ? 'Invoice data unavailable' : embeddedReceivablesOnly ? 'No outstanding receivables' : 'No invoices found'} description={loading || refreshing ? 'Loading the latest invoice records.' : invoiceSourceUnavailable ? 'The invoice source could not be loaded. Retry before relying on this list or creating a new invoice.' : embeddedReceivablesOnly ? 'No open invoice balances match the current filters.' : 'No invoices match the current filters.'} action={!invoiceSourceBlocked && canManageInvoices && !embeddedReceivablesOnly ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button> : undefined}/></div>:<table className="ams-finance-table min-w-[1120px] table-fixed border-separate border-spacing-0 text-xs">
+  )}
+  <div className="min-w-0">{filteredInvoices.length===0?<div className="p-4"><EmptyState title={loading || refreshing ? 'Loading invoices…' : invoiceSourceUnavailable ? 'Invoice data unavailable' : embeddedReceivablesOnly ? 'No outstanding receivables' : 'No invoices found'} description={loading || refreshing ? 'Loading the latest invoice records.' : invoiceSourceUnavailable ? 'The invoice source could not be loaded. Retry before relying on this list or creating a new invoice.' : embeddedReceivablesOnly ? 'No open invoice balances match the current filters.' : 'No invoices match the current filters.'} action={!invoiceSourceBlocked && canManageInvoices && !embeddedReceivablesOnly ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button> : undefined}/></div>:<FinanceRecordSurface caption="Invoice ledger"><table className="ams-finance-table min-w-[1120px] table-fixed border-separate border-spacing-0 text-xs">
 <thead><tr>
   <th className="w-[20%]">Invoice</th>
   {columnVisibility.client&&<th className="w-[19%]">Client & project</th>}
@@ -3505,7 +3294,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     </td>}
   </tr>;
 })}
-</tbody></table>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></section>
+</tbody></table></FinanceRecordSurface>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></AdminDataTableShell></AdminPanel></>
 {embedded && invoiceSummary}
 
 {embeddedReceivablesOnly && (
@@ -3618,7 +3407,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         <h3 className="text-sm font-semibold text-fg">Retainer invoice register</h3>
         <p className="mt-1 text-xs text-muted">Open the invoice number to inspect its tax, payment terms, and balance details.</p>
       </div>
-      {retainerLedgerInvoices.length === 0 ? <div className="p-5"><EmptyState title="No retainer invoices" description="Retainer invoices will appear here when their payment terms identify them as retainers."/></div> : (
+      {retainerLedgerInvoices.length === 0 ? <div className="p-4"><EmptyState title={invoiceSourceBlocked ? 'Retainer invoice data unavailable' : 'No retainer invoices'} description={invoiceSourceBlocked ? 'Retry the invoice source before relying on this supporting register.' : 'Retainer invoices will appear here when their payment terms identify them as retainers.'}/></div> : (
         <div className="overflow-x-auto">
           <table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
             <thead><tr><th>Invoice</th><th>Client</th><th>Issued</th><th>Due</th><th className="text-right">Billed</th><th className="text-right">Collected</th><th>Status</th></tr></thead>

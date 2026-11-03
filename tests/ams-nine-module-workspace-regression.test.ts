@@ -563,7 +563,7 @@ test('Finance worksheet header explains the active view and its owning workspace
   assert.match(finance, /eyebrow=\{activeGroup\.label\}/);
   assert.match(finance, /description=\{activeTab\.description \|\| "Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place\."\}/);
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);
-  assert.match(finance, /ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 min-\[1100px\]:flex-1" variant="primary"/);
+  assert.match(finance, /ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="ams-operational-tabs" variant="primary"/);
 });
 
 
@@ -831,7 +831,7 @@ test('Vendor & Freelancers keeps the canonical directory primary and independent
 
   assert.ok(filters >= 0 && registerHeader > filters && register > registerHeader && pagination > register,
     'Vendor directory should flow from filters to a named primary register and its pagination.');
-  assert.match(vendors, /aria-labelledby="vendor-directory-list-title"/);
+  assert.match(vendors, /aria-labelledby=\{embedded \? undefined : 'vendor-directory-list-title'\}/);
   assert.match(vendors, /aria-live="polite"/);
   assert.doesNotMatch(vendors, /vendor-kpis|vendor-snapshot|AdminMetricStrip/,
     'The supplier master directory must not put a KPI snapshot ahead of its primary work surface.');

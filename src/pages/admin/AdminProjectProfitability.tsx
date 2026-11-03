@@ -1,7 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, RefreshCw, Search } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { AdminModuleHeader, AdminModuleNotice, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminPanel } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterToolbar } from '../../components/admin/AdminFilterToolbar';
+import { DashboardEmptyState } from '../../components/admin/DashboardEmptyState';
+import { FinanceRecordSurface } from '../../components/admin/finance/FinanceRecordSurface';
 import Button from '../../components/ui/Button';
 
 type ProjectProfitabilityRow = {
@@ -102,26 +106,10 @@ export const AdminProjectProfitability: React.FC = () => {
 
 
 
-      <section className="min-w-0 overflow-hidden rounded-card border border-line bg-panel" data-ams-slug="project-profitability-table">
-        <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <div>
-            <h2 className="text-sm font-semibold text-fg">Project-level financial summary</h2>
-            <p className="mt-1 text-xs text-muted">Figures remain separated by currency; only project aggregates are returned to this view.</p>
-          </div>
-          <label className="relative block w-full sm:max-w-xs">
-            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
-            <input
-              type="search"
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Search project or client"
-              aria-label="Search project profitability"
-              className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
-            />
-          </label>
-        </div>
-
-        <div className="overflow-x-auto">
+      <AdminFilterToolbar slug="project-profitability-search" searchValue={searchText} onSearchChange={setSearchText} searchLabel="Search project profitability" searchPlaceholder="Search project or client" activeFilterCount={0} onReset={() => setSearchText('')} />
+      <AdminPanel className="ams-operational-panel ams-overview-panel" slug="project-profitability-table" title="Project-level financial summary" description="Figures remain separated by currency; only project aggregates are returned to this view."><AdminDataTableShell embedded>
+      {loading ? <div className="p-4 text-xs text-muted" role="status">Loading aggregate project data…</div> : !visibleProjects.length ? <DashboardEmptyState inset eyebrow="Project finance" title={error ? 'Project data unavailable' : 'No matching projects'} description={error ? 'Retry to load the aggregate project source.' : 'No project profitability records match this search.'} /> : (
+        <FinanceRecordSurface caption="Project-level financial summary">
           <table className="w-full min-w-[1040px] border-collapse text-left text-xs">
             <thead>
               <tr className="border-b border-line bg-bg/60 text-[10px] font-semibold uppercase tracking-wide text-muted">
@@ -137,11 +125,7 @@ export const AdminProjectProfitability: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {loading ? (
-                <tr><td colSpan={9} className="px-5 py-12 text-center text-xs text-muted">Loading aggregate project data…</td></tr>
-              ) : visibleProjects.length === 0 ? (
-                <tr><td colSpan={9} className="px-5 py-12 text-center text-xs text-muted">{error ? 'Project data could not be loaded.' : 'No project profitability records match this search.'}</td></tr>
-              ) : visibleProjects.map((project) => (
+              {visibleProjects.map((project) => (
                 <tr key={project.projectId + ':' + project.currency} className="transition-colors hover:bg-bg/40">
                   <td className="px-4 py-3 sm:px-5">
                     <p className="font-medium text-fg">{project.projectName || 'Untitled project'}</p>
@@ -159,14 +143,14 @@ export const AdminProjectProfitability: React.FC = () => {
               ))}
             </tbody>
           </table>
-        </div>
+        </FinanceRecordSurface>)}
 
         <div className="border-t border-line px-4 py-3 sm:px-5">
           <p className="text-[10px] leading-4 text-muted">
             Aggregate formula: collected revenue minus recorded expenses. This is a management contribution indicator, not a fully allocated accounting profit unless all project costs have been recorded and classified.
           </p>
         </div>
-      </section>
+</AdminDataTableShell></AdminPanel>
 
       <section aria-label="Aggregate profitability metrics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-project-count">

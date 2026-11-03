@@ -226,7 +226,7 @@ test('primary data surfaces remain named and keyboard-accessible across all nine
     ['src/components/admin/projects/ProjectRegistryRecords.tsx', /role="region" tabIndex=\{0\} aria-label=\{archived \? 'Scrollable archived project register' : 'Scrollable project register table'\}/, 'Projects'],
     ['src/components/admin/tasks/TaskExecutionViews.tsx', /tabIndex=\{0\} role="region" aria-label="Scrollable task register"/, 'Tasks'],
     ['src/components/admin/clients/ClientDirectoryRegister.tsx', /tabIndex=\{0\} role="region" aria-label=\{'Scrollable ' \+ title\.toLowerCase\(\)\}/, 'Clients'],
-    ['src/pages/admin/AdminFinanceWorkspace.tsx', /aria-label=\{'Scrollable ' \+ title \+ ' table'\}/, 'Finance'],
+    ['src/components/admin/finance/FinanceRecordSurface.tsx', /role="region" tabIndex=\{0\} aria-label=\{'Scrollable ' \+ caption \+ ' table'\}/, 'Finance'],
     ['src/pages/admin/AdminTeams.tsx', /aria-label="Scrollable team directory table"/, 'Team & Resources'],
     ['src/pages/admin/AdminDocuments.tsx', /aria-label="Scrollable private document register"/, 'Documents'],
     ['src/pages/admin/AdminCmsProjects.tsx', /aria-label="Scrollable case study register"/, 'Website CMS'],

@@ -41,7 +41,7 @@ test('Finance transaction worksheets keep mutations permission-gated and use emb
   assert.ok(source.includes('onClick={exportInvoicesCsv}'));
   assert.ok(source.includes('onClick={exportExpensesCsv}'));
   assert.ok(source.includes('onClick={exportVendorPaymentsCsv}'));
-  assert.ok(source.includes("isProposalWorkspace && <AdminModuleHeader className=\"mb-0\" title=\"Quotations\""));
+  assert.equal(source.includes('title="Quotations"'), false, 'The owning Finance header must remain the single h1 for embedded Quotations.');
   assert.ok(source.includes("const canManageProposals = hasAdminPermission('canManageCrm') || canManageInvoices;"));
   assert.ok(!source.includes('<AdminSectionTabs'));
   assert.ok(!source.includes('Finance sections'));
@@ -92,7 +92,7 @@ test('Finance views stay inside the Finance workspace and retired routes stay hi
   }
   assert.ok(workspace.includes('FINANCE_WORKBOOK_GROUPS'));
   assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance worksheets"'));
-  assert.match(workspace, /ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full min-w-0 min-\[1100px\]:flex-1" variant="primary"/);
+  assert.match(workspace, /ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="ams-operational-tabs" variant="primary"/);
   assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
 });
 test('Retainer workspace uses neutral counts and sentence-case table hierarchy', () => {
@@ -849,12 +849,12 @@ test('Contracts form and status filtering use CustomSelect without enabling unli
 test('Project profitability prioritizes its searchable financial register before aggregate metrics', () => {
   const page = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjectProfitability.tsx'), 'utf8');
   const header = page.indexOf('slug="project-profitability-header"');
-  const register = page.indexOf('data-ams-slug="project-profitability-table"');
-  const search = page.indexOf('aria-label="Search project profitability"');
+  const register = page.indexOf('slug="project-profitability-table"');
+  const search = page.indexOf('searchLabel="Search project profitability"');
   const table = page.indexOf('<table', search);
   const metrics = page.indexOf('aria-label="Aggregate profitability metrics"');
   assert.ok(header >= 0 && register > header);
-  assert.ok(search > register && table > search);
+  assert.ok(search > header && register > search && table > register);
   assert.ok(metrics > table);
   assert.ok(page.includes('collected revenue minus recorded expenses'));
   assert.ok(page.includes('currencyFormatter(\'IDR\', idrCollected)'));
@@ -885,7 +885,7 @@ test('Vendor directory uses filters, a labelled primary register, and the shared
   const pagination = vendors.indexOf('slug="vendor-directory-pagination"');
   const detailDrawer = vendors.indexOf('slug="vendor-detail-drawer"');
   assert.ok(filters >= 0 && registerHeader > filters && directory > registerHeader);
-  assert.ok(vendors.includes('aria-labelledby="vendor-directory-list-title"'));
+  assert.ok(vendors.includes("aria-labelledby={embedded ? undefined : 'vendor-directory-list-title'}"));
   assert.ok(vendors.includes('aria-live="polite"'));
   assert.equal(vendors.includes('data-ams-feature-slug="vendor-snapshot"'), false);
   assert.ok(emptyState > directory && pagination > emptyState);

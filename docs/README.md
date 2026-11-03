@@ -24,6 +24,8 @@ When two active product documents disagree, do not silently choose a more conven
 
 For execution sequencing, `AMS-END-TO-END-DELIVERY-ROADMAP.md` is canonical. The feature/content gap register records current requirement status and evidence, not a second schedule. `AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md` remains the target product/workflow specification; its implementation-stage guidance must be read consistently with the roadmap rather than treated as a competing numbered rollout. Routine slices receive reports and continue within the user's authorized scope; stop at the explicit visual sign-off gate and for genuine decision/blocker gates.
 
+Current Finance presentation and source boundaries: [Finance workspaces](AMS-FINANCE-WORKSPACES.md).
+
 Current Clients presentation and source boundaries: [Clients workspaces](AMS-CLIENTS-WORKSPACES.md).
 
 ## 2. Canonical product and data specifications
