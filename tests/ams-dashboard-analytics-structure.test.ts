@@ -126,7 +126,7 @@ test('TrendChart keeps its data table by default while Analytics uses one collap
   const analytics = source.slice(source.indexOf('const AnalyticsView: React.FC'), source.indexOf('type DashboardCalendarPeriodFilterProps'));
   assert.match(chartSource, /showDataTable\?: boolean/);
   assert.match(chartSource, /showDataTable = true/);
-  assert.match(chartSource, /\{showDataTable \? \(/);
+  assert.match(chartSource, /\{showDataTable && !emptyState \? \(/);
   assert.ok(analytics.includes('showDataTable={false}'));
   assert.match(analytics, /<details className="mt-3 rounded-control border border-line bg-bg px-3 py-2" data-ams-feature-slug="dashboard-analytics-exact-values">/);
 });

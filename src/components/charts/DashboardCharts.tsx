@@ -91,8 +91,10 @@ export const TrendChart: React.FC<{
   axisFormat?: (value: number) => string;
   presentation?: 'default' | 'maven';
   showDataTable?: boolean;
+  emptyState?: React.ReactNode;
   ariaLabel: string;
-}> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, axisFormat, presentation = 'default', showDataTable = true, ariaLabel }) => {
+}> = ({ data: sourceData, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, axisFormat, presentation = 'default', showDataTable = true, emptyState, ariaLabel }) => {
+  const data = sourceData.length || !emptyState ? sourceData : [{ label: "", primary: 0 }, { label: "", primary: 0 }];
   const [hover, setHover] = useState<{ index: number; x: number; percent: number; yPercent: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const gradientId = `dashboard-trend-${useId().replace(/:/g, '')}`;
@@ -180,7 +182,7 @@ export const TrendChart: React.FC<{
     updateHover(event.clientX, event.currentTarget);
   };
 
-  const active = hover ? points[hover.index] : null;
+  const active = hover && !emptyState ? points[hover.index] : null;
   const selectPoint = (index: number) => {
     const safeIndex = Math.max(0, Math.min(points.length - 1, index));
     const selectedPoint = points[safeIndex];
@@ -226,18 +228,18 @@ export const TrendChart: React.FC<{
         className={[
           'relative h-[250px] w-full overflow-hidden rounded-card border border-line/80 bg-bg/30 sm:h-[280px] lg:h-[320px] ams-trend-chart__plot',
           isMavenPresentation ? 'ams-trend-chart__plot--maven' : '',
-          dragging ? 'cursor-grabbing select-none' : isMavenPresentation ? 'cursor-crosshair' : 'cursor-grab',
+          emptyState ? '' : dragging ? 'cursor-grabbing select-none' : isMavenPresentation ? 'cursor-crosshair' : 'cursor-grab',
         ].join(' ')}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        onPointerDown={emptyState ? undefined : handlePointerDown}
+        onPointerMove={emptyState ? undefined : handlePointerMove}
+        onPointerUp={emptyState ? undefined : handlePointerUp}
+        onPointerCancel={emptyState ? undefined : handlePointerUp}
         onPointerLeave={() => {
           if (!dragging) setHover(null);
         }}
-        onKeyDown={isMavenPresentation ? handleChartKeyDown : undefined}
-        tabIndex={isMavenPresentation ? 0 : undefined}
-        aria-label={isMavenPresentation ? ariaLabel + ' Use left and right arrow keys to inspect points, Home or End to jump to the first or last point, and Escape to clear the selection.' : undefined}
+        onKeyDown={isMavenPresentation && !emptyState ? handleChartKeyDown : undefined}
+        tabIndex={isMavenPresentation && !emptyState ? 0 : undefined}
+        aria-label={isMavenPresentation && !emptyState ? ariaLabel + ' Use left and right arrow keys to inspect points, Home or End to jump to the first or last point, and Escape to clear the selection.' : undefined}
         role={isMavenPresentation ? 'group' : undefined}
         style={{ touchAction: isMavenPresentation ? 'pan-y' : 'none' }}
       >
@@ -326,9 +328,14 @@ export const TrendChart: React.FC<{
             </div>
           )}
         </div>
+        {emptyState && (
+          <div className="absolute inset-0 z-20 grid place-items-center p-3 sm:p-6">
+            <div className="w-full max-w-sm rounded-control bg-panel">{emptyState}</div>
+          </div>
+        )}
       </div>
 
-      {showDataTable ? (
+      {showDataTable && !emptyState ? (
       <details className="mt-2">
         <summary className="ams-trend-chart__data-toggle cursor-pointer text-[11px] text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View data table</summary>
         <div className="mt-2 overflow-x-auto rounded-control border border-line">

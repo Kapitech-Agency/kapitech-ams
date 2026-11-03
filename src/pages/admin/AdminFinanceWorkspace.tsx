@@ -2003,14 +2003,23 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <AdminPanel featureSlug="finance-executive-summary-period" className="ams-operational-panel ams-overview-panel" title="Executive summary" description={<>Reporting period: {dashboardPeriodLabel}</>} actions={<><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/finance?tab=accounts-receivable" icon={<FileText size={14} />}>Open Accounts Receivable</DashboardControl><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/finance?tab=dashboard" icon={<ArrowUpRight size={14} />}>Open Dashboard comparison</DashboardControl></>}><p className="p-4 text-[11px] text-muted">{dashboardRange ? formatDate(dashboardRange.startDate) + ' â€“ ' + formatDate(dashboardRange.endDate) : 'Reporting period unavailable'} Â· Currency: IDR</p></AdminPanel>
             <AdminMetricStrip metrics={metrics} />
             <AdminPanel className="ams-operational-panel ams-overview-panel" title="Client collections and recorded expenses" description={dashboardPeriodLabel + ' · IDR · ' + (daily ? 'Daily' : 'Monthly')}>
-              {trend.some(point => point.primary !== 0 || point.secondary !== 0) ? (
-                <div className="min-w-0 p-4">
-                  <TrendChart data={trend} primaryLabel="Client payments recorded" secondaryLabel="Expenses recorded" primaryFormat={value => formatMoney(value)} presentation="maven" ariaLabel="Client collections and recorded expenses by date" />
-                </div>
-              ) : <DashboardEmptyState inset eyebrow="Finance Overview"
-                title={invoiceSourceError || expenseSourceError ? 'Trend data unavailable' : 'No recorded movements in this period'}
-                description={invoiceSourceError || expenseSourceError ? 'Refresh Finance to reload invoices and expenses.' : 'Recorded client payments and expenses will appear here for the selected period.'}
-              />}
+              <div className="min-w-0 p-4">
+                <TrendChart
+                  data={trend}
+                  primaryLabel="Client payments recorded"
+                  secondaryLabel="Expenses recorded"
+                  primaryFormat={value => formatMoney(value)}
+                  axisFormat={value => new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(value)}
+                  presentation="maven"
+                  ariaLabel="Client collections and recorded expenses by date"
+                  emptyState={trend.some(point => point.primary !== 0 || point.secondary !== 0) ? undefined : (
+                    <DashboardEmptyState eyebrow="Finance Overview"
+                      title={invoiceSourceError || expenseSourceError ? 'Trend data unavailable' : 'No recorded movements in this period'}
+                      description={invoiceSourceError || expenseSourceError ? 'Refresh Finance to reload invoices and expenses.' : 'Recorded client payments and expenses will appear here for the selected period.'}
+                    />
+                  )}
+                />
+              </div>
             </AdminPanel>
 <FinanceWorksheetSections label="Executive overview" sections={[
 { key: 'attention', label: 'Needs attention', content: <>

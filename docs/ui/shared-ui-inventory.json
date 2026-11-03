@@ -526,7 +526,8 @@
       ],
       "consumers": [
         "src/components/admin/GlobalExecutiveDashboard.tsx",
-        "src/pages/admin/AdminFinanceWorkspace.tsx"
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInvoicing.tsx"
       ]
     },
     {
@@ -1348,10 +1349,10 @@
         "Download": 11,
         "Drawer": 6,
         "Edit3": 3,
-        "EmptyState": 12,
+        "EmptyState": 11,
         "Eye": 3,
         "FileText": 6,
-        "FinanceCashFlowChart": 2,
+        "FinanceCashFlowChart": 1,
         "FinanceMetricCard": 28,
         "FinanceRecordSurface": 5,
         "FinanceWorksheetSections": 2,
@@ -1368,6 +1369,7 @@
         "ShieldCheck": 2,
         "StatusBadge": 6,
         "Trash2": 7,
+        "TrendChart": 1,
         "TrendingUp": 4,
         "WalletCards": 7,
         "X": 1
