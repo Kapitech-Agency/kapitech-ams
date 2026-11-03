@@ -525,7 +525,8 @@
         "TrendChart"
       ],
       "consumers": [
-        "src/components/admin/GlobalExecutiveDashboard.tsx"
+        "src/components/admin/GlobalExecutiveDashboard.tsx",
+        "src/pages/admin/AdminFinanceWorkspace.tsx"
       ]
     },
     {
@@ -1261,7 +1262,7 @@
         "AdminModuleHeader": 2,
         "AdminModuleNotice": 2,
         "AdminPageShell": 2,
-        "AdminPanel": 8,
+        "AdminPanel": 9,
         "AdminProjectProfitability": 1,
         "AdminSectionTabs": 1,
         "AdminStatusBadge": 13,
@@ -1276,7 +1277,7 @@
         "CustomDatePicker": 4,
         "CustomSelect": 9,
         "DashboardControl": 17,
-        "DashboardEmptyState": 1,
+        "DashboardEmptyState": 2,
         "Download": 9,
         "Drawer": 2,
         "FileText": 3,
@@ -1291,6 +1292,7 @@
         "ShieldAlert": 4,
         "StatusBadge": 15,
         "Trash2": 1,
+        "TrendChart": 1,
         "WalletCards": 6,
         "WorkbookNote": 21
       }

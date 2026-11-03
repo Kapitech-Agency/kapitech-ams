@@ -40,8 +40,8 @@ test('Finance Executive Summary highlights overdue invoices using the existing F
   const metricStrip = summary.indexOf('<AdminMetricStrip metrics={metrics} />');
   const figureDefinitions = summary.indexOf('data-ams-feature-slug="finance-executive-summary-definitions"');
   const recentRegister = summary.indexOf('title="Recent invoice register"');
-  assert.ok(periodContext >= 0 && exceptionQueue > periodContext && metricStrip > exceptionQueue && figureDefinitions > metricStrip && recentRegister > figureDefinitions,
-    'Executive Summary should prioritize the current exception queue before period metrics, definitions, and the recent invoice register.');
+  assert.ok(periodContext >= 0 && metricStrip > periodContext && exceptionQueue > metricStrip && figureDefinitions > exceptionQueue && recentRegister > figureDefinitions,
+    'Executive Summary should lead with period metrics before the exception queue, definitions, and recent invoice register.');
   assert.ok(summary.includes("formatMoney(getInvoiceOutstanding(invoice), invoice.currency)"));
   assert.ok(summary.includes('const overdueInvoiceRows: TableRow[] = overdueInvoices.map((invoice) => ({'), 'The complete overdue queue should be paginated by FinanceDataTable instead of silently truncating at a fixed row count.');
   assert.ok(summary.includes("navigate('/admin/finance?tab=accounts-receivable')"));

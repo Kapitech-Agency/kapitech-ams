@@ -1,3 +1,4 @@
+import { TrendChart } from '../../components/charts/DashboardCharts';
 import { FinanceWorksheetSections } from '../../components/admin/finance/FinanceWorksheetSections';
 import { FINANCE_HANDOFFS, FINANCE_WORKSHEET_LABELS, FINANCE_WORKSHEET_START, getFinanceArea } from '../../lib/financeWorkspaceNavigation';
 import { AdminDataTableShell } from '../../components/admin/AdminModulePrimitives';
@@ -1890,6 +1891,33 @@ const FinanceWorkbookWorkspace: React.FC = () => {
     }));
     const invoiceSourceStale = invoiceSourceError && idrInvoices.length > 0;
     const expenseSourceStale = expenseSourceError && idrExpenses.length > 0;
+    // Plot recorded payment and expense dates on the same basis as the Overview KPIs.
+    const daily = reportPeriodMode === 'month';
+    const bucketKey = (date: string) => date.slice(0, daily ? 10 : 7);
+    const trendBuckets = new Map<string, { label: string; primary: number; secondary: number }>();
+    if (dashboardRange && !invoiceSourceError && !expenseSourceError) {
+      const dateLabel = new Intl.DateTimeFormat(locale, { month: 'short', ...(daily ? { day: 'numeric' } : {}), timeZone: 'UTC' });
+      const cursor = new Date(dashboardRange.startDate + 'T00:00:00Z');
+      if (!daily) cursor.setUTCDate(1);
+      while (cursor.toISOString().slice(0, 10) <= dashboardRange.endDate) {
+        trendBuckets.set(bucketKey(cursor.toISOString()), { label: dateLabel.format(cursor), primary: 0, secondary: 0 });
+        if (daily) cursor.setUTCDate(cursor.getUTCDate() + 1);
+        else cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+      }
+      for (const invoice of idrInvoices) {
+        for (const payment of getPaymentRows(invoice)) {
+          const date = String(payment.date || '').slice(0, 10);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < dashboardRange.startDate || date > dashboardRange.endDate) continue;
+          const bucket = trendBuckets.get(bucketKey(date));
+          if (bucket) bucket.primary += Math.max(0, Number(payment.amount) || 0);
+        }
+      }
+      for (const expense of expensesInPeriod) {
+        const bucket = trendBuckets.get(bucketKey(expense.date));
+        if (bucket) bucket.secondary += Number(expense.amount) || 0;
+      }
+    }
+    const trend = [...trendBuckets.values()];
     const metrics = [
       {
         id: 'billed-period',
@@ -1973,6 +2001,17 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         ) : (
           <>
             <AdminPanel featureSlug="finance-executive-summary-period" className="ams-operational-panel ams-overview-panel" title="Executive summary" description={<>Reporting period: {dashboardPeriodLabel}</>} actions={<><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/finance?tab=accounts-receivable" icon={<FileText size={14} />}>Open Accounts Receivable</DashboardControl><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/finance?tab=dashboard" icon={<ArrowUpRight size={14} />}>Open Dashboard comparison</DashboardControl></>}><p className="p-4 text-[11px] text-muted">{dashboardRange ? formatDate(dashboardRange.startDate) + ' â€“ ' + formatDate(dashboardRange.endDate) : 'Reporting period unavailable'} Â· Currency: IDR</p></AdminPanel>
+            <AdminMetricStrip metrics={metrics} />
+            <AdminPanel className="ams-operational-panel ams-overview-panel" title="Client collections and recorded expenses" description={dashboardPeriodLabel + ' · IDR · ' + (daily ? 'Daily' : 'Monthly')}>
+              {trend.some(point => point.primary !== 0 || point.secondary !== 0) ? (
+                <div className="min-w-0 p-4">
+                  <TrendChart data={trend} primaryLabel="Client payments recorded" secondaryLabel="Expenses recorded" primaryFormat={value => formatMoney(value)} presentation="maven" ariaLabel="Client collections and recorded expenses by date" />
+                </div>
+              ) : <DashboardEmptyState inset eyebrow="Finance Overview"
+                title={invoiceSourceError || expenseSourceError ? 'Trend data unavailable' : 'No recorded movements in this period'}
+                description={invoiceSourceError || expenseSourceError ? 'Refresh Finance to reload invoices and expenses.' : 'Recorded client payments and expenses will appear here for the selected period.'}
+              />}
+            </AdminPanel>
 <FinanceWorksheetSections label="Executive overview" sections={[
 { key: 'attention', label: 'Needs attention', content: <>
 <FinanceDataTable
@@ -1988,8 +2027,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               actions={<DashboardControl type="button" onClick={() => navigate('/admin/finance?tab=accounts-receivable')} variant="action" size="compact" className="ams-dashboard-card-action">Review receivables</DashboardControl>}
             />
 </> },
-{ key: 'performance', label: 'Period performance', content: <>
-<AdminMetricStrip metrics={metrics} />
+{ key: 'performance', label: 'Metric definitions', content: <>
 <AdminPanel className="ams-operational-panel ams-overview-panel" title="How to read these figures" description="The period metrics and current balance snapshot use different date and accounting bases.">
               <div className="space-y-2 p-4 text-xs leading-5 text-muted" data-ams-feature-slug="finance-executive-summary-definitions">
                 <p>Invoice value issued uses invoice issue date. Client payments recorded use recorded invoice payment dates. Expenses recorded use the expense date. Current outstanding receivables reflect the current invoice balance, not only invoices issued in the selected period.</p>
