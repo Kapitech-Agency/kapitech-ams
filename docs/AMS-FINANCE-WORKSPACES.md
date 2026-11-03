@@ -11,6 +11,10 @@ Updated: 2 November 2026. Scope: frontend presentation and navigation. Dashboard
 - `AdminDataTableShell embedded` contains the register and pagination inside its owning panel. `FinanceRecordSurface` is a presentation bridge over existing native cells and handlers, including conditional invoice columns. At widths below 1100px registers use labelled record cards; desktop retains the native table. Span/unsupported structures fall back to a named keyboard-scrollable native table. Existing grouped Project Finance/payable cards retain their task-specific sections. Formal statements remain tables at every width.
 - Empty content uses one compact `DashboardEmptyState` outside tables, with the Overview 16px body inset exactly once. Loaded, empty, filtered-empty, restricted, stale and unavailable sources remain distinct. Do not imply a successful source or a confirmed zero from a failed request.
 
+## Workspace design
+
+Each worksheet opens on its primary task. Multi-part worksheets use the shared Overview filter group to switch working surfaces without resetting the register. Executive Summary separates overdue exceptions, period performance and recent invoices. Client Billing separates the register from pipeline or billing review. Cash and supplier worksheets separate movement, reconciliation, installment, contract and directory work. Project Finance separates the portfolio and linking exceptions, saved allocations and reward policy, and member fees and expense evidence. Month-End Close keeps the period and close action visible while checklist and evidence have their own surfaces. Journal separates source queue, entries and account mapping. Financial Reports separates posted ledger statements from source activity or opening balances. Period controls stay available across report sections.
+
 ## Worksheet composition and ownership
 
 | Area | Worksheet | Presentation / existing source |

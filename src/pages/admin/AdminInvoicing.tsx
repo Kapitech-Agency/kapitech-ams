@@ -1,3 +1,4 @@
+import { FinanceWorksheetSections } from '../../components/admin/finance/FinanceWorksheetSections';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AlertCircle, ArrowDown, Check, CheckCircle2, Copy, BadgeCheck, BarChart3, Clock3, Download, Edit3, Eye, FileText, Hourglass, Plus, Receipt, RefreshCw, Send, MoreHorizontal, ShieldCheck, SlidersHorizontal, Trash2, TrendingUp, WalletCards, X } from 'lucide-react';
@@ -2875,8 +2876,9 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
       ) : financeView === 'quotations' ? (
         <div className="space-y-5">
-          <section className="space-y-5">
-            <><AdminFilterToolbar slug="finance-records-section-filters" searchValue={quotationSearch} onSearchChange={setQuotationSearch} searchLabel="Search quotations" searchPlaceholder="Search quotation or client" activeFilterCount={Number(quotationStatusFilter !== 'all')} onReset={() => { setQuotationSearch(''); setQuotationStatusFilter('all'); }} columns={3}><AdminFilterField label="Status"><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} className="min-w-0" triggerClassName="w-full" aria-label="Quotation status filter"/></AdminFilterField>
+          <FinanceWorksheetSections label="Quotation workspace" sections={[
+            { key: 'register', label: 'Quotation register', content: <>
+<><AdminFilterToolbar slug="finance-records-section-filters" searchValue={quotationSearch} onSearchChange={setQuotationSearch} searchLabel="Search quotations" searchPlaceholder="Search quotation or client" activeFilterCount={Number(quotationStatusFilter !== 'all')} onReset={() => { setQuotationSearch(''); setQuotationStatusFilter('all'); }} columns={3}><AdminFilterField label="Status"><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} className="min-w-0" triggerClassName="w-full" aria-label="Quotation status filter"/></AdminFilterField>
 <AdminFilterField label="Sort"><CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} className="min-w-0" triggerClassName="w-full" aria-label="Quotation sort"/></AdminFilterField></AdminFilterToolbar><AdminPanel className="ams-operational-panel ams-overview-panel" title={<>Quotation ledger</>} description={<>Search, filter, and sort the commercial pipeline.</>} actions={<div className="flex flex-wrap items-center gap-2">
           <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">
             {filteredQuotations.length} visible
@@ -2940,10 +2942,14 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     </td>
   </tr>
 })}
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records"  icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent"  icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context="Records returned by the Finance service"  icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'}  icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
+
 </tbody></table></FinanceRecordSurface>}</div><AdminTablePagination total={filteredQuotations.length} page={quotationPage} pageSize={quotationPageSize} onPageChange={setQuotationPage} onPageSizeChange={setQuotationPageSize} itemLabel="quotations" slug="finance-quotations-pagination" /></AdminDataTableShell></AdminPanel></>
-            <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
-          </section>
+            </> },
+            { key: 'pipeline', label: 'Pipeline review', content: <>
+<section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records"  icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent"  icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context="Records returned by the Finance service"  icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'}  icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
+<section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
+            </> },
+          ]} />
         </div>
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-5">
@@ -3149,14 +3155,15 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       ) : (
         <div className="space-y-5">
           {!embedded && invoiceSummary}
-
 {!embedded && (
           <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><div className="shrink-0 rounded-control border border-line bg-bg px-3 py-2 text-right">
   <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">Quarter net cash</p>
   <p className={'mt-0.5 text-sm font-semibold tabular-nums '+(quarterNetCash>=0?'text-success':'text-danger')}>{formatFinanceCardAmount(quarterNetCash,currency)}</p>
 </div></div></div><div className="p-4">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 5 aging buckets.</p></div><div className="p-4"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
           )}
-          <><AdminFilterToolbar slug="finance-invoice-ledger-filters" searchValue={search} onSearchChange={setSearch} searchLabel="Search invoices" searchPlaceholder="Search invoice, client or project" activeFilterCount={[statusFilter, paymentFilter, dueFilter].filter(value => value !== 'all').length} onReset={() => { setSearch(''); setStatusFilter('all'); setPaymentFilter('all'); setDueFilter('all'); }} columns={4}><AdminFilterField label="Invoice status"><CustomSelect
+<FinanceWorksheetSections label="Client billing workspace" sections={[
+{ key: 'register', label: 'Invoice register', content: <>
+<><AdminFilterToolbar slug="finance-invoice-ledger-filters" searchValue={search} onSearchChange={setSearch} searchLabel="Search invoices" searchPlaceholder="Search invoice, client or project" activeFilterCount={[statusFilter, paymentFilter, dueFilter].filter(value => value !== 'all').length} onReset={() => { setSearch(''); setStatusFilter('all'); setPaymentFilter('all'); setDueFilter('all'); }} columns={4}><AdminFilterField label="Invoice status"><CustomSelect
             value={statusFilter}
             onChange={setStatusFilter}
             options={embeddedReceivablesOnly ? statusOptions.filter((option) => ['all', 'sent', 'partially_paid', 'overdue'].includes(option.value)) : statusOptions} className="min-w-0" triggerClassName="w-full"
@@ -3295,8 +3302,9 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   </tr>;
 })}
 </tbody></table></FinanceRecordSurface>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></AdminDataTableShell></AdminPanel></>
+</> },
+{ key: 'review', label: 'Billing review', content: <>
 {embedded && invoiceSummary}
-
 {embeddedReceivablesOnly && (
   <section
     className="overflow-hidden rounded-card border border-line bg-panel"
@@ -3385,7 +3393,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     )}
   </section>
 )}
-
 {embedded && !embeddedReceivablesOnly && (
   <section className="space-y-4 rounded-card border border-line bg-panel p-4 sm:p-5" data-ams-feature-slug="finance-revenue-tax-retainer" data-ams-slug="finance-revenue-tax-retainer">
     <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -3577,6 +3584,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   </div>
 </section>
           )}
+</> }
+]} />
 
         </div>
       )}

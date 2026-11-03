@@ -822,8 +822,8 @@ test('Cash, petty cash, and payables put their working registers before supporti
   const pettyRegister = petty.indexOf('title="Petty Cash Ledger"');
   const pettyReconciliationHandoff = petty.indexOf('title="Reconciliation evidence is managed in Cash & Bank"');
   const pettyMetrics = petty.indexOf('<AdminMetricStrip metrics={[');
-  assert.ok(pettyRegister >= 0 && pettyReconciliationHandoff > pettyRegister && pettyMetrics > pettyReconciliationHandoff,
-    'Petty Cash should present its canonical reconciliation handoff after the ledger and before supporting metrics.');
+  assert.ok(pettyRegister >= 0 && pettyMetrics > pettyRegister && pettyReconciliationHandoff > pettyMetrics,
+    'Petty Cash should keep balances with vouchers and present reconciliation evidence in its own section.');
   assert.match(petty, /navigate\('\/admin\/finance\?tab=cash-bank'\)/);
   assert.match(petty, /account 1100 reconciliation record/);
   assert.doesNotMatch(petty, /openRegisterForm\('cash-reconciliation'/,

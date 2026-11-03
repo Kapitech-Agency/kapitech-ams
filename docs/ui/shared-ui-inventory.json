@@ -6,9 +6,9 @@
     "Import reachability is conservative and does not prove each export/selector is used. Never auto-delete based on this report."
   ],
   "summary": {
-    "sourceFiles": 119,
-    "reachableFiles": 116,
-    "componentFiles": 43,
+    "sourceFiles": 120,
+    "reachableFiles": 117,
+    "componentFiles": 44,
     "sharedComponentFiles": 18,
     "cssBytes": 513951
   },
@@ -226,6 +226,7 @@
         "src/components/admin/clients/ClientOnboardingWorkspace.tsx",
         "src/components/admin/clients/ClientWorkspace.tsx",
         "src/components/admin/finance/FinanceRecordSurface.tsx",
+        "src/components/admin/finance/FinanceWorksheetSections.tsx",
         "src/components/admin/inbox/InboxFollowUps.tsx",
         "src/components/admin/inbox/InboxMessageToolbar.tsx",
         "src/components/admin/inbox/InboxRoutingTemplates.tsx",
@@ -296,6 +297,18 @@
         "src/pages/admin/AdminFinanceWorkspace.tsx",
         "src/pages/admin/AdminInvoicing.tsx",
         "src/pages/admin/AdminProjectProfitability.tsx"
+      ]
+    },
+    {
+      "file": "src/components/admin/finance/FinanceWorksheetSections.tsx",
+      "kind": "domain",
+      "reachable": true,
+      "exports": [
+        "FinanceWorksheetSections"
+      ],
+      "consumers": [
+        "src/pages/admin/AdminFinanceWorkspace.tsx",
+        "src/pages/admin/AdminInvoicing.tsx"
       ]
     },
     {
@@ -1270,6 +1283,7 @@
         "FinanceDataTable": 32,
         "FinanceRecordSurface": 1,
         "FinanceWorkbookWorkspace": 1,
+        "FinanceWorksheetSections": 15,
         "Landmark": 3,
         "Modal": 1,
         "Plus": 7,
@@ -1337,6 +1351,7 @@
         "FinanceCashFlowChart": 2,
         "FinanceMetricCard": 28,
         "FinanceRecordSurface": 5,
+        "FinanceWorksheetSections": 2,
         "Hourglass": 3,
         "InvoiceStatusDropdown": 1,
         "Modal": 8,

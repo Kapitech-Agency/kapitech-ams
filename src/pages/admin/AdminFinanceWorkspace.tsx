@@ -1,3 +1,4 @@
+import { FinanceWorksheetSections } from '../../components/admin/finance/FinanceWorksheetSections';
 import { FINANCE_HANDOFFS, FINANCE_WORKSHEET_LABELS, getFinanceArea } from '../../lib/financeWorkspaceNavigation';
 import { AdminDataTableShell } from '../../components/admin/AdminModulePrimitives';
 import { AdminFilterToolbar } from '../../components/admin/AdminFilterToolbar';
@@ -1954,19 +1955,27 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               <h2 className="text-sm font-semibold text-fg">Selected-period dashboard</h2>
               <p className="text-xs text-muted">Recorded cash movement and invoice activity for {dashboardPeriodLabel}.</p>
             </div>
-            <FinanceDataTable presentation="report"
+<FinanceWorksheetSections label="Period performance" sections={[
+{ key: 'comparison', label: 'Period comparison', content: <>
+<FinanceDataTable presentation="report"
               title="Selected vs previous period"
               description="Invoice values use invoice dates. Cash values use recorded IDR movement dates. Net movement is a proxy and is not a reconciled closing cash balance."
               columns={[{ label: 'Measure' }, { label: dashboardPeriodLabel, align: 'right' }, { label: previousDashboardPeriodLabel, align: 'right' }, { label: 'Difference', align: 'right' }]}
               rows={dashboardComparisonRows}
               emptyMessage="No period comparison rows are available for the selected reporting ranges."
             />
-            {renderRecentActivity(dashboardRange ? { startDate: dashboardRange.startDate, endDate: dashboardRange.endDate, label: dashboardPeriodLabel } : undefined)}
+</> },
+{ key: 'activity', label: 'Transaction activity', content: <>
+{renderRecentActivity(dashboardRange ? { startDate: dashboardRange.startDate, endDate: dashboardRange.endDate, label: dashboardPeriodLabel } : undefined)}
+</> }
+]} />
           </>
         ) : (
           <>
             <AdminPanel featureSlug="finance-executive-summary-period" className="ams-operational-panel ams-overview-panel" title="Executive summary" description={<>Reporting period: {dashboardPeriodLabel}</>} actions={<><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/finance?tab=accounts-receivable" icon={<FileText size={14} />}>Open Accounts Receivable</DashboardControl><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/finance?tab=dashboard" icon={<ArrowUpRight size={14} />}>Open Dashboard comparison</DashboardControl></>}><p className="p-4 text-[11px] text-muted">{dashboardRange ? formatDate(dashboardRange.startDate) + ' – ' + formatDate(dashboardRange.endDate) : 'Reporting period unavailable'} · Currency: IDR</p></AdminPanel>
-            <FinanceDataTable
+<FinanceWorksheetSections label="Executive overview" sections={[
+{ key: 'attention', label: 'Needs attention', content: <>
+<FinanceDataTable
               title="Items needing attention · overdue invoices"
               description={invoiceSourceError
                 ? (invoiceSourceStale ? 'Invoice source refresh failed. Overdue rows use the last loaded invoice records and may be stale.' : 'Invoice source is unavailable. Overdue status and the absence of exceptions cannot be confirmed.')
@@ -1978,15 +1987,18 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 : 'No overdue invoice balances in the current invoice source.'}
               actions={<DashboardControl type="button" onClick={() => navigate('/admin/finance?tab=accounts-receivable')} variant="action" size="compact" className="ams-dashboard-card-action">Review receivables</DashboardControl>}
             />
-            <AdminMetricStrip metrics={metrics} />
-            <AdminPanel className="ams-operational-panel ams-overview-panel" title="How to read these figures" description="The period metrics and current balance snapshot use different date and accounting bases.">
+</> },
+{ key: 'performance', label: 'Period performance', content: <>
+<AdminMetricStrip metrics={metrics} />
+<AdminPanel className="ams-operational-panel ams-overview-panel" title="How to read these figures" description="The period metrics and current balance snapshot use different date and accounting bases.">
               <div className="space-y-2 p-4 text-xs leading-5 text-muted" data-ams-feature-slug="finance-executive-summary-definitions">
                 <p>Invoice value issued uses invoice issue date. Client payments recorded use recorded invoice payment dates. Expenses recorded use the expense date. Current outstanding receivables reflect the current invoice balance, not only invoices issued in the selected period.</p>
                 <p>Recorded cash movement is shown in Dashboard comparison. It can include supported bank adjustments and internal transfers, so it is not the same as client payments. These figures are not a substitute for posted General Ledger profit or bank reconciliation.</p>
               </div>
             </AdminPanel>
-
-            <FinanceDataTable
+</> },
+{ key: 'invoices', label: 'Recent invoices', content: <>
+<FinanceDataTable
               title="Recent invoice register"
               description="Issued invoice records in the selected reporting period, with current outstanding balances. Values retain each invoice currency."
               columns={[{ label: 'Invoice no.' }, { label: 'Client' }, { label: 'Issue date' }, { label: 'Invoice value', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Status' }]}
@@ -1995,6 +2007,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 ? (idrInvoices.length > 0 ? 'Invoice source refresh failed. Displayed records may be stale.' : 'Invoice source unavailable; an empty register is not confirmed.')
                 : 'No issued invoices were returned by AMS.'}
             />
+</> }
+]} />
           </>
         )}
       </div>
@@ -2275,8 +2289,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 ? 'Set the 1000 Cash & Bank opening balance before treating a running balance as meaningful. Only invoice receipts mapped to account 1000, paid expenses with an explicit 1000 settlement account, and bank-side movements appear here. This is not a bank-statement reconciliation.'
                 : 'Opening balance comes from the saved finance register. Paid expenses must record the actual paid date and settlement account; internal transfers are shown on the bank ledger but excluded from consolidated cash-flow movement. Reconcile to the bank statement before closing the month.'}
             </WorkbookNote>
-
-            <FinanceDataTable
+<FinanceWorksheetSections label="Cash workspace" sections={[
+{ key: 'movements', label: 'Cash movements', content: <>
+<FinanceDataTable
               title="Cash & Bank ledger"
               description="Transactions stay linked to their AMS source. Use this register for manual adjustments and internal transfers."
               columns={[{label:'Date'},{label:'Reference'},{label:'Description'},{label:'Source'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'}]}
@@ -2284,14 +2299,15 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               emptyMessage="No dated cash movement is available. Set an opening balance or record a movement."
               actions={<div className="flex flex-wrap gap-2">{registerAddButton('cash-bank-transaction','Add movement')}{canManageFinanceRecords && <DashboardControl type="button" onClick={() => openCashOpeningForm('1000')} variant="action" size="compact" className="ams-dashboard-card-action">{opening === null ? 'Set opening balance' : 'Edit opening balance'}</DashboardControl>}</div>}
             />
-
-            <AdminMetricStrip metrics={[
+<AdminMetricStrip metrics={[
               {id:'cash-opening',label:'Opening balance',value:opening === null ? 'Not set' : formatMoney(opening),context:openingDate ? 'Account 1000 · from ' + formatDate(openingDate) : 'Account 1000 · Cash & Bank',icon:<Landmark size={15}/>},
               {id:'cash-in',label:'Recorded cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowDown size={15}/>},
               {id:'cash-out',label:'Recorded cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowUpRight size={15}/>},
               {id:'cash-closing',label:reportPeriodEnabled ? 'Provisional period-end balance' : 'Provisional balance',value:periodClosingBalance === null ? 'Not available' : formatMoney(periodClosingBalance),context:'Opening balance plus recorded movements through period end; unreconciled',icon:<WalletCards size={15}/>},
             ]}/>
-            <section className="min-w-0 space-y-3" data-ams-slug="finance-statement-reconciliation-workspace" aria-label="Statement reconciliation workspace">
+</> },
+{ key: 'reconciliation', label: 'Statement reconciliation', content: <>
+<section className="min-w-0 space-y-3" data-ams-slug="finance-statement-reconciliation-workspace" aria-label="Statement reconciliation workspace">
             <AdminMetricStrip metrics={[
               {id:'cash-recon-complete',label:'Reconciled accounts',value:reconciledCount+' / '+reconciliationDiffs.length,context:'Month-end · '+reconciliationMonth,icon:<ShieldAlert size={15}/>},
               {id:'cash-recon-open',label:'Reconciliation exceptions',value:String(openReconCount),context:'Missing statement evidence or non-zero difference',icon:<CircleDollarSign size={15}/>}
@@ -2320,6 +2336,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               actions={registerAddButton('cash-reconciliation','Record reconciliation',{reconciliationMonth,statementDate:reconciliationMonthEnd})}
             />
             </section>
+</> }
+]} />
           </div>
         );
       }
@@ -2388,8 +2406,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote title="Vendor bills and linked payments determine payable balances">
               Vendor contracts describe commitments. Accounts Payable is now kept in a separate persistent register; each bill can carry its own due date and payment schedule. Linked expenses remain source records and are not silently converted into bills.
             </WorkbookNote>
-
-            <FinanceDataTable
+<FinanceWorksheetSections label="Supplier obligations" sections={[
+{ key: 'bills', label: 'Bills & installments', content: <>
+<FinanceDataTable
               title="Accounts Payable register"
               description="Outstanding uses the saved bill balance when available, with the stored paid amount as a legacy fallback. The installment schedule uses linked payment records."
               columns={[{label:'Bill no.'},{label:'Vendor'},{label:'Project'},{label:'Bill date'},{label:'Due date'},{label:'Bill amount',align:'right'},{label:'Paid',align:'right'},{label:'Outstanding',align:'right'},{label:'Status'},{label:'Actions'}]}
@@ -2417,8 +2436,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               actions={registerAddButton('vendor-bill','Add vendor bill')}
               compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[8],groups:[{label:'Bill details',indexes:[3,4,5,6,7]}],actionIndex:9}}
             />
-
-            {bills.length > 0 && (
+{bills.length > 0 && (
               <FinanceDataTable
                 title="Vendor payment schedule"
                 description="Installments use each bill's saved payment schedule and linked payment records. Review the overall due date in the Accounts Payable register."
@@ -2432,14 +2450,18 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[10],groups:[{label:'Bill amount',indexes:[3]},{label:'Installments',indexes:[4,5,6]},{label:'Settlement',indexes:[7,8,9]}]}}
               />
             )}
-            <AdminMetricStrip metrics={[
+<AdminMetricStrip metrics={[
               {id:'ap-bills',label:'Vendor bills',value:String(bills.length),context:'Saved finance register',icon:<FileText size={15}/>},
               {id:'ap-total',label:'IDR outstanding',value:formatMoney(payableTotalIDR),context:foreignCurrencyBillCount+' non-IDR bills listed separately',icon:<WalletCards size={15} />}
             ]}/>
-            <WorkbookNote title="Contract-linked vendor payments">
+</> },
+{ key: 'contract-payments', label: 'Contract payments', content: <>
+<WorkbookNote title="Contract-linked vendor payments">
               Use this register for payments planned against vendor contracts. These records remain linked to their contract and expense evidence; they do not settle a vendor bill in the Accounts Payable register above. Record bill settlements against the bill itself so the bill balance and installment schedule stay accurate.
             </WorkbookNote>
-            <AdminInvoicing embeddedView="vendor-payments" />
+<AdminInvoicing embeddedView="vendor-payments" />
+</> }
+]} />
           </div>
         );
       }
@@ -2475,8 +2497,13 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         ));
         return (
           <div className="space-y-4">
-            <AdminVendors embedded searchTerm={searchText} onSearchChange={setSearchText} />
-            <FinanceDataTable
+
+<FinanceWorksheetSections label="Supplier workspace" sections={[
+{ key: 'directory', label: 'Supplier directory', content: <>
+<AdminVendors embedded searchTerm={searchText} onSearchChange={setSearchText} />
+</> },
+{ key: 'contracts', label: 'Contract register', content: <>
+<FinanceDataTable
               title="Vendor contract register"
               description="Manage contract scope, dates, rate basis, value, and lifecycle here. Vendor bills and their installment schedule remain in Accounts Payable."
               columns={[{ label: 'Vendor' }, { label: 'Contract' }, { label: 'Contract period' }, { label: 'Rate basis' }, { label: 'Rate / value', align: 'right' }, { label: 'Linked expense records' }, { label: 'Status' }, { label: 'Actions' }]}
@@ -2484,6 +2511,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               emptyMessage="No vendor contracts match the current search. Add a contract to keep commitments visible."
               actions={canManageVendorContracts ? <Button variant="primary" type="button" icon={<Plus size={14} />} onClick={() => openVendorContractEditor()}>Add contract</Button> : undefined}
             />
+</> }
+]} />
           </div>
         );
       }
@@ -2563,8 +2592,14 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </div>
               )}
             </WorkbookNote>
-            <FinanceDataTable title="Project Finance" description="Planned profit is Contract Value less Vendor Commitment and Other Obligations. Vendor Paid and Vendor Outstanding are calculated from linked IDR vendor bills and their recorded payments; period invoice and expense figures remain live source activity." columns={[{label:'Project'},{label:'Client'},{label:'PIC'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Net project profit · plan',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'Vendor paid · current',align:'right'},{label:'Vendor outstanding · current',align:'right'},{label:'Vendor bills · current',align:'right'},{label:'Project status'},{label:'Project dates'},{label:'Notes'},{label:'Check'},{label:'Setup / actions'}]} rows={rows} emptyMessage={projectSourceBlocked && !hasSuccessfulProjectSource ? 'Project source is unavailable; retry before treating Project Finance as empty.' : 'No AMS projects were returned. Finance records can be saved and linked when a project is available.'} actions={registerAddButton('project-finance','Add project finance record')} compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[13,16],groups:[{label:'Planned financials',indexes:[3,4,5,6]},{label:'Reporting-period activity',indexes:[7,8,9,10,11,12]}],detailIndexes:[14,15],actionIndex:17}}/>
-            {orphanRecords.length>0&&<FinanceDataTable title="Unlinked project finance records" description="These records remain visible until they can be linked to the correct AMS project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>}
+<FinanceWorksheetSections label="Project profitability" sections={[
+{ key: 'portfolio', label: 'Project portfolio', content: <>
+<FinanceDataTable title="Project Finance" description="Planned profit is Contract Value less Vendor Commitment and Other Obligations. Vendor Paid and Vendor Outstanding are calculated from linked IDR vendor bills and their recorded payments; period invoice and expense figures remain live source activity." columns={[{label:'Project'},{label:'Client'},{label:'PIC'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Net project profit · plan',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'Vendor paid · current',align:'right'},{label:'Vendor outstanding · current',align:'right'},{label:'Vendor bills · current',align:'right'},{label:'Project status'},{label:'Project dates'},{label:'Notes'},{label:'Check'},{label:'Setup / actions'}]} rows={rows} emptyMessage={projectSourceBlocked && !hasSuccessfulProjectSource ? 'Project source is unavailable; retry before treating Project Finance as empty.' : 'No AMS projects were returned. Finance records can be saved and linked when a project is available.'} actions={registerAddButton('project-finance','Add project finance record')} compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[13,16],groups:[{label:'Planned financials',indexes:[3,4,5,6]},{label:'Reporting-period activity',indexes:[7,8,9,10,11,12]}],detailIndexes:[14,15],actionIndex:17}}/>
+</> },
+{ key: 'unlinked', label: 'Linking exceptions', content: <>
+{orphanRecords.length>0&&<FinanceDataTable title="Unlinked project finance records" description="These records remain visible until they can be linked to the correct AMS project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>}
+</> }
+]} />
           </div>
         );
       }
@@ -2700,20 +2735,25 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote tone={opening===null?'warning':'info'} title={opening===null?'Petty cash needs an opening balance':'Petty cash register connected'}>
               Only posted vouchers affect the petty-cash ledger. Pending/approved vouchers remain visible in workflow but do not change the running balance. The ledger starts at the saved opening date; earlier movements are excluded from the opening-balance roll-forward. Internal transfers are shared with Cash & Bank and are not treated as an expense by themselves.
             </WorkbookNote>
-
-            <FinanceDataTable title="Petty Cash Ledger" description="Voucher movements and internal cash transfers, sorted by date." columns={[{label:'Date'},{label:'Voucher / reference'},{label:'Description'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'},{label:'Status'},{label:'Actions'}]} rows={rows} emptyMessage="No petty-cash vouchers or transfers are recorded." actions={<div className="flex flex-wrap gap-2">{registerAddButton('petty-cash-voucher','Add voucher')}{canManageFinanceRecords && <><DashboardControl type="button" onClick={()=>openRegisterForm('cash-bank-transaction',undefined,{transactionKind:'bank-to-petty-cash',accountCode:'1000',counterpartAccountCode:'1100',direction:'out',description:'Petty cash top-up'})} variant="action" size="compact" className="ams-dashboard-card-action">Top up from bank</DashboardControl><DashboardControl type="button" onClick={()=>openCashOpeningForm('1100')} variant="action" size="compact" className="ams-dashboard-card-action">{opening===null?'Set opening balance':'Edit opening balance'}</DashboardControl></>}</div>}/>
-            <WorkbookNote tone="info" title="Reconciliation evidence is managed in Cash & Bank">
-              A petty-cash opening balance or posted voucher does not prove the physical cash count was reconciled. Review the canonical account 1100 reconciliation record and record its count date and evidence in the Statement reconciliation workspace.
-              <div className="mt-3">
-                <Button type="button" variant="secondary" onClick={() => navigate('/admin/finance?tab=cash-bank')}>Open Cash &amp; Bank reconciliation</Button>
-              </div>
-            </WorkbookNote>
-            <AdminMetricStrip metrics={[
+<FinanceWorksheetSections label="Petty cash workspace" sections={[
+{ key: 'vouchers', label: 'Vouchers & balances', content: <>
+<FinanceDataTable title="Petty Cash Ledger" description="Voucher movements and internal cash transfers, sorted by date." columns={[{label:'Date'},{label:'Voucher / reference'},{label:'Description'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'},{label:'Status'},{label:'Actions'}]} rows={rows} emptyMessage="No petty-cash vouchers or transfers are recorded." actions={<div className="flex flex-wrap gap-2">{registerAddButton('petty-cash-voucher','Add voucher')}{canManageFinanceRecords && <><DashboardControl type="button" onClick={()=>openRegisterForm('cash-bank-transaction',undefined,{transactionKind:'bank-to-petty-cash',accountCode:'1000',counterpartAccountCode:'1100',direction:'out',description:'Petty cash top-up'})} variant="action" size="compact" className="ams-dashboard-card-action">Top up from bank</DashboardControl><DashboardControl type="button" onClick={()=>openCashOpeningForm('1100')} variant="action" size="compact" className="ams-dashboard-card-action">{opening===null?'Set opening balance':'Edit opening balance'}</DashboardControl></>}</div>}/>
+<AdminMetricStrip metrics={[
               {id:'petty-opening',label:'Opening balance',value:opening===null?'Not set':formatMoney(opening),context:'Account 1100 · Petty Cash Reserve',icon:<WalletCards size={15}/>},
               {id:'petty-in',label:'Posted cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Posted movements in selected period' : 'Posted voucher receipts',icon:<ArrowDown size={15}/>},
               {id:'petty-out',label:'Posted cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Posted movements in selected period' : 'Posted voucher expenses',icon:<ArrowUpRight size={15}/>},
               {id:'petty-pending',label:'Pending approval',value:String(pending),context:'Vouchers awaiting approve/post',icon:<ShieldAlert size={15}/>}
             ]}/>
+</> },
+{ key: 'evidence', label: 'Reconciliation evidence', content: <>
+<WorkbookNote tone="info" title="Reconciliation evidence is managed in Cash & Bank">
+              A petty-cash opening balance or posted voucher does not prove the physical cash count was reconciled. Review the canonical account 1100 reconciliation record and record its count date and evidence in the Statement reconciliation workspace.
+              <div className="mt-3">
+                <Button type="button" variant="secondary" onClick={() => navigate('/admin/finance?tab=cash-bank')}>Open Cash &amp; Bank reconciliation</Button>
+              </div>
+            </WorkbookNote>
+</> }
+]} />
 
           </div>
         );
@@ -2805,7 +2845,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote tone="warning" title="Operational source preview · not the posted General Ledger">
               This preview uses invoice issue dates and expense records, excluding output tax from revenue. It is useful for operating review but is not accounting profit. Use posted General Journal balances as the accounting view; unmapped source rows, drafts and incomplete posting remain exceptions to resolve.
             </WorkbookNote>
-            <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-pnl-comparison-controls">
+<div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-pnl-comparison-controls">
               <div className="min-w-0 text-xs text-muted">
                 <div className="font-medium text-fg">Comparison period</div>
                 <div className="mt-1">{comparisonLabel}</div>
@@ -2825,9 +2865,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </label>
               )}
             </div>
-
-
-            <FinanceDataTable presentation="report"
+<FinanceWorksheetSections label="Profit & loss basis" defaultSection="posted" sections={[
+{ key: 'source', label: 'Source activity', content: <>
+<FinanceDataTable presentation="report"
               title="Operational source preview comparison"
               description={periodLabel + ' compared with ' + comparisonLabel + '. Change is current minus comparison; percentage is unavailable when the comparison baseline is zero.'}
               columns={[{ label: 'Line item' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
@@ -2836,9 +2876,11 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               exportable={false}
               actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-comparison-' + reportPeriodValue + '.csv', ['Line item', 'Selected period', 'Comparison period', 'Change', 'Change percent'], comparisonMetrics.map((item) => [item.label, item.current, item.comparison, item.current - item.comparison, item.comparison === 0 ? 'N/A' : (((item.current - item.comparison) / Math.abs(item.comparison)) * 100).toFixed(1) + '%']))} variant="action" size="compact" className="ams-dashboard-card-action">Export comparison</DashboardControl>}
             />
-            <FinanceDataTable presentation="report" title="Operational source preview detail" description="These source-derived values are separate from the Posted GL metrics above and must not be presented as final accounting profit." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected period." exportable={false} actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-' + reportPeriodValue + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))} variant="action" size="compact" className="ams-dashboard-card-action">Export CSV</DashboardControl>} />
-            <div className="text-xs text-muted">Classified expense total: {formatMoney(classifiedExpense)} · Source records in selected period: {currentPnl.expenses.length} expenses, {currentPnl.invoices.length} invoices.</div>
-            <section className="min-w-0 space-y-3" data-ams-slug="finance-pnl-posted-ledger-summary">
+<FinanceDataTable presentation="report" title="Operational source preview detail" description="These source-derived values are separate from the Posted GL metrics above and must not be presented as final accounting profit." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected period." exportable={false} actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-' + reportPeriodValue + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))} variant="action" size="compact" className="ams-dashboard-card-action">Export CSV</DashboardControl>} />
+<div className="text-xs text-muted">Classified expense total: {formatMoney(classifiedExpense)} · Source records in selected period: {currentPnl.expenses.length} expenses, {currentPnl.invoices.length} invoices.</div>
+</> },
+{ key: 'posted', label: 'Posted ledger', content: <>
+<section className="min-w-0 space-y-3" data-ams-slug="finance-pnl-posted-ledger-summary">
               <div className="flex min-w-0 flex-col gap-1">
                 <h2 className="text-sm font-semibold text-fg">Posted General Ledger snapshot</h2>
                 <p className="text-xs text-muted">Journal-backed accounting figures for {periodLabel}, separate from the operational source preview above.</p>
@@ -2853,6 +2895,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 actions={postedLedger.available ? <DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-posted-gl-pnl-' + reportPeriodValue + '.csv', ['Statement line', 'Amount IDR', 'Measurement basis'], postedLedgerRows.map((row) => [String(row.cells[0]), String(row.cells[1]), String(row.cells[2])]))} variant="action" size="compact" className="ams-dashboard-card-action">Export posted GL</DashboardControl> : null}
               />
             </section>
+</> }
+]} />
           </div>
         );
       }
@@ -2918,7 +2962,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote tone="warning" title="Separate posted-ledger cash flow from the source preview">
               The Posted General Ledger view below is calculated from posted journal lines on cash accounts 1000, 1100 and 1200; inter-account transfers net to zero, and opening balance entries are not treated as cash flows. The source preview below remains useful for unmatched or unposted activity, but it is not a reconciled bank statement or ending cash balance. Petty-cash voucher activity is still a separate control to reconcile.
             </WorkbookNote>
-            <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-cash-flow-comparison-controls">
+<div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-cash-flow-comparison-controls">
               <div className="min-w-0 text-xs text-muted">
                 <div className="font-medium text-fg">Comparison period</div>
                 <div className="mt-1">{comparisonLabel}</div>
@@ -2938,7 +2982,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </label>
               )}
             </div>
-            <FinanceDataTable presentation="report"
+<FinanceWorksheetSections label="Cash flow basis" sections={[
+{ key: 'posted', label: 'Posted ledger', content: <>
+<FinanceDataTable presentation="report"
               title="Posted General Ledger cash flow"
               description={periodLabel + ' compared with ' + comparisonLabel + '. These values use posted journal activity only and exclude opening balances; bank-statement reconciliation is still required.'}
               columns={[{ label: 'Metric' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
@@ -2947,7 +2993,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               exportable={false}
               actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-posted-gl-cash-flow-' + reportPeriodValue + '.csv', ['Metric','Selected period','Comparison period','Change','Change percent'], postedFlowMetrics.map((item) => [item.label,item.current,item.comparison,item.current-item.comparison,item.comparison===0?'N/A':(((item.current-item.comparison)/Math.abs(item.comparison))*100).toFixed(1)+'%']))} variant="action" size="compact" className="ams-dashboard-card-action">Export posted GL</DashboardControl>}
             />
-            <FinanceDataTable presentation="report"
+</> },
+{ key: 'source', label: 'Source movements', content: <>
+<FinanceDataTable presentation="report"
               title="Source cash movement comparison (proxy)"
               description={periodLabel + ' compared with ' + comparisonLabel + '. Source rows are not equivalent to posted ledger movements; reconcile any difference before closing.'}
               columns={[{ label: 'Metric' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
@@ -2956,7 +3004,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               exportable={false}
               actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-cash-flow-comparison-' + reportPeriodValue + '.csv', ['Metric', 'Selected period', 'Comparison period', 'Change', 'Change percent'], flowComparisonMetrics.map((item) => [item.label, item.current, item.comparison, item.current - item.comparison, item.comparison === 0 ? 'N/A' : (((item.current - item.comparison) / Math.abs(item.comparison)) * 100).toFixed(1) + '%']))} variant="action" size="compact" className="ams-dashboard-card-action">Export comparison</DashboardControl>}
             />
-            <FinanceDataTable presentation="report"
+<FinanceDataTable presentation="report"
               title="Recorded source cash movement by Month (proxy)"
               description="Monthly source activity inside the selected reporting period. This does not replace the Posted General Ledger cash-flow comparison above."
               columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]}
@@ -2965,6 +3013,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               exportable={false}
               actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-cash-flow-' + reportPeriodValue + '.csv', ['Month', 'Total cash in', 'Total cash out', 'Net cash movement', 'Source rows'], visibleMonthlyRows.map((item) => [item.month, item.inflow, item.outflow, item.inflow - item.outflow, item.count]))} variant="action" size="compact" className="ams-dashboard-card-action">Export period detail</DashboardControl>}
             />
+</> }
+]} />
           </div>
         );
       }
@@ -3011,7 +3061,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected closing month is closed':'Checklist progress'}>
               Closing month: {selectedClosingMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are marked Done. Checklist completion is necessary, but it is not final close readiness. Review the authoritative source gates below before requesting closure.
             </WorkbookNote>
-            <AdminPanel className="ams-operational-panel ams-overview-panel" title="Closing period" bodyClassName="p-4">
+<AdminPanel className="ams-operational-panel ams-overview-panel" title="Closing period" bodyClassName="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <label className="block max-w-xs flex-1 text-xs font-medium text-muted">Closing month
                   <CustomDatePicker type="month" value={selectedClosingMonth} onChange={setSelectedClosingMonth} locale={locale} className="mt-1.5 w-full" triggerClassName="h-10 min-h-10" aria-label="Closing month" slug="finance-closing-month-picker" />
@@ -3022,7 +3072,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </div>
               </div>
             </AdminPanel>
-            <AdminPanel className="ams-operational-panel ams-overview-panel" title="Final close validation" bodyClassName="p-4">
+<FinanceWorksheetSections label="Month-end close steps" defaultSection="checklist" sections={[
+{ key: 'evidence', label: 'Review close evidence', content: <>
+<AdminPanel className="ams-operational-panel ams-overview-panel" title="Final close validation" bodyClassName="p-4">
               <div className="space-y-3">
                 <p className="text-xs leading-5 text-muted">
                   The server performs the final checks when you request closure. It requires all 11 controls to be Done, no unresolved source-journal exceptions or period drafts, balanced posted journals, and month-end statement or count evidence that matches the posted General Ledger for each required cash account. This workspace does not guess a separate readiness score.
@@ -3040,7 +3092,11 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </div>
               </div>
             </AdminPanel>
-            <FinanceDataTable title="Monthly closing checklist" description="One saved row for each monthly closing control, with an assigned owner, sign-off date, and review notes." columns={[{label:'Checklist item'},{label:'Default owner'},{label:'Status'},{label:'Control purpose'},{label:'Actions'}]} rows={rows} emptyMessage="Create the checklist rows before requesting month-end close."/>
+</> },
+{ key: 'checklist', label: 'Complete checklist', content: <>
+<FinanceDataTable title="Monthly closing checklist" description="One saved row for each monthly closing control, with an assigned owner, sign-off date, and review notes." columns={[{label:'Checklist item'},{label:'Default owner'},{label:'Status'},{label:'Control purpose'},{label:'Actions'}]} rows={rows} emptyMessage="Create the checklist rows before requesting month-end close."/>
+</> }
+]} />
           </div>
         );
       }
@@ -3052,8 +3108,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               Net Project Profit is calculated from contract value less vendor commitment, other obligations and the saved Team Fee milestones for that project. Team Fee is deducted before reserve/reward allocation; negative project results never create negative distributions. Project amounts use saved contract values and obligations, not the general AMS project budget.
               Current saved allocation records do not include an effective month or quarter. This worksheet shows the saved allocation per project, not historical per-period snapshots; the reporting-period control does not create or infer allocation history.
             </WorkbookNote>
-
-             <FinanceDataTable title="Project Allocation" description="Amounts and percentages come from each project's saved allocation. The default split above applies only to new records." columns={[{label:'Project'},{label:'Net project profit',align:'right'},{label:'Petty cash reserve',align:'right'},{label:'Emergency fund',align:'right'},{label:'Team Reward',align:'right'},{label:'Company operational fund',align:'right'},{label:'Emergency fund status'},{label:'Actions'}]} rows={records.map((record)=> {
+<FinanceWorksheetSections label="Profit allocation workspace" sections={[
+{ key: 'allocations', label: 'Saved allocations', content: <>
+<FinanceDataTable title="Project Allocation" description="Amounts and percentages come from each project's saved allocation. The default split above applies only to new records." columns={[{label:'Project'},{label:'Net project profit',align:'right'},{label:'Petty cash reserve',align:'right'},{label:'Emergency fund',align:'right'},{label:'Team Reward',align:'right'},{label:'Company operational fund',align:'right'},{label:'Emergency fund status'},{label:'Actions'}]} rows={records.map((record)=> {
             <AdminMetricStrip metrics={[
               {id:'alloc-petty',label:'Default petty cash reserve',value:'10%',context:'For new allocations',icon:<WalletCards size={15}/>},
               {id:'alloc-emergency',label:'Default emergency fund',value:'10%',context:'For new allocations',icon:<ShieldAlert size={15}/>},
@@ -3084,11 +3141,15 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                  registerRecordActions('project-allocation',record)
                ]};
              })} emptyMessage="No project allocation has been saved yet. Configure it from the current contract value and project obligations." actions={registerAddButton('project-allocation','Calculate project allocation')}/>
-            <FinanceDataTable title="Team Reward distribution" description="Standard distribution when Team Reward uses the default 10% allocation." columns={[{label:'Recipient group'},{label:'Percentage of Net Project Profit'},{label:'Share of Team Reward'}]} rows={[
+</> },
+{ key: 'distribution', label: 'Team reward policy', content: <>
+<FinanceDataTable title="Team Reward distribution" description="Standard distribution when Team Reward uses the default 10% allocation." columns={[{label:'Recipient group'},{label:'Percentage of Net Project Profit'},{label:'Share of Team Reward'}]} rows={[
               {id:'sales',cells:['Sales','5%','50%']},
               {id:'vendor',cells:['Vendor / PIC','2.5%','25%']},
               {id:'management',cells:['Management','2.5%','25%']}
             ]}/>
+</> }
+]} />
           </div>
         );
       }
@@ -3113,8 +3174,14 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </div>
               )}
             </WorkbookNote>
-            <FinanceDataTable title="Project Team Fee allocation" description="One row per project and team member; status is maintained independently from Team Reward. Period filtering uses due date, or record creation date when no due date is stored; paid date is informational." columns={[{label:'Project'},{label:'Member'},{label:'Milestone / reference'},{label:'Role'},{label:'Fee amount',align:'right'},{label:'Due date'},{label:'Paid date'},{label:'Payment status'},{label:'Actions'}]} rows={feeRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.projectId||'—'),String(record.payload.memberName||'—'),String(record.payload.paymentReference||'—'),String(record.payload.role||'—'),formatMoney(Number(record.payload.feeAmount)||0),formatDate(record.payload.dueDate),formatDate(record.payload.paidDate),<StatusBadge value={record.payload.paymentStatus||record.status}/>,registerRecordActions('team-fee',record)]}))} emptyMessage={teamFeeSourceBlocked ? hasSuccessfulTeamFeeSource ? 'Last successful Team Fee register returned no matching allocations; refresh to confirm the empty state.' : 'Team Fee allocation source unavailable. Retry Finance sources before treating this register as empty.' : 'No individual Team Fee allocation has been recorded.'} actions={registerAddButton('team-fee','Add team fee')}/>
-            <FinanceDataTable title="Project Team Fee expense sources" description="Actual expense records that are explicitly classified as Project Team Fee." columns={[{label:'Date'},{label:'Project'},{label:'Description'},{label:'Amount',align:'right'},{label:'Record state'}]} rows={feeExpenses.map((expense)=>({id:expense.id,cells:[formatDate(expense.date),projects.find((project)=>project.id===expense.projectId)?.name||expense.projectId||'Not linked',expense.description,formatMoney(Number(expense.amount)||0,String((expense as any).currency||'IDR')),<StatusBadge value={(expense as any).status||'recorded'}/>]}))} emptyMessage={expenseSourceBlocked ? hasSuccessfulExpenseSource ? 'Last successful expense response had no matching Team Fee source rows; refresh to confirm current coverage.' : 'Expense source unavailable. Retry Finance sources before treating this table as empty.' : 'No expense source record is classified as Project Team Fee.'}/>
+<FinanceWorksheetSections label="Team fee workspace" sections={[
+{ key: 'allocations', label: 'Member allocations', content: <>
+<FinanceDataTable title="Project Team Fee allocation" description="One row per project and team member; status is maintained independently from Team Reward. Period filtering uses due date, or record creation date when no due date is stored; paid date is informational." columns={[{label:'Project'},{label:'Member'},{label:'Milestone / reference'},{label:'Role'},{label:'Fee amount',align:'right'},{label:'Due date'},{label:'Paid date'},{label:'Payment status'},{label:'Actions'}]} rows={feeRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.projectId||'—'),String(record.payload.memberName||'—'),String(record.payload.paymentReference||'—'),String(record.payload.role||'—'),formatMoney(Number(record.payload.feeAmount)||0),formatDate(record.payload.dueDate),formatDate(record.payload.paidDate),<StatusBadge value={record.payload.paymentStatus||record.status}/>,registerRecordActions('team-fee',record)]}))} emptyMessage={teamFeeSourceBlocked ? hasSuccessfulTeamFeeSource ? 'Last successful Team Fee register returned no matching allocations; refresh to confirm the empty state.' : 'Team Fee allocation source unavailable. Retry Finance sources before treating this register as empty.' : 'No individual Team Fee allocation has been recorded.'} actions={registerAddButton('team-fee','Add team fee')}/>
+</> },
+{ key: 'expenses', label: 'Recorded expense sources', content: <>
+<FinanceDataTable title="Project Team Fee expense sources" description="Actual expense records that are explicitly classified as Project Team Fee." columns={[{label:'Date'},{label:'Project'},{label:'Description'},{label:'Amount',align:'right'},{label:'Record state'}]} rows={feeExpenses.map((expense)=>({id:expense.id,cells:[formatDate(expense.date),projects.find((project)=>project.id===expense.projectId)?.name||expense.projectId||'Not linked',expense.description,formatMoney(Number(expense.amount)||0,String((expense as any).currency||'IDR')),<StatusBadge value={(expense as any).status||'recorded'}/>]}))} emptyMessage={expenseSourceBlocked ? hasSuccessfulExpenseSource ? 'Last successful expense response had no matching Team Fee source rows; refresh to confirm current coverage.' : 'Expense source unavailable. Retry Finance sources before treating this table as empty.' : 'No expense source record is classified as Project Team Fee.'}/>
+</> }
+]} />
           </div>
         );
       }
@@ -3269,13 +3336,15 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote tone={sourceExceptionCount > 0 || !balanced || Math.abs(openingOffset) > 0.01 ? 'warning' : 'info'} title={sourceExceptionCount > 0 ? 'Posted ledger has unresolved source exceptions' : !balanced ? 'General Ledger is out of balance' : Math.abs(openingOffset) > 0.01 ? 'Opening balance offset needs reconciliation' : 'Posted ledger balance snapshot'}>
               Balances below are calculated from posted General Journal lines through {formatDate(asOfDate)}. They are not silently filled from invoices, expenses or opening registers. {sourceExceptionCount} source item(s) still need mapping, posting, correction or reconciliation; {postedJournals.length} posted journal(s) are included. Account 3200 is a temporary opening balance offset and should be cleared to the appropriate equity account after opening balances are reconciled.
             </WorkbookNote>
-            <AdminMetricStrip metrics={[
+<FinanceWorksheetSections label="Balance sheet workspace" sections={[
+{ key: 'statement', label: 'Posted statement', content: <>
+<AdminMetricStrip metrics={[
               { id: 'bs-assets', label: 'Total assets', value: formatMoney(totalAssets), context: 'Posted General Ledger · ' + periodLabel, icon: <Landmark size={15} /> },
               { id: 'bs-liabilities', label: 'Total liabilities', value: formatMoney(totalLiabilities), context: 'As of ' + formatDate(asOfDate), icon: <ShieldAlert size={15} /> },
               { id: 'bs-equity', label: 'Total equity incl. current earnings', value: formatMoney(totalEquity), context: 'Includes temporary account 3200', icon: <CircleDollarSign size={15} /> },
               { id: 'bs-check', label: 'Accounting equation', value: balanced ? 'Balanced' : formatMoney(balanceDifference), context: 'Assets − liabilities − equity', icon: <WalletCards size={15} /> }
             ]} />
-            <FinanceDataTable presentation="report"
+<FinanceDataTable presentation="report"
               title="Posted General Ledger Balance Sheet"
               description={'Balance Sheet grouped by Assets, Liabilities and Equity at ' + formatDate(asOfDate) + ', with section subtotals. Current earnings are calculated from posted Revenue and Expense accounts; unresolved source items are disclosed above.'}
               columns={[{label:'Section'},{label:'Code'},{label:'Account'},{label:'Balance (IDR)',align:'right'},{label:'Basis'}]}
@@ -3283,7 +3352,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               emptyMessage="No posted journal activity exists through the selected date."
               exportable={true}
             />
-            <FinanceDataTable presentation="report"
+</> },
+{ key: 'opening', label: 'Opening balances', content: <>
+<FinanceDataTable presentation="report"
               title="Opening balance register"
               description="Opening balances are journalized via account 3200. Save an opening balance, run source sync, review the generated draft and have a second authorized user post it."
               columns={[{label:'As of date'},{label:'Account code'},{label:'Account'},{label:'Balance side'},{label:'Opening amount',align:'right'},{label:'Notes'},{label:'Actions'}]}
@@ -3294,6 +3365,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               emptyMessage="No opening balances have been entered."
               actions={registerAddButton('balance-sheet-opening','Record opening balance')}
             />
+</> }
+]} />
           </div>
         );
       }
@@ -3341,9 +3414,15 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote tone="info" title="Source sync creates drafts only">
               Generate source drafts prepares invoice-recognition entries where the tax mapping is supported, client receipts that clear Accounts Receivable, classifiable expense entries, vendor bill payments with a supported account proposal, and posted internal cash transfers. Nothing is approved or posted automatically. Unsupported tax or payment-account mappings stay skipped with a reason; verify each source and its related ledger entry before approval.
             </WorkbookNote>
-            {journalSyncSummary && <WorkbookNote tone="info" title="Source journal sync result">{journalSyncSummary}</WorkbookNote>}
-            <FinanceDataTable title="Source transaction posting queue" description="Source rows show the matching journal state or why automatic draft creation was skipped. These rows are not themselves journal entries." columns={[{label:'Date'},{label:'Reference'},{label:'Source'},{label:'Description'},{label:'Amount',align:'right'},{label:'Posting state'}]} rows={journalSources.map((row)=>({id:row.id,cells:[formatDate(row.date),row.reference||'—',row.source,row.description,formatMoney(row.amount),<AdminStatusBadge tone={row.tone}>{row.status}</AdminStatusBadge>]}))} emptyMessage="No eligible or skipped source rows were found." actions={canManageFinanceRecords ? <Button variant="secondary" type="button" loading={registerSaving} disabled={registerSaving} icon={<RefreshCw size={14}/>} onClick={() => void syncSourceJournalDrafts()}>Generate source drafts</Button> : null}/>
+{journalSyncSummary && <WorkbookNote tone="info" title="Source journal sync result">{journalSyncSummary}</WorkbookNote>}
+<FinanceWorksheetSections label="Journal workflow" sections={[
+{ key: 'queue', label: 'Source queue', content: <>
+<FinanceDataTable title="Source transaction posting queue" description="Source rows show the matching journal state or why automatic draft creation was skipped. These rows are not themselves journal entries." columns={[{label:'Date'},{label:'Reference'},{label:'Source'},{label:'Description'},{label:'Amount',align:'right'},{label:'Posting state'}]} rows={journalSources.map((row)=>({id:row.id,cells:[formatDate(row.date),row.reference||'—',row.source,row.description,formatMoney(row.amount),<AdminStatusBadge tone={row.tone}>{row.status}</AdminStatusBadge>]}))} emptyMessage="No eligible or skipped source rows were found." actions={canManageFinanceRecords ? <Button variant="secondary" type="button" loading={registerSaving} disabled={registerSaving} icon={<RefreshCw size={14}/>} onClick={() => void syncSourceJournalDrafts()}>Generate source drafts</Button> : null}/>
+</> },
+{ key: 'journal', label: 'Journal entries', content: <>
 <FinanceDataTable title="General Journal" description="Generated records retain their source reference. Review every draft and supporting document; a different authorized user must approve/post it. Posted entries are immutable." columns={[{label:'Date'},{label:'Reference'},{label:'Description'},{label:'Project'},{label:'Debit total',align:'right'},{label:'Credit total',align:'right'},{label:'Status'},{label:'Actions'}]} rows={records.map((record)=>({id:record.id,cells:[formatDate(record.payload.date),String(record.payload.reference||record.recordKey),String(record.payload.description||''),String(record.payload.projectId||'—'),formatMoney(Number(record.payload.debitTotal)||0),formatMoney(Number(record.payload.creditTotal)||0),<StatusBadge value={record.status}/>,registerRecordActions('journal-entry',record)]}))} emptyMessage="No general journal entries have been saved." actions={registerAddButton('journal-entry','Add journal entry')}/>
+</> },
+{ key: 'mapping', label: 'Account mapping', content: <>
 <FinanceDataTable title="Journal account mapping" description="Source-linked entries follow accrual accounting. Invoice issue, client receipts, cost recognition and settlements are separate drafts. Finance must review and post each entry." columns={[{label:'Source event'},{label:'Debit'},{label:'Credit'},{label:'Review requirement'}]} rows={[
               {id:'invoice-issued',cells:['Invoice issued','1300 · Accounts Receivable','4000 · Project Revenue; 2100 · Tax Payable when taxable','Match the invoice total and tax evidence. Tax is separated from revenue.']},
               {id:'receipt',cells:['Client receipt','1000 · Cash & Bank / 1010 · Card Clearing / 1100 · Petty Cash','1300 · Accounts Receivable','Match receipt date, method, amount and source invoice. Post only after invoice recognition.']},
@@ -3353,6 +3432,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               {id:'vendor-payment',cells:['Vendor bill payment','2000 · Accounts Payable','1000 / 1100 / 1200 / 2200 · Settlement account','Match payment to the bill accrual and verify method and statement evidence.']},
               {id:'petty-transfer',cells:['Bank to petty cash','1100 · Petty Cash Reserve','1000 · Cash & Bank','Internal transfer only. It does not create revenue or expense.']}
             ]} actions={<DashboardControl type="button" icon={<ArrowUpRight size={14}/>} onClick={() => navigate('/admin/finance?tab=chart-of-accounts')} variant="action" size="compact" className="ams-dashboard-card-action">Review Chart of Accounts</DashboardControl>}/>
+</> }
+]} />
           </div>
         );
       }
@@ -3424,7 +3505,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               <h2 className="text-sm font-semibold text-fg">Annual summary · {selectedYear} vs {previousYear}</h2>
               <p className="text-xs text-muted">Compares the selected reporting year with the previous calendar year. Difference is selected year minus previous year. A positive expense or outflow difference means the recorded amount increased, not that performance improved.</p>
             </div>
-            <FinanceDataTable presentation="report"
+<FinanceWorksheetSections label="Annual reporting basis" sections={[
+{ key: 'activity', label: 'Operating activity', content: <>
+<FinanceDataTable presentation="report"
               title="Annual operating activity comparison"
               description="Source-derived invoice, expense and recorded cash totals. Cash flow figures are proxies, not reconciled closing cash or posted profit. If the Finance source notice above indicates incomplete availability, retry before relying on the comparison."
               columns={comparisonColumns}
@@ -3433,7 +3516,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               exportable={false}
               actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '-vs-' + previousYear + '.csv', ['Metric', selectedYear, previousYear, 'Difference', 'Measurement basis'], exportComparisonRows)} variant="action" size="compact" className="ams-dashboard-card-action">{'Export ' + selectedYear + ' vs ' + previousYear}</DashboardControl>}
             />
-            <section className="min-w-0 space-y-3" data-ams-slug="finance-annual-posted-ledger">
+</> },
+{ key: 'posted', label: 'Posted ledger', content: <>
+<section className="min-w-0 space-y-3" data-ams-slug="finance-annual-posted-ledger">
               <WorkbookNote tone="warning" title="Posted General Ledger · annual comparison">
                 These annual accounting metrics use posted journals only. They may not represent final financial statements until every source row is mapped, posted and reconciled. The temporary Opening Balance Equity account must be cleared after opening balances are reviewed.
               </WorkbookNote>
@@ -3447,6 +3532,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '-vs-' + previousYear + '-posted-gl.csv', ['Metric', selectedYear, previousYear, 'Difference', 'Measurement basis'], postedLedgerSummaryRows.map((item) => [item.metric, item.amount, item.previousAmount, item.difference, item.comparisonBasis]))} variant="action" size="compact" className="ams-dashboard-card-action">Export posted GL comparison</DashboardControl>}
               />
             </section>
+</> }
+]} />
           </div>
         );
       }
@@ -3492,17 +3579,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
       <div data-ams-slug="finance-workspace-navigation">
         {sheetItems.length > 0 && <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="ams-operational-tabs" variant="primary" />}
       </div>
-      {handoffs.length > 0 && (
-        <AdminPanel className="ams-operational-panel ams-overview-panel" title={activeTab.key === 'executive-summary' ? 'Finance workbench' : 'Related work'} description={activeTab.key === 'executive-summary' ? 'Open the register, close checklist, or report for the work you need to do.' : 'Continue in the worksheet that owns the next step.'}>
-          <div className="flex flex-wrap gap-2 p-4">
-            {handoffs.map(item => (
-              <DashboardControl key={item.tab} to={financeWorksheetDestination(item.tab)} variant="action" size="compact" className="ams-dashboard-card-action">
-                {item.label}
-              </DashboardControl>
-            ))}
-          </div>
-        </AdminPanel>
-      )}
+      <div className={handoffs.length ? "grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_16rem]" : "min-w-0"}>
+      <div className="min-w-0 space-y-4" key={activeTab.key}>
       {SEARCHABLE_FINANCE_TABS.has(activeTab.key) && activeTab.key !== 'vendors' && <AdminFilterToolbar slug="finance-worksheet-search" searchValue={searchText} onSearchChange={setSearchText} searchLabel="Search this view" searchPlaceholder="Search this worksheet…" activeFilterCount={0} onReset={() => setSearchText('')} />}
       <div className="min-w-0 space-y-4" data-ams-feature-slug={activeTab.key} data-ams-slug="finance-active-worksheet">
         {(Boolean(registerActionError && !editor) || registerErrors.length > 0 || sourceErrors.length > 0) && (
@@ -3530,6 +3608,19 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           </AdminModuleNotice>
         )}
         {loading ? renderLoading() : renderView(activeTab)}
+      </div>
+      </div>
+      {handoffs.length > 0 && (
+        <AdminPanel className="ams-operational-panel ams-overview-panel" title={activeTab.key === 'executive-summary' ? 'Finance workbench' : 'Related work'} description={activeTab.key === 'executive-summary' ? 'Open the register, close checklist, or report for the work you need to do.' : 'Continue in the worksheet that owns the next step.'}>
+          <div className="flex flex-col items-start gap-2 p-4">
+            {handoffs.map(item => (
+              <DashboardControl key={item.tab} to={financeWorksheetDestination(item.tab)} variant="action" size="compact" className="ams-dashboard-card-action">
+                {item.label}
+              </DashboardControl>
+            ))}
+          </div>
+        </AdminPanel>
+      )}
       </div>
       {renderRegisterEditor()}
       {renderVendorContractEditor()}
