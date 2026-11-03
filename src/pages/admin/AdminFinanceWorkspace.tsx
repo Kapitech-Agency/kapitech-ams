@@ -1961,7 +1961,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               title="Selected vs previous period"
               description="Invoice values use invoice dates. Cash values use recorded IDR movement dates. Net movement is a proxy and is not a reconciled closing cash balance."
               columns={[{ label: 'Measure' }, { label: dashboardPeriodLabel, align: 'right' }, { label: previousDashboardPeriodLabel, align: 'right' }, { label: 'Difference', align: 'right' }]}
-              rows={dashboardComparisonRows}
+              rows={idrInvoices.length || idrExpenses.length || cashMovements.length ? dashboardComparisonRows : []}
               emptyMessage="No period comparison rows are available for the selected reporting ranges."
             />
 </> },
@@ -2436,8 +2436,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               actions={registerAddButton('vendor-bill','Add vendor bill')}
               compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[8],groups:[{label:'Bill details',indexes:[3,4,5,6,7]}],actionIndex:9}}
             />
-{bills.length > 0 && (
-              <FinanceDataTable
+<FinanceDataTable
                 title="Vendor payment schedule"
                 description="Installments use each bill's saved payment schedule and linked payment records. Review the overall due date in the Accounts Payable register."
                 columns={[
@@ -2449,7 +2448,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 emptyMessage="No vendor bills have been entered. Create a bill to see its payment schedule."
                 compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[10],groups:[{label:'Bill amount',indexes:[3]},{label:'Installments',indexes:[4,5,6]},{label:'Settlement',indexes:[7,8,9]}]}}
               />
-            )}
 <AdminMetricStrip metrics={[
               {id:'ap-bills',label:'Vendor bills',value:String(bills.length),context:'Saved finance register',icon:<FileText size={15}/>},
               {id:'ap-total',label:'IDR outstanding',value:formatMoney(payableTotalIDR),context:foreignCurrencyBillCount+' non-IDR bills listed separately',icon:<WalletCards size={15} />}
@@ -2597,7 +2595,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
 <FinanceDataTable title="Project Finance" description="Planned profit is Contract Value less Vendor Commitment and Other Obligations. Vendor Paid and Vendor Outstanding are calculated from linked IDR vendor bills and their recorded payments; period invoice and expense figures remain live source activity." columns={[{label:'Project'},{label:'Client'},{label:'PIC'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Net project profit · plan',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'Vendor paid · current',align:'right'},{label:'Vendor outstanding · current',align:'right'},{label:'Vendor bills · current',align:'right'},{label:'Project status'},{label:'Project dates'},{label:'Notes'},{label:'Check'},{label:'Setup / actions'}]} rows={rows} emptyMessage={projectSourceBlocked && !hasSuccessfulProjectSource ? 'Project source is unavailable; retry before treating Project Finance as empty.' : 'No AMS projects were returned. Finance records can be saved and linked when a project is available.'} actions={registerAddButton('project-finance','Add project finance record')} compactCardLayout={{titleIndex:0,subtitleIndexes:[1,2],statusIndexes:[13,16],groups:[{label:'Planned financials',indexes:[3,4,5,6]},{label:'Reporting-period activity',indexes:[7,8,9,10,11,12]}],detailIndexes:[14,15],actionIndex:17}}/>
 </> },
 { key: 'unlinked', label: 'Linking exceptions', content: <>
-{orphanRecords.length>0&&<FinanceDataTable title="Unlinked project finance records" description="These records remain visible until they can be linked to the correct AMS project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>}
+<FinanceDataTable emptyMessage="No unlinked records were found in the loaded project Finance register." title="Unlinked project finance records" description="These records remain visible until they can be linked to the correct AMS project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>
 </> }
 ]} />
           </div>
@@ -2890,8 +2888,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 title="Posted General Ledger income statement"
                 description={periodLabel + '. ' + postedLedger.journalCount + ' posted journal entries. Only posted journal lines in mapped Revenue and Expense accounts contribute. Unmapped source rows and drafts remain outside this snapshot.'}
                 columns={[{ label: 'Statement line' }, { label: 'Amount (IDR)', align: 'right' }, { label: 'Measurement basis' }]}
-                rows={postedLedgerRows}
-                emptyMessage="No posted journal entries were returned for the selected period."
+                rows={postedLedger.available ? postedLedgerRows : []}
+                emptyMessage={registerErrors.some(error => error.startsWith('Finance register journal-entry:')) ? 'Journal data could not be loaded. Refresh Finance before relying on this statement.' : 'No posted journal entries were returned for the selected period.'}
                 exportable={false}
                 actions={postedLedger.available ? <DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-posted-gl-pnl-' + reportPeriodValue + '.csv', ['Statement line', 'Amount IDR', 'Measurement basis'], postedLedgerRows.map((row) => [String(row.cells[0]), String(row.cells[1]), String(row.cells[2])]))} variant="action" size="compact" className="ams-dashboard-card-action">Export posted GL</DashboardControl> : null}
               />
@@ -2989,7 +2987,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               title="Posted General Ledger cash flow"
               description={periodLabel + ' compared with ' + comparisonLabel + '. These values use posted journal activity only and exclude opening balances; bank-statement reconciliation is still required.'}
               columns={[{ label: 'Metric' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
-              rows={postedFlowRows}
+              rows={postedCurrentFlow.activityCount || postedComparisonFlow.activityCount ? postedFlowRows : []}
               emptyMessage="No posted journal entries affect the selected period cash accounts."
               exportable={false}
               actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-posted-gl-cash-flow-' + reportPeriodValue + '.csv', ['Metric','Selected period','Comparison period','Change','Change percent'], postedFlowMetrics.map((item) => [item.label,item.current,item.comparison,item.current-item.comparison,item.comparison===0?'N/A':(((item.current-item.comparison)/Math.abs(item.comparison))*100).toFixed(1)+'%']))} variant="action" size="compact" className="ams-dashboard-card-action">Export posted GL</DashboardControl>}
@@ -3339,17 +3337,17 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             </WorkbookNote>
 <FinanceWorksheetSections label="Balance sheet workspace" sections={[
 { key: 'statement', label: 'Posted statement', content: <>
-<AdminMetricStrip metrics={[
+{postedJournals.length > 0 && <AdminMetricStrip metrics={[
               { id: 'bs-assets', label: 'Total assets', value: formatMoney(totalAssets), context: 'Posted General Ledger · ' + periodLabel, icon: <Landmark size={15} /> },
               { id: 'bs-liabilities', label: 'Total liabilities', value: formatMoney(totalLiabilities), context: 'As of ' + formatDate(asOfDate), icon: <ShieldAlert size={15} /> },
               { id: 'bs-equity', label: 'Total equity incl. current earnings', value: formatMoney(totalEquity), context: 'Includes temporary account 3200', icon: <CircleDollarSign size={15} /> },
               { id: 'bs-check', label: 'Accounting equation', value: balanced ? 'Balanced' : formatMoney(balanceDifference), context: 'Assets − liabilities − equity', icon: <WalletCards size={15} /> }
-            ]} />
+            ]} />}
 <FinanceDataTable presentation="report"
               title="Posted General Ledger Balance Sheet"
               description={'Balance Sheet grouped by Assets, Liabilities and Equity at ' + formatDate(asOfDate) + ', with section subtotals. Current earnings are calculated from posted Revenue and Expense accounts; unresolved source items are disclosed above.'}
               columns={[{label:'Section'},{label:'Code'},{label:'Account'},{label:'Balance (IDR)',align:'right'},{label:'Basis'}]}
-              rows={ledgerRows}
+              rows={postedJournals.length > 0 ? ledgerRows : []}
               emptyMessage="No posted journal activity exists through the selected date."
               exportable={true}
             />
@@ -3467,6 +3465,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           ];
           return {
             rows,
+            hasOperatingRecords: yearInvoices.length > 0 || yearExpenses.length > 0 || yearCollections.length > 0,
             postedJournalCount: postedYearIncome.journalCount,
             postedCashActivityCount: postedYearCashFlow.activityCount
           };
@@ -3512,7 +3511,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
               title="Annual operating activity comparison"
               description="Source-derived invoice, expense and recorded cash totals. Cash flow figures are proxies, not reconciled closing cash or posted profit. If the Finance source notice above indicates incomplete availability, retry before relying on the comparison."
               columns={comparisonColumns}
-              rows={annualOperatingRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), formatMoney(item.previousAmount), formatMoney(item.difference), item.comparisonBasis] }))}
+              rows={(selectedSnapshot.hasOperatingRecords || previousSnapshot.hasOperatingRecords ? annualOperatingRows : []).map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), formatMoney(item.previousAmount), formatMoney(item.difference), item.comparisonBasis] }))}
               emptyMessage="No source operating activity exists for either reporting year."
               exportable={false}
               actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '-vs-' + previousYear + '.csv', ['Metric', selectedYear, previousYear, 'Difference', 'Measurement basis'], exportComparisonRows)} variant="action" size="compact" className="ams-dashboard-card-action">{'Export ' + selectedYear + ' vs ' + previousYear}</DashboardControl>}
@@ -3527,7 +3526,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 title="Posted General Ledger comparison"
                 description="Journal-backed annual figures for both years. Only posted journal lines contribute. Review unresolved mappings and bank reconciliation before relying on these as final accounting results."
                 columns={comparisonColumns}
-                rows={postedLedgerSummaryRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), formatMoney(item.previousAmount), formatMoney(item.difference), item.comparisonBasis] }))}
+                rows={(selectedSnapshot.postedJournalCount || previousSnapshot.postedJournalCount ? postedLedgerSummaryRows : []).map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), formatMoney(item.previousAmount), formatMoney(item.difference), item.comparisonBasis] }))}
                 emptyMessage="No posted General Ledger activity exists for either reporting year."
                 exportable={false}
                 actions={<DashboardControl type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '-vs-' + previousYear + '-posted-gl.csv', ['Metric', selectedYear, previousYear, 'Difference', 'Measurement basis'], postedLedgerSummaryRows.map((item) => [item.metric, item.amount, item.previousAmount, item.difference, item.comparisonBasis]))} variant="action" size="compact" className="ams-dashboard-card-action">Export posted GL comparison</DashboardControl>}

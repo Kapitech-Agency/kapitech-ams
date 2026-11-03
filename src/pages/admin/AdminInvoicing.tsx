@@ -2889,7 +2889,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             </DashboardControl>
           )}
         </div>} slug="finance-records-section" featureSlug="finance-records-section"><AdminDataTableShell embedded>
-  <div className="min-w-0">{filteredQuotations.length===0?<div className="p-4"><EmptyState title={quotationError ? 'Quotation data unavailable' : 'No quotations found'} description={quotationError ? 'Retry quotations before relying on this list.' : 'Adjust the search or filters.'}/></div>:<FinanceRecordSurface caption="Quotation ledger"><table className="ams-finance-table min-w-[1180px] border-separate border-spacing-0 text-xs">
+  <div className="min-w-0">{filteredQuotations.length===0?<div className="p-4"><EmptyState title={quotationError ? 'Quotation data unavailable' : quotations.length === 0 ? 'No quotations yet' : 'No matching quotations'} description={quotationError ? 'Retry quotations before relying on this list.' : quotations.length === 0 ? 'New quotations will appear in this register.' : 'Adjust the search, status filter, or reporting period.'}/></div>:<FinanceRecordSurface caption="Quotation ledger"><table className="ams-finance-table min-w-[1180px] border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10">
 <tr>
   <th className="w-[25%]">Quotation</th>
@@ -2943,11 +2943,21 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   </tr>
 })}
 
-</tbody></table></FinanceRecordSurface>}</div><AdminTablePagination total={filteredQuotations.length} page={quotationPage} pageSize={quotationPageSize} onPageChange={setQuotationPage} onPageSizeChange={setQuotationPageSize} itemLabel="quotations" slug="finance-quotations-pagination" /></AdminDataTableShell></AdminPanel></>
+</tbody></table></FinanceRecordSurface>}</div>{filteredQuotations.length > 0 && <AdminTablePagination total={filteredQuotations.length} page={quotationPage} pageSize={quotationPageSize} onPageChange={setQuotationPage} onPageSizeChange={setQuotationPageSize} itemLabel="quotations" slug="finance-quotations-pagination" />}</AdminDataTableShell></AdminPanel></>
             </> },
             { key: 'pipeline', label: 'Pipeline review', content: <>
-<section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records"  icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent"  icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context="Records returned by the Finance service"  icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'}  icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
-<section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
+{quotationError || quotations.length === 0 ? (
+  <AdminPanel className="ams-operational-panel ams-overview-panel" title="Pipeline stages">
+    <DashboardEmptyState inset eyebrow="Client Billing"
+      title={quotationError ? 'Quotation pipeline unavailable' : 'No quotations in the pipeline'}
+      description={quotationError ? 'Refresh the quotation source before relying on pipeline totals.' : 'Create a quotation in the register to start tracking its progress.'}
+      action={quotationError ? <DashboardControl variant="action" onClick={() => void loadQuotations()}>Retry quotations</DashboardControl> : undefined}
+    />
+  </AdminPanel>
+) : <>
+<section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records"  icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent"  icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context="Records returned by the Finance service"  icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'}  icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
+<AdminPanel className="ams-operational-panel ams-overview-panel" title="Pipeline stages" description="Count and value by stage."><div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></AdminPanel>
+</>}
             </> },
           ]} />
         </div>
@@ -3044,17 +3054,17 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           </table></FinanceRecordSurface>
         )}
       </div>
-      <AdminTablePagination total={filteredExpenses.length} page={expensePage} pageSize={expensePageSize} onPageChange={setExpensePage} onPageSizeChange={setExpensePageSize} itemLabel="expenses" slug="finance-expenses-pagination" />
+      {filteredExpenses.length > 0 && <AdminTablePagination total={filteredExpenses.length} page={expensePage} pageSize={expensePageSize} onPageChange={setExpensePage} onPageSizeChange={setExpensePageSize} itemLabel="expenses" slug="finance-expenses-pagination" />}
     </div>
   )}
-{incomeExpenseMode === 'expenses' ? (
-            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+{incomeExpenseMode === 'expenses' ? (expenseSourceBlocked || currencyExpenses.length === 0 ? null : (
+            <section className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
               <FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context="Recorded expense date in the current year" sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>} />
               <FinanceMetricCard label="Expense records" value={currencyExpenses.filter((expense) => String(expense.date || '').slice(0,4) === String(currentYear)).length} context="Current year · selected currency" icon={<FileText size={15}/>} />
               <FinanceMetricCard label="Average expense" value={formatFinanceCardAmount(currencyExpenses.length ? currencyExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0) / currencyExpenses.length : 0,currency)} context="Across loaded expense records" icon={<WalletCards size={15}/>} />
               <FinanceMetricCard label="Recurring expenses" value={currencyExpenses.filter((expense) => expense.recurringInterval && expense.recurringInterval !== 'none').length} context="Scheduled cadence recorded" icon={<RefreshCw size={15}/>} />
             </section>
-          ) : (
+          )) : (
             <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
           )}
           </AdminDataTableShell></AdminPanel></>
@@ -3107,7 +3117,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                 </table></FinanceRecordSurface>
               )}
             </div>
-            <AdminTablePagination total={filteredVendorPayments.length} page={vendorPaymentPage} pageSize={vendorPaymentPageSize} onPageChange={setVendorPaymentPage} onPageSizeChange={setVendorPaymentPageSize} itemLabel="vendor payments" slug="finance-vendor-payments-pagination" />
+            {filteredVendorPayments.length > 0 && <AdminTablePagination total={filteredVendorPayments.length} page={vendorPaymentPage} pageSize={vendorPaymentPageSize} onPageChange={setVendorPaymentPage} onPageSizeChange={setVendorPaymentPageSize} itemLabel="vendor payments" slug="finance-vendor-payments-pagination" />}
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
             <FinanceMetricCard label="Scheduled" value={String(vendorPaymentMetrics.scheduled)} context="Upcoming vendor payments" icon={<Clock3 size={15}/>} />
             <FinanceMetricCard label="Overdue" value={String(vendorPaymentMetrics.overdue)} context="Payments past due" icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger" />
@@ -3142,7 +3152,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   <td className="text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td>
   <td><StatusBadge status={invoice.status}/></td>
 </tr>)}
-</tbody></table></div><AdminTablePagination total={retainerLedgerInvoices.length} page={retainerPage} pageSize={retainerPageSize} onPageChange={setRetainerPage} onPageSizeChange={setRetainerPageSize} itemLabel="retainer invoices" slug="finance-retainer-pagination" /></section>
+</tbody></table></div>{retainerLedgerInvoices.length > 0 && <AdminTablePagination total={retainerLedgerInvoices.length} page={retainerPage} pageSize={retainerPageSize} onPageChange={setRetainerPage} onPageSizeChange={setRetainerPageSize} itemLabel="retainer invoices" slug="finance-retainer-pagination" />}</section>
             <div className="grid gap-5 lg:grid-cols-2"><section className="rounded-card border border-line bg-panel p-4"><div className="border-b border-line pb-3"><h2 className="text-sm font-semibold text-fg">Tax provision</h2><p className="mt-1 text-xs text-muted">Provision versus collected and outstanding tax.</p></div><div className="mt-4 space-y-3">{[{label:'Provision',value:taxProvision,tone:'bg-series-1'},{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className={'h-full rounded-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div><button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass+' mt-5 w-full'}><Download size={14}/>Export tax detail</button></section><section className="rounded-card border border-line bg-panel p-4"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Retainer collection</h2><p className="mt-1 text-xs text-muted">Collection against billed retainers.</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-4 h-2 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted"><span>{formatFinanceCardAmount(retainerCollected,currency)}</span><span>{formatFinanceCardAmount(retainerBilled,currency)}</span></div></section></div>
           </section>
         </div>
@@ -3301,7 +3311,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     </td>}
   </tr>;
 })}
-</tbody></table></FinanceRecordSurface>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></AdminDataTableShell></AdminPanel></>
+</tbody></table></FinanceRecordSurface>}</div>{filteredInvoices.length > 0 && <AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" />}</AdminDataTableShell></AdminPanel></>
 </> },
 { key: 'review', label: 'Billing review', content: <>
 {embedded && invoiceSummary}
@@ -3430,7 +3440,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           </table>
         </div>
       )}
-      <AdminTablePagination total={retainerLedgerInvoices.length} page={retainerPage} pageSize={retainerPageSize} onPageChange={setRetainerPage} onPageSizeChange={setRetainerPageSize} itemLabel="retainer invoices" slug="finance-retainer-pagination" />
+      {retainerLedgerInvoices.length > 0 && <AdminTablePagination total={retainerLedgerInvoices.length} page={retainerPage} pageSize={retainerPageSize} onPageChange={setRetainerPage} onPageSizeChange={setRetainerPageSize} itemLabel="retainer invoices" slug="finance-retainer-pagination" />}
     </section>
     <div className="grid gap-4 lg:grid-cols-2">
       <section className="rounded-control border border-line bg-bg p-4">
@@ -3831,7 +3841,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                   </table>
                 </div>
               </div>
-            ) : null}
+            ) : <EmptyState title="No commercial line items" description="This quotation has no itemized scope on record." />}
             {(quotationDetail.paymentTerms || quotationDetail.notes) && (
               <div className="rounded-card border border-line bg-bg p-4 text-xs">
                 {quotationDetail.paymentTerms && <div><p className="text-[10px] text-muted">Payment terms</p><p className="mt-1 text-fg">{quotationDetail.paymentTerms}</p></div>}
@@ -4231,7 +4241,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <div className="space-y-2">
               <p className="text-xs font-semibold text-fg">Payment history</p>
               {getExpensePayments(expenseDetail).length === 0
-                ? <p className="text-xs text-muted">No settlement recorded yet.</p>
+                ? <EmptyState title="No settlement recorded" description="Recorded settlements for this expense will appear here." />
                 : <div className="overflow-x-auto rounded-control border border-line"><table className="w-full text-xs"><thead><tr className="border-b border-line text-left text-muted"><th className="p-2">Date</th><th className="p-2">Method / reference</th><th className="p-2 text-right">Amount</th></tr></thead><tbody>{getExpensePayments(expenseDetail).map((payment) => <tr key={payment.id} className="border-b border-line last:border-0"><td className="p-2 tabular-nums">{payment.date}</td><td className="p-2"><p>{String(payment.method||'other').replace('_',' ')}</p><p className="mt-0.5 text-[10px] text-muted">{payment.reference || 'No reference'}</p></td><td className="p-2 text-right tabular-nums">{formatNativeAmount(payment.amount,expenseDetail.currency||currency,true)}</td></tr>)}</tbody></table></div>}
             </div>
             {canManageInvoices && getExpensePaidAmount(expenseDetail) < Number(expenseDetail.amount||0) - 0.01 && <button type="button" onClick={() => openExpensePayment(expenseDetail)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white"><Plus size={14}/>Record payment</button>}
@@ -4399,7 +4409,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                 <p className="text-xs font-medium text-muted">Payment activity</p>
                 {detailInvoice.payments?.length ? (
                   <div className="mt-2 space-y-2">{detailInvoice.payments.map((payment) => <div key={payment.id} className="flex flex-col gap-1 rounded-control border border-line bg-bg p-3 text-xs sm:flex-row sm:items-center sm:justify-between"><span className="text-muted">{payment.date} · {payment.method.replace('_', ' ')}{payment.reference ? ' · ' + payment.reference : ''}</span><span className="font-medium tabular-nums text-success">{formatNativeAmount(payment.amount, detailInvoice.currency)}</span></div>)}</div>
-                ) : <p className="mt-2 rounded-control border border-line bg-bg p-3 text-xs text-muted">No recorded payments.</p>}
+                ) : <div className="mt-2"><EmptyState title="No recorded payments" description="Payments recorded against this invoice will appear here." /></div>}
                 {detailInvoice.notes && <p className="mt-3 text-xs leading-5 text-muted">{detailInvoice.notes}</p>}
                 {detailInvoice.auditTrail?.length ? (
                   <div className="mt-4">

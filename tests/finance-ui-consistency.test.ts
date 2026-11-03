@@ -336,7 +336,7 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   const vendorsView = workspace.slice(vendorsStart, projectStart);
   assert.match(apView, /title="Accounts Payable register"/);
   assert.match(apView, /title="Vendor payment schedule"/);
-  assert.match(apView, /bills\.length > 0 &&/);
+  assert.match(apView, /emptyMessage="No vendor bills have been entered/);
   assert.match(workspace, /const financeWorksheetDestination = \(key: string\) => '\/admin\/finance\?tab=' \+ key/);
   assert.match(workspace, /const canShowFinanceWorksheet = \(key: string\) =>/);
   assert.doesNotMatch(workspace, /sidebarDestinations/);
