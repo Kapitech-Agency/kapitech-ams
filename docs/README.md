@@ -1,5 +1,8 @@
 # Kapitech AMS Documentation Index
 
+> **5 November 2026 UX reconciliation:** When older baseline documents list Dashboard Performance or Inbox Overview, treat those entries as historical: the current approved Dashboard tabs are Overview and Analytics, and Inbox starts at Messages. Five Finance canonical taxonomy groups and six current Finance presentation groups are separate layers. `AMS-FINANCE-WORKSPACES.md` controls the rendered Finance work-area grouping, while Master Structure/Navigation IA retain business ownership and worksheet identities. Neither document changes actual data, routes or authorization. The new end-to-end UX playbook governs supplementary heuristics, audit evidence and acceptance only.
+
+
 **Updated:** 2 November 2026
 **Repository:** `Kapitech-Agency/kapitech-ams`  
 **Purpose:** Identify the authoritative product, design, engineering, evidence, and operational documents without confusing target specifications with verified implementation.
