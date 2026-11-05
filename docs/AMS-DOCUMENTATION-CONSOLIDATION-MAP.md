@@ -73,3 +73,11 @@ Four current UX documents were fetched completely and compared by heading and ro
 **Comparison finding:** these files share vocabulary and repeated high-level UX principles but their principal required outputs, update cadence and exact operational rules are different. A wholesale merge would increase cognitive load and risk losing actionable contracts. Consolidation is therefore **normative-role consolidation**, not physical deletion: detailed page order belongs only in the Main-Content Specification, applied UI geometry in UX Interaction Standards under the Design System, and research/acceptance in the UX Audit Playbook. Link to the owner rather than recopying paragraphs.
 
 **Evidence:** GitHub Actions `Documentation integrity` run https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42008421422 passed at `decc5e36f90b`. Its result is a link integrity gate, not a semantic equivalence test. A full exact-paragraph and unique-contract diff of all Markdown files was not run. No historical file is approved for removal solely by this review.
+
+## Execution document authority review, 5 November 2026
+
+Full text and heading structures were inspected for the End-to-End Execution Prompt, Frontend Structural Redesign Prompt, Frontend-only UXUI Prompt, AI Phased Workflow, Resume After Interruption, and Execution Checkpoint.
+
+Retain the End-to-End Execution Prompt as the canonical starting instruction. Retain the Frontend Structural Redesign Prompt as its specialized FE-only instruction. Treat the older Frontend-only UXUI Prompt as supporting background, not an independent stage schedule. Retain the AI Phased Workflow for bounded execution procedure, the Resume Protocol for interruption handling, and the Execution Checkpoint for dated evidence. The 215,578-character checkpoint contains history, not proof of current implementation.
+
+These files have overlapping general rules but distinct purposes and evidence; deleting or merging them without unique requirement migration and consumer updates would be unsafe. Keep stable paths for now. Latest source and CI verification still controls claims about implementation. This review compared their full contents and section purposes, not every possible semantic duplicate.
