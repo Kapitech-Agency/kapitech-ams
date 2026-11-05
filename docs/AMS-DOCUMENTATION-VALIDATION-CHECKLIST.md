@@ -109,3 +109,12 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - Re-read Master Structure, Main-Content Specification and Delivery Roadmap after change; the current core Dashboard navigation lists do not require a Performance tab. Mentions in top-of-file supersession notes remain intentional historical context.
 - Remaining before destructive cleanup: enumerate all code-file inbound references, analyze all document unique requirements and duplicate paragraphs, and confirm active source/runtime navigation and CI. Overall **PARTIAL**.
 
+
+## N. Continued source dependency audit — 5 November 2026
+
+- Baseline `main` tree `65627731b5c80b21dc30ba12f94aa9c78e3f2434`: 425 tracked code files of extension TS/TSX/CSS/SQL.
+- Inspected the 20 files in source-tree positions **70–89**, from `server/firebase-token.ts` through `server/postgres-lead-repository.ts`, successfully fetching each and searching literal Markdown names with `(?:docs/)?[\\w-]+\\.md`. **Zero literal matches** were found within these 20 files.
+- This batch does not prove missing dynamic references, string concatenation, slash/backslash variants, or absence of links in the remaining code. Previous batches were sampled and may overlap; no completed whole-source audit is claimed.
+- Documentation files still directly referenced from `.github/copilot-instructions.md` must remain stable. Do not archive/move/delete on the strength of the zero results above.
+- Consolidation release gate remains **PARTIAL**. Continue with remaining source ranges; then compare normative sections for duplicates and trace unique requirements before a physical merge.
+
