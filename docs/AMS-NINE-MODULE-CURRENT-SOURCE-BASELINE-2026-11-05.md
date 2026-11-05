@@ -73,3 +73,12 @@ The latest documentation CI and Quality Gate run observed at this source checkpo
 - CI results of commits newer than the inspected baseline.
 
 **Result:** route/component inventory established for all nine modules. Full production readiness remains **NOT VERIFIED**. Preserve existing FE/BE/Finance constraints.
+
+## Dashboard frontend correction — 5 November 2026
+
+- Source discovery: `GlobalExecutiveDashboard.tsx` still exposed an active Performance tab despite the approved Overview + Analytics presentation contract.
+- Frontend-only correction at commit `eb58e3ecf9a9c13a49981880f946bc010ad77a52`: permitted visible views changed to Overview/Analytics; legacy `?view=performance` now redirects to Analytics. The unused PerformanceView implementation remains preserved temporarily so existing calculations and historical logic are not rewritten in this UI-only slice.
+- Overview hierarchy source-structure regression test was adjusted for the new Analytics branch boundary at commit `27dfc71019b3e2735e43d4a70b7ba5bbe73964df`.
+- Generated Shared UI inventory was aligned to JSX invocation removal at commit `129a542c825c1e29ffa76310eaa19dd94b6ea7dc`.
+- Intermediate CI failures were caused by the stale Shared UI inventory. Exact-head CI must be verified again after the inventory adjustment; do not treat earlier CI success as a test of this UI change.
+- Authenticated visual verification remains required for Desktop/Tablet/320px, role-specific navigation and deep-link redirect behavior. This is not Stage 5 user acceptance.
