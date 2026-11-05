@@ -1,5 +1,8 @@
 # AMS End-to-End Execution Prompt
 
+> **Canonical execution entry point (5 November 2026):** This is the single default instruction for the end-to-end initiative. Determine task scope from the latest user request. Follow `AGENTS.md`, `AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md` and the canonical Stage 0–15 roadmap; use the frontend structural prompt only when a frontend-only structural slice is authorized. Specialized prompts do not introduce independent stage sequences or overrule Finance/security/data contracts. Historical reference to a removed Dashboard Performance or Inbox Overview does not authorize restoring it. 
+
+
 **Repository:** Kapitech-Agency/kapitech-ams  
 **Required delivery branch:** main  
 **Canonical schedule:** docs/AMS-END-TO-END-DELIVERY-ROADMAP.md  
