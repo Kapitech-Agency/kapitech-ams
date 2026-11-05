@@ -118,3 +118,10 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - Documentation files still directly referenced from `.github/copilot-instructions.md` must remain stable. Do not archive/move/delete on the strength of the zero results above.
 - Consolidation release gate remains **PARTIAL**. Continue with remaining source ranges; then compare normative sections for duplicates and trace unique requirements before a physical merge.
 
+
+## O. Documentation verification utility — 5 November 2026
+
+- Added `scripts/check-docs.mjs` with `npm run docs:check` to enumerate local Markdown, check common inline Markdown relative paths and GitHub-style heading slugs, and exit nonzero if broken references are detected.
+- This is an initial local verification aid, **not yet proven passing on a checked-out full repository**. It does not cover all reference-style link syntax, HTML hrefs, dynamic imports, arbitrary text references, external HTTP URLs or semantic guideline conflicts.
+- CI has not been modified to require it. Run the command in a full checkout and fix verified defects before enabling a mandatory CI gate.
+- No deprecated docs renamed or removed. Complete source-level inbound-reference audit remains open; this is not an assertion that every file is safe to delete.
