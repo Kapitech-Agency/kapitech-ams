@@ -159,3 +159,12 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - This supersedes earlier *unverified workflow execution* wording in sections P/Q, but does not upgrade the global documentation-governance release gate to PASS. The checker validates common inline relative paths, fragments and literal `docs/*.md` paths, **not** the uniqueness, correctness, chronology, contractual completeness, all dynamic/referenced links, external links, or implementation truth of Markdown prose.
 - Physical deletion/moving of historical docs remains disallowed without unique-rule comparison and inbound-consumer migration evidence.
 
+
+## S. Four-document UX content comparison — 5 November 2026
+
+- Read all contents of the four UX documents: Content Architecture and Module Workspace Guidelines (23,617 chars), Main-Content Restructuring Specification (74,395 chars), UX Interaction Standards (12,448 chars), and End-to-End UX Audit and Quality Standards (39,034 chars).
+- Recorded a role/heading-level content comparison and **RETAIN** decisions in `AMS-DOCUMENTATION-CONSOLIDATION-MAP.md`: supporting workspace anatomy, canonical per-view layout, interaction-application details, and evidence/testing playbook have distinct operational purposes.
+- This is **not** a claim of an exhaustive line-by-line all-file duplicate or unique-contract diff. No document is deleted, relocated or merged.
+- GitHub Actions documentation integrity check passed for commit `decc5e36f90b`, run https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42008421422.
+- Overall gate remains PARTIAL for semantic deduplication of the remaining documents and real app/role correctness.
+
