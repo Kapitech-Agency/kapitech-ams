@@ -66,7 +66,7 @@ test('Dashboard Overview empty states are contextual, action-aware and distinct 
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, end);
   assert.ok((await read('src/components/admin/DashboardEmptyState.tsx')).includes('type DashboardEmptyStateProps = {'));
   assert.ok((await read('src/components/admin/DashboardEmptyState.tsx')).includes('eyebrow: string;'));
@@ -145,7 +145,7 @@ test('Overview uses per-card period controls, compact project filters, aligned h
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, end);
   const adminLayout = await read('src/pages/admin/AdminLayout.tsx');
   assert.ok(adminLayout.includes('const isDashboardOverview ='));
@@ -488,7 +488,7 @@ test('Dashboard card-local calendars sit in card headers, dropdown widths are st
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const portfolioStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
@@ -633,7 +633,7 @@ test('Dashboard card actions, Recorded time controls, calendar navigation and Ac
   assert.ok(dashboard.includes('ams-dashboard-activity-filter--order'));
 
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, end);
   const activityStart = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
   const activity = overview.slice(activityStart);
@@ -700,7 +700,7 @@ test('Dashboard active tabs, shared filter states, aligned card bodies, compact 
   const taskStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const deadlineStart = dashboard.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"', taskStart);
   const task = dashboard.slice(taskStart, deadlineStart);
-  const overviewStop = dashboard.indexOf(") : view === 'performance' ? (", deadlineStart);
+  const overviewStop = dashboard.indexOf(") : (\n        <AnalyticsView", deadlineStart);
   const deadlines = dashboard.slice(deadlineStart, overviewStop);
   assert.ok(task.includes('ams-dashboard-task-queue-panel'));
   assert.ok(task.includes('ams-dashboard-task-queue-list'));
@@ -752,7 +752,7 @@ test('Dashboard uses a consistent typography scale, neutral project filters and 
   const dashboardStyles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const controlStyles = await read('src/components/admin/DashboardControls.css');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const quotationStart = overview.indexOf('data-ams-feature-slug="dashboard-commercial-quotation-pipeline"');
   const projectsStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', quotationStart);
@@ -1099,7 +1099,7 @@ test('Dashboard overview keeps its operational cards source-backed and preserves
     assert.ok(dashboard.includes(sourceCall), 'Dashboard source missing: ' + sourceCall);
   }
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const stop = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, stop);
   const analyticsStart = dashboard.indexOf('const AnalyticsView:');
   const analyticsEnd = dashboard.indexOf('export const GlobalExecutiveDashboard', analyticsStart);
@@ -1135,7 +1135,7 @@ test('Dashboard Overview separates current operations from period-scoped Analyti
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const charts = await read('src/components/charts/DashboardCharts.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const stop = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, stop);
   const analyticsStart = dashboard.indexOf('const AnalyticsView:');
   const analyticsEnd = dashboard.indexOf('export const GlobalExecutiveDashboard', analyticsStart);
@@ -1173,7 +1173,7 @@ test('Dashboard final layout keeps date controls local, cards aligned and tab na
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = await read('src/components/admin/GlobalExecutiveDashboard.css');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   assert.ok(start >= 0 && end > start);
   const overview = dashboard.slice(start, end);
   const toolbarStart = dashboard.indexOf('<section className="ams-dashboard-toolbar');
@@ -1296,8 +1296,8 @@ test('Dashboard Performance header and reporting period follow the shared Overvi
   assert.ok(header.includes('data-ams-feature-slug="dashboard-workspace-shortcuts"'));
   assert.equal(header.includes("view === 'overview' ?"), false, 'Quick shortcuts and header layout must not change between Dashboard tabs.');
   assert.ok(dashboard.includes('reportPeriodMode={reportPeriodMode}'));
-  assert.ok(dashboard.includes('canOpenTasks={canOpenTasks}'));
-  assert.ok(dashboard.includes('canOpenProjects={canOpenProjects}'));
+  assert.ok(dashboard.includes('const canOpenTasks = canOpenDashboardRoute('));
+  assert.ok(dashboard.includes('const canOpenProjects = canOpenDashboardRoute('));
 });
 
 test('Dashboard Analytics reuses approved Overview rows, proportions, panels and controls', async () => {
@@ -1453,7 +1453,7 @@ test('Dashboard Overview adds a permission-gated Inbox triage card from the cano
   const inboxTriage = await read('src/lib/inboxTriage.ts');
   const inboxPage = await read('src/pages/admin/AdminInbox.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const stop = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, stop);
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projects = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
@@ -1533,7 +1533,7 @@ test('Dashboard Needs Attention places its clean-state pill and level filter in 
 test('Dashboard Overview orders urgent delivery actions before finance and portfolio context', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const stop = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   assert.ok(start >= 0 && stop > start);
   const overview = dashboard.slice(start, stop);
   const order = [
@@ -1587,7 +1587,7 @@ test('Dashboard exceptions sort by severity without artificial priority numberin
   assert.match(dashboard, /if \(normalized === 'warning'\) return 1;/);
   assert.match(dashboard, /return \[\.\.\.allowedItems\]\.sort\(\(left, right\) =>\s*dashboardAttentionSeverityRank\(left\.severity\) - dashboardAttentionSeverityRank\(right\.severity\)/);
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const attentionStart = overview.indexOf('data-ams-feature-slug="dashboard-attention-center"');
   const attentionEnd = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"', attentionStart);
@@ -1642,7 +1642,7 @@ test('Dashboard Projects card visualizes Creative and IT workload from canonical
 test('Dashboard task queue and deadline cards remain compact, responsive and source-backed', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const stop = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, stop);
   const queueStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-desk"');
   const deadlineStart = overview.indexOf('data-ams-feature-slug="dashboard-delivery-commitments"');
@@ -1682,7 +1682,7 @@ test('Task queue filters live in the card header beside Open Tasks', async () =>
 test('Dashboard Overview gates module links through the existing route-access policy', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const stop = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, stop);
   assert.ok(dashboard.includes("const canOpenProjects = canOpenDashboardRoute('/admin/projects')"));
   assert.ok(dashboard.includes("const canOpenTasks = canOpenDashboardRoute('/admin/tasks')"));
@@ -1704,7 +1704,7 @@ test('Dashboard Overview gates module links through the existing route-access po
 test('Dashboard Overview displays canonical recent audit activity only for permitted roles', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const stop = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const stop = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, stop);
   const activity = overview.indexOf('data-ams-feature-slug="dashboard-recent-activity"');
   assert.ok(activity >= 0);
@@ -1767,7 +1767,7 @@ test('Dashboard Overview uses a rounded reference-led visual system and interact
 test('Dashboard Overview keeps reporting controls card-local and operational filters functional', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
 
   assert.ok(dashboard.includes('aria-label="Dashboard views"'));
@@ -1875,7 +1875,7 @@ test('Dashboard Overview presents Finance and Projects as compact visual work su
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projectStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
@@ -1920,7 +1920,7 @@ test('Dashboard Finance layout follows the card width and keeps its financial se
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projectStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
@@ -1951,7 +1951,7 @@ test('Dashboard Finance layout follows the card width and keeps its financial se
 test('Dashboard Overview exposes canonical quotation follow-up and functional commercial stage filters', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const financeStart = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projectsStart = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"', financeStart);
@@ -2010,7 +2010,7 @@ test('Dashboard refresh warnings keep the main status concise and preserve sourc
 test('Dashboard date controls stay local to Finance, Recorded Time, Deadlines and Activity', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.equal(overview.includes('aria-label="Reporting date range"'), false);
   assert.equal(dashboard.includes('aria-label="Reporting date range"'), false);
@@ -2030,7 +2030,7 @@ test('Dashboard calendar filters are dropdowns with card-local periods and acces
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, end);
   assert.ok(dashboard.includes('const DashboardCalendarPeriodFilter: React.FC<DashboardCalendarPeriodFilterProps>'));
   assert.ok(dashboard.includes('Choose reporting period'));
@@ -2104,7 +2104,7 @@ test('Overview action buttons, panel headers, dropdown states, and filter rows s
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, end);
 
   assert.ok(dashboard.includes('ams-dashboard-header-primary-actions'));
@@ -2187,7 +2187,7 @@ test('Dashboard Overview action and filter controls use the shared symmetric-pad
   const controlsCss = await read('src/components/admin/DashboardControls.css');
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, end);
 
   assert.ok(shared.includes('const DASHBOARD_CONTROL_PADDING_BY_SIZE: Record<DashboardControlSize, string> = {'));
@@ -2214,7 +2214,7 @@ test('Dashboard cards use whitespace and soft row surfaces instead of legacy div
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   const controls = await read('src/components/admin/DashboardControls.css');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, end);
   assert.ok(overview.includes('<AdminPanel headerDivider={false}'));
   for (const c of ['ams-dashboard-project-delivery-list','ams-dashboard-attention-list__rows','ams-dashboard-inbox-list','ams-dashboard-task-queue-list','ams-dashboard-deadline-list','ams-finance-quotation-rows','ams-dashboard-client-delivery-list']) assert.ok(overview.includes(c), 'Missing list wrapper: ' + c);
@@ -2295,7 +2295,7 @@ test('Dashboard final responsive contract aligns header, Projects, local date fi
   assert.ok(finalLayer.includes('@media (max-width: 599px)'));
 
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.equal(overview.includes('aria-label="Reporting date range"'), false);
   for (const label of [
@@ -2321,7 +2321,7 @@ test('Dashboard card actions use the same compact visual contract as Project reg
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const controls = await read('src/components/admin/DashboardControls.css');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const tasksStart = overview.indexOf('data-ams-feature-slug="dashboard-task-load-by-owner"');
   const recordedTimeStart = overview.indexOf('data-ams-feature-slug="dashboard-recorded-time-by-person"', tasksStart);
@@ -2378,7 +2378,7 @@ test('Dashboard final UI layer keeps responsive card and control geometry cohere
   assert.ok(finalLayer.includes('@media (max-width: 599px)'));
 
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   assert.equal(overview.includes('aria-label="Reporting date range"'), false);
   for (const label of [
