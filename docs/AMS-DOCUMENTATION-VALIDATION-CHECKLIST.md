@@ -92,3 +92,12 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - Resolved the outdated **active body content** (not just top warning) in `AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md` and `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`. Removed Dashboard Performance from active view lists and incorporated its valid comparison concepts into Analytics without discarding metrics/guardrails. Current navigation is Overview + Analytics.
 - Scope: documentation only, no app or domain logic changes. Full documentation-consolidation acceptance stays **PARTIAL** until complete source reference and unique-requirement checks.
 
+
+## L. Application-source reference sampling — 5 November 2026
+
+- Git tree at `a7097af8a7bb47a443fff86eb32b35da1e4e500c`: 505 tracked files, including 284 TypeScript, 70 TSX, 56 SQL and 15 CSS files. Together these are **425 source files** subject to this repository-wide reference review.
+- Successfully read **35 source files** in two small batches (first 18 matching TS/TSX/CSS/SQL in tree order, and first 17 under src/tests filtered from the same tree). Searched for Markdown filenames matching `(?:docs/)?[\\w-]+\\.md`. **No literal Markdown filename references were found in this 35-fetch sample.** Batches may overlap; this must not be reported as 35 unique files without deduplication.
+- Repository search requests for selected documentation titles returned zero results, but this search cannot prove the full source set has no consumers.
+- **Remaining:** inspect every one of the 425 tracked code files (including any overlap), literal and constructed path references, filenames in SQL/comments, plus anchor, templates and other source types. No rename, delete or merge of depended-on documents is authorized by this sample.
+- This section is a coverage checkpoint, not a complete source scan. Consolidation gate remains **PARTIAL**.
+
