@@ -11,6 +11,12 @@
 
 > **Resume after timeout/interruption:** Follow [AMS Resume After Timeout or Interruption Protocol](AMS-RESUME-AFTER-INTERRUPTION.md) and restore the working pointer from [AMS Execution Checkpoint](AMS-EXECUTION-CHECKPOINT.md). A short “continue/lanjutkan” follow-up means resume the same task after verifying live repository state; it is not a request to restart or ask for the master prompt again.
 
+## Documentation governance and consolidation
+
+- [Documentation Governance and Authority Matrix](AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md): single normative owner per concern, precedence, lifecycle, and AI reading protocol.
+- [Documentation Validation and Acceptance Checklist](AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md): inventory, contradiction, link, source/implementation, and migration gates. Full recursive audit is still pending.
+- [Documentation Consolidation and Migration Map](AMS-DOCUMENTATION-CONSOLIDATION-MAP.md): keep/merge/archive decisions and phased no-loss migration. A proposal is not authorization to delete historical contracts.
+
 ## 1. Authority and conflict-resolution rules
 
 Use these rules when documents appear to conflict:
