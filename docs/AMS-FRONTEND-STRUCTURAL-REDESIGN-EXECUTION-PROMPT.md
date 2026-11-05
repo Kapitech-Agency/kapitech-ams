@@ -1,5 +1,8 @@
 # AMS Frontend Structural Redesign Execution Prompt
 
+> **Specialist prompt, not a competing master (5 November 2026):** Invoke only for explicitly authorized frontend-only structural redesign within canonical Stages 0–5. Read the End-to-End Execution Prompt and Documentation Governance Matrix for common execution/safety rules. Current presentation is Dashboard Overview + Analytics and Inbox Messages-first. Finance six work areas follow the current Finance Workspaces presentation contract while five master groups remain domain taxonomy. Preserve all source-backed business, role, API and accounting behavior. 
+
+
 **Repository:** `Kapitech-Agency/kapitech-ams`  
 **Execution branch:** `main`  
 **Production target:** `https://ams.kapitech.id`  
