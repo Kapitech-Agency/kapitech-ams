@@ -10,9 +10,9 @@ const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 test('Dashboard Overview prioritizes urgent delivery actions, deadlines, and header shortcuts before reporting context', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const performanceStart = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
-  assert.ok(overviewStart >= 0 && performanceStart > overviewStart, 'Dashboard overview branch should be identifiable');
-  const overview = dashboard.slice(overviewStart, performanceStart);
+  const analyticsStart = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
+  assert.ok(overviewStart >= 0 && analyticsStart > overviewStart, 'Dashboard overview branch should be identifiable');
+  const overview = dashboard.slice(overviewStart, analyticsStart);
 
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const portfolio = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
