@@ -2065,7 +2065,7 @@ test('Dashboard Overview uses compact source states and custom controls without 
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const styles = (await read('src/components/admin/GlobalExecutiveDashboard.css')) + '\n' + await read('src/components/admin/DashboardControls.css');
   const overviewStart = dashboard.indexOf("{view === 'overview' ?");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ?", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   assert.ok(overviewStart >= 0 && overviewEnd > overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   for (const title of [
