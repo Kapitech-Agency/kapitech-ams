@@ -168,3 +168,23 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - GitHub Actions documentation integrity check passed for commit `decc5e36f90b`, run https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42008421422.
 - Overall gate remains PARTIAL for semantic deduplication of the remaining documents and real app/role correctness.
 
+
+## T. Consolidation closure checkpoint — 5 November 2026
+
+**Closure decision:** governance reconciliation and safe non-destructive consolidation of reviewed documentation families is complete. A full repository-wide semantic proof or application production-ready certification is **NOT** claimed.
+
+Verified:
+- 61 Markdown files and 439 code/config files were scanned by passing GitHub Actions documentation integrity at `ce00ba56ad0a`; 219 supported Markdown links and two literal documentation path references, zero detected issues (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42007747437).
+- A later documentation integrity run also passed at `63874d82e5e6` (https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42008900688).
+- Source-of-truth and task-based reading order are now in `docs/README.md` and the governance authority matrix.
+- Active Dashboard and Inbox obsolete directives were corrected in key normative files; the five Finance domain categories and six Finance presentation areas are explicitly separated.
+- Four evidence-heavy Markdown files carry explicit active/history roles instead of competing current-state instructions.
+- A documented **retain rather than physically merge** decision preserves traceability and consumers; none of the four progress/evidence files was deleted or moved.
+
+Not claimed:
+- Exhaustive semantic line-by-line equivalence of all Markdown text and all embedded source contracts.
+- Dynamic/reference-style/external links validated by current checker.
+- Latest deployment, UI/UX, backend, RBAC or Finance production acceptance.
+- GitHub Actions results for every subsequent commit until its specific run completes.
+
+**Final documentation governance outcome:** reviewed-document authority consolidation ACCEPTED. **Full semantic and product readiness:** NOT VERIFIED. Revisit physical archival only with a concrete maintenance benefit and evidence-based no-loss migration.
