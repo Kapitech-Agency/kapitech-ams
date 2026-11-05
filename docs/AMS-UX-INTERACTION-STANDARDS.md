@@ -1,5 +1,7 @@
 # AMS UX and Interaction Standards
 
+> **Authority clarification — 5 November 2026:** ACTIVE for exact application of the shared UI interaction/layout contract. `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` owns UCD/UX laws, research, test design, evidence and acceptance methodology; `AMS-DESIGN-SYSTEM.md` owns visual numbers and breakpoints. Avoid duplicating laws or measurement criteria in this file. Preserve this path for existing AI and code references.
+
 **Purpose:** Standardize UX hierarchy, density, margin/padding ownership, shared interactions and accessibility across AMS.  
 **Visual authority:** AMS-DESIGN-SYSTEM.md and current tokens in src/index.css. This document describes how to apply/test the system; it does not create a second token system.
 
