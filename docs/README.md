@@ -13,6 +13,8 @@
 
 > **Start here for current documentation scope:** [AMS Documentation Current State](AMS-DOCUMENTATION-CURRENT-STATE.md). It provides a concise reading order, currently approved UI presentation decisions, and links to verified CI evidence; historical documents remain preserved.
 
+- [Nine-Module Current Source Baseline (5 Nov 2026)](AMS-NINE-MODULE-CURRENT-SOURCE-BASELINE-2026-11-05.md): source-backed route/component map, outstanding UX/functional verification and production gates. This is an audit baseline, not an implementation completion claim.
+
 ## Current documentation reading order (governance reconciliation, 5 November 2026)
 
 These paths are retained deliberately. Do not use document count or age as a reason to delete evidence or instructions.
