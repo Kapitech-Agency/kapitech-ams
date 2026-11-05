@@ -4,6 +4,9 @@
 
 ## A. Inventory gate
 
+> **Evidence update (5 November 2026):** Recursive tree inventory completed at `a2858ce`'s parent `eb2e2f3b6929`: 504 tracked files, 60 tracked Markdown files (56 in docs), tree not truncated. All 56 docs Markdown files checked for relative Markdown file-target existence against that tree; none missing. See `AMS-DOCUMENTATION-INVENTORY-2026-11-05.md`. This is not proof of valid anchors, in-source references, all links, or no duplicate rules. Full release gate remains PARTIAL.
+
+
 - [ ] Enumerate **all tracked files** from current HEAD tree recursively, not only README links; record docs root, nested folders, root policies, GitHub AI instructions, generated inventory and operational runbooks.
 - [ ] Identify owner, purpose, status, file size, last meaningful revision, incoming/outgoing links and downstream tooling consumers.
 - [ ] Classify each as ACTIVE, SUPPORTING, HISTORICAL, SUPERSEDED or ARCHIVED.
