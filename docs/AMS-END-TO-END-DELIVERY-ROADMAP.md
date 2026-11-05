@@ -1,5 +1,8 @@
 # AMS End-to-End Delivery Roadmap
 
+> **UX documentation reconciliation — 5 November 2026:** The Stage 0–15 sequence and Stage 5 user sign-off remain authoritative. Dashboard's approved current visual scope is **Overview and Analytics**; prior “Performance” text in this roadmap is historical target inventory, not an instruction to restore the removed tab. Inbox opens **Messages**, with no standalone Inbox Overview. Finance retains the **five canonical target/business taxonomy areas** in the master/navigation IA, while `AMS-FINANCE-WORKSPACES.md` defines the **six current presentation work areas** and 20 workbook worksheets plus Quotations. These are different classification layers; use the six-area presentation contract when auditing/redesigning the current Finance UI, without renaming worksheet IDs, URLs, source records, accounting rules or silently changing canonical taxonomy. Use `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` for supplementary UX quality/evidence requirements, not for a replacement roadmap.
+
+
 **Status:** Canonical execution sequence for the AMS delivery initiative  
 **Last updated:** 19 October 2026  
 **Repository:** `Kapitech-Agency/kapitech-ams`  
