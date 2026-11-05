@@ -1,5 +1,7 @@
 # Kapitech AMS Structural UX/UI Redesign Progress
 
+> **HISTORICAL EVIDENCE REGISTER, not the active execution queue (5 November 2026).** Entries below are dated implementation notes and may include local, uncommitted, failed, cancelled or superseded work. To identify the next task, read `AMS-RESUME-AFTER-INTERRUPTION.md`, inspect current `main` and CI, then use `AMS-EXECUTION-CHECKPOINT.md` with the gap register. Do not treat this file as proof that a feature is live or approved.
+
 ## Local Inbox Messages replacement — 31 October 2026
 
 `VIEW-INBOX-MESSAGES`, Stage 4, local/uncommitted against main `4a30bbcb`. Replaced legacy message queue/table/reader markup with one task-first register/reader across All Messages, Sales Inquiries, Unread and Starred. Brief → requested services/captured budget → triage/PIC → internal notes; 5:7 desktop split and compact back/focus flow. Existing data, API handlers, permission policy and routes remain intact. Dashboard control CSS gains only an additional Inbox consumer scope. [View contract, states and evidence](AMS-INBOX-MESSAGE-REDESIGN.md).
