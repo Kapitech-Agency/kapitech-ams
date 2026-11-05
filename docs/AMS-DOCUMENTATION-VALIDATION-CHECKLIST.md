@@ -125,3 +125,12 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - This is an initial local verification aid, **not yet proven passing on a checked-out full repository**. It does not cover all reference-style link syntax, HTML hrefs, dynamic imports, arbitrary text references, external HTTP URLs or semantic guideline conflicts.
 - CI has not been modified to require it. Run the command in a full checkout and fix verified defects before enabling a mandatory CI gate.
 - No deprecated docs renamed or removed. Complete source-level inbound-reference audit remains open; this is not an assertion that every file is safe to delete.
+
+## P. Automated documentation verification in CI — 5 November 2026
+
+- Created `.github/workflows/docs-check.yml` with Node 22, `actions/checkout@v4`, and `npm run docs:check`. It runs for documentation-related changes on push and pull requests, and supports manual `workflow_dispatch`.
+- This creates an executable check inside GitHub's full checkout rather than requiring individual connector reads of all source files.
+- **Execution result not yet retrieved:** this session could not access the Actions workflow-run collection through the available GitHub fetch endpoint. No successful CI run or zero-defect outcome is claimed. Consult GitHub Actions for authoritative pass/fail and logs.
+- The script currently checks inline Markdown paths/anchors only, not semantic conflicts, all reference styles, all plain-text references, or every source-code consumer. Do not infer safe file removal from the check alone.
+- Do not declare full documentation consolidation complete until workflow evidence is reviewed and remaining rule-uniqueness/source-consumer reviews are performed.
+
