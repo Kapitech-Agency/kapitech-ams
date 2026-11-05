@@ -3,7 +3,7 @@
 > **5 November 2026 UX reconciliation:** When older baseline documents list Dashboard Performance or Inbox Overview, treat those entries as historical: the current approved Dashboard tabs are Overview and Analytics, and Inbox starts at Messages. Five Finance canonical taxonomy groups and six current Finance presentation groups are separate layers. `AMS-FINANCE-WORKSPACES.md` controls the rendered Finance work-area grouping, while Master Structure/Navigation IA retain business ownership and worksheet identities. Neither document changes actual data, routes or authorization. The new end-to-end UX playbook governs supplementary heuristics, audit evidence and acceptance only.
 
 
-**Updated:** 2 November 2026
+**Updated:** 5 November 2026
 **Repository:** `Kapitech-Agency/kapitech-ams`  
 **Purpose:** Identify the authoritative product, design, engineering, evidence, and operational documents without confusing target specifications with verified implementation.
 
@@ -12,6 +12,9 @@
 > **Resume after timeout/interruption:** Follow [AMS Resume After Timeout or Interruption Protocol](AMS-RESUME-AFTER-INTERRUPTION.md) and restore the working pointer from [AMS Execution Checkpoint](AMS-EXECUTION-CHECKPOINT.md). A short “continue/lanjutkan” follow-up means resume the same task after verifying live repository state; it is not a request to restart or ask for the master prompt again.
 
 ## Documentation governance and consolidation
+
+- Automated local relative-link and Markdown heading check: `npm run docs:check` (`scripts/check-docs.mjs`). It is a new safety check, not a full doc-content or live-app validator. This command has not yet been executed against a full checkout in this documentation-only connector session.
+
 
 - [Verified Markdown inventory and relative-link baseline, 5 Nov 2026](AMS-DOCUMENTATION-INVENTORY-2026-11-05.md): 60 tracked Markdown files, 56 under docs, 504 tracked files, and no missing relative file targets found in all docs Markdown. Anchor, external link, source/script references and content deduplication remain pending.
 
