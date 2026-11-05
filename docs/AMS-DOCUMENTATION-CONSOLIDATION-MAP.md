@@ -58,3 +58,18 @@ The automated documentation integrity workflow passed on commit `ce00ba56ad0a0f2
 
 **Decision:** paths are eligible for continued content-level consolidation **review**, not for automatic deletion or relocation. This check establishes relative-link integrity for a bounded syntax, but does not prove that old documents lack unique active requirements, that non-literal inbound references are absent, or that user-approved UX requirements match the actual application. Consequently: retain existing paths and history until unique-requirement comparison and consumers are explicitly reconciled.
 
+
+## Content comparison checkpoint — 5 November 2026
+
+Four current UX documents were fetched completely and compared by heading and role, not just by filename:
+
+| Document | Approx. characters | Unique durable function | Decision |
+|---|---:|---|---|
+| `AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md` | 23,617 | Compact page anatomy and nine-module *high-level* priorities, frontend-only guardrails | RETAIN as SUPPORTING; do not duplicate detailed views into this document |
+| `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` | 74,395 | Nine-module actionable workspace structure, state requirements and section 4.10 relative hierarchy | RETAIN as canonical main-content specification |
+| `AMS-UX-INTERACTION-STANDARDS.md` | 12,448 | Applied spacing ownership, navigation, tables/forms/overlays, component usage and responsive behaviors | RETAIN as current interaction application standard |
+| `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` | 39,034 | UX laws, user research, nine-module audit protocol, usability measurements, evidence and acceptance | RETAIN as assessment and validation playbook |
+
+**Comparison finding:** these files share vocabulary and repeated high-level UX principles but their principal required outputs, update cadence and exact operational rules are different. A wholesale merge would increase cognitive load and risk losing actionable contracts. Consolidation is therefore **normative-role consolidation**, not physical deletion: detailed page order belongs only in the Main-Content Specification, applied UI geometry in UX Interaction Standards under the Design System, and research/acceptance in the UX Audit Playbook. Link to the owner rather than recopying paragraphs.
+
+**Evidence:** GitHub Actions `Documentation integrity` run https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42008421422 passed at `decc5e36f90b`. Its result is a link integrity gate, not a semantic equivalence test. A full exact-paragraph and unique-contract diff of all Markdown files was not run. No historical file is approved for removal solely by this review.
