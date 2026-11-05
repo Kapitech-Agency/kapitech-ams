@@ -1,5 +1,8 @@
 # AMS Main-Content Restructuring Specification
 
+> **UX scope correction — 5 November 2026:** Prior Dashboard “Performance” references are superseded for current presentation: Dashboard uses Overview + Analytics only. Inbox has no separate Overview view. This document's five Finance groups describe the canonical baseline taxonomy; the later `AMS-FINANCE-WORKSPACES.md` six-area layout is the current Finance presentation contract for existing worksheets and permitted routes. Section 4.10 still owns the intended task-based relative content order where applicable, but do not resurrect removed tabs or remap Finance records to satisfy an outdated label. See `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` for evidence and verification.
+
+
 **Product:** Kapitech Agency Management System (AMS)  
 **Primary stage:** Stage 4 — Main-content hierarchy across all nine modules  
 **Status:** Mandatory target specification; implementation must be proven with source, test and runtime evidence  
