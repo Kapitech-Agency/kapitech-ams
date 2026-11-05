@@ -39,7 +39,7 @@ import { getInvoiceDate, getInvoiceOutstanding, getPaymentRows, isIssuedInvoice 
 import { isInboxActionable, isInboxHighPriority, isInboxUnassigned } from '../../lib/inboxTriage';
 import { normalizeContactSubmission, type ContactSubmission } from '../../lib/submissions';
 
-const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const;
+const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'analytics'] as const;
 type DashboardWorkspaceView = (typeof DASHBOARD_WORKSPACE_VIEWS)[number];
 type DashboardTone = 'success' | 'warning' | 'danger' | 'info';
 type DashboardTaskFilter = 'action' | 'review' | 'overdue' | 'blocked' | 'unassigned';
@@ -1784,7 +1784,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     : 'overview';
 
   useEffect(() => {
-    if (hasViewParameter && !DASHBOARD_WORKSPACE_VIEWS.includes(requestedView as DashboardWorkspaceView)) {
+    if (requestedView === 'performance') {
+      navigate('/admin/dashboard?view=analytics', { replace: true });
+    } else if (hasViewParameter && !DASHBOARD_WORKSPACE_VIEWS.includes(requestedView as DashboardWorkspaceView)) {
       navigate('/admin/dashboard', { replace: true });
     }
   }, [hasViewParameter, navigate, requestedView]);
@@ -2688,7 +2690,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <nav className="ams-dashboard-view-tabs flex min-w-0 flex-wrap items-center gap-1" aria-label="Dashboard views">
           {([
             { key: 'overview', label: 'Overview' },
-            { key: 'performance', label: 'Performance' },
             { key: 'analytics', label: 'Analytics' }
           ] as Array<{ key: DashboardWorkspaceView; label: string }>).map((tab) => (
             <DashboardControl
@@ -3929,18 +3930,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             
           </section>
         </>
-      ) : view === 'performance' ? (
-        <PerformanceView
-          snapshot={operationalSnapshot}
-          matchesDate={matchesDate}
-          matchesInterval={matchesInterval}
-          reportPeriodLabel={reportPeriodLabel}
-          reportPeriodEnabled={reportPeriodEnabled}
-          reportPeriodValue={reportPeriodValue}
-          reportPeriodMode={reportPeriodMode}
-          canOpenTasks={canOpenTasks}
-          canOpenProjects={canOpenProjects}
-        />
       ) : (
         <AnalyticsView
           snapshot={operationalSnapshot}
