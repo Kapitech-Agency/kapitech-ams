@@ -128,7 +128,6 @@ Breadcrumbs are **conditional, not global**. Use them when a deep record/detail 
 ### 4.1 Structure
 
 - Overview
-- Performance
 - Analytics
 
 ### 4.2 Purpose
@@ -149,13 +148,13 @@ Show metrics that are actually available and relevant to the user's role, such a
 
 Do not combine revenue, issued invoices, cash received, profit, and account balances into one metric. Every value must have a period, definition, source, timestamp when relevant, and drill-down.
 
-### 4.4 Performance
+### 4.4 Reporting comparisons (inside Analytics, not a separate tab)
 
-- Clear period comparisons.
-- Trends for delivery, pipeline, revenue/cash, client health, and resource load.
-- Reporting-period controls consistent with Finance reports where relevant.
-- Drill down to the source module.
-- Percentage changes must be handled safely when the baseline is zero or unavailable.
+- Use source-backed period comparisons where useful to the Analytics workspace.
+- Trends for delivery, pipeline, revenue/cash, client health, and resource load require actual eligible records.
+- Reporting-period controls must match Finance report semantics where relevant.
+- Drill down to the source module; handle zero/unavailable baselines safely.
+- Do not restore a standalone Performance navigation tab.
 
 ### 4.5 Analytics
 
