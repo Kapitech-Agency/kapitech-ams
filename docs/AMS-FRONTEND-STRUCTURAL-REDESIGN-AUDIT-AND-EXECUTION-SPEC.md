@@ -1,5 +1,8 @@
 # AMS Frontend Structural Redesign Audit and Execution Specification
 
+> **Supersession note — 5 November 2026:** Audit snapshots mentioning Dashboard Performance or a five-area Finance rendered layout predate later approved UX changes. Current Dashboard presentation has Overview + Analytics; Inbox defaults to Messages without an Inbox Overview; current Finance UI presentation follows the six work areas in `AMS-FINANCE-WORKSPACES.md`, while the master five-area taxonomy remains a distinct domain-ownership grouping. Do not reinstate removed views or change canonical records/routes without separate approval. For UX heuristics, per-state checks and acceptance evidence, use `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` as a supplement to this mandatory structural method.
+
+
 **Repository:** Kapitech-Agency/kapitech-ams  
 **Scope:** Frontend-only navigation, routing, shared shell, main-content structure, interactions, responsive behavior, accessibility, and user visual review  
 **Roadmap coverage:** Refines the official end-to-end roadmap's Stages 0–5. Does not replace or renumber the canonical Stages 0–15.  
