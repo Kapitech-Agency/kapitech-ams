@@ -1,5 +1,8 @@
 # AI Execution Prompt: AMS Content-First UX/UI Clarity Upgrade (Frontend Only)
 
+> **Supporting/legacy general frontend prompt (5 November 2026):** This file supplies frontend-only boundaries and useful examples, not a separate canonical execution path or stage schedule. For a structural frontend task use `AMS-FRONTEND-STRUCTURAL-REDESIGN-EXECUTION-PROMPT.md`; for end-to-end delivery use `AMS-END-TO-END-EXECUTION-PROMPT.md`. Follow `AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md`. Older Dashboard Performance, Inbox Overview or Finance UI grouping examples are superseded by current specialist presentation decisions. 
+
+
 > **Execution-order authority:** For the current end-to-end initiative, use [AMS End-to-End Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md) and [AMS End-to-End Execution Prompt](AMS-END-TO-END-EXECUTION-PROMPT.md). This document defines the general frontend visual/content scope during the roadmap's visual stages; it does not define a competing overall schedule and does not authorize backend or workflow changes on its own. For the specific Stage 4 structural-redesign task, use [AMS Frontend Structural Redesign Execution Prompt](AMS-FRONTEND-STRUCTURAL-REDESIGN-EXECUTION-PROMPT.md) as the focused operating prompt and [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md) as the canonical per-workspace content target. This general prompt's shared design and frontend safeguards still apply.
 
 Act as the senior frontend UX/UI engineer for Kapitech Agency Management System. Execute an evidence-based redesign of the primary content area of all existing AMS modules and their actual subtabs, following the user's Dashboard screenshot as the layout reference.
