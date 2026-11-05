@@ -13,7 +13,7 @@ test('Dashboard Overview keeps finance and portfolio as distinct reporting cards
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   assert.match(dashboard, /featureSlug="dashboard-module"/);
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   assert.ok(start >= 0 && end > start);
   const overview = dashboard.slice(start, end);
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
@@ -123,7 +123,7 @@ test('Client exports use one scope-aware CSV handler and preserve missing billed
 test('Dashboard Overview prioritizes Finance and Projects as distinct cards', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   const start = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const end = dashboard.indexOf(") : view === 'performance' ? (", start);
+  const end = dashboard.indexOf(") : (\n        <AnalyticsView", start);
   const overview = dashboard.slice(start, end);
   const finance = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projects = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
@@ -659,7 +659,8 @@ test('Dashboard header stays consistent with the Overview shell across workspace
 
 test('Dashboard invalid workspace query values normalize to Overview', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
-  assert.ok(dashboard.includes("const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'performance', 'analytics'] as const"));
+  assert.ok(dashboard.includes("const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'analytics'] as const"));
+  assert.ok(dashboard.includes("navigate('/admin/dashboard?view=analytics', { replace: true })"));
   assert.ok(dashboard.includes("DASHBOARD_WORKSPACE_VIEWS.includes(requestedView as DashboardWorkspaceView)"));
   assert.ok(dashboard.includes("const hasViewParameter = searchParams.has('view')"));
   assert.ok(dashboard.includes("navigate('/admin/dashboard', { replace: true })"));
