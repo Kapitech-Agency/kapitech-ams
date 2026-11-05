@@ -1,4 +1,7 @@
 # AMS Master Structure & AI Implementation Guide
+
+> **5 November 2026 UX alignment note:** This master document owns target product/domain boundaries, not proof that every historical UI view should remain visible. Historical Dashboard Performance and Inbox Overview sections are not current UI implementation instructions: current approved Dashboard tabs are Overview + Analytics; Inbox opens Messages. The five Finance **canonical taxonomy** groups below coexist with the six **current presentation** work areas in `AMS-FINANCE-WORKSPACES.md`; do not rewrite finance business ownership, IDs, permissions or formulas to align visual navigation. For UX audit acceptance and evidence use `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` after the Design System/Shared UI/interaction contracts.
+
 ## Master Specification for Kapitech AMS Navigation, Modules, Worksheets, Workflows, Data, Integrations, and Acceptance Criteria
 
 - **Repository:** Kapitech-Agency/kapitech-ams
