@@ -50,16 +50,15 @@ Settings may remain pinned in the existing system area. It remains the ninth pri
 ## 3. Module subnavigation
 
 ### 3.1 Dashboard
-Local views are Overview, Performance and Analytics. Values are summaries of their source modules. Do not imply an unimplemented activity/analytics route is functional.
+Current local views are Overview and Analytics. Performance is retired and must not be recreated. Values summarize their source modules; do not imply an unimplemented analytics source is functional.
 
 ### 3.2 Inbox
 
-Inbox has exactly four direct workspace entries:
+Inbox has three current direct workspace entries. The previous Overview entry was retired and must not be recreated:
 
-1. **Overview** — source-backed summary of messages requiring attention, follow-ups, and recent activity.
-2. **Messages** — one canonical message/thread workspace with worksheets for All Messages, Sales Inquiries, Client Requests, and Project & Support. Unread, Starred, Resolved, and Archived are filters or saved views within Messages, not separate sidebar entries.
-3. **Follow-ups** — views for Due Today, Upcoming, Overdue, and Completed over the existing follow-up records. Do not create a duplicate task system.
-4. **Routing & Templates** — internal sections or tabs for Routing Rules and Response Templates. Do not expose each as a separate direct submenu.
+1. **Messages** — one canonical message/thread workspace with worksheets for All Messages, Sales Inquiries, Client Requests, and Project & Support. Unread, Starred, Resolved, and Archived are filters or saved views within Messages, not separate sidebar entries.
+2. **Follow-ups** — views for Due Today, Upcoming, Overdue, and Completed over the existing follow-up records. Do not create a duplicate task system.
+3. **Routing & Templates** — internal sections or tabs for Routing Rules and Response Templates. Do not expose each as a separate direct submenu.
 
 Use the same canonical message/thread records across categories, filters and saved views. Resolved and Archived remain distinct statuses even though they are accessed from the same workspace. Other supported filters, such as priority, owner/PIC, channel and date range, belong inside Messages and must not increase sidebar complexity.
 
@@ -91,7 +90,7 @@ Clients has four workspaces:
 Client Requests and inbound conversations are owned by Inbox. Clients may show linked request context, but must not create a competing request queue or status system. Finance owns quotations, invoices, payments and accounting records. Legacy CRM data may remain for compatibility, but there is no standalone CRM workspace.
 
 ### 3.5 Finance
-Finance keeps five top-level areas:
+Finance retains five canonical domain taxonomy areas below. For the currently rendered six-work-area Finance UI use `../AMS-FINANCE-WORKSPACES.md` as the presentation contract, without changing existing routes, source ownership or accounting:
 
 1. **Overview & Control**: Executive Summary and Dashboard.
 2. **Transactions & Cash**: Cash & Bank, Revenue, Expenses and Petty Cash.
