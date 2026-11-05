@@ -2,6 +2,8 @@
 
 **Read this file before changing anything in this repository.** These rules apply to AI coding agents, assistants, autonomous coding tools, and humans delegating repository work to AI. Start with [`docs/README.md`](docs/README.md) for the documentation authority/index and to distinguish active specifications from historical/staging references. After any timeout, interruption, context reset, or short continuation request (for example, “lanjutkan”), automatically follow [`docs/AMS-RESUME-AFTER-INTERRUPTION.md`](docs/AMS-RESUME-AFTER-INTERRUPTION.md) and restore state from [`docs/AMS-EXECUTION-CHECKPOINT.md`](docs/AMS-EXECUTION-CHECKPOINT.md). Do not ask the user to restate a scope already established by the conversation and repository docs.
 
+> **Documentation ownership (5 November 2026):** Before reorganizing or merging Markdown, follow [Documentation Governance and Authority Matrix](docs/AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md), [Documentation Validation Checklist](docs/AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md), and [Consolidation Map](docs/AMS-DOCUMENTATION-CONSOLIDATION-MAP.md). Preserve current normative domain owners, source contracts, history, links, and exact-SHA evidence. A full recursive tree and inbound-link inventory are required before destructive rename/move/delete.
+
 ## 1. Read the right documentation first
 
 Before implementation, read:
