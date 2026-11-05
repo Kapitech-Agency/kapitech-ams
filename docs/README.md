@@ -28,6 +28,10 @@ Current Finance presentation and source boundaries: [Finance workspaces](AMS-FIN
 
 Current Clients presentation and source boundaries: [Clients workspaces](AMS-CLIENTS-WORKSPACES.md).
 
+## End-to-end UX quality and audit playbook
+
+- [AMS End-to-End UX Audit, Laws, Quality Standards and Acceptance Playbook](AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md) defines user-centered UX principles, interaction laws and heuristics, nine-module audit checklists, cross-module journeys, accessibility, responsive tests, issue evidence, and Stage 5 acceptance. It supplements (does not override) the Design System, UX Interaction Standards, Shared UI System, and canonical module/finance specifications. Its dated findings require current source/runtime verification.
+
 ## 2. Canonical product and data specifications
 
 | Document | Purpose / authority |
