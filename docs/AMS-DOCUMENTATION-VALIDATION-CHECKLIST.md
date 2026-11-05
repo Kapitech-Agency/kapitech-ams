@@ -64,3 +64,13 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - GitHub repository code-search queries for three legacy documentation filenames returned no matches; **a zero search response is not a complete in-source inbound reference audit**.
 - The previous 56-doc relative file target check does not validate Markdown fragment anchors or non-Markdown consumers. Full governance exit gate remains **PARTIAL**.
 
+
+## I. Follow-up verification — 5 November 2026 (second pass)
+
+- Recursive Git tree was retrieved again at `ace8589c796c5b62a978c627597cd5b19bac4955`: **505 tracked files and 61 Markdown files**; inventory baseline must account for the newly added inventory report.
+- Checked `.github/copilot-instructions.md`, `.github/workflows/ams-ci.yml`, `.github/workflows/ams-quality.yml`, and `package.json` for explicit `docs/...md` references and documentation-specific test wiring.
+- Copilot instructions have many **direct documentation dependencies**. These files must remain at their current paths until every reference is migrated. The two examined GitHub Actions files and package.json expose no literal `docs/...md` reference in this inspection.
+- `package.json` exposes `ui:audit` and `ui:check`, but no dedicated `docs:check`, `markdownlint`, `remark` or `lychee` script was identified in this examination. **No CI documentation validation was executed.**
+- Inspected the first 17 of 61 Markdown files for inline Markdown link fragments. No `[label](path#fragment)` instances were found in that subset. **This does not verify all anchor links**: bare URLs, HTML anchors, slug collisions, the other 44 Markdown files and references in code are unverified.
+- Remaining gate: full file-to-file link and fragment extraction across the repository, canonical heading-slug matching, content-level duplicate comparison and active source/route validation. Status is **PARTIAL**, not completed.
+
