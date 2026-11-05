@@ -11,6 +11,8 @@
 
 > **Resume after timeout/interruption:** Follow [AMS Resume After Timeout or Interruption Protocol](AMS-RESUME-AFTER-INTERRUPTION.md) and restore the working pointer from [AMS Execution Checkpoint](AMS-EXECUTION-CHECKPOINT.md). A short “continue/lanjutkan” follow-up means resume the same task after verifying live repository state; it is not a request to restart or ask for the master prompt again.
 
+> **Start here for current documentation scope:** [AMS Documentation Current State](AMS-DOCUMENTATION-CURRENT-STATE.md). It provides a concise reading order, currently approved UI presentation decisions, and links to verified CI evidence; historical documents remain preserved.
+
 ## Current documentation reading order (governance reconciliation, 5 November 2026)
 
 These paths are retained deliberately. Do not use document count or age as a reason to delete evidence or instructions.
