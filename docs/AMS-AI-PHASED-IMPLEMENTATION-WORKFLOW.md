@@ -1,4 +1,7 @@
 # AMS AI Phased Implementation Workflow
+
+> **Supporting procedure (5 November 2026):** The sole canonical stage order is `AMS-END-TO-END-DELIVERY-ROADMAP.md` (Stages 0–15). Phase numbers in this procedural guide are local workflow steps, not a competing delivery schedule. The End-to-End Execution Prompt is the default entry; specialist frontend execution applies only to authorized frontend-only slices. Resolve rule ownership through `AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md`. 
+
 ## Operating instructions for incremental, reviewable, timeout-resilient work
 
 - **Repository:** Kapitech-Agency/kapitech-ams
