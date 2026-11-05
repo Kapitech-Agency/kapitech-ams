@@ -17,7 +17,8 @@
     "db:reconcile": "tsx scripts/postgres-reconcile.ts",
     "db:import": "tsx scripts/postgres-import.ts",
     "db:restore-rehearsal": "tsx scripts/postgres-restore-rehearsal.ts",
-    "validate:production-env": "tsx scripts/validate-production-env.ts"
+    "validate:production-env": "tsx scripts/validate-production-env.ts",
+    "docs:check": "node scripts/check-docs.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
