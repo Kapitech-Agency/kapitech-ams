@@ -74,3 +74,12 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - Inspected the first 17 of 61 Markdown files for inline Markdown link fragments. No `[label](path#fragment)` instances were found in that subset. **This does not verify all anchor links**: bare URLs, HTML anchors, slug collisions, the other 44 Markdown files and references in code are unverified.
 - Remaining gate: full file-to-file link and fragment extraction across the repository, canonical heading-slug matching, content-level duplicate comparison and active source/route validation. Status is **PARTIAL**, not completed.
 
+
+## J. Markdown anchor-syntax inspection and normative overlap — 5 November 2026
+
+- Enumerated all **61 Markdown files** in the current recursive `main` tree at the start of this checkpoint and successfully fetched each file, in five bounded batches.
+- Searched every file for Markdown link forms containing a fragment (`[label](target#anchor)` or `[label](#anchor)`). **No operational Markdown links with a fragment were found**; one example `[label](path#fragment)` in this checklist is instructional text, not a real link target. As a result there are **zero fragment targets to resolve within that inspected syntax**.
+- This is a limited *syntax-specific* result: HTML `href`, plain-text URLs, dynamically constructed references, reference-style Markdown links, heading-specific GitHub slug collision cases and external destinations were not validated by that expression. It is not a claim of full link correctness.
+- Reviewed the scopes of `AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md`, `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`, `AMS-UX-INTERACTION-STANDARDS.md` and `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md`. Added explicit authority notes to the first and third documents: content anatomy is SUPPORTING and §4.10 owns per-workspace order; UX Interaction Standards owns practical interaction application, while the UX Audit Playbook owns research/heuristics/acceptance. This is a **non-destructive authority consolidation**, not a line-by-line deduplication.
+- No file moved, deleted or replaced. Broad source/CI text reference scanning, all Markdown link types, full duplicate-paragraph comparison, and live code/runtime alignment remain pending. Full release gate remains **PARTIAL**.
+
