@@ -1,5 +1,8 @@
 # AMS Navigation and Information Architecture
 
+> **Current presentation clarification — 5 November 2026:** Legacy references to Dashboard “Performance” and Inbox “Overview” below are historical target descriptions; do not recreate these removed tabs. Current Dashboard visual scope is Overview + Analytics; Inbox defaults to Messages without an Overview landing. The Finance taxonomy below remains five canonical **domain ownership** areas; `../AMS-FINANCE-WORKSPACES.md` documents six **rendered work areas**, preserving existing worksheet and URL identities. Verify actual current routes and permission guards before modifying navigation; this note does not authorize route deletion or backend changes.
+
+
 **Status:** Approved navigation target, updated 18 October 2026.
 **Authority:** Latest product decision, current route/access implementation, AMS master guide, and implementation traceability register.
 
