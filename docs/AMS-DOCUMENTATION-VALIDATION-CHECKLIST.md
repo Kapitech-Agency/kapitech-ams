@@ -55,3 +55,12 @@ When a full repository checkout is available, create/extend a documentation lint
 ## G. Release gate
 
 PASS requires inventory + content + links + source mapping + documented exception decisions. PARTIAL means some checks are performed but unknowns remain. FAIL means broken normative links, unresolved conflicting active instructions or lost domain rules. Keep the current status **PARTIAL until a full recursive tree scan and dependent-source validation is completed**.
+
+## H. Verified operative instruction corrections — 5 November 2026
+
+- Changed operative Stage 4 inventory in `AMS-END-TO-END-DELIVERY-ROADMAP.md`: Dashboard Overview + Analytics; Inbox Messages-first; Finance five-domain taxonomy/six rendered work areas.
+- Changed operative `architecture/ams-navigation-information-architecture.md`: removed the retired Dashboard Performance and Inbox Overview from active workspace listing, retained the Finance domain taxonomy with an explicit presentation-contract pointer.
+- This is documentation-only source reconciliation. It does not prove corresponding production routes or all indirect references were audited.
+- GitHub repository code-search queries for three legacy documentation filenames returned no matches; **a zero search response is not a complete in-source inbound reference audit**.
+- The previous 56-doc relative file target check does not validate Markdown fragment anchors or non-Markdown consumers. Full governance exit gate remains **PARTIAL**.
+
