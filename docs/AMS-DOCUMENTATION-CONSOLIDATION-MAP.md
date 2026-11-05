@@ -81,3 +81,17 @@ Full text and heading structures were inspected for the End-to-End Execution Pro
 Retain the End-to-End Execution Prompt as the canonical starting instruction. Retain the Frontend Structural Redesign Prompt as its specialized FE-only instruction. Treat the older Frontend-only UXUI Prompt as supporting background, not an independent stage schedule. Retain the AI Phased Workflow for bounded execution procedure, the Resume Protocol for interruption handling, and the Execution Checkpoint for dated evidence. The 215,578-character checkpoint contains history, not proof of current implementation.
 
 These files have overlapping general rules but distinct purposes and evidence; deleting or merging them without unique requirement migration and consumer updates would be unsafe. Keep stable paths for now. Latest source and CI verification still controls claims about implementation. This review compared their full contents and section purposes, not every possible semantic duplicate.
+
+## Final retention and governance decision, 5 November 2026
+
+The repository-wide Markdown inventory, owner matrix, prompt comparison, UX document comparison and automatic literal/relative-link checks have now been established. The repository uses **selective consolidation of authority**, not wholesale physical file merges:
+
+- **Normative:** End-to-End Execution Prompt, Roadmap, Master Structure, Navigation IA, Main-Content Specification, Design System, domain contracts, interaction standard and UX acceptance playbook remain separate with one named authority per area.
+- **Supporting:** older content-first frontend prompt, content architecture guide and phased micro-step workflow remain read-only/reference materials under canonical owners; a reader must not obey a conflicting legacy stage schedule.
+- **Dated evidence:** Structural Redesign Progress and Content-First Implementation Map are retained with explicit historical labels. Implementation Traceability is an evidence ledger; Execution Checkpoint is the resume context, not a live completeness certificate.
+- **Production and sensitive business controls:** Finance/accounting, backend API integrity, data schema, roles and recovery runbooks remain dedicated normative documents. No such contracts are merged into UX prose.
+- **Physical archive/move decision:** **NO MOVE / NO DELETE** at this checkpoint. Preserving stable historical paths is the approved safe migration outcome because long logs preserve SHA-linked evidence and Copilot/AGENTS/README links reference specific paths. A large rename/rewrite is not necessary to produce an unambiguous active reading order.
+
+Entry point: `docs/README.md` now contains a task-based canonical reading-order table. `AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md` owns conflicts; `AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md` owns evidence and QA. `npm run docs:check` runs in GitHub Actions, but it does not validate semantic correctness or current production readiness.
+
+**Deliverable classification:** documentation governance and non-destructive consolidation **completed for reviewed contract families**. A full semantic line-by-line comparison across all historical content and runtime product readiness validation remain out of scope and must not be reported as completed. No documents were silently removed or merged.
