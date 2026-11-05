@@ -1,5 +1,7 @@
 # AMS Content-First UX/UI Implementation Map
 
+> **HISTORICAL/SUPPORTING VIEW IMPLEMENTATION MAP (5 November 2026).** This file preserves dated view-specific design decisions and implementation evidence. Current normative view structure is owned by `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` and current module workspaces, and active status requires current source, CI, gap register, and user acceptance. Do not use older disabled-view or Performance/Inbox Overview snapshots to recreate removed UI.
+
 > **2 November 2026 current Projects update:** Planning & Delivery, Content & Campaigns, Project Resources and Project Controls have a shared, source-backed frontend composition across fourteen worksheets. This supersedes the historical notes below that keep the entire Content/Controls workspace entry disabled. Missing campaign/review/risk/capacity/closure sources remain explicitly unavailable inside the new workspaces. See [current workspace contract](AMS-PROJECT-DELIVERY-WORKSPACES.md) and [execution checkpoint](AMS-EXECUTION-CHECKPOINT.md); historical source/CI notes are retained as dated evidence.
 
 Historical baseline date: 17 October 2026  
