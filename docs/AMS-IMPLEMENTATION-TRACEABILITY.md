@@ -1,5 +1,7 @@
 # AMS Implementation Traceability Register
 
+> **EVIDENCE REGISTER (5 November 2026).** Requirement-to-source evidence is preserved here; dated completion statements are historical until rechecked against `main` and relevant CI. `AMS-FEATURE-CONTENT-GAP-REGISTER.md` owns the broad requirement/gap inventory. `AMS-EXECUTION-CHECKPOINT.md` records resume context. These three files have different duties and must not create three competing live progress statuses.
+
 **Purpose:** Prevent AI and human implementers from confusing planned functionality with verified implementation.  
 **Status:** Maintained evidence register containing dated audit/checkpoint snapshots. Some entries may not reflect the latest `main` HEAD until re-audited; do not treat historical branch/PR status as a live GitHub status.  
 **Authority:** `AGENTS.md` defines working rules; the master guide defines target requirements. Current implementation status must be re-verified against current source, latest CI results, and production evidence where relevant.
