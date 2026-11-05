@@ -13,6 +13,9 @@
 
 ## Documentation governance and consolidation
 
+- [Verified Markdown inventory and relative-link baseline, 5 Nov 2026](AMS-DOCUMENTATION-INVENTORY-2026-11-05.md): 60 tracked Markdown files, 56 under docs, 504 tracked files, and no missing relative file targets found in all docs Markdown. Anchor, external link, source/script references and content deduplication remain pending.
+
+
 - [Documentation Governance and Authority Matrix](AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md): single normative owner per concern, precedence, lifecycle, and AI reading protocol.
 - [Documentation Validation and Acceptance Checklist](AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md): inventory, contradiction, link, source/implementation, and migration gates. Full recursive audit is still pending.
 - [Documentation Consolidation and Migration Map](AMS-DOCUMENTATION-CONSOLIDATION-MAP.md): keep/merge/archive decisions and phased no-loss migration. A proposal is not authorization to delete historical contracts.
