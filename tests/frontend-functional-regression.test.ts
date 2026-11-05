@@ -249,7 +249,9 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
     'api.finance.getExpenses()'
   ]) assert.ok(dashboard.includes(sourceCall), 'Dashboard source missing: ' + sourceCall);
 
-  assert.ok(dashboard.includes('<PerformanceView') && dashboard.includes('matchesDate={matchesDate}') && dashboard.includes('reportPeriodLabel={reportPeriodLabel}'));
+  assert.ok(dashboard.includes("const DASHBOARD_WORKSPACE_VIEWS = ['overview', 'analytics'] as const"));
+  assert.ok(dashboard.includes("navigate('/admin/dashboard?view=analytics', { replace: true })"));
+  assert.equal(dashboard.includes("{ key: 'performance', label: 'Performance' }"), false);
   assert.ok(dashboard.includes('<AnalyticsView') && dashboard.includes('reportPeriodMode={reportPeriodMode}') && dashboard.includes('reportPeriodValue={reportPeriodValue}') && dashboard.includes('reportPeriodLabel={reportPeriodLabel}') && dashboard.includes('currency={financeCurrency}'));
   const analyticsView = dashboard.slice(dashboard.indexOf('const AnalyticsView:'), dashboard.indexOf('export const GlobalExecutiveDashboard'));
   assert.equal(analyticsView.includes('data-ams-feature-slug="dashboard-analytics-controls"'), false, 'Nested report-selection tabs are removed.');
@@ -282,7 +284,7 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
   assert.ok(dashboard.includes('The difference is an arithmetic comparison, not posted profit.'));
   assert.ok(dashboard.includes("const [financialPeriodMode, setFinancialPeriodMode] = useState<ReportingPeriodMode>('month')"));
   const overviewStart = dashboard.indexOf("\n      {view === 'overview' ? (");
-  const overviewEnd = dashboard.indexOf(") : view === 'performance' ? (", overviewStart);
+  const overviewEnd = dashboard.indexOf(") : (\n        <AnalyticsView", overviewStart);
   const overview = dashboard.slice(overviewStart, overviewEnd);
   const financeOverview = overview.indexOf('data-ams-feature-slug="dashboard-finance-overview"');
   const projectPortfolio = overview.indexOf('data-ams-feature-slug="dashboard-project-portfolio"');
