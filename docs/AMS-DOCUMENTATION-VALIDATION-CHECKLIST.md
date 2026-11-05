@@ -101,3 +101,11 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - **Remaining:** inspect every one of the 425 tracked code files (including any overlap), literal and constructed path references, filenames in SQL/comments, plus anchor, templates and other source types. No rename, delete or merge of depended-on documents is authorized by this sample.
 - This section is a coverage checkpoint, not a complete source scan. Consolidation gate remains **PARTIAL**.
 
+
+## M. Continued source sampling and operative Analytics contract — 5 November 2026
+
+- Extended source-text inspection with tree-order batches `35:52` and `52:70` (17 + 18 fetched files). Their literal `(?:docs/)?[\\w-]+\\.md` match counts were zero. Prior sampled batches may overlap. This is still not a certified 70-unique-file, 425-file recursive scan.
+- Corrected four additional operative instructions in `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`: the formerly separate Performance subsection, comparison-region contract, the screen-composition table's Performance row, and module completion checklist now direct source-backed comparisons into **Analytics**, with no Performance tab.
+- Re-read Master Structure, Main-Content Specification and Delivery Roadmap after change; the current core Dashboard navigation lists do not require a Performance tab. Mentions in top-of-file supersession notes remain intentional historical context.
+- Remaining before destructive cleanup: enumerate all code-file inbound references, analyze all document unique requirements and duplicate paragraphs, and confirm active source/runtime navigation and CI. Overall **PARTIAL**.
+
