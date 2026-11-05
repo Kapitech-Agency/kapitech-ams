@@ -100,11 +100,11 @@ For every module/workspace/worksheet and workflow:
 **Objective:** Fully re-architect the main-content hierarchy across all nine modules using the mandatory [AMS Main-Content Restructuring Specification](AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md). This is a structural overhaul, not a cosmetic revision or preservation of the current page layout.
 
 Proceed one bounded view/module slice at a time:
-1. Dashboard — Overview, Performance, Analytics.
-2. Inbox — Overview, Messages/categories/saved views, Follow-ups, Routing & Templates as supported.
+1. Dashboard — Overview and Analytics (Performance is a retired historical view; do not restore it).
+2. Inbox — Messages/categories/saved views, Follow-ups, Routing & Templates as supported (no standalone Inbox Overview).
 3. Projects — Overview, Project Registry, Tasks & Execution, Planning & Delivery, Content & Campaigns, Project Resources and Project Controls as supported.
 4. Clients — Directory, Onboarding, Agreements, Service & Health; client details remain contextual.
-5. Finance — all five top-level areas and existing worksheets.
+5. Finance — all five canonical taxonomy groups, displayed through the six current Finance UI work areas; preserve all twenty workbook worksheets plus Quotations.
 6. Team & Resources — Team & Capacity, People Operations, Vendors & Freelancers, Time & Availability as supported.
 7. Documents — canonical document register, linked records and secure detail behavior.
 8. Website CMS — each actual content type/editor, publication state, Careers jobs and Applicants.
