@@ -40,3 +40,7 @@ For a new task, verify the actual latest Git SHA, tests, runtime, permissions an
 ## Maintenance contract
 
 Update this file only when approved ownership or current UX presentation changes. Do not paste recurring implementation logs here. Use `AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md` to resolve conflicts and `AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md` for verification evidence.
+
+## Current source-level module audit
+
+See [Nine-Module Current Source Baseline](AMS-NINE-MODULE-CURRENT-SOURCE-BASELINE-2026-11-05.md) for inspected routes, component ownership, verification boundaries and a prioritized acceptance backlog. Presence of a route or component is not proof of working E2E functionality or production readiness.
