@@ -51,3 +51,10 @@ A full recursive tracked-file tree and code-reference graph cannot be inferred f
 ## Operational consolidation outcome — 5 November 2026
 
 This consolidation keeps specialist documents intact and resolves overlapping authority through one centralized matrix, operative Dashboard/Inbox corrections, and a single canonical end-to-end entry point. Physical merging of long historical logs is **explicitly deferred**, because deletion or title-based merging does not improve correctness without a validated inbound-reference map and unique-requirement diff. Do not label deferred merge tasks as completed. Use `npm run docs:check` to assist local link checking, subject to successful execution on a checkout.
+
+## Evidence checkpoint: verified documentation CI — 5 November 2026
+
+The automated documentation integrity workflow passed on commit `ce00ba56ad0a0f2e3062b271454b7725f440f51a`, run https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42007747437. It read 61 Markdown files, checked 219 supported Markdown links and 439 code/config files, and reported zero defects for its supported literal reference checks.
+
+**Decision:** paths are eligible for continued content-level consolidation **review**, not for automatic deletion or relocation. This check establishes relative-link integrity for a bounded syntax, but does not prove that old documents lack unique active requirements, that non-literal inbound references are absent, or that user-approved UX requirements match the actual application. Consequently: retain existing paths and history until unique-requirement comparison and consumers are explicitly reconciled.
+
