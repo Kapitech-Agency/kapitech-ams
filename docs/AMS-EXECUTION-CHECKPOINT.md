@@ -1,5 +1,7 @@
 # AMS Execution Checkpoint
 
+> **RESUME CONTEXT, not unverified production acceptance (5 November 2026).** This append-heavy log preserves many dated checkpoints. For a new task, use `AMS-RESUME-AFTER-INTERRUPTION.md`, inspect latest `main` and CI, and choose the newest relevant verified entry, not simply the longest or oldest section. Historical notes do not prove runtime functionality or Stage 5 user approval.
+
 ## Finance module frontend rebuild — active 2 November 2026
 
 - User requests continuing into Finance under the established structural UI/UX/shared-component scope. Baseline main `3a968fd9aaabe27566cfb5060d10bf00223ee103`; prior exact-SHA AMS CI and Quality Gate passed. Repository is clean at audit start and live main fetched. Preserve all 20 workbook destinations, Quotations, PM aggregate-only Project Finance, routes, source ownership and permissions.
