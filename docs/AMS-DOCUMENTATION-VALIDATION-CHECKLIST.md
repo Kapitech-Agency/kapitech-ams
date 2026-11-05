@@ -142,3 +142,20 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - **Pass/fail remains unverified** until the workflow run results or a full-checkout command log are inspected. CI configuration present is not the same as CI passing.
 - Moving/archiving referenced documents remains blocked until actual results, unique contractual content and migration mapping are inspected.
 
+
+## R. Verified GitHub Actions execution — 5 November 2026
+
+**Status of automated link and literal-source-reference check: PASS (for the syntax/classes supported by the checker).**
+
+- Run: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42007747437
+- Trigger/branch/commit: push to `main` at `ce00ba56ad0a0f2e3062b271454b7725f440f51a`.
+- Workflow: `Documentation integrity`, job `documentation`, completed **success**.
+- Job log confirms `node scripts/check-docs.mjs` returned:
+  - `markdownFiles: 61`
+  - `checkedLinks: 219`
+  - `codeFilesChecked: 439`
+  - `docPathReferences: 2`
+  - `issues: []`, `issueCount: 0`
+- This supersedes earlier *unverified workflow execution* wording in sections P/Q, but does not upgrade the global documentation-governance release gate to PASS. The checker validates common inline relative paths, fragments and literal `docs/*.md` paths, **not** the uniqueness, correctness, chronology, contractual completeness, all dynamic/referenced links, external links, or implementation truth of Markdown prose.
+- Physical deletion/moving of historical docs remains disallowed without unique-rule comparison and inbound-consumer migration evidence.
+
