@@ -134,3 +134,11 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - The script currently checks inline Markdown paths/anchors only, not semantic conflicts, all reference styles, all plain-text references, or every source-code consumer. Do not infer safe file removal from the check alone.
 - Do not declare full documentation consolidation complete until workflow evidence is reviewed and remaining rule-uniqueness/source-consumer reviews are performed.
 
+
+## Q. Full-checkout source-reference verification wired — 5 November 2026
+
+- Extended `scripts/check-docs.mjs` to scan all local source/config files ending in TS, TSX, JS, JSX, MJS, CJS, CSS, SQL, JSON, YML, YAML and HTML for **literal `docs/...md` paths**, reporting missing targets as errors. The command runs under the new dedicated GitHub Actions documentation workflow.
+- This replaces repeated partial manual connector samples with a reproducible local/full-checkout scan. It does **not** claim all dynamically constructed paths, non-literal file names, or all document semantics can be checked automatically.
+- **Pass/fail remains unverified** until the workflow run results or a full-checkout command log are inspected. CI configuration present is not the same as CI passing.
+- Moving/archiving referenced documents remains blocked until actual results, unique contractual content and migration mapping are inspected.
+
