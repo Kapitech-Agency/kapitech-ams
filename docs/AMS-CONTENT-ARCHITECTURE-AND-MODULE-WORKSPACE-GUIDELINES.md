@@ -1,5 +1,7 @@
 # AMS Content Architecture & Module Workspace Guidelines
 
+> **Authority clarification — 5 November 2026:** SUPPORTING anatomy and rationale only. For normative per-view region order, required fields, states and acceptance, follow `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` §4.10 and the Maven operational workspace contract. Do not treat this file as a parallel checklist or copy repeated module-level structure into new pages. Keep this original path while dependencies are verified.
+
 Purpose: make the primary content area of every Kapitech AMS module easy to understand, task-oriented, and consistent with the user-provided Dashboard reference without forcing every module into one dashboard template.
 
 Scope: frontend UX/UI and content presentation only. This guide does not authorize backend, API, database, authentication, authorization-policy, or business-rule changes.
