@@ -47,3 +47,7 @@
 ## Remaining blocker
 
 A full recursive tracked-file tree and code-reference graph cannot be inferred from `docs/README.md`. Until it is available and inspected, destructive merges, renames and archival moves are **NOT VERIFIED** and should not be executed.
+
+## Operational consolidation outcome — 5 November 2026
+
+This consolidation keeps specialist documents intact and resolves overlapping authority through one centralized matrix, operative Dashboard/Inbox corrections, and a single canonical end-to-end entry point. Physical merging of long historical logs is **explicitly deferred**, because deletion or title-based merging does not improve correctness without a validated inbound-reference map and unique-requirement diff. Do not label deferred merge tasks as completed. Use `npm run docs:check` to assist local link checking, subject to successful execution on a checkout.
