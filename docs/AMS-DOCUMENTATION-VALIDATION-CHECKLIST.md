@@ -83,3 +83,12 @@ PASS requires inventory + content + links + source mapping + documented exceptio
 - Reviewed the scopes of `AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md`, `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`, `AMS-UX-INTERACTION-STANDARDS.md` and `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md`. Added explicit authority notes to the first and third documents: content anatomy is SUPPORTING and §4.10 owns per-workspace order; UX Interaction Standards owns practical interaction application, while the UX Audit Playbook owns research/heuristics/acceptance. This is a **non-destructive authority consolidation**, not a line-by-line deduplication.
 - No file moved, deleted or replaced. Broad source/CI text reference scanning, all Markdown link types, full duplicate-paragraph comparison, and live code/runtime alignment remain pending. Full release gate remains **PARTIAL**.
 
+
+## K. Source-reference spot check and body-level consolidation — 5 November 2026
+
+- Inspected tracked repository tree at `8cae1375a48c1dd0add205216ae166751c8f9c77`: 505 blobs, primarily TypeScript/TSX. Four `scripts/*.mjs` files, two GitHub workflows and `package.json` were checked for literal docs Markdown paths. The UI audit script explicitly refers to `docs/ui/shared-ui-inventory.json`; no Markdown path references were observed in these scripts/configuration files.
+- `.github/copilot-instructions.md` continues to reference many specific documentation paths. **Do not rename/move/delete these files** without coordinated updates.
+- Full-text scanning of all TypeScript/TSX/SQL/CSS files **was not performed**, so global inbound-reference verification remains outstanding.
+- Resolved the outdated **active body content** (not just top warning) in `AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md` and `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md`. Removed Dashboard Performance from active view lists and incorporated its valid comparison concepts into Analytics without discarding metrics/guardrails. Current navigation is Overview + Analytics.
+- Scope: documentation only, no app or domain logic changes. Full documentation-consolidation acceptance stays **PARTIAL** until complete source reference and unique-requirement checks.
+
