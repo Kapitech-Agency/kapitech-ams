@@ -1,5 +1,8 @@
 # AMS End-to-End UX Audit, Laws, Quality Standards and Acceptance Playbook
 
+> **Reconciled scope — 5 November 2026:** Dashboard Overview + Analytics and Inbox Messages-first are current presentation decisions. Finance has five canonical master taxonomy areas but six rendered presentation work areas in `AMS-FINANCE-WORKSPACES.md`. This playbook audits the latter without superseding the former, and never changes IDs, source data, route permissions or accounting behavior. Older references in historical specifications are superseded only for these visible UI decisions.
+
+
 **Status:** Normative UX quality and audit playbook, not an implementation completion certificate  
 **Version:** 1.0 | **Date:** 5 November 2026  
 **Repository:** `Kapitech-Agency/kapitech-ams` | **Scope:** all nine AMS modules, shared shell, cross-module journeys, mobile, accessibility, recovery, and testing.  
