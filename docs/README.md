@@ -11,6 +11,24 @@
 
 > **Resume after timeout/interruption:** Follow [AMS Resume After Timeout or Interruption Protocol](AMS-RESUME-AFTER-INTERRUPTION.md) and restore the working pointer from [AMS Execution Checkpoint](AMS-EXECUTION-CHECKPOINT.md). A short “continue/lanjutkan” follow-up means resume the same task after verifying live repository state; it is not a request to restart or ask for the master prompt again.
 
+## Current documentation reading order (governance reconciliation, 5 November 2026)
+
+These paths are retained deliberately. Do not use document count or age as a reason to delete evidence or instructions.
+
+| When you need to… | Read the owner | Avoid mistaking for current authority |
+|---|---|---|
+| Start or resume an AI execution task | `../AGENTS.md`, `AMS-END-TO-END-EXECUTION-PROMPT.md`, `AMS-END-TO-END-DELIVERY-ROADMAP.md`, `AMS-RESUME-AFTER-INTERRUPTION.md` | Historical prompts and dated progress entries |
+| Implement authorized frontend structure | `AMS-FRONTEND-STRUCTURAL-REDESIGN-EXECUTION-PROMPT.md`, `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` | Legacy general frontend-only prompt |
+| Implement UI design, interactions and UX acceptance | `../AMS-DESIGN-SYSTEM.md`, `AMS-SHARED-UI-SYSTEM.md`, `AMS-UX-INTERACTION-STANDARDS.md`, `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` | Duplicated generic heuristics in other documents |
+| Inspect current requirements and evidence | `AMS-FEATURE-CONTENT-GAP-REGISTER.md`, `AMS-IMPLEMENTATION-TRACEABILITY.md`, `AMS-EXECUTION-CHECKPOINT.md` | `AMS-STRUCTURAL-REDESIGN-PROGRESS.md` or `AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md` as if live |
+| Change Finance presentations | `AMS-FINANCE-WORKSPACES.md` and `FINANCE-EXCEL-ALIGNMENT.md` | Equating five domain groups with six rendered areas |
+| Validate documentation references | `npm run docs:check`, `AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md` | Assuming link checks prove content parity or production behavior |
+
+**Historical retention decision:** `AMS-STRUCTURAL-REDESIGN-PROGRESS.md` and `AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md` retain dated evidence. `AMS-IMPLEMENTATION-TRACEABILITY.md` preserves requirement-to-evidence mappings. `AMS-EXECUTION-CHECKPOINT.md` is a resume log, not a current product-status certificate. All four retain existing paths to preserve inbound references. For a new task verify current Git SHA, CI, source, and user approval.
+
+**Technical verification:** documentation integrity GitHub Actions passed for `63874d82e5e6686fbbf7c7ccb18ec536df310d6a`: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/42008900688. This check validates supported links and literal references, not semantic duplication.
+
+
 ## Documentation governance and consolidation
 
 - Automated local relative-link and Markdown heading check: `npm run docs:check` (`scripts/check-docs.mjs`). It is a new safety check, not a full doc-content or live-app validator. This command has not yet been executed against a full checkout in this documentation-only connector session.
