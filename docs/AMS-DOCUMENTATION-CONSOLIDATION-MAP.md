@@ -149,3 +149,14 @@ Past-tense/dated references to retired `Dashboard Performance` or `Inbox Overvie
 ### Finance document recovery — 6 November 2026
 
 `AMS-FINANCE-WORKSPACES.md` was successfully fetched via the GitHub file-content endpoint after its blob-decoding failure. Its entire 49-line document was readable. No `Inbox Overview`, `Dashboard Performance`, or `mock data` matches were found there. Thus **all 60 docs Markdown files have now been read for the targeted legacy-term scan**. Earlier remarks reporting 59/60 represent the initial scanning method and are superseded for this narrow coverage claim. This does not establish all-file semantic equivalence, source-reference completeness, docs-check success or production readiness.
+
+## Verification checkpoint — 6 November 2026, continuation
+
+- Checked the live Git tree on `main` after commit `9fe046280fbd28f63c22dee25b67f007d4767a83`: 64 tracked `docs/` blobs, including 60 Markdown. The tree response was not truncated.
+- Confirmed the existing documentation validator is `scripts/check-docs.mjs` invoked by `npm run docs:check`; `.github/workflows/docs-check.yml` runs it on documentation changes.
+- Attempted a fresh repository checkout and command execution, but the execution environment could not resolve `github.com`. This is a tooling/network blocker, not a failing documentation check.
+- The connector's commit-workflow query returned no PR-triggered workflow runs for `9fe0462`; it does not establish that push-triggered Actions passed or failed.
+- To reduce the risk of a historical prompt being executed independently, its superseded warning has been placed at the beginning of the legacy full UX/UI prompt, not merely appended to its end.
+- Physical merging/deleting of long specifications remains on hold pending full inbound link and unique requirement verification. Keep existing file paths and protect historical evidence.
+
+**Verification status:** PARTIAL. No claims of passing exact-SHA docs CI, complete semantic non-conflict, or production readiness.

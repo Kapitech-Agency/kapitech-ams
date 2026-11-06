@@ -1,5 +1,8 @@
 # KAPITECH AMS — FULL UX/UI STRUCTURAL REDESIGN EXECUTION PROMPT
 
+> **HISTORICAL / SUPERSEDED, DO NOT EXECUTE AS CURRENT INSTRUCTIONS (6 November 2026).** Use [End-to-End Execution Prompt](AMS-END-TO-END-EXECUTION-PROMPT.md), [Delivery Roadmap](AMS-END-TO-END-DELIVERY-ROADMAP.md), and [UX/UI Canonical Standard](AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md). The archived phases below document an earlier proposal only; unique historical context is retained for traceability.
+
+
 ## 1. ROLE AND OBJECTIVE
 
 Act as a principal product designer, enterprise UX architect, information-architecture specialist, accessibility reviewer, and senior frontend engineer.

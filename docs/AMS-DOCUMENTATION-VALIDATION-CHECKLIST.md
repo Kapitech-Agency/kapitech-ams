@@ -223,3 +223,14 @@ Inventory: 64 docs blobs, 60 Markdown at baseline `8791a657` (before this revisi
 ### Finance document recovery — 6 November 2026
 
 `AMS-FINANCE-WORKSPACES.md` was successfully fetched via the GitHub file-content endpoint after its blob-decoding failure. Its entire 49-line document was readable. No `Inbox Overview`, `Dashboard Performance`, or `mock data` matches were found there. Thus **all 60 docs Markdown files have now been read for the targeted legacy-term scan**. Earlier remarks reporting 59/60 represent the initial scanning method and are superseded for this narrow coverage claim. This does not establish all-file semantic equivalence, source-reference completeness, docs-check success or production readiness.
+
+## W. Follow-on validation outcome — 6 November 2026
+
+- [x] Current `main` recursive docs inventory is readable without a truncated tree.
+- [x] Documentation check entry point (`scripts/check-docs.mjs`) and workflow integration reviewed.
+- [x] Legacy full UX/UI prompt prominently marked SUPERSEDED at the beginning.
+- [ ] Run `npm run docs:check` on an accessible full repository checkout at the exact final commit.
+- [ ] Confirm GitHub Actions documentation workflow result for that SHA.
+- [ ] Complete exhaustive source-code/reference and uniqueness migration proofs before any deletion.
+
+The inability to clone owing to DNS failure is an environment access limitation, not a CI failure or pass.
