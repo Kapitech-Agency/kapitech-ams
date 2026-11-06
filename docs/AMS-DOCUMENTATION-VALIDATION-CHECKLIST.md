@@ -234,3 +234,10 @@ Inventory: 64 docs blobs, 60 Markdown at baseline `8791a657` (before this revisi
 - [ ] Complete exhaustive source-code/reference and uniqueness migration proofs before any deletion.
 
 The inability to clone owing to DNS failure is an environment access limitation, not a CI failure or pass.
+
+
+## X. Full docs Markdown inline-link existence scan — 6 November 2026
+
+**Baseline SHA:** `15505942d169b24c44b6f870b139f7501857a70a`. GitHub recursive tree untruncated, 539 tracked entries, 60 tracked docs Markdown files. All **60/60** docs Markdown contents were fetched successfully through the authenticated GitHub file endpoint in seven batches. Each file's Markdown inline links were checked for local file-target existence against tracked repository files, using path normalization. No missing genuine local target was detected. A broad preliminary regex yielded three matches `path` / `target` in `AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md`; these are illustrative syntax tokens, not actionable links, and require fenced-code-aware parsing to suppress false positives.
+
+This focused scan does **not** check all heading anchors, reference-style/HTML links, dynamic source-code references, every semantic conflict, or exact-SHA workflow results. GitHub code search for two legacy filenames returned no results, which is **not** a full inbound dependency proof. The local checkout attempt failed due network DNS resolution and the connector did not provide push-triggered CI evidence. Therefore the complete `npm run docs:check` / full semantic acceptance gates remain **NOT VERIFIED**. No destructive deletion/physical merge of long documentation was authorized by this evidence. Historic migration, role, finance, API, security and production contracts must stay intact.
