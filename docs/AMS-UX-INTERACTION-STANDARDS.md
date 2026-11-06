@@ -1,5 +1,8 @@
 # AMS UX and Interaction Standards
 
+> **Canonical UX/UI precedence (6 November 2026):** [AMS UX/UI, Visual Hierarchy and Usability Canonical Standard](AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md) governs cross-module UX principles, hierarchy, interactions and quality acceptance. This file retains only its documented specialist authority. Where older examples differ, follow the canonical standard without changing the approved business, token, or security owners.
+
+
 > **Authority clarification — 5 November 2026:** ACTIVE for exact application of the shared UI interaction/layout contract. `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` owns UCD/UX laws, research, test design, evidence and acceptance methodology; `AMS-DESIGN-SYSTEM.md` owns visual numbers and breakpoints. Avoid duplicating laws or measurement criteria in this file. Preserve this path for existing AI and code references.
 
 **Purpose:** Standardize UX hierarchy, density, margin/padding ownership, shared interactions and accessibility across AMS.  

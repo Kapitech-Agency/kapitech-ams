@@ -1,5 +1,8 @@
 # AMS End-to-End UX Audit, Laws, Quality Standards and Acceptance Playbook
 
+> **Canonical UX/UI precedence (6 November 2026):** [AMS UX/UI, Visual Hierarchy and Usability Canonical Standard](AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md) governs cross-module UX principles, hierarchy, interactions and quality acceptance. This file retains only its documented specialist authority. Where older examples differ, follow the canonical standard without changing the approved business, token, or security owners.
+
+
 > **Reconciled scope — 5 November 2026:** Dashboard Overview + Analytics and Inbox Messages-first are current presentation decisions. Finance has five canonical master taxonomy areas but six rendered presentation work areas in `AMS-FINANCE-WORKSPACES.md`. This playbook audits the latter without superseding the former, and never changes IDs, source data, route permissions or accounting behavior. Older references in historical specifications are superseded only for these visible UI decisions.
 
 

@@ -1,5 +1,8 @@
 # Kapitech AMS Documentation Index
 
+> **Canonical UX/UI precedence (6 November 2026):** [AMS UX/UI, Visual Hierarchy and Usability Canonical Standard](AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md) governs cross-module UX principles, hierarchy, interactions and quality acceptance. This file retains only its documented specialist authority. Where older examples differ, follow the canonical standard without changing the approved business, token, or security owners.
+
+
 > **5 November 2026 UX reconciliation:** When older baseline documents list Dashboard Performance or Inbox Overview, treat those entries as historical: the current approved Dashboard tabs are Overview and Analytics, and Inbox starts at Messages. Five Finance canonical taxonomy groups and six current Finance presentation groups are separate layers. `AMS-FINANCE-WORKSPACES.md` controls the rendered Finance work-area grouping, while Master Structure/Navigation IA retain business ownership and worksheet identities. Neither document changes actual data, routes or authorization. The new end-to-end UX playbook governs supplementary heuristics, audit evidence and acceptance only.
 
 
@@ -14,6 +17,8 @@
 > **Start here for current documentation scope:** [AMS Documentation Current State](AMS-DOCUMENTATION-CURRENT-STATE.md). It provides a concise reading order, currently approved UI presentation decisions, and links to verified CI evidence; historical documents remain preserved.
 
 - [Nine-Module Current Source Baseline (5 Nov 2026)](AMS-NINE-MODULE-CURRENT-SOURCE-BASELINE-2026-11-05.md): source-backed route/component map, outstanding UX/functional verification and production gates. This is an audit baseline, not an implementation completion claim.
+
+- **Canonical UX/UI principles and visual hierarchy:** [AMS UX/UI, Visual Hierarchy and Usability Canonical Standard](AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md). This owns the design principles while the Design System owns exact tokens and component sizes.
 
 ## Current documentation reading order (governance reconciliation, 5 November 2026)
 

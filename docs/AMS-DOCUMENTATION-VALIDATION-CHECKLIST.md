@@ -1,5 +1,8 @@
 # AMS Documentation Validation and Acceptance Checklist
 
+> **Canonical UX/UI precedence (6 November 2026):** [AMS UX/UI, Visual Hierarchy and Usability Canonical Standard](AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md) governs cross-module UX principles, hierarchy, interactions and quality acceptance. This file retains only its documented specialist authority. Where older examples differ, follow the canonical standard without changing the approved business, token, or security owners.
+
+
 **Status:** ACTIVE. **Updated:** 5 November 2026. Documentation-only QA; does not imply product QA.
 
 ## A. Inventory gate

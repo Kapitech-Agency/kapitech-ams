@@ -1,5 +1,8 @@
 # AMS Design System
 
+> **Canonical UX/UI precedence (6 November 2026):** [AMS UX/UI, Visual Hierarchy and Usability Canonical Standard](docs/AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md) governs UX laws, UCD, IA principles, visual prioritization, honest states, interaction behavior and usability acceptance. Existing token/dimension ownership, approved domain workflows, protected business logic, and actual implementation evidence remain with their existing normative owners. Conflicting older illustrative UX advice is superseded; historical evidence is preserved.
+
+
 **Product:** Kapitech Agency Management System (AMS), a production-grade internal tool for running the agency: clients, projects, tasks, team, finance, and a private document vault.
 **Repo:** `Kapitech-Agency/kapitech-ams` (React 19 + Vite + TypeScript + Tailwind CSS v4, Express API).
 **Users:** agency staff and managers day to day; privileged **Master** and **IT** users for system, backup, and security tasks.
@@ -526,7 +529,7 @@ The exact primary-module order and ownership are defined by `docs/architecture/a
 - **Stack:** React 19 + TypeScript, Tailwind v4 (tokens via `@theme`), `@untitledui/icons` (shared bridge + Vite alias for legacy imports), `motion`, `react-router-dom`, `fuse.js`, `clsx` + `tailwind-merge`. Do not add shadcn/ui, Radix, a chart library, or `framer-motion` without stating why.
 - **Structure (adapt to what exists):** `src/components/ui`, `src/components/layout`, `src/components/charts`, `src/pages`, `src/lib` (`cn`, formatters), `src/hooks`. Small, reusable, typed components.
 - **Theming:** `data-theme` on `<html>`; every component works in both themes.
-- **Data:** use the real API where it exists; otherwise keep mock data in one place with realistic, consistent numbers across KPIs, charts, and tables.
+- **Data:** use real authorized sources only. If data is unavailable, show a truthful unavailable, loading, filtered-empty or error state. Never render runtime mock/dummy values, fabricated KPI, chart series, or synthetic transactions.
 - **Secrets and safety:** never commit runtime data, keys, credentials, or private files. Do not read or hardcode values from `.env`. Do not put tokens in `localStorage`, URLs, or logs.
 - **No external images or brand assets.** Use initials, icons, and placeholders.
 - **Quality gates:** `npm run lint` and `npm run build` must pass. Add `node --test` tests in `tests/` for non-trivial logic (formatters, permission helpers).

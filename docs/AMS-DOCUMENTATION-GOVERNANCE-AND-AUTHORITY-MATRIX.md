@@ -1,5 +1,8 @@
 # AMS Documentation Governance and Authority Matrix
 
+> **Canonical UX/UI precedence (6 November 2026):** [AMS UX/UI, Visual Hierarchy and Usability Canonical Standard](AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md) governs cross-module UX principles, hierarchy, interactions and quality acceptance. This file retains only its documented specialist authority. Where older examples differ, follow the canonical standard without changing the approved business, token, or security owners.
+
+
 **Status:** ACTIVE, mandatory for documentation changes. **Updated:** 5 November 2026.
 **Scope:** repository documentation organization, precedence, maintenance, consolidation, archival and evidence. No authority to edit software, Finance formulas, auth, RBAC or data.
 
@@ -17,7 +20,8 @@ A requirement has one **normative owner**. Other files link to that owner, suppl
 | Visual tokens, geometry, breakpoints | `../AMS-DESIGN-SYSTEM.md` | `AMS-UX-INTERACTION-STANDARDS.md` (usage) |
 | Shared component implementation | `AMS-SHARED-UI-SYSTEM.md` | `ui/shared-ui-inventory.json` generated consumers |
 | Interaction geometry and per-page behavior | `AMS-UX-INTERACTION-STANDARDS.md` | Drawer, Modal, Kanban domain guidelines |
-| UX heuristics and acceptance methodology | `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` | E2E regression matrix |
+| UX principles, hierarchy, states and usability acceptance | `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md` | `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` (audit procedure, research/evidence) |
+| UX audit procedure and test evidence | `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` | E2E regression matrix |
 | Frontend engineering contracts | `AMS-FRONTEND-ENGINEERING-STANDARDS.md` | Shared UI catalogue |
 | Backend integrity, security | `AMS-BACKEND-API-AND-DATA-INTEGRITY.md` | actual server guards/code/tests |
 | Logical data/schema definitions | `AMS-DATA-MODEL-AND-DATA-DICTIONARY.md` | deployed schema/migration evidence |
