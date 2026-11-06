@@ -365,3 +365,27 @@ Internal: [documentation index](README.md), [UX Interaction Standards](AMS-UX-IN
 External: [ISO 9241-210 overview](https://www.iso.org/standard/77520.html), [WCAG 2.2](https://www.w3.org/TR/WCAG22/), [WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/), [Nielsen Norman Group usability heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/). Design laws are heuristic support, not automatic approval or universal numerical constraints.
 
 **Done means:** each relevant task is understandable, source-backed, permission-safe, keyboard/touch usable, recoverable and visually verified across the intended routes, roles and viewports, with an accountable human acceptance decision.
+
+## 12. UX/UI workspace acceptance matrix — added 6 November 2026
+
+The canonical UX/UI standard owns principles; this matrix defines test cases, not a claim that current views pass. Record role, actual route, test SHA, source, screenshot, keyboard outcome, viewport, state coverage, severity and reviewer for each row.
+
+| Workspace | Priority task | Data and state evidence | Required interaction evaluation |
+|---|---|---|---|
+| Dashboard Overview | See Finance/Projects exposure and act | Period, source, receivables, attention or truthful unavailable | Quick action, local filters, chart alternative, keyboard/reflow |
+| Dashboard Analytics | Compare supported trends | Real historical values, labels, ranges and empty state | Selector/period, readable visualization, accessible data |
+| Inbox Messages | Triage and answer a thread | Actual thread, owner, unread, no-selection, failure | Search/filter, split pane, focus, back-to-list |
+| Inbox Follow-ups/Routing | Route and close pending requests | Due dates, routing permissions, template source | Saved views, edit feedback, recovery |
+| Projects Registry/Tasks | Find and progress work | Status, deadline, real task links, filtered empty | Search/sort, board/list, actions, keyboard |
+| Projects Delivery/Campaigns | Review work and handoff | Milestones, deliverable states, source limits | Review flow, responsive layout, safe confirmation |
+| Clients Directory/360 | Find client relationship | Identity, contacts, agreements, missing source | Search, details, navigation, permission |
+| Clients Contracts/Retainers/SLA | Check obligations | Status, entitlement source, renewals | Editing, denial, recovery, labeling |
+| Finance Overview/Transactions | Understand cash and control | Currency, as-of, accounting source | Local period, reconciled meanings, errors |
+| Finance AR/AP/Quotations | Review/create finance record | Party, due date, amounts, no fake totals | Form validation, table keyboard, save status |
+| Finance Accounting/Reports | Examine ledger/report | Accounting classification, source, period | Drilldown, export permissions, accessible report |
+| Team & Resources | Check allocations | Workload denominator, assignments, actual log | Filtering, accessible capacity reading |
+| Documents | Retrieve permitted file | Identity, entity relation, permission and preview state | Search, download guards, keyboard |
+| Website CMS | Edit and publish content | Draft/review/published truth and failed result | Editor, preview, save/publish confirmation |
+| Settings | Change configuration safely | Current state and access policy | Confirm, cancel, focus return, denied state |
+
+Every row additionally checks task-first IA, header/action clarity, one dominant workspace, local filter proximity, canonical typography/spacing, no fabricated KPI, distinct loading/empty/error/permission states, WCAG 2.2 AA, design-system viewport matrix, and role-based usability task results. Unexecuted tests remain **NOT VERIFIED**, never PASS.

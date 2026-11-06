@@ -68,3 +68,9 @@ Merge only if two files have substantially the same purpose, audience, rule auth
 ## 6. Documentation change acceptance
 
 No documentation change is complete unless the owner/role is clear, competing normative phrasing removed or explicitly superseded, all affected links/path consumers validated, source/target/history distinguished, current SHA noted for implementation claims, and all referenced test/acceptance conditions retained. Use `AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md` for gates and `AMS-DOCUMENTATION-CONSOLIDATION-MAP.md` for non-destructive migration plans.
+
+## Governance reconciliation — 6 November 2026
+
+The normative owner for UX laws, visual hierarchy, usability, accessibility principles, state honesty, and UX acceptance is `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md`. `AMS-DESIGN-SYSTEM.md` owns exact tokens and geometry. `AMS-UX-INTERACTION-STANDARDS.md` owns the application of shared interaction components. `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md` owns testing procedures and evidence. `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` owns per-view structure. `AMS-END-TO-END-EXECUTION-PROMPT.md` is the only general execution entry point. The delivery roadmap owns overall stage sequence. Other execution prompts are specialist or historical, not competing authorities.
+
+Keep stable paths until inbound links, unique requirements, and source consumers are verified. Historical and financial/security records may not be discarded because they overlap with recent prose.

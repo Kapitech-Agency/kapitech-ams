@@ -95,3 +95,18 @@ The repository-wide Markdown inventory, owner matrix, prompt comparison, UX docu
 Entry point: `docs/README.md` now contains a task-based canonical reading-order table. `AMS-DOCUMENTATION-GOVERNANCE-AND-AUTHORITY-MATRIX.md` owns conflicts; `AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md` owns evidence and QA. `npm run docs:check` runs in GitHub Actions, but it does not validate semantic correctness or current production readiness.
 
 **Deliverable classification:** documentation governance and non-destructive consolidation **completed for reviewed contract families**. A full semantic line-by-line comparison across all historical content and runtime product readiness validation remain out of scope and must not be reported as completed. No documents were silently removed or merged.
+
+## 6 November 2026 — explicit UX and documentation conflict register
+
+| ID | Overlapping documents | Decision | Status |
+|---|---|---|---|
+| UX-01 | UX canonical / UX audit / interaction guide | Canonical owns design principles; UX audit owns test method; interaction guide owns applied mechanics | Authority reconciled, semantic dedup pending |
+| IA-01 | Content Architecture / Main-Content Specification | Main-Content owns per-workspace order; Content Architecture is explanatory | Physical merge pending unique-content/inbound-reference verification |
+| EX-01 | End-to-End / FE-only / Structural / Full redesign prompts | End-to-End is single default entry, roadmap sole global stage order; other prompts are scoped/historical | Authority reconciled, old paths retained |
+| STATE-01 | Checkpoint / Progress / Content-First Map / Traceability | Checkpoint supports resumption, progress/map are historical, traceability records evidence; HEAD plus CI determines actual state | Retain unique evidence |
+| DATA-01 | Old mock-data fallback / source-backed runtime policy | Runtime mock/dummy KPIs forbidden; display truthful unavailable state | Design System corrected previously |
+| NAV-01 | Historical Performance/Inbox Overview / current presentation | Dashboard Overview+Analytics and Inbox Messages default | Current owner prevails |
+| FIN-01 | Five Finance taxonomy groups / six rendered areas | Domain taxonomy and UI presentation are distinct | Keep separate |
+| DOC-01 | Dated inventory / current docs structure | Inventory is a 5 Nov snapshot, not current file count | Re-inventory before destructive operations |
+
+For every proposed deletion or physical merge: demonstrate unique-requirement migration, full Markdown/source inbound links and anchors, correct historical evidence retention, docs-check against exact SHA, and no protected domain edits. **No file is approved for unconditional deletion.**
