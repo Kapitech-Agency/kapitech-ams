@@ -184,3 +184,14 @@ Historical docs must retain their context but must not state old deployment/migr
 4. Do not hardcode the latest migration prefix in readiness docs; check all migration files discovered by the current runtime loader against applied versions and checksums.
 5. When retiring a document, keep it only if history/recovery value remains; add a superseded/historical notice and link to its replacement.
 6. A documentation update does not itself verify code, current CI, runtime configuration, or a live deployment.
+
+
+## Consolidated UX/UI documentation access (6 November 2026)
+
+- UX/UI principles: [Canonical Standard](AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md).
+- UX/UI test matrix and evidence: [UX Audit Playbook](AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md).
+- Conflict register and safe consolidation criteria: [Consolidation Map](AMS-DOCUMENTATION-CONSOLIDATION-MAP.md).
+- Acceptance gates and checks: [Validation Checklist](AMS-DOCUMENTATION-VALIDATION-CHECKLIST.md).
+- Sole general execution entry: [End-to-End Execution Prompt](AMS-END-TO-END-EXECUTION-PROMPT.md).
+
+Retain historical records and standalone specialist prompts until all unique requirements, inbound references and relevant SHA evidence are mapped. Documentation-only updates do not certify current production behavior.

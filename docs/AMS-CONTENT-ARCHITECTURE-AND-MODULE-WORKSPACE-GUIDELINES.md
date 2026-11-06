@@ -288,3 +288,8 @@ A view is ready only when its purpose/next action are clear, the main work area 
 - docs/AMS-MODAL-GUIDELINES.md
 - docs/AMS-KANBAN-GUIDELINES.md
 - docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md
+
+
+## Consolidation disposition (6 November 2026)
+
+This is supporting explanation, not a competing operative layout contract. `AMS-MAIN-CONTENT-RESTRUCTURING-SPECIFICATION.md` owns required workspace region order; `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md` owns principles and acceptance. Retain this compatibility path until heading-level unique requirements and inbound source references are verified. Do not delete by visual similarity alone.

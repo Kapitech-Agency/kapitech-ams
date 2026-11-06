@@ -44,3 +44,8 @@ Update this file only when approved ownership or current UX presentation changes
 ## Current source-level module audit
 
 See [Nine-Module Current Source Baseline](AMS-NINE-MODULE-CURRENT-SOURCE-BASELINE-2026-11-05.md) for inspected routes, component ownership, verification boundaries and a prioritized acceptance backlog. Presence of a route or component is not proof of working E2E functionality or production readiness.
+
+
+## 6 November 2026 authority update
+
+The normative UX/UI principles are in `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md`; UX testing and its workspace acceptance matrix are in `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md`. Conflict decisions and merger candidates are documented in `AMS-DOCUMENTATION-CONSOLIDATION-MAP.md`. Exact pixel/tokens remain in `../AMS-DESIGN-SYSTEM.md`. Earlier execution prompts are specialist or historical under the End-to-End entry. Historical inventories are not current state evidence.

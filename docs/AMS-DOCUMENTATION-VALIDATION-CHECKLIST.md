@@ -191,3 +191,15 @@ Not claimed:
 - GitHub Actions results for every subsequent commit until its specific run completes.
 
 **Final documentation governance outcome:** reviewed-document authority consolidation ACCEPTED. **Full semantic and product readiness:** NOT VERIFIED. Revisit physical archival only with a concrete maintenance benefit and evidence-based no-loss migration.
+
+
+## U. 6 November 2026 consolidation verification gate
+
+- [ ] Examine all current Markdown text, headings, and unique requirements before a physical merge.
+- [ ] Map inbound file references in Markdown, source code, workflows, generated files, including anchors and dynamic references.
+- [ ] Verify all links and anchors and run `npm run docs:check` on the exact changed SHA.
+- [ ] Cross-check current owner mapping in the governance matrix and conflict decisions in the consolidation map.
+- [ ] Validate each UX/UI workspace with the acceptance matrix in the UX Audit Playbook.
+- [ ] Confirm that historical progress, code SHA evidence, finance, access controls and migration guidance remain preserved.
+
+These items are pending unless evidenced individually. Documentation authority reconciliation is not a claim of complete semantic conflict elimination or production readiness.
