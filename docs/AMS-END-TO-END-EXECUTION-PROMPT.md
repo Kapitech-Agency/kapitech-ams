@@ -73,3 +73,7 @@ At a stage boundary, report whether its exit criteria passed, failed or remain u
 Do not declare production-ready until all mandatory product/workflow tests, Finance integrity checks, security/access controls, migration/reconciliation checks, backup/restore and private-document integrity checks pass; the authenticated `GET /api/system/production-readiness` returns HTTP 200 with `productionReady=true`; and the intended deployed release passes authorized live smoke tests. Provider-dependent integrations such as Kopra must either pass their independent readiness gate or remain disabled/out of the declared release scope with the user's agreement.
 
 If any required gate is not verifiable, state **not yet production-ready** and identify the exact blocker.
+
+## Unified execution authority (6 November 2026)
+
+The sole default execution entry is `AMS-END-TO-END-EXECUTION-PROMPT.md`, with stage order owned by `AMS-END-TO-END-DELIVERY-ROADMAP.md`. Frontend-only and structural prompts are specialist procedures, not alternate global schedules. UX principles and acceptance defer to `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md`; exact visual tokens defer to `../AMS-DESIGN-SYSTEM.md`. Preserve business and security rules, source-backed data, and dated evidence. No runtime dummy KPIs.

@@ -266,3 +266,8 @@ Use this format after each meaningful slice:
 ## Immediate instruction
 
 Read the controlling specification in full. Fetch current `main`, recent commits and current CI. Reconcile the checkpoint and gap register against source. Verify completed navigation without rebuilding it. Select the earliest unfinished workspace in canonical order, define its view contract, implement the material main-content redesign, test it, record exact evidence and continue with the next authorized slice. Do not stop after another audit or plan. Do not begin broad backend/workflow work before the user's Stage 5 approval.
+
+
+## Unified execution authority (6 November 2026)
+
+The sole default execution entry is `AMS-END-TO-END-EXECUTION-PROMPT.md`, with stage order owned by `AMS-END-TO-END-DELIVERY-ROADMAP.md`. Frontend-only and structural prompts are specialist procedures, not alternate global schedules. UX principles and acceptance defer to `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md`; exact visual tokens defer to `../AMS-DESIGN-SYSTEM.md`. Preserve business and security rules, source-backed data, and dated evidence. No runtime dummy KPIs.

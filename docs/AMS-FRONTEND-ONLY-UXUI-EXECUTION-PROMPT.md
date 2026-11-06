@@ -187,3 +187,8 @@ Remaining: [gaps and blockers]
 Resume point: [next concrete action]
 
 Start with Phase 0, finish the inventory and change map, then execute all safe UI-only slices in order. Request clarification only for a genuine ambiguity or a change that crosses the protected boundary.
+
+
+## Unified execution authority (6 November 2026)
+
+The sole default execution entry is `AMS-END-TO-END-EXECUTION-PROMPT.md`, with stage order owned by `AMS-END-TO-END-DELIVERY-ROADMAP.md`. Frontend-only and structural prompts are specialist procedures, not alternate global schedules. UX principles and acceptance defer to `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md`; exact visual tokens defer to `../AMS-DESIGN-SYSTEM.md`. Preserve business and security rules, source-backed data, and dated evidence. No runtime dummy KPIs.
