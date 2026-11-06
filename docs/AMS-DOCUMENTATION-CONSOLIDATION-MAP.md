@@ -144,3 +144,8 @@ Past-tense/dated references to retired `Dashboard Performance` or `Inbox Overvie
 5. Verify implemented UI and production separately; documentation governance does not prove UX, backend or release readiness.
 
 **Decision:** retain source documentation paths without deletion; this is an evidence-based choice to avoid breaking dependent instructions and historical traceability, not an omission disguised as completion.
+
+
+### Finance document recovery — 6 November 2026
+
+`AMS-FINANCE-WORKSPACES.md` was successfully fetched via the GitHub file-content endpoint after its blob-decoding failure. Its entire 49-line document was readable. No `Inbox Overview`, `Dashboard Performance`, or `mock data` matches were found there. Thus **all 60 docs Markdown files have now been read for the targeted legacy-term scan**. Earlier remarks reporting 59/60 represent the initial scanning method and are superseded for this narrow coverage claim. This does not establish all-file semantic equivalence, source-reference completeness, docs-check success or production readiness.

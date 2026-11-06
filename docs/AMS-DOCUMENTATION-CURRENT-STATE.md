@@ -53,3 +53,8 @@ The normative UX/UI principles are in `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STAND
 ## Audit coverage update — 6 November 2026
 
 Current normative UX standards, test methodology, exact geometry, domain structures and execution stage ownership remain separated by role. The 6 November repository-wide review inventoried **64 docs files and 60 Markdown files** at baseline `8791a657`. A legacy terminology scan read 59 of 60 Markdown blobs; `AMS-FINANCE-WORKSPACES.md` requires a decoding recovery path. Obsolete Inbox Overview/Performance entries in historical logs are not current instructions. The consolidation map documents why no unverified physical removal of historical/protected specifications was performed. Full semantic and current CI verification are still pending.
+
+
+### Finance document recovery — 6 November 2026
+
+`AMS-FINANCE-WORKSPACES.md` was successfully fetched via the GitHub file-content endpoint after its blob-decoding failure. Its entire 49-line document was readable. No `Inbox Overview`, `Dashboard Performance`, or `mock data` matches were found there. Thus **all 60 docs Markdown files have now been read for the targeted legacy-term scan**. Earlier remarks reporting 59/60 represent the initial scanning method and are superseded for this narrow coverage claim. This does not establish all-file semantic equivalence, source-reference completeness, docs-check success or production readiness.

@@ -218,3 +218,8 @@ Inventory: 64 docs blobs, 60 Markdown at baseline `8791a657` (before this revisi
 - [ ] Complete line-by-line equivalence and safe destructive merging certified.
 
 **Do not mark full consolidation PASS until all four unchecked gates are evidenced.**
+
+
+### Finance document recovery — 6 November 2026
+
+`AMS-FINANCE-WORKSPACES.md` was successfully fetched via the GitHub file-content endpoint after its blob-decoding failure. Its entire 49-line document was readable. No `Inbox Overview`, `Dashboard Performance`, or `mock data` matches were found there. Thus **all 60 docs Markdown files have now been read for the targeted legacy-term scan**. Earlier remarks reporting 59/60 represent the initial scanning method and are superseded for this narrow coverage claim. This does not establish all-file semantic equivalence, source-reference completeness, docs-check success or production readiness.
