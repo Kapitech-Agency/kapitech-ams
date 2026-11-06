@@ -49,3 +49,7 @@ See [Nine-Module Current Source Baseline](AMS-NINE-MODULE-CURRENT-SOURCE-BASELIN
 ## 6 November 2026 authority update
 
 The normative UX/UI principles are in `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md`; UX testing and its workspace acceptance matrix are in `AMS-END-TO-END-UX-AUDIT-AND-QUALITY-STANDARDS.md`. Conflict decisions and merger candidates are documented in `AMS-DOCUMENTATION-CONSOLIDATION-MAP.md`. Exact pixel/tokens remain in `../AMS-DESIGN-SYSTEM.md`. Earlier execution prompts are specialist or historical under the End-to-End entry. Historical inventories are not current state evidence.
+
+## Audit coverage update — 6 November 2026
+
+Current normative UX standards, test methodology, exact geometry, domain structures and execution stage ownership remain separated by role. The 6 November repository-wide review inventoried **64 docs files and 60 Markdown files** at baseline `8791a657`. A legacy terminology scan read 59 of 60 Markdown blobs; `AMS-FINANCE-WORKSPACES.md` requires a decoding recovery path. Obsolete Inbox Overview/Performance entries in historical logs are not current instructions. The consolidation map documents why no unverified physical removal of historical/protected specifications was performed. Full semantic and current CI verification are still pending.

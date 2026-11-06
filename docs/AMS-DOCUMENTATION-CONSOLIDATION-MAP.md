@@ -110,3 +110,37 @@ Entry point: `docs/README.md` now contains a task-based canonical reading-order 
 | DOC-01 | Dated inventory / current docs structure | Inventory is a 5 Nov snapshot, not current file count | Re-inventory before destructive operations |
 
 For every proposed deletion or physical merge: demonstrate unique-requirement migration, full Markdown/source inbound links and anchors, correct historical evidence retention, docs-check against exact SHA, and no protected domain edits. **No file is approved for unconditional deletion.**
+
+## 6 November 2026 — repository-wide Markdown review and safe final disposition
+
+**Baseline:** `main` commit `8791a657a85b38d06302e78f7933e57d8713c720`; recursive Git tree is not truncated. Inventory before this update: **64 docs blobs, 60 Markdown, two images, one SQL and one JSON**. All 60 Markdown paths were attempted for a content-level scan of legacy Dashboard Performance, Inbox Overview and mock-data instructions. **59 readable; one blob (`AMS-FINANCE-WORKSPACES.md`) returned a decoding error**, so full semantic verification is not established. Existing domain/role/workspace files remain independent where their owner, audience and data contracts differ.
+
+### Retention and consolidation decision
+
+| Family | Decision | Justification |
+|---|---|---|
+| UX principles / UX audit / interaction | KEEP as separate normative owner + specialized testing + concrete implementation, cross-linked | Different audience and test cadence; canonical principles prevail |
+| Main Content / Content Architecture | KEEP Main Content normative, Content Architecture supporting compatibility | No proven complete unique-heading migration or inbound-reference coverage; unsafe to delete |
+| Execution prompts | ONE canonical execution entry and roadmap; specialist prompts supporting, full-redesign prompt historical | Old phase numbers must never override roadmap |
+| Checkpoint / Structural Progress / Content-First Map / Traceability | KEEP checkpoint and traceability; treat older progress/maps as historical evidence | SHA-specific history and requirements must survive |
+| Role Blueprint / Worksheet Role Matrix | KEEP parent-detail pair | Different resolution and persona detail |
+| Data / Finance / Backend / production runbooks | KEEP separate | Business, integrity, recovery and audit obligations cannot be absorbed into UX |
+| Legacy Navigation-First Pointer | KEEP a short redirect at stable path | Previous references require a safe compatibility route |
+| 5 Nov inventory/baseline | KEEP as immutable dated evidence | Counts and SHA should not be presented as current |
+| Images, JSON UI inventory, SQL under docs | KEEP pending consumer audit | Non-Markdown paths have potential runtime or tooling consumers |
+
+**Physical merge/delete verdict:** no destructive merge can be certified from available evidence. Consolidation of **normative authority** is complete for reviewed families, but removal and full semantic certification are **NOT VERIFIED**. Do not call an unverified delete/rename safe. In particular, all documented requirements, exact finance math, permission contracts, source mappings, relative anchors and SHA-linked evidence must be proven preserved before archival.
+
+### Legacy text classification
+
+Past-tense/dated references to retired `Dashboard Performance` or `Inbox Overview` are allowed only as explicit history. An imperative to reintroduce them in the current operative body is prohibited. Earlier mock-data references are non-operative; production UIs must use real data or truthful states. Agent readers must apply the canonical UX standard rather than treating quoted snapshots as new directives.
+
+### Remaining verification gates
+
+1. Recover the Finance workspaces document via direct file read (blob decoder failed).
+2. Execute `npm run docs:check` on a full checkout of the final exact SHA; record actual CI run result, not an assumed pass.
+3. Verify full source-code consumer/inbound link and generated anchors for any proposed move/delete.
+4. Perform line-by-line uniqueness comparison before physically merging large long-form specifications.
+5. Verify implemented UI and production separately; documentation governance does not prove UX, backend or release readiness.
+
+**Decision:** retain source documentation paths without deletion; this is an evidence-based choice to avoid breaking dependent instructions and historical traceability, not an omission disguised as completion.

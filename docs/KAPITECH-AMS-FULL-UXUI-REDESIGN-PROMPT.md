@@ -330,3 +330,7 @@ Be decisive about replacing confusing layouts. Do not preserve a bad page struct
 The goal is a coherent, production-ready Kapitech AMS whose layout is immediately understandable, visually clear, consistent, responsive, and efficient for daily operations.
 
 Do not change backend or business behavior. Do not stop at recommendations. Work through every active frontend module and subtab, validate the result, and push each completed stage directly to `main`.
+
+## Supersession and compatibility status (6 November 2026)
+
+**HISTORICAL. NOT AN ACTIVE EXECUTION PROMPT.** This full-UXUI redesign prompt is preserved as prior design context, not a standalone mandate. Its phase sequence and historical instructions must not be executed independently. Use `AMS-END-TO-END-EXECUTION-PROMPT.md` and `AMS-END-TO-END-DELIVERY-ROADMAP.md` for active execution, and `AMS-UXUI-VISUAL-HIERARCHY-CANONICAL-STANDARD.md` for UX principles. Preserve this filename as a compatibility target until every unique instruction, link and code consumer can be mapped to a successor.

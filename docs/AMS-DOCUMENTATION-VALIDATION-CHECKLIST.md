@@ -203,3 +203,18 @@ Not claimed:
 - [ ] Confirm that historical progress, code SHA evidence, finance, access controls and migration guidance remain preserved.
 
 These items are pending unless evidenced individually. Documentation authority reconciliation is not a claim of complete semantic conflict elimination or production readiness.
+
+## V. 6 November 2026 audit coverage and release boundary
+
+Inventory: 64 docs blobs, 60 Markdown at baseline `8791a657` (before this revision). Attempted read of all 60 Markdown files for legacy tab and mock-data terms; 59 blob reads succeeded, one Finance Workspaces blob decoding failed. The governance and consolidation map record the disposition. This review does NOT replace full unique-requirement, anchor, reference-style link and source-consumer validation.
+
+- [x] Recursive docs inventory and current main SHA recorded.
+- [x] Repository-wide Markdown legacy-term scan attempted; exception explicitly recorded.
+- [x] Historic vs operative tab names differentiated in governance.
+- [x] Domain-specific non-UX authority and protected history retained.
+- [ ] All docs Markdown successfully decoded and compared in full.
+- [ ] Full source-code inbound-reference/anchor graph complete.
+- [ ] `npm run docs:check` completed on exact final SHA with recorded result.
+- [ ] Complete line-by-line equivalence and safe destructive merging certified.
+
+**Do not mark full consolidation PASS until all four unchecked gates are evidenced.**
