@@ -45,7 +45,7 @@ export const FINANCE_HANDOFFS: Readonly<Record<string, readonly { tab: string; l
 
 
 export const FINANCE_WORKSHEET_START: Readonly<Record<string, string>> = {
-  'executive-summary': 'Start with overdue client invoices, then review the period’s performance and recent billing.',
+  'executive-summary': 'Review the periodâ€™s billing, collections and expenses, then follow up on overdue invoices.',
   dashboard: 'Compare the selected period with the previous period, then inspect individual transactions.',
   quotations: 'Open or create a client quotation in the register. Use Pipeline review to check where proposals stand.',
   revenue: 'Find an invoice in the register to review its details or record a payment.',

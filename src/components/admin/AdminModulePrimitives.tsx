@@ -486,7 +486,7 @@ export const AdminMetricCard: React.FC<AdminMetric & { className?: string; value
     {(change !== undefined || context !== undefined) && (
       <div className="mt-2 flex min-h-5 min-w-0 items-center gap-2">
         {change !== undefined && <span className={cn('shrink-0 text-[11px] font-medium tabular-nums', changeToneClassName)}>{change}</span>}
-        {context !== undefined && <span className="min-w-0 truncate text-[11px] leading-4 text-muted">{context}</span>}
+        {context !== undefined && <span className="ams-metric-context min-w-0 truncate text-[11px] leading-4 text-muted">{context}</span>}
       </div>
     )}
     {sourceLabel !== undefined && <p className="mt-2 text-[10px] leading-4 text-muted">Source: {sourceLabel}</p>}

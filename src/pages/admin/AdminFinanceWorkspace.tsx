@@ -2001,8 +2001,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         ) : (
           <>
             <AdminPanel featureSlug="finance-executive-summary-period" className="ams-operational-panel ams-overview-panel" title="Executive summary" description={<>Reporting period: {dashboardPeriodLabel}</>} actions={<><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/finance?tab=accounts-receivable" icon={<FileText size={14} />}>Open Accounts Receivable</DashboardControl><DashboardControl variant="action" size="compact" className="ams-dashboard-card-action" to="/admin/finance?tab=dashboard" icon={<ArrowUpRight size={14} />}>Open Dashboard comparison</DashboardControl></>}><p className="p-4 text-[11px] text-muted">{dashboardRange ? formatDate(dashboardRange.startDate) + ' – ' + formatDate(dashboardRange.endDate) : 'Reporting period unavailable'} · Currency: IDR</p></AdminPanel>
-            <AdminMetricStrip metrics={metrics} />
-            <AdminPanel className="ams-operational-panel ams-overview-panel" title="Client collections and recorded expenses" description={dashboardPeriodLabel + ' � IDR � ' + (daily ? 'Daily' : 'Monthly')}>
+            <AdminMetricStrip metrics={metrics} itemClassName="[&_.ams-metric-context]:whitespace-normal" />
+            <AdminPanel className="ams-operational-panel ams-overview-panel" title="Client collections and recorded expenses" description={dashboardPeriodLabel + ' · IDR · ' + (daily ? 'Daily' : 'Monthly')}>
               <div className="min-w-0 p-4">
                 <TrendChart
                   data={trend}
@@ -2888,6 +2888,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         return (
           <div className="space-y-4">
 
+<FinanceWorksheetSections label="Profit & loss basis" defaultSection="posted" sections={[
+{ key: 'source', label: 'Source activity', content: <>
 <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-pnl-comparison-controls">
               <div className="min-w-0 text-xs text-muted">
                 <div className="font-medium text-fg">Comparison period</div>
@@ -2908,8 +2910,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                 </label>
               )}
             </div>
-<FinanceWorksheetSections label="Profit & loss basis" defaultSection="posted" sections={[
-{ key: 'source', label: 'Source activity', content: <>
             <WorkbookNote tone="warning" title="Operational source preview · not the posted General Ledger">
               This preview uses invoice issue dates and expense records, excluding output tax from revenue. It is useful for operating review but is not accounting profit. Use posted General Journal balances as the accounting view; unmapped source rows, drafts and incomplete posting remain exceptions to resolve.
             </WorkbookNote>
@@ -3614,7 +3614,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         eyebrow={'Finance / ' + activeGroup.label}
         title={FINANCE_WORKSHEET_LABELS[activeTab.key] ?? activeTab.label}
         description={FINANCE_WORKSHEET_START[activeTab.key] ?? activeTab.description}
-        actions={(
+        actions={!['quotations', 'revenue', 'accounts-receivable', 'expenses'].includes(activeTab.key) && (
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>
               Refresh data

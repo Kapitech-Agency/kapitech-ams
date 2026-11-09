@@ -2903,6 +2903,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             { key: 'register', label: 'Quotation register', content: <>
 <><AdminFilterToolbar slug="finance-records-section-filters" searchValue={quotationSearch} onSearchChange={setQuotationSearch} searchLabel="Search quotations" searchPlaceholder="Search quotation or client" activeFilterCount={Number(quotationStatusFilter !== 'all')} onReset={() => { setQuotationSearch(''); setQuotationStatusFilter('all'); }} columns={3}><AdminFilterField label="Status"><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} className="min-w-0" triggerClassName="w-full" aria-label="Quotation status filter"/></AdminFilterField>
 <AdminFilterField label="Sort"><CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} className="min-w-0" triggerClassName="w-full" aria-label="Quotation sort"/></AdminFilterField>{currencyFilter}</AdminFilterToolbar><AdminPanel className="ams-operational-panel ams-overview-panel" title={<>Quotation ledger</>} description={<>Search, filter, and sort the commercial pipeline.</>} actions={<div className="flex flex-wrap items-center gap-2">
+          <DashboardControl variant="action" size="compact" className="ams-dashboard-card-action"
+            icon={<RefreshCw size={14} />} onClick={() => void loadQuotations()} disabled={quotationLoading}>
+            Refresh quotations
+          </DashboardControl>
           <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">
             {filteredQuotations.length} visible
           </span>
@@ -3804,7 +3808,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
               <div className="flex justify-between gap-3"><span className="text-muted">Tax</span><span className="tabular-nums text-fg">{formatNativeAmount(quotationPreviewTotals.taxAmount, currency, true)}</span></div>
               <div className="flex justify-between gap-3 border-t border-line pt-2 font-semibold"><span className="text-fg">Preview total</span><span className="tabular-nums text-fg">{formatNativeAmount(quotationPreviewTotals.total, currency, true)}</span></div>
             </div>
-            <p className="mt-2 text-[10px] text-muted">Currency follows the selection in the register’s Filters panel.</p>
+            <p className="mt-2 text-[10px] text-muted">Currency follows the selection in the registerâ€™s Filters panel.</p>
           </div>
         </form>
       </Drawer>
