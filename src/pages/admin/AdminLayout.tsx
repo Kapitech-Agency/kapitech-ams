@@ -389,12 +389,12 @@ export const AdminLayout: React.FC = () => {
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              {workspaceTabItems.length > 0 && workspaceNavigationModule !== 'finance' && (
+              {workspaceTabItems.length > 0 && (
                 <AdminTopbarTabs
                   ariaLabel="Module navigation"
                   activeKey={activeWorkspaceTab?.key || ''}
                   items={workspaceTabItems}
-                  className={workspaceNavigationModule === 'inbox' ? 'min-w-0 flex-1 ams-inbox-module-tabs' : workspaceNavigationModule === 'projects' ? 'min-w-0 flex-1 ams-projects-module-tabs' : workspaceNavigationModule === 'clients' ? 'min-w-0 flex-1 ams-operational-tabs' : 'min-w-0 flex-1'}
+                  className={workspaceNavigationModule === 'inbox' ? 'min-w-0 flex-1 ams-inbox-module-tabs' : workspaceNavigationModule === 'projects' ? 'min-w-0 flex-1 ams-projects-module-tabs' : (workspaceNavigationModule === 'clients' || workspaceNavigationModule === 'finance') ? 'min-w-0 flex-1 ams-operational-tabs' : 'min-w-0 flex-1'}
                 />
               )}
               <Button
@@ -453,7 +453,7 @@ export const AdminLayout: React.FC = () => {
         {/* Compact in-page navigation fallback for viewports where the desktop topbar is hidden. */}
         {workspaceTabItems.length > 0 && (
           <div
-            className={'ams-workspace-topbar-nav sticky top-0 z-20 border-b border-line bg-panel ' + (workspaceNavigationModule === 'finance' ? 'min-[900px]:top-[52px]' : 'min-[900px]:hidden')}
+            className="ams-workspace-topbar-nav sticky top-0 z-20 border-b border-line bg-panel min-[900px]:hidden"
             data-ams-slug="workspace-topbar-navigation"
           >
             <div className="mx-auto w-full max-w-[1560px] min-w-0 px-3 sm:px-5">
