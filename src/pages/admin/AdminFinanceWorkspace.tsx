@@ -1894,6 +1894,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
     // Plot recorded payment and expense dates on the same basis as the Overview KPIs.
     const daily = reportPeriodMode === 'month';
     const bucketKey = (date: string) => date.slice(0, daily ? 10 : 7);
+    let hasRecordedMovement = false;
     const trendBuckets = new Map<string, { label: string; primary: number; secondary: number }>();
     if (dashboardRange && !invoiceSourceError && !expenseSourceError) {
       const dateLabel = new Intl.DateTimeFormat(locale, { month: 'short', ...(daily ? { day: 'numeric' } : {}), timeZone: 'UTC' });
@@ -1909,12 +1910,16 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           const date = String(payment.date || '').slice(0, 10);
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < dashboardRange.startDate || date > dashboardRange.endDate) continue;
           const bucket = trendBuckets.get(bucketKey(date));
-          if (bucket) bucket.primary += Math.max(0, Number(payment.amount) || 0);
+          if (!bucket) continue;
+          bucket.primary += Math.max(0, Number(payment.amount) || 0);
+          hasRecordedMovement = true;
         }
       }
       for (const expense of expensesInPeriod) {
         const bucket = trendBuckets.get(bucketKey(expense.date));
-        if (bucket) bucket.secondary += Number(expense.amount) || 0;
+        if (!bucket) continue;
+        bucket.secondary += Number(expense.amount) || 0;
+        hasRecordedMovement = true;
       }
     }
     const trend = [...trendBuckets.values()];
@@ -2012,10 +2017,10 @@ const FinanceWorkbookWorkspace: React.FC = () => {
                   axisFormat={value => new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 }).format(value)}
                   presentation="maven"
                   ariaLabel="Client collections and recorded expenses by date"
-                  emptyState={trend.some(point => point.primary !== 0 || point.secondary !== 0) ? undefined : (
+                  emptyState={hasRecordedMovement ? undefined : (
                     <DashboardEmptyState eyebrow="Finance Overview"
-                      title={invoiceSourceError || expenseSourceError ? 'Trend data unavailable' : 'No recorded movements in this period'}
-                      description={invoiceSourceError || expenseSourceError ? 'Refresh Finance to reload invoices and expenses.' : 'Recorded client payments and expenses will appear here for the selected period.'}
+                      title={!dashboardRange || invoiceSourceError || expenseSourceError ? 'Trend data unavailable' : 'No recorded movements in this period'}
+                      description={!dashboardRange ? 'Select a valid reporting period.' : invoiceSourceError || expenseSourceError ? 'Refresh Finance to reload invoices and expenses.' : 'Recorded client payments and expenses will appear here for the selected period.'}
                     />
                   )}
                 />

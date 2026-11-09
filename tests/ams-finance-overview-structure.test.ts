@@ -59,3 +59,26 @@ test('Finance Executive Summary keeps cash movement and posted profit semantical
   assert.ok(summary.includes('title="Selected vs previous period"'));
   assert.ok(summary.includes('Net movement is a proxy and is not a reconciled closing cash balance.'));
 });
+
+test('Shared trend preserves the empty plot without representing missing data as zero', async () => {
+  const { createElement } = await import('react');
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const { TrendChart } = await import('../src/components/charts/DashboardCharts');
+  const props = {
+    primaryLabel: 'Recorded payments',
+    ariaLabel: 'Recorded payments by date',
+    data: [{ label: 'Jan', primary: 0 }, { label: 'Feb', primary: 0 }],
+  };
+
+  for (const data of [[], props.data]) {
+    const empty = renderToStaticMarkup(createElement(TrendChart, { ...props, data, emptyState: 'No records' }));
+    assert.match(empty, /<svg/);
+    assert.match(empty, /<line/);
+    assert.match(empty, /No records/);
+    assert.doesNotMatch(empty, /ams-trend-chart__primary-line|<table/);
+  }
+
+  const recordedZero = renderToStaticMarkup(createElement(TrendChart, props));
+  assert.match(recordedZero, /ams-trend-chart__primary-line/);
+  assert.match(recordedZero, /<table/);
+});

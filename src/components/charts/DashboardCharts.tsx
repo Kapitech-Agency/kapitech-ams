@@ -93,8 +93,7 @@ export const TrendChart: React.FC<{
   showDataTable?: boolean;
   emptyState?: React.ReactNode;
   ariaLabel: string;
-}> = ({ data: sourceData, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, axisFormat, presentation = 'default', showDataTable = true, emptyState, ariaLabel }) => {
-  const data = sourceData.length || !emptyState ? sourceData : [{ label: "", primary: 0 }, { label: "", primary: 0 }];
+}> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, axisFormat, presentation = 'default', showDataTable = true, emptyState, ariaLabel }) => {
   const [hover, setHover] = useState<{ index: number; x: number; percent: number; yPercent: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const gradientId = `dashboard-trend-${useId().replace(/:/g, '')}`;
@@ -125,11 +124,11 @@ export const TrendChart: React.FC<{
     tertiaryY: point.tertiary === undefined ? undefined : y(point.tertiary),
   }));
 
-  if (!data.length) return null;
+  if (!data.length && !emptyState) return null;
 
   const primaryPath = smoothLinePath(points.map((point) => ({ x: point.x, y: point.y })));
   const primaryBaseline = y(0);
-  const primaryAreaPath = primaryPath + ` L ${points[points.length - 1].x} ${primaryBaseline} L ${points[0].x} ${primaryBaseline} Z`;
+  const primaryAreaPath = points.length ? primaryPath + ` L ${points[points.length - 1].x} ${primaryBaseline} L ${points[0].x} ${primaryBaseline} Z` : "";
   const secondaryPath = smoothLinePath(
     points.filter((point) => point.secondaryY !== undefined).map((point) => ({ x: point.x, y: point.secondaryY as number }))
   );
@@ -263,11 +262,12 @@ export const TrendChart: React.FC<{
             return (
               <g key={ratio}>
                 <line x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" strokeDasharray={isMavenPresentation ? "1 0" : "2 5"} opacity={isMavenPresentation ? 0.34 : 0.55} vectorEffect="non-scaling-stroke" />
-                <text x={left - 9} y={yy + 4} textAnchor="end" fontSize={isMavenPresentation ? "14" : "10"} fill="var(--muted)">{formatAxisValue(value)}</text>
+                {!emptyState && <text x={left - 9} y={yy + 4} textAnchor="end" fontSize={isMavenPresentation ? "14" : "10"} fill="var(--muted)">{formatAxisValue(value)}</text>}
               </g>
             );
           })}
 
+          {!emptyState && <>
           <path d={primaryAreaPath} fill={`url(#${gradientId})`} />
           <path className="ams-trend-chart__primary-line" d={primaryPath} fill="none" stroke={primaryLineColor} strokeWidth={isMavenPresentation ? "2.5" : "3"} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           {secondaryLabel && secondaryPath && (
@@ -277,7 +277,9 @@ export const TrendChart: React.FC<{
             <path className="ams-trend-chart__tertiary-line" d={tertiaryPath} fill="none" stroke={tertiaryLineColor} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.78" />
           )}
 
-          {hover && (
+          </>}
+
+          {!emptyState && hover && (
             <line
               x1={hover.x}
               x2={hover.x}
@@ -292,7 +294,7 @@ export const TrendChart: React.FC<{
           )}
 
           {points.map((point, index) => {
-            const activePoint = hover?.index === index;
+            const activePoint = !emptyState && hover?.index === index;
             return (
               <g key={point.label}>
                 <text x={point.x} y={height - 15} textAnchor="middle" fontSize={isMavenPresentation ? "14" : "10"} fill="var(--muted)">{point.label}</text>
